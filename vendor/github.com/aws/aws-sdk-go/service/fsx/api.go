@@ -75,21 +75,21 @@ func (c *FSx) CancelDataRepositoryTaskRequest(input *CancelDataRepositoryTaskInp
 // See the AWS API reference guide for Amazon FSx's
 // API operation CancelDataRepositoryTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeUnsupportedOperation "UnsupportedOperation"
+//   * UnsupportedOperation
 //   The requested operation is not supported for this resource or API.
 //
-//   * ErrCodeDataRepositoryTaskNotFound "DataRepositoryTaskNotFound"
+//   * DataRepositoryTaskNotFound
 //   The data repository task or tasks you specified could not be found.
 //
-//   * ErrCodeDataRepositoryTaskEnded "DataRepositoryTaskEnded"
+//   * DataRepositoryTaskEnded
 //   The data repository task could not be canceled because the task has already
 //   ended.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/CancelDataRepositoryTask
@@ -193,30 +193,30 @@ func (c *FSx) CreateBackupRequest(input *CreateBackupInput) (req *request.Reques
 // See the AWS API reference guide for Amazon FSx's
 // API operation CreateBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeUnsupportedOperation "UnsupportedOperation"
+//   * UnsupportedOperation
 //   The requested operation is not supported for this resource or API.
 //
-//   * ErrCodeFileSystemNotFound "FileSystemNotFound"
+//   * FileSystemNotFound
 //   No Amazon FSx file systems were found based upon supplied parameters.
 //
-//   * ErrCodeBackupInProgress "BackupInProgress"
+//   * BackupInProgress
 //   Another backup is already under way. Wait for completion before initiating
 //   additional backups of this file system.
 //
-//   * ErrCodeIncompatibleParameterError "IncompatibleParameterError"
+//   * IncompatibleParameterError
 //   The error returned when a second request is received with the same client
 //   request token but different parameters settings. A client request token should
 //   always uniquely identify a single request.
 //
-//   * ErrCodeServiceLimitExceeded "ServiceLimitExceeded"
+//   * ServiceLimitExceeded
 //   An error indicating that a particular service limit was exceeded. You can
 //   increase some service limits by contacting AWS Support.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/CreateBackup
@@ -303,29 +303,29 @@ func (c *FSx) CreateDataRepositoryTaskRequest(input *CreateDataRepositoryTaskInp
 // See the AWS API reference guide for Amazon FSx's
 // API operation CreateDataRepositoryTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeUnsupportedOperation "UnsupportedOperation"
+//   * UnsupportedOperation
 //   The requested operation is not supported for this resource or API.
 //
-//   * ErrCodeFileSystemNotFound "FileSystemNotFound"
+//   * FileSystemNotFound
 //   No Amazon FSx file systems were found based upon supplied parameters.
 //
-//   * ErrCodeIncompatibleParameterError "IncompatibleParameterError"
+//   * IncompatibleParameterError
 //   The error returned when a second request is received with the same client
 //   request token but different parameters settings. A client request token should
 //   always uniquely identify a single request.
 //
-//   * ErrCodeServiceLimitExceeded "ServiceLimitExceeded"
+//   * ServiceLimitExceeded
 //   An error indicating that a particular service limit was exceeded. You can
 //   increase some service limits by contacting AWS Support.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
-//   * ErrCodeDataRepositoryTaskExecuting "DataRepositoryTaskExecuting"
+//   * DataRepositoryTaskExecuting
 //   An existing data repository task is currently executing on the file system.
 //   Wait until the existing task has completed, then create the new task.
 //
@@ -432,25 +432,25 @@ func (c *FSx) CreateFileSystemRequest(input *CreateFileSystemInput) (req *reques
 // See the AWS API reference guide for Amazon FSx's
 // API operation CreateFileSystem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeActiveDirectoryError "ActiveDirectoryError"
+//   * ActiveDirectoryError
 //   An Active Directory error.
 //
-//   * ErrCodeIncompatibleParameterError "IncompatibleParameterError"
+//   * IncompatibleParameterError
 //   The error returned when a second request is received with the same client
 //   request token but different parameters settings. A client request token should
 //   always uniquely identify a single request.
 //
-//   * ErrCodeInvalidImportPath "InvalidImportPath"
+//   * InvalidImportPath
 //   The path provided for data repository import isn't valid.
 //
-//   * ErrCodeInvalidExportPath "InvalidExportPath"
+//   * InvalidExportPath
 //   The path provided for data repository export isn't valid.
 //
-//   * ErrCodeInvalidNetworkSettings "InvalidNetworkSettings"
+//   * InvalidNetworkSettings
 //   One or more network settings specified in the request are invalid. InvalidVpcId
 //   means that the ID passed for the virtual private cloud (VPC) is invalid.
 //   InvalidSubnetIds returns the list of IDs for subnets that are either invalid
@@ -458,14 +458,14 @@ func (c *FSx) CreateFileSystemRequest(input *CreateFileSystemInput) (req *reques
 //   of IDs for security groups that are either invalid or not part of the VPC
 //   specified.
 //
-//   * ErrCodeServiceLimitExceeded "ServiceLimitExceeded"
+//   * ServiceLimitExceeded
 //   An error indicating that a particular service limit was exceeded. You can
 //   increase some service limits by contacting AWS Support.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
-//   * ErrCodeMissingFileSystemConfiguration "MissingFileSystemConfiguration"
+//   * MissingFileSystemConfiguration
 //   File system configuration is required for this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/CreateFileSystem
@@ -573,19 +573,19 @@ func (c *FSx) CreateFileSystemFromBackupRequest(input *CreateFileSystemFromBacku
 // See the AWS API reference guide for Amazon FSx's
 // API operation CreateFileSystemFromBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeActiveDirectoryError "ActiveDirectoryError"
+//   * ActiveDirectoryError
 //   An Active Directory error.
 //
-//   * ErrCodeIncompatibleParameterError "IncompatibleParameterError"
+//   * IncompatibleParameterError
 //   The error returned when a second request is received with the same client
 //   request token but different parameters settings. A client request token should
 //   always uniquely identify a single request.
 //
-//   * ErrCodeInvalidNetworkSettings "InvalidNetworkSettings"
+//   * InvalidNetworkSettings
 //   One or more network settings specified in the request are invalid. InvalidVpcId
 //   means that the ID passed for the virtual private cloud (VPC) is invalid.
 //   InvalidSubnetIds returns the list of IDs for subnets that are either invalid
@@ -593,17 +593,17 @@ func (c *FSx) CreateFileSystemFromBackupRequest(input *CreateFileSystemFromBacku
 //   of IDs for security groups that are either invalid or not part of the VPC
 //   specified.
 //
-//   * ErrCodeServiceLimitExceeded "ServiceLimitExceeded"
+//   * ServiceLimitExceeded
 //   An error indicating that a particular service limit was exceeded. You can
 //   increase some service limits by contacting AWS Support.
 //
-//   * ErrCodeBackupNotFound "BackupNotFound"
+//   * BackupNotFound
 //   No Amazon FSx backups were found based upon the supplied parameters.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
-//   * ErrCodeMissingFileSystemConfiguration "MissingFileSystemConfiguration"
+//   * MissingFileSystemConfiguration
 //   File system configuration is required for this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/CreateFileSystemFromBackup
@@ -688,26 +688,26 @@ func (c *FSx) DeleteBackupRequest(input *DeleteBackupInput) (req *request.Reques
 // See the AWS API reference guide for Amazon FSx's
 // API operation DeleteBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeBackupInProgress "BackupInProgress"
+//   * BackupInProgress
 //   Another backup is already under way. Wait for completion before initiating
 //   additional backups of this file system.
 //
-//   * ErrCodeBackupNotFound "BackupNotFound"
+//   * BackupNotFound
 //   No Amazon FSx backups were found based upon the supplied parameters.
 //
-//   * ErrCodeBackupRestoring "BackupRestoring"
+//   * BackupRestoring
 //   You can't delete a backup while it's being used to restore a file system.
 //
-//   * ErrCodeIncompatibleParameterError "IncompatibleParameterError"
+//   * IncompatibleParameterError
 //   The error returned when a second request is received with the same client
 //   request token but different parameters settings. A client request token should
 //   always uniquely identify a single request.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/DeleteBackup
@@ -803,23 +803,23 @@ func (c *FSx) DeleteFileSystemRequest(input *DeleteFileSystemInput) (req *reques
 // See the AWS API reference guide for Amazon FSx's
 // API operation DeleteFileSystem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeIncompatibleParameterError "IncompatibleParameterError"
+//   * IncompatibleParameterError
 //   The error returned when a second request is received with the same client
 //   request token but different parameters settings. A client request token should
 //   always uniquely identify a single request.
 //
-//   * ErrCodeFileSystemNotFound "FileSystemNotFound"
+//   * FileSystemNotFound
 //   No Amazon FSx file systems were found based upon supplied parameters.
 //
-//   * ErrCodeServiceLimitExceeded "ServiceLimitExceeded"
+//   * ServiceLimitExceeded
 //   An error indicating that a particular service limit was exceeded. You can
 //   increase some service limits by contacting AWS Support.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/DeleteFileSystem
@@ -926,17 +926,17 @@ func (c *FSx) DescribeBackupsRequest(input *DescribeBackupsInput) (req *request.
 // See the AWS API reference guide for Amazon FSx's
 // API operation DescribeBackups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeFileSystemNotFound "FileSystemNotFound"
+//   * FileSystemNotFound
 //   No Amazon FSx file systems were found based upon supplied parameters.
 //
-//   * ErrCodeBackupNotFound "BackupNotFound"
+//   * BackupNotFound
 //   No Amazon FSx backups were found based upon the supplied parameters.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/DescribeBackups
@@ -1083,17 +1083,17 @@ func (c *FSx) DescribeDataRepositoryTasksRequest(input *DescribeDataRepositoryTa
 // See the AWS API reference guide for Amazon FSx's
 // API operation DescribeDataRepositoryTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeFileSystemNotFound "FileSystemNotFound"
+//   * FileSystemNotFound
 //   No Amazon FSx file systems were found based upon supplied parameters.
 //
-//   * ErrCodeDataRepositoryTaskNotFound "DataRepositoryTaskNotFound"
+//   * DataRepositoryTaskNotFound
 //   The data repository task or tasks you specified could not be found.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/DescribeDataRepositoryTasks
@@ -1252,14 +1252,14 @@ func (c *FSx) DescribeFileSystemsRequest(input *DescribeFileSystemsInput) (req *
 // See the AWS API reference guide for Amazon FSx's
 // API operation DescribeFileSystems for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeFileSystemNotFound "FileSystemNotFound"
+//   * FileSystemNotFound
 //   No Amazon FSx file systems were found based upon supplied parameters.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/DescribeFileSystems
@@ -1410,21 +1410,21 @@ func (c *FSx) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // See the AWS API reference guide for Amazon FSx's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   The resource specified by the Amazon Resource Name (ARN) can't be found.
 //
-//   * ErrCodeNotServiceResourceError "NotServiceResourceError"
+//   * NotServiceResourceError
 //   The resource specified for the tagging operation is not a resource type owned
 //   by Amazon FSx. Use the API of the relevant service to perform the operation.
 //
-//   * ErrCodeResourceDoesNotSupportTagging "ResourceDoesNotSupportTagging"
+//   * ResourceDoesNotSupportTagging
 //   The resource specified does not support tagging.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/ListTagsForResource
@@ -1503,21 +1503,21 @@ func (c *FSx) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 // See the AWS API reference guide for Amazon FSx's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   The resource specified by the Amazon Resource Name (ARN) can't be found.
 //
-//   * ErrCodeNotServiceResourceError "NotServiceResourceError"
+//   * NotServiceResourceError
 //   The resource specified for the tagging operation is not a resource type owned
 //   by Amazon FSx. Use the API of the relevant service to perform the operation.
 //
-//   * ErrCodeResourceDoesNotSupportTagging "ResourceDoesNotSupportTagging"
+//   * ResourceDoesNotSupportTagging
 //   The resource specified does not support tagging.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/TagResource
@@ -1596,21 +1596,21 @@ func (c *FSx) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 // See the AWS API reference guide for Amazon FSx's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   The resource specified by the Amazon Resource Name (ARN) can't be found.
 //
-//   * ErrCodeNotServiceResourceError "NotServiceResourceError"
+//   * NotServiceResourceError
 //   The resource specified for the tagging operation is not a resource type owned
 //   by Amazon FSx. Use the API of the relevant service to perform the operation.
 //
-//   * ErrCodeResourceDoesNotSupportTagging "ResourceDoesNotSupportTagging"
+//   * ResourceDoesNotSupportTagging
 //   The resource specified does not support tagging.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/UntagResource
@@ -1688,25 +1688,25 @@ func (c *FSx) UpdateFileSystemRequest(input *UpdateFileSystemInput) (req *reques
 // See the AWS API reference guide for Amazon FSx's
 // API operation UpdateFileSystem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequest "BadRequest"
+// Returned Error Types:
+//   * BadRequest
 //   A generic error indicating a failure with a client request.
 //
-//   * ErrCodeUnsupportedOperation "UnsupportedOperation"
+//   * UnsupportedOperation
 //   The requested operation is not supported for this resource or API.
 //
-//   * ErrCodeIncompatibleParameterError "IncompatibleParameterError"
+//   * IncompatibleParameterError
 //   The error returned when a second request is received with the same client
 //   request token but different parameters settings. A client request token should
 //   always uniquely identify a single request.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   A generic error indicating a server-side failure.
 //
-//   * ErrCodeFileSystemNotFound "FileSystemNotFound"
+//   * FileSystemNotFound
 //   No Amazon FSx file systems were found based upon supplied parameters.
 //
-//   * ErrCodeMissingFileSystemConfiguration "MissingFileSystemConfiguration"
+//   * MissingFileSystemConfiguration
 //   File system configuration is required for this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/UpdateFileSystem
@@ -1764,6 +1764,71 @@ func (s *ActiveDirectoryBackupAttributes) SetActiveDirectoryId(v string) *Active
 func (s *ActiveDirectoryBackupAttributes) SetDomainName(v string) *ActiveDirectoryBackupAttributes {
 	s.DomainName = &v
 	return s
+}
+
+// An Active Directory error.
+type ActiveDirectoryError struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The directory ID of the directory that an error pertains to.
+	//
+	// ActiveDirectoryId is a required field
+	ActiveDirectoryId *string `min:"12" type:"string" required:"true"`
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+
+	// The type of Active Directory error.
+	Type *string `type:"string" enum:"ActiveDirectoryErrorType"`
+}
+
+// String returns the string representation
+func (s ActiveDirectoryError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ActiveDirectoryError) GoString() string {
+	return s.String()
+}
+
+func newErrorActiveDirectoryError(v protocol.ResponseMetadata) error {
+	return &ActiveDirectoryError{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ActiveDirectoryError) Code() string {
+	return "ActiveDirectoryError"
+}
+
+// Message returns the exception's message.
+func (s ActiveDirectoryError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ActiveDirectoryError) OrigErr() error {
+	return nil
+}
+
+func (s ActiveDirectoryError) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ActiveDirectoryError) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ActiveDirectoryError) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A backup of an Amazon FSx for Windows File Server file system. You can create
@@ -1917,6 +1982,238 @@ func (s BackupFailureDetails) GoString() string {
 func (s *BackupFailureDetails) SetMessage(v string) *BackupFailureDetails {
 	s.Message = &v
 	return s
+}
+
+// Another backup is already under way. Wait for completion before initiating
+// additional backups of this file system.
+type BackupInProgress struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s BackupInProgress) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BackupInProgress) GoString() string {
+	return s.String()
+}
+
+func newErrorBackupInProgress(v protocol.ResponseMetadata) error {
+	return &BackupInProgress{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BackupInProgress) Code() string {
+	return "BackupInProgress"
+}
+
+// Message returns the exception's message.
+func (s BackupInProgress) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BackupInProgress) OrigErr() error {
+	return nil
+}
+
+func (s BackupInProgress) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BackupInProgress) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BackupInProgress) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// No Amazon FSx backups were found based upon the supplied parameters.
+type BackupNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s BackupNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BackupNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorBackupNotFound(v protocol.ResponseMetadata) error {
+	return &BackupNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BackupNotFound) Code() string {
+	return "BackupNotFound"
+}
+
+// Message returns the exception's message.
+func (s BackupNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BackupNotFound) OrigErr() error {
+	return nil
+}
+
+func (s BackupNotFound) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BackupNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BackupNotFound) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You can't delete a backup while it's being used to restore a file system.
+type BackupRestoring struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The ID of a file system being restored from the backup.
+	FileSystemId *string `min:"11" type:"string"`
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s BackupRestoring) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BackupRestoring) GoString() string {
+	return s.String()
+}
+
+func newErrorBackupRestoring(v protocol.ResponseMetadata) error {
+	return &BackupRestoring{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BackupRestoring) Code() string {
+	return "BackupRestoring"
+}
+
+// Message returns the exception's message.
+func (s BackupRestoring) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BackupRestoring) OrigErr() error {
+	return nil
+}
+
+func (s BackupRestoring) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BackupRestoring) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BackupRestoring) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A generic error indicating a failure with a client request.
+type BadRequest struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequest) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequest(v protocol.ResponseMetadata) error {
+	return &BadRequest{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequest) Code() string {
+	return "BadRequest"
+}
+
+// Message returns the exception's message.
+func (s BadRequest) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequest) OrigErr() error {
+	return nil
+}
+
+func (s BadRequest) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequest) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequest) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Cancels a data repository task.
@@ -3183,6 +3480,122 @@ func (s *DataRepositoryTask) SetType(v string) *DataRepositoryTask {
 	return s
 }
 
+// The data repository task could not be canceled because the task has already
+// ended.
+type DataRepositoryTaskEnded struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DataRepositoryTaskEnded) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DataRepositoryTaskEnded) GoString() string {
+	return s.String()
+}
+
+func newErrorDataRepositoryTaskEnded(v protocol.ResponseMetadata) error {
+	return &DataRepositoryTaskEnded{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DataRepositoryTaskEnded) Code() string {
+	return "DataRepositoryTaskEnded"
+}
+
+// Message returns the exception's message.
+func (s DataRepositoryTaskEnded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DataRepositoryTaskEnded) OrigErr() error {
+	return nil
+}
+
+func (s DataRepositoryTaskEnded) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DataRepositoryTaskEnded) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DataRepositoryTaskEnded) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An existing data repository task is currently executing on the file system.
+// Wait until the existing task has completed, then create the new task.
+type DataRepositoryTaskExecuting struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DataRepositoryTaskExecuting) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DataRepositoryTaskExecuting) GoString() string {
+	return s.String()
+}
+
+func newErrorDataRepositoryTaskExecuting(v protocol.ResponseMetadata) error {
+	return &DataRepositoryTaskExecuting{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DataRepositoryTaskExecuting) Code() string {
+	return "DataRepositoryTaskExecuting"
+}
+
+// Message returns the exception's message.
+func (s DataRepositoryTaskExecuting) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DataRepositoryTaskExecuting) OrigErr() error {
+	return nil
+}
+
+func (s DataRepositoryTaskExecuting) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DataRepositoryTaskExecuting) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DataRepositoryTaskExecuting) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Provides information about why a data repository task failed. Only populated
 // when the task Lifecycle is set to FAILED.
 type DataRepositoryTaskFailureDetails struct {
@@ -3251,6 +3664,63 @@ func (s *DataRepositoryTaskFilter) SetName(v string) *DataRepositoryTaskFilter {
 func (s *DataRepositoryTaskFilter) SetValues(v []*string) *DataRepositoryTaskFilter {
 	s.Values = v
 	return s
+}
+
+// The data repository task or tasks you specified could not be found.
+type DataRepositoryTaskNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DataRepositoryTaskNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DataRepositoryTaskNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorDataRepositoryTaskNotFound(v protocol.ResponseMetadata) error {
+	return &DataRepositoryTaskNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DataRepositoryTaskNotFound) Code() string {
+	return "DataRepositoryTaskNotFound"
+}
+
+// Message returns the exception's message.
+func (s DataRepositoryTaskNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DataRepositoryTaskNotFound) OrigErr() error {
+	return nil
+}
+
+func (s DataRepositoryTaskNotFound) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DataRepositoryTaskNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DataRepositoryTaskNotFound) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Provides the task status showing a running total of the total number of files
@@ -4135,6 +4605,63 @@ func (s *FileSystemFailureDetails) SetMessage(v string) *FileSystemFailureDetail
 	return s
 }
 
+// No Amazon FSx file systems were found based upon supplied parameters.
+type FileSystemNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s FileSystemNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileSystemNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorFileSystemNotFound(v protocol.ResponseMetadata) error {
+	return &FileSystemNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FileSystemNotFound) Code() string {
+	return "FileSystemNotFound"
+}
+
+// Message returns the exception's message.
+func (s FileSystemNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FileSystemNotFound) OrigErr() error {
+	return nil
+}
+
+func (s FileSystemNotFound) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FileSystemNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FileSystemNotFound) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // A filter used to restrict the results of describe calls. You can use multiple
 // filters to return results that meet all applied filter requirements.
 type Filter struct {
@@ -4168,6 +4695,315 @@ func (s *Filter) SetName(v string) *Filter {
 func (s *Filter) SetValues(v []*string) *Filter {
 	s.Values = v
 	return s
+}
+
+// The error returned when a second request is received with the same client
+// request token but different parameters settings. A client request token should
+// always uniquely identify a single request.
+type IncompatibleParameterError struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+
+	// A parameter that is incompatible with the earlier request.
+	//
+	// Parameter is a required field
+	Parameter *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s IncompatibleParameterError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IncompatibleParameterError) GoString() string {
+	return s.String()
+}
+
+func newErrorIncompatibleParameterError(v protocol.ResponseMetadata) error {
+	return &IncompatibleParameterError{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IncompatibleParameterError) Code() string {
+	return "IncompatibleParameterError"
+}
+
+// Message returns the exception's message.
+func (s IncompatibleParameterError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IncompatibleParameterError) OrigErr() error {
+	return nil
+}
+
+func (s IncompatibleParameterError) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IncompatibleParameterError) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IncompatibleParameterError) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A generic error indicating a server-side failure.
+type InternalServerError struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerError) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerError(v protocol.ResponseMetadata) error {
+	return &InternalServerError{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerError) Code() string {
+	return "InternalServerError"
+}
+
+// Message returns the exception's message.
+func (s InternalServerError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerError) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerError) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerError) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerError) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The path provided for data repository export isn't valid.
+type InvalidExportPath struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidExportPath) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidExportPath) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidExportPath(v protocol.ResponseMetadata) error {
+	return &InvalidExportPath{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidExportPath) Code() string {
+	return "InvalidExportPath"
+}
+
+// Message returns the exception's message.
+func (s InvalidExportPath) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidExportPath) OrigErr() error {
+	return nil
+}
+
+func (s InvalidExportPath) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidExportPath) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidExportPath) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The path provided for data repository import isn't valid.
+type InvalidImportPath struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidImportPath) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidImportPath) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidImportPath(v protocol.ResponseMetadata) error {
+	return &InvalidImportPath{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidImportPath) Code() string {
+	return "InvalidImportPath"
+}
+
+// Message returns the exception's message.
+func (s InvalidImportPath) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidImportPath) OrigErr() error {
+	return nil
+}
+
+func (s InvalidImportPath) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidImportPath) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidImportPath) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// One or more network settings specified in the request are invalid. InvalidVpcId
+// means that the ID passed for the virtual private cloud (VPC) is invalid.
+// InvalidSubnetIds returns the list of IDs for subnets that are either invalid
+// or not part of the VPC specified. InvalidSecurityGroupIds returns the list
+// of IDs for security groups that are either invalid or not part of the VPC
+// specified.
+type InvalidNetworkSettings struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The ID of your Amazon EC2 security group. This ID is used to control network
+	// access to the endpoint that Amazon FSx creates on your behalf in each subnet.
+	// For more information, see Amazon EC2 Security Groups for Linux Instances
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html)
+	// in the Amazon EC2 User Guide.
+	InvalidSecurityGroupId *string `min:"11" type:"string"`
+
+	// The ID for a subnet. A subnet is a range of IP addresses in your virtual
+	// private cloud (VPC). For more information, see VPC and Subnets (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html)
+	// in the Amazon VPC User Guide.
+	InvalidSubnetId *string `min:"15" type:"string"`
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidNetworkSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNetworkSettings) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNetworkSettings(v protocol.ResponseMetadata) error {
+	return &InvalidNetworkSettings{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidNetworkSettings) Code() string {
+	return "InvalidNetworkSettings"
+}
+
+// Message returns the exception's message.
+func (s InvalidNetworkSettings) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidNetworkSettings) OrigErr() error {
+	return nil
+}
+
+func (s InvalidNetworkSettings) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidNetworkSettings) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidNetworkSettings) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The request object for ListTagsForResource operation.
@@ -4307,6 +5143,250 @@ func (s *LustreFileSystemConfiguration) SetDataRepositoryConfiguration(v *DataRe
 func (s *LustreFileSystemConfiguration) SetWeeklyMaintenanceStartTime(v string) *LustreFileSystemConfiguration {
 	s.WeeklyMaintenanceStartTime = &v
 	return s
+}
+
+// File system configuration is required for this operation.
+type MissingFileSystemConfiguration struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s MissingFileSystemConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MissingFileSystemConfiguration) GoString() string {
+	return s.String()
+}
+
+func newErrorMissingFileSystemConfiguration(v protocol.ResponseMetadata) error {
+	return &MissingFileSystemConfiguration{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MissingFileSystemConfiguration) Code() string {
+	return "MissingFileSystemConfiguration"
+}
+
+// Message returns the exception's message.
+func (s MissingFileSystemConfiguration) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MissingFileSystemConfiguration) OrigErr() error {
+	return nil
+}
+
+func (s MissingFileSystemConfiguration) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MissingFileSystemConfiguration) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MissingFileSystemConfiguration) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource specified for the tagging operation is not a resource type owned
+// by Amazon FSx. Use the API of the relevant service to perform the operation.
+type NotServiceResourceError struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the non-Amazon FSx resource.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"8" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s NotServiceResourceError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotServiceResourceError) GoString() string {
+	return s.String()
+}
+
+func newErrorNotServiceResourceError(v protocol.ResponseMetadata) error {
+	return &NotServiceResourceError{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotServiceResourceError) Code() string {
+	return "NotServiceResourceError"
+}
+
+// Message returns the exception's message.
+func (s NotServiceResourceError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotServiceResourceError) OrigErr() error {
+	return nil
+}
+
+func (s NotServiceResourceError) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotServiceResourceError) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotServiceResourceError) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource specified does not support tagging.
+type ResourceDoesNotSupportTagging struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the resource that doesn't support tagging.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"8" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResourceDoesNotSupportTagging) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDoesNotSupportTagging) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceDoesNotSupportTagging(v protocol.ResponseMetadata) error {
+	return &ResourceDoesNotSupportTagging{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceDoesNotSupportTagging) Code() string {
+	return "ResourceDoesNotSupportTagging"
+}
+
+// Message returns the exception's message.
+func (s ResourceDoesNotSupportTagging) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceDoesNotSupportTagging) OrigErr() error {
+	return nil
+}
+
+func (s ResourceDoesNotSupportTagging) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceDoesNotSupportTagging) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceDoesNotSupportTagging) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource specified by the Amazon Resource Name (ARN) can't be found.
+type ResourceNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+
+	// The resource ARN of the resource that can't be found.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"8" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResourceNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFound(v protocol.ResponseMetadata) error {
+	return &ResourceNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFound) Code() string {
+	return "ResourceNotFound"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFound) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFound) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFound) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The configuration of the self-managed Microsoft Active Directory (AD) directory
@@ -4591,6 +5671,69 @@ func (s *SelfManagedActiveDirectoryConfigurationUpdates) SetUserName(v string) *
 	return s
 }
 
+// An error indicating that a particular service limit was exceeded. You can
+// increase some service limits by contacting AWS Support.
+type ServiceLimitExceeded struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// Enumeration of the service limit that was exceeded.
+	//
+	// Limit is a required field
+	Limit *string `type:"string" required:"true" enum:"ServiceLimit"`
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceLimitExceeded) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceLimitExceeded) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceLimitExceeded(v protocol.ResponseMetadata) error {
+	return &ServiceLimitExceeded{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceLimitExceeded) Code() string {
+	return "ServiceLimitExceeded"
+}
+
+// Message returns the exception's message.
+func (s ServiceLimitExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceLimitExceeded) OrigErr() error {
+	return nil
+}
+
+func (s ServiceLimitExceeded) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceLimitExceeded) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceLimitExceeded) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Specifies a key-value pair for a resource tag.
 type Tag struct {
 	_ struct{} `type:"structure"`
@@ -4725,6 +5868,63 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// The requested operation is not supported for this resource or API.
+type UnsupportedOperation struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UnsupportedOperation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedOperation) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedOperation(v protocol.ResponseMetadata) error {
+	return &UnsupportedOperation{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnsupportedOperation) Code() string {
+	return "UnsupportedOperation"
+}
+
+// Message returns the exception's message.
+func (s UnsupportedOperation) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnsupportedOperation) OrigErr() error {
+	return nil
+}
+
+func (s UnsupportedOperation) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnsupportedOperation) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnsupportedOperation) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The request object for UntagResource action.

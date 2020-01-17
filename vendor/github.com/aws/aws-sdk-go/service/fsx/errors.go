@@ -2,6 +2,10 @@
 
 package fsx
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeActiveDirectoryError for service response error code
@@ -136,3 +140,26 @@ const (
 	// The requested operation is not supported for this resource or API.
 	ErrCodeUnsupportedOperation = "UnsupportedOperation"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ActiveDirectoryError":           newErrorActiveDirectoryError,
+	"BackupInProgress":               newErrorBackupInProgress,
+	"BackupNotFound":                 newErrorBackupNotFound,
+	"BackupRestoring":                newErrorBackupRestoring,
+	"BadRequest":                     newErrorBadRequest,
+	"DataRepositoryTaskEnded":        newErrorDataRepositoryTaskEnded,
+	"DataRepositoryTaskExecuting":    newErrorDataRepositoryTaskExecuting,
+	"DataRepositoryTaskNotFound":     newErrorDataRepositoryTaskNotFound,
+	"FileSystemNotFound":             newErrorFileSystemNotFound,
+	"IncompatibleParameterError":     newErrorIncompatibleParameterError,
+	"InternalServerError":            newErrorInternalServerError,
+	"InvalidExportPath":              newErrorInvalidExportPath,
+	"InvalidImportPath":              newErrorInvalidImportPath,
+	"InvalidNetworkSettings":         newErrorInvalidNetworkSettings,
+	"MissingFileSystemConfiguration": newErrorMissingFileSystemConfiguration,
+	"NotServiceResourceError":        newErrorNotServiceResourceError,
+	"ResourceDoesNotSupportTagging":  newErrorResourceDoesNotSupportTagging,
+	"ResourceNotFound":               newErrorResourceNotFound,
+	"ServiceLimitExceeded":           newErrorServiceLimitExceeded,
+	"UnsupportedOperation":           newErrorUnsupportedOperation,
+}

@@ -2,6 +2,10 @@
 
 package marketplacecatalog
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -52,3 +56,14 @@ const (
 	// An error occurred during validation.
 	ErrCodeValidationException = "ValidationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":         newErrorAccessDeniedException,
+	"InternalServiceException":      newErrorInternalServiceException,
+	"ResourceInUseException":        newErrorResourceInUseException,
+	"ResourceNotFoundException":     newErrorResourceNotFoundException,
+	"ResourceNotSupportedException": newErrorResourceNotSupportedException,
+	"ServiceQuotaExceededException": newErrorServiceQuotaExceededException,
+	"ThrottlingException":           newErrorThrottlingException,
+	"ValidationException":           newErrorValidationException,
+}

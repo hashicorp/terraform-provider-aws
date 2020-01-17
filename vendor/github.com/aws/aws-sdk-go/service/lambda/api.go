@@ -3,6 +3,7 @@
 package lambda
 
 import (
+	"fmt"
 	"io"
 	"time"
 
@@ -73,26 +74,26 @@ func (c *Lambda) AddLayerVersionPermissionRequest(input *AddLayerVersionPermissi
 // See the AWS API reference guide for AWS Lambda's
 // API operation AddLayerVersionPermission for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodePolicyLengthExceededException "PolicyLengthExceededException"
+//   * PolicyLengthExceededException
 //   The permissions policy for the resource is too large. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
@@ -188,26 +189,26 @@ func (c *Lambda) AddPermissionRequest(input *AddPermissionInput) (req *request.R
 // See the AWS API reference guide for AWS Lambda's
 // API operation AddPermission for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodePolicyLengthExceededException "PolicyLengthExceededException"
+//   * PolicyLengthExceededException
 //   The permissions policy for the resource is too large. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
@@ -293,20 +294,20 @@ func (c *Lambda) CreateAliasRequest(input *CreateAliasInput) (req *request.Reque
 // See the AWS API reference guide for AWS Lambda's
 // API operation CreateAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateAlias
@@ -408,20 +409,20 @@ func (c *Lambda) CreateEventSourceMappingRequest(input *CreateEventSourceMapping
 // See the AWS API reference guide for AWS Lambda's
 // API operation CreateEventSourceMapping for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateEventSourceMapping
@@ -534,23 +535,23 @@ func (c *Lambda) CreateFunctionRequest(input *CreateFunctionInput) (req *request
 // See the AWS API reference guide for AWS Lambda's
 // API operation CreateFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
+//   * CodeStorageExceededException
 //   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateFunction
@@ -629,17 +630,17 @@ func (c *Lambda) DeleteAliasRequest(input *DeleteAliasInput) (req *request.Reque
 // See the AWS API reference guide for AWS Lambda's
 // API operation DeleteAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteAlias
@@ -721,20 +722,20 @@ func (c *Lambda) DeleteEventSourceMappingRequest(input *DeleteEventSourceMapping
 // See the AWS API reference guide for AWS Lambda's
 // API operation DeleteEventSourceMapping for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to update an EventSource Mapping in CREATING, or tried to delete
 //   a EventSource mapping currently in the UPDATING state.
@@ -820,20 +821,20 @@ func (c *Lambda) DeleteFunctionRequest(input *DeleteFunctionInput) (req *request
 // See the AWS API reference guide for AWS Lambda's
 // API operation DeleteFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteFunction
@@ -912,20 +913,20 @@ func (c *Lambda) DeleteFunctionConcurrencyRequest(input *DeleteFunctionConcurren
 // See the AWS API reference guide for AWS Lambda's
 // API operation DeleteFunctionConcurrency for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteFunctionConcurrency
@@ -1007,17 +1008,17 @@ func (c *Lambda) DeleteFunctionEventInvokeConfigRequest(input *DeleteFunctionEve
 // See the AWS API reference guide for AWS Lambda's
 // API operation DeleteFunctionEventInvokeConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteFunctionEventInvokeConfig
@@ -1099,11 +1100,11 @@ func (c *Lambda) DeleteLayerVersionRequest(input *DeleteLayerVersionInput) (req 
 // See the AWS API reference guide for AWS Lambda's
 // API operation DeleteLayerVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteLayerVersion
@@ -1182,20 +1183,20 @@ func (c *Lambda) DeleteProvisionedConcurrencyConfigRequest(input *DeleteProvisio
 // See the AWS API reference guide for AWS Lambda's
 // API operation DeleteProvisionedConcurrencyConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteProvisionedConcurrencyConfig
@@ -1274,11 +1275,11 @@ func (c *Lambda) GetAccountSettingsRequest(input *GetAccountSettingsInput) (req 
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetAccountSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+// Returned Error Types:
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetAccountSettings
@@ -1356,17 +1357,17 @@ func (c *Lambda) GetAliasRequest(input *GetAliasInput) (req *request.Request, ou
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetAlias
@@ -1445,17 +1446,17 @@ func (c *Lambda) GetEventSourceMappingRequest(input *GetEventSourceMappingInput)
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetEventSourceMapping for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetEventSourceMapping
@@ -1535,17 +1536,17 @@ func (c *Lambda) GetFunctionRequest(input *GetFunctionInput) (req *request.Reque
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunction
@@ -1624,17 +1625,17 @@ func (c *Lambda) GetFunctionConcurrencyRequest(input *GetFunctionConcurrencyInpu
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetFunctionConcurrency for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionConcurrency
@@ -1717,17 +1718,17 @@ func (c *Lambda) GetFunctionConfigurationRequest(input *GetFunctionConfiguration
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetFunctionConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionConfiguration
@@ -1808,17 +1809,17 @@ func (c *Lambda) GetFunctionEventInvokeConfigRequest(input *GetFunctionEventInvo
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetFunctionEventInvokeConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionEventInvokeConfig
@@ -1897,17 +1898,17 @@ func (c *Lambda) GetLayerVersionRequest(input *GetLayerVersionInput) (req *reque
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetLayerVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersion
@@ -1986,17 +1987,17 @@ func (c *Lambda) GetLayerVersionByArnRequest(input *GetLayerVersionByArnInput) (
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetLayerVersionByArn for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersionByArn
@@ -2075,17 +2076,17 @@ func (c *Lambda) GetLayerVersionPolicyRequest(input *GetLayerVersionPolicyInput)
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetLayerVersionPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersionPolicy
@@ -2164,17 +2165,17 @@ func (c *Lambda) GetPolicyRequest(input *GetPolicyInput) (req *request.Request, 
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetPolicy
@@ -2253,20 +2254,20 @@ func (c *Lambda) GetProvisionedConcurrencyConfigRequest(input *GetProvisionedCon
 // See the AWS API reference guide for AWS Lambda's
 // API operation GetProvisionedConcurrencyConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeProvisionedConcurrencyConfigNotFoundException "ProvisionedConcurrencyConfigNotFoundException"
+//   * ProvisionedConcurrencyConfigNotFoundException
 //   The specified configuration does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetProvisionedConcurrencyConfig
@@ -2380,82 +2381,82 @@ func (c *Lambda) InvokeRequest(input *InvokeInput) (req *request.Request, output
 // See the AWS API reference guide for AWS Lambda's
 // API operation Invoke for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidRequestContentException "InvalidRequestContentException"
+//   * InvalidRequestContentException
 //   The request body could not be parsed as JSON.
 //
-//   * ErrCodeRequestTooLargeException "RequestTooLargeException"
+//   * RequestTooLargeException
 //   The request payload exceeded the Invoke request body JSON input limit. For
 //   more information, see Limits (https://docs.aws.amazon.com/lambda/latest/dg/limits.html).
 //
-//   * ErrCodeUnsupportedMediaTypeException "UnsupportedMediaTypeException"
+//   * UnsupportedMediaTypeException
 //   The content type of the Invoke request body is not JSON.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeEC2UnexpectedException "EC2UnexpectedException"
+//   * EC2UnexpectedException
 //   AWS Lambda received an unexpected EC2 client exception while setting up for
 //   the Lambda function.
 //
-//   * ErrCodeSubnetIPAddressLimitReachedException "SubnetIPAddressLimitReachedException"
+//   * SubnetIPAddressLimitReachedException
 //   AWS Lambda was not able to set up VPC access for the Lambda function because
 //   one or more configured subnets has no available IP addresses.
 //
-//   * ErrCodeENILimitReachedException "ENILimitReachedException"
+//   * ENILimitReachedException
 //   AWS Lambda was not able to create an elastic network interface in the VPC,
 //   specified as part of Lambda function configuration, because the limit for
 //   network interfaces has been reached.
 //
-//   * ErrCodeEC2ThrottledException "EC2ThrottledException"
+//   * EC2ThrottledException
 //   AWS Lambda was throttled by Amazon EC2 during Lambda function initialization
 //   using the execution role provided for the Lambda function.
 //
-//   * ErrCodeEC2AccessDeniedException "EC2AccessDeniedException"
+//   * EC2AccessDeniedException
 //   Need additional permissions to configure VPC settings.
 //
-//   * ErrCodeInvalidSubnetIDException "InvalidSubnetIDException"
+//   * InvalidSubnetIDException
 //   The Subnet ID provided in the Lambda function VPC configuration is invalid.
 //
-//   * ErrCodeInvalidSecurityGroupIDException "InvalidSecurityGroupIDException"
+//   * InvalidSecurityGroupIDException
 //   The Security Group ID provided in the Lambda function VPC configuration is
 //   invalid.
 //
-//   * ErrCodeInvalidZipFileException "InvalidZipFileException"
+//   * InvalidZipFileException
 //   AWS Lambda could not unzip the deployment package.
 //
-//   * ErrCodeKMSDisabledException "KMSDisabledException"
+//   * KMSDisabledException
 //   Lambda was unable to decrypt the environment variables because the KMS key
 //   used is disabled. Check the Lambda function's KMS key settings.
 //
-//   * ErrCodeKMSInvalidStateException "KMSInvalidStateException"
+//   * KMSInvalidStateException
 //   Lambda was unable to decrypt the environment variables because the KMS key
 //   used is in an invalid state for Decrypt. Check the function's KMS key settings.
 //
-//   * ErrCodeKMSAccessDeniedException "KMSAccessDeniedException"
+//   * KMSAccessDeniedException
 //   Lambda was unable to decrypt the environment variables because KMS access
 //   was denied. Check the Lambda function's KMS permissions.
 //
-//   * ErrCodeKMSNotFoundException "KMSNotFoundException"
+//   * KMSNotFoundException
 //   Lambda was unable to decrypt the environment variables because the KMS key
 //   was not found. Check the function's KMS key settings.
 //
-//   * ErrCodeInvalidRuntimeException "InvalidRuntimeException"
+//   * InvalidRuntimeException
 //   The runtime or runtime version specified is not supported.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodeResourceNotReadyException "ResourceNotReadyException"
+//   * ResourceNotReadyException
 //   The function is inactive and its VPC connection is no longer available. Wait
 //   for the VPC connection to reestablish and try again.
 //
@@ -2542,20 +2543,20 @@ func (c *Lambda) InvokeAsyncRequest(input *InvokeAsyncInput) (req *request.Reque
 // See the AWS API reference guide for AWS Lambda's
 // API operation InvokeAsync for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidRequestContentException "InvalidRequestContentException"
+//   * InvalidRequestContentException
 //   The request body could not be parsed as JSON.
 //
-//   * ErrCodeInvalidRuntimeException "InvalidRuntimeException"
+//   * InvalidRuntimeException
 //   The runtime or runtime version specified is not supported.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/InvokeAsync
@@ -2644,17 +2645,17 @@ func (c *Lambda) ListAliasesRequest(input *ListAliasesInput) (req *request.Reque
 // See the AWS API reference guide for AWS Lambda's
 // API operation ListAliases for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListAliases
@@ -2791,17 +2792,17 @@ func (c *Lambda) ListEventSourceMappingsRequest(input *ListEventSourceMappingsIn
 // See the AWS API reference guide for AWS Lambda's
 // API operation ListEventSourceMappings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListEventSourceMappings
@@ -2939,17 +2940,17 @@ func (c *Lambda) ListFunctionEventInvokeConfigsRequest(input *ListFunctionEventI
 // See the AWS API reference guide for AWS Lambda's
 // API operation ListFunctionEventInvokeConfigs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListFunctionEventInvokeConfigs
@@ -3090,14 +3091,14 @@ func (c *Lambda) ListFunctionsRequest(input *ListFunctionsInput) (req *request.R
 // See the AWS API reference guide for AWS Lambda's
 // API operation ListFunctions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListFunctions
@@ -3236,17 +3237,17 @@ func (c *Lambda) ListLayerVersionsRequest(input *ListLayerVersionsInput) (req *r
 // See the AWS API reference guide for AWS Lambda's
 // API operation ListLayerVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListLayerVersions
@@ -3385,14 +3386,14 @@ func (c *Lambda) ListLayersRequest(input *ListLayersInput) (req *request.Request
 // See the AWS API reference guide for AWS Lambda's
 // API operation ListLayers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListLayers
@@ -3528,17 +3529,17 @@ func (c *Lambda) ListProvisionedConcurrencyConfigsRequest(input *ListProvisioned
 // See the AWS API reference guide for AWS Lambda's
 // API operation ListProvisionedConcurrencyConfigs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListProvisionedConcurrencyConfigs
@@ -3669,17 +3670,17 @@ func (c *Lambda) ListTagsRequest(input *ListTagsInput) (req *request.Request, ou
 // See the AWS API reference guide for AWS Lambda's
 // API operation ListTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListTags
@@ -3764,17 +3765,17 @@ func (c *Lambda) ListVersionsByFunctionRequest(input *ListVersionsByFunctionInpu
 // See the AWS API reference guide for AWS Lambda's
 // API operation ListVersionsByFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListVersionsByFunction
@@ -3908,20 +3909,20 @@ func (c *Lambda) PublishLayerVersionRequest(input *PublishLayerVersionInput) (re
 // See the AWS API reference guide for AWS Lambda's
 // API operation PublishLayerVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
+//   * CodeStorageExceededException
 //   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PublishLayerVersion
@@ -4008,28 +4009,28 @@ func (c *Lambda) PublishVersionRequest(input *PublishVersionInput) (req *request
 // See the AWS API reference guide for AWS Lambda's
 // API operation PublishVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
+//   * CodeStorageExceededException
 //   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PublishVersion
@@ -4120,20 +4121,20 @@ func (c *Lambda) PutFunctionConcurrencyRequest(input *PutFunctionConcurrencyInpu
 // See the AWS API reference guide for AWS Lambda's
 // API operation PutFunctionConcurrency for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutFunctionConcurrency
@@ -4218,17 +4219,17 @@ func (c *Lambda) PutFunctionEventInvokeConfigRequest(input *PutFunctionEventInvo
 // See the AWS API reference guide for AWS Lambda's
 // API operation PutFunctionEventInvokeConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutFunctionEventInvokeConfig
@@ -4306,20 +4307,20 @@ func (c *Lambda) PutProvisionedConcurrencyConfigRequest(input *PutProvisionedCon
 // See the AWS API reference guide for AWS Lambda's
 // API operation PutProvisionedConcurrencyConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutProvisionedConcurrencyConfig
@@ -4400,20 +4401,20 @@ func (c *Lambda) RemoveLayerVersionPermissionRequest(input *RemoveLayerVersionPe
 // See the AWS API reference guide for AWS Lambda's
 // API operation RemoveLayerVersionPermission for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
@@ -4495,20 +4496,20 @@ func (c *Lambda) RemovePermissionRequest(input *RemovePermissionInput) (req *req
 // See the AWS API reference guide for AWS Lambda's
 // API operation RemovePermission for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
@@ -4590,17 +4591,17 @@ func (c *Lambda) TagResourceRequest(input *TagResourceInput) (req *request.Reque
 // See the AWS API reference guide for AWS Lambda's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/TagResource
@@ -4680,17 +4681,17 @@ func (c *Lambda) UntagResourceRequest(input *UntagResourceInput) (req *request.R
 // See the AWS API reference guide for AWS Lambda's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UntagResource
@@ -4768,25 +4769,25 @@ func (c *Lambda) UpdateAliasRequest(input *UpdateAliasInput) (req *request.Reque
 // See the AWS API reference guide for AWS Lambda's
 // API operation UpdateAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateAlias
@@ -4880,23 +4881,23 @@ func (c *Lambda) UpdateEventSourceMappingRequest(input *UpdateEventSourceMapping
 // See the AWS API reference guide for AWS Lambda's
 // API operation UpdateEventSourceMapping for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to update an EventSource Mapping in CREATING, or tried to delete
 //   a EventSource mapping currently in the UPDATING state.
@@ -4979,28 +4980,28 @@ func (c *Lambda) UpdateFunctionCodeRequest(input *UpdateFunctionCodeInput) (req 
 // See the AWS API reference guide for AWS Lambda's
 // API operation UpdateFunctionCode for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
+//   * CodeStorageExceededException
 //   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateFunctionCode
@@ -5093,23 +5094,23 @@ func (c *Lambda) UpdateFunctionConfigurationRequest(input *UpdateFunctionConfigu
 // See the AWS API reference guide for AWS Lambda's
 // API operation UpdateFunctionConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
-//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   * ResourceConflictException
 //   The resource already exists, or another operation is in progress.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
@@ -5192,17 +5193,17 @@ func (c *Lambda) UpdateFunctionEventInvokeConfigRequest(input *UpdateFunctionEve
 // See the AWS API reference guide for AWS Lambda's
 // API operation UpdateFunctionEventInvokeConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   The AWS Lambda service encountered an internal error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource specified in the request does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateFunctionEventInvokeConfig
@@ -5755,6 +5756,65 @@ func (s AliasRoutingConfiguration) GoString() string {
 func (s *AliasRoutingConfiguration) SetAdditionalVersionWeights(v map[string]*float64) *AliasRoutingConfiguration {
 	s.AdditionalVersionWeights = v
 	return s
+}
+
+// You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
+type CodeStorageExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The exception type.
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CodeStorageExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CodeStorageExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorCodeStorageExceededException(v protocol.ResponseMetadata) error {
+	return &CodeStorageExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CodeStorageExceededException) Code() string {
+	return "CodeStorageExceededException"
+}
+
+// Message returns the exception's message.
+func (s CodeStorageExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CodeStorageExceededException) OrigErr() error {
+	return nil
+}
+
+func (s CodeStorageExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CodeStorageExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CodeStorageExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type CreateAliasInput struct {
@@ -6840,6 +6900,244 @@ func (s *DestinationConfig) SetOnFailure(v *OnFailure) *DestinationConfig {
 func (s *DestinationConfig) SetOnSuccess(v *OnSuccess) *DestinationConfig {
 	s.OnSuccess = v
 	return s
+}
+
+// Need additional permissions to configure VPC settings.
+type EC2AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EC2AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EC2AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorEC2AccessDeniedException(v protocol.ResponseMetadata) error {
+	return &EC2AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EC2AccessDeniedException) Code() string {
+	return "EC2AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s EC2AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EC2AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s EC2AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EC2AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EC2AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS Lambda was throttled by Amazon EC2 during Lambda function initialization
+// using the execution role provided for the Lambda function.
+type EC2ThrottledException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EC2ThrottledException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EC2ThrottledException) GoString() string {
+	return s.String()
+}
+
+func newErrorEC2ThrottledException(v protocol.ResponseMetadata) error {
+	return &EC2ThrottledException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EC2ThrottledException) Code() string {
+	return "EC2ThrottledException"
+}
+
+// Message returns the exception's message.
+func (s EC2ThrottledException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EC2ThrottledException) OrigErr() error {
+	return nil
+}
+
+func (s EC2ThrottledException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EC2ThrottledException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EC2ThrottledException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS Lambda received an unexpected EC2 client exception while setting up for
+// the Lambda function.
+type EC2UnexpectedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	EC2ErrorCode *string `type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EC2UnexpectedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EC2UnexpectedException) GoString() string {
+	return s.String()
+}
+
+func newErrorEC2UnexpectedException(v protocol.ResponseMetadata) error {
+	return &EC2UnexpectedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EC2UnexpectedException) Code() string {
+	return "EC2UnexpectedException"
+}
+
+// Message returns the exception's message.
+func (s EC2UnexpectedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EC2UnexpectedException) OrigErr() error {
+	return nil
+}
+
+func (s EC2UnexpectedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EC2UnexpectedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EC2UnexpectedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS Lambda was not able to create an elastic network interface in the VPC,
+// specified as part of Lambda function configuration, because the limit for
+// network interfaces has been reached.
+type ENILimitReachedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ENILimitReachedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ENILimitReachedException) GoString() string {
+	return s.String()
+}
+
+func newErrorENILimitReachedException(v protocol.ResponseMetadata) error {
+	return &ENILimitReachedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ENILimitReachedException) Code() string {
+	return "ENILimitReachedException"
+}
+
+// Message returns the exception's message.
+func (s ENILimitReachedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ENILimitReachedException) OrigErr() error {
+	return nil
+}
+
+func (s ENILimitReachedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ENILimitReachedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ENILimitReachedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A function's environment variable settings.
@@ -8652,6 +8950,359 @@ func (s *GetProvisionedConcurrencyConfigOutput) SetStatusReason(v string) *GetPr
 	return s
 }
 
+// One of the parameters in the request is invalid.
+type InvalidParameterValueException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The exception message.
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The exception type.
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidParameterValueException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterValueException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterValueException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterValueException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParameterValueException) Code() string {
+	return "InvalidParameterValueException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParameterValueException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParameterValueException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParameterValueException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParameterValueException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParameterValueException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The request body could not be parsed as JSON.
+type InvalidRequestContentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The exception message.
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The exception type.
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestContentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestContentException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestContentException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestContentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestContentException) Code() string {
+	return "InvalidRequestContentException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestContentException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestContentException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestContentException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestContentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestContentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The runtime or runtime version specified is not supported.
+type InvalidRuntimeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRuntimeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRuntimeException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRuntimeException(v protocol.ResponseMetadata) error {
+	return &InvalidRuntimeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRuntimeException) Code() string {
+	return "InvalidRuntimeException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRuntimeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRuntimeException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRuntimeException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRuntimeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRuntimeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The Security Group ID provided in the Lambda function VPC configuration is
+// invalid.
+type InvalidSecurityGroupIDException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidSecurityGroupIDException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidSecurityGroupIDException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidSecurityGroupIDException(v protocol.ResponseMetadata) error {
+	return &InvalidSecurityGroupIDException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidSecurityGroupIDException) Code() string {
+	return "InvalidSecurityGroupIDException"
+}
+
+// Message returns the exception's message.
+func (s InvalidSecurityGroupIDException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidSecurityGroupIDException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidSecurityGroupIDException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidSecurityGroupIDException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidSecurityGroupIDException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The Subnet ID provided in the Lambda function VPC configuration is invalid.
+type InvalidSubnetIDException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidSubnetIDException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidSubnetIDException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidSubnetIDException(v protocol.ResponseMetadata) error {
+	return &InvalidSubnetIDException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidSubnetIDException) Code() string {
+	return "InvalidSubnetIDException"
+}
+
+// Message returns the exception's message.
+func (s InvalidSubnetIDException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidSubnetIDException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidSubnetIDException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidSubnetIDException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidSubnetIDException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS Lambda could not unzip the deployment package.
+type InvalidZipFileException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidZipFileException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidZipFileException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidZipFileException(v protocol.ResponseMetadata) error {
+	return &InvalidZipFileException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidZipFileException) Code() string {
+	return "InvalidZipFileException"
+}
+
+// Message returns the exception's message.
+func (s InvalidZipFileException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidZipFileException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidZipFileException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidZipFileException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidZipFileException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Deprecated: InvokeAsyncInput has been deprecated
 type InvokeAsyncInput struct {
 	_ struct{} `deprecated:"true" type:"structure" payload:"InvokeArgs"`
@@ -8927,6 +9578,242 @@ func (s *InvokeOutput) SetPayload(v []byte) *InvokeOutput {
 func (s *InvokeOutput) SetStatusCode(v int64) *InvokeOutput {
 	s.StatusCode = &v
 	return s
+}
+
+// Lambda was unable to decrypt the environment variables because KMS access
+// was denied. Check the Lambda function's KMS permissions.
+type KMSAccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s KMSAccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSAccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &KMSAccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s KMSAccessDeniedException) Code() string {
+	return "KMSAccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s KMSAccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s KMSAccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s KMSAccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSAccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSAccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Lambda was unable to decrypt the environment variables because the KMS key
+// used is disabled. Check the Lambda function's KMS key settings.
+type KMSDisabledException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s KMSDisabledException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSDisabledException) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSDisabledException(v protocol.ResponseMetadata) error {
+	return &KMSDisabledException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s KMSDisabledException) Code() string {
+	return "KMSDisabledException"
+}
+
+// Message returns the exception's message.
+func (s KMSDisabledException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s KMSDisabledException) OrigErr() error {
+	return nil
+}
+
+func (s KMSDisabledException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSDisabledException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSDisabledException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Lambda was unable to decrypt the environment variables because the KMS key
+// used is in an invalid state for Decrypt. Check the function's KMS key settings.
+type KMSInvalidStateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s KMSInvalidStateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSInvalidStateException) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSInvalidStateException(v protocol.ResponseMetadata) error {
+	return &KMSInvalidStateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s KMSInvalidStateException) Code() string {
+	return "KMSInvalidStateException"
+}
+
+// Message returns the exception's message.
+func (s KMSInvalidStateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s KMSInvalidStateException) OrigErr() error {
+	return nil
+}
+
+func (s KMSInvalidStateException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSInvalidStateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSInvalidStateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Lambda was unable to decrypt the environment variables because the KMS key
+// was not found. Check the function's KMS key settings.
+type KMSNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s KMSNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSNotFoundException(v protocol.ResponseMetadata) error {
+	return &KMSNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s KMSNotFoundException) Code() string {
+	return "KMSNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s KMSNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s KMSNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s KMSNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // An AWS Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
@@ -10143,6 +11030,126 @@ func (s *OnSuccess) SetDestination(v string) *OnSuccess {
 	return s
 }
 
+// The permissions policy for the resource is too large. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
+type PolicyLengthExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PolicyLengthExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PolicyLengthExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorPolicyLengthExceededException(v protocol.ResponseMetadata) error {
+	return &PolicyLengthExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PolicyLengthExceededException) Code() string {
+	return "PolicyLengthExceededException"
+}
+
+// Message returns the exception's message.
+func (s PolicyLengthExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PolicyLengthExceededException) OrigErr() error {
+	return nil
+}
+
+func (s PolicyLengthExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PolicyLengthExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PolicyLengthExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The RevisionId provided does not match the latest RevisionId for the Lambda
+// function or alias. Call the GetFunction or the GetAlias API to retrieve the
+// latest RevisionId for your resource.
+type PreconditionFailedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The exception message.
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The exception type.
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PreconditionFailedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PreconditionFailedException) GoString() string {
+	return s.String()
+}
+
+func newErrorPreconditionFailedException(v protocol.ResponseMetadata) error {
+	return &PreconditionFailedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PreconditionFailedException) Code() string {
+	return "PreconditionFailedException"
+}
+
+// Message returns the exception's message.
+func (s PreconditionFailedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PreconditionFailedException) OrigErr() error {
+	return nil
+}
+
+func (s PreconditionFailedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PreconditionFailedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PreconditionFailedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Details about the provisioned concurrency configuration for a function alias
 // or version.
 type ProvisionedConcurrencyConfigListItem struct {
@@ -10222,6 +11229,64 @@ func (s *ProvisionedConcurrencyConfigListItem) SetStatus(v string) *ProvisionedC
 func (s *ProvisionedConcurrencyConfigListItem) SetStatusReason(v string) *ProvisionedConcurrencyConfigListItem {
 	s.StatusReason = &v
 	return s
+}
+
+// The specified configuration does not exist.
+type ProvisionedConcurrencyConfigNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisionedConcurrencyConfigNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionedConcurrencyConfigNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorProvisionedConcurrencyConfigNotFoundException(v protocol.ResponseMetadata) error {
+	return &ProvisionedConcurrencyConfigNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ProvisionedConcurrencyConfigNotFoundException) Code() string {
+	return "ProvisionedConcurrencyConfigNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ProvisionedConcurrencyConfigNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ProvisionedConcurrencyConfigNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ProvisionedConcurrencyConfigNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ProvisionedConcurrencyConfigNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ProvisionedConcurrencyConfigNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type PublishLayerVersionInput struct {
@@ -11115,6 +12180,421 @@ func (s RemovePermissionOutput) GoString() string {
 	return s.String()
 }
 
+// The request payload exceeded the Invoke request body JSON input limit. For
+// more information, see Limits (https://docs.aws.amazon.com/lambda/latest/dg/limits.html).
+type RequestTooLargeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s RequestTooLargeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RequestTooLargeException) GoString() string {
+	return s.String()
+}
+
+func newErrorRequestTooLargeException(v protocol.ResponseMetadata) error {
+	return &RequestTooLargeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RequestTooLargeException) Code() string {
+	return "RequestTooLargeException"
+}
+
+// Message returns the exception's message.
+func (s RequestTooLargeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RequestTooLargeException) OrigErr() error {
+	return nil
+}
+
+func (s RequestTooLargeException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RequestTooLargeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RequestTooLargeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource already exists, or another operation is in progress.
+type ResourceConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The exception message.
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The exception type.
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceConflictException(v protocol.ResponseMetadata) error {
+	return &ResourceConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceConflictException) Code() string {
+	return "ResourceConflictException"
+}
+
+// Message returns the exception's message.
+func (s ResourceConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceConflictException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The operation conflicts with the resource's availability. For example, you
+// attempted to update an EventSource Mapping in CREATING, or tried to delete
+// a EventSource mapping currently in the UPDATING state.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource specified in the request does not exist.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The function is inactive and its VPC connection is no longer available. Wait
+// for the VPC connection to reestablish and try again.
+type ResourceNotReadyException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The exception message.
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The exception type.
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotReadyException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotReadyException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotReadyException(v protocol.ResponseMetadata) error {
+	return &ResourceNotReadyException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotReadyException) Code() string {
+	return "ResourceNotReadyException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotReadyException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotReadyException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotReadyException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotReadyException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotReadyException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The AWS Lambda service encountered an internal error.
+type ServiceException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceException(v protocol.ResponseMetadata) error {
+	return &ServiceException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceException) Code() string {
+	return "ServiceException"
+}
+
+// Message returns the exception's message.
+func (s ServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS Lambda was not able to set up VPC access for the Lambda function because
+// one or more configured subnets has no available IP addresses.
+type SubnetIPAddressLimitReachedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SubnetIPAddressLimitReachedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SubnetIPAddressLimitReachedException) GoString() string {
+	return s.String()
+}
+
+func newErrorSubnetIPAddressLimitReachedException(v protocol.ResponseMetadata) error {
+	return &SubnetIPAddressLimitReachedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SubnetIPAddressLimitReachedException) Code() string {
+	return "SubnetIPAddressLimitReachedException"
+}
+
+// Message returns the exception's message.
+func (s SubnetIPAddressLimitReachedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SubnetIPAddressLimitReachedException) OrigErr() error {
+	return nil
+}
+
+func (s SubnetIPAddressLimitReachedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SubnetIPAddressLimitReachedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SubnetIPAddressLimitReachedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type TagResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11184,6 +12664,69 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// The request throughput limit was exceeded.
+type TooManyRequestsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	Reason *string `type:"string" enum:"ThrottleReason"`
+
+	// The number of seconds the caller should wait before retrying.
+	RetryAfterSeconds *string `location:"header" locationName:"Retry-After" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyRequestsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyRequestsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The function's AWS X-Ray tracing configuration.
 type TracingConfig struct {
 	_ struct{} `type:"structure"`
@@ -11230,6 +12773,64 @@ func (s TracingConfigResponse) GoString() string {
 func (s *TracingConfigResponse) SetMode(v string) *TracingConfigResponse {
 	s.Mode = &v
 	return s
+}
+
+// The content type of the Invoke request body is not JSON.
+type UnsupportedMediaTypeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s UnsupportedMediaTypeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedMediaTypeException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedMediaTypeException(v protocol.ResponseMetadata) error {
+	return &UnsupportedMediaTypeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnsupportedMediaTypeException) Code() string {
+	return "UnsupportedMediaTypeException"
+}
+
+// Message returns the exception's message.
+func (s UnsupportedMediaTypeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnsupportedMediaTypeException) OrigErr() error {
+	return nil
+}
+
+func (s UnsupportedMediaTypeException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnsupportedMediaTypeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnsupportedMediaTypeException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {

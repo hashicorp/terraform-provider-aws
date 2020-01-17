@@ -2,6 +2,10 @@
 
 package quicksight
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -119,3 +123,23 @@ const (
 	// as DeleteUser, DescribeUser, and so on.
 	ErrCodeUserNotFoundException = "QuickSightUserNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":                    newErrorAccessDeniedException,
+	"ConcurrentUpdatingException":              newErrorConcurrentUpdatingException,
+	"ConflictException":                        newErrorConflictException,
+	"DomainNotWhitelistedException":            newErrorDomainNotWhitelistedException,
+	"IdentityTypeNotSupportedException":        newErrorIdentityTypeNotSupportedException,
+	"InternalFailureException":                 newErrorInternalFailureException,
+	"InvalidNextTokenException":                newErrorInvalidNextTokenException,
+	"InvalidParameterValueException":           newErrorInvalidParameterValueException,
+	"LimitExceededException":                   newErrorLimitExceededException,
+	"PreconditionNotMetException":              newErrorPreconditionNotMetException,
+	"ResourceExistsException":                  newErrorResourceExistsException,
+	"ResourceNotFoundException":                newErrorResourceNotFoundException,
+	"ResourceUnavailableException":             newErrorResourceUnavailableException,
+	"SessionLifetimeInMinutesInvalidException": newErrorSessionLifetimeInMinutesInvalidException,
+	"ThrottlingException":                      newErrorThrottlingException,
+	"UnsupportedUserEditionException":          newErrorUnsupportedUserEditionException,
+	"QuickSightUserNotFoundException":          newErrorUserNotFoundException,
+}

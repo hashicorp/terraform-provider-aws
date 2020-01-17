@@ -682,7 +682,7 @@ func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "enabled_metrics.#", "7"),
+						"aws_autoscaling_group.bar", "enabled_metrics.#", "13"),
 				),
 			},
 			{
@@ -2755,7 +2755,13 @@ resource "aws_autoscaling_group" "bar" {
   	     "GroupDesiredCapacity",
   	     "GroupInServiceInstances",
   	     "GroupMinSize",
-  	     "GroupMaxSize"
+  	     "GroupMaxSize",
+  	     "GroupPendingCapacity",
+  	     "GroupInServiceCapacity",
+  	     "GroupStandbyCapacity",
+  	     "GroupTotalCapacity",
+  	     "GroupTerminatingCapacity",
+  	     "GroupStandbyInstances"
   ]
   metrics_granularity = "1Minute"
 }

@@ -73,50 +73,50 @@ func (c *CodeCommit) AssociateApprovalRuleTemplateWithRepositoryRequest(input *A
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation AssociateApprovalRuleTemplateWithRepository for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+// Returned Error Types:
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   * ApprovalRuleTemplateDoesNotExistException
 //   The specified approval rule template does not exist. Verify that the name
 //   is correct and that you are signed in to the AWS Region where the template
 //   was created, and then try again.
 //
-//   * ErrCodeMaximumRuleTemplatesAssociatedWithRepositoryException "MaximumRuleTemplatesAssociatedWithRepositoryException"
+//   * MaximumRuleTemplatesAssociatedWithRepositoryException
 //   The maximum number of approval rule templates for a repository has been exceeded.
 //   You cannot associate more than 25 approval rule templates with a repository.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/AssociateApprovalRuleTemplateWithRepository
@@ -195,40 +195,40 @@ func (c *CodeCommit) BatchAssociateApprovalRuleTemplateWithRepositoriesRequest(i
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation BatchAssociateApprovalRuleTemplateWithRepositories for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+// Returned Error Types:
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   * ApprovalRuleTemplateDoesNotExistException
 //   The specified approval rule template does not exist. Verify that the name
 //   is correct and that you are signed in to the AWS Region where the template
 //   was created, and then try again.
 //
-//   * ErrCodeRepositoryNamesRequiredException "RepositoryNamesRequiredException"
+//   * RepositoryNamesRequiredException
 //   At least one repository name object is required, but was not specified.
 //
-//   * ErrCodeMaximumRepositoryNamesExceededException "MaximumRepositoryNamesExceededException"
+//   * MaximumRepositoryNamesExceededException
 //   The maximum number of allowed repository names was exceeded. Currently, this
 //   number is 100.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchAssociateApprovalRuleTemplateWithRepositories
@@ -307,77 +307,77 @@ func (c *CodeCommit) BatchDescribeMergeConflictsRequest(input *BatchDescribeMerg
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation BatchDescribeMergeConflicts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeMergeOptionRequiredException "MergeOptionRequiredException"
+//   * MergeOptionRequiredException
 //   A merge option or stategy is required, and none was provided.
 //
-//   * ErrCodeInvalidMergeOptionException "InvalidMergeOptionException"
+//   * InvalidMergeOptionException
 //   The specified merge option is not valid for this operation. Not all merge
 //   strategies are supported for all operations.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
-//   * ErrCodeCommitRequiredException "CommitRequiredException"
+//   * CommitRequiredException
 //   A commit was not specified.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeTipsDivergenceExceededException "TipsDivergenceExceededException"
+//   * TipsDivergenceExceededException
 //   The divergence between the tips of the provided commit specifiers is too
 //   great to determine whether there might be any merge conflicts. Locally compare
 //   the specifiers using git diff or a diff tool.
 //
-//   * ErrCodeInvalidMaxConflictFilesException "InvalidMaxConflictFilesException"
+//   * InvalidMaxConflictFilesException
 //   The specified value for the number of conflict files to return is not valid.
 //
-//   * ErrCodeInvalidMaxMergeHunksException "InvalidMaxMergeHunksException"
+//   * InvalidMaxMergeHunksException
 //   The specified value for the number of merge hunks to return is not valid.
 //
-//   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
+//   * InvalidConflictDetailLevelException
 //   The specified conflict detail level is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionStrategyException "InvalidConflictResolutionStrategyException"
+//   * InvalidConflictResolutionStrategyException
 //   The specified conflict resolution strategy is not valid.
 //
-//   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
+//   * MaximumFileContentToLoadExceededException
 //   The number of files to load exceeds the allowed limit.
 //
-//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   * MaximumItemsToCompareExceededException
 //   The number of items to compare between the source or destination branches
 //   and the merge base has exceeded the maximum allowed.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchDescribeMergeConflicts
@@ -456,40 +456,40 @@ func (c *CodeCommit) BatchDisassociateApprovalRuleTemplateFromRepositoriesReques
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation BatchDisassociateApprovalRuleTemplateFromRepositories for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+// Returned Error Types:
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   * ApprovalRuleTemplateDoesNotExistException
 //   The specified approval rule template does not exist. Verify that the name
 //   is correct and that you are signed in to the AWS Region where the template
 //   was created, and then try again.
 //
-//   * ErrCodeRepositoryNamesRequiredException "RepositoryNamesRequiredException"
+//   * RepositoryNamesRequiredException
 //   At least one repository name object is required, but was not specified.
 //
-//   * ErrCodeMaximumRepositoryNamesExceededException "MaximumRepositoryNamesExceededException"
+//   * MaximumRepositoryNamesExceededException
 //   The maximum number of allowed repository names was exceeded. Currently, this
 //   number is 100.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchDisassociateApprovalRuleTemplateFromRepositories
@@ -567,42 +567,42 @@ func (c *CodeCommit) BatchGetCommitsRequest(input *BatchGetCommitsInput) (req *r
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation BatchGetCommits for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCommitIdsListRequiredException "CommitIdsListRequiredException"
+// Returned Error Types:
+//   * CommitIdsListRequiredException
 //   A list of commit IDs is required, but was either not specified or the list
 //   was empty.
 //
-//   * ErrCodeCommitIdsLimitExceededException "CommitIdsLimitExceededException"
+//   * CommitIdsLimitExceededException
 //   The maximum number of allowed commit IDs in a batch request is 100. Verify
 //   that your batch requests contains no more than 100 commit IDs, and then try
 //   again.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchGetCommits
@@ -686,34 +686,34 @@ func (c *CodeCommit) BatchGetRepositoriesRequest(input *BatchGetRepositoriesInpu
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation BatchGetRepositories for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNamesRequiredException "RepositoryNamesRequiredException"
+// Returned Error Types:
+//   * RepositoryNamesRequiredException
 //   At least one repository name object is required, but was not specified.
 //
-//   * ErrCodeMaximumRepositoryNamesExceededException "MaximumRepositoryNamesExceededException"
+//   * MaximumRepositoryNamesExceededException
 //   The maximum number of allowed repository names was exceeded. Currently, this
 //   number is 100.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchGetRepositories
@@ -795,33 +795,33 @@ func (c *CodeCommit) CreateApprovalRuleTemplateRequest(input *CreateApprovalRule
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation CreateApprovalRuleTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+// Returned Error Types:
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateNameAlreadyExistsException "ApprovalRuleTemplateNameAlreadyExistsException"
+//   * ApprovalRuleTemplateNameAlreadyExistsException
 //   You cannot create an approval rule template with that name because a template
 //   with that name already exists in this AWS Region for your AWS account. Approval
 //   rule template names must be unique.
 //
-//   * ErrCodeApprovalRuleTemplateContentRequiredException "ApprovalRuleTemplateContentRequiredException"
+//   * ApprovalRuleTemplateContentRequiredException
 //   The content for the approval rule template is empty. You must provide some
 //   content for an approval rule template. The content cannot be null.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateContentException "InvalidApprovalRuleTemplateContentException"
+//   * InvalidApprovalRuleTemplateContentException
 //   The content of the approval rule template is not valid.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateDescriptionException "InvalidApprovalRuleTemplateDescriptionException"
+//   * InvalidApprovalRuleTemplateDescriptionException
 //   The description for the approval rule template is not valid because it exceeds
 //   the maximum characters allowed for a description. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeNumberOfRuleTemplatesExceededException "NumberOfRuleTemplatesExceededException"
+//   * NumberOfRuleTemplatesExceededException
 //   The maximum number of approval rule templates has been exceeded for this
 //   AWS Region.
 //
@@ -904,52 +904,52 @@ func (c *CodeCommit) CreateBranchRequest(input *CreateBranchInput) (req *request
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation CreateBranch for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   * BranchNameRequiredException
 //   A branch name is required, but was not specified.
 //
-//   * ErrCodeBranchNameExistsException "BranchNameExistsException"
+//   * BranchNameExistsException
 //   The specified branch name already exists.
 //
-//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   * InvalidBranchNameException
 //   The specified reference name is not valid.
 //
-//   * ErrCodeCommitIdRequiredException "CommitIdRequiredException"
+//   * CommitIdRequiredException
 //   A commit ID was not specified.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
+//   * InvalidCommitIdException
 //   The specified commit ID is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreateBranch
@@ -1027,161 +1027,161 @@ func (c *CodeCommit) CreateCommitRequest(input *CreateCommitInput) (req *request
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation CreateCommit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeParentCommitIdRequiredException "ParentCommitIdRequiredException"
+//   * ParentCommitIdRequiredException
 //   A parent commit ID is required. To view the full commit ID of a branch in
 //   a repository, use GetBranch or a Git command (for example, git pull or git
 //   log).
 //
-//   * ErrCodeInvalidParentCommitIdException "InvalidParentCommitIdException"
+//   * InvalidParentCommitIdException
 //   The parent commit ID is not valid. The commit ID cannot be empty, and must
 //   match the head commit ID for the branch of the repository where you want
 //   to add or update a file.
 //
-//   * ErrCodeParentCommitDoesNotExistException "ParentCommitDoesNotExistException"
+//   * ParentCommitDoesNotExistException
 //   The parent commit ID is not valid because it does not exist. The specified
 //   parent commit ID does not exist in the specified branch of the repository.
 //
-//   * ErrCodeParentCommitIdOutdatedException "ParentCommitIdOutdatedException"
+//   * ParentCommitIdOutdatedException
 //   The file could not be added because the provided parent commit ID is not
 //   the current tip of the specified branch. To view the full commit ID of the
 //   current head of the branch, use GetBranch.
 //
-//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   * BranchNameRequiredException
 //   A branch name is required, but was not specified.
 //
-//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   * InvalidBranchNameException
 //   The specified reference name is not valid.
 //
-//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   * BranchDoesNotExistException
 //   The specified branch does not exist.
 //
-//   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
+//   * BranchNameIsTagNameException
 //   The specified branch name is not valid because it is a tag name. Enter the
 //   name of a branch in the repository. For a list of valid branch names, use
 //   ListBranches.
 //
-//   * ErrCodeFileEntryRequiredException "FileEntryRequiredException"
+//   * FileEntryRequiredException
 //   The commit cannot be created because no files have been specified as added,
 //   updated, or changed (PutFile or DeleteFile) for the commit.
 //
-//   * ErrCodeMaximumFileEntriesExceededException "MaximumFileEntriesExceededException"
+//   * MaximumFileEntriesExceededException
 //   The number of specified files to change as part of this commit exceeds the
 //   maximum number of files that can be changed in a single commit. Consider
 //   using a Git client for these changes.
 //
-//   * ErrCodePutFileEntryConflictException "PutFileEntryConflictException"
+//   * PutFileEntryConflictException
 //   The commit cannot be created because one or more files specified in the commit
 //   reference both a file and a folder.
 //
-//   * ErrCodeSourceFileOrContentRequiredException "SourceFileOrContentRequiredException"
+//   * SourceFileOrContentRequiredException
 //   The commit cannot be created because no source files or file content have
 //   been specified for the commit.
 //
-//   * ErrCodeFileContentAndSourceFileSpecifiedException "FileContentAndSourceFileSpecifiedException"
+//   * FileContentAndSourceFileSpecifiedException
 //   The commit cannot be created because both a source file and file content
 //   have been specified for the same file. You cannot provide both. Either specify
 //   a source file or provide the file content directly.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeSamePathRequestException "SamePathRequestException"
+//   * SamePathRequestException
 //   The commit cannot be created because one or more changes in this commit duplicate
 //   actions in the same file path. For example, you cannot make the same delete
 //   request to the same file in the same file path twice, or make a delete request
 //   and a move request to the same file as part of the same commit.
 //
-//   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
+//   * FileDoesNotExistException
 //   The specified file does not exist. Verify that you have used the correct
 //   file name, full path, and extension.
 //
-//   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
+//   * FileContentSizeLimitExceededException
 //   The file cannot be added because it is too large. The maximum file size is
 //   6 MB, and the combined file content change size is 7 MB. Consider making
 //   these changes using a Git client.
 //
-//   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
+//   * FolderContentSizeLimitExceededException
 //   The commit cannot be created because at least one of the overall changes
 //   in the commit results in a folder whose contents exceed the limit of 6 MB.
 //   Either reduce the number and size of your changes, or split the changes across
 //   multiple folders.
 //
-//   * ErrCodeInvalidDeletionParameterException "InvalidDeletionParameterException"
+//   * InvalidDeletionParameterException
 //   The specified deletion parameter is not valid.
 //
-//   * ErrCodeRestrictedSourceFileException "RestrictedSourceFileException"
+//   * RestrictedSourceFileException
 //   The commit cannot be created because one of the changes specifies copying
 //   or moving a .gitkeep file.
 //
-//   * ErrCodeFileModeRequiredException "FileModeRequiredException"
+//   * FileModeRequiredException
 //   The commit cannot be created because no file mode has been specified. A file
 //   mode is required to update mode permissions for a file.
 //
-//   * ErrCodeInvalidFileModeException "InvalidFileModeException"
+//   * InvalidFileModeException
 //   The specified file mode permission is not valid. For a list of valid file
 //   mode permissions, see PutFile.
 //
-//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   * NameLengthExceededException
 //   The user name is not valid because it has exceeded the character limit for
 //   author names.
 //
-//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   * InvalidEmailException
 //   The specified email address either contains one or more characters that are
 //   not allowed, or it exceeds the maximum number of characters allowed for an
 //   email address.
 //
-//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   * CommitMessageLengthExceededException
 //   The commit message is too long. Provide a shorter string.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
-//   * ErrCodeNoChangeException "NoChangeException"
+//   * NoChangeException
 //   The commit cannot be created because no changes will be made to the repository
 //   as a result of this commit. A commit must contain at least one change.
 //
-//   * ErrCodeFileNameConflictsWithDirectoryNameException "FileNameConflictsWithDirectoryNameException"
+//   * FileNameConflictsWithDirectoryNameException
 //   A file cannot be added to the repository because the specified file name
 //   has the same name as a directory in this repository. Either provide another
 //   name for the file, or add the file in a directory that does not match the
 //   file name.
 //
-//   * ErrCodeDirectoryNameConflictsWithFileNameException "DirectoryNameConflictsWithFileNameException"
+//   * DirectoryNameConflictsWithFileNameException
 //   A file cannot be added to the repository because the specified path name
 //   has the same name as a file that already exists in this repository. Either
 //   provide a different name for the file, or specify a different path for the
 //   file.
 //
-//   * ErrCodeFilePathConflictsWithSubmodulePathException "FilePathConflictsWithSubmodulePathException"
+//   * FilePathConflictsWithSubmodulePathException
 //   The commit cannot be created because a specified file path points to a submodule.
 //   Verify that the destination files have valid file paths that do not point
 //   to a submodule.
@@ -1261,105 +1261,105 @@ func (c *CodeCommit) CreatePullRequestRequest(input *CreatePullRequestInput) (re
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation CreatePullRequest for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
-//   * ErrCodeClientRequestTokenRequiredException "ClientRequestTokenRequiredException"
+//   * ClientRequestTokenRequiredException
 //   A client request token is required. A client request token is an unique,
 //   client-generated idempotency token that, when provided in a request, ensures
 //   the request cannot be repeated with a changed parameter. If a request is
 //   received with the same parameters and a token is included, the request returns
 //   information about the initial request that used that token.
 //
-//   * ErrCodeInvalidClientRequestTokenException "InvalidClientRequestTokenException"
+//   * InvalidClientRequestTokenException
 //   The client request token is not valid.
 //
-//   * ErrCodeIdempotencyParameterMismatchException "IdempotencyParameterMismatchException"
+//   * IdempotencyParameterMismatchException
 //   The client request token is not valid. Either the token is not in a valid
 //   format, or the token has been used in a previous request and cannot be reused.
 //
-//   * ErrCodeReferenceNameRequiredException "ReferenceNameRequiredException"
+//   * ReferenceNameRequiredException
 //   A reference name is required, but none was provided.
 //
-//   * ErrCodeInvalidReferenceNameException "InvalidReferenceNameException"
+//   * InvalidReferenceNameException
 //   The specified reference name format is not valid. Reference names must conform
 //   to the Git references format (for example, refs/heads/master). For more information,
 //   see Git Internals - Git References (https://git-scm.com/book/en/v2/Git-Internals-Git-References)
 //   or consult your Git documentation.
 //
-//   * ErrCodeReferenceDoesNotExistException "ReferenceDoesNotExistException"
+//   * ReferenceDoesNotExistException
 //   The specified reference does not exist. You must provide a full commit ID.
 //
-//   * ErrCodeReferenceTypeNotSupportedException "ReferenceTypeNotSupportedException"
+//   * ReferenceTypeNotSupportedException
 //   The specified reference is not a supported type.
 //
-//   * ErrCodeTitleRequiredException "TitleRequiredException"
+//   * TitleRequiredException
 //   A pull request title is required. It cannot be empty or null.
 //
-//   * ErrCodeInvalidTitleException "InvalidTitleException"
+//   * InvalidTitleException
 //   The title of the pull request is not valid. Pull request titles cannot exceed
 //   100 characters in length.
 //
-//   * ErrCodeInvalidDescriptionException "InvalidDescriptionException"
+//   * InvalidDescriptionException
 //   The pull request description is not valid. Descriptions cannot be more than
 //   1,000 characters.
 //
-//   * ErrCodeTargetsRequiredException "TargetsRequiredException"
+//   * TargetsRequiredException
 //   An array of target objects is required. It cannot be empty or null.
 //
-//   * ErrCodeInvalidTargetsException "InvalidTargetsException"
+//   * InvalidTargetsException
 //   The targets for the pull request is not valid or not in a valid format. Targets
 //   are a list of target objects. Each target object must contain the full values
 //   for the repository name, source branch, and destination branch for a pull
 //   request.
 //
-//   * ErrCodeTargetRequiredException "TargetRequiredException"
+//   * TargetRequiredException
 //   A pull request target is required. It cannot be empty or null. A pull request
 //   target must contain the full values for the repository name, source branch,
 //   and destination branch for the pull request.
 //
-//   * ErrCodeInvalidTargetException "InvalidTargetException"
+//   * InvalidTargetException
 //   The target for the pull request is not valid. A target must contain the full
 //   values for the repository name, source branch, and destination branch for
 //   the pull request.
 //
-//   * ErrCodeMultipleRepositoriesInPullRequestException "MultipleRepositoriesInPullRequestException"
+//   * MultipleRepositoriesInPullRequestException
 //   You cannot include more than one repository in a pull request. Make sure
 //   you have specified only one repository name in your request, and then try
 //   again.
 //
-//   * ErrCodeMaximumOpenPullRequestsExceededException "MaximumOpenPullRequestsExceededException"
+//   * MaximumOpenPullRequestsExceededException
 //   You cannot create the pull request because the repository has too many open
 //   pull requests. The maximum number of open pull requests for a repository
 //   is 1,000. Close one or more open pull requests, and then try again.
 //
-//   * ErrCodeSourceAndDestinationAreSameException "SourceAndDestinationAreSameException"
+//   * SourceAndDestinationAreSameException
 //   The source branch and destination branch for the pull request are the same.
 //   You must specify different branches for the source and destination.
 //
@@ -1438,56 +1438,56 @@ func (c *CodeCommit) CreatePullRequestApprovalRuleRequest(input *CreatePullReque
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation CreatePullRequestApprovalRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeApprovalRuleNameRequiredException "ApprovalRuleNameRequiredException"
+// Returned Error Types:
+//   * ApprovalRuleNameRequiredException
 //   An approval rule name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleNameException "InvalidApprovalRuleNameException"
+//   * InvalidApprovalRuleNameException
 //   The name for the approval rule is not valid.
 //
-//   * ErrCodeApprovalRuleNameAlreadyExistsException "ApprovalRuleNameAlreadyExistsException"
+//   * ApprovalRuleNameAlreadyExistsException
 //   An approval rule with that name already exists. Approval rule names must
 //   be unique within the scope of a pull request.
 //
-//   * ErrCodeApprovalRuleContentRequiredException "ApprovalRuleContentRequiredException"
+//   * ApprovalRuleContentRequiredException
 //   The content for the approval rule is empty. You must provide some content
 //   for an approval rule. The content cannot be null.
 //
-//   * ErrCodeInvalidApprovalRuleContentException "InvalidApprovalRuleContentException"
+//   * InvalidApprovalRuleContentException
 //   The content for the approval rule is not valid.
 //
-//   * ErrCodeNumberOfRulesExceededException "NumberOfRulesExceededException"
+//   * NumberOfRulesExceededException
 //   The approval rule cannot be added. The pull request has the maximum number
 //   of approval rules associated with it.
 //
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   * PullRequestAlreadyClosedException
 //   The pull request status cannot be updated because it is already closed.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreatePullRequestApprovalRule
@@ -1565,51 +1565,51 @@ func (c *CodeCommit) CreateRepositoryRequest(input *CreateRepositoryInput) (req 
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation CreateRepository for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameExistsException "RepositoryNameExistsException"
+// Returned Error Types:
+//   * RepositoryNameExistsException
 //   The specified repository name already exists.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryDescriptionException "InvalidRepositoryDescriptionException"
+//   * InvalidRepositoryDescriptionException
 //   The specified repository description is not valid.
 //
-//   * ErrCodeRepositoryLimitExceededException "RepositoryLimitExceededException"
+//   * RepositoryLimitExceededException
 //   A repository resource limit was exceeded.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
-//   * ErrCodeInvalidTagsMapException "InvalidTagsMapException"
+//   * InvalidTagsMapException
 //   The map of tags is not valid.
 //
-//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   * TooManyTagsException
 //   The maximum number of tags for an AWS CodeCommit resource has been exceeded.
 //
-//   * ErrCodeInvalidSystemTagUsageException "InvalidSystemTagUsageException"
+//   * InvalidSystemTagUsageException
 //   The specified tag is not valid. Key names cannot be prefixed with aws:.
 //
-//   * ErrCodeTagPolicyException "TagPolicyException"
+//   * TagPolicyException
 //   The tag policy is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreateRepository
@@ -1694,138 +1694,138 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation CreateUnreferencedMergeCommit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeTipsDivergenceExceededException "TipsDivergenceExceededException"
+//   * TipsDivergenceExceededException
 //   The divergence between the tips of the provided commit specifiers is too
 //   great to determine whether there might be any merge conflicts. Locally compare
 //   the specifiers using git diff or a diff tool.
 //
-//   * ErrCodeCommitRequiredException "CommitRequiredException"
+//   * CommitRequiredException
 //   A commit was not specified.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeMergeOptionRequiredException "MergeOptionRequiredException"
+//   * MergeOptionRequiredException
 //   A merge option or stategy is required, and none was provided.
 //
-//   * ErrCodeInvalidMergeOptionException "InvalidMergeOptionException"
+//   * InvalidMergeOptionException
 //   The specified merge option is not valid for this operation. Not all merge
 //   strategies are supported for all operations.
 //
-//   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
+//   * InvalidConflictDetailLevelException
 //   The specified conflict detail level is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionStrategyException "InvalidConflictResolutionStrategyException"
+//   * InvalidConflictResolutionStrategyException
 //   The specified conflict resolution strategy is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionException "InvalidConflictResolutionException"
+//   * InvalidConflictResolutionException
 //   The specified conflict resolution list is not valid.
 //
-//   * ErrCodeManualMergeRequiredException "ManualMergeRequiredException"
+//   * ManualMergeRequiredException
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
 //
-//   * ErrCodeMaximumConflictResolutionEntriesExceededException "MaximumConflictResolutionEntriesExceededException"
+//   * MaximumConflictResolutionEntriesExceededException
 //   The number of allowed conflict resolution entries was exceeded.
 //
-//   * ErrCodeMultipleConflictResolutionEntriesException "MultipleConflictResolutionEntriesException"
+//   * MultipleConflictResolutionEntriesException
 //   More than one conflict resolution entries exists for the conflict. A conflict
 //   can have only one conflict resolution entry.
 //
-//   * ErrCodeReplacementTypeRequiredException "ReplacementTypeRequiredException"
+//   * ReplacementTypeRequiredException
 //   A replacement type is required.
 //
-//   * ErrCodeInvalidReplacementTypeException "InvalidReplacementTypeException"
+//   * InvalidReplacementTypeException
 //   Automerge was specified for resolving the conflict, but the specified replacement
 //   type is not valid.
 //
-//   * ErrCodeReplacementContentRequiredException "ReplacementContentRequiredException"
+//   * ReplacementContentRequiredException
 //   USE_NEW_CONTENT was specified, but no replacement content has been provided.
 //
-//   * ErrCodeInvalidReplacementContentException "InvalidReplacementContentException"
+//   * InvalidReplacementContentException
 //   Automerge was specified for resolving the conflict, but the replacement type
 //   is not valid or content is missing.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
+//   * FileContentSizeLimitExceededException
 //   The file cannot be added because it is too large. The maximum file size is
 //   6 MB, and the combined file content change size is 7 MB. Consider making
 //   these changes using a Git client.
 //
-//   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
+//   * FolderContentSizeLimitExceededException
 //   The commit cannot be created because at least one of the overall changes
 //   in the commit results in a folder whose contents exceed the limit of 6 MB.
 //   Either reduce the number and size of your changes, or split the changes across
 //   multiple folders.
 //
-//   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
+//   * MaximumFileContentToLoadExceededException
 //   The number of files to load exceeds the allowed limit.
 //
-//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   * MaximumItemsToCompareExceededException
 //   The number of items to compare between the source or destination branches
 //   and the merge base has exceeded the maximum allowed.
 //
-//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   * ConcurrentReferenceUpdateException
 //   The merge cannot be completed because the target branch has been modified.
 //   Another user might have modified the target branch while the merge was in
 //   progress. Wait a few minutes, and then try again.
 //
-//   * ErrCodeFileModeRequiredException "FileModeRequiredException"
+//   * FileModeRequiredException
 //   The commit cannot be created because no file mode has been specified. A file
 //   mode is required to update mode permissions for a file.
 //
-//   * ErrCodeInvalidFileModeException "InvalidFileModeException"
+//   * InvalidFileModeException
 //   The specified file mode permission is not valid. For a list of valid file
 //   mode permissions, see PutFile.
 //
-//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   * NameLengthExceededException
 //   The user name is not valid because it has exceeded the character limit for
 //   author names.
 //
-//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   * InvalidEmailException
 //   The specified email address either contains one or more characters that are
 //   not allowed, or it exceeds the maximum number of characters allowed for an
 //   email address.
 //
-//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   * CommitMessageLengthExceededException
 //   The commit message is too long. Provide a shorter string.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreateUnreferencedMergeCommit
@@ -1904,16 +1904,16 @@ func (c *CodeCommit) DeleteApprovalRuleTemplateRequest(input *DeleteApprovalRule
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation DeleteApprovalRuleTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+// Returned Error Types:
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateInUseException "ApprovalRuleTemplateInUseException"
+//   * ApprovalRuleTemplateInUseException
 //   The approval rule template is associated with one or more repositories. You
 //   cannot delete a template that is associated with a repository. Remove all
 //   associations, and then try again.
@@ -1994,44 +1994,44 @@ func (c *CodeCommit) DeleteBranchRequest(input *DeleteBranchInput) (req *request
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation DeleteBranch for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   * BranchNameRequiredException
 //   A branch name is required, but was not specified.
 //
-//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   * InvalidBranchNameException
 //   The specified reference name is not valid.
 //
-//   * ErrCodeDefaultBranchCannotBeDeletedException "DefaultBranchCannotBeDeletedException"
+//   * DefaultBranchCannotBeDeletedException
 //   The specified branch is the default branch for the repository, and cannot
 //   be deleted. To delete this branch, you must first set another branch as the
 //   default branch.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DeleteBranch
@@ -2109,19 +2109,19 @@ func (c *CodeCommit) DeleteCommentContentRequest(input *DeleteCommentContentInpu
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation DeleteCommentContent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCommentDoesNotExistException "CommentDoesNotExistException"
+// Returned Error Types:
+//   * CommentDoesNotExistException
 //   No comment exists with the provided ID. Verify that you have used the correct
 //   ID, and then try again.
 //
-//   * ErrCodeCommentIdRequiredException "CommentIdRequiredException"
+//   * CommentIdRequiredException
 //   The comment ID is missing or null. A comment ID is required.
 //
-//   * ErrCodeInvalidCommentIdException "InvalidCommentIdException"
+//   * InvalidCommentIdException
 //   The comment ID is not in a valid format. Make sure that you have provided
 //   the full comment ID.
 //
-//   * ErrCodeCommentDeletedException "CommentDeletedException"
+//   * CommentDeletedException
 //   This comment has already been deleted. You cannot edit or delete a deleted
 //   comment.
 //
@@ -2202,88 +2202,88 @@ func (c *CodeCommit) DeleteFileRequest(input *DeleteFileInput) (req *request.Req
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation DeleteFile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeParentCommitIdRequiredException "ParentCommitIdRequiredException"
+//   * ParentCommitIdRequiredException
 //   A parent commit ID is required. To view the full commit ID of a branch in
 //   a repository, use GetBranch or a Git command (for example, git pull or git
 //   log).
 //
-//   * ErrCodeInvalidParentCommitIdException "InvalidParentCommitIdException"
+//   * InvalidParentCommitIdException
 //   The parent commit ID is not valid. The commit ID cannot be empty, and must
 //   match the head commit ID for the branch of the repository where you want
 //   to add or update a file.
 //
-//   * ErrCodeParentCommitDoesNotExistException "ParentCommitDoesNotExistException"
+//   * ParentCommitDoesNotExistException
 //   The parent commit ID is not valid because it does not exist. The specified
 //   parent commit ID does not exist in the specified branch of the repository.
 //
-//   * ErrCodeParentCommitIdOutdatedException "ParentCommitIdOutdatedException"
+//   * ParentCommitIdOutdatedException
 //   The file could not be added because the provided parent commit ID is not
 //   the current tip of the specified branch. To view the full commit ID of the
 //   current head of the branch, use GetBranch.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
+//   * FileDoesNotExistException
 //   The specified file does not exist. Verify that you have used the correct
 //   file name, full path, and extension.
 //
-//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   * BranchNameRequiredException
 //   A branch name is required, but was not specified.
 //
-//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   * InvalidBranchNameException
 //   The specified reference name is not valid.
 //
-//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   * BranchDoesNotExistException
 //   The specified branch does not exist.
 //
-//   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
+//   * BranchNameIsTagNameException
 //   The specified branch name is not valid because it is a tag name. Enter the
 //   name of a branch in the repository. For a list of valid branch names, use
 //   ListBranches.
 //
-//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   * NameLengthExceededException
 //   The user name is not valid because it has exceeded the character limit for
 //   author names.
 //
-//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   * InvalidEmailException
 //   The specified email address either contains one or more characters that are
 //   not allowed, or it exceeds the maximum number of characters allowed for an
 //   email address.
 //
-//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   * CommitMessageLengthExceededException
 //   The commit message is too long. Provide a shorter string.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DeleteFile
@@ -2366,45 +2366,45 @@ func (c *CodeCommit) DeletePullRequestApprovalRuleRequest(input *DeletePullReque
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation DeletePullRequestApprovalRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   * PullRequestAlreadyClosedException
 //   The pull request status cannot be updated because it is already closed.
 //
-//   * ErrCodeApprovalRuleNameRequiredException "ApprovalRuleNameRequiredException"
+//   * ApprovalRuleNameRequiredException
 //   An approval rule name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleNameException "InvalidApprovalRuleNameException"
+//   * InvalidApprovalRuleNameException
 //   The name for the approval rule is not valid.
 //
-//   * ErrCodeCannotDeleteApprovalRuleFromTemplateException "CannotDeleteApprovalRuleFromTemplateException"
+//   * CannotDeleteApprovalRuleFromTemplateException
 //   The approval rule cannot be deleted from the pull request because it was
 //   created by an approval rule template and applied to the pull request automatically.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DeletePullRequestApprovalRule
@@ -2487,30 +2487,30 @@ func (c *CodeCommit) DeleteRepositoryRequest(input *DeleteRepositoryInput) (req 
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation DeleteRepository for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DeleteRepository
@@ -2597,84 +2597,84 @@ func (c *CodeCommit) DescribeMergeConflictsRequest(input *DescribeMergeConflicts
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation DescribeMergeConflicts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeMergeOptionRequiredException "MergeOptionRequiredException"
+//   * MergeOptionRequiredException
 //   A merge option or stategy is required, and none was provided.
 //
-//   * ErrCodeInvalidMergeOptionException "InvalidMergeOptionException"
+//   * InvalidMergeOptionException
 //   The specified merge option is not valid for this operation. Not all merge
 //   strategies are supported for all operations.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
-//   * ErrCodeCommitRequiredException "CommitRequiredException"
+//   * CommitRequiredException
 //   A commit was not specified.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeTipsDivergenceExceededException "TipsDivergenceExceededException"
+//   * TipsDivergenceExceededException
 //   The divergence between the tips of the provided commit specifiers is too
 //   great to determine whether there might be any merge conflicts. Locally compare
 //   the specifiers using git diff or a diff tool.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
+//   * FileDoesNotExistException
 //   The specified file does not exist. Verify that you have used the correct
 //   file name, full path, and extension.
 //
-//   * ErrCodeInvalidMaxMergeHunksException "InvalidMaxMergeHunksException"
+//   * InvalidMaxMergeHunksException
 //   The specified value for the number of merge hunks to return is not valid.
 //
-//   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
+//   * InvalidConflictDetailLevelException
 //   The specified conflict detail level is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionStrategyException "InvalidConflictResolutionStrategyException"
+//   * InvalidConflictResolutionStrategyException
 //   The specified conflict resolution strategy is not valid.
 //
-//   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
+//   * MaximumFileContentToLoadExceededException
 //   The number of files to load exceeds the allowed limit.
 //
-//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   * MaximumItemsToCompareExceededException
 //   The number of items to compare between the source or destination branches
 //   and the merge base has exceeded the maximum allowed.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DescribeMergeConflicts
@@ -2810,49 +2810,49 @@ func (c *CodeCommit) DescribePullRequestEventsRequest(input *DescribePullRequest
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation DescribePullRequestEvents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeInvalidPullRequestEventTypeException "InvalidPullRequestEventTypeException"
+//   * InvalidPullRequestEventTypeException
 //   The pull request event type is not valid.
 //
-//   * ErrCodeInvalidActorArnException "InvalidActorArnException"
+//   * InvalidActorArnException
 //   The Amazon Resource Name (ARN) is not valid. Make sure that you have provided
 //   the full ARN for the user who initiated the change for the pull request,
 //   and then try again.
 //
-//   * ErrCodeActorDoesNotExistException "ActorDoesNotExistException"
+//   * ActorDoesNotExistException
 //   The specified Amazon Resource Name (ARN) does not exist in the AWS account.
 //
-//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+//   * InvalidMaxResultsException
 //   The specified number of maximum results is not valid.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DescribePullRequestEvents
@@ -2986,46 +2986,46 @@ func (c *CodeCommit) DisassociateApprovalRuleTemplateFromRepositoryRequest(input
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation DisassociateApprovalRuleTemplateFromRepository for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+// Returned Error Types:
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   * ApprovalRuleTemplateDoesNotExistException
 //   The specified approval rule template does not exist. Verify that the name
 //   is correct and that you are signed in to the AWS Region where the template
 //   was created, and then try again.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DisassociateApprovalRuleTemplateFromRepository
@@ -3104,42 +3104,42 @@ func (c *CodeCommit) EvaluatePullRequestApprovalRulesRequest(input *EvaluatePull
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation EvaluatePullRequestApprovalRules for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeInvalidRevisionIdException "InvalidRevisionIdException"
+//   * InvalidRevisionIdException
 //   The revision ID is not valid. Use GetPullRequest to determine the value.
 //
-//   * ErrCodeRevisionIdRequiredException "RevisionIdRequiredException"
+//   * RevisionIdRequiredException
 //   A revision ID is required, but was not provided.
 //
-//   * ErrCodeRevisionNotCurrentException "RevisionNotCurrentException"
+//   * RevisionNotCurrentException
 //   The revision ID provided in the request does not match the current revision
 //   ID. Use GetPullRequest to retrieve the current revision ID.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/EvaluatePullRequestApprovalRules
@@ -3217,16 +3217,16 @@ func (c *CodeCommit) GetApprovalRuleTemplateRequest(input *GetApprovalRuleTempla
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetApprovalRuleTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+// Returned Error Types:
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   * ApprovalRuleTemplateDoesNotExistException
 //   The specified approval rule template does not exist. Verify that the name
 //   is correct and that you are signed in to the AWS Region where the template
 //   was created, and then try again.
@@ -3306,45 +3306,45 @@ func (c *CodeCommit) GetBlobRequest(input *GetBlobInput) (req *request.Request, 
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetBlob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeBlobIdRequiredException "BlobIdRequiredException"
+//   * BlobIdRequiredException
 //   A blob ID is required, but was not specified.
 //
-//   * ErrCodeInvalidBlobIdException "InvalidBlobIdException"
+//   * InvalidBlobIdException
 //   The specified blob is not valid.
 //
-//   * ErrCodeBlobIdDoesNotExistException "BlobIdDoesNotExistException"
+//   * BlobIdDoesNotExistException
 //   The specified blob does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
-//   * ErrCodeFileTooLargeException "FileTooLargeException"
+//   * FileTooLargeException
 //   The specified file exceeds the file size limit for AWS CodeCommit. For more
 //   information about limits in AWS CodeCommit, see AWS CodeCommit User Guide
 //   (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
@@ -3425,42 +3425,42 @@ func (c *CodeCommit) GetBranchRequest(input *GetBranchInput) (req *request.Reque
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetBranch for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   * BranchNameRequiredException
 //   A branch name is required, but was not specified.
 //
-//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   * InvalidBranchNameException
 //   The specified reference name is not valid.
 //
-//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   * BranchDoesNotExistException
 //   The specified branch does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetBranch
@@ -3538,19 +3538,19 @@ func (c *CodeCommit) GetCommentRequest(input *GetCommentInput) (req *request.Req
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetComment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCommentDoesNotExistException "CommentDoesNotExistException"
+// Returned Error Types:
+//   * CommentDoesNotExistException
 //   No comment exists with the provided ID. Verify that you have used the correct
 //   ID, and then try again.
 //
-//   * ErrCodeCommentIdRequiredException "CommentIdRequiredException"
+//   * CommentIdRequiredException
 //   The comment ID is missing or null. A comment ID is required.
 //
-//   * ErrCodeInvalidCommentIdException "InvalidCommentIdException"
+//   * InvalidCommentIdException
 //   The comment ID is not in a valid format. Make sure that you have provided
 //   the full comment ID.
 //
-//   * ErrCodeCommentDeletedException "CommentDeletedException"
+//   * CommentDeletedException
 //   This comment has already been deleted. You cannot edit or delete a deleted
 //   comment.
 //
@@ -3635,49 +3635,49 @@ func (c *CodeCommit) GetCommentsForComparedCommitRequest(input *GetCommentsForCo
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetCommentsForComparedCommit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeCommitIdRequiredException "CommitIdRequiredException"
+//   * CommitIdRequiredException
 //   A commit ID was not specified.
 //
-//   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
+//   * InvalidCommitIdException
 //   The specified commit ID is not valid.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+//   * InvalidMaxResultsException
 //   The specified number of maximum results is not valid.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetCommentsForComparedCommit
@@ -3813,66 +3813,66 @@ func (c *CodeCommit) GetCommentsForPullRequestRequest(input *GetCommentsForPullR
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetCommentsForPullRequest for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+// Returned Error Types:
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeCommitIdRequiredException "CommitIdRequiredException"
+//   * CommitIdRequiredException
 //   A commit ID was not specified.
 //
-//   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
+//   * InvalidCommitIdException
 //   The specified commit ID is not valid.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+//   * InvalidMaxResultsException
 //   The specified number of maximum results is not valid.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
-//   * ErrCodeRepositoryNotAssociatedWithPullRequestException "RepositoryNotAssociatedWithPullRequestException"
+//   * RepositoryNotAssociatedWithPullRequestException
 //   The repository does not contain any pull requests with that pull request
 //   ID. Use GetPullRequest to verify the correct repository name for the pull
 //   request ID.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetCommentsForPullRequest
@@ -4003,42 +4003,42 @@ func (c *CodeCommit) GetCommitRequest(input *GetCommitInput) (req *request.Reque
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetCommit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeCommitIdRequiredException "CommitIdRequiredException"
+//   * CommitIdRequiredException
 //   A commit ID was not specified.
 //
-//   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
+//   * InvalidCommitIdException
 //   The specified commit ID is not valid.
 //
-//   * ErrCodeCommitIdDoesNotExistException "CommitIdDoesNotExistException"
+//   * CommitIdDoesNotExistException
 //   The specified commit ID does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetCommit
@@ -4124,58 +4124,58 @@ func (c *CodeCommit) GetDifferencesRequest(input *GetDifferencesInput) (req *req
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetDifferences for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
-//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+//   * InvalidMaxResultsException
 //   The specified number of maximum results is not valid.
 //
-//   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
+//   * InvalidCommitIdException
 //   The specified commit ID is not valid.
 //
-//   * ErrCodeCommitRequiredException "CommitRequiredException"
+//   * CommitRequiredException
 //   A commit was not specified.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodePathDoesNotExistException "PathDoesNotExistException"
+//   * PathDoesNotExistException
 //   The specified path does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetDifferences
@@ -4305,53 +4305,53 @@ func (c *CodeCommit) GetFileRequest(input *GetFileInput) (req *request.Request, 
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetFile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
+//   * FileDoesNotExistException
 //   The specified file does not exist. Verify that you have used the correct
 //   file name, full path, and extension.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
-//   * ErrCodeFileTooLargeException "FileTooLargeException"
+//   * FileTooLargeException
 //   The specified file exceeds the file size limit for AWS CodeCommit. For more
 //   information about limits in AWS CodeCommit, see AWS CodeCommit User Guide
 //   (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
@@ -4431,50 +4431,50 @@ func (c *CodeCommit) GetFolderRequest(input *GetFolderInput) (req *request.Reque
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetFolder for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeFolderDoesNotExistException "FolderDoesNotExistException"
+//   * FolderDoesNotExistException
 //   The specified folder does not exist. Either the folder name is not correct,
 //   or you did not enter the full path to the folder.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetFolder
@@ -4552,49 +4552,49 @@ func (c *CodeCommit) GetMergeCommitRequest(input *GetMergeCommitInput) (req *req
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetMergeCommit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeCommitRequiredException "CommitRequiredException"
+//   * CommitRequiredException
 //   A commit was not specified.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
+//   * InvalidConflictDetailLevelException
 //   The specified conflict detail level is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionStrategyException "InvalidConflictResolutionStrategyException"
+//   * InvalidConflictResolutionStrategyException
 //   The specified conflict resolution strategy is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetMergeCommit
@@ -4679,82 +4679,82 @@ func (c *CodeCommit) GetMergeConflictsRequest(input *GetMergeConflictsInput) (re
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetMergeConflicts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeMergeOptionRequiredException "MergeOptionRequiredException"
+//   * MergeOptionRequiredException
 //   A merge option or stategy is required, and none was provided.
 //
-//   * ErrCodeInvalidMergeOptionException "InvalidMergeOptionException"
+//   * InvalidMergeOptionException
 //   The specified merge option is not valid for this operation. Not all merge
 //   strategies are supported for all operations.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
-//   * ErrCodeCommitRequiredException "CommitRequiredException"
+//   * CommitRequiredException
 //   A commit was not specified.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeTipsDivergenceExceededException "TipsDivergenceExceededException"
+//   * TipsDivergenceExceededException
 //   The divergence between the tips of the provided commit specifiers is too
 //   great to determine whether there might be any merge conflicts. Locally compare
 //   the specifiers using git diff or a diff tool.
 //
-//   * ErrCodeInvalidMaxConflictFilesException "InvalidMaxConflictFilesException"
+//   * InvalidMaxConflictFilesException
 //   The specified value for the number of conflict files to return is not valid.
 //
-//   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
+//   * InvalidConflictDetailLevelException
 //   The specified conflict detail level is not valid.
 //
-//   * ErrCodeInvalidDestinationCommitSpecifierException "InvalidDestinationCommitSpecifierException"
+//   * InvalidDestinationCommitSpecifierException
 //   The destination commit specifier is not valid. You must provide a valid branch
 //   name, tag, or full commit ID.
 //
-//   * ErrCodeInvalidSourceCommitSpecifierException "InvalidSourceCommitSpecifierException"
+//   * InvalidSourceCommitSpecifierException
 //   The source commit specifier is not valid. You must provide a valid branch
 //   name, tag, or full commit ID.
 //
-//   * ErrCodeInvalidConflictResolutionStrategyException "InvalidConflictResolutionStrategyException"
+//   * InvalidConflictResolutionStrategyException
 //   The specified conflict resolution strategy is not valid.
 //
-//   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
+//   * MaximumFileContentToLoadExceededException
 //   The number of files to load exceeds the allowed limit.
 //
-//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   * MaximumItemsToCompareExceededException
 //   The number of items to compare between the source or destination branches
 //   and the merge base has exceeded the maximum allowed.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetMergeConflicts
@@ -4886,61 +4886,61 @@ func (c *CodeCommit) GetMergeOptionsRequest(input *GetMergeOptionsInput) (req *r
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetMergeOptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeCommitRequiredException "CommitRequiredException"
+//   * CommitRequiredException
 //   A commit was not specified.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeTipsDivergenceExceededException "TipsDivergenceExceededException"
+//   * TipsDivergenceExceededException
 //   The divergence between the tips of the provided commit specifiers is too
 //   great to determine whether there might be any merge conflicts. Locally compare
 //   the specifiers using git diff or a diff tool.
 //
-//   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
+//   * InvalidConflictDetailLevelException
 //   The specified conflict detail level is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionStrategyException "InvalidConflictResolutionStrategyException"
+//   * InvalidConflictResolutionStrategyException
 //   The specified conflict resolution strategy is not valid.
 //
-//   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
+//   * MaximumFileContentToLoadExceededException
 //   The number of files to load exceeds the allowed limit.
 //
-//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   * MaximumItemsToCompareExceededException
 //   The number of items to compare between the source or destination branches
 //   and the merge base has exceeded the maximum allowed.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetMergeOptions
@@ -5018,32 +5018,32 @@ func (c *CodeCommit) GetPullRequestRequest(input *GetPullRequestInput) (req *req
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetPullRequest for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetPullRequest
@@ -5123,38 +5123,38 @@ func (c *CodeCommit) GetPullRequestApprovalStatesRequest(input *GetPullRequestAp
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetPullRequestApprovalStates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeInvalidRevisionIdException "InvalidRevisionIdException"
+//   * InvalidRevisionIdException
 //   The revision ID is not valid. Use GetPullRequest to determine the value.
 //
-//   * ErrCodeRevisionIdRequiredException "RevisionIdRequiredException"
+//   * RevisionIdRequiredException
 //   A revision ID is required, but was not provided.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetPullRequestApprovalStates
@@ -5234,38 +5234,38 @@ func (c *CodeCommit) GetPullRequestOverrideStateRequest(input *GetPullRequestOve
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetPullRequestOverrideState for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeInvalidRevisionIdException "InvalidRevisionIdException"
+//   * InvalidRevisionIdException
 //   The revision ID is not valid. Use GetPullRequest to determine the value.
 //
-//   * ErrCodeRevisionIdRequiredException "RevisionIdRequiredException"
+//   * RevisionIdRequiredException
 //   A revision ID is required, but was not provided.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetPullRequestOverrideState
@@ -5349,33 +5349,33 @@ func (c *CodeCommit) GetRepositoryRequest(input *GetRepositoryInput) (req *reque
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetRepository for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetRepository
@@ -5453,33 +5453,33 @@ func (c *CodeCommit) GetRepositoryTriggersRequest(input *GetRepositoryTriggersIn
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation GetRepositoryTriggers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetRepositoryTriggers
@@ -5565,11 +5565,11 @@ func (c *CodeCommit) ListApprovalRuleTemplatesRequest(input *ListApprovalRuleTem
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation ListApprovalRuleTemplates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+// Returned Error Types:
+//   * InvalidMaxResultsException
 //   The specified number of maximum results is not valid.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListApprovalRuleTemplates
@@ -5705,39 +5705,39 @@ func (c *CodeCommit) ListAssociatedApprovalRuleTemplatesForRepositoryRequest(inp
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation ListAssociatedApprovalRuleTemplatesForRepository for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+//   * InvalidMaxResultsException
 //   The specified number of maximum results is not valid.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListAssociatedApprovalRuleTemplatesForRepository
@@ -5873,36 +5873,36 @@ func (c *CodeCommit) ListBranchesRequest(input *ListBranchesInput) (req *request
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation ListBranches for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListBranches
@@ -6039,50 +6039,50 @@ func (c *CodeCommit) ListPullRequestsRequest(input *ListPullRequestsInput) (req 
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation ListPullRequests for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidPullRequestStatusException "InvalidPullRequestStatusException"
+// Returned Error Types:
+//   * InvalidPullRequestStatusException
 //   The pull request status is not valid. The only valid values are OPEN and
 //   CLOSED.
 //
-//   * ErrCodeInvalidAuthorArnException "InvalidAuthorArnException"
+//   * InvalidAuthorArnException
 //   The Amazon Resource Name (ARN) is not valid. Make sure that you have provided
 //   the full ARN for the author of the pull request, and then try again.
 //
-//   * ErrCodeAuthorDoesNotExistException "AuthorDoesNotExistException"
+//   * AuthorDoesNotExistException
 //   The specified Amazon Resource Name (ARN) does not exist in the AWS account.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+//   * InvalidMaxResultsException
 //   The specified number of maximum results is not valid.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListPullRequests
@@ -6218,14 +6218,14 @@ func (c *CodeCommit) ListRepositoriesRequest(input *ListRepositoriesInput) (req 
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation ListRepositories for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidSortByException "InvalidSortByException"
+// Returned Error Types:
+//   * InvalidSortByException
 //   The specified sort by value is not valid.
 //
-//   * ErrCodeInvalidOrderException "InvalidOrderException"
+//   * InvalidOrderException
 //   The specified sort order is not valid.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListRepositories
@@ -6361,39 +6361,39 @@ func (c *CodeCommit) ListRepositoriesForApprovalRuleTemplateRequest(input *ListR
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation ListRepositoriesForApprovalRuleTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+// Returned Error Types:
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   * ApprovalRuleTemplateDoesNotExistException
 //   The specified approval rule template does not exist. Verify that the name
 //   is correct and that you are signed in to the AWS Region where the template
 //   was created, and then try again.
 //
-//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+//   * InvalidMaxResultsException
 //   The specified number of maximum results is not valid.
 //
-//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   * InvalidContinuationTokenException
 //   The specified continuation token is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListRepositoriesForApprovalRuleTemplate
@@ -6526,24 +6526,24 @@ func (c *CodeCommit) ListTagsForResourceRequest(input *ListTagsForResourceInput)
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+// Returned Error Types:
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeResourceArnRequiredException "ResourceArnRequiredException"
+//   * ResourceArnRequiredException
 //   A valid Amazon Resource Name (ARN) for an AWS CodeCommit resource is required.
 //   For a list of valid resources in AWS CodeCommit, see CodeCommit Resources
 //   and Operations (https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-access-control-identity-based.html#arn-formats)
 //   in the AWS CodeCommit User Guide.
 //
-//   * ErrCodeInvalidResourceArnException "InvalidResourceArnException"
+//   * InvalidResourceArnException
 //   The value for the resource ARN is not valid. For more information about resources
 //   in AWS CodeCommit, see CodeCommit Resources and Operations (https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-access-control-identity-based.html#arn-formats)
 //   in the AWS CodeCommit User Guide.
@@ -6623,74 +6623,74 @@ func (c *CodeCommit) MergeBranchesByFastForwardRequest(input *MergeBranchesByFas
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation MergeBranchesByFastForward for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeTipsDivergenceExceededException "TipsDivergenceExceededException"
+//   * TipsDivergenceExceededException
 //   The divergence between the tips of the provided commit specifiers is too
 //   great to determine whether there might be any merge conflicts. Locally compare
 //   the specifiers using git diff or a diff tool.
 //
-//   * ErrCodeCommitRequiredException "CommitRequiredException"
+//   * CommitRequiredException
 //   A commit was not specified.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidTargetBranchException "InvalidTargetBranchException"
+//   * InvalidTargetBranchException
 //   The specified target branch is not valid.
 //
-//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   * InvalidBranchNameException
 //   The specified reference name is not valid.
 //
-//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   * BranchNameRequiredException
 //   A branch name is required, but was not specified.
 //
-//   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
+//   * BranchNameIsTagNameException
 //   The specified branch name is not valid because it is a tag name. Enter the
 //   name of a branch in the repository. For a list of valid branch names, use
 //   ListBranches.
 //
-//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   * BranchDoesNotExistException
 //   The specified branch does not exist.
 //
-//   * ErrCodeManualMergeRequiredException "ManualMergeRequiredException"
+//   * ManualMergeRequiredException
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
 //
-//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   * ConcurrentReferenceUpdateException
 //   The merge cannot be completed because the target branch has been modified.
 //   Another user might have modified the target branch while the merge was in
 //   progress. Wait a few minutes, and then try again.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/MergeBranchesByFastForward
@@ -6768,148 +6768,148 @@ func (c *CodeCommit) MergeBranchesBySquashRequest(input *MergeBranchesBySquashIn
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation MergeBranchesBySquash for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeTipsDivergenceExceededException "TipsDivergenceExceededException"
+//   * TipsDivergenceExceededException
 //   The divergence between the tips of the provided commit specifiers is too
 //   great to determine whether there might be any merge conflicts. Locally compare
 //   the specifiers using git diff or a diff tool.
 //
-//   * ErrCodeCommitRequiredException "CommitRequiredException"
+//   * CommitRequiredException
 //   A commit was not specified.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidTargetBranchException "InvalidTargetBranchException"
+//   * InvalidTargetBranchException
 //   The specified target branch is not valid.
 //
-//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   * InvalidBranchNameException
 //   The specified reference name is not valid.
 //
-//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   * BranchNameRequiredException
 //   A branch name is required, but was not specified.
 //
-//   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
+//   * BranchNameIsTagNameException
 //   The specified branch name is not valid because it is a tag name. Enter the
 //   name of a branch in the repository. For a list of valid branch names, use
 //   ListBranches.
 //
-//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   * BranchDoesNotExistException
 //   The specified branch does not exist.
 //
-//   * ErrCodeManualMergeRequiredException "ManualMergeRequiredException"
+//   * ManualMergeRequiredException
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
 //
-//   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
+//   * InvalidConflictDetailLevelException
 //   The specified conflict detail level is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionStrategyException "InvalidConflictResolutionStrategyException"
+//   * InvalidConflictResolutionStrategyException
 //   The specified conflict resolution strategy is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionException "InvalidConflictResolutionException"
+//   * InvalidConflictResolutionException
 //   The specified conflict resolution list is not valid.
 //
-//   * ErrCodeMaximumConflictResolutionEntriesExceededException "MaximumConflictResolutionEntriesExceededException"
+//   * MaximumConflictResolutionEntriesExceededException
 //   The number of allowed conflict resolution entries was exceeded.
 //
-//   * ErrCodeMultipleConflictResolutionEntriesException "MultipleConflictResolutionEntriesException"
+//   * MultipleConflictResolutionEntriesException
 //   More than one conflict resolution entries exists for the conflict. A conflict
 //   can have only one conflict resolution entry.
 //
-//   * ErrCodeReplacementTypeRequiredException "ReplacementTypeRequiredException"
+//   * ReplacementTypeRequiredException
 //   A replacement type is required.
 //
-//   * ErrCodeInvalidReplacementTypeException "InvalidReplacementTypeException"
+//   * InvalidReplacementTypeException
 //   Automerge was specified for resolving the conflict, but the specified replacement
 //   type is not valid.
 //
-//   * ErrCodeReplacementContentRequiredException "ReplacementContentRequiredException"
+//   * ReplacementContentRequiredException
 //   USE_NEW_CONTENT was specified, but no replacement content has been provided.
 //
-//   * ErrCodeInvalidReplacementContentException "InvalidReplacementContentException"
+//   * InvalidReplacementContentException
 //   Automerge was specified for resolving the conflict, but the replacement type
 //   is not valid or content is missing.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
+//   * FileContentSizeLimitExceededException
 //   The file cannot be added because it is too large. The maximum file size is
 //   6 MB, and the combined file content change size is 7 MB. Consider making
 //   these changes using a Git client.
 //
-//   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
+//   * FolderContentSizeLimitExceededException
 //   The commit cannot be created because at least one of the overall changes
 //   in the commit results in a folder whose contents exceed the limit of 6 MB.
 //   Either reduce the number and size of your changes, or split the changes across
 //   multiple folders.
 //
-//   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
+//   * MaximumFileContentToLoadExceededException
 //   The number of files to load exceeds the allowed limit.
 //
-//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   * MaximumItemsToCompareExceededException
 //   The number of items to compare between the source or destination branches
 //   and the merge base has exceeded the maximum allowed.
 //
-//   * ErrCodeFileModeRequiredException "FileModeRequiredException"
+//   * FileModeRequiredException
 //   The commit cannot be created because no file mode has been specified. A file
 //   mode is required to update mode permissions for a file.
 //
-//   * ErrCodeInvalidFileModeException "InvalidFileModeException"
+//   * InvalidFileModeException
 //   The specified file mode permission is not valid. For a list of valid file
 //   mode permissions, see PutFile.
 //
-//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   * NameLengthExceededException
 //   The user name is not valid because it has exceeded the character limit for
 //   author names.
 //
-//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   * InvalidEmailException
 //   The specified email address either contains one or more characters that are
 //   not allowed, or it exceeds the maximum number of characters allowed for an
 //   email address.
 //
-//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   * CommitMessageLengthExceededException
 //   The commit message is too long. Provide a shorter string.
 //
-//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   * ConcurrentReferenceUpdateException
 //   The merge cannot be completed because the target branch has been modified.
 //   Another user might have modified the target branch while the merge was in
 //   progress. Wait a few minutes, and then try again.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/MergeBranchesBySquash
@@ -6987,148 +6987,148 @@ func (c *CodeCommit) MergeBranchesByThreeWayRequest(input *MergeBranchesByThreeW
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation MergeBranchesByThreeWay for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeTipsDivergenceExceededException "TipsDivergenceExceededException"
+//   * TipsDivergenceExceededException
 //   The divergence between the tips of the provided commit specifiers is too
 //   great to determine whether there might be any merge conflicts. Locally compare
 //   the specifiers using git diff or a diff tool.
 //
-//   * ErrCodeCommitRequiredException "CommitRequiredException"
+//   * CommitRequiredException
 //   A commit was not specified.
 //
-//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   * InvalidCommitException
 //   The specified commit is not valid.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidTargetBranchException "InvalidTargetBranchException"
+//   * InvalidTargetBranchException
 //   The specified target branch is not valid.
 //
-//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   * InvalidBranchNameException
 //   The specified reference name is not valid.
 //
-//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   * BranchNameRequiredException
 //   A branch name is required, but was not specified.
 //
-//   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
+//   * BranchNameIsTagNameException
 //   The specified branch name is not valid because it is a tag name. Enter the
 //   name of a branch in the repository. For a list of valid branch names, use
 //   ListBranches.
 //
-//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   * BranchDoesNotExistException
 //   The specified branch does not exist.
 //
-//   * ErrCodeManualMergeRequiredException "ManualMergeRequiredException"
+//   * ManualMergeRequiredException
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
 //
-//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   * ConcurrentReferenceUpdateException
 //   The merge cannot be completed because the target branch has been modified.
 //   Another user might have modified the target branch while the merge was in
 //   progress. Wait a few minutes, and then try again.
 //
-//   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
+//   * InvalidConflictDetailLevelException
 //   The specified conflict detail level is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionStrategyException "InvalidConflictResolutionStrategyException"
+//   * InvalidConflictResolutionStrategyException
 //   The specified conflict resolution strategy is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionException "InvalidConflictResolutionException"
+//   * InvalidConflictResolutionException
 //   The specified conflict resolution list is not valid.
 //
-//   * ErrCodeMaximumConflictResolutionEntriesExceededException "MaximumConflictResolutionEntriesExceededException"
+//   * MaximumConflictResolutionEntriesExceededException
 //   The number of allowed conflict resolution entries was exceeded.
 //
-//   * ErrCodeMultipleConflictResolutionEntriesException "MultipleConflictResolutionEntriesException"
+//   * MultipleConflictResolutionEntriesException
 //   More than one conflict resolution entries exists for the conflict. A conflict
 //   can have only one conflict resolution entry.
 //
-//   * ErrCodeReplacementTypeRequiredException "ReplacementTypeRequiredException"
+//   * ReplacementTypeRequiredException
 //   A replacement type is required.
 //
-//   * ErrCodeInvalidReplacementTypeException "InvalidReplacementTypeException"
+//   * InvalidReplacementTypeException
 //   Automerge was specified for resolving the conflict, but the specified replacement
 //   type is not valid.
 //
-//   * ErrCodeReplacementContentRequiredException "ReplacementContentRequiredException"
+//   * ReplacementContentRequiredException
 //   USE_NEW_CONTENT was specified, but no replacement content has been provided.
 //
-//   * ErrCodeInvalidReplacementContentException "InvalidReplacementContentException"
+//   * InvalidReplacementContentException
 //   Automerge was specified for resolving the conflict, but the replacement type
 //   is not valid or content is missing.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
+//   * FileContentSizeLimitExceededException
 //   The file cannot be added because it is too large. The maximum file size is
 //   6 MB, and the combined file content change size is 7 MB. Consider making
 //   these changes using a Git client.
 //
-//   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
+//   * FolderContentSizeLimitExceededException
 //   The commit cannot be created because at least one of the overall changes
 //   in the commit results in a folder whose contents exceed the limit of 6 MB.
 //   Either reduce the number and size of your changes, or split the changes across
 //   multiple folders.
 //
-//   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
+//   * MaximumFileContentToLoadExceededException
 //   The number of files to load exceeds the allowed limit.
 //
-//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   * MaximumItemsToCompareExceededException
 //   The number of items to compare between the source or destination branches
 //   and the merge base has exceeded the maximum allowed.
 //
-//   * ErrCodeFileModeRequiredException "FileModeRequiredException"
+//   * FileModeRequiredException
 //   The commit cannot be created because no file mode has been specified. A file
 //   mode is required to update mode permissions for a file.
 //
-//   * ErrCodeInvalidFileModeException "InvalidFileModeException"
+//   * InvalidFileModeException
 //   The specified file mode permission is not valid. For a list of valid file
 //   mode permissions, see PutFile.
 //
-//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   * NameLengthExceededException
 //   The user name is not valid because it has exceeded the character limit for
 //   author names.
 //
-//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   * InvalidEmailException
 //   The specified email address either contains one or more characters that are
 //   not allowed, or it exceeds the maximum number of characters allowed for an
 //   email address.
 //
-//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   * CommitMessageLengthExceededException
 //   The commit message is too long. Provide a shorter string.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/MergeBranchesByThreeWay
@@ -7209,77 +7209,77 @@ func (c *CodeCommit) MergePullRequestByFastForwardRequest(input *MergePullReques
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation MergePullRequestByFastForward for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeManualMergeRequiredException "ManualMergeRequiredException"
+// Returned Error Types:
+//   * ManualMergeRequiredException
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
 //
-//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   * PullRequestAlreadyClosedException
 //   The pull request status cannot be updated because it is already closed.
 //
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeTipOfSourceReferenceIsDifferentException "TipOfSourceReferenceIsDifferentException"
+//   * TipOfSourceReferenceIsDifferentException
 //   The tip of the source branch in the destination repository does not match
 //   the tip of the source branch specified in your request. The pull request
 //   might have been updated. Make sure that you have the latest changes.
 //
-//   * ErrCodeReferenceDoesNotExistException "ReferenceDoesNotExistException"
+//   * ReferenceDoesNotExistException
 //   The specified reference does not exist. You must provide a full commit ID.
 //
-//   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
+//   * InvalidCommitIdException
 //   The specified commit ID is not valid.
 //
-//   * ErrCodeRepositoryNotAssociatedWithPullRequestException "RepositoryNotAssociatedWithPullRequestException"
+//   * RepositoryNotAssociatedWithPullRequestException
 //   The repository does not contain any pull requests with that pull request
 //   ID. Use GetPullRequest to verify the correct repository name for the pull
 //   request ID.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   * ConcurrentReferenceUpdateException
 //   The merge cannot be completed because the target branch has been modified.
 //   Another user might have modified the target branch while the merge was in
 //   progress. Wait a few minutes, and then try again.
 //
-//   * ErrCodePullRequestApprovalRulesNotSatisfiedException "PullRequestApprovalRulesNotSatisfiedException"
+//   * PullRequestApprovalRulesNotSatisfiedException
 //   The pull request cannot be merged because one or more approval rules applied
 //   to the pull request have conditions that have not been met.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/MergePullRequestByFastForward
@@ -7359,149 +7359,149 @@ func (c *CodeCommit) MergePullRequestBySquashRequest(input *MergePullRequestBySq
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation MergePullRequestBySquash for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+// Returned Error Types:
+//   * PullRequestAlreadyClosedException
 //   The pull request status cannot be updated because it is already closed.
 //
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
+//   * InvalidCommitIdException
 //   The specified commit ID is not valid.
 //
-//   * ErrCodeManualMergeRequiredException "ManualMergeRequiredException"
+//   * ManualMergeRequiredException
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
 //
-//   * ErrCodeTipOfSourceReferenceIsDifferentException "TipOfSourceReferenceIsDifferentException"
+//   * TipOfSourceReferenceIsDifferentException
 //   The tip of the source branch in the destination repository does not match
 //   the tip of the source branch specified in your request. The pull request
 //   might have been updated. Make sure that you have the latest changes.
 //
-//   * ErrCodeTipsDivergenceExceededException "TipsDivergenceExceededException"
+//   * TipsDivergenceExceededException
 //   The divergence between the tips of the provided commit specifiers is too
 //   great to determine whether there might be any merge conflicts. Locally compare
 //   the specifiers using git diff or a diff tool.
 //
-//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   * NameLengthExceededException
 //   The user name is not valid because it has exceeded the character limit for
 //   author names.
 //
-//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   * InvalidEmailException
 //   The specified email address either contains one or more characters that are
 //   not allowed, or it exceeds the maximum number of characters allowed for an
 //   email address.
 //
-//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   * CommitMessageLengthExceededException
 //   The commit message is too long. Provide a shorter string.
 //
-//   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
+//   * InvalidConflictDetailLevelException
 //   The specified conflict detail level is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionStrategyException "InvalidConflictResolutionStrategyException"
+//   * InvalidConflictResolutionStrategyException
 //   The specified conflict resolution strategy is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionException "InvalidConflictResolutionException"
+//   * InvalidConflictResolutionException
 //   The specified conflict resolution list is not valid.
 //
-//   * ErrCodeReplacementTypeRequiredException "ReplacementTypeRequiredException"
+//   * ReplacementTypeRequiredException
 //   A replacement type is required.
 //
-//   * ErrCodeInvalidReplacementTypeException "InvalidReplacementTypeException"
+//   * InvalidReplacementTypeException
 //   Automerge was specified for resolving the conflict, but the specified replacement
 //   type is not valid.
 //
-//   * ErrCodeMultipleConflictResolutionEntriesException "MultipleConflictResolutionEntriesException"
+//   * MultipleConflictResolutionEntriesException
 //   More than one conflict resolution entries exists for the conflict. A conflict
 //   can have only one conflict resolution entry.
 //
-//   * ErrCodeReplacementContentRequiredException "ReplacementContentRequiredException"
+//   * ReplacementContentRequiredException
 //   USE_NEW_CONTENT was specified, but no replacement content has been provided.
 //
-//   * ErrCodeMaximumConflictResolutionEntriesExceededException "MaximumConflictResolutionEntriesExceededException"
+//   * MaximumConflictResolutionEntriesExceededException
 //   The number of allowed conflict resolution entries was exceeded.
 //
-//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   * ConcurrentReferenceUpdateException
 //   The merge cannot be completed because the target branch has been modified.
 //   Another user might have modified the target branch while the merge was in
 //   progress. Wait a few minutes, and then try again.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeInvalidFileModeException "InvalidFileModeException"
+//   * InvalidFileModeException
 //   The specified file mode permission is not valid. For a list of valid file
 //   mode permissions, see PutFile.
 //
-//   * ErrCodeInvalidReplacementContentException "InvalidReplacementContentException"
+//   * InvalidReplacementContentException
 //   Automerge was specified for resolving the conflict, but the replacement type
 //   is not valid or content is missing.
 //
-//   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
+//   * FileContentSizeLimitExceededException
 //   The file cannot be added because it is too large. The maximum file size is
 //   6 MB, and the combined file content change size is 7 MB. Consider making
 //   these changes using a Git client.
 //
-//   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
+//   * FolderContentSizeLimitExceededException
 //   The commit cannot be created because at least one of the overall changes
 //   in the commit results in a folder whose contents exceed the limit of 6 MB.
 //   Either reduce the number and size of your changes, or split the changes across
 //   multiple folders.
 //
-//   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
+//   * MaximumFileContentToLoadExceededException
 //   The number of files to load exceeds the allowed limit.
 //
-//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   * MaximumItemsToCompareExceededException
 //   The number of items to compare between the source or destination branches
 //   and the merge base has exceeded the maximum allowed.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeRepositoryNotAssociatedWithPullRequestException "RepositoryNotAssociatedWithPullRequestException"
+//   * RepositoryNotAssociatedWithPullRequestException
 //   The repository does not contain any pull requests with that pull request
 //   ID. Use GetPullRequest to verify the correct repository name for the pull
 //   request ID.
 //
-//   * ErrCodePullRequestApprovalRulesNotSatisfiedException "PullRequestApprovalRulesNotSatisfiedException"
+//   * PullRequestApprovalRulesNotSatisfiedException
 //   The pull request cannot be merged because one or more approval rules applied
 //   to the pull request have conditions that have not been met.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/MergePullRequestBySquash
@@ -7582,149 +7582,149 @@ func (c *CodeCommit) MergePullRequestByThreeWayRequest(input *MergePullRequestBy
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation MergePullRequestByThreeWay for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+// Returned Error Types:
+//   * PullRequestAlreadyClosedException
 //   The pull request status cannot be updated because it is already closed.
 //
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
+//   * InvalidCommitIdException
 //   The specified commit ID is not valid.
 //
-//   * ErrCodeManualMergeRequiredException "ManualMergeRequiredException"
+//   * ManualMergeRequiredException
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
 //
-//   * ErrCodeTipOfSourceReferenceIsDifferentException "TipOfSourceReferenceIsDifferentException"
+//   * TipOfSourceReferenceIsDifferentException
 //   The tip of the source branch in the destination repository does not match
 //   the tip of the source branch specified in your request. The pull request
 //   might have been updated. Make sure that you have the latest changes.
 //
-//   * ErrCodeTipsDivergenceExceededException "TipsDivergenceExceededException"
+//   * TipsDivergenceExceededException
 //   The divergence between the tips of the provided commit specifiers is too
 //   great to determine whether there might be any merge conflicts. Locally compare
 //   the specifiers using git diff or a diff tool.
 //
-//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   * NameLengthExceededException
 //   The user name is not valid because it has exceeded the character limit for
 //   author names.
 //
-//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   * InvalidEmailException
 //   The specified email address either contains one or more characters that are
 //   not allowed, or it exceeds the maximum number of characters allowed for an
 //   email address.
 //
-//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   * CommitMessageLengthExceededException
 //   The commit message is too long. Provide a shorter string.
 //
-//   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
+//   * InvalidConflictDetailLevelException
 //   The specified conflict detail level is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionStrategyException "InvalidConflictResolutionStrategyException"
+//   * InvalidConflictResolutionStrategyException
 //   The specified conflict resolution strategy is not valid.
 //
-//   * ErrCodeInvalidConflictResolutionException "InvalidConflictResolutionException"
+//   * InvalidConflictResolutionException
 //   The specified conflict resolution list is not valid.
 //
-//   * ErrCodeReplacementTypeRequiredException "ReplacementTypeRequiredException"
+//   * ReplacementTypeRequiredException
 //   A replacement type is required.
 //
-//   * ErrCodeInvalidReplacementTypeException "InvalidReplacementTypeException"
+//   * InvalidReplacementTypeException
 //   Automerge was specified for resolving the conflict, but the specified replacement
 //   type is not valid.
 //
-//   * ErrCodeMultipleConflictResolutionEntriesException "MultipleConflictResolutionEntriesException"
+//   * MultipleConflictResolutionEntriesException
 //   More than one conflict resolution entries exists for the conflict. A conflict
 //   can have only one conflict resolution entry.
 //
-//   * ErrCodeReplacementContentRequiredException "ReplacementContentRequiredException"
+//   * ReplacementContentRequiredException
 //   USE_NEW_CONTENT was specified, but no replacement content has been provided.
 //
-//   * ErrCodeMaximumConflictResolutionEntriesExceededException "MaximumConflictResolutionEntriesExceededException"
+//   * MaximumConflictResolutionEntriesExceededException
 //   The number of allowed conflict resolution entries was exceeded.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeInvalidFileModeException "InvalidFileModeException"
+//   * InvalidFileModeException
 //   The specified file mode permission is not valid. For a list of valid file
 //   mode permissions, see PutFile.
 //
-//   * ErrCodeInvalidReplacementContentException "InvalidReplacementContentException"
+//   * InvalidReplacementContentException
 //   Automerge was specified for resolving the conflict, but the replacement type
 //   is not valid or content is missing.
 //
-//   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
+//   * FileContentSizeLimitExceededException
 //   The file cannot be added because it is too large. The maximum file size is
 //   6 MB, and the combined file content change size is 7 MB. Consider making
 //   these changes using a Git client.
 //
-//   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
+//   * FolderContentSizeLimitExceededException
 //   The commit cannot be created because at least one of the overall changes
 //   in the commit results in a folder whose contents exceed the limit of 6 MB.
 //   Either reduce the number and size of your changes, or split the changes across
 //   multiple folders.
 //
-//   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
+//   * MaximumFileContentToLoadExceededException
 //   The number of files to load exceeds the allowed limit.
 //
-//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   * MaximumItemsToCompareExceededException
 //   The number of items to compare between the source or destination branches
 //   and the merge base has exceeded the maximum allowed.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeRepositoryNotAssociatedWithPullRequestException "RepositoryNotAssociatedWithPullRequestException"
+//   * RepositoryNotAssociatedWithPullRequestException
 //   The repository does not contain any pull requests with that pull request
 //   ID. Use GetPullRequest to verify the correct repository name for the pull
 //   request ID.
 //
-//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   * ConcurrentReferenceUpdateException
 //   The merge cannot be completed because the target branch has been modified.
 //   Another user might have modified the target branch while the merge was in
 //   progress. Wait a few minutes, and then try again.
 //
-//   * ErrCodePullRequestApprovalRulesNotSatisfiedException "PullRequestApprovalRulesNotSatisfiedException"
+//   * PullRequestApprovalRulesNotSatisfiedException
 //   The pull request cannot be merged because one or more approval rules applied
 //   to the pull request have conditions that have not been met.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/MergePullRequestByThreeWay
@@ -7804,55 +7804,55 @@ func (c *CodeCommit) OverridePullRequestApprovalRulesRequest(input *OverridePull
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation OverridePullRequestApprovalRules for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeInvalidRevisionIdException "InvalidRevisionIdException"
+//   * InvalidRevisionIdException
 //   The revision ID is not valid. Use GetPullRequest to determine the value.
 //
-//   * ErrCodeRevisionIdRequiredException "RevisionIdRequiredException"
+//   * RevisionIdRequiredException
 //   A revision ID is required, but was not provided.
 //
-//   * ErrCodeInvalidOverrideStatusException "InvalidOverrideStatusException"
+//   * InvalidOverrideStatusException
 //   The override status is not valid. Valid statuses are OVERRIDE and REVOKE.
 //
-//   * ErrCodeOverrideStatusRequiredException "OverrideStatusRequiredException"
+//   * OverrideStatusRequiredException
 //   An override status is required, but no value was provided. Valid values include
 //   OVERRIDE and REVOKE.
 //
-//   * ErrCodeOverrideAlreadySetException "OverrideAlreadySetException"
+//   * OverrideAlreadySetException
 //   The pull request has already had its approval rules set to override.
 //
-//   * ErrCodeRevisionNotCurrentException "RevisionNotCurrentException"
+//   * RevisionNotCurrentException
 //   The revision ID provided in the request does not match the current revision
 //   ID. Use GetPullRequest to retrieve the current revision ID.
 //
-//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   * PullRequestAlreadyClosedException
 //   The pull request status cannot be updated because it is already closed.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/OverridePullRequestApprovalRules
@@ -7930,89 +7930,89 @@ func (c *CodeCommit) PostCommentForComparedCommitRequest(input *PostCommentForCo
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation PostCommentForComparedCommit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeClientRequestTokenRequiredException "ClientRequestTokenRequiredException"
+//   * ClientRequestTokenRequiredException
 //   A client request token is required. A client request token is an unique,
 //   client-generated idempotency token that, when provided in a request, ensures
 //   the request cannot be repeated with a changed parameter. If a request is
 //   received with the same parameters and a token is included, the request returns
 //   information about the initial request that used that token.
 //
-//   * ErrCodeInvalidClientRequestTokenException "InvalidClientRequestTokenException"
+//   * InvalidClientRequestTokenException
 //   The client request token is not valid.
 //
-//   * ErrCodeIdempotencyParameterMismatchException "IdempotencyParameterMismatchException"
+//   * IdempotencyParameterMismatchException
 //   The client request token is not valid. Either the token is not in a valid
 //   format, or the token has been used in a previous request and cannot be reused.
 //
-//   * ErrCodeCommentContentRequiredException "CommentContentRequiredException"
+//   * CommentContentRequiredException
 //   The comment is empty. You must provide some content for a comment. The content
 //   cannot be null.
 //
-//   * ErrCodeCommentContentSizeLimitExceededException "CommentContentSizeLimitExceededException"
+//   * CommentContentSizeLimitExceededException
 //   The comment is too large. Comments are limited to 1,000 characters.
 //
-//   * ErrCodeInvalidFileLocationException "InvalidFileLocationException"
+//   * InvalidFileLocationException
 //   The location of the file is not valid. Make sure that you include the file
 //   name and extension.
 //
-//   * ErrCodeInvalidRelativeFileVersionEnumException "InvalidRelativeFileVersionEnumException"
+//   * InvalidRelativeFileVersionEnumException
 //   Either the enum is not in a valid format, or the specified file version enum
 //   is not valid in respect to the current file version.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidFilePositionException "InvalidFilePositionException"
+//   * InvalidFilePositionException
 //   The position is not valid. Make sure that the line number exists in the version
 //   of the file you want to comment on.
 //
-//   * ErrCodeCommitIdRequiredException "CommitIdRequiredException"
+//   * CommitIdRequiredException
 //   A commit ID was not specified.
 //
-//   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
+//   * InvalidCommitIdException
 //   The specified commit ID is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
-//   * ErrCodeBeforeCommitIdAndAfterCommitIdAreSameException "BeforeCommitIdAndAfterCommitIdAreSameException"
+//   * BeforeCommitIdAndAfterCommitIdAreSameException
 //   The before commit ID and the after commit ID are the same, which is not valid.
 //   The before commit ID and the after commit ID must be different commit IDs.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodePathDoesNotExistException "PathDoesNotExistException"
+//   * PathDoesNotExistException
 //   The specified path does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/PostCommentForComparedCommit
@@ -8090,108 +8090,108 @@ func (c *CodeCommit) PostCommentForPullRequestRequest(input *PostCommentForPullR
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation PostCommentForPullRequest for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeRepositoryNotAssociatedWithPullRequestException "RepositoryNotAssociatedWithPullRequestException"
+//   * RepositoryNotAssociatedWithPullRequestException
 //   The repository does not contain any pull requests with that pull request
 //   ID. Use GetPullRequest to verify the correct repository name for the pull
 //   request ID.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeClientRequestTokenRequiredException "ClientRequestTokenRequiredException"
+//   * ClientRequestTokenRequiredException
 //   A client request token is required. A client request token is an unique,
 //   client-generated idempotency token that, when provided in a request, ensures
 //   the request cannot be repeated with a changed parameter. If a request is
 //   received with the same parameters and a token is included, the request returns
 //   information about the initial request that used that token.
 //
-//   * ErrCodeInvalidClientRequestTokenException "InvalidClientRequestTokenException"
+//   * InvalidClientRequestTokenException
 //   The client request token is not valid.
 //
-//   * ErrCodeIdempotencyParameterMismatchException "IdempotencyParameterMismatchException"
+//   * IdempotencyParameterMismatchException
 //   The client request token is not valid. Either the token is not in a valid
 //   format, or the token has been used in a previous request and cannot be reused.
 //
-//   * ErrCodeCommentContentRequiredException "CommentContentRequiredException"
+//   * CommentContentRequiredException
 //   The comment is empty. You must provide some content for a comment. The content
 //   cannot be null.
 //
-//   * ErrCodeCommentContentSizeLimitExceededException "CommentContentSizeLimitExceededException"
+//   * CommentContentSizeLimitExceededException
 //   The comment is too large. Comments are limited to 1,000 characters.
 //
-//   * ErrCodeInvalidFileLocationException "InvalidFileLocationException"
+//   * InvalidFileLocationException
 //   The location of the file is not valid. Make sure that you include the file
 //   name and extension.
 //
-//   * ErrCodeInvalidRelativeFileVersionEnumException "InvalidRelativeFileVersionEnumException"
+//   * InvalidRelativeFileVersionEnumException
 //   Either the enum is not in a valid format, or the specified file version enum
 //   is not valid in respect to the current file version.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidFilePositionException "InvalidFilePositionException"
+//   * InvalidFilePositionException
 //   The position is not valid. Make sure that the line number exists in the version
 //   of the file you want to comment on.
 //
-//   * ErrCodeCommitIdRequiredException "CommitIdRequiredException"
+//   * CommitIdRequiredException
 //   A commit ID was not specified.
 //
-//   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
+//   * InvalidCommitIdException
 //   The specified commit ID is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
-//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   * CommitDoesNotExistException
 //   The specified commit does not exist or no commit was specified, and the specified
 //   repository has no default branch.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodePathDoesNotExistException "PathDoesNotExistException"
+//   * PathDoesNotExistException
 //   The specified path does not exist.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeBeforeCommitIdAndAfterCommitIdAreSameException "BeforeCommitIdAndAfterCommitIdAreSameException"
+//   * BeforeCommitIdAndAfterCommitIdAreSameException
 //   The before commit ID and the after commit ID are the same, which is not valid.
 //   The before commit ID and the after commit ID must be different commit IDs.
 //
@@ -8271,36 +8271,36 @@ func (c *CodeCommit) PostCommentReplyRequest(input *PostCommentReplyInput) (req 
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation PostCommentReply for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientRequestTokenRequiredException "ClientRequestTokenRequiredException"
+// Returned Error Types:
+//   * ClientRequestTokenRequiredException
 //   A client request token is required. A client request token is an unique,
 //   client-generated idempotency token that, when provided in a request, ensures
 //   the request cannot be repeated with a changed parameter. If a request is
 //   received with the same parameters and a token is included, the request returns
 //   information about the initial request that used that token.
 //
-//   * ErrCodeInvalidClientRequestTokenException "InvalidClientRequestTokenException"
+//   * InvalidClientRequestTokenException
 //   The client request token is not valid.
 //
-//   * ErrCodeIdempotencyParameterMismatchException "IdempotencyParameterMismatchException"
+//   * IdempotencyParameterMismatchException
 //   The client request token is not valid. Either the token is not in a valid
 //   format, or the token has been used in a previous request and cannot be reused.
 //
-//   * ErrCodeCommentContentRequiredException "CommentContentRequiredException"
+//   * CommentContentRequiredException
 //   The comment is empty. You must provide some content for a comment. The content
 //   cannot be null.
 //
-//   * ErrCodeCommentContentSizeLimitExceededException "CommentContentSizeLimitExceededException"
+//   * CommentContentSizeLimitExceededException
 //   The comment is too large. Comments are limited to 1,000 characters.
 //
-//   * ErrCodeCommentDoesNotExistException "CommentDoesNotExistException"
+//   * CommentDoesNotExistException
 //   No comment exists with the provided ID. Verify that you have used the correct
 //   ID, and then try again.
 //
-//   * ErrCodeCommentIdRequiredException "CommentIdRequiredException"
+//   * CommentIdRequiredException
 //   The comment ID is missing or null. A comment ID is required.
 //
-//   * ErrCodeInvalidCommentIdException "InvalidCommentIdException"
+//   * InvalidCommentIdException
 //   The comment ID is not in a valid format. Make sure that you have provided
 //   the full comment ID.
 //
@@ -8380,126 +8380,126 @@ func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, 
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation PutFile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeParentCommitIdRequiredException "ParentCommitIdRequiredException"
+//   * ParentCommitIdRequiredException
 //   A parent commit ID is required. To view the full commit ID of a branch in
 //   a repository, use GetBranch or a Git command (for example, git pull or git
 //   log).
 //
-//   * ErrCodeInvalidParentCommitIdException "InvalidParentCommitIdException"
+//   * InvalidParentCommitIdException
 //   The parent commit ID is not valid. The commit ID cannot be empty, and must
 //   match the head commit ID for the branch of the repository where you want
 //   to add or update a file.
 //
-//   * ErrCodeParentCommitDoesNotExistException "ParentCommitDoesNotExistException"
+//   * ParentCommitDoesNotExistException
 //   The parent commit ID is not valid because it does not exist. The specified
 //   parent commit ID does not exist in the specified branch of the repository.
 //
-//   * ErrCodeParentCommitIdOutdatedException "ParentCommitIdOutdatedException"
+//   * ParentCommitIdOutdatedException
 //   The file could not be added because the provided parent commit ID is not
 //   the current tip of the specified branch. To view the full commit ID of the
 //   current head of the branch, use GetBranch.
 //
-//   * ErrCodeFileContentRequiredException "FileContentRequiredException"
+//   * FileContentRequiredException
 //   The file cannot be added because it is empty. Empty files cannot be added
 //   to the repository with this API.
 //
-//   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
+//   * FileContentSizeLimitExceededException
 //   The file cannot be added because it is too large. The maximum file size is
 //   6 MB, and the combined file content change size is 7 MB. Consider making
 //   these changes using a Git client.
 //
-//   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
+//   * FolderContentSizeLimitExceededException
 //   The commit cannot be created because at least one of the overall changes
 //   in the commit results in a folder whose contents exceed the limit of 6 MB.
 //   Either reduce the number and size of your changes, or split the changes across
 //   multiple folders.
 //
-//   * ErrCodePathRequiredException "PathRequiredException"
+//   * PathRequiredException
 //   The folderPath for a location cannot be null.
 //
-//   * ErrCodeInvalidPathException "InvalidPathException"
+//   * InvalidPathException
 //   The specified path is not valid.
 //
-//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   * BranchNameRequiredException
 //   A branch name is required, but was not specified.
 //
-//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   * InvalidBranchNameException
 //   The specified reference name is not valid.
 //
-//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   * BranchDoesNotExistException
 //   The specified branch does not exist.
 //
-//   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
+//   * BranchNameIsTagNameException
 //   The specified branch name is not valid because it is a tag name. Enter the
 //   name of a branch in the repository. For a list of valid branch names, use
 //   ListBranches.
 //
-//   * ErrCodeInvalidFileModeException "InvalidFileModeException"
+//   * InvalidFileModeException
 //   The specified file mode permission is not valid. For a list of valid file
 //   mode permissions, see PutFile.
 //
-//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   * NameLengthExceededException
 //   The user name is not valid because it has exceeded the character limit for
 //   author names.
 //
-//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   * InvalidEmailException
 //   The specified email address either contains one or more characters that are
 //   not allowed, or it exceeds the maximum number of characters allowed for an
 //   email address.
 //
-//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   * CommitMessageLengthExceededException
 //   The commit message is too long. Provide a shorter string.
 //
-//   * ErrCodeInvalidDeletionParameterException "InvalidDeletionParameterException"
+//   * InvalidDeletionParameterException
 //   The specified deletion parameter is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
-//   * ErrCodeSameFileContentException "SameFileContentException"
+//   * SameFileContentException
 //   The file was not added or updated because the content of the file is exactly
 //   the same as the content of that file in the repository and branch that you
 //   specified.
 //
-//   * ErrCodeFileNameConflictsWithDirectoryNameException "FileNameConflictsWithDirectoryNameException"
+//   * FileNameConflictsWithDirectoryNameException
 //   A file cannot be added to the repository because the specified file name
 //   has the same name as a directory in this repository. Either provide another
 //   name for the file, or add the file in a directory that does not match the
 //   file name.
 //
-//   * ErrCodeDirectoryNameConflictsWithFileNameException "DirectoryNameConflictsWithFileNameException"
+//   * DirectoryNameConflictsWithFileNameException
 //   A file cannot be added to the repository because the specified path name
 //   has the same name as a file that already exists in this repository. Either
 //   provide a different name for the file, or specify a different path for the
 //   file.
 //
-//   * ErrCodeFilePathConflictsWithSubmodulePathException "FilePathConflictsWithSubmodulePathException"
+//   * FilePathConflictsWithSubmodulePathException
 //   The commit cannot be created because a specified file path points to a submodule.
 //   Verify that the destination files have valid file paths that do not point
 //   to a submodule.
@@ -8579,79 +8579,79 @@ func (c *CodeCommit) PutRepositoryTriggersRequest(input *PutRepositoryTriggersIn
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation PutRepositoryTriggers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+// Returned Error Types:
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryTriggersListRequiredException "RepositoryTriggersListRequiredException"
+//   * RepositoryTriggersListRequiredException
 //   The list of triggers for the repository is required, but was not specified.
 //
-//   * ErrCodeMaximumRepositoryTriggersExceededException "MaximumRepositoryTriggersExceededException"
+//   * MaximumRepositoryTriggersExceededException
 //   The number of triggers allowed for the repository was exceeded.
 //
-//   * ErrCodeInvalidRepositoryTriggerNameException "InvalidRepositoryTriggerNameException"
+//   * InvalidRepositoryTriggerNameException
 //   The name of the trigger is not valid.
 //
-//   * ErrCodeInvalidRepositoryTriggerDestinationArnException "InvalidRepositoryTriggerDestinationArnException"
+//   * InvalidRepositoryTriggerDestinationArnException
 //   The Amazon Resource Name (ARN) for the trigger is not valid for the specified
 //   destination. The most common reason for this error is that the ARN does not
 //   meet the requirements for the service type.
 //
-//   * ErrCodeInvalidRepositoryTriggerRegionException "InvalidRepositoryTriggerRegionException"
+//   * InvalidRepositoryTriggerRegionException
 //   The AWS Region for the trigger target does not match the AWS Region for the
 //   repository. Triggers must be created in the same Region as the target for
 //   the trigger.
 //
-//   * ErrCodeInvalidRepositoryTriggerCustomDataException "InvalidRepositoryTriggerCustomDataException"
+//   * InvalidRepositoryTriggerCustomDataException
 //   The custom data provided for the trigger is not valid.
 //
-//   * ErrCodeMaximumBranchesExceededException "MaximumBranchesExceededException"
+//   * MaximumBranchesExceededException
 //   The number of branches for the trigger was exceeded.
 //
-//   * ErrCodeInvalidRepositoryTriggerBranchNameException "InvalidRepositoryTriggerBranchNameException"
+//   * InvalidRepositoryTriggerBranchNameException
 //   One or more branch names specified for the trigger is not valid.
 //
-//   * ErrCodeInvalidRepositoryTriggerEventsException "InvalidRepositoryTriggerEventsException"
+//   * InvalidRepositoryTriggerEventsException
 //   One or more events specified for the trigger is not valid. Check to make
 //   sure that all events specified match the requirements for allowed events.
 //
-//   * ErrCodeRepositoryTriggerNameRequiredException "RepositoryTriggerNameRequiredException"
+//   * RepositoryTriggerNameRequiredException
 //   A name for the trigger is required, but was not specified.
 //
-//   * ErrCodeRepositoryTriggerDestinationArnRequiredException "RepositoryTriggerDestinationArnRequiredException"
+//   * RepositoryTriggerDestinationArnRequiredException
 //   A destination ARN for the target service for the trigger is required, but
 //   was not specified.
 //
-//   * ErrCodeRepositoryTriggerBranchNameListRequiredException "RepositoryTriggerBranchNameListRequiredException"
+//   * RepositoryTriggerBranchNameListRequiredException
 //   At least one branch name is required, but was not specified in the trigger
 //   configuration.
 //
-//   * ErrCodeRepositoryTriggerEventsListRequiredException "RepositoryTriggerEventsListRequiredException"
+//   * RepositoryTriggerEventsListRequiredException
 //   At least one event for the trigger is required, but was not specified.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/PutRepositoryTriggers
@@ -8732,41 +8732,41 @@ func (c *CodeCommit) TagResourceRequest(input *TagResourceInput) (req *request.R
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+// Returned Error Types:
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeResourceArnRequiredException "ResourceArnRequiredException"
+//   * ResourceArnRequiredException
 //   A valid Amazon Resource Name (ARN) for an AWS CodeCommit resource is required.
 //   For a list of valid resources in AWS CodeCommit, see CodeCommit Resources
 //   and Operations (https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-access-control-identity-based.html#arn-formats)
 //   in the AWS CodeCommit User Guide.
 //
-//   * ErrCodeInvalidResourceArnException "InvalidResourceArnException"
+//   * InvalidResourceArnException
 //   The value for the resource ARN is not valid. For more information about resources
 //   in AWS CodeCommit, see CodeCommit Resources and Operations (https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-access-control-identity-based.html#arn-formats)
 //   in the AWS CodeCommit User Guide.
 //
-//   * ErrCodeTagsMapRequiredException "TagsMapRequiredException"
+//   * TagsMapRequiredException
 //   A map of tags is required.
 //
-//   * ErrCodeInvalidTagsMapException "InvalidTagsMapException"
+//   * InvalidTagsMapException
 //   The map of tags is not valid.
 //
-//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   * TooManyTagsException
 //   The maximum number of tags for an AWS CodeCommit resource has been exceeded.
 //
-//   * ErrCodeInvalidSystemTagUsageException "InvalidSystemTagUsageException"
+//   * InvalidSystemTagUsageException
 //   The specified tag is not valid. Key names cannot be prefixed with aws:.
 //
-//   * ErrCodeTagPolicyException "TagPolicyException"
+//   * TagPolicyException
 //   The tag policy is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/TagResource
@@ -8847,79 +8847,79 @@ func (c *CodeCommit) TestRepositoryTriggersRequest(input *TestRepositoryTriggers
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation TestRepositoryTriggers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+// Returned Error Types:
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeRepositoryTriggersListRequiredException "RepositoryTriggersListRequiredException"
+//   * RepositoryTriggersListRequiredException
 //   The list of triggers for the repository is required, but was not specified.
 //
-//   * ErrCodeMaximumRepositoryTriggersExceededException "MaximumRepositoryTriggersExceededException"
+//   * MaximumRepositoryTriggersExceededException
 //   The number of triggers allowed for the repository was exceeded.
 //
-//   * ErrCodeInvalidRepositoryTriggerNameException "InvalidRepositoryTriggerNameException"
+//   * InvalidRepositoryTriggerNameException
 //   The name of the trigger is not valid.
 //
-//   * ErrCodeInvalidRepositoryTriggerDestinationArnException "InvalidRepositoryTriggerDestinationArnException"
+//   * InvalidRepositoryTriggerDestinationArnException
 //   The Amazon Resource Name (ARN) for the trigger is not valid for the specified
 //   destination. The most common reason for this error is that the ARN does not
 //   meet the requirements for the service type.
 //
-//   * ErrCodeInvalidRepositoryTriggerRegionException "InvalidRepositoryTriggerRegionException"
+//   * InvalidRepositoryTriggerRegionException
 //   The AWS Region for the trigger target does not match the AWS Region for the
 //   repository. Triggers must be created in the same Region as the target for
 //   the trigger.
 //
-//   * ErrCodeInvalidRepositoryTriggerCustomDataException "InvalidRepositoryTriggerCustomDataException"
+//   * InvalidRepositoryTriggerCustomDataException
 //   The custom data provided for the trigger is not valid.
 //
-//   * ErrCodeMaximumBranchesExceededException "MaximumBranchesExceededException"
+//   * MaximumBranchesExceededException
 //   The number of branches for the trigger was exceeded.
 //
-//   * ErrCodeInvalidRepositoryTriggerBranchNameException "InvalidRepositoryTriggerBranchNameException"
+//   * InvalidRepositoryTriggerBranchNameException
 //   One or more branch names specified for the trigger is not valid.
 //
-//   * ErrCodeInvalidRepositoryTriggerEventsException "InvalidRepositoryTriggerEventsException"
+//   * InvalidRepositoryTriggerEventsException
 //   One or more events specified for the trigger is not valid. Check to make
 //   sure that all events specified match the requirements for allowed events.
 //
-//   * ErrCodeRepositoryTriggerNameRequiredException "RepositoryTriggerNameRequiredException"
+//   * RepositoryTriggerNameRequiredException
 //   A name for the trigger is required, but was not specified.
 //
-//   * ErrCodeRepositoryTriggerDestinationArnRequiredException "RepositoryTriggerDestinationArnRequiredException"
+//   * RepositoryTriggerDestinationArnRequiredException
 //   A destination ARN for the target service for the trigger is required, but
 //   was not specified.
 //
-//   * ErrCodeRepositoryTriggerBranchNameListRequiredException "RepositoryTriggerBranchNameListRequiredException"
+//   * RepositoryTriggerBranchNameListRequiredException
 //   At least one branch name is required, but was not specified in the trigger
 //   configuration.
 //
-//   * ErrCodeRepositoryTriggerEventsListRequiredException "RepositoryTriggerEventsListRequiredException"
+//   * RepositoryTriggerEventsListRequiredException
 //   At least one event for the trigger is required, but was not specified.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/TestRepositoryTriggers
@@ -9000,41 +9000,41 @@ func (c *CodeCommit) UntagResourceRequest(input *UntagResourceInput) (req *reque
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+// Returned Error Types:
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeResourceArnRequiredException "ResourceArnRequiredException"
+//   * ResourceArnRequiredException
 //   A valid Amazon Resource Name (ARN) for an AWS CodeCommit resource is required.
 //   For a list of valid resources in AWS CodeCommit, see CodeCommit Resources
 //   and Operations (https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-access-control-identity-based.html#arn-formats)
 //   in the AWS CodeCommit User Guide.
 //
-//   * ErrCodeInvalidResourceArnException "InvalidResourceArnException"
+//   * InvalidResourceArnException
 //   The value for the resource ARN is not valid. For more information about resources
 //   in AWS CodeCommit, see CodeCommit Resources and Operations (https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-access-control-identity-based.html#arn-formats)
 //   in the AWS CodeCommit User Guide.
 //
-//   * ErrCodeTagKeysListRequiredException "TagKeysListRequiredException"
+//   * TagKeysListRequiredException
 //   A list of tag keys is required. The list cannot be empty or null.
 //
-//   * ErrCodeInvalidTagKeysListException "InvalidTagKeysListException"
+//   * InvalidTagKeysListException
 //   The list of tags is not valid.
 //
-//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   * TooManyTagsException
 //   The maximum number of tags for an AWS CodeCommit resource has been exceeded.
 //
-//   * ErrCodeInvalidSystemTagUsageException "InvalidSystemTagUsageException"
+//   * InvalidSystemTagUsageException
 //   The specified tag is not valid. Key names cannot be prefixed with aws:.
 //
-//   * ErrCodeTagPolicyException "TagPolicyException"
+//   * TagPolicyException
 //   The tag policy is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UntagResource
@@ -9114,27 +9114,27 @@ func (c *CodeCommit) UpdateApprovalRuleTemplateContentRequest(input *UpdateAppro
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdateApprovalRuleTemplateContent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+// Returned Error Types:
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   * ApprovalRuleTemplateDoesNotExistException
 //   The specified approval rule template does not exist. Verify that the name
 //   is correct and that you are signed in to the AWS Region where the template
 //   was created, and then try again.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateContentException "InvalidApprovalRuleTemplateContentException"
+//   * InvalidApprovalRuleTemplateContentException
 //   The content of the approval rule template is not valid.
 //
-//   * ErrCodeInvalidRuleContentSha256Exception "InvalidRuleContentSha256Exception"
+//   * InvalidRuleContentSha256Exception
 //   The SHA-256 hash signature for the rule content is not valid.
 //
-//   * ErrCodeApprovalRuleTemplateContentRequiredException "ApprovalRuleTemplateContentRequiredException"
+//   * ApprovalRuleTemplateContentRequiredException
 //   The content for the approval rule template is empty. You must provide some
 //   content for an approval rule template. The content cannot be null.
 //
@@ -9213,21 +9213,21 @@ func (c *CodeCommit) UpdateApprovalRuleTemplateDescriptionRequest(input *UpdateA
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdateApprovalRuleTemplateDescription for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+// Returned Error Types:
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   * ApprovalRuleTemplateDoesNotExistException
 //   The specified approval rule template does not exist. Verify that the name
 //   is correct and that you are signed in to the AWS Region where the template
 //   was created, and then try again.
 //
-//   * ErrCodeInvalidApprovalRuleTemplateDescriptionException "InvalidApprovalRuleTemplateDescriptionException"
+//   * InvalidApprovalRuleTemplateDescriptionException
 //   The description for the approval rule template is not valid because it exceeds
 //   the maximum characters allowed for a description. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
@@ -9307,21 +9307,21 @@ func (c *CodeCommit) UpdateApprovalRuleTemplateNameRequest(input *UpdateApproval
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdateApprovalRuleTemplateName for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+// Returned Error Types:
+//   * InvalidApprovalRuleTemplateNameException
 //   The name of the approval rule template is not valid. Template names must
 //   be between 1 and 100 valid characters in length. For more information about
 //   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 //
-//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   * ApprovalRuleTemplateNameRequiredException
 //   An approval rule template name is required, but was not specified.
 //
-//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   * ApprovalRuleTemplateDoesNotExistException
 //   The specified approval rule template does not exist. Verify that the name
 //   is correct and that you are signed in to the AWS Region where the template
 //   was created, and then try again.
 //
-//   * ErrCodeApprovalRuleTemplateNameAlreadyExistsException "ApprovalRuleTemplateNameAlreadyExistsException"
+//   * ApprovalRuleTemplateNameAlreadyExistsException
 //   You cannot create an approval rule template with that name because a template
 //   with that name already exists in this AWS Region for your AWS account. Approval
 //   rule template names must be unique.
@@ -9401,30 +9401,30 @@ func (c *CodeCommit) UpdateCommentRequest(input *UpdateCommentInput) (req *reque
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdateComment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCommentContentRequiredException "CommentContentRequiredException"
+// Returned Error Types:
+//   * CommentContentRequiredException
 //   The comment is empty. You must provide some content for a comment. The content
 //   cannot be null.
 //
-//   * ErrCodeCommentContentSizeLimitExceededException "CommentContentSizeLimitExceededException"
+//   * CommentContentSizeLimitExceededException
 //   The comment is too large. Comments are limited to 1,000 characters.
 //
-//   * ErrCodeCommentDoesNotExistException "CommentDoesNotExistException"
+//   * CommentDoesNotExistException
 //   No comment exists with the provided ID. Verify that you have used the correct
 //   ID, and then try again.
 //
-//   * ErrCodeCommentIdRequiredException "CommentIdRequiredException"
+//   * CommentIdRequiredException
 //   The comment ID is missing or null. A comment ID is required.
 //
-//   * ErrCodeInvalidCommentIdException "InvalidCommentIdException"
+//   * InvalidCommentIdException
 //   The comment ID is not in a valid format. Make sure that you have provided
 //   the full comment ID.
 //
-//   * ErrCodeCommentNotCreatedByCallerException "CommentNotCreatedByCallerException"
+//   * CommentNotCreatedByCallerException
 //   You cannot modify or delete this comment. Only comment authors can modify
 //   or delete their comments.
 //
-//   * ErrCodeCommentDeletedException "CommentDeletedException"
+//   * CommentDeletedException
 //   This comment has already been deleted. You cannot edit or delete a deleted
 //   comment.
 //
@@ -9508,42 +9508,42 @@ func (c *CodeCommit) UpdateDefaultBranchRequest(input *UpdateDefaultBranchInput)
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdateDefaultBranch for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   * BranchNameRequiredException
 //   A branch name is required, but was not specified.
 //
-//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   * InvalidBranchNameException
 //   The specified reference name is not valid.
 //
-//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   * BranchDoesNotExistException
 //   The specified branch does not exist.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdateDefaultBranch
@@ -9623,58 +9623,58 @@ func (c *CodeCommit) UpdatePullRequestApprovalRuleContentRequest(input *UpdatePu
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdatePullRequestApprovalRuleContent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   * PullRequestAlreadyClosedException
 //   The pull request status cannot be updated because it is already closed.
 //
-//   * ErrCodeApprovalRuleNameRequiredException "ApprovalRuleNameRequiredException"
+//   * ApprovalRuleNameRequiredException
 //   An approval rule name is required, but was not specified.
 //
-//   * ErrCodeInvalidApprovalRuleNameException "InvalidApprovalRuleNameException"
+//   * InvalidApprovalRuleNameException
 //   The name for the approval rule is not valid.
 //
-//   * ErrCodeApprovalRuleDoesNotExistException "ApprovalRuleDoesNotExistException"
+//   * ApprovalRuleDoesNotExistException
 //   The specified approval rule does not exist.
 //
-//   * ErrCodeInvalidRuleContentSha256Exception "InvalidRuleContentSha256Exception"
+//   * InvalidRuleContentSha256Exception
 //   The SHA-256 hash signature for the rule content is not valid.
 //
-//   * ErrCodeApprovalRuleContentRequiredException "ApprovalRuleContentRequiredException"
+//   * ApprovalRuleContentRequiredException
 //   The content for the approval rule is empty. You must provide some content
 //   for an approval rule. The content cannot be null.
 //
-//   * ErrCodeInvalidApprovalRuleContentException "InvalidApprovalRuleContentException"
+//   * InvalidApprovalRuleContentException
 //   The content for the approval rule is not valid.
 //
-//   * ErrCodeCannotModifyApprovalRuleFromTemplateException "CannotModifyApprovalRuleFromTemplateException"
+//   * CannotModifyApprovalRuleFromTemplateException
 //   The approval rule cannot be modified for the pull request because it was
 //   created by an approval rule template and applied to the pull request automatically.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdatePullRequestApprovalRuleContent
@@ -9754,61 +9754,61 @@ func (c *CodeCommit) UpdatePullRequestApprovalStateRequest(input *UpdatePullRequ
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdatePullRequestApprovalState for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeInvalidRevisionIdException "InvalidRevisionIdException"
+//   * InvalidRevisionIdException
 //   The revision ID is not valid. Use GetPullRequest to determine the value.
 //
-//   * ErrCodeRevisionIdRequiredException "RevisionIdRequiredException"
+//   * RevisionIdRequiredException
 //   A revision ID is required, but was not provided.
 //
-//   * ErrCodeInvalidApprovalStateException "InvalidApprovalStateException"
+//   * InvalidApprovalStateException
 //   The state for the approval is not valid. Valid values include APPROVE and
 //   REVOKE.
 //
-//   * ErrCodeApprovalStateRequiredException "ApprovalStateRequiredException"
+//   * ApprovalStateRequiredException
 //   An approval state is required, but was not specified.
 //
-//   * ErrCodePullRequestCannotBeApprovedByAuthorException "PullRequestCannotBeApprovedByAuthorException"
+//   * PullRequestCannotBeApprovedByAuthorException
 //   The approval cannot be applied because the user approving the pull request
 //   matches the user who created the pull request. You cannot approve a pull
 //   request that you created.
 //
-//   * ErrCodeRevisionNotCurrentException "RevisionNotCurrentException"
+//   * RevisionNotCurrentException
 //   The revision ID provided in the request does not match the current revision
 //   ID. Use GetPullRequest to retrieve the current revision ID.
 //
-//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   * PullRequestAlreadyClosedException
 //   The pull request status cannot be updated because it is already closed.
 //
-//   * ErrCodeMaximumNumberOfApprovalsExceededException "MaximumNumberOfApprovalsExceededException"
+//   * MaximumNumberOfApprovalsExceededException
 //   The number of approvals required for the approval rule exceeds the maximum
 //   number allowed.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdatePullRequestApprovalState
@@ -9886,24 +9886,24 @@ func (c *CodeCommit) UpdatePullRequestDescriptionRequest(input *UpdatePullReques
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdatePullRequestDescription for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeInvalidDescriptionException "InvalidDescriptionException"
+//   * InvalidDescriptionException
 //   The pull request description is not valid. Descriptions cannot be more than
 //   1,000 characters.
 //
-//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   * PullRequestAlreadyClosedException
 //   The pull request status cannot be updated because it is already closed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdatePullRequestDescription
@@ -9981,43 +9981,43 @@ func (c *CodeCommit) UpdatePullRequestStatusRequest(input *UpdatePullRequestStat
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdatePullRequestStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeInvalidPullRequestStatusUpdateException "InvalidPullRequestStatusUpdateException"
+//   * InvalidPullRequestStatusUpdateException
 //   The pull request status update is not valid. The only valid update is from
 //   OPEN to CLOSED.
 //
-//   * ErrCodeInvalidPullRequestStatusException "InvalidPullRequestStatusException"
+//   * InvalidPullRequestStatusException
 //   The pull request status is not valid. The only valid values are OPEN and
 //   CLOSED.
 //
-//   * ErrCodePullRequestStatusRequiredException "PullRequestStatusRequiredException"
+//   * PullRequestStatusRequiredException
 //   A pull request status is required, but none was provided.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdatePullRequestStatus
@@ -10095,27 +10095,27 @@ func (c *CodeCommit) UpdatePullRequestTitleRequest(input *UpdatePullRequestTitle
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdatePullRequestTitle for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+// Returned Error Types:
+//   * PullRequestDoesNotExistException
 //   The pull request ID could not be found. Make sure that you have specified
 //   the correct repository name and pull request ID, and then try again.
 //
-//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   * InvalidPullRequestIdException
 //   The pull request ID is not valid. Make sure that you have provided the full
 //   ID and that the pull request is in the specified repository, and then try
 //   again.
 //
-//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   * PullRequestIdRequiredException
 //   A pull request ID is required, but none was provided.
 //
-//   * ErrCodeTitleRequiredException "TitleRequiredException"
+//   * TitleRequiredException
 //   A pull request title is required. It cannot be empty or null.
 //
-//   * ErrCodeInvalidTitleException "InvalidTitleException"
+//   * InvalidTitleException
 //   The title of the pull request is not valid. Pull request titles cannot exceed
 //   100 characters in length.
 //
-//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   * PullRequestAlreadyClosedException
 //   The pull request status cannot be updated because it is already closed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdatePullRequestTitle
@@ -10200,36 +10200,36 @@ func (c *CodeCommit) UpdateRepositoryDescriptionRequest(input *UpdateRepositoryD
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdateRepositoryDescription for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+// Returned Error Types:
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
-//   * ErrCodeInvalidRepositoryDescriptionException "InvalidRepositoryDescriptionException"
+//   * InvalidRepositoryDescriptionException
 //   The specified repository description is not valid.
 //
-//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   * EncryptionIntegrityChecksFailedException
 //   An encryption integrity check failed.
 //
-//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   * EncryptionKeyAccessDeniedException
 //   An encryption key could not be accessed.
 //
-//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   * EncryptionKeyDisabledException
 //   The encryption key is disabled.
 //
-//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   * EncryptionKeyNotFoundException
 //   No encryption key was found.
 //
-//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   * EncryptionKeyUnavailableException
 //   The encryption key is not available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdateRepositoryDescription
@@ -10313,17 +10313,17 @@ func (c *CodeCommit) UpdateRepositoryNameRequest(input *UpdateRepositoryNameInpu
 // See the AWS API reference guide for AWS CodeCommit's
 // API operation UpdateRepositoryName for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+// Returned Error Types:
+//   * RepositoryDoesNotExistException
 //   The specified repository does not exist.
 //
-//   * ErrCodeRepositoryNameExistsException "RepositoryNameExistsException"
+//   * RepositoryNameExistsException
 //   The specified repository name already exists.
 //
-//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   * RepositoryNameRequiredException
 //   A repository name is required, but was not specified.
 //
-//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   * InvalidRepositoryNameException
 //   A specified repository name is not valid.
 //
 //   This exception occurs only when a specified repository name is not valid.
@@ -10350,6 +10350,57 @@ func (c *CodeCommit) UpdateRepositoryNameWithContext(ctx aws.Context, input *Upd
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// The specified Amazon Resource Name (ARN) does not exist in the AWS account.
+type ActorDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ActorDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ActorDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorActorDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &ActorDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ActorDoesNotExistException) Code() string {
+	return "ActorDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s ActorDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ActorDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s ActorDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ActorDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ActorDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Returns information about a specific approval on a pull request.
@@ -10473,6 +10524,109 @@ func (s *ApprovalRule) SetRuleContentSha256(v string) *ApprovalRule {
 	return s
 }
 
+// The content for the approval rule is empty. You must provide some content
+// for an approval rule. The content cannot be null.
+type ApprovalRuleContentRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ApprovalRuleContentRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleContentRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorApprovalRuleContentRequiredException(v protocol.ResponseMetadata) error {
+	return &ApprovalRuleContentRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApprovalRuleContentRequiredException) Code() string {
+	return "ApprovalRuleContentRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ApprovalRuleContentRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApprovalRuleContentRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ApprovalRuleContentRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApprovalRuleContentRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApprovalRuleContentRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified approval rule does not exist.
+type ApprovalRuleDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ApprovalRuleDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorApprovalRuleDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &ApprovalRuleDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApprovalRuleDoesNotExistException) Code() string {
+	return "ApprovalRuleDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s ApprovalRuleDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApprovalRuleDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s ApprovalRuleDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApprovalRuleDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApprovalRuleDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Returns information about an event for an approval rule.
 type ApprovalRuleEventMetadata struct {
 	_ struct{} `type:"structure"`
@@ -10513,6 +10667,109 @@ func (s *ApprovalRuleEventMetadata) SetApprovalRuleId(v string) *ApprovalRuleEve
 func (s *ApprovalRuleEventMetadata) SetApprovalRuleName(v string) *ApprovalRuleEventMetadata {
 	s.ApprovalRuleName = &v
 	return s
+}
+
+// An approval rule with that name already exists. Approval rule names must
+// be unique within the scope of a pull request.
+type ApprovalRuleNameAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ApprovalRuleNameAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleNameAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorApprovalRuleNameAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ApprovalRuleNameAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApprovalRuleNameAlreadyExistsException) Code() string {
+	return "ApprovalRuleNameAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ApprovalRuleNameAlreadyExistsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApprovalRuleNameAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ApprovalRuleNameAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApprovalRuleNameAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApprovalRuleNameAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An approval rule name is required, but was not specified.
+type ApprovalRuleNameRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ApprovalRuleNameRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleNameRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorApprovalRuleNameRequiredException(v protocol.ResponseMetadata) error {
+	return &ApprovalRuleNameRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApprovalRuleNameRequiredException) Code() string {
+	return "ApprovalRuleNameRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ApprovalRuleNameRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApprovalRuleNameRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ApprovalRuleNameRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApprovalRuleNameRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApprovalRuleNameRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Returns information about an override event for approval rules for a pull
@@ -10638,6 +10895,268 @@ func (s *ApprovalRuleTemplate) SetRuleContentSha256(v string) *ApprovalRuleTempl
 	return s
 }
 
+// The content for the approval rule template is empty. You must provide some
+// content for an approval rule template. The content cannot be null.
+type ApprovalRuleTemplateContentRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ApprovalRuleTemplateContentRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleTemplateContentRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorApprovalRuleTemplateContentRequiredException(v protocol.ResponseMetadata) error {
+	return &ApprovalRuleTemplateContentRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApprovalRuleTemplateContentRequiredException) Code() string {
+	return "ApprovalRuleTemplateContentRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ApprovalRuleTemplateContentRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApprovalRuleTemplateContentRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ApprovalRuleTemplateContentRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApprovalRuleTemplateContentRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApprovalRuleTemplateContentRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified approval rule template does not exist. Verify that the name
+// is correct and that you are signed in to the AWS Region where the template
+// was created, and then try again.
+type ApprovalRuleTemplateDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ApprovalRuleTemplateDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleTemplateDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorApprovalRuleTemplateDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &ApprovalRuleTemplateDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApprovalRuleTemplateDoesNotExistException) Code() string {
+	return "ApprovalRuleTemplateDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s ApprovalRuleTemplateDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApprovalRuleTemplateDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s ApprovalRuleTemplateDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApprovalRuleTemplateDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApprovalRuleTemplateDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The approval rule template is associated with one or more repositories. You
+// cannot delete a template that is associated with a repository. Remove all
+// associations, and then try again.
+type ApprovalRuleTemplateInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ApprovalRuleTemplateInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleTemplateInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorApprovalRuleTemplateInUseException(v protocol.ResponseMetadata) error {
+	return &ApprovalRuleTemplateInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApprovalRuleTemplateInUseException) Code() string {
+	return "ApprovalRuleTemplateInUseException"
+}
+
+// Message returns the exception's message.
+func (s ApprovalRuleTemplateInUseException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApprovalRuleTemplateInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ApprovalRuleTemplateInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApprovalRuleTemplateInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApprovalRuleTemplateInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You cannot create an approval rule template with that name because a template
+// with that name already exists in this AWS Region for your AWS account. Approval
+// rule template names must be unique.
+type ApprovalRuleTemplateNameAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ApprovalRuleTemplateNameAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleTemplateNameAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorApprovalRuleTemplateNameAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ApprovalRuleTemplateNameAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApprovalRuleTemplateNameAlreadyExistsException) Code() string {
+	return "ApprovalRuleTemplateNameAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ApprovalRuleTemplateNameAlreadyExistsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApprovalRuleTemplateNameAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ApprovalRuleTemplateNameAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApprovalRuleTemplateNameAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApprovalRuleTemplateNameAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An approval rule template name is required, but was not specified.
+type ApprovalRuleTemplateNameRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ApprovalRuleTemplateNameRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleTemplateNameRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorApprovalRuleTemplateNameRequiredException(v protocol.ResponseMetadata) error {
+	return &ApprovalRuleTemplateNameRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApprovalRuleTemplateNameRequiredException) Code() string {
+	return "ApprovalRuleTemplateNameRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ApprovalRuleTemplateNameRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApprovalRuleTemplateNameRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ApprovalRuleTemplateNameRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApprovalRuleTemplateNameRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApprovalRuleTemplateNameRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Returns information about a change in the approval state for a pull request.
 type ApprovalStateChangedEventMetadata struct {
 	_ struct{} `type:"structure"`
@@ -10669,6 +11188,57 @@ func (s *ApprovalStateChangedEventMetadata) SetApprovalStatus(v string) *Approva
 func (s *ApprovalStateChangedEventMetadata) SetRevisionId(v string) *ApprovalStateChangedEventMetadata {
 	s.RevisionId = &v
 	return s
+}
+
+// An approval state is required, but was not specified.
+type ApprovalStateRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ApprovalStateRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalStateRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorApprovalStateRequiredException(v protocol.ResponseMetadata) error {
+	return &ApprovalStateRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApprovalStateRequiredException) Code() string {
+	return "ApprovalStateRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ApprovalStateRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApprovalStateRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ApprovalStateRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApprovalStateRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApprovalStateRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type AssociateApprovalRuleTemplateWithRepositoryInput struct {
@@ -10741,6 +11311,57 @@ func (s AssociateApprovalRuleTemplateWithRepositoryOutput) String() string {
 // GoString returns the string representation
 func (s AssociateApprovalRuleTemplateWithRepositoryOutput) GoString() string {
 	return s.String()
+}
+
+// The specified Amazon Resource Name (ARN) does not exist in the AWS account.
+type AuthorDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s AuthorDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuthorDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorAuthorDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &AuthorDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AuthorDoesNotExistException) Code() string {
+	return "AuthorDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s AuthorDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AuthorDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s AuthorDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AuthorDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AuthorDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Returns information about errors in a BatchAssociateApprovalRuleTemplateWithRepositories
@@ -11511,6 +12132,160 @@ func (s *BatchGetRepositoriesOutput) SetRepositoriesNotFound(v []*string) *Batch
 	return s
 }
 
+// The before commit ID and the after commit ID are the same, which is not valid.
+// The before commit ID and the after commit ID must be different commit IDs.
+type BeforeCommitIdAndAfterCommitIdAreSameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s BeforeCommitIdAndAfterCommitIdAreSameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BeforeCommitIdAndAfterCommitIdAreSameException) GoString() string {
+	return s.String()
+}
+
+func newErrorBeforeCommitIdAndAfterCommitIdAreSameException(v protocol.ResponseMetadata) error {
+	return &BeforeCommitIdAndAfterCommitIdAreSameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BeforeCommitIdAndAfterCommitIdAreSameException) Code() string {
+	return "BeforeCommitIdAndAfterCommitIdAreSameException"
+}
+
+// Message returns the exception's message.
+func (s BeforeCommitIdAndAfterCommitIdAreSameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BeforeCommitIdAndAfterCommitIdAreSameException) OrigErr() error {
+	return nil
+}
+
+func (s BeforeCommitIdAndAfterCommitIdAreSameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BeforeCommitIdAndAfterCommitIdAreSameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BeforeCommitIdAndAfterCommitIdAreSameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified blob does not exist.
+type BlobIdDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s BlobIdDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BlobIdDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorBlobIdDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &BlobIdDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BlobIdDoesNotExistException) Code() string {
+	return "BlobIdDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s BlobIdDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BlobIdDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s BlobIdDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BlobIdDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BlobIdDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A blob ID is required, but was not specified.
+type BlobIdRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s BlobIdRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BlobIdRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorBlobIdRequiredException(v protocol.ResponseMetadata) error {
+	return &BlobIdRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BlobIdRequiredException) Code() string {
+	return "BlobIdRequiredException"
+}
+
+// Message returns the exception's message.
+func (s BlobIdRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BlobIdRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s BlobIdRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BlobIdRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BlobIdRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Returns information about a specific Git blob object.
 type BlobMetadata struct {
 	_ struct{} `type:"structure"`
@@ -11561,6 +12336,57 @@ func (s *BlobMetadata) SetPath(v string) *BlobMetadata {
 	return s
 }
 
+// The specified branch does not exist.
+type BranchDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s BranchDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BranchDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorBranchDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &BranchDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BranchDoesNotExistException) Code() string {
+	return "BranchDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s BranchDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BranchDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s BranchDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BranchDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BranchDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Returns information about a branch.
 type BranchInfo struct {
 	_ struct{} `type:"structure"`
@@ -11592,6 +12418,320 @@ func (s *BranchInfo) SetBranchName(v string) *BranchInfo {
 func (s *BranchInfo) SetCommitId(v string) *BranchInfo {
 	s.CommitId = &v
 	return s
+}
+
+// The specified branch name already exists.
+type BranchNameExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s BranchNameExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BranchNameExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorBranchNameExistsException(v protocol.ResponseMetadata) error {
+	return &BranchNameExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BranchNameExistsException) Code() string {
+	return "BranchNameExistsException"
+}
+
+// Message returns the exception's message.
+func (s BranchNameExistsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BranchNameExistsException) OrigErr() error {
+	return nil
+}
+
+func (s BranchNameExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BranchNameExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BranchNameExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified branch name is not valid because it is a tag name. Enter the
+// name of a branch in the repository. For a list of valid branch names, use
+// ListBranches.
+type BranchNameIsTagNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s BranchNameIsTagNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BranchNameIsTagNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorBranchNameIsTagNameException(v protocol.ResponseMetadata) error {
+	return &BranchNameIsTagNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BranchNameIsTagNameException) Code() string {
+	return "BranchNameIsTagNameException"
+}
+
+// Message returns the exception's message.
+func (s BranchNameIsTagNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BranchNameIsTagNameException) OrigErr() error {
+	return nil
+}
+
+func (s BranchNameIsTagNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BranchNameIsTagNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BranchNameIsTagNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A branch name is required, but was not specified.
+type BranchNameRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s BranchNameRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BranchNameRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorBranchNameRequiredException(v protocol.ResponseMetadata) error {
+	return &BranchNameRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BranchNameRequiredException) Code() string {
+	return "BranchNameRequiredException"
+}
+
+// Message returns the exception's message.
+func (s BranchNameRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BranchNameRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s BranchNameRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BranchNameRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BranchNameRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The approval rule cannot be deleted from the pull request because it was
+// created by an approval rule template and applied to the pull request automatically.
+type CannotDeleteApprovalRuleFromTemplateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CannotDeleteApprovalRuleFromTemplateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CannotDeleteApprovalRuleFromTemplateException) GoString() string {
+	return s.String()
+}
+
+func newErrorCannotDeleteApprovalRuleFromTemplateException(v protocol.ResponseMetadata) error {
+	return &CannotDeleteApprovalRuleFromTemplateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CannotDeleteApprovalRuleFromTemplateException) Code() string {
+	return "CannotDeleteApprovalRuleFromTemplateException"
+}
+
+// Message returns the exception's message.
+func (s CannotDeleteApprovalRuleFromTemplateException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CannotDeleteApprovalRuleFromTemplateException) OrigErr() error {
+	return nil
+}
+
+func (s CannotDeleteApprovalRuleFromTemplateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CannotDeleteApprovalRuleFromTemplateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CannotDeleteApprovalRuleFromTemplateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The approval rule cannot be modified for the pull request because it was
+// created by an approval rule template and applied to the pull request automatically.
+type CannotModifyApprovalRuleFromTemplateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CannotModifyApprovalRuleFromTemplateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CannotModifyApprovalRuleFromTemplateException) GoString() string {
+	return s.String()
+}
+
+func newErrorCannotModifyApprovalRuleFromTemplateException(v protocol.ResponseMetadata) error {
+	return &CannotModifyApprovalRuleFromTemplateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CannotModifyApprovalRuleFromTemplateException) Code() string {
+	return "CannotModifyApprovalRuleFromTemplateException"
+}
+
+// Message returns the exception's message.
+func (s CannotModifyApprovalRuleFromTemplateException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CannotModifyApprovalRuleFromTemplateException) OrigErr() error {
+	return nil
+}
+
+func (s CannotModifyApprovalRuleFromTemplateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CannotModifyApprovalRuleFromTemplateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CannotModifyApprovalRuleFromTemplateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A client request token is required. A client request token is an unique,
+// client-generated idempotency token that, when provided in a request, ensures
+// the request cannot be repeated with a changed parameter. If a request is
+// received with the same parameters and a token is included, the request returns
+// information about the initial request that used that token.
+type ClientRequestTokenRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ClientRequestTokenRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientRequestTokenRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorClientRequestTokenRequiredException(v protocol.ResponseMetadata) error {
+	return &ClientRequestTokenRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClientRequestTokenRequiredException) Code() string {
+	return "ClientRequestTokenRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ClientRequestTokenRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClientRequestTokenRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ClientRequestTokenRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClientRequestTokenRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClientRequestTokenRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Returns information about a specific comment.
@@ -11682,6 +12822,316 @@ func (s *Comment) SetInReplyTo(v string) *Comment {
 func (s *Comment) SetLastModifiedDate(v time.Time) *Comment {
 	s.LastModifiedDate = &v
 	return s
+}
+
+// The comment is empty. You must provide some content for a comment. The content
+// cannot be null.
+type CommentContentRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommentContentRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommentContentRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommentContentRequiredException(v protocol.ResponseMetadata) error {
+	return &CommentContentRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommentContentRequiredException) Code() string {
+	return "CommentContentRequiredException"
+}
+
+// Message returns the exception's message.
+func (s CommentContentRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommentContentRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s CommentContentRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommentContentRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommentContentRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The comment is too large. Comments are limited to 1,000 characters.
+type CommentContentSizeLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommentContentSizeLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommentContentSizeLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommentContentSizeLimitExceededException(v protocol.ResponseMetadata) error {
+	return &CommentContentSizeLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommentContentSizeLimitExceededException) Code() string {
+	return "CommentContentSizeLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s CommentContentSizeLimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommentContentSizeLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s CommentContentSizeLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommentContentSizeLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommentContentSizeLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// This comment has already been deleted. You cannot edit or delete a deleted
+// comment.
+type CommentDeletedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommentDeletedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommentDeletedException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommentDeletedException(v protocol.ResponseMetadata) error {
+	return &CommentDeletedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommentDeletedException) Code() string {
+	return "CommentDeletedException"
+}
+
+// Message returns the exception's message.
+func (s CommentDeletedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommentDeletedException) OrigErr() error {
+	return nil
+}
+
+func (s CommentDeletedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommentDeletedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommentDeletedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// No comment exists with the provided ID. Verify that you have used the correct
+// ID, and then try again.
+type CommentDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommentDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommentDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommentDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &CommentDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommentDoesNotExistException) Code() string {
+	return "CommentDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s CommentDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommentDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s CommentDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommentDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommentDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The comment ID is missing or null. A comment ID is required.
+type CommentIdRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommentIdRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommentIdRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommentIdRequiredException(v protocol.ResponseMetadata) error {
+	return &CommentIdRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommentIdRequiredException) Code() string {
+	return "CommentIdRequiredException"
+}
+
+// Message returns the exception's message.
+func (s CommentIdRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommentIdRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s CommentIdRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommentIdRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommentIdRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You cannot modify or delete this comment. Only comment authors can modify
+// or delete their comments.
+type CommentNotCreatedByCallerException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommentNotCreatedByCallerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommentNotCreatedByCallerException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommentNotCreatedByCallerException(v protocol.ResponseMetadata) error {
+	return &CommentNotCreatedByCallerException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommentNotCreatedByCallerException) Code() string {
+	return "CommentNotCreatedByCallerException"
+}
+
+// Message returns the exception's message.
+func (s CommentNotCreatedByCallerException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommentNotCreatedByCallerException) OrigErr() error {
+	return nil
+}
+
+func (s CommentNotCreatedByCallerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommentNotCreatedByCallerException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommentNotCreatedByCallerException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Returns information about comments on the comparison between two commits.
@@ -11946,6 +13396,420 @@ func (s *Commit) SetParents(v []*string) *Commit {
 func (s *Commit) SetTreeId(v string) *Commit {
 	s.TreeId = &v
 	return s
+}
+
+// The specified commit does not exist or no commit was specified, and the specified
+// repository has no default branch.
+type CommitDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommitDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommitDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommitDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &CommitDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommitDoesNotExistException) Code() string {
+	return "CommitDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s CommitDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommitDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s CommitDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommitDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommitDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified commit ID does not exist.
+type CommitIdDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommitIdDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommitIdDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommitIdDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &CommitIdDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommitIdDoesNotExistException) Code() string {
+	return "CommitIdDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s CommitIdDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommitIdDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s CommitIdDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommitIdDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommitIdDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A commit ID was not specified.
+type CommitIdRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommitIdRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommitIdRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommitIdRequiredException(v protocol.ResponseMetadata) error {
+	return &CommitIdRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommitIdRequiredException) Code() string {
+	return "CommitIdRequiredException"
+}
+
+// Message returns the exception's message.
+func (s CommitIdRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommitIdRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s CommitIdRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommitIdRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommitIdRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The maximum number of allowed commit IDs in a batch request is 100. Verify
+// that your batch requests contains no more than 100 commit IDs, and then try
+// again.
+type CommitIdsLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommitIdsLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommitIdsLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommitIdsLimitExceededException(v protocol.ResponseMetadata) error {
+	return &CommitIdsLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommitIdsLimitExceededException) Code() string {
+	return "CommitIdsLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s CommitIdsLimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommitIdsLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s CommitIdsLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommitIdsLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommitIdsLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A list of commit IDs is required, but was either not specified or the list
+// was empty.
+type CommitIdsListRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommitIdsListRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommitIdsListRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommitIdsListRequiredException(v protocol.ResponseMetadata) error {
+	return &CommitIdsListRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommitIdsListRequiredException) Code() string {
+	return "CommitIdsListRequiredException"
+}
+
+// Message returns the exception's message.
+func (s CommitIdsListRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommitIdsListRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s CommitIdsListRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommitIdsListRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommitIdsListRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The commit message is too long. Provide a shorter string.
+type CommitMessageLengthExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommitMessageLengthExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommitMessageLengthExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommitMessageLengthExceededException(v protocol.ResponseMetadata) error {
+	return &CommitMessageLengthExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommitMessageLengthExceededException) Code() string {
+	return "CommitMessageLengthExceededException"
+}
+
+// Message returns the exception's message.
+func (s CommitMessageLengthExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommitMessageLengthExceededException) OrigErr() error {
+	return nil
+}
+
+func (s CommitMessageLengthExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommitMessageLengthExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommitMessageLengthExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A commit was not specified.
+type CommitRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s CommitRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CommitRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorCommitRequiredException(v protocol.ResponseMetadata) error {
+	return &CommitRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CommitRequiredException) Code() string {
+	return "CommitRequiredException"
+}
+
+// Message returns the exception's message.
+func (s CommitRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CommitRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s CommitRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CommitRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CommitRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The merge cannot be completed because the target branch has been modified.
+// Another user might have modified the target branch while the merge was in
+// progress. Wait a few minutes, and then try again.
+type ConcurrentReferenceUpdateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ConcurrentReferenceUpdateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentReferenceUpdateException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentReferenceUpdateException(v protocol.ResponseMetadata) error {
+	return &ConcurrentReferenceUpdateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConcurrentReferenceUpdateException) Code() string {
+	return "ConcurrentReferenceUpdateException"
+}
+
+// Message returns the exception's message.
+func (s ConcurrentReferenceUpdateException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConcurrentReferenceUpdateException) OrigErr() error {
+	return nil
+}
+
+func (s ConcurrentReferenceUpdateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConcurrentReferenceUpdateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConcurrentReferenceUpdateException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information about conflicts in a merge operation.
@@ -13138,6 +15002,59 @@ func (s *CreateUnreferencedMergeCommitOutput) SetTreeId(v string) *CreateUnrefer
 	return s
 }
 
+// The specified branch is the default branch for the repository, and cannot
+// be deleted. To delete this branch, you must first set another branch as the
+// default branch.
+type DefaultBranchCannotBeDeletedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s DefaultBranchCannotBeDeletedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DefaultBranchCannotBeDeletedException) GoString() string {
+	return s.String()
+}
+
+func newErrorDefaultBranchCannotBeDeletedException(v protocol.ResponseMetadata) error {
+	return &DefaultBranchCannotBeDeletedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DefaultBranchCannotBeDeletedException) Code() string {
+	return "DefaultBranchCannotBeDeletedException"
+}
+
+// Message returns the exception's message.
+func (s DefaultBranchCannotBeDeletedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DefaultBranchCannotBeDeletedException) OrigErr() error {
+	return nil
+}
+
+func (s DefaultBranchCannotBeDeletedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DefaultBranchCannotBeDeletedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DefaultBranchCannotBeDeletedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type DeleteApprovalRuleTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14116,6 +16033,60 @@ func (s *Difference) SetChangeType(v string) *Difference {
 	return s
 }
 
+// A file cannot be added to the repository because the specified path name
+// has the same name as a file that already exists in this repository. Either
+// provide a different name for the file, or specify a different path for the
+// file.
+type DirectoryNameConflictsWithFileNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s DirectoryNameConflictsWithFileNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DirectoryNameConflictsWithFileNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorDirectoryNameConflictsWithFileNameException(v protocol.ResponseMetadata) error {
+	return &DirectoryNameConflictsWithFileNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DirectoryNameConflictsWithFileNameException) Code() string {
+	return "DirectoryNameConflictsWithFileNameException"
+}
+
+// Message returns the exception's message.
+func (s DirectoryNameConflictsWithFileNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DirectoryNameConflictsWithFileNameException) OrigErr() error {
+	return nil
+}
+
+func (s DirectoryNameConflictsWithFileNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DirectoryNameConflictsWithFileNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DirectoryNameConflictsWithFileNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type DisassociateApprovalRuleTemplateFromRepositoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14186,6 +16157,261 @@ func (s DisassociateApprovalRuleTemplateFromRepositoryOutput) String() string {
 // GoString returns the string representation
 func (s DisassociateApprovalRuleTemplateFromRepositoryOutput) GoString() string {
 	return s.String()
+}
+
+// An encryption integrity check failed.
+type EncryptionIntegrityChecksFailedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s EncryptionIntegrityChecksFailedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionIntegrityChecksFailedException) GoString() string {
+	return s.String()
+}
+
+func newErrorEncryptionIntegrityChecksFailedException(v protocol.ResponseMetadata) error {
+	return &EncryptionIntegrityChecksFailedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EncryptionIntegrityChecksFailedException) Code() string {
+	return "EncryptionIntegrityChecksFailedException"
+}
+
+// Message returns the exception's message.
+func (s EncryptionIntegrityChecksFailedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EncryptionIntegrityChecksFailedException) OrigErr() error {
+	return nil
+}
+
+func (s EncryptionIntegrityChecksFailedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EncryptionIntegrityChecksFailedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EncryptionIntegrityChecksFailedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An encryption key could not be accessed.
+type EncryptionKeyAccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s EncryptionKeyAccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionKeyAccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorEncryptionKeyAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &EncryptionKeyAccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EncryptionKeyAccessDeniedException) Code() string {
+	return "EncryptionKeyAccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s EncryptionKeyAccessDeniedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EncryptionKeyAccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s EncryptionKeyAccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EncryptionKeyAccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EncryptionKeyAccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The encryption key is disabled.
+type EncryptionKeyDisabledException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s EncryptionKeyDisabledException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionKeyDisabledException) GoString() string {
+	return s.String()
+}
+
+func newErrorEncryptionKeyDisabledException(v protocol.ResponseMetadata) error {
+	return &EncryptionKeyDisabledException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EncryptionKeyDisabledException) Code() string {
+	return "EncryptionKeyDisabledException"
+}
+
+// Message returns the exception's message.
+func (s EncryptionKeyDisabledException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EncryptionKeyDisabledException) OrigErr() error {
+	return nil
+}
+
+func (s EncryptionKeyDisabledException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EncryptionKeyDisabledException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EncryptionKeyDisabledException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// No encryption key was found.
+type EncryptionKeyNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s EncryptionKeyNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionKeyNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorEncryptionKeyNotFoundException(v protocol.ResponseMetadata) error {
+	return &EncryptionKeyNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EncryptionKeyNotFoundException) Code() string {
+	return "EncryptionKeyNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s EncryptionKeyNotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EncryptionKeyNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s EncryptionKeyNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EncryptionKeyNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EncryptionKeyNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The encryption key is not available.
+type EncryptionKeyUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s EncryptionKeyUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionKeyUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorEncryptionKeyUnavailableException(v protocol.ResponseMetadata) error {
+	return &EncryptionKeyUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EncryptionKeyUnavailableException) Code() string {
+	return "EncryptionKeyUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s EncryptionKeyUnavailableException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EncryptionKeyUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s EncryptionKeyUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EncryptionKeyUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EncryptionKeyUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type EvaluatePullRequestApprovalRulesInput struct {
@@ -14374,6 +16600,268 @@ func (s *File) SetRelativePath(v string) *File {
 	return s
 }
 
+// The commit cannot be created because both a source file and file content
+// have been specified for the same file. You cannot provide both. Either specify
+// a source file or provide the file content directly.
+type FileContentAndSourceFileSpecifiedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FileContentAndSourceFileSpecifiedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileContentAndSourceFileSpecifiedException) GoString() string {
+	return s.String()
+}
+
+func newErrorFileContentAndSourceFileSpecifiedException(v protocol.ResponseMetadata) error {
+	return &FileContentAndSourceFileSpecifiedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FileContentAndSourceFileSpecifiedException) Code() string {
+	return "FileContentAndSourceFileSpecifiedException"
+}
+
+// Message returns the exception's message.
+func (s FileContentAndSourceFileSpecifiedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FileContentAndSourceFileSpecifiedException) OrigErr() error {
+	return nil
+}
+
+func (s FileContentAndSourceFileSpecifiedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FileContentAndSourceFileSpecifiedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FileContentAndSourceFileSpecifiedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The file cannot be added because it is empty. Empty files cannot be added
+// to the repository with this API.
+type FileContentRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FileContentRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileContentRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorFileContentRequiredException(v protocol.ResponseMetadata) error {
+	return &FileContentRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FileContentRequiredException) Code() string {
+	return "FileContentRequiredException"
+}
+
+// Message returns the exception's message.
+func (s FileContentRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FileContentRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s FileContentRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FileContentRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FileContentRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The file cannot be added because it is too large. The maximum file size is
+// 6 MB, and the combined file content change size is 7 MB. Consider making
+// these changes using a Git client.
+type FileContentSizeLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FileContentSizeLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileContentSizeLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorFileContentSizeLimitExceededException(v protocol.ResponseMetadata) error {
+	return &FileContentSizeLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FileContentSizeLimitExceededException) Code() string {
+	return "FileContentSizeLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s FileContentSizeLimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FileContentSizeLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s FileContentSizeLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FileContentSizeLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FileContentSizeLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified file does not exist. Verify that you have used the correct
+// file name, full path, and extension.
+type FileDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FileDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorFileDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &FileDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FileDoesNotExistException) Code() string {
+	return "FileDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s FileDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FileDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s FileDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FileDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FileDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The commit cannot be created because no files have been specified as added,
+// updated, or changed (PutFile or DeleteFile) for the commit.
+type FileEntryRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FileEntryRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileEntryRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorFileEntryRequiredException(v protocol.ResponseMetadata) error {
+	return &FileEntryRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FileEntryRequiredException) Code() string {
+	return "FileEntryRequiredException"
+}
+
+// Message returns the exception's message.
+func (s FileEntryRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FileEntryRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s FileEntryRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FileEntryRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FileEntryRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // A file to be added, updated, or deleted as part of a commit.
 type FileMetadata struct {
 	_ struct{} `type:"structure"`
@@ -14418,6 +16906,58 @@ func (s *FileMetadata) SetFileMode(v string) *FileMetadata {
 	return s
 }
 
+// The commit cannot be created because no file mode has been specified. A file
+// mode is required to update mode permissions for a file.
+type FileModeRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FileModeRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileModeRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorFileModeRequiredException(v protocol.ResponseMetadata) error {
+	return &FileModeRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FileModeRequiredException) Code() string {
+	return "FileModeRequiredException"
+}
+
+// Message returns the exception's message.
+func (s FileModeRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FileModeRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s FileModeRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FileModeRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FileModeRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information about file modes in a merge or pull request.
 type FileModes struct {
 	_ struct{} `type:"structure"`
@@ -14458,6 +16998,113 @@ func (s *FileModes) SetDestination(v string) *FileModes {
 func (s *FileModes) SetSource(v string) *FileModes {
 	s.Source = &v
 	return s
+}
+
+// A file cannot be added to the repository because the specified file name
+// has the same name as a directory in this repository. Either provide another
+// name for the file, or add the file in a directory that does not match the
+// file name.
+type FileNameConflictsWithDirectoryNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FileNameConflictsWithDirectoryNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileNameConflictsWithDirectoryNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorFileNameConflictsWithDirectoryNameException(v protocol.ResponseMetadata) error {
+	return &FileNameConflictsWithDirectoryNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FileNameConflictsWithDirectoryNameException) Code() string {
+	return "FileNameConflictsWithDirectoryNameException"
+}
+
+// Message returns the exception's message.
+func (s FileNameConflictsWithDirectoryNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FileNameConflictsWithDirectoryNameException) OrigErr() error {
+	return nil
+}
+
+func (s FileNameConflictsWithDirectoryNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FileNameConflictsWithDirectoryNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FileNameConflictsWithDirectoryNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The commit cannot be created because a specified file path points to a submodule.
+// Verify that the destination files have valid file paths that do not point
+// to a submodule.
+type FilePathConflictsWithSubmodulePathException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FilePathConflictsWithSubmodulePathException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FilePathConflictsWithSubmodulePathException) GoString() string {
+	return s.String()
+}
+
+func newErrorFilePathConflictsWithSubmodulePathException(v protocol.ResponseMetadata) error {
+	return &FilePathConflictsWithSubmodulePathException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FilePathConflictsWithSubmodulePathException) Code() string {
+	return "FilePathConflictsWithSubmodulePathException"
+}
+
+// Message returns the exception's message.
+func (s FilePathConflictsWithSubmodulePathException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FilePathConflictsWithSubmodulePathException) OrigErr() error {
+	return nil
+}
+
+func (s FilePathConflictsWithSubmodulePathException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FilePathConflictsWithSubmodulePathException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FilePathConflictsWithSubmodulePathException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information about the size of files in a merge or pull request.
@@ -14502,6 +17149,59 @@ func (s *FileSizes) SetSource(v int64) *FileSizes {
 	return s
 }
 
+// The specified file exceeds the file size limit for AWS CodeCommit. For more
+// information about limits in AWS CodeCommit, see AWS CodeCommit User Guide
+// (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+type FileTooLargeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FileTooLargeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileTooLargeException) GoString() string {
+	return s.String()
+}
+
+func newErrorFileTooLargeException(v protocol.ResponseMetadata) error {
+	return &FileTooLargeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FileTooLargeException) Code() string {
+	return "FileTooLargeException"
+}
+
+// Message returns the exception's message.
+func (s FileTooLargeException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FileTooLargeException) OrigErr() error {
+	return nil
+}
+
+func (s FileTooLargeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FileTooLargeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FileTooLargeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Returns information about a folder in a repository.
 type Folder struct {
 	_ struct{} `type:"structure"`
@@ -14544,6 +17244,112 @@ func (s *Folder) SetRelativePath(v string) *Folder {
 func (s *Folder) SetTreeId(v string) *Folder {
 	s.TreeId = &v
 	return s
+}
+
+// The commit cannot be created because at least one of the overall changes
+// in the commit results in a folder whose contents exceed the limit of 6 MB.
+// Either reduce the number and size of your changes, or split the changes across
+// multiple folders.
+type FolderContentSizeLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FolderContentSizeLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FolderContentSizeLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorFolderContentSizeLimitExceededException(v protocol.ResponseMetadata) error {
+	return &FolderContentSizeLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FolderContentSizeLimitExceededException) Code() string {
+	return "FolderContentSizeLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s FolderContentSizeLimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FolderContentSizeLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s FolderContentSizeLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FolderContentSizeLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FolderContentSizeLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified folder does not exist. Either the folder name is not correct,
+// or you did not enter the full path to the folder.
+type FolderDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s FolderDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FolderDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorFolderDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &FolderDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FolderDoesNotExistException) Code() string {
+	return "FolderDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s FolderDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FolderDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s FolderDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FolderDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FolderDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type GetApprovalRuleTemplateInput struct {
@@ -16492,6 +19298,3216 @@ func (s *GetRepositoryTriggersOutput) SetTriggers(v []*RepositoryTrigger) *GetRe
 	return s
 }
 
+// The client request token is not valid. Either the token is not in a valid
+// format, or the token has been used in a previous request and cannot be reused.
+type IdempotencyParameterMismatchException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s IdempotencyParameterMismatchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IdempotencyParameterMismatchException) GoString() string {
+	return s.String()
+}
+
+func newErrorIdempotencyParameterMismatchException(v protocol.ResponseMetadata) error {
+	return &IdempotencyParameterMismatchException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IdempotencyParameterMismatchException) Code() string {
+	return "IdempotencyParameterMismatchException"
+}
+
+// Message returns the exception's message.
+func (s IdempotencyParameterMismatchException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IdempotencyParameterMismatchException) OrigErr() error {
+	return nil
+}
+
+func (s IdempotencyParameterMismatchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IdempotencyParameterMismatchException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IdempotencyParameterMismatchException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The Amazon Resource Name (ARN) is not valid. Make sure that you have provided
+// the full ARN for the user who initiated the change for the pull request,
+// and then try again.
+type InvalidActorArnException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidActorArnException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidActorArnException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidActorArnException(v protocol.ResponseMetadata) error {
+	return &InvalidActorArnException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidActorArnException) Code() string {
+	return "InvalidActorArnException"
+}
+
+// Message returns the exception's message.
+func (s InvalidActorArnException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidActorArnException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidActorArnException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidActorArnException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidActorArnException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The content for the approval rule is not valid.
+type InvalidApprovalRuleContentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidApprovalRuleContentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidApprovalRuleContentException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidApprovalRuleContentException(v protocol.ResponseMetadata) error {
+	return &InvalidApprovalRuleContentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidApprovalRuleContentException) Code() string {
+	return "InvalidApprovalRuleContentException"
+}
+
+// Message returns the exception's message.
+func (s InvalidApprovalRuleContentException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidApprovalRuleContentException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidApprovalRuleContentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidApprovalRuleContentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidApprovalRuleContentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The name for the approval rule is not valid.
+type InvalidApprovalRuleNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidApprovalRuleNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidApprovalRuleNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidApprovalRuleNameException(v protocol.ResponseMetadata) error {
+	return &InvalidApprovalRuleNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidApprovalRuleNameException) Code() string {
+	return "InvalidApprovalRuleNameException"
+}
+
+// Message returns the exception's message.
+func (s InvalidApprovalRuleNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidApprovalRuleNameException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidApprovalRuleNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidApprovalRuleNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidApprovalRuleNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The content of the approval rule template is not valid.
+type InvalidApprovalRuleTemplateContentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidApprovalRuleTemplateContentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidApprovalRuleTemplateContentException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidApprovalRuleTemplateContentException(v protocol.ResponseMetadata) error {
+	return &InvalidApprovalRuleTemplateContentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidApprovalRuleTemplateContentException) Code() string {
+	return "InvalidApprovalRuleTemplateContentException"
+}
+
+// Message returns the exception's message.
+func (s InvalidApprovalRuleTemplateContentException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidApprovalRuleTemplateContentException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidApprovalRuleTemplateContentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidApprovalRuleTemplateContentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidApprovalRuleTemplateContentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The description for the approval rule template is not valid because it exceeds
+// the maximum characters allowed for a description. For more information about
+// limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+type InvalidApprovalRuleTemplateDescriptionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidApprovalRuleTemplateDescriptionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidApprovalRuleTemplateDescriptionException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidApprovalRuleTemplateDescriptionException(v protocol.ResponseMetadata) error {
+	return &InvalidApprovalRuleTemplateDescriptionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidApprovalRuleTemplateDescriptionException) Code() string {
+	return "InvalidApprovalRuleTemplateDescriptionException"
+}
+
+// Message returns the exception's message.
+func (s InvalidApprovalRuleTemplateDescriptionException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidApprovalRuleTemplateDescriptionException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidApprovalRuleTemplateDescriptionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidApprovalRuleTemplateDescriptionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidApprovalRuleTemplateDescriptionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The name of the approval rule template is not valid. Template names must
+// be between 1 and 100 valid characters in length. For more information about
+// limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+type InvalidApprovalRuleTemplateNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidApprovalRuleTemplateNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidApprovalRuleTemplateNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidApprovalRuleTemplateNameException(v protocol.ResponseMetadata) error {
+	return &InvalidApprovalRuleTemplateNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidApprovalRuleTemplateNameException) Code() string {
+	return "InvalidApprovalRuleTemplateNameException"
+}
+
+// Message returns the exception's message.
+func (s InvalidApprovalRuleTemplateNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidApprovalRuleTemplateNameException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidApprovalRuleTemplateNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidApprovalRuleTemplateNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidApprovalRuleTemplateNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The state for the approval is not valid. Valid values include APPROVE and
+// REVOKE.
+type InvalidApprovalStateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidApprovalStateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidApprovalStateException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidApprovalStateException(v protocol.ResponseMetadata) error {
+	return &InvalidApprovalStateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidApprovalStateException) Code() string {
+	return "InvalidApprovalStateException"
+}
+
+// Message returns the exception's message.
+func (s InvalidApprovalStateException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidApprovalStateException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidApprovalStateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidApprovalStateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidApprovalStateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The Amazon Resource Name (ARN) is not valid. Make sure that you have provided
+// the full ARN for the author of the pull request, and then try again.
+type InvalidAuthorArnException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidAuthorArnException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidAuthorArnException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidAuthorArnException(v protocol.ResponseMetadata) error {
+	return &InvalidAuthorArnException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidAuthorArnException) Code() string {
+	return "InvalidAuthorArnException"
+}
+
+// Message returns the exception's message.
+func (s InvalidAuthorArnException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidAuthorArnException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidAuthorArnException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidAuthorArnException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidAuthorArnException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified blob is not valid.
+type InvalidBlobIdException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidBlobIdException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidBlobIdException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidBlobIdException(v protocol.ResponseMetadata) error {
+	return &InvalidBlobIdException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidBlobIdException) Code() string {
+	return "InvalidBlobIdException"
+}
+
+// Message returns the exception's message.
+func (s InvalidBlobIdException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidBlobIdException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidBlobIdException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidBlobIdException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidBlobIdException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified reference name is not valid.
+type InvalidBranchNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidBranchNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidBranchNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidBranchNameException(v protocol.ResponseMetadata) error {
+	return &InvalidBranchNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidBranchNameException) Code() string {
+	return "InvalidBranchNameException"
+}
+
+// Message returns the exception's message.
+func (s InvalidBranchNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidBranchNameException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidBranchNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidBranchNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidBranchNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The client request token is not valid.
+type InvalidClientRequestTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidClientRequestTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidClientRequestTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidClientRequestTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidClientRequestTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidClientRequestTokenException) Code() string {
+	return "InvalidClientRequestTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidClientRequestTokenException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidClientRequestTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidClientRequestTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidClientRequestTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidClientRequestTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The comment ID is not in a valid format. Make sure that you have provided
+// the full comment ID.
+type InvalidCommentIdException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidCommentIdException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidCommentIdException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidCommentIdException(v protocol.ResponseMetadata) error {
+	return &InvalidCommentIdException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidCommentIdException) Code() string {
+	return "InvalidCommentIdException"
+}
+
+// Message returns the exception's message.
+func (s InvalidCommentIdException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidCommentIdException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidCommentIdException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidCommentIdException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidCommentIdException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified commit is not valid.
+type InvalidCommitException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidCommitException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidCommitException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidCommitException(v protocol.ResponseMetadata) error {
+	return &InvalidCommitException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidCommitException) Code() string {
+	return "InvalidCommitException"
+}
+
+// Message returns the exception's message.
+func (s InvalidCommitException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidCommitException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidCommitException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidCommitException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidCommitException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified commit ID is not valid.
+type InvalidCommitIdException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidCommitIdException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidCommitIdException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidCommitIdException(v protocol.ResponseMetadata) error {
+	return &InvalidCommitIdException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidCommitIdException) Code() string {
+	return "InvalidCommitIdException"
+}
+
+// Message returns the exception's message.
+func (s InvalidCommitIdException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidCommitIdException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidCommitIdException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidCommitIdException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidCommitIdException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified conflict detail level is not valid.
+type InvalidConflictDetailLevelException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidConflictDetailLevelException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidConflictDetailLevelException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidConflictDetailLevelException(v protocol.ResponseMetadata) error {
+	return &InvalidConflictDetailLevelException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidConflictDetailLevelException) Code() string {
+	return "InvalidConflictDetailLevelException"
+}
+
+// Message returns the exception's message.
+func (s InvalidConflictDetailLevelException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidConflictDetailLevelException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidConflictDetailLevelException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidConflictDetailLevelException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidConflictDetailLevelException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified conflict resolution list is not valid.
+type InvalidConflictResolutionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidConflictResolutionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidConflictResolutionException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidConflictResolutionException(v protocol.ResponseMetadata) error {
+	return &InvalidConflictResolutionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidConflictResolutionException) Code() string {
+	return "InvalidConflictResolutionException"
+}
+
+// Message returns the exception's message.
+func (s InvalidConflictResolutionException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidConflictResolutionException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidConflictResolutionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidConflictResolutionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidConflictResolutionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified conflict resolution strategy is not valid.
+type InvalidConflictResolutionStrategyException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidConflictResolutionStrategyException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidConflictResolutionStrategyException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidConflictResolutionStrategyException(v protocol.ResponseMetadata) error {
+	return &InvalidConflictResolutionStrategyException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidConflictResolutionStrategyException) Code() string {
+	return "InvalidConflictResolutionStrategyException"
+}
+
+// Message returns the exception's message.
+func (s InvalidConflictResolutionStrategyException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidConflictResolutionStrategyException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidConflictResolutionStrategyException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidConflictResolutionStrategyException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidConflictResolutionStrategyException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified continuation token is not valid.
+type InvalidContinuationTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidContinuationTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidContinuationTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidContinuationTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidContinuationTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidContinuationTokenException) Code() string {
+	return "InvalidContinuationTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidContinuationTokenException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidContinuationTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidContinuationTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidContinuationTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidContinuationTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified deletion parameter is not valid.
+type InvalidDeletionParameterException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidDeletionParameterException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidDeletionParameterException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidDeletionParameterException(v protocol.ResponseMetadata) error {
+	return &InvalidDeletionParameterException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidDeletionParameterException) Code() string {
+	return "InvalidDeletionParameterException"
+}
+
+// Message returns the exception's message.
+func (s InvalidDeletionParameterException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidDeletionParameterException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidDeletionParameterException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidDeletionParameterException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidDeletionParameterException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The pull request description is not valid. Descriptions cannot be more than
+// 1,000 characters.
+type InvalidDescriptionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidDescriptionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidDescriptionException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidDescriptionException(v protocol.ResponseMetadata) error {
+	return &InvalidDescriptionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidDescriptionException) Code() string {
+	return "InvalidDescriptionException"
+}
+
+// Message returns the exception's message.
+func (s InvalidDescriptionException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidDescriptionException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidDescriptionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidDescriptionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidDescriptionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The destination commit specifier is not valid. You must provide a valid branch
+// name, tag, or full commit ID.
+type InvalidDestinationCommitSpecifierException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidDestinationCommitSpecifierException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidDestinationCommitSpecifierException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidDestinationCommitSpecifierException(v protocol.ResponseMetadata) error {
+	return &InvalidDestinationCommitSpecifierException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidDestinationCommitSpecifierException) Code() string {
+	return "InvalidDestinationCommitSpecifierException"
+}
+
+// Message returns the exception's message.
+func (s InvalidDestinationCommitSpecifierException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidDestinationCommitSpecifierException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidDestinationCommitSpecifierException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidDestinationCommitSpecifierException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidDestinationCommitSpecifierException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified email address either contains one or more characters that are
+// not allowed, or it exceeds the maximum number of characters allowed for an
+// email address.
+type InvalidEmailException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidEmailException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidEmailException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidEmailException(v protocol.ResponseMetadata) error {
+	return &InvalidEmailException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidEmailException) Code() string {
+	return "InvalidEmailException"
+}
+
+// Message returns the exception's message.
+func (s InvalidEmailException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidEmailException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidEmailException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidEmailException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidEmailException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The location of the file is not valid. Make sure that you include the file
+// name and extension.
+type InvalidFileLocationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidFileLocationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidFileLocationException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidFileLocationException(v protocol.ResponseMetadata) error {
+	return &InvalidFileLocationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidFileLocationException) Code() string {
+	return "InvalidFileLocationException"
+}
+
+// Message returns the exception's message.
+func (s InvalidFileLocationException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidFileLocationException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidFileLocationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidFileLocationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidFileLocationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified file mode permission is not valid. For a list of valid file
+// mode permissions, see PutFile.
+type InvalidFileModeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidFileModeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidFileModeException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidFileModeException(v protocol.ResponseMetadata) error {
+	return &InvalidFileModeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidFileModeException) Code() string {
+	return "InvalidFileModeException"
+}
+
+// Message returns the exception's message.
+func (s InvalidFileModeException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidFileModeException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidFileModeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidFileModeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidFileModeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The position is not valid. Make sure that the line number exists in the version
+// of the file you want to comment on.
+type InvalidFilePositionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidFilePositionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidFilePositionException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidFilePositionException(v protocol.ResponseMetadata) error {
+	return &InvalidFilePositionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidFilePositionException) Code() string {
+	return "InvalidFilePositionException"
+}
+
+// Message returns the exception's message.
+func (s InvalidFilePositionException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidFilePositionException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidFilePositionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidFilePositionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidFilePositionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified value for the number of conflict files to return is not valid.
+type InvalidMaxConflictFilesException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidMaxConflictFilesException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidMaxConflictFilesException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidMaxConflictFilesException(v protocol.ResponseMetadata) error {
+	return &InvalidMaxConflictFilesException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidMaxConflictFilesException) Code() string {
+	return "InvalidMaxConflictFilesException"
+}
+
+// Message returns the exception's message.
+func (s InvalidMaxConflictFilesException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidMaxConflictFilesException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidMaxConflictFilesException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidMaxConflictFilesException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidMaxConflictFilesException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified value for the number of merge hunks to return is not valid.
+type InvalidMaxMergeHunksException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidMaxMergeHunksException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidMaxMergeHunksException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidMaxMergeHunksException(v protocol.ResponseMetadata) error {
+	return &InvalidMaxMergeHunksException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidMaxMergeHunksException) Code() string {
+	return "InvalidMaxMergeHunksException"
+}
+
+// Message returns the exception's message.
+func (s InvalidMaxMergeHunksException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidMaxMergeHunksException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidMaxMergeHunksException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidMaxMergeHunksException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidMaxMergeHunksException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified number of maximum results is not valid.
+type InvalidMaxResultsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidMaxResultsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidMaxResultsException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidMaxResultsException(v protocol.ResponseMetadata) error {
+	return &InvalidMaxResultsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidMaxResultsException) Code() string {
+	return "InvalidMaxResultsException"
+}
+
+// Message returns the exception's message.
+func (s InvalidMaxResultsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidMaxResultsException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidMaxResultsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidMaxResultsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidMaxResultsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified merge option is not valid for this operation. Not all merge
+// strategies are supported for all operations.
+type InvalidMergeOptionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidMergeOptionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidMergeOptionException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidMergeOptionException(v protocol.ResponseMetadata) error {
+	return &InvalidMergeOptionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidMergeOptionException) Code() string {
+	return "InvalidMergeOptionException"
+}
+
+// Message returns the exception's message.
+func (s InvalidMergeOptionException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidMergeOptionException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidMergeOptionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidMergeOptionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidMergeOptionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified sort order is not valid.
+type InvalidOrderException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidOrderException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidOrderException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidOrderException(v protocol.ResponseMetadata) error {
+	return &InvalidOrderException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidOrderException) Code() string {
+	return "InvalidOrderException"
+}
+
+// Message returns the exception's message.
+func (s InvalidOrderException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidOrderException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidOrderException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidOrderException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidOrderException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The override status is not valid. Valid statuses are OVERRIDE and REVOKE.
+type InvalidOverrideStatusException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidOverrideStatusException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidOverrideStatusException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidOverrideStatusException(v protocol.ResponseMetadata) error {
+	return &InvalidOverrideStatusException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidOverrideStatusException) Code() string {
+	return "InvalidOverrideStatusException"
+}
+
+// Message returns the exception's message.
+func (s InvalidOverrideStatusException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidOverrideStatusException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidOverrideStatusException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidOverrideStatusException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidOverrideStatusException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The parent commit ID is not valid. The commit ID cannot be empty, and must
+// match the head commit ID for the branch of the repository where you want
+// to add or update a file.
+type InvalidParentCommitIdException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidParentCommitIdException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParentCommitIdException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParentCommitIdException(v protocol.ResponseMetadata) error {
+	return &InvalidParentCommitIdException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParentCommitIdException) Code() string {
+	return "InvalidParentCommitIdException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParentCommitIdException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParentCommitIdException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParentCommitIdException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParentCommitIdException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParentCommitIdException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified path is not valid.
+type InvalidPathException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidPathException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPathException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPathException(v protocol.ResponseMetadata) error {
+	return &InvalidPathException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidPathException) Code() string {
+	return "InvalidPathException"
+}
+
+// Message returns the exception's message.
+func (s InvalidPathException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidPathException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidPathException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidPathException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidPathException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The pull request event type is not valid.
+type InvalidPullRequestEventTypeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidPullRequestEventTypeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPullRequestEventTypeException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPullRequestEventTypeException(v protocol.ResponseMetadata) error {
+	return &InvalidPullRequestEventTypeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidPullRequestEventTypeException) Code() string {
+	return "InvalidPullRequestEventTypeException"
+}
+
+// Message returns the exception's message.
+func (s InvalidPullRequestEventTypeException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidPullRequestEventTypeException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidPullRequestEventTypeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidPullRequestEventTypeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidPullRequestEventTypeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The pull request ID is not valid. Make sure that you have provided the full
+// ID and that the pull request is in the specified repository, and then try
+// again.
+type InvalidPullRequestIdException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidPullRequestIdException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPullRequestIdException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPullRequestIdException(v protocol.ResponseMetadata) error {
+	return &InvalidPullRequestIdException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidPullRequestIdException) Code() string {
+	return "InvalidPullRequestIdException"
+}
+
+// Message returns the exception's message.
+func (s InvalidPullRequestIdException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidPullRequestIdException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidPullRequestIdException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidPullRequestIdException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidPullRequestIdException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The pull request status is not valid. The only valid values are OPEN and
+// CLOSED.
+type InvalidPullRequestStatusException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidPullRequestStatusException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPullRequestStatusException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPullRequestStatusException(v protocol.ResponseMetadata) error {
+	return &InvalidPullRequestStatusException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidPullRequestStatusException) Code() string {
+	return "InvalidPullRequestStatusException"
+}
+
+// Message returns the exception's message.
+func (s InvalidPullRequestStatusException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidPullRequestStatusException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidPullRequestStatusException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidPullRequestStatusException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidPullRequestStatusException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The pull request status update is not valid. The only valid update is from
+// OPEN to CLOSED.
+type InvalidPullRequestStatusUpdateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidPullRequestStatusUpdateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPullRequestStatusUpdateException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPullRequestStatusUpdateException(v protocol.ResponseMetadata) error {
+	return &InvalidPullRequestStatusUpdateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidPullRequestStatusUpdateException) Code() string {
+	return "InvalidPullRequestStatusUpdateException"
+}
+
+// Message returns the exception's message.
+func (s InvalidPullRequestStatusUpdateException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidPullRequestStatusUpdateException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidPullRequestStatusUpdateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidPullRequestStatusUpdateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidPullRequestStatusUpdateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified reference name format is not valid. Reference names must conform
+// to the Git references format (for example, refs/heads/master). For more information,
+// see Git Internals - Git References (https://git-scm.com/book/en/v2/Git-Internals-Git-References)
+// or consult your Git documentation.
+type InvalidReferenceNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidReferenceNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidReferenceNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidReferenceNameException(v protocol.ResponseMetadata) error {
+	return &InvalidReferenceNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidReferenceNameException) Code() string {
+	return "InvalidReferenceNameException"
+}
+
+// Message returns the exception's message.
+func (s InvalidReferenceNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidReferenceNameException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidReferenceNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidReferenceNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidReferenceNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Either the enum is not in a valid format, or the specified file version enum
+// is not valid in respect to the current file version.
+type InvalidRelativeFileVersionEnumException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRelativeFileVersionEnumException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRelativeFileVersionEnumException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRelativeFileVersionEnumException(v protocol.ResponseMetadata) error {
+	return &InvalidRelativeFileVersionEnumException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRelativeFileVersionEnumException) Code() string {
+	return "InvalidRelativeFileVersionEnumException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRelativeFileVersionEnumException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRelativeFileVersionEnumException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRelativeFileVersionEnumException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRelativeFileVersionEnumException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRelativeFileVersionEnumException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Automerge was specified for resolving the conflict, but the replacement type
+// is not valid or content is missing.
+type InvalidReplacementContentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidReplacementContentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidReplacementContentException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidReplacementContentException(v protocol.ResponseMetadata) error {
+	return &InvalidReplacementContentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidReplacementContentException) Code() string {
+	return "InvalidReplacementContentException"
+}
+
+// Message returns the exception's message.
+func (s InvalidReplacementContentException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidReplacementContentException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidReplacementContentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidReplacementContentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidReplacementContentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Automerge was specified for resolving the conflict, but the specified replacement
+// type is not valid.
+type InvalidReplacementTypeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidReplacementTypeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidReplacementTypeException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidReplacementTypeException(v protocol.ResponseMetadata) error {
+	return &InvalidReplacementTypeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidReplacementTypeException) Code() string {
+	return "InvalidReplacementTypeException"
+}
+
+// Message returns the exception's message.
+func (s InvalidReplacementTypeException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidReplacementTypeException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidReplacementTypeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidReplacementTypeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidReplacementTypeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified repository description is not valid.
+type InvalidRepositoryDescriptionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRepositoryDescriptionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRepositoryDescriptionException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRepositoryDescriptionException(v protocol.ResponseMetadata) error {
+	return &InvalidRepositoryDescriptionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRepositoryDescriptionException) Code() string {
+	return "InvalidRepositoryDescriptionException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRepositoryDescriptionException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRepositoryDescriptionException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRepositoryDescriptionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRepositoryDescriptionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRepositoryDescriptionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A specified repository name is not valid.
+//
+// This exception occurs only when a specified repository name is not valid.
+// Other exceptions occur when a required repository parameter is missing, or
+// when a specified repository does not exist.
+type InvalidRepositoryNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRepositoryNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRepositoryNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRepositoryNameException(v protocol.ResponseMetadata) error {
+	return &InvalidRepositoryNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRepositoryNameException) Code() string {
+	return "InvalidRepositoryNameException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRepositoryNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRepositoryNameException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRepositoryNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRepositoryNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRepositoryNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// One or more branch names specified for the trigger is not valid.
+type InvalidRepositoryTriggerBranchNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRepositoryTriggerBranchNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRepositoryTriggerBranchNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRepositoryTriggerBranchNameException(v protocol.ResponseMetadata) error {
+	return &InvalidRepositoryTriggerBranchNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRepositoryTriggerBranchNameException) Code() string {
+	return "InvalidRepositoryTriggerBranchNameException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRepositoryTriggerBranchNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRepositoryTriggerBranchNameException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRepositoryTriggerBranchNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRepositoryTriggerBranchNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRepositoryTriggerBranchNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The custom data provided for the trigger is not valid.
+type InvalidRepositoryTriggerCustomDataException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRepositoryTriggerCustomDataException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRepositoryTriggerCustomDataException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRepositoryTriggerCustomDataException(v protocol.ResponseMetadata) error {
+	return &InvalidRepositoryTriggerCustomDataException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRepositoryTriggerCustomDataException) Code() string {
+	return "InvalidRepositoryTriggerCustomDataException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRepositoryTriggerCustomDataException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRepositoryTriggerCustomDataException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRepositoryTriggerCustomDataException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRepositoryTriggerCustomDataException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRepositoryTriggerCustomDataException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The Amazon Resource Name (ARN) for the trigger is not valid for the specified
+// destination. The most common reason for this error is that the ARN does not
+// meet the requirements for the service type.
+type InvalidRepositoryTriggerDestinationArnException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRepositoryTriggerDestinationArnException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRepositoryTriggerDestinationArnException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRepositoryTriggerDestinationArnException(v protocol.ResponseMetadata) error {
+	return &InvalidRepositoryTriggerDestinationArnException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRepositoryTriggerDestinationArnException) Code() string {
+	return "InvalidRepositoryTriggerDestinationArnException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRepositoryTriggerDestinationArnException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRepositoryTriggerDestinationArnException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRepositoryTriggerDestinationArnException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRepositoryTriggerDestinationArnException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRepositoryTriggerDestinationArnException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// One or more events specified for the trigger is not valid. Check to make
+// sure that all events specified match the requirements for allowed events.
+type InvalidRepositoryTriggerEventsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRepositoryTriggerEventsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRepositoryTriggerEventsException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRepositoryTriggerEventsException(v protocol.ResponseMetadata) error {
+	return &InvalidRepositoryTriggerEventsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRepositoryTriggerEventsException) Code() string {
+	return "InvalidRepositoryTriggerEventsException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRepositoryTriggerEventsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRepositoryTriggerEventsException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRepositoryTriggerEventsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRepositoryTriggerEventsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRepositoryTriggerEventsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The name of the trigger is not valid.
+type InvalidRepositoryTriggerNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRepositoryTriggerNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRepositoryTriggerNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRepositoryTriggerNameException(v protocol.ResponseMetadata) error {
+	return &InvalidRepositoryTriggerNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRepositoryTriggerNameException) Code() string {
+	return "InvalidRepositoryTriggerNameException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRepositoryTriggerNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRepositoryTriggerNameException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRepositoryTriggerNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRepositoryTriggerNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRepositoryTriggerNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The AWS Region for the trigger target does not match the AWS Region for the
+// repository. Triggers must be created in the same Region as the target for
+// the trigger.
+type InvalidRepositoryTriggerRegionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRepositoryTriggerRegionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRepositoryTriggerRegionException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRepositoryTriggerRegionException(v protocol.ResponseMetadata) error {
+	return &InvalidRepositoryTriggerRegionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRepositoryTriggerRegionException) Code() string {
+	return "InvalidRepositoryTriggerRegionException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRepositoryTriggerRegionException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRepositoryTriggerRegionException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRepositoryTriggerRegionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRepositoryTriggerRegionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRepositoryTriggerRegionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The value for the resource ARN is not valid. For more information about resources
+// in AWS CodeCommit, see CodeCommit Resources and Operations (https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-access-control-identity-based.html#arn-formats)
+// in the AWS CodeCommit User Guide.
+type InvalidResourceArnException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidResourceArnException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidResourceArnException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidResourceArnException(v protocol.ResponseMetadata) error {
+	return &InvalidResourceArnException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidResourceArnException) Code() string {
+	return "InvalidResourceArnException"
+}
+
+// Message returns the exception's message.
+func (s InvalidResourceArnException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidResourceArnException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidResourceArnException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidResourceArnException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidResourceArnException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The revision ID is not valid. Use GetPullRequest to determine the value.
+type InvalidRevisionIdException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRevisionIdException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRevisionIdException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRevisionIdException(v protocol.ResponseMetadata) error {
+	return &InvalidRevisionIdException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRevisionIdException) Code() string {
+	return "InvalidRevisionIdException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRevisionIdException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRevisionIdException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRevisionIdException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRevisionIdException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRevisionIdException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The SHA-256 hash signature for the rule content is not valid.
+type InvalidRuleContentSha256Exception struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRuleContentSha256Exception) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRuleContentSha256Exception) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRuleContentSha256Exception(v protocol.ResponseMetadata) error {
+	return &InvalidRuleContentSha256Exception{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRuleContentSha256Exception) Code() string {
+	return "InvalidRuleContentSha256Exception"
+}
+
+// Message returns the exception's message.
+func (s InvalidRuleContentSha256Exception) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRuleContentSha256Exception) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRuleContentSha256Exception) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRuleContentSha256Exception) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRuleContentSha256Exception) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified sort by value is not valid.
+type InvalidSortByException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidSortByException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidSortByException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidSortByException(v protocol.ResponseMetadata) error {
+	return &InvalidSortByException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidSortByException) Code() string {
+	return "InvalidSortByException"
+}
+
+// Message returns the exception's message.
+func (s InvalidSortByException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidSortByException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidSortByException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidSortByException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidSortByException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The source commit specifier is not valid. You must provide a valid branch
+// name, tag, or full commit ID.
+type InvalidSourceCommitSpecifierException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidSourceCommitSpecifierException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidSourceCommitSpecifierException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidSourceCommitSpecifierException(v protocol.ResponseMetadata) error {
+	return &InvalidSourceCommitSpecifierException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidSourceCommitSpecifierException) Code() string {
+	return "InvalidSourceCommitSpecifierException"
+}
+
+// Message returns the exception's message.
+func (s InvalidSourceCommitSpecifierException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidSourceCommitSpecifierException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidSourceCommitSpecifierException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidSourceCommitSpecifierException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidSourceCommitSpecifierException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified tag is not valid. Key names cannot be prefixed with aws:.
+type InvalidSystemTagUsageException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidSystemTagUsageException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidSystemTagUsageException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidSystemTagUsageException(v protocol.ResponseMetadata) error {
+	return &InvalidSystemTagUsageException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidSystemTagUsageException) Code() string {
+	return "InvalidSystemTagUsageException"
+}
+
+// Message returns the exception's message.
+func (s InvalidSystemTagUsageException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidSystemTagUsageException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidSystemTagUsageException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidSystemTagUsageException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidSystemTagUsageException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The list of tags is not valid.
+type InvalidTagKeysListException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidTagKeysListException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTagKeysListException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTagKeysListException(v protocol.ResponseMetadata) error {
+	return &InvalidTagKeysListException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidTagKeysListException) Code() string {
+	return "InvalidTagKeysListException"
+}
+
+// Message returns the exception's message.
+func (s InvalidTagKeysListException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidTagKeysListException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidTagKeysListException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidTagKeysListException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidTagKeysListException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The map of tags is not valid.
+type InvalidTagsMapException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidTagsMapException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTagsMapException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTagsMapException(v protocol.ResponseMetadata) error {
+	return &InvalidTagsMapException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidTagsMapException) Code() string {
+	return "InvalidTagsMapException"
+}
+
+// Message returns the exception's message.
+func (s InvalidTagsMapException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidTagsMapException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidTagsMapException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidTagsMapException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidTagsMapException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified target branch is not valid.
+type InvalidTargetBranchException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidTargetBranchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTargetBranchException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTargetBranchException(v protocol.ResponseMetadata) error {
+	return &InvalidTargetBranchException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidTargetBranchException) Code() string {
+	return "InvalidTargetBranchException"
+}
+
+// Message returns the exception's message.
+func (s InvalidTargetBranchException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidTargetBranchException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidTargetBranchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidTargetBranchException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidTargetBranchException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The target for the pull request is not valid. A target must contain the full
+// values for the repository name, source branch, and destination branch for
+// the pull request.
+type InvalidTargetException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidTargetException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTargetException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTargetException(v protocol.ResponseMetadata) error {
+	return &InvalidTargetException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidTargetException) Code() string {
+	return "InvalidTargetException"
+}
+
+// Message returns the exception's message.
+func (s InvalidTargetException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidTargetException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidTargetException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidTargetException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidTargetException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The targets for the pull request is not valid or not in a valid format. Targets
+// are a list of target objects. Each target object must contain the full values
+// for the repository name, source branch, and destination branch for a pull
+// request.
+type InvalidTargetsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidTargetsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTargetsException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTargetsException(v protocol.ResponseMetadata) error {
+	return &InvalidTargetsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidTargetsException) Code() string {
+	return "InvalidTargetsException"
+}
+
+// Message returns the exception's message.
+func (s InvalidTargetsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidTargetsException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidTargetsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidTargetsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidTargetsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The title of the pull request is not valid. Pull request titles cannot exceed
+// 100 characters in length.
+type InvalidTitleException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidTitleException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTitleException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTitleException(v protocol.ResponseMetadata) error {
+	return &InvalidTitleException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidTitleException) Code() string {
+	return "InvalidTitleException"
+}
+
+// Message returns the exception's message.
+func (s InvalidTitleException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidTitleException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidTitleException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidTitleException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidTitleException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information about whether a file is binary or textual in a merge or pull
 // request operation.
 type IsBinaryFile struct {
@@ -17202,6 +23218,576 @@ func (s *Location) SetRelativeFileVersion(v string) *Location {
 	return s
 }
 
+// The pull request cannot be merged automatically into the destination branch.
+// You must manually merge the branches and resolve any conflicts.
+type ManualMergeRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ManualMergeRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ManualMergeRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorManualMergeRequiredException(v protocol.ResponseMetadata) error {
+	return &ManualMergeRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ManualMergeRequiredException) Code() string {
+	return "ManualMergeRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ManualMergeRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ManualMergeRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ManualMergeRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ManualMergeRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ManualMergeRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The number of branches for the trigger was exceeded.
+type MaximumBranchesExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaximumBranchesExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaximumBranchesExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaximumBranchesExceededException(v protocol.ResponseMetadata) error {
+	return &MaximumBranchesExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaximumBranchesExceededException) Code() string {
+	return "MaximumBranchesExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaximumBranchesExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaximumBranchesExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaximumBranchesExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaximumBranchesExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaximumBranchesExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The number of allowed conflict resolution entries was exceeded.
+type MaximumConflictResolutionEntriesExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaximumConflictResolutionEntriesExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaximumConflictResolutionEntriesExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaximumConflictResolutionEntriesExceededException(v protocol.ResponseMetadata) error {
+	return &MaximumConflictResolutionEntriesExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaximumConflictResolutionEntriesExceededException) Code() string {
+	return "MaximumConflictResolutionEntriesExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaximumConflictResolutionEntriesExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaximumConflictResolutionEntriesExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaximumConflictResolutionEntriesExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaximumConflictResolutionEntriesExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaximumConflictResolutionEntriesExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The number of files to load exceeds the allowed limit.
+type MaximumFileContentToLoadExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaximumFileContentToLoadExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaximumFileContentToLoadExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaximumFileContentToLoadExceededException(v protocol.ResponseMetadata) error {
+	return &MaximumFileContentToLoadExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaximumFileContentToLoadExceededException) Code() string {
+	return "MaximumFileContentToLoadExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaximumFileContentToLoadExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaximumFileContentToLoadExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaximumFileContentToLoadExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaximumFileContentToLoadExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaximumFileContentToLoadExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The number of specified files to change as part of this commit exceeds the
+// maximum number of files that can be changed in a single commit. Consider
+// using a Git client for these changes.
+type MaximumFileEntriesExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaximumFileEntriesExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaximumFileEntriesExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaximumFileEntriesExceededException(v protocol.ResponseMetadata) error {
+	return &MaximumFileEntriesExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaximumFileEntriesExceededException) Code() string {
+	return "MaximumFileEntriesExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaximumFileEntriesExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaximumFileEntriesExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaximumFileEntriesExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaximumFileEntriesExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaximumFileEntriesExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The number of items to compare between the source or destination branches
+// and the merge base has exceeded the maximum allowed.
+type MaximumItemsToCompareExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaximumItemsToCompareExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaximumItemsToCompareExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaximumItemsToCompareExceededException(v protocol.ResponseMetadata) error {
+	return &MaximumItemsToCompareExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaximumItemsToCompareExceededException) Code() string {
+	return "MaximumItemsToCompareExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaximumItemsToCompareExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaximumItemsToCompareExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaximumItemsToCompareExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaximumItemsToCompareExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaximumItemsToCompareExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The number of approvals required for the approval rule exceeds the maximum
+// number allowed.
+type MaximumNumberOfApprovalsExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaximumNumberOfApprovalsExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaximumNumberOfApprovalsExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaximumNumberOfApprovalsExceededException(v protocol.ResponseMetadata) error {
+	return &MaximumNumberOfApprovalsExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaximumNumberOfApprovalsExceededException) Code() string {
+	return "MaximumNumberOfApprovalsExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaximumNumberOfApprovalsExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaximumNumberOfApprovalsExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaximumNumberOfApprovalsExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaximumNumberOfApprovalsExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaximumNumberOfApprovalsExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You cannot create the pull request because the repository has too many open
+// pull requests. The maximum number of open pull requests for a repository
+// is 1,000. Close one or more open pull requests, and then try again.
+type MaximumOpenPullRequestsExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaximumOpenPullRequestsExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaximumOpenPullRequestsExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaximumOpenPullRequestsExceededException(v protocol.ResponseMetadata) error {
+	return &MaximumOpenPullRequestsExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaximumOpenPullRequestsExceededException) Code() string {
+	return "MaximumOpenPullRequestsExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaximumOpenPullRequestsExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaximumOpenPullRequestsExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaximumOpenPullRequestsExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaximumOpenPullRequestsExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaximumOpenPullRequestsExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The maximum number of allowed repository names was exceeded. Currently, this
+// number is 100.
+type MaximumRepositoryNamesExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaximumRepositoryNamesExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaximumRepositoryNamesExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaximumRepositoryNamesExceededException(v protocol.ResponseMetadata) error {
+	return &MaximumRepositoryNamesExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaximumRepositoryNamesExceededException) Code() string {
+	return "MaximumRepositoryNamesExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaximumRepositoryNamesExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaximumRepositoryNamesExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaximumRepositoryNamesExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaximumRepositoryNamesExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaximumRepositoryNamesExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The number of triggers allowed for the repository was exceeded.
+type MaximumRepositoryTriggersExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaximumRepositoryTriggersExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaximumRepositoryTriggersExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaximumRepositoryTriggersExceededException(v protocol.ResponseMetadata) error {
+	return &MaximumRepositoryTriggersExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaximumRepositoryTriggersExceededException) Code() string {
+	return "MaximumRepositoryTriggersExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaximumRepositoryTriggersExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaximumRepositoryTriggersExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaximumRepositoryTriggersExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaximumRepositoryTriggersExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaximumRepositoryTriggersExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The maximum number of approval rule templates for a repository has been exceeded.
+// You cannot associate more than 25 approval rule templates with a repository.
+type MaximumRuleTemplatesAssociatedWithRepositoryException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaximumRuleTemplatesAssociatedWithRepositoryException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaximumRuleTemplatesAssociatedWithRepositoryException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaximumRuleTemplatesAssociatedWithRepositoryException(v protocol.ResponseMetadata) error {
+	return &MaximumRuleTemplatesAssociatedWithRepositoryException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaximumRuleTemplatesAssociatedWithRepositoryException) Code() string {
+	return "MaximumRuleTemplatesAssociatedWithRepositoryException"
+}
+
+// Message returns the exception's message.
+func (s MaximumRuleTemplatesAssociatedWithRepositoryException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaximumRuleTemplatesAssociatedWithRepositoryException) OrigErr() error {
+	return nil
+}
+
+func (s MaximumRuleTemplatesAssociatedWithRepositoryException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaximumRuleTemplatesAssociatedWithRepositoryException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaximumRuleTemplatesAssociatedWithRepositoryException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type MergeBranchesByFastForwardInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17891,6 +24477,57 @@ func (s *MergeOperations) SetSource(v string) *MergeOperations {
 	return s
 }
 
+// A merge option or stategy is required, and none was provided.
+type MergeOptionRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MergeOptionRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MergeOptionRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorMergeOptionRequiredException(v protocol.ResponseMetadata) error {
+	return &MergeOptionRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MergeOptionRequiredException) Code() string {
+	return "MergeOptionRequiredException"
+}
+
+// Message returns the exception's message.
+func (s MergeOptionRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MergeOptionRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s MergeOptionRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MergeOptionRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MergeOptionRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type MergePullRequestByFastForwardInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18316,6 +24953,319 @@ func (s *MergePullRequestByThreeWayOutput) SetPullRequest(v *PullRequest) *Merge
 	return s
 }
 
+// More than one conflict resolution entries exists for the conflict. A conflict
+// can have only one conflict resolution entry.
+type MultipleConflictResolutionEntriesException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MultipleConflictResolutionEntriesException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultipleConflictResolutionEntriesException) GoString() string {
+	return s.String()
+}
+
+func newErrorMultipleConflictResolutionEntriesException(v protocol.ResponseMetadata) error {
+	return &MultipleConflictResolutionEntriesException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MultipleConflictResolutionEntriesException) Code() string {
+	return "MultipleConflictResolutionEntriesException"
+}
+
+// Message returns the exception's message.
+func (s MultipleConflictResolutionEntriesException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MultipleConflictResolutionEntriesException) OrigErr() error {
+	return nil
+}
+
+func (s MultipleConflictResolutionEntriesException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MultipleConflictResolutionEntriesException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MultipleConflictResolutionEntriesException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You cannot include more than one repository in a pull request. Make sure
+// you have specified only one repository name in your request, and then try
+// again.
+type MultipleRepositoriesInPullRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MultipleRepositoriesInPullRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultipleRepositoriesInPullRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorMultipleRepositoriesInPullRequestException(v protocol.ResponseMetadata) error {
+	return &MultipleRepositoriesInPullRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MultipleRepositoriesInPullRequestException) Code() string {
+	return "MultipleRepositoriesInPullRequestException"
+}
+
+// Message returns the exception's message.
+func (s MultipleRepositoriesInPullRequestException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MultipleRepositoriesInPullRequestException) OrigErr() error {
+	return nil
+}
+
+func (s MultipleRepositoriesInPullRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MultipleRepositoriesInPullRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MultipleRepositoriesInPullRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The user name is not valid because it has exceeded the character limit for
+// author names.
+type NameLengthExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NameLengthExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NameLengthExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorNameLengthExceededException(v protocol.ResponseMetadata) error {
+	return &NameLengthExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NameLengthExceededException) Code() string {
+	return "NameLengthExceededException"
+}
+
+// Message returns the exception's message.
+func (s NameLengthExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NameLengthExceededException) OrigErr() error {
+	return nil
+}
+
+func (s NameLengthExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NameLengthExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NameLengthExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The commit cannot be created because no changes will be made to the repository
+// as a result of this commit. A commit must contain at least one change.
+type NoChangeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoChangeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoChangeException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoChangeException(v protocol.ResponseMetadata) error {
+	return &NoChangeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoChangeException) Code() string {
+	return "NoChangeException"
+}
+
+// Message returns the exception's message.
+func (s NoChangeException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoChangeException) OrigErr() error {
+	return nil
+}
+
+func (s NoChangeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoChangeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoChangeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The maximum number of approval rule templates has been exceeded for this
+// AWS Region.
+type NumberOfRuleTemplatesExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NumberOfRuleTemplatesExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NumberOfRuleTemplatesExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorNumberOfRuleTemplatesExceededException(v protocol.ResponseMetadata) error {
+	return &NumberOfRuleTemplatesExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NumberOfRuleTemplatesExceededException) Code() string {
+	return "NumberOfRuleTemplatesExceededException"
+}
+
+// Message returns the exception's message.
+func (s NumberOfRuleTemplatesExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NumberOfRuleTemplatesExceededException) OrigErr() error {
+	return nil
+}
+
+func (s NumberOfRuleTemplatesExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NumberOfRuleTemplatesExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NumberOfRuleTemplatesExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The approval rule cannot be added. The pull request has the maximum number
+// of approval rules associated with it.
+type NumberOfRulesExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NumberOfRulesExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NumberOfRulesExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorNumberOfRulesExceededException(v protocol.ResponseMetadata) error {
+	return &NumberOfRulesExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NumberOfRulesExceededException) Code() string {
+	return "NumberOfRulesExceededException"
+}
+
+// Message returns the exception's message.
+func (s NumberOfRulesExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NumberOfRulesExceededException) OrigErr() error {
+	return nil
+}
+
+func (s NumberOfRulesExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NumberOfRulesExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NumberOfRulesExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information about the type of an object in a merge operation.
 type ObjectTypes struct {
 	_ struct{} `type:"structure"`
@@ -18390,6 +25340,57 @@ func (s *OriginApprovalRuleTemplate) SetApprovalRuleTemplateId(v string) *Origin
 func (s *OriginApprovalRuleTemplate) SetApprovalRuleTemplateName(v string) *OriginApprovalRuleTemplate {
 	s.ApprovalRuleTemplateName = &v
 	return s
+}
+
+// The pull request has already had its approval rules set to override.
+type OverrideAlreadySetException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s OverrideAlreadySetException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OverrideAlreadySetException) GoString() string {
+	return s.String()
+}
+
+func newErrorOverrideAlreadySetException(v protocol.ResponseMetadata) error {
+	return &OverrideAlreadySetException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s OverrideAlreadySetException) Code() string {
+	return "OverrideAlreadySetException"
+}
+
+// Message returns the exception's message.
+func (s OverrideAlreadySetException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s OverrideAlreadySetException) OrigErr() error {
+	return nil
+}
+
+func (s OverrideAlreadySetException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s OverrideAlreadySetException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s OverrideAlreadySetException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type OverridePullRequestApprovalRulesInput struct {
@@ -18475,6 +25476,318 @@ func (s OverridePullRequestApprovalRulesOutput) String() string {
 // GoString returns the string representation
 func (s OverridePullRequestApprovalRulesOutput) GoString() string {
 	return s.String()
+}
+
+// An override status is required, but no value was provided. Valid values include
+// OVERRIDE and REVOKE.
+type OverrideStatusRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s OverrideStatusRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OverrideStatusRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorOverrideStatusRequiredException(v protocol.ResponseMetadata) error {
+	return &OverrideStatusRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s OverrideStatusRequiredException) Code() string {
+	return "OverrideStatusRequiredException"
+}
+
+// Message returns the exception's message.
+func (s OverrideStatusRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s OverrideStatusRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s OverrideStatusRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s OverrideStatusRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s OverrideStatusRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The parent commit ID is not valid because it does not exist. The specified
+// parent commit ID does not exist in the specified branch of the repository.
+type ParentCommitDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ParentCommitDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ParentCommitDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorParentCommitDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &ParentCommitDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ParentCommitDoesNotExistException) Code() string {
+	return "ParentCommitDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s ParentCommitDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ParentCommitDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s ParentCommitDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ParentCommitDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ParentCommitDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The file could not be added because the provided parent commit ID is not
+// the current tip of the specified branch. To view the full commit ID of the
+// current head of the branch, use GetBranch.
+type ParentCommitIdOutdatedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ParentCommitIdOutdatedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ParentCommitIdOutdatedException) GoString() string {
+	return s.String()
+}
+
+func newErrorParentCommitIdOutdatedException(v protocol.ResponseMetadata) error {
+	return &ParentCommitIdOutdatedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ParentCommitIdOutdatedException) Code() string {
+	return "ParentCommitIdOutdatedException"
+}
+
+// Message returns the exception's message.
+func (s ParentCommitIdOutdatedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ParentCommitIdOutdatedException) OrigErr() error {
+	return nil
+}
+
+func (s ParentCommitIdOutdatedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ParentCommitIdOutdatedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ParentCommitIdOutdatedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A parent commit ID is required. To view the full commit ID of a branch in
+// a repository, use GetBranch or a Git command (for example, git pull or git
+// log).
+type ParentCommitIdRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ParentCommitIdRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ParentCommitIdRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorParentCommitIdRequiredException(v protocol.ResponseMetadata) error {
+	return &ParentCommitIdRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ParentCommitIdRequiredException) Code() string {
+	return "ParentCommitIdRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ParentCommitIdRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ParentCommitIdRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ParentCommitIdRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ParentCommitIdRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ParentCommitIdRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified path does not exist.
+type PathDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PathDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PathDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorPathDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &PathDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PathDoesNotExistException) Code() string {
+	return "PathDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s PathDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PathDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s PathDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PathDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PathDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The folderPath for a location cannot be null.
+type PathRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PathRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PathRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorPathRequiredException(v protocol.ResponseMetadata) error {
+	return &PathRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PathRequiredException) Code() string {
+	return "PathRequiredException"
+}
+
+// Message returns the exception's message.
+func (s PathRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PathRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s PathRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PathRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PathRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type PostCommentForComparedCommitInput struct {
@@ -19079,6 +26392,162 @@ func (s *PullRequest) SetTitle(v string) *PullRequest {
 	return s
 }
 
+// The pull request status cannot be updated because it is already closed.
+type PullRequestAlreadyClosedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PullRequestAlreadyClosedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PullRequestAlreadyClosedException) GoString() string {
+	return s.String()
+}
+
+func newErrorPullRequestAlreadyClosedException(v protocol.ResponseMetadata) error {
+	return &PullRequestAlreadyClosedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PullRequestAlreadyClosedException) Code() string {
+	return "PullRequestAlreadyClosedException"
+}
+
+// Message returns the exception's message.
+func (s PullRequestAlreadyClosedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PullRequestAlreadyClosedException) OrigErr() error {
+	return nil
+}
+
+func (s PullRequestAlreadyClosedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PullRequestAlreadyClosedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PullRequestAlreadyClosedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The pull request cannot be merged because one or more approval rules applied
+// to the pull request have conditions that have not been met.
+type PullRequestApprovalRulesNotSatisfiedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PullRequestApprovalRulesNotSatisfiedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PullRequestApprovalRulesNotSatisfiedException) GoString() string {
+	return s.String()
+}
+
+func newErrorPullRequestApprovalRulesNotSatisfiedException(v protocol.ResponseMetadata) error {
+	return &PullRequestApprovalRulesNotSatisfiedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PullRequestApprovalRulesNotSatisfiedException) Code() string {
+	return "PullRequestApprovalRulesNotSatisfiedException"
+}
+
+// Message returns the exception's message.
+func (s PullRequestApprovalRulesNotSatisfiedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PullRequestApprovalRulesNotSatisfiedException) OrigErr() error {
+	return nil
+}
+
+func (s PullRequestApprovalRulesNotSatisfiedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PullRequestApprovalRulesNotSatisfiedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PullRequestApprovalRulesNotSatisfiedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The approval cannot be applied because the user approving the pull request
+// matches the user who created the pull request. You cannot approve a pull
+// request that you created.
+type PullRequestCannotBeApprovedByAuthorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PullRequestCannotBeApprovedByAuthorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PullRequestCannotBeApprovedByAuthorException) GoString() string {
+	return s.String()
+}
+
+func newErrorPullRequestCannotBeApprovedByAuthorException(v protocol.ResponseMetadata) error {
+	return &PullRequestCannotBeApprovedByAuthorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PullRequestCannotBeApprovedByAuthorException) Code() string {
+	return "PullRequestCannotBeApprovedByAuthorException"
+}
+
+// Message returns the exception's message.
+func (s PullRequestCannotBeApprovedByAuthorException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PullRequestCannotBeApprovedByAuthorException) OrigErr() error {
+	return nil
+}
+
+func (s PullRequestCannotBeApprovedByAuthorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PullRequestCannotBeApprovedByAuthorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PullRequestCannotBeApprovedByAuthorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Metadata about the pull request that is used when comparing the pull request
 // source with its destination.
 type PullRequestCreatedEventMetadata struct {
@@ -19131,6 +26600,58 @@ func (s *PullRequestCreatedEventMetadata) SetRepositoryName(v string) *PullReque
 func (s *PullRequestCreatedEventMetadata) SetSourceCommitId(v string) *PullRequestCreatedEventMetadata {
 	s.SourceCommitId = &v
 	return s
+}
+
+// The pull request ID could not be found. Make sure that you have specified
+// the correct repository name and pull request ID, and then try again.
+type PullRequestDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PullRequestDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PullRequestDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorPullRequestDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &PullRequestDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PullRequestDoesNotExistException) Code() string {
+	return "PullRequestDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s PullRequestDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PullRequestDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s PullRequestDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PullRequestDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PullRequestDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Returns information about a pull request event.
@@ -19248,6 +26769,57 @@ func (s *PullRequestEvent) SetPullRequestSourceReferenceUpdatedEventMetadata(v *
 func (s *PullRequestEvent) SetPullRequestStatusChangedEventMetadata(v *PullRequestStatusChangedEventMetadata) *PullRequestEvent {
 	s.PullRequestStatusChangedEventMetadata = v
 	return s
+}
+
+// A pull request ID is required, but none was provided.
+type PullRequestIdRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PullRequestIdRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PullRequestIdRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorPullRequestIdRequiredException(v protocol.ResponseMetadata) error {
+	return &PullRequestIdRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PullRequestIdRequiredException) Code() string {
+	return "PullRequestIdRequiredException"
+}
+
+// Message returns the exception's message.
+func (s PullRequestIdRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PullRequestIdRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s PullRequestIdRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PullRequestIdRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PullRequestIdRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Returns information about the change in the merge state for a pull request
@@ -19369,6 +26941,57 @@ func (s PullRequestStatusChangedEventMetadata) GoString() string {
 func (s *PullRequestStatusChangedEventMetadata) SetPullRequestStatus(v string) *PullRequestStatusChangedEventMetadata {
 	s.PullRequestStatus = &v
 	return s
+}
+
+// A pull request status is required, but none was provided.
+type PullRequestStatusRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PullRequestStatusRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PullRequestStatusRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorPullRequestStatusRequiredException(v protocol.ResponseMetadata) error {
+	return &PullRequestStatusRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PullRequestStatusRequiredException) Code() string {
+	return "PullRequestStatusRequiredException"
+}
+
+// Message returns the exception's message.
+func (s PullRequestStatusRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PullRequestStatusRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s PullRequestStatusRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PullRequestStatusRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PullRequestStatusRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Returns information about a pull request target.
@@ -19530,6 +27153,58 @@ func (s *PutFileEntry) SetFilePath(v string) *PutFileEntry {
 func (s *PutFileEntry) SetSourceFile(v *SourceFileSpecifier) *PutFileEntry {
 	s.SourceFile = v
 	return s
+}
+
+// The commit cannot be created because one or more files specified in the commit
+// reference both a file and a folder.
+type PutFileEntryConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PutFileEntryConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutFileEntryConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorPutFileEntryConflictException(v protocol.ResponseMetadata) error {
+	return &PutFileEntryConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PutFileEntryConflictException) Code() string {
+	return "PutFileEntryConflictException"
+}
+
+// Message returns the exception's message.
+func (s PutFileEntryConflictException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PutFileEntryConflictException) OrigErr() error {
+	return nil
+}
+
+func (s PutFileEntryConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PutFileEntryConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PutFileEntryConflictException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type PutFileInput struct {
@@ -19816,6 +27491,159 @@ func (s *PutRepositoryTriggersOutput) SetConfigurationId(v string) *PutRepositor
 	return s
 }
 
+// The specified reference does not exist. You must provide a full commit ID.
+type ReferenceDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ReferenceDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReferenceDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorReferenceDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &ReferenceDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ReferenceDoesNotExistException) Code() string {
+	return "ReferenceDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s ReferenceDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ReferenceDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s ReferenceDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ReferenceDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ReferenceDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A reference name is required, but none was provided.
+type ReferenceNameRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ReferenceNameRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReferenceNameRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorReferenceNameRequiredException(v protocol.ResponseMetadata) error {
+	return &ReferenceNameRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ReferenceNameRequiredException) Code() string {
+	return "ReferenceNameRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ReferenceNameRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ReferenceNameRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ReferenceNameRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ReferenceNameRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ReferenceNameRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified reference is not a supported type.
+type ReferenceTypeNotSupportedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ReferenceTypeNotSupportedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReferenceTypeNotSupportedException) GoString() string {
+	return s.String()
+}
+
+func newErrorReferenceTypeNotSupportedException(v protocol.ResponseMetadata) error {
+	return &ReferenceTypeNotSupportedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ReferenceTypeNotSupportedException) Code() string {
+	return "ReferenceTypeNotSupportedException"
+}
+
+// Message returns the exception's message.
+func (s ReferenceTypeNotSupportedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ReferenceTypeNotSupportedException) OrigErr() error {
+	return nil
+}
+
+func (s ReferenceTypeNotSupportedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ReferenceTypeNotSupportedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ReferenceTypeNotSupportedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information about a replacement content entry in the conflict of a merge
 // or pull request operation.
 type ReplaceContentEntry struct {
@@ -19888,6 +27716,210 @@ func (s *ReplaceContentEntry) SetFilePath(v string) *ReplaceContentEntry {
 func (s *ReplaceContentEntry) SetReplacementType(v string) *ReplaceContentEntry {
 	s.ReplacementType = &v
 	return s
+}
+
+// USE_NEW_CONTENT was specified, but no replacement content has been provided.
+type ReplacementContentRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ReplacementContentRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplacementContentRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorReplacementContentRequiredException(v protocol.ResponseMetadata) error {
+	return &ReplacementContentRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ReplacementContentRequiredException) Code() string {
+	return "ReplacementContentRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ReplacementContentRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ReplacementContentRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ReplacementContentRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ReplacementContentRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ReplacementContentRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A replacement type is required.
+type ReplacementTypeRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ReplacementTypeRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplacementTypeRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorReplacementTypeRequiredException(v protocol.ResponseMetadata) error {
+	return &ReplacementTypeRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ReplacementTypeRequiredException) Code() string {
+	return "ReplacementTypeRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ReplacementTypeRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ReplacementTypeRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ReplacementTypeRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ReplacementTypeRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ReplacementTypeRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified repository does not exist.
+type RepositoryDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &RepositoryDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryDoesNotExistException) Code() string {
+	return "RepositoryDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryDoesNotExistException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A repository resource limit was exceeded.
+type RepositoryLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryLimitExceededException(v protocol.ResponseMetadata) error {
+	return &RepositoryLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryLimitExceededException) Code() string {
+	return "RepositoryLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryLimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information about a repository.
@@ -19995,6 +28027,57 @@ func (s *RepositoryMetadata) SetRepositoryName(v string) *RepositoryMetadata {
 	return s
 }
 
+// The specified repository name already exists.
+type RepositoryNameExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryNameExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryNameExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryNameExistsException(v protocol.ResponseMetadata) error {
+	return &RepositoryNameExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryNameExistsException) Code() string {
+	return "RepositoryNameExistsException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryNameExistsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryNameExistsException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryNameExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryNameExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryNameExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information about a repository name and ID.
 type RepositoryNameIdPair struct {
 	_ struct{} `type:"structure"`
@@ -20026,6 +28109,161 @@ func (s *RepositoryNameIdPair) SetRepositoryId(v string) *RepositoryNameIdPair {
 func (s *RepositoryNameIdPair) SetRepositoryName(v string) *RepositoryNameIdPair {
 	s.RepositoryName = &v
 	return s
+}
+
+// A repository name is required, but was not specified.
+type RepositoryNameRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryNameRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryNameRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryNameRequiredException(v protocol.ResponseMetadata) error {
+	return &RepositoryNameRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryNameRequiredException) Code() string {
+	return "RepositoryNameRequiredException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryNameRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryNameRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryNameRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryNameRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryNameRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// At least one repository name object is required, but was not specified.
+type RepositoryNamesRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryNamesRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryNamesRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryNamesRequiredException(v protocol.ResponseMetadata) error {
+	return &RepositoryNamesRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryNamesRequiredException) Code() string {
+	return "RepositoryNamesRequiredException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryNamesRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryNamesRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryNamesRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryNamesRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryNamesRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The repository does not contain any pull requests with that pull request
+// ID. Use GetPullRequest to verify the correct repository name for the pull
+// request ID.
+type RepositoryNotAssociatedWithPullRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryNotAssociatedWithPullRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryNotAssociatedWithPullRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryNotAssociatedWithPullRequestException(v protocol.ResponseMetadata) error {
+	return &RepositoryNotAssociatedWithPullRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryNotAssociatedWithPullRequestException) Code() string {
+	return "RepositoryNotAssociatedWithPullRequestException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryNotAssociatedWithPullRequestException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryNotAssociatedWithPullRequestException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryNotAssociatedWithPullRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryNotAssociatedWithPullRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryNotAssociatedWithPullRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information about a trigger for a repository.
@@ -20122,6 +28360,161 @@ func (s *RepositoryTrigger) SetName(v string) *RepositoryTrigger {
 	return s
 }
 
+// At least one branch name is required, but was not specified in the trigger
+// configuration.
+type RepositoryTriggerBranchNameListRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryTriggerBranchNameListRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryTriggerBranchNameListRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryTriggerBranchNameListRequiredException(v protocol.ResponseMetadata) error {
+	return &RepositoryTriggerBranchNameListRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryTriggerBranchNameListRequiredException) Code() string {
+	return "RepositoryTriggerBranchNameListRequiredException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryTriggerBranchNameListRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryTriggerBranchNameListRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryTriggerBranchNameListRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryTriggerBranchNameListRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryTriggerBranchNameListRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A destination ARN for the target service for the trigger is required, but
+// was not specified.
+type RepositoryTriggerDestinationArnRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryTriggerDestinationArnRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryTriggerDestinationArnRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryTriggerDestinationArnRequiredException(v protocol.ResponseMetadata) error {
+	return &RepositoryTriggerDestinationArnRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryTriggerDestinationArnRequiredException) Code() string {
+	return "RepositoryTriggerDestinationArnRequiredException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryTriggerDestinationArnRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryTriggerDestinationArnRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryTriggerDestinationArnRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryTriggerDestinationArnRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryTriggerDestinationArnRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// At least one event for the trigger is required, but was not specified.
+type RepositoryTriggerEventsListRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryTriggerEventsListRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryTriggerEventsListRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryTriggerEventsListRequiredException(v protocol.ResponseMetadata) error {
+	return &RepositoryTriggerEventsListRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryTriggerEventsListRequiredException) Code() string {
+	return "RepositoryTriggerEventsListRequiredException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryTriggerEventsListRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryTriggerEventsListRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryTriggerEventsListRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryTriggerEventsListRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryTriggerEventsListRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // A trigger failed to run.
 type RepositoryTriggerExecutionFailure struct {
 	_ struct{} `type:"structure"`
@@ -20153,6 +28546,424 @@ func (s *RepositoryTriggerExecutionFailure) SetFailureMessage(v string) *Reposit
 func (s *RepositoryTriggerExecutionFailure) SetTrigger(v string) *RepositoryTriggerExecutionFailure {
 	s.Trigger = &v
 	return s
+}
+
+// A name for the trigger is required, but was not specified.
+type RepositoryTriggerNameRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryTriggerNameRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryTriggerNameRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryTriggerNameRequiredException(v protocol.ResponseMetadata) error {
+	return &RepositoryTriggerNameRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryTriggerNameRequiredException) Code() string {
+	return "RepositoryTriggerNameRequiredException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryTriggerNameRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryTriggerNameRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryTriggerNameRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryTriggerNameRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryTriggerNameRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The list of triggers for the repository is required, but was not specified.
+type RepositoryTriggersListRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RepositoryTriggersListRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RepositoryTriggersListRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorRepositoryTriggersListRequiredException(v protocol.ResponseMetadata) error {
+	return &RepositoryTriggersListRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RepositoryTriggersListRequiredException) Code() string {
+	return "RepositoryTriggersListRequiredException"
+}
+
+// Message returns the exception's message.
+func (s RepositoryTriggersListRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RepositoryTriggersListRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s RepositoryTriggersListRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RepositoryTriggersListRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RepositoryTriggersListRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A valid Amazon Resource Name (ARN) for an AWS CodeCommit resource is required.
+// For a list of valid resources in AWS CodeCommit, see CodeCommit Resources
+// and Operations (https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-access-control-identity-based.html#arn-formats)
+// in the AWS CodeCommit User Guide.
+type ResourceArnRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceArnRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceArnRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceArnRequiredException(v protocol.ResponseMetadata) error {
+	return &ResourceArnRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceArnRequiredException) Code() string {
+	return "ResourceArnRequiredException"
+}
+
+// Message returns the exception's message.
+func (s ResourceArnRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceArnRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceArnRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceArnRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceArnRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The commit cannot be created because one of the changes specifies copying
+// or moving a .gitkeep file.
+type RestrictedSourceFileException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RestrictedSourceFileException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RestrictedSourceFileException) GoString() string {
+	return s.String()
+}
+
+func newErrorRestrictedSourceFileException(v protocol.ResponseMetadata) error {
+	return &RestrictedSourceFileException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RestrictedSourceFileException) Code() string {
+	return "RestrictedSourceFileException"
+}
+
+// Message returns the exception's message.
+func (s RestrictedSourceFileException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RestrictedSourceFileException) OrigErr() error {
+	return nil
+}
+
+func (s RestrictedSourceFileException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RestrictedSourceFileException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RestrictedSourceFileException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A revision ID is required, but was not provided.
+type RevisionIdRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RevisionIdRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RevisionIdRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorRevisionIdRequiredException(v protocol.ResponseMetadata) error {
+	return &RevisionIdRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RevisionIdRequiredException) Code() string {
+	return "RevisionIdRequiredException"
+}
+
+// Message returns the exception's message.
+func (s RevisionIdRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RevisionIdRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s RevisionIdRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RevisionIdRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RevisionIdRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The revision ID provided in the request does not match the current revision
+// ID. Use GetPullRequest to retrieve the current revision ID.
+type RevisionNotCurrentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RevisionNotCurrentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RevisionNotCurrentException) GoString() string {
+	return s.String()
+}
+
+func newErrorRevisionNotCurrentException(v protocol.ResponseMetadata) error {
+	return &RevisionNotCurrentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RevisionNotCurrentException) Code() string {
+	return "RevisionNotCurrentException"
+}
+
+// Message returns the exception's message.
+func (s RevisionNotCurrentException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RevisionNotCurrentException) OrigErr() error {
+	return nil
+}
+
+func (s RevisionNotCurrentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RevisionNotCurrentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RevisionNotCurrentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The file was not added or updated because the content of the file is exactly
+// the same as the content of that file in the repository and branch that you
+// specified.
+type SameFileContentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s SameFileContentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SameFileContentException) GoString() string {
+	return s.String()
+}
+
+func newErrorSameFileContentException(v protocol.ResponseMetadata) error {
+	return &SameFileContentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SameFileContentException) Code() string {
+	return "SameFileContentException"
+}
+
+// Message returns the exception's message.
+func (s SameFileContentException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SameFileContentException) OrigErr() error {
+	return nil
+}
+
+func (s SameFileContentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SameFileContentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SameFileContentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The commit cannot be created because one or more changes in this commit duplicate
+// actions in the same file path. For example, you cannot make the same delete
+// request to the same file in the same file path twice, or make a delete request
+// and a move request to the same file as part of the same commit.
+type SamePathRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s SamePathRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SamePathRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorSamePathRequestException(v protocol.ResponseMetadata) error {
+	return &SamePathRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SamePathRequestException) Code() string {
+	return "SamePathRequestException"
+}
+
+// Message returns the exception's message.
+func (s SamePathRequestException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SamePathRequestException) OrigErr() error {
+	return nil
+}
+
+func (s SamePathRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SamePathRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SamePathRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information about the file mode changes.
@@ -20206,6 +29017,110 @@ func (s *SetFileModeEntry) SetFileMode(v string) *SetFileModeEntry {
 func (s *SetFileModeEntry) SetFilePath(v string) *SetFileModeEntry {
 	s.FilePath = &v
 	return s
+}
+
+// The source branch and destination branch for the pull request are the same.
+// You must specify different branches for the source and destination.
+type SourceAndDestinationAreSameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s SourceAndDestinationAreSameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SourceAndDestinationAreSameException) GoString() string {
+	return s.String()
+}
+
+func newErrorSourceAndDestinationAreSameException(v protocol.ResponseMetadata) error {
+	return &SourceAndDestinationAreSameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SourceAndDestinationAreSameException) Code() string {
+	return "SourceAndDestinationAreSameException"
+}
+
+// Message returns the exception's message.
+func (s SourceAndDestinationAreSameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SourceAndDestinationAreSameException) OrigErr() error {
+	return nil
+}
+
+func (s SourceAndDestinationAreSameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SourceAndDestinationAreSameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SourceAndDestinationAreSameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The commit cannot be created because no source files or file content have
+// been specified for the commit.
+type SourceFileOrContentRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s SourceFileOrContentRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SourceFileOrContentRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorSourceFileOrContentRequiredException(v protocol.ResponseMetadata) error {
+	return &SourceFileOrContentRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SourceFileOrContentRequiredException) Code() string {
+	return "SourceFileOrContentRequiredException"
+}
+
+// Message returns the exception's message.
+func (s SourceFileOrContentRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SourceFileOrContentRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s SourceFileOrContentRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SourceFileOrContentRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SourceFileOrContentRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information about a source file that is part of changes made in a commit.
@@ -20351,6 +29266,108 @@ func (s *SymbolicLink) SetRelativePath(v string) *SymbolicLink {
 	return s
 }
 
+// A list of tag keys is required. The list cannot be empty or null.
+type TagKeysListRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TagKeysListRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagKeysListRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagKeysListRequiredException(v protocol.ResponseMetadata) error {
+	return &TagKeysListRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TagKeysListRequiredException) Code() string {
+	return "TagKeysListRequiredException"
+}
+
+// Message returns the exception's message.
+func (s TagKeysListRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TagKeysListRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s TagKeysListRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TagKeysListRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TagKeysListRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The tag policy is not valid.
+type TagPolicyException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TagPolicyException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagPolicyException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagPolicyException(v protocol.ResponseMetadata) error {
+	return &TagPolicyException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TagPolicyException) Code() string {
+	return "TagPolicyException"
+}
+
+// Message returns the exception's message.
+func (s TagPolicyException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TagPolicyException) OrigErr() error {
+	return nil
+}
+
+func (s TagPolicyException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TagPolicyException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TagPolicyException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type TagResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -20418,6 +29435,57 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// A map of tags is required.
+type TagsMapRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TagsMapRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagsMapRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagsMapRequiredException(v protocol.ResponseMetadata) error {
+	return &TagsMapRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TagsMapRequiredException) Code() string {
+	return "TagsMapRequiredException"
+}
+
+// Message returns the exception's message.
+func (s TagsMapRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TagsMapRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s TagsMapRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TagsMapRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TagsMapRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Returns information about a target for a pull request.
 type Target struct {
 	_ struct{} `type:"structure"`
@@ -20483,6 +29551,110 @@ func (s *Target) SetRepositoryName(v string) *Target {
 func (s *Target) SetSourceReference(v string) *Target {
 	s.SourceReference = &v
 	return s
+}
+
+// A pull request target is required. It cannot be empty or null. A pull request
+// target must contain the full values for the repository name, source branch,
+// and destination branch for the pull request.
+type TargetRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TargetRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorTargetRequiredException(v protocol.ResponseMetadata) error {
+	return &TargetRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TargetRequiredException) Code() string {
+	return "TargetRequiredException"
+}
+
+// Message returns the exception's message.
+func (s TargetRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TargetRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s TargetRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TargetRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TargetRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An array of target objects is required. It cannot be empty or null.
+type TargetsRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TargetsRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetsRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorTargetsRequiredException(v protocol.ResponseMetadata) error {
+	return &TargetsRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TargetsRequiredException) Code() string {
+	return "TargetsRequiredException"
+}
+
+// Message returns the exception's message.
+func (s TargetsRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TargetsRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s TargetsRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TargetsRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TargetsRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Represents the input of a test repository triggers operation.
@@ -20584,6 +29756,214 @@ func (s *TestRepositoryTriggersOutput) SetFailedExecutions(v []*RepositoryTrigge
 func (s *TestRepositoryTriggersOutput) SetSuccessfulExecutions(v []*string) *TestRepositoryTriggersOutput {
 	s.SuccessfulExecutions = v
 	return s
+}
+
+// The tip of the source branch in the destination repository does not match
+// the tip of the source branch specified in your request. The pull request
+// might have been updated. Make sure that you have the latest changes.
+type TipOfSourceReferenceIsDifferentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TipOfSourceReferenceIsDifferentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TipOfSourceReferenceIsDifferentException) GoString() string {
+	return s.String()
+}
+
+func newErrorTipOfSourceReferenceIsDifferentException(v protocol.ResponseMetadata) error {
+	return &TipOfSourceReferenceIsDifferentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TipOfSourceReferenceIsDifferentException) Code() string {
+	return "TipOfSourceReferenceIsDifferentException"
+}
+
+// Message returns the exception's message.
+func (s TipOfSourceReferenceIsDifferentException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TipOfSourceReferenceIsDifferentException) OrigErr() error {
+	return nil
+}
+
+func (s TipOfSourceReferenceIsDifferentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TipOfSourceReferenceIsDifferentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TipOfSourceReferenceIsDifferentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The divergence between the tips of the provided commit specifiers is too
+// great to determine whether there might be any merge conflicts. Locally compare
+// the specifiers using git diff or a diff tool.
+type TipsDivergenceExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TipsDivergenceExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TipsDivergenceExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorTipsDivergenceExceededException(v protocol.ResponseMetadata) error {
+	return &TipsDivergenceExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TipsDivergenceExceededException) Code() string {
+	return "TipsDivergenceExceededException"
+}
+
+// Message returns the exception's message.
+func (s TipsDivergenceExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TipsDivergenceExceededException) OrigErr() error {
+	return nil
+}
+
+func (s TipsDivergenceExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TipsDivergenceExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TipsDivergenceExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A pull request title is required. It cannot be empty or null.
+type TitleRequiredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TitleRequiredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TitleRequiredException) GoString() string {
+	return s.String()
+}
+
+func newErrorTitleRequiredException(v protocol.ResponseMetadata) error {
+	return &TitleRequiredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TitleRequiredException) Code() string {
+	return "TitleRequiredException"
+}
+
+// Message returns the exception's message.
+func (s TitleRequiredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TitleRequiredException) OrigErr() error {
+	return nil
+}
+
+func (s TitleRequiredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TitleRequiredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TitleRequiredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The maximum number of tags for an AWS CodeCommit resource has been exceeded.
+type TooManyTagsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TooManyTagsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyTagsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyTagsException(v protocol.ResponseMetadata) error {
+	return &TooManyTagsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyTagsException) Code() string {
+	return "TooManyTagsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyTagsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyTagsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyTagsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyTagsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyTagsException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {

@@ -5153,7 +5153,8 @@ func (c *RDS) DescribeDBClustersRequest(input *DescribeDBClustersInput) (req *re
 // For more information on Amazon Aurora, see What Is Amazon Aurora? (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html)
 // in the Amazon Aurora User Guide.
 //
-// This action only applies to Aurora DB clusters.
+// This operation can also return information for Amazon Neptune DB instances
+// and Amazon DocumentDB instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5566,6 +5567,9 @@ func (c *RDS) DescribeDBInstancesRequest(input *DescribeDBInstancesInput) (req *
 // DescribeDBInstances API operation for Amazon Relational Database Service.
 //
 // Returns information about provisioned RDS instances. This API supports pagination.
+//
+// This operation can also return information for Amazon Neptune DB instances
+// and Amazon DocumentDB instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9175,6 +9179,111 @@ func (c *RDS) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsFor
 // for more information on using Contexts.
 func (c *RDS) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
 	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyCertificates = "ModifyCertificates"
+
+// ModifyCertificatesRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyCertificates operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyCertificates for more information on using the ModifyCertificates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyCertificatesRequest method.
+//    req, resp := client.ModifyCertificatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ModifyCertificates
+func (c *RDS) ModifyCertificatesRequest(input *ModifyCertificatesInput) (req *request.Request, output *ModifyCertificatesOutput) {
+	op := &request.Operation{
+		Name:       opModifyCertificates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyCertificatesInput{}
+	}
+
+	output = &ModifyCertificatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyCertificates API operation for Amazon Relational Database Service.
+//
+// Override the system-default Secure Sockets Layer/Transport Layer Security
+// (SSL/TLS) certificate for Amazon RDS for new DB instances, or remove the
+// override.
+//
+// By using this operation, you can specify an RDS-approved SSL/TLS certificate
+// for new DB instances that is different from the default certificate provided
+// by RDS. You can also use this operation to remove the override, so that new
+// DB instances use the default certificate provided by RDS.
+//
+// You might need to override the default certificate in the following situations:
+//
+//    * You already migrated your applications to support the latest certificate
+//    authority (CA) certificate, but the new CA certificate is not yet the
+//    RDS default CA certificate for the specified AWS Region.
+//
+//    * RDS has already moved to a new default CA certificate for the specified
+//    AWS Region, but you are still in the process of supporting the new CA
+//    certificate. In this case, you temporarily need additional time to finish
+//    your application changes.
+//
+// For more information about rotating your SSL/TLS certificate for RDS DB engines,
+// see Rotating Your SSL/TLS Certificate (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL-certificate-rotation.html)
+// in the Amazon RDS User Guide.
+//
+// For more information about rotating your SSL/TLS certificate for Aurora DB
+// engines, see Rotating Your SSL/TLS Certificate (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.SSL-certificate-rotation.html)
+// in the Amazon Aurora User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Relational Database Service's
+// API operation ModifyCertificates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeCertificateNotFoundFault "CertificateNotFound"
+//   CertificateIdentifier doesn't refer to an existing certificate.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ModifyCertificates
+func (c *RDS) ModifyCertificates(input *ModifyCertificatesInput) (*ModifyCertificatesOutput, error) {
+	req, out := c.ModifyCertificatesRequest(input)
+	return out, req.Send()
+}
+
+// ModifyCertificatesWithContext is the same as ModifyCertificates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyCertificates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) ModifyCertificatesWithContext(ctx aws.Context, input *ModifyCertificatesInput, opts ...request.Option) (*ModifyCertificatesOutput, error) {
+	req, out := c.ModifyCertificatesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -13411,7 +13520,9 @@ func (c *RDS) StopDBInstanceWithContext(ctx aws.Context, input *StopDBInstanceIn
 //    a lower number of associated IAM roles.
 //
 //    * DBInstances - The number of DB instances per account. The used value
-//    is the count of the DB instances in the account.
+//    is the count of the DB instances in the account. Amazon RDS DB instances,
+//    Amazon Aurora DB instances, Amazon Neptune instances, and Amazon DocumentDB
+//    instances apply to this quota.
 //
 //    * DBParameterGroups - The number of DB parameter groups per account, excluding
 //    default parameter groups. The used value is the count of nondefault DB
@@ -13448,8 +13559,8 @@ func (c *RDS) StopDBInstanceWithContext(ctx aws.Context, input *StopDBInstanceIn
 //    account. Other DB subnet groups in the account might have a lower number
 //    of subnets.
 //
-// For more information, see Limits (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html)
-// in the Amazon RDS User Guide and Limits (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_Limits.html)
+// For more information, see Quotas for Amazon RDS (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html)
+// in the Amazon RDS User Guide and Quotas for Amazon Aurora (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_Limits.html)
 // in the Amazon Aurora User Guide.
 type AccountQuota struct {
 	_ struct{} `type:"structure"`
@@ -14291,6 +14402,13 @@ type Certificate struct {
 	// The type of the certificate.
 	CertificateType *string `type:"string"`
 
+	// Whether there is an override for the default certificate identifier.
+	CustomerOverride *bool `type:"boolean"`
+
+	// If there is an override for the default certificate identifier, when the
+	// override expires.
+	CustomerOverrideValidTill *time.Time `type:"timestamp"`
+
 	// The thumbprint of the certificate.
 	Thumbprint *string `type:"string"`
 
@@ -14326,6 +14444,18 @@ func (s *Certificate) SetCertificateIdentifier(v string) *Certificate {
 // SetCertificateType sets the CertificateType field's value.
 func (s *Certificate) SetCertificateType(v string) *Certificate {
 	s.CertificateType = &v
+	return s
+}
+
+// SetCustomerOverride sets the CustomerOverride field's value.
+func (s *Certificate) SetCustomerOverride(v bool) *Certificate {
+	s.CustomerOverride = &v
+	return s
+}
+
+// SetCustomerOverrideValidTill sets the CustomerOverrideValidTill field's value.
+func (s *Certificate) SetCustomerOverrideValidTill(v time.Time) *Certificate {
+	s.CustomerOverrideValidTill = &v
 	return s
 }
 
@@ -15870,6 +16000,17 @@ type CreateDBClusterInput struct {
 
 	// The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery,
 	// global, or multimaster.
+	//
+	// Limitations and requirements apply to some DB engine modes. For more information,
+	// see the following sections in the Amazon Aurora User Guide:
+	//
+	//    * Limitations of Aurora Serverless (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html#aurora-serverless.limitations)
+	//
+	//    * Limitations of Parallel Query (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-mysql-parallel-query.html#aurora-mysql-parallel-query-limitations)
+	//
+	//    * Requirements for Aurora Global Databases (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html#aurora-global-database.limitations)
+	//
+	//    * Limitations of Multi-Master Clusters (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-multi-master.html#aurora-multi-master-limitations)
 	EngineMode *string `type:"string"`
 
 	// The version number of the database engine to use.
@@ -30243,6 +30384,65 @@ func (s *MinimumEngineVersionPerAllowedValue) SetAllowedValue(v string) *Minimum
 // SetMinimumEngineVersion sets the MinimumEngineVersion field's value.
 func (s *MinimumEngineVersionPerAllowedValue) SetMinimumEngineVersion(v string) *MinimumEngineVersionPerAllowedValue {
 	s.MinimumEngineVersion = &v
+	return s
+}
+
+type ModifyCertificatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The new default certificate identifier to override the current one with.
+	//
+	// To determine the valid values, use the describe-certificates AWS CLI command
+	// or the DescribeCertificates API operation.
+	CertificateIdentifier *string `type:"string"`
+
+	// A value that indicates whether to remove the override for the default certificate.
+	// If the override is removed, the default certificate is the system default.
+	RemoveCustomerOverride *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s ModifyCertificatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyCertificatesInput) GoString() string {
+	return s.String()
+}
+
+// SetCertificateIdentifier sets the CertificateIdentifier field's value.
+func (s *ModifyCertificatesInput) SetCertificateIdentifier(v string) *ModifyCertificatesInput {
+	s.CertificateIdentifier = &v
+	return s
+}
+
+// SetRemoveCustomerOverride sets the RemoveCustomerOverride field's value.
+func (s *ModifyCertificatesInput) SetRemoveCustomerOverride(v bool) *ModifyCertificatesInput {
+	s.RemoveCustomerOverride = &v
+	return s
+}
+
+type ModifyCertificatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A CA certificate for an AWS account.
+	Certificate *Certificate `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyCertificatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyCertificatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificate sets the Certificate field's value.
+func (s *ModifyCertificatesOutput) SetCertificate(v *Certificate) *ModifyCertificatesOutput {
+	s.Certificate = v
 	return s
 }
 

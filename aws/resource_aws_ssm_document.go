@@ -272,7 +272,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	doc := describeDocumentOutput.Document
 
 	d.Set("content", getDocumentOutput.Content)
-	d.Set("created_date", doc.CreatedDate)
+	d.Set("created_date", aws.TimeValue(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set("description", doc.Description)
 	d.Set("schema_version", doc.SchemaVersion)

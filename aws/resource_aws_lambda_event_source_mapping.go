@@ -221,7 +221,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	d.Set("maximum_batching_window_in_seconds", eventSourceMappingConfiguration.MaximumBatchingWindowInSeconds)
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
 	d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
-	d.Set("last_modified", eventSourceMappingConfiguration.LastModified)
+	d.Set("last_modified", aws.TimeValue(eventSourceMappingConfiguration.LastModified).Format(time.RFC3339))
 	d.Set("last_processing_result", eventSourceMappingConfiguration.LastProcessingResult)
 	d.Set("state", eventSourceMappingConfiguration.State)
 	d.Set("state_transition_reason", eventSourceMappingConfiguration.StateTransitionReason)

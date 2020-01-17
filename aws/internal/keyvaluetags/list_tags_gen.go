@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -242,6 +243,23 @@ func BackupListTags(conn *backup.Backup, identifier string) (KeyValueTags, error
 	}
 
 	return BackupKeyValueTags(output.Tags), nil
+}
+
+// CloudfrontListTags lists cloudfront service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudfrontListTags(conn *cloudfront.CloudFront, identifier string) (KeyValueTags, error) {
+	input := &cloudfront.ListTagsForResourceInput{
+		Resource: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CloudfrontKeyValueTags(output.Tags.Items), nil
 }
 
 // Cloudhsmv2ListTags lists cloudhsmv2 service tags.

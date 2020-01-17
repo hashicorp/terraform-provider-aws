@@ -73,20 +73,20 @@ func (c *ECS) CreateCapacityProviderRequest(input *CreateCapacityProviderInput) 
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation CreateCapacityProvider for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit for the resource has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/CreateCapacityProvider
@@ -174,16 +174,16 @@ func (c *ECS) CreateClusterRequest(input *CreateClusterInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation CreateCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -360,34 +360,34 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation CreateService for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   * UnsupportedFeatureException
 //   The specified task is not supported in this Region.
 //
-//   * ErrCodePlatformUnknownException "PlatformUnknownException"
+//   * PlatformUnknownException
 //   The specified platform version does not exist.
 //
-//   * ErrCodePlatformTaskDefinitionIncompatibilityException "PlatformTaskDefinitionIncompatibilityException"
+//   * PlatformTaskDefinitionIncompatibilityException
 //   The specified platform version does not satisfy the task definition's required
 //   capabilities.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/CreateService
@@ -468,41 +468,41 @@ func (c *ECS) CreateTaskSetRequest(input *CreateTaskSetInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation CreateTaskSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   * UnsupportedFeatureException
 //   The specified task is not supported in this Region.
 //
-//   * ErrCodePlatformUnknownException "PlatformUnknownException"
+//   * PlatformUnknownException
 //   The specified platform version does not exist.
 //
-//   * ErrCodePlatformTaskDefinitionIncompatibilityException "PlatformTaskDefinitionIncompatibilityException"
+//   * PlatformTaskDefinitionIncompatibilityException
 //   The specified platform version does not satisfy the task definition's required
 //   capabilities.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
-//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   * ServiceNotFoundException
 //   The specified service could not be found. You can view your available services
 //   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
 //
-//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   * ServiceNotActiveException
 //   The specified service is not active. You can't update a service that is inactive.
 //   If you have previously deleted a service, you can re-create it with CreateService.
 //
@@ -582,16 +582,16 @@ func (c *ECS) DeleteAccountSettingRequest(input *DeleteAccountSettingInput) (req
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DeleteAccountSetting for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -670,17 +670,17 @@ func (c *ECS) DeleteAttributesRequest(input *DeleteAttributesInput) (req *reques
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DeleteAttributes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+// Returned Error Types:
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeTargetNotFoundException "TargetNotFoundException"
+//   * TargetNotFoundException
 //   The specified target could not be found. You can view your available container
 //   instances with ListContainerInstances. Amazon ECS container instances are
 //   cluster-specific and Region-specific.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -761,37 +761,37 @@ func (c *ECS) DeleteClusterRequest(input *DeleteClusterInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DeleteCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeClusterContainsContainerInstancesException "ClusterContainsContainerInstancesException"
+//   * ClusterContainsContainerInstancesException
 //   You cannot delete a cluster that has registered container instances. First,
 //   deregister the container instances before you can delete the cluster. For
 //   more information, see DeregisterContainerInstance.
 //
-//   * ErrCodeClusterContainsServicesException "ClusterContainsServicesException"
+//   * ClusterContainsServicesException
 //   You cannot delete a cluster that contains services. First, update the service
 //   to reduce its desired task count to 0 and then delete the service. For more
 //   information, see UpdateService and DeleteService.
 //
-//   * ErrCodeClusterContainsTasksException "ClusterContainsTasksException"
+//   * ClusterContainsTasksException
 //   You cannot delete a cluster that has active tasks.
 //
-//   * ErrCodeUpdateInProgressException "UpdateInProgressException"
+//   * UpdateInProgressException
 //   There is already a current Amazon ECS container agent update in progress
 //   on the specified container instance. If the container agent becomes disconnected
 //   while it is in a transitional stage, such as PENDING or STAGING, the update
@@ -890,24 +890,24 @@ func (c *ECS) DeleteServiceRequest(input *DeleteServiceInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DeleteService for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   * ServiceNotFoundException
 //   The specified service could not be found. You can view your available services
 //   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
 //
@@ -989,38 +989,38 @@ func (c *ECS) DeleteTaskSetRequest(input *DeleteTaskSetInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DeleteTaskSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   * UnsupportedFeatureException
 //   The specified task is not supported in this Region.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
-//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   * ServiceNotFoundException
 //   The specified service could not be found. You can view your available services
 //   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
 //
-//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   * ServiceNotActiveException
 //   The specified service is not active. You can't update a service that is inactive.
 //   If you have previously deleted a service, you can re-create it with CreateService.
 //
-//   * ErrCodeTaskSetNotFoundException "TaskSetNotFoundException"
+//   * TaskSetNotFoundException
 //   The specified task set could not be found. You can view your available task
 //   sets with DescribeTaskSets. Task sets are specific to each cluster, service
 //   and Region.
@@ -1114,20 +1114,20 @@ func (c *ECS) DeregisterContainerInstanceRequest(input *DeregisterContainerInsta
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DeregisterContainerInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
@@ -1220,16 +1220,16 @@ func (c *ECS) DeregisterTaskDefinitionRequest(input *DeregisterTaskDefinitionInp
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DeregisterTaskDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -1308,16 +1308,16 @@ func (c *ECS) DescribeCapacityProvidersRequest(input *DescribeCapacityProvidersI
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DescribeCapacityProviders for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -1396,16 +1396,16 @@ func (c *ECS) DescribeClustersRequest(input *DescribeClustersInput) (req *reques
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DescribeClusters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -1485,20 +1485,20 @@ func (c *ECS) DescribeContainerInstancesRequest(input *DescribeContainerInstance
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DescribeContainerInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
@@ -1577,20 +1577,20 @@ func (c *ECS) DescribeServicesRequest(input *DescribeServicesInput) (req *reques
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DescribeServices for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
@@ -1674,16 +1674,16 @@ func (c *ECS) DescribeTaskDefinitionRequest(input *DescribeTaskDefinitionInput) 
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DescribeTaskDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -1765,34 +1765,34 @@ func (c *ECS) DescribeTaskSetsRequest(input *DescribeTaskSetsInput) (req *reques
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DescribeTaskSets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   * UnsupportedFeatureException
 //   The specified task is not supported in this Region.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
-//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   * ServiceNotFoundException
 //   The specified service could not be found. You can view your available services
 //   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
 //
-//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   * ServiceNotActiveException
 //   The specified service is not active. You can't update a service that is inactive.
 //   If you have previously deleted a service, you can re-create it with CreateService.
 //
@@ -1871,20 +1871,20 @@ func (c *ECS) DescribeTasksRequest(input *DescribeTasksInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DescribeTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
@@ -1967,11 +1967,11 @@ func (c *ECS) DiscoverPollEndpointRequest(input *DiscoverPollEndpointInput) (req
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation DiscoverPollEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
@@ -2051,16 +2051,16 @@ func (c *ECS) ListAccountSettingsRequest(input *ListAccountSettingsInput) (req *
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation ListAccountSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -2151,12 +2151,12 @@ func (c *ECS) ListAttributesRequest(input *ListAttributesInput) (req *request.Re
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation ListAttributes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+// Returned Error Types:
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -2293,16 +2293,16 @@ func (c *ECS) ListClustersRequest(input *ListClustersInput) (req *request.Reques
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation ListClusters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -2443,20 +2443,20 @@ func (c *ECS) ListContainerInstancesRequest(input *ListContainerInstancesInput) 
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation ListContainerInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
@@ -2593,20 +2593,20 @@ func (c *ECS) ListServicesRequest(input *ListServicesInput) (req *request.Reques
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation ListServices for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
@@ -2737,20 +2737,20 @@ func (c *ECS) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -2841,16 +2841,16 @@ func (c *ECS) ListTaskDefinitionFamiliesRequest(input *ListTaskDefinitionFamilie
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation ListTaskDefinitionFamilies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -2989,16 +2989,16 @@ func (c *ECS) ListTaskDefinitionsRequest(input *ListTaskDefinitionsInput) (req *
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation ListTaskDefinitions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -3140,24 +3140,24 @@ func (c *ECS) ListTasksRequest(input *ListTasksInput) (req *request.Request, out
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation ListTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   * ServiceNotFoundException
 //   The specified service could not be found. You can view your available services
 //   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
 //
@@ -3317,16 +3317,16 @@ func (c *ECS) PutAccountSettingRequest(input *PutAccountSettingInput) (req *requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation PutAccountSetting for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -3407,16 +3407,16 @@ func (c *ECS) PutAccountSettingDefaultRequest(input *PutAccountSettingDefaultInp
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation PutAccountSettingDefault for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -3499,22 +3499,22 @@ func (c *ECS) PutAttributesRequest(input *PutAttributesInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation PutAttributes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+// Returned Error Types:
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeTargetNotFoundException "TargetNotFoundException"
+//   * TargetNotFoundException
 //   The specified target could not be found. You can view your available container
 //   instances with ListContainerInstances. Amazon ECS container instances are
 //   cluster-specific and Region-specific.
 //
-//   * ErrCodeAttributeLimitExceededException "AttributeLimitExceededException"
+//   * AttributeLimitExceededException
 //   You can apply up to 10 custom attributes per resource. You can view the attributes
 //   of a resource with ListAttributes. You can remove existing attributes on
 //   a resource with DeleteAttributes.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -3609,27 +3609,27 @@ func (c *ECS) PutClusterCapacityProvidersRequest(input *PutClusterCapacityProvid
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation PutClusterCapacityProviders for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in-use and cannot be removed.
 //
-//   * ErrCodeUpdateInProgressException "UpdateInProgressException"
+//   * UpdateInProgressException
 //   There is already a current Amazon ECS container agent update in progress
 //   on the specified container instance. If the container agent becomes disconnected
 //   while it is in a transitional stage, such as PENDING or STAGING, the update
@@ -3716,16 +3716,16 @@ func (c *ECS) RegisterContainerInstanceRequest(input *RegisterContainerInstanceI
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation RegisterContainerInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -3824,16 +3824,16 @@ func (c *ECS) RegisterTaskDefinitionRequest(input *RegisterTaskDefinitionInput) 
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation RegisterTaskDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -3940,37 +3940,37 @@ func (c *ECS) RunTaskRequest(input *RunTaskInput) (req *request.Request, output 
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation RunTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   * UnsupportedFeatureException
 //   The specified task is not supported in this Region.
 //
-//   * ErrCodePlatformUnknownException "PlatformUnknownException"
+//   * PlatformUnknownException
 //   The specified platform version does not exist.
 //
-//   * ErrCodePlatformTaskDefinitionIncompatibilityException "PlatformTaskDefinitionIncompatibilityException"
+//   * PlatformTaskDefinitionIncompatibilityException
 //   The specified platform version does not satisfy the task definition's required
 //   capabilities.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
-//   * ErrCodeBlockedException "BlockedException"
+//   * BlockedException
 //   Your AWS account has been blocked. For more information, contact AWS Support
 //   (http://aws.amazon.com/contact-us/).
 //
@@ -4054,20 +4054,20 @@ func (c *ECS) StartTaskRequest(input *StartTaskInput) (req *request.Request, out
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation StartTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
@@ -4158,20 +4158,20 @@ func (c *ECS) StopTaskRequest(input *StopTaskInput) (req *request.Request, outpu
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation StopTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
@@ -4254,19 +4254,19 @@ func (c *ECS) SubmitAttachmentStateChangesRequest(input *SubmitAttachmentStateCh
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation SubmitAttachmentStateChanges for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -4349,16 +4349,16 @@ func (c *ECS) SubmitContainerStateChangeRequest(input *SubmitContainerStateChang
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation SubmitContainerStateChange for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/SubmitContainerStateChange
@@ -4440,19 +4440,19 @@ func (c *ECS) SubmitTaskStateChangeRequest(input *SubmitTaskStateChangeInput) (r
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation SubmitTaskStateChange for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -4535,23 +4535,23 @@ func (c *ECS) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -4631,23 +4631,23 @@ func (c *ECS) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -4726,20 +4726,20 @@ func (c *ECS) UpdateClusterSettingsRequest(input *UpdateClusterSettingsInput) (r
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation UpdateClusterSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
@@ -4828,36 +4828,36 @@ func (c *ECS) UpdateContainerAgentRequest(input *UpdateContainerAgentInput) (req
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation UpdateContainerAgent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeUpdateInProgressException "UpdateInProgressException"
+//   * UpdateInProgressException
 //   There is already a current Amazon ECS container agent update in progress
 //   on the specified container instance. If the container agent becomes disconnected
 //   while it is in a transitional stage, such as PENDING or STAGING, the update
 //   process can get stuck in that state. However, when the agent reconnects,
 //   it resumes where it stopped previously.
 //
-//   * ErrCodeNoUpdateAvailableException "NoUpdateAvailableException"
+//   * NoUpdateAvailableException
 //   There is no update available for this Amazon ECS container agent. This could
 //   be because the agent is already running the latest version, or it is so old
 //   that there is no update path to the current version.
 //
-//   * ErrCodeMissingVersionException "MissingVersionException"
+//   * MissingVersionException
 //   Amazon ECS is unable to determine the current version of the Amazon ECS container
 //   agent on the container instance and does not have enough information to proceed
 //   with an update. This could be because the agent running on the container
@@ -4986,20 +4986,20 @@ func (c *ECS) UpdateContainerInstancesStateRequest(input *UpdateContainerInstanc
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation UpdateContainerInstancesState for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
@@ -5166,39 +5166,39 @@ func (c *ECS) UpdateServiceRequest(input *UpdateServiceInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation UpdateService for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   * ServiceNotFoundException
 //   The specified service could not be found. You can view your available services
 //   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
 //
-//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   * ServiceNotActiveException
 //   The specified service is not active. You can't update a service that is inactive.
 //   If you have previously deleted a service, you can re-create it with CreateService.
 //
-//   * ErrCodePlatformUnknownException "PlatformUnknownException"
+//   * PlatformUnknownException
 //   The specified platform version does not exist.
 //
-//   * ErrCodePlatformTaskDefinitionIncompatibilityException "PlatformTaskDefinitionIncompatibilityException"
+//   * PlatformTaskDefinitionIncompatibilityException
 //   The specified platform version does not satisfy the task definition's required
 //   capabilities.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/UpdateService
@@ -5280,40 +5280,40 @@ func (c *ECS) UpdateServicePrimaryTaskSetRequest(input *UpdateServicePrimaryTask
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation UpdateServicePrimaryTaskSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   * UnsupportedFeatureException
 //   The specified task is not supported in this Region.
 //
-//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   * ServiceNotFoundException
 //   The specified service could not be found. You can view your available services
 //   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
 //
-//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   * ServiceNotActiveException
 //   The specified service is not active. You can't update a service that is inactive.
 //   If you have previously deleted a service, you can re-create it with CreateService.
 //
-//   * ErrCodeTaskSetNotFoundException "TaskSetNotFoundException"
+//   * TaskSetNotFoundException
 //   The specified task set could not be found. You can view your available task
 //   sets with DescribeTaskSets. Task sets are specific to each cluster, service
 //   and Region.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/UpdateServicePrimaryTaskSet
@@ -5393,38 +5393,38 @@ func (c *ECS) UpdateTaskSetRequest(input *UpdateTaskSetInput) (req *request.Requ
 // See the AWS API reference guide for Amazon EC2 Container Service's
 // API operation UpdateTaskSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerException "ServerException"
+// Returned Error Types:
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   * ClusterNotFoundException
 //   The specified cluster could not be found. You can view your available clusters
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
-//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   * UnsupportedFeatureException
 //   The specified task is not supported in this Region.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have authorization to perform the requested action.
 //
-//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   * ServiceNotFoundException
 //   The specified service could not be found. You can view your available services
 //   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
 //
-//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   * ServiceNotActiveException
 //   The specified service is not active. You can't update a service that is inactive.
 //   If you have previously deleted a service, you can re-create it with CreateService.
 //
-//   * ErrCodeTaskSetNotFoundException "TaskSetNotFoundException"
+//   * TaskSetNotFoundException
 //   The specified task set could not be found. You can view your available task
 //   sets with DescribeTaskSets. Task sets are specific to each cluster, service
 //   and Region.
@@ -5449,6 +5449,57 @@ func (c *ECS) UpdateTaskSetWithContext(ctx aws.Context, input *UpdateTaskSetInpu
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// You do not have authorization to perform the requested action.
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // An object representing a container instance or task attachment.
@@ -5633,6 +5684,59 @@ func (s *Attribute) SetValue(v string) *Attribute {
 	return s
 }
 
+// You can apply up to 10 custom attributes per resource. You can view the attributes
+// of a resource with ListAttributes. You can remove existing attributes on
+// a resource with DeleteAttributes.
+type AttributeLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s AttributeLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttributeLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorAttributeLimitExceededException(v protocol.ResponseMetadata) error {
+	return &AttributeLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AttributeLimitExceededException) Code() string {
+	return "AttributeLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s AttributeLimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AttributeLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s AttributeLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AttributeLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AttributeLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The details of the Auto Scaling group for the capacity provider.
 type AutoScalingGroupProvider struct {
 	_ struct{} `type:"structure"`
@@ -5770,6 +5874,58 @@ func (s *AwsVpcConfiguration) SetSecurityGroups(v []*string) *AwsVpcConfiguratio
 func (s *AwsVpcConfiguration) SetSubnets(v []*string) *AwsVpcConfiguration {
 	s.Subnets = v
 	return s
+}
+
+// Your AWS account has been blocked. For more information, contact AWS Support
+// (http://aws.amazon.com/contact-us/).
+type BlockedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s BlockedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BlockedException) GoString() string {
+	return s.String()
+}
+
+func newErrorBlockedException(v protocol.ResponseMetadata) error {
+	return &BlockedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BlockedException) Code() string {
+	return "BlockedException"
+}
+
+// Message returns the exception's message.
+func (s BlockedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BlockedException) OrigErr() error {
+	return nil
+}
+
+func (s BlockedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BlockedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BlockedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The details of a capacity provider.
@@ -5923,6 +6079,64 @@ func (s *CapacityProviderStrategyItem) SetCapacityProvider(v string) *CapacityPr
 func (s *CapacityProviderStrategyItem) SetWeight(v int64) *CapacityProviderStrategyItem {
 	s.Weight = &v
 	return s
+}
+
+// These errors are usually caused by a client action, such as using an action
+// or resource on behalf of a user that doesn't have permissions to use the
+// action or resource, or specifying an identifier that is not valid.
+type ClientException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ClientException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientException) GoString() string {
+	return s.String()
+}
+
+func newErrorClientException(v protocol.ResponseMetadata) error {
+	return &ClientException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClientException) Code() string {
+	return "ClientException"
+}
+
+// Message returns the exception's message.
+func (s ClientException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClientException) OrigErr() error {
+	return nil
+}
+
+func (s ClientException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClientException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClientException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A regional grouping of one or more container instances on which you can run
@@ -6135,6 +6349,215 @@ func (s *Cluster) SetStatus(v string) *Cluster {
 func (s *Cluster) SetTags(v []*Tag) *Cluster {
 	s.Tags = v
 	return s
+}
+
+// You cannot delete a cluster that has registered container instances. First,
+// deregister the container instances before you can delete the cluster. For
+// more information, see DeregisterContainerInstance.
+type ClusterContainsContainerInstancesException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ClusterContainsContainerInstancesException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClusterContainsContainerInstancesException) GoString() string {
+	return s.String()
+}
+
+func newErrorClusterContainsContainerInstancesException(v protocol.ResponseMetadata) error {
+	return &ClusterContainsContainerInstancesException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClusterContainsContainerInstancesException) Code() string {
+	return "ClusterContainsContainerInstancesException"
+}
+
+// Message returns the exception's message.
+func (s ClusterContainsContainerInstancesException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClusterContainsContainerInstancesException) OrigErr() error {
+	return nil
+}
+
+func (s ClusterContainsContainerInstancesException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClusterContainsContainerInstancesException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClusterContainsContainerInstancesException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You cannot delete a cluster that contains services. First, update the service
+// to reduce its desired task count to 0 and then delete the service. For more
+// information, see UpdateService and DeleteService.
+type ClusterContainsServicesException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ClusterContainsServicesException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClusterContainsServicesException) GoString() string {
+	return s.String()
+}
+
+func newErrorClusterContainsServicesException(v protocol.ResponseMetadata) error {
+	return &ClusterContainsServicesException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClusterContainsServicesException) Code() string {
+	return "ClusterContainsServicesException"
+}
+
+// Message returns the exception's message.
+func (s ClusterContainsServicesException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClusterContainsServicesException) OrigErr() error {
+	return nil
+}
+
+func (s ClusterContainsServicesException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClusterContainsServicesException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClusterContainsServicesException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You cannot delete a cluster that has active tasks.
+type ClusterContainsTasksException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ClusterContainsTasksException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClusterContainsTasksException) GoString() string {
+	return s.String()
+}
+
+func newErrorClusterContainsTasksException(v protocol.ResponseMetadata) error {
+	return &ClusterContainsTasksException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClusterContainsTasksException) Code() string {
+	return "ClusterContainsTasksException"
+}
+
+// Message returns the exception's message.
+func (s ClusterContainsTasksException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClusterContainsTasksException) OrigErr() error {
+	return nil
+}
+
+func (s ClusterContainsTasksException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClusterContainsTasksException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClusterContainsTasksException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified cluster could not be found. You can view your available clusters
+// with ListClusters. Amazon ECS clusters are Region-specific.
+type ClusterNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ClusterNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClusterNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorClusterNotFoundException(v protocol.ResponseMetadata) error {
+	return &ClusterNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClusterNotFoundException) Code() string {
+	return "ClusterNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ClusterNotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClusterNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ClusterNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClusterNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClusterNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The settings to use when creating a cluster. This parameter is used to enable
@@ -10858,6 +11281,58 @@ func (s *InferenceAcceleratorOverride) SetDeviceType(v string) *InferenceAcceler
 	return s
 }
 
+// The specified parameter is invalid. Review the available parameters for the
+// API request.
+type InvalidParameterException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidParameterException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParameterException) Code() string {
+	return "InvalidParameterException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParameterException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParameterException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParameterException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParameterException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParameterException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The Linux capabilities for the container that are added to or dropped from
 // the default configuration provided by Docker. For more information on the
 // default capabilities and the non-default available capabilities, see Runtime
@@ -10959,6 +11434,57 @@ func (s *KeyValuePair) SetName(v string) *KeyValuePair {
 func (s *KeyValuePair) SetValue(v string) *KeyValuePair {
 	s.Value = &v
 	return s
+}
+
+// The limit for the resource has been exceeded.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Linux-specific options that are applied to the container, such as Linux KernelCapabilities.
@@ -12420,6 +12946,60 @@ func (s *ManagedScaling) SetTargetCapacity(v int64) *ManagedScaling {
 	return s
 }
 
+// Amazon ECS is unable to determine the current version of the Amazon ECS container
+// agent on the container instance and does not have enough information to proceed
+// with an update. This could be because the agent running on the container
+// instance is an older or custom version that does not use our version information.
+type MissingVersionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MissingVersionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MissingVersionException) GoString() string {
+	return s.String()
+}
+
+func newErrorMissingVersionException(v protocol.ResponseMetadata) error {
+	return &MissingVersionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MissingVersionException) Code() string {
+	return "MissingVersionException"
+}
+
+// Message returns the exception's message.
+func (s MissingVersionException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MissingVersionException) OrigErr() error {
+	return nil
+}
+
+func (s MissingVersionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MissingVersionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MissingVersionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Details on a volume mount point that is used in a container definition.
 type MountPoint struct {
 	_ struct{} `type:"structure"`
@@ -12603,6 +13183,59 @@ func (s *NetworkInterface) SetPrivateIpv4Address(v string) *NetworkInterface {
 	return s
 }
 
+// There is no update available for this Amazon ECS container agent. This could
+// be because the agent is already running the latest version, or it is so old
+// that there is no update path to the current version.
+type NoUpdateAvailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoUpdateAvailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoUpdateAvailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoUpdateAvailableException(v protocol.ResponseMetadata) error {
+	return &NoUpdateAvailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoUpdateAvailableException) Code() string {
+	return "NoUpdateAvailableException"
+}
+
+// Message returns the exception's message.
+func (s NoUpdateAvailableException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoUpdateAvailableException) OrigErr() error {
+	return nil
+}
+
+func (s NoUpdateAvailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoUpdateAvailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoUpdateAvailableException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // An object representing a constraint on task placement. For more information,
 // see Task Placement Constraints (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html)
 // in the Amazon Elastic Container Service Developer Guide.
@@ -12747,6 +13380,109 @@ func (s *PlatformDevice) SetId(v string) *PlatformDevice {
 func (s *PlatformDevice) SetType(v string) *PlatformDevice {
 	s.Type = &v
 	return s
+}
+
+// The specified platform version does not satisfy the task definition's required
+// capabilities.
+type PlatformTaskDefinitionIncompatibilityException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PlatformTaskDefinitionIncompatibilityException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PlatformTaskDefinitionIncompatibilityException) GoString() string {
+	return s.String()
+}
+
+func newErrorPlatformTaskDefinitionIncompatibilityException(v protocol.ResponseMetadata) error {
+	return &PlatformTaskDefinitionIncompatibilityException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PlatformTaskDefinitionIncompatibilityException) Code() string {
+	return "PlatformTaskDefinitionIncompatibilityException"
+}
+
+// Message returns the exception's message.
+func (s PlatformTaskDefinitionIncompatibilityException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PlatformTaskDefinitionIncompatibilityException) OrigErr() error {
+	return nil
+}
+
+func (s PlatformTaskDefinitionIncompatibilityException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PlatformTaskDefinitionIncompatibilityException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PlatformTaskDefinitionIncompatibilityException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified platform version does not exist.
+type PlatformUnknownException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PlatformUnknownException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PlatformUnknownException) GoString() string {
+	return s.String()
+}
+
+func newErrorPlatformUnknownException(v protocol.ResponseMetadata) error {
+	return &PlatformUnknownException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PlatformUnknownException) Code() string {
+	return "PlatformUnknownException"
+}
+
+// Message returns the exception's message.
+func (s PlatformUnknownException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PlatformUnknownException) OrigErr() error {
+	return nil
+}
+
+func (s PlatformUnknownException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PlatformUnknownException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PlatformUnknownException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Port mappings allow containers to access ports on the host container instance
@@ -14057,6 +14793,108 @@ func (s *Resource) SetType(v string) *Resource {
 	return s
 }
 
+// The specified resource is in-use and cannot be removed.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified resource could not be found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The type and amount of a resource to assign to a container. The supported
 // resource types are GPUs and Elastic Inference accelerators. For more information,
 // see Working with GPUs on Amazon ECS (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-gpu.html)
@@ -14556,6 +15394,62 @@ func (s *Secret) SetValueFrom(v string) *Secret {
 	return s
 }
 
+// These errors are usually caused by a server issue.
+type ServerException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorServerException(v protocol.ResponseMetadata) error {
+	return &ServerException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServerException) Code() string {
+	return "ServerException"
+}
+
+// Message returns the exception's message.
+func (s ServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServerException) OrigErr() error {
+	return nil
+}
+
+func (s ServerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServerException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServerException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Details on a service within a cluster
 type Service struct {
 	_ struct{} `type:"structure"`
@@ -14944,6 +15838,110 @@ func (s *ServiceEvent) SetId(v string) *ServiceEvent {
 func (s *ServiceEvent) SetMessage(v string) *ServiceEvent {
 	s.Message = &v
 	return s
+}
+
+// The specified service is not active. You can't update a service that is inactive.
+// If you have previously deleted a service, you can re-create it with CreateService.
+type ServiceNotActiveException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ServiceNotActiveException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceNotActiveException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceNotActiveException(v protocol.ResponseMetadata) error {
+	return &ServiceNotActiveException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceNotActiveException) Code() string {
+	return "ServiceNotActiveException"
+}
+
+// Message returns the exception's message.
+func (s ServiceNotActiveException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceNotActiveException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceNotActiveException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceNotActiveException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceNotActiveException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified service could not be found. You can view your available services
+// with ListServices. Amazon ECS services are cluster-specific and Region-specific.
+type ServiceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ServiceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ServiceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceNotFoundException) Code() string {
+	return "ServiceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ServiceNotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Details of the service registry.
@@ -15929,6 +16927,59 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// The specified target could not be found. You can view your available container
+// instances with ListContainerInstances. Amazon ECS container instances are
+// cluster-specific and Region-specific.
+type TargetNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TargetNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorTargetNotFoundException(v protocol.ResponseMetadata) error {
+	return &TargetNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TargetNotFoundException) Code() string {
+	return "TargetNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s TargetNotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TargetNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s TargetNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TargetNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TargetNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Details on a task in a cluster.
@@ -17102,6 +18153,59 @@ func (s *TaskSet) SetUpdatedAt(v time.Time) *TaskSet {
 	return s
 }
 
+// The specified task set could not be found. You can view your available task
+// sets with DescribeTaskSets. Task sets are specific to each cluster, service
+// and Region.
+type TaskSetNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TaskSetNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskSetNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorTaskSetNotFoundException(v protocol.ResponseMetadata) error {
+	return &TaskSetNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TaskSetNotFoundException) Code() string {
+	return "TaskSetNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s TaskSetNotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TaskSetNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s TaskSetNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TaskSetNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TaskSetNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The container path, mount options, and size of the tmpfs mount.
 type Tmpfs struct {
 	_ struct{} `type:"structure"`
@@ -17236,6 +18340,57 @@ func (s *Ulimit) SetName(v string) *Ulimit {
 func (s *Ulimit) SetSoftLimit(v int64) *Ulimit {
 	s.SoftLimit = &v
 	return s
+}
+
+// The specified task is not supported in this Region.
+type UnsupportedFeatureException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s UnsupportedFeatureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedFeatureException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedFeatureException(v protocol.ResponseMetadata) error {
+	return &UnsupportedFeatureException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnsupportedFeatureException) Code() string {
+	return "UnsupportedFeatureException"
+}
+
+// Message returns the exception's message.
+func (s UnsupportedFeatureException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnsupportedFeatureException) OrigErr() error {
+	return nil
+}
+
+func (s UnsupportedFeatureException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnsupportedFeatureException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnsupportedFeatureException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -17558,6 +18713,61 @@ func (s *UpdateContainerInstancesStateOutput) SetContainerInstances(v []*Contain
 func (s *UpdateContainerInstancesStateOutput) SetFailures(v []*Failure) *UpdateContainerInstancesStateOutput {
 	s.Failures = v
 	return s
+}
+
+// There is already a current Amazon ECS container agent update in progress
+// on the specified container instance. If the container agent becomes disconnected
+// while it is in a transitional stage, such as PENDING or STAGING, the update
+// process can get stuck in that state. However, when the agent reconnects,
+// it resumes where it stopped previously.
+type UpdateInProgressException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s UpdateInProgressException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInProgressException) GoString() string {
+	return s.String()
+}
+
+func newErrorUpdateInProgressException(v protocol.ResponseMetadata) error {
+	return &UpdateInProgressException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UpdateInProgressException) Code() string {
+	return "UpdateInProgressException"
+}
+
+// Message returns the exception's message.
+func (s UpdateInProgressException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UpdateInProgressException) OrigErr() error {
+	return nil
+}
+
+func (s UpdateInProgressException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UpdateInProgressException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UpdateInProgressException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UpdateServiceInput struct {

@@ -76,25 +76,25 @@ func (c *LexModelBuildingService) CreateBotVersionRequest(input *CreateBotVersio
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation CreateBotVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The checksum of the resource that you are trying to change does not match
 //   the checksum in the request. Check the resource's checksum and try again.
 //
@@ -185,25 +185,25 @@ func (c *LexModelBuildingService) CreateIntentVersionRequest(input *CreateIntent
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation CreateIntentVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The checksum of the resource that you are trying to change does not match
 //   the checksum in the request. Check the resource's checksum and try again.
 //
@@ -293,25 +293,25 @@ func (c *LexModelBuildingService) CreateSlotTypeVersionRequest(input *CreateSlot
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation CreateSlotTypeVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The checksum of the resource that you are trying to change does not match
 //   the checksum in the request. Check the resource's checksum and try again.
 //
@@ -406,25 +406,25 @@ func (c *LexModelBuildingService) DeleteBotRequest(input *DeleteBotInput) (req *
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation DeleteBot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are attempting to delete is referred to by another
 //   resource. Use this information to remove references to the resource that
 //   you are trying to delete.
@@ -521,25 +521,25 @@ func (c *LexModelBuildingService) DeleteBotAliasRequest(input *DeleteBotAliasInp
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation DeleteBotAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are attempting to delete is referred to by another
 //   resource. Use this information to remove references to the resource that
 //   you are trying to delete.
@@ -631,21 +631,21 @@ func (c *LexModelBuildingService) DeleteBotChannelAssociationRequest(input *Dele
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation DeleteBotChannelAssociation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -728,25 +728,25 @@ func (c *LexModelBuildingService) DeleteBotVersionRequest(input *DeleteBotVersio
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation DeleteBotVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are attempting to delete is referred to by another
 //   resource. Use this information to remove references to the resource that
 //   you are trying to delete.
@@ -848,25 +848,25 @@ func (c *LexModelBuildingService) DeleteIntentRequest(input *DeleteIntentInput) 
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation DeleteIntent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are attempting to delete is referred to by another
 //   resource. Use this information to remove references to the resource that
 //   you are trying to delete.
@@ -958,25 +958,25 @@ func (c *LexModelBuildingService) DeleteIntentVersionRequest(input *DeleteIntent
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation DeleteIntentVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are attempting to delete is referred to by another
 //   resource. Use this information to remove references to the resource that
 //   you are trying to delete.
@@ -1080,25 +1080,25 @@ func (c *LexModelBuildingService) DeleteSlotTypeRequest(input *DeleteSlotTypeInp
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation DeleteSlotType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are attempting to delete is referred to by another
 //   resource. Use this information to remove references to the resource that
 //   you are trying to delete.
@@ -1190,25 +1190,25 @@ func (c *LexModelBuildingService) DeleteSlotTypeVersionRequest(input *DeleteSlot
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation DeleteSlotTypeVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are attempting to delete is referred to by another
 //   resource. Use this information to remove references to the resource that
 //   you are trying to delete.
@@ -1310,18 +1310,18 @@ func (c *LexModelBuildingService) DeleteUtterancesRequest(input *DeleteUtterance
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation DeleteUtterances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -1403,18 +1403,18 @@ func (c *LexModelBuildingService) GetBotRequest(input *GetBotInput) (req *reques
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetBot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -1496,18 +1496,18 @@ func (c *LexModelBuildingService) GetBotAliasRequest(input *GetBotAliasInput) (r
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetBotAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -1594,14 +1594,14 @@ func (c *LexModelBuildingService) GetBotAliasesRequest(input *GetBotAliasesInput
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetBotAliases for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -1736,18 +1736,18 @@ func (c *LexModelBuildingService) GetBotChannelAssociationRequest(input *GetBotC
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetBotChannelAssociation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -1835,14 +1835,14 @@ func (c *LexModelBuildingService) GetBotChannelAssociationsRequest(input *GetBot
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetBotChannelAssociations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -1989,18 +1989,18 @@ func (c *LexModelBuildingService) GetBotVersionsRequest(input *GetBotVersionsInp
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetBotVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -2146,18 +2146,18 @@ func (c *LexModelBuildingService) GetBotsRequest(input *GetBotsInput) (req *requ
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetBots for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -2290,18 +2290,18 @@ func (c *LexModelBuildingService) GetBuiltinIntentRequest(input *GetBuiltinInten
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetBuiltinIntent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -2388,14 +2388,14 @@ func (c *LexModelBuildingService) GetBuiltinIntentsRequest(input *GetBuiltinInte
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetBuiltinIntents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -2537,14 +2537,14 @@ func (c *LexModelBuildingService) GetBuiltinSlotTypesRequest(input *GetBuiltinSl
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetBuiltinSlotTypes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -2675,18 +2675,18 @@ func (c *LexModelBuildingService) GetExportRequest(input *GetExportInput) (req *
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetExport for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -2765,18 +2765,18 @@ func (c *LexModelBuildingService) GetImportRequest(input *GetImportInput) (req *
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetImport for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -2858,18 +2858,18 @@ func (c *LexModelBuildingService) GetIntentRequest(input *GetIntentInput) (req *
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetIntent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -2964,18 +2964,18 @@ func (c *LexModelBuildingService) GetIntentVersionsRequest(input *GetIntentVersi
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetIntentVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -3120,18 +3120,18 @@ func (c *LexModelBuildingService) GetIntentsRequest(input *GetIntentsInput) (req
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetIntents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -3265,18 +3265,18 @@ func (c *LexModelBuildingService) GetSlotTypeRequest(input *GetSlotTypeInput) (r
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetSlotType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -3371,18 +3371,18 @@ func (c *LexModelBuildingService) GetSlotTypeVersionsRequest(input *GetSlotTypeV
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetSlotTypeVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -3527,18 +3527,18 @@ func (c *LexModelBuildingService) GetSlotTypesRequest(input *GetSlotTypesInput) 
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetSlotTypes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource and
 //   try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -3693,14 +3693,14 @@ func (c *LexModelBuildingService) GetUtterancesViewRequest(input *GetUtterancesV
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation GetUtterancesView for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -3796,21 +3796,21 @@ func (c *LexModelBuildingService) PutBotRequest(input *PutBotInput) (req *reques
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation PutBot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConflictException "ConflictException"
+// Returned Error Types:
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The checksum of the resource that you are trying to change does not match
 //   the checksum in the request. Check the resource's checksum and try again.
 //
@@ -3893,21 +3893,21 @@ func (c *LexModelBuildingService) PutBotAliasRequest(input *PutBotAliasInput) (r
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation PutBotAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConflictException "ConflictException"
+// Returned Error Types:
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The checksum of the resource that you are trying to change does not match
 //   the checksum in the request. Check the resource's checksum and try again.
 //
@@ -4030,21 +4030,21 @@ func (c *LexModelBuildingService) PutIntentRequest(input *PutIntentInput) (req *
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation PutIntent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConflictException "ConflictException"
+// Returned Error Types:
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The checksum of the resource that you are trying to change does not match
 //   the checksum in the request. Check the resource's checksum and try again.
 //
@@ -4136,21 +4136,21 @@ func (c *LexModelBuildingService) PutSlotTypeRequest(input *PutSlotTypeInput) (r
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation PutSlotType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConflictException "ConflictException"
+// Returned Error Types:
+//   * ConflictException
 //   There was a conflict processing the request. Try your request again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
-//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   * PreconditionFailedException
 //   The checksum of the resource that you are trying to change does not match
 //   the checksum in the request. Check the resource's checksum and try again.
 //
@@ -4229,14 +4229,14 @@ func (c *LexModelBuildingService) StartImportRequest(input *StartImportInput) (r
 // See the AWS API reference guide for Amazon Lex Model Building Service's
 // API operation StartImport for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal Amazon Lex error occurred. Try your request again.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and try again.
 //
@@ -4260,6 +4260,63 @@ func (c *LexModelBuildingService) StartImportWithContext(ctx aws.Context, input 
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// The request is not well formed. For example, a value is invalid or a required
+// field is missing. Check the field values, and try again.
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Provides information about a bot alias.
@@ -4684,6 +4741,62 @@ func (s *CodeHook) SetMessageVersion(v string) *CodeHook {
 func (s *CodeHook) SetUri(v string) *CodeHook {
 	s.Uri = &v
 	return s
+}
+
+// There was a conflict processing the request. Try your request again.
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Provides the settings needed for conversation logs.
@@ -8811,6 +8924,120 @@ func (s *IntentMetadata) SetVersion(v string) *IntentMetadata {
 	return s
 }
 
+// An internal Amazon Lex error occurred. Try your request again.
+type InternalFailureException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
+	return &InternalFailureException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalFailureException) Code() string {
+	return "InternalFailureException"
+}
+
+// Message returns the exception's message.
+func (s InternalFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalFailureException) OrigErr() error {
+	return nil
+}
+
+func (s InternalFailureException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalFailureException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalFailureException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The request exceeded a limit. Try your request again.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	RetryAfterSeconds *string `location:"header" locationName:"Retry-After" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Settings used to configure delivery mode and destination for conversation
 // logs.
 type LogSettingsRequest struct {
@@ -9031,6 +9258,120 @@ func (s *Message) SetContentType(v string) *Message {
 func (s *Message) SetGroupNumber(v int64) *Message {
 	s.GroupNumber = &v
 	return s
+}
+
+// The resource specified in the request was not found. Check the resource and
+// try again.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The checksum of the resource that you are trying to change does not match
+// the checksum in the request. Check the resource's checksum and try again.
+type PreconditionFailedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s PreconditionFailedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PreconditionFailedException) GoString() string {
+	return s.String()
+}
+
+func newErrorPreconditionFailedException(v protocol.ResponseMetadata) error {
+	return &PreconditionFailedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PreconditionFailedException) Code() string {
+	return "PreconditionFailedException"
+}
+
+// Message returns the exception's message.
+func (s PreconditionFailedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PreconditionFailedException) OrigErr() error {
+	return nil
+}
+
+func (s PreconditionFailedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PreconditionFailedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PreconditionFailedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Obtains information from the user. To define a prompt, provide one or more
@@ -10496,6 +10837,74 @@ func (s *PutSlotTypeOutput) SetValueSelectionStrategy(v string) *PutSlotTypeOutp
 func (s *PutSlotTypeOutput) SetVersion(v string) *PutSlotTypeOutput {
 	s.Version = &v
 	return s
+}
+
+// The resource that you are attempting to delete is referred to by another
+// resource. Use this information to remove references to the resource that
+// you are trying to delete.
+//
+// The body of the exception contains a JSON object that describes the resource.
+//
+// { "resourceType": BOT | BOTALIAS | BOTCHANNEL | INTENT,
+//
+// "resourceReference": {
+//
+// "name": string, "version": string } }
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// Describes the resource that refers to the resource that you are attempting
+	// to delete. This object is returned as part of the ResourceInUseException
+	// exception.
+	ExampleReference *ResourceReference `locationName:"exampleReference" type:"structure"`
+
+	ReferenceType *string `locationName:"referenceType" type:"string" enum:"ReferenceType"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes the resource that refers to the resource that you are attempting

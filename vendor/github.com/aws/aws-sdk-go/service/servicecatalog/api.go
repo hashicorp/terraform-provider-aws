@@ -67,14 +67,14 @@ func (c *ServiceCatalog) AcceptPortfolioShareRequest(input *AcceptPortfolioShare
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation AcceptPortfolioShare for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
@@ -155,19 +155,19 @@ func (c *ServiceCatalog) AssociateBudgetWithResourceRequest(input *AssociateBudg
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation AssociateBudgetWithResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeDuplicateResourceException "DuplicateResourceException"
+//   * DuplicateResourceException
 //   The specified resource is a duplicate.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociateBudgetWithResource
@@ -246,14 +246,14 @@ func (c *ServiceCatalog) AssociatePrincipalWithPortfolioRequest(input *Associate
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation AssociatePrincipalWithPortfolio for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
@@ -334,14 +334,14 @@ func (c *ServiceCatalog) AssociateProductWithPortfolioRequest(input *AssociatePr
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation AssociateProductWithPortfolio for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
@@ -422,14 +422,14 @@ func (c *ServiceCatalog) AssociateServiceActionWithProvisioningArtifactRequest(i
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation AssociateServiceActionWithProvisioningArtifact for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeDuplicateResourceException "DuplicateResourceException"
+//   * DuplicateResourceException
 //   The specified resource is a duplicate.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
@@ -510,27 +510,27 @@ func (c *ServiceCatalog) AssociateTagOptionWithResourceRequest(input *AssociateT
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation AssociateTagOptionWithResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+// Returned Error Types:
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
 //
-//   * ErrCodeDuplicateResourceException "DuplicateResourceException"
+//   * DuplicateResourceException
 //   The specified resource is a duplicate.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   An attempt was made to modify a resource that is in a state that is not valid.
 //   Check your resources to ensure that they are in valid states before retrying
 //   the operation.
@@ -610,8 +610,8 @@ func (c *ServiceCatalog) BatchAssociateServiceActionWithProvisioningArtifactRequ
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation BatchAssociateServiceActionWithProvisioningArtifact for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/BatchAssociateServiceActionWithProvisioningArtifact
@@ -690,8 +690,8 @@ func (c *ServiceCatalog) BatchDisassociateServiceActionFromProvisioningArtifactR
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation BatchDisassociateServiceActionFromProvisioningArtifact for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/BatchDisassociateServiceActionFromProvisioningArtifact
@@ -776,11 +776,11 @@ func (c *ServiceCatalog) CopyProductRequest(input *CopyProductInput) (req *reque
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation CopyProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CopyProduct
@@ -858,19 +858,19 @@ func (c *ServiceCatalog) CreateConstraintRequest(input *CreateConstraintInput) (
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation CreateConstraint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
 //
-//   * ErrCodeDuplicateResourceException "DuplicateResourceException"
+//   * DuplicateResourceException
 //   The specified resource is a duplicate.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateConstraint
@@ -948,16 +948,16 @@ func (c *ServiceCatalog) CreatePortfolioRequest(input *CreatePortfolioInput) (re
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation CreatePortfolio for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
 //
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
@@ -1040,22 +1040,22 @@ func (c *ServiceCatalog) CreatePortfolioShareRequest(input *CreatePortfolioShare
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation CreatePortfolioShare for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   * OperationNotSupportedException
 //   The operation is not supported.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   An attempt was made to modify a resource that is in a state that is not valid.
 //   Check your resources to ensure that they are in valid states before retrying
 //   the operation.
@@ -1135,16 +1135,16 @@ func (c *ServiceCatalog) CreateProductRequest(input *CreateProductInput) (req *r
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation CreateProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
 //
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
@@ -1232,14 +1232,14 @@ func (c *ServiceCatalog) CreateProvisionedProductPlanRequest(input *CreateProvis
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation CreateProvisionedProductPlan for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   An attempt was made to modify a resource that is in a state that is not valid.
 //   Check your resources to ensure that they are in valid states before retrying
 //   the operation.
@@ -1323,14 +1323,14 @@ func (c *ServiceCatalog) CreateProvisioningArtifactRequest(input *CreateProvisio
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation CreateProvisioningArtifact for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
@@ -1410,11 +1410,11 @@ func (c *ServiceCatalog) CreateServiceActionRequest(input *CreateServiceActionIn
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation CreateServiceAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
@@ -1494,16 +1494,16 @@ func (c *ServiceCatalog) CreateTagOptionRequest(input *CreateTagOptionInput) (re
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation CreateTagOption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+// Returned Error Types:
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
 //
-//   * ErrCodeDuplicateResourceException "DuplicateResourceException"
+//   * DuplicateResourceException
 //   The specified resource is a duplicate.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
@@ -1584,11 +1584,11 @@ func (c *ServiceCatalog) DeleteConstraintRequest(input *DeleteConstraintInput) (
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DeleteConstraint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteConstraint
@@ -1670,18 +1670,18 @@ func (c *ServiceCatalog) DeletePortfolioRequest(input *DeletePortfolioInput) (re
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DeletePortfolio for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   A resource that is currently in use. Ensure that the resource is not in use
 //   and retry the operation.
 //
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
@@ -1763,17 +1763,17 @@ func (c *ServiceCatalog) DeletePortfolioShareRequest(input *DeletePortfolioShare
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DeletePortfolioShare for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   * OperationNotSupportedException
 //   The operation is not supported.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   An attempt was made to modify a resource that is in a state that is not valid.
 //   Check your resources to ensure that they are in valid states before retrying
 //   the operation.
@@ -1857,18 +1857,18 @@ func (c *ServiceCatalog) DeleteProductRequest(input *DeleteProductInput) (req *r
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DeleteProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   A resource that is currently in use. Ensure that the resource is not in use
 //   and retry the operation.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
@@ -1949,11 +1949,11 @@ func (c *ServiceCatalog) DeleteProvisionedProductPlanRequest(input *DeleteProvis
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DeleteProvisionedProductPlan for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteProvisionedProductPlan
@@ -2037,15 +2037,15 @@ func (c *ServiceCatalog) DeleteProvisioningArtifactRequest(input *DeleteProvisio
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DeleteProvisioningArtifact for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   A resource that is currently in use. Ensure that the resource is not in use
 //   and retry the operation.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteProvisioningArtifact
@@ -2124,11 +2124,11 @@ func (c *ServiceCatalog) DeleteServiceActionRequest(input *DeleteServiceActionIn
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DeleteServiceAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   A resource that is currently in use. Ensure that the resource is not in use
 //   and retry the operation.
 //
@@ -2210,17 +2210,17 @@ func (c *ServiceCatalog) DeleteTagOptionRequest(input *DeleteTagOptionInput) (re
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DeleteTagOption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+// Returned Error Types:
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   A resource that is currently in use. Ensure that the resource is not in use
 //   and retry the operation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteTagOption
@@ -2298,8 +2298,8 @@ func (c *ServiceCatalog) DescribeConstraintRequest(input *DescribeConstraintInpu
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeConstraint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeConstraint
@@ -2377,8 +2377,8 @@ func (c *ServiceCatalog) DescribeCopyProductStatusRequest(input *DescribeCopyPro
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeCopyProductStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeCopyProductStatus
@@ -2456,8 +2456,8 @@ func (c *ServiceCatalog) DescribePortfolioRequest(input *DescribePortfolioInput)
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribePortfolio for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribePortfolio
@@ -2536,14 +2536,14 @@ func (c *ServiceCatalog) DescribePortfolioShareStatusRequest(input *DescribePort
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribePortfolioShareStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   * OperationNotSupportedException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribePortfolioShareStatus
@@ -2621,11 +2621,11 @@ func (c *ServiceCatalog) DescribeProductRequest(input *DescribeProductInput) (re
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProduct
@@ -2704,8 +2704,8 @@ func (c *ServiceCatalog) DescribeProductAsAdminRequest(input *DescribeProductAsA
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeProductAsAdmin for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProductAsAdmin
@@ -2783,11 +2783,11 @@ func (c *ServiceCatalog) DescribeProductViewRequest(input *DescribeProductViewIn
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeProductView for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProductView
@@ -2865,8 +2865,8 @@ func (c *ServiceCatalog) DescribeProvisionedProductRequest(input *DescribeProvis
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeProvisionedProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisionedProduct
@@ -2944,11 +2944,11 @@ func (c *ServiceCatalog) DescribeProvisionedProductPlanRequest(input *DescribePr
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeProvisionedProductPlan for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisionedProductPlan
@@ -3027,8 +3027,8 @@ func (c *ServiceCatalog) DescribeProvisioningArtifactRequest(input *DescribeProv
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeProvisioningArtifact for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisioningArtifact
@@ -3114,11 +3114,11 @@ func (c *ServiceCatalog) DescribeProvisioningParametersRequest(input *DescribePr
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeProvisioningParameters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisioningParameters
@@ -3205,8 +3205,8 @@ func (c *ServiceCatalog) DescribeRecordRequest(input *DescribeRecordInput) (req 
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeRecord for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeRecord
@@ -3284,8 +3284,8 @@ func (c *ServiceCatalog) DescribeServiceActionRequest(input *DescribeServiceActi
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeServiceAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeServiceAction
@@ -3361,11 +3361,11 @@ func (c *ServiceCatalog) DescribeServiceActionExecutionParametersRequest(input *
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeServiceActionExecutionParameters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeServiceActionExecutionParameters
@@ -3443,13 +3443,13 @@ func (c *ServiceCatalog) DescribeTagOptionRequest(input *DescribeTagOptionInput)
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DescribeTagOption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+// Returned Error Types:
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeTagOption
@@ -3532,16 +3532,16 @@ func (c *ServiceCatalog) DisableAWSOrganizationsAccessRequest(input *DisableAWSO
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DisableAWSOrganizationsAccess for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   An attempt was made to modify a resource that is in a state that is not valid.
 //   Check your resources to ensure that they are in valid states before retrying
 //   the operation.
 //
-//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   * OperationNotSupportedException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisableAWSOrganizationsAccess
@@ -3620,8 +3620,8 @@ func (c *ServiceCatalog) DisassociateBudgetFromResourceRequest(input *Disassocia
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DisassociateBudgetFromResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateBudgetFromResource
@@ -3700,11 +3700,11 @@ func (c *ServiceCatalog) DisassociatePrincipalFromPortfolioRequest(input *Disass
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DisassociatePrincipalFromPortfolio for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociatePrincipalFromPortfolio
@@ -3783,15 +3783,15 @@ func (c *ServiceCatalog) DisassociateProductFromPortfolioRequest(input *Disassoc
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DisassociateProductFromPortfolio for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   A resource that is currently in use. Ensure that the resource is not in use
 //   and retry the operation.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateProductFromPortfolio
@@ -3871,8 +3871,8 @@ func (c *ServiceCatalog) DisassociateServiceActionFromProvisioningArtifactReques
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DisassociateServiceActionFromProvisioningArtifact for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateServiceActionFromProvisioningArtifact
@@ -3951,13 +3951,13 @@ func (c *ServiceCatalog) DisassociateTagOptionFromResourceRequest(input *Disasso
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation DisassociateTagOptionFromResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+// Returned Error Types:
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateTagOptionFromResource
@@ -4043,16 +4043,16 @@ func (c *ServiceCatalog) EnableAWSOrganizationsAccessRequest(input *EnableAWSOrg
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation EnableAWSOrganizationsAccess for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   An attempt was made to modify a resource that is in a state that is not valid.
 //   Check your resources to ensure that they are in valid states before retrying
 //   the operation.
 //
-//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   * OperationNotSupportedException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/EnableAWSOrganizationsAccess
@@ -4131,14 +4131,14 @@ func (c *ServiceCatalog) ExecuteProvisionedProductPlanRequest(input *ExecuteProv
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ExecuteProvisionedProductPlan for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   An attempt was made to modify a resource that is in a state that is not valid.
 //   Check your resources to ensure that they are in valid states before retrying
 //   the operation.
@@ -4218,14 +4218,14 @@ func (c *ServiceCatalog) ExecuteProvisionedProductServiceActionRequest(input *Ex
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ExecuteProvisionedProductServiceAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   An attempt was made to modify a resource that is in a state that is not valid.
 //   Check your resources to ensure that they are in valid states before retrying
 //   the operation.
@@ -4306,11 +4306,11 @@ func (c *ServiceCatalog) GetAWSOrganizationsAccessStatusRequest(input *GetAWSOrg
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation GetAWSOrganizationsAccessStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   * OperationNotSupportedException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/GetAWSOrganizationsAccessStatus
@@ -4394,11 +4394,11 @@ func (c *ServiceCatalog) ListAcceptedPortfolioSharesRequest(input *ListAcceptedP
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListAcceptedPortfolioShares for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   * OperationNotSupportedException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListAcceptedPortfolioShares
@@ -4534,11 +4534,11 @@ func (c *ServiceCatalog) ListBudgetsForResourceRequest(input *ListBudgetsForReso
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListBudgetsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListBudgetsForResource
@@ -4674,11 +4674,11 @@ func (c *ServiceCatalog) ListConstraintsForPortfolioRequest(input *ListConstrain
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListConstraintsForPortfolio for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListConstraintsForPortfolio
@@ -4816,11 +4816,11 @@ func (c *ServiceCatalog) ListLaunchPathsRequest(input *ListLaunchPathsInput) (re
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListLaunchPaths for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListLaunchPaths
@@ -4957,14 +4957,14 @@ func (c *ServiceCatalog) ListOrganizationPortfolioAccessRequest(input *ListOrgan
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListOrganizationPortfolioAccess for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   * OperationNotSupportedException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListOrganizationPortfolioAccess
@@ -5094,8 +5094,8 @@ func (c *ServiceCatalog) ListPortfolioAccessRequest(input *ListPortfolioAccessIn
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListPortfolioAccess for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfolioAccess
@@ -5179,8 +5179,8 @@ func (c *ServiceCatalog) ListPortfoliosRequest(input *ListPortfoliosInput) (req 
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListPortfolios for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfolios
@@ -5316,11 +5316,11 @@ func (c *ServiceCatalog) ListPortfoliosForProductRequest(input *ListPortfoliosFo
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListPortfoliosForProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfoliosForProduct
@@ -5456,11 +5456,11 @@ func (c *ServiceCatalog) ListPrincipalsForPortfolioRequest(input *ListPrincipals
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListPrincipalsForPortfolio for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPrincipalsForPortfolio
@@ -5591,11 +5591,11 @@ func (c *ServiceCatalog) ListProvisionedProductPlansRequest(input *ListProvision
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListProvisionedProductPlans for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListProvisionedProductPlans
@@ -5674,11 +5674,11 @@ func (c *ServiceCatalog) ListProvisioningArtifactsRequest(input *ListProvisionin
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListProvisioningArtifacts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListProvisioningArtifacts
@@ -5763,11 +5763,11 @@ func (c *ServiceCatalog) ListProvisioningArtifactsForServiceActionRequest(input 
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListProvisioningArtifactsForServiceAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListProvisioningArtifactsForServiceAction
@@ -5897,8 +5897,8 @@ func (c *ServiceCatalog) ListRecordHistoryRequest(input *ListRecordHistoryInput)
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListRecordHistory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListRecordHistory
@@ -5982,16 +5982,16 @@ func (c *ServiceCatalog) ListResourcesForTagOptionRequest(input *ListResourcesFo
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListResourcesForTagOption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+// Returned Error Types:
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListResourcesForTagOption
@@ -6127,8 +6127,8 @@ func (c *ServiceCatalog) ListServiceActionsRequest(input *ListServiceActionsInpu
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListServiceActions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListServiceActions
@@ -6265,11 +6265,11 @@ func (c *ServiceCatalog) ListServiceActionsForProvisioningArtifactRequest(input 
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListServiceActionsForProvisioningArtifact for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListServiceActionsForProvisioningArtifact
@@ -6401,11 +6401,11 @@ func (c *ServiceCatalog) ListStackInstancesForProvisionedProductRequest(input *L
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListStackInstancesForProvisionedProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListStackInstancesForProvisionedProduct
@@ -6489,13 +6489,13 @@ func (c *ServiceCatalog) ListTagOptionsRequest(input *ListTagOptionsInput) (req 
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ListTagOptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+// Returned Error Types:
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListTagOptions
@@ -6635,14 +6635,14 @@ func (c *ServiceCatalog) ProvisionProductRequest(input *ProvisionProductInput) (
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ProvisionProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeDuplicateResourceException "DuplicateResourceException"
+//   * DuplicateResourceException
 //   The specified resource is a duplicate.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProvisionProduct
@@ -6721,8 +6721,8 @@ func (c *ServiceCatalog) RejectPortfolioShareRequest(input *RejectPortfolioShare
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation RejectPortfolioShare for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/RejectPortfolioShare
@@ -6802,8 +6802,8 @@ func (c *ServiceCatalog) ScanProvisionedProductsRequest(input *ScanProvisionedPr
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation ScanProvisionedProducts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ScanProvisionedProducts
@@ -6887,8 +6887,8 @@ func (c *ServiceCatalog) SearchProductsRequest(input *SearchProductsInput) (req 
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation SearchProducts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/SearchProducts
@@ -7024,11 +7024,11 @@ func (c *ServiceCatalog) SearchProductsAsAdminRequest(input *SearchProductsAsAdm
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation SearchProductsAsAdmin for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/SearchProductsAsAdmin
@@ -7164,8 +7164,8 @@ func (c *ServiceCatalog) SearchProvisionedProductsRequest(input *SearchProvision
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation SearchProvisionedProducts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/SearchProvisionedProducts
@@ -7300,8 +7300,8 @@ func (c *ServiceCatalog) TerminateProvisionedProductRequest(input *TerminateProv
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation TerminateProvisionedProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/TerminateProvisionedProduct
@@ -7379,11 +7379,11 @@ func (c *ServiceCatalog) UpdateConstraintRequest(input *UpdateConstraintInput) (
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation UpdateConstraint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateConstraint
@@ -7463,19 +7463,19 @@ func (c *ServiceCatalog) UpdatePortfolioRequest(input *UpdatePortfolioInput) (re
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation UpdatePortfolio for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The current limits of the service would have been exceeded by this operation.
 //   Decrease your resource use or increase your service limits and retry the
 //   operation.
 //
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
@@ -7555,14 +7555,14 @@ func (c *ServiceCatalog) UpdateProductRequest(input *UpdateProductInput) (req *r
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation UpdateProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
@@ -7649,11 +7649,11 @@ func (c *ServiceCatalog) UpdateProvisionedProductRequest(input *UpdateProvisione
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation UpdateProvisionedProduct for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProvisionedProduct
@@ -7731,14 +7731,14 @@ func (c *ServiceCatalog) UpdateProvisionedProductPropertiesRequest(input *Update
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation UpdateProvisionedProductProperties for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+// Returned Error Types:
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   An attempt was made to modify a resource that is in a state that is not valid.
 //   Check your resources to ensure that they are in valid states before retrying
 //   the operation.
@@ -7822,11 +7822,11 @@ func (c *ServiceCatalog) UpdateProvisioningArtifactRequest(input *UpdateProvisio
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation UpdateProvisioningArtifact for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProvisioningArtifact
@@ -7904,11 +7904,11 @@ func (c *ServiceCatalog) UpdateServiceActionRequest(input *UpdateServiceActionIn
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation UpdateServiceAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateServiceAction
@@ -7986,19 +7986,19 @@ func (c *ServiceCatalog) UpdateTagOptionRequest(input *UpdateTagOptionInput) (re
 // See the AWS API reference guide for AWS Service Catalog's
 // API operation UpdateTagOption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+// Returned Error Types:
+//   * TagOptionNotMigratedException
 //   An operation requiring TagOptions failed because the TagOptions migration
 //   process has not been performed for this account. Please use the AWS console
 //   to perform the migration process before retrying the operation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeDuplicateResourceException "DuplicateResourceException"
+//   * DuplicateResourceException
 //   The specified resource is a duplicate.
 //
-//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   * InvalidParametersException
 //   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateTagOption
@@ -12951,6 +12951,57 @@ func (s DisassociateTagOptionFromResourceOutput) GoString() string {
 	return s.String()
 }
 
+// The specified resource is a duplicate.
+type DuplicateResourceException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s DuplicateResourceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DuplicateResourceException) GoString() string {
+	return s.String()
+}
+
+func newErrorDuplicateResourceException(v protocol.ResponseMetadata) error {
+	return &DuplicateResourceException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DuplicateResourceException) Code() string {
+	return "DuplicateResourceException"
+}
+
+// Message returns the exception's message.
+func (s DuplicateResourceException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DuplicateResourceException) OrigErr() error {
+	return nil
+}
+
+func (s DuplicateResourceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DuplicateResourceException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DuplicateResourceException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type EnableAWSOrganizationsAccessInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -13328,6 +13379,110 @@ func (s *GetAWSOrganizationsAccessStatusOutput) SetAccessStatus(v string) *GetAW
 	return s
 }
 
+// One or more parameters provided to the operation are not valid.
+type InvalidParametersException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidParametersException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParametersException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParametersException(v protocol.ResponseMetadata) error {
+	return &InvalidParametersException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParametersException) Code() string {
+	return "InvalidParametersException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParametersException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParametersException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParametersException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParametersException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParametersException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An attempt was made to modify a resource that is in a state that is not valid.
+// Check your resources to ensure that they are in valid states before retrying
+// the operation.
+type InvalidStateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidStateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidStateException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidStateException(v protocol.ResponseMetadata) error {
+	return &InvalidStateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidStateException) Code() string {
+	return "InvalidStateException"
+}
+
+// Message returns the exception's message.
+func (s InvalidStateException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidStateException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidStateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidStateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidStateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Summary information about a product path for a user.
 type LaunchPathSummary struct {
 	_ struct{} `type:"structure"`
@@ -13377,6 +13532,59 @@ func (s *LaunchPathSummary) SetName(v string) *LaunchPathSummary {
 func (s *LaunchPathSummary) SetTags(v []*Tag) *LaunchPathSummary {
 	s.Tags = v
 	return s
+}
+
+// The current limits of the service would have been exceeded by this operation.
+// Decrease your resource use or increase your service limits and retry the
+// operation.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListAcceptedPortfolioSharesInput struct {
@@ -15343,6 +15551,57 @@ func (s *ListTagOptionsOutput) SetPageToken(v string) *ListTagOptionsOutput {
 func (s *ListTagOptionsOutput) SetTagOptionDetails(v []*TagOptionDetail) *ListTagOptionsOutput {
 	s.TagOptionDetails = v
 	return s
+}
+
+// The operation is not supported.
+type OperationNotSupportedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s OperationNotSupportedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OperationNotSupportedException) GoString() string {
+	return s.String()
+}
+
+func newErrorOperationNotSupportedException(v protocol.ResponseMetadata) error {
+	return &OperationNotSupportedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s OperationNotSupportedException) Code() string {
+	return "OperationNotSupportedException"
+}
+
+// Message returns the exception's message.
+func (s OperationNotSupportedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s OperationNotSupportedException) OrigErr() error {
+	return nil
+}
+
+func (s OperationNotSupportedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s OperationNotSupportedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s OperationNotSupportedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information about the organization node.
@@ -17638,6 +17897,109 @@ func (s *ResourceDetail) SetName(v string) *ResourceDetail {
 	return s
 }
 
+// A resource that is currently in use. Ensure that the resource is not in use
+// and retry the operation.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified resource was not found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information about a change to a resource attribute.
 type ResourceTargetDefinition struct {
 	_ struct{} `type:"structure"`
@@ -18570,6 +18932,59 @@ func (s *TagOptionDetail) SetKey(v string) *TagOptionDetail {
 func (s *TagOptionDetail) SetValue(v string) *TagOptionDetail {
 	s.Value = &v
 	return s
+}
+
+// An operation requiring TagOptions failed because the TagOptions migration
+// process has not been performed for this account. Please use the AWS console
+// to perform the migration process before retrying the operation.
+type TagOptionNotMigratedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TagOptionNotMigratedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagOptionNotMigratedException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagOptionNotMigratedException(v protocol.ResponseMetadata) error {
+	return &TagOptionNotMigratedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TagOptionNotMigratedException) Code() string {
+	return "TagOptionNotMigratedException"
+}
+
+// Message returns the exception's message.
+func (s TagOptionNotMigratedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TagOptionNotMigratedException) OrigErr() error {
+	return nil
+}
+
+func (s TagOptionNotMigratedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TagOptionNotMigratedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TagOptionNotMigratedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Summary information about a TagOption.
