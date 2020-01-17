@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsEcsService() *schema.Resource {
@@ -44,6 +45,23 @@ func dataSourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"enable_ecs_managed_tags": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"propagate_tags": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"health_check_grace_period_seconds": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"platform_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -84,6 +102,13 @@ func dataSourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("launch_type", service.LaunchType)
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	d.Set("task_definition", service.TaskDefinition)
+	d.Set("platform_version", service.PlatformVersion)
+	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
+	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
+	d.Set("propagate_tags", service.PropagateTags)
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(service.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }

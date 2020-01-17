@@ -36,3 +36,8 @@ In addition to all arguments above, the following attributes are exported:
 * `launch_type` - The launch type for the ECS Service
 * `scheduling_strategy` - The scheduling strategy for the ECS Service
 * `task_definition` - The family for the latest ACTIVE revision
+* `platform_version` - The platform version on which to run your service.
+* `propagate_tags` - Specifies whether to propagate the tags from the task definition or the service to the tasks.
+* `enable_ecs_managed_tags` - Specifies whether to enable Amazon ECS managed tags for the tasks within the service.
+* `health_check_grace_period_seconds` - Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647.
+* `tags` - Key-value mapping of resource tags
