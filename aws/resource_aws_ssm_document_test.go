@@ -27,6 +27,7 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 					testAccCheckAWSSSMDocumentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "JSON"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("document/%s", name)),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

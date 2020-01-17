@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
+const rfc3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
+
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProviderFactories func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory
 var testAccProvider *schema.Provider
@@ -191,6 +193,12 @@ func testAccMatchResourceAttrGlobalARN(resourceName, attributeName, arnService s
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
 	}
+}
+
+// testAccCheckResourceAttrRfc3339 ensures the Terraform state matches a RFC3339 value
+// This TestCheckFunc will likely be moved to the Terraform Plugin SDK in the future.
+func testAccCheckResourceAttrRfc3339(resourceName, attributeName string) resource.TestCheckFunc {
+	return resource.TestMatchResourceAttr(resourceName, attributeName, regexp.MustCompile(rfc3339RegexPattern))
 }
 
 // testAccCheckListHasSomeElementAttrPair is a TestCheckFunc which validates that the collection on the left has an element with an attribute value
