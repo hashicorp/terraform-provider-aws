@@ -74,6 +74,13 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 			})
 
 			if err != nil {
+				// Fix timing issue where describe is called prior to
+				// create being effectively processed by AWS
+				awsErr := err.(awserr.Error)
+				if awsErr.Code() == "InvalidPlacementGroup.Unknown" {
+					log.Printf("[DEBUG] Resetting error creating EC2 Placement group: %q %v", d.Id(), awsErr)
+					return out, "pending", nil
+				}
 				return out, "", err
 			}
 
