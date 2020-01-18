@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_api_gateway_api_key: Add `created_date`, `description`, `enabled`, `last_updated_date`, and `tags` attributes [GH-10821]
 * data-source/aws_cloudwatch_log_group: Add `kms_key_id`, `retention_in_days`, and `tags` attributes [GH-10755]
 * data-source/aws_db_instance: Add `multi_az` attribute [GH-10795]
 * data-source/aws_sqs_queue: Add `tags` attribute [GH-10820]
