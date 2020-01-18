@@ -2,17 +2,68 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/efs"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_efs_file_system", &resource.Sweeper{
+		Name: "aws_efs_file_system",
+		F:    testSweepEfsFileSystems,
+		Dependencies: []string{
+			"aws_efs_mount_target",
+		},
+	})
+}
+
+func testSweepEfsFileSystems(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).efsconn
+
+	var errors error
+	input := &efs.DescribeFileSystemsInput{}
+	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
+		for _, filesystem := range page.FileSystems {
+			id := aws.StringValue(filesystem.FileSystemId)
+
+			log.Printf("[INFO] Deleting EFS File System: %s", id)
+
+			_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
+				FileSystemId: filesystem.FileSystemId,
+			})
+			if err != nil {
+				errors = multierror.Append(errors, fmt.Errorf("error deleting EFS File System %q: %w", id, err))
+				continue
+			}
+
+			err = waitForDeleteEfsFileSystem(conn, id, 10*time.Minute)
+			if err != nil {
+				errors = multierror.Append(fmt.Errorf("error waiting for EFS File System %q to delete: %w", id, err))
+				continue
+			}
+		}
+		return true
+	})
+	if err != nil {
+		errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
+	}
+
+	return errors
+}
 
 func TestResourceAWSEFSFileSystem_hasEmptyFileSystems(t *testing.T) {
 	fs := &efs.DescribeFileSystemsOutput{
