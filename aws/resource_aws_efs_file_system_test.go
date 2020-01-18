@@ -87,6 +87,7 @@ func TestResourceAWSEFSFileSystem_hasEmptyFileSystems(t *testing.T) {
 func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
+	rName := acctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -94,7 +95,7 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSFileSystemConfig,
+				Config: testAccAWSEFSFileSystemConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "generalPurpose"),
@@ -124,7 +125,7 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 
 func TestAccAWSEFSFileSystem_tags(t *testing.T) {
 	var desc efs.FileSystemDescription
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix("tf-acc-tags")
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -430,6 +431,28 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy_removal(t *testing.T) {
 	})
 }
 
+func TestAccAWSEFSFileSystem_disappears(t *testing.T) {
+	var desc efs.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+	rName := acctest.RandomWithPrefix("tf-acc-disappears")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+					testAccCheckEfsFileSystemDisappears(&desc),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckEfsFileSystemDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).efsconn
 	for _, rs := range s.RootModule().Resources {
@@ -455,7 +478,7 @@ func testAccCheckEfsFileSystemDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEfsFileSystem(resourceID string, description *efs.FileSystemDescription) resource.TestCheckFunc {
+func testAccCheckEfsFileSystem(resourceID string, fDesc *efs.FileSystemDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceID]
 		if !ok {
@@ -475,13 +498,27 @@ func testAccCheckEfsFileSystem(resourceID string, description *efs.FileSystemDes
 			return err
 		}
 
-		if fs == nil {
+		if len(fs.FileSystems) == 0 {
 			return fmt.Errorf("EFS File System not found")
 		}
 
-		*fs.FileSystems[0] = *description
+		*fDesc = *fs.FileSystems[0]
 
 		return nil
+	}
+}
+
+func testAccCheckEfsFileSystemDisappears(fDesc *efs.FileSystemDescription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).efsconn
+
+		input := &efs.DeleteFileSystemInput{
+			FileSystemId: fDesc.FileSystemId,
+		}
+
+		_, err := conn.DeleteFileSystem(input)
+
+		return err
 	}
 }
 
@@ -585,11 +622,13 @@ func testAccCheckEfsFileSystemLifecyclePolicy(resourceID string, expectedVal str
 	}
 }
 
-const testAccAWSEFSFileSystemConfig = `
+func testAccAWSEFSFileSystemConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-	creation_token = "radeksimko"
+	creation_token = %q
 }
-`
+`, rName)
+}
 
 func testAccAWSEFSFileSystemConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
