@@ -513,6 +513,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"object_version": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 								},
 							},
 						},
@@ -680,7 +684,11 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 			BucketARN: aws.String(s3Bucket),
 			FileKey:   aws.String(s3Object),
 		}
+		if version, ok := d.GetOk("object_version"); ok {
+			s3ContentLocation.ObjectVersion = aws.String(version.(string))
+		}
 	}
+
 	var textContent *string
 	if textCode != "" {
 		textContent = aws.String(textCode)
@@ -792,6 +800,9 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 	if resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.S3ApplicationCodeLocationDescription != nil {
 		d.Set("s3_bucket", aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.S3ApplicationCodeLocationDescription.BucketARN))
 		d.Set("s3_object", aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.S3ApplicationCodeLocationDescription.FileKey))
+		if resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.S3ApplicationCodeLocationDescription.ObjectVersion != nil {
+			d.Set("object_version", aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.S3ApplicationCodeLocationDescription.ObjectVersion))
+		}
 	}
 
 	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsCloudwatchLoggingOptions(resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)); err != nil {
