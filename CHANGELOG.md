@@ -25,6 +25,7 @@ BUG FIXES:
 * resource/aws_ec2_client_vpn_endpoint: Properly set `status` value into Terraform state [GH-11497]
 * resource/aws_emr_security_configuration: Properly set `creation_date` value into the Terraform state [GH-11491]
 * resource/aws_iam_service_linked_role: Properly set `create_date` value into the Terraform state [GH-11491]
+* resource/aws_iot_topic_rule: Trigger resource recreation on `name` argument updates [GH-10366]
 * resource/aws_lambda_event_source_mapping: Properly set `last_modified` value into the Terraform state [GH-11491]
 * resource/aws_organizations_account: Properly set `joined_timestamp` value into the Terraform state [GH-11491]
 * resource/aws_redshift_cluster: Handle `available, prep-for-resize` pending status during creation and update [GH-10530]
