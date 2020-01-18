@@ -18,6 +18,9 @@ func resourceAwsSsmActivation() *schema.Resource {
 		Create: resourceAwsSsmActivationCreate,
 		Read:   resourceAwsSsmActivationRead,
 		Delete: resourceAwsSsmActivationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -151,7 +154,9 @@ func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error reading SSM activation: %s", err)
 	}
 	if resp.ActivationList == nil || len(resp.ActivationList) == 0 {
-		return fmt.Errorf("ActivationList was nil or empty")
+		log.Printf("[WARN] SSM Activation (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	activation := resp.ActivationList[0] // Only 1 result as MaxResults is 1 above
