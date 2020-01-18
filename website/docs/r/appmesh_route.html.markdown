@@ -77,6 +77,43 @@ resource "aws_appmesh_route" "serviceb" {
 }
 ```
 
+### Retry Policy
+
+```hcl
+resource "aws_appmesh_route" "serviceb" {
+  name                = "serviceB-route"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.serviceb.name}"
+
+  spec {
+    http_route {
+      match {
+        prefix = "/"
+      }
+
+      retry_policy {
+        http_retry_events = [
+          "server-error",
+        ]
+        max_retries = 1
+
+        per_retry_timeout {
+          unit  = "s"
+          value = 15
+        }
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.serviceb.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+```
+
 ### TCP Routing
 
 ```hcl
@@ -120,6 +157,7 @@ The `http_route` object supports the following:
 
 * `action` - (Required) The action to take if a match is determined.
 * `match` - (Required) The criteria for determining an HTTP request match.
+* `retry_policy` - (Optional) The retry policy.
 
 The `tcp_route` object supports the following:
 
@@ -137,6 +175,21 @@ This parameter must always start with /, which by itself matches all requests to
 * `header` - (Optional) The client request headers to match on.
 * `method` - (Optional) The client request header method to match on. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
 * `scheme` - (Optional) The client request header scheme to match on. Valid values: `http`, `https`.
+
+The `retry_policy` object supports the following:
+
+* `http_retry_events` - (Optional) List of HTTP retry events.
+Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP status codes 502, 503, and 504), `server-error` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `stream-error` (retry on refused stream).
+* `max_retries` - (Required) The maximum number of retries.
+* `per_retry_timeout` - (Required) The per-retry timeout.
+* `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
+
+You must specify at least one value for `http_retry_events`, or at least one value for `tcp_retry_events`.
+
+The `per_retry_timeout` object supports the following:
+
+* `unit` - (Required) Retry unit. Valid values: `ms`, `s`.
+* `value` - (Required) Retry value.
 
 The `weighted_target` object supports the following:
 
