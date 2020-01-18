@@ -137,9 +137,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 							Default:  true,
 						},
 						"configuration_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  kinesisanalyticsv2.ConfigurationTypeDefault,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
+							ValidateFunc: validateKinesisAnalyticsConfigurationType,
 						},
 						"min_pause_between_checkpoints": {
 							Type:     schema.TypeInt,
@@ -156,22 +157,19 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"configuration_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  kinesisanalyticsv2.ConfigurationTypeDefault,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
+							ValidateFunc: validateKinesisAnalyticsConfigurationType,
 						},
 						"log_level": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 						"metrics_level": {
-							Type:     schema.TypeString,
-							Required: true,
-							// TODO add validation
-							// that this is one of
-							// "APPLICATION",
-							// "TASK", "OPERATOR",
-							// or "PARALLELISM"
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateKineisAnalyticsMetricsLevel,
 						},
 					},
 				},
@@ -188,9 +186,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 							Default:  false,
 						},
 						"configuration_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  kinesisanalyticsv2.ConfigurationTypeDefault,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
+							ValidateFunc: validateKinesisAnalyticsConfigurationType,
 						},
 						"parallelism": {
 							Type:     schema.TypeInt,

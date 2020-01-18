@@ -704,6 +704,31 @@ func validateKinesisAnalayticsRuntime(v interface{}, k string) (ws []string, err
 	return
 }
 
+func validateKineisAnalyticsMetricsLevel(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if value != kinesisanalyticsv2.MetricsLevelApplication &&
+		value != kinesisanalyticsv2.MetricsLevelOperator &&
+		value != kinesisanalyticsv2.MetricsLevelParallelism &&
+		value != kinesisanalyticsv2.MetricsLevelTask {
+		errors = append(errors, fmt.Errorf("'%s' is an invalid kinesisanalytics metrics level. Valid values are: %s", value,
+			fmt.Sprintf("%s, %s, %s, %s", kinesisanalyticsv2.MetricsLevelApplication, kinesisanalyticsv2.MetricsLevelOperator,
+				kinesisanalyticsv2.MetricsLevelParallelism, kinesisanalyticsv2.MetricsLevelTask)))
+	}
+	return
+}
+
+func validateKinesisAnalyticsConfigurationType(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value != kinesisanalyticsv2.ConfigurationTypeCustom &&
+		value != kinesisanalyticsv2.ConfigurationTypeDefault {
+		errors = append(errors, fmt.Errorf("'%s' is an invalid kinesisanalytics configuration type. Valid values are: %s", value,
+			fmt.Sprintf("%s, %s", kinesisanalyticsv2.ConfigurationTypeCustom, kinesisanalyticsv2.ConfigurationTypeDefault)))
+
+	}
+	return
+}
+
 func validateArn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
