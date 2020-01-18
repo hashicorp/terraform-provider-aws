@@ -191,6 +191,7 @@ func TestAccAWSAcmCertificateDataSource_KeyTypes(t *testing.T) {
 				Config: testAccAwsAcmCertificateDataSourceConfigKeyTypes(tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
 				),
 			},
 		},
