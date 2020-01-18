@@ -490,7 +490,7 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "backing-up", "modifying", "restoring"},
+		Pending:    []string{"creating", "backing-up", "modifying", "restoring", "available, prep-for-resize"},
 		Target:     []string{"available"},
 		Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
@@ -777,7 +777,7 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 	if requestUpdate || d.HasChange("iam_roles") {
 
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"creating", "deleting", "rebooting", "resizing", "renaming", "modifying"},
+			Pending:    []string{"creating", "deleting", "rebooting", "resizing", "renaming", "modifying", "available, prep-for-resize"},
 			Target:     []string{"available"},
 			Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
