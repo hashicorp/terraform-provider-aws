@@ -190,6 +190,9 @@ func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) e
 			}
 
 			pg := out.PlacementGroups[0]
+			if *pg.State == "available" {
+				log.Printf("[DEBUG] Accepted status when deleting EC2 Placement group: %q %v", d.Id(), *pg.State)
+			}
 
 			return out, *pg.State, nil
 		},
