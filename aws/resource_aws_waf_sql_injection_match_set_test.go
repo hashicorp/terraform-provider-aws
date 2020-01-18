@@ -63,6 +63,11 @@ func TestAccAWSWafSqlInjectionMatchSet_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSWafSqlInjectionMatchSetConfigChangeName(rNameNew),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafSqlInjectionMatchSetExists(resourceName, &after),
@@ -119,6 +124,11 @@ func TestAccAWSWafSqlInjectionMatchSet_changeTuples(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSWafSqlInjectionMatchSetConfig_changeTuples(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafSqlInjectionMatchSetExists(resourceName, &after),
@@ -147,6 +157,11 @@ func TestAccAWSWafSqlInjectionMatchSet_noTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
