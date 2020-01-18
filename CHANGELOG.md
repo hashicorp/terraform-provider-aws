@@ -19,6 +19,8 @@ BUG FIXES:
 
 * data-source/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
 * resource/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
+* resource_aws_cognito_resource_server: Increase `scope` max limit to match API [GH-10505]
+* resource_aws_cognito_user_pool_client: Increase `allowed_oauth_scopes` max limit to match API [GH-10505]
 * resource/aws_dms_certificate: Properly set `certificate_wallet` value into Terraform state [GH-11496]
 * resource/aws_ec2_client_vpn_endpoint: Properly set `status` value into Terraform state [GH-11497]
 * resource/aws_emr_security_configuration: Properly set `creation_date` value into the Terraform state [GH-11491]
