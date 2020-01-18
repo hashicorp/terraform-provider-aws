@@ -109,7 +109,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 			"allowed_oauth_scopes": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 25,
+				MaxItems: 50,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					// https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html
