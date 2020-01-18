@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -471,6 +472,21 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 			}
 			if isAWSErr(err, "ValidationException", "The passed role has not propagated yet") {
 				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationException", "Authentication error") ||
+				isAWSErr(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describeVpcs") ||
+				isAWSErr(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describeSubnets") ||
+				isAWSErr(err, "ValidationException", "Before you can proceed, you must enable a service-linked role to give Amazon ES permissions to access your VPC") {
+				log.Printf("[DEBUG] Retrying creation of ElasticSearch domain %s (transient error)", aws.StringValue(input.DomainName))
+				return resource.RetryableError(err)
+			}
+			// New transient AWS error
+			var awsErr awserr.Error
+			if errors.As(err, &awsErr) {
+				if awsErr.Code() == "ValidationException" && len(awsErr.Message()) == 0 {
+					log.Printf("[DEBUG] Empty ValidationException ElasticSearch domain %s (transient error)", aws.StringValue(input.DomainName))
+					return resource.RetryableError(err)
+				}
 			}
 
 			return resource.NonRetryableError(err)
