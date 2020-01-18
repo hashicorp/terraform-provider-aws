@@ -25,6 +25,7 @@ BUG FIXES:
 * resource/aws_iam_service_linked_role: Properly set `create_date` value into the Terraform state [GH-11491]
 * resource/aws_lambda_event_source_mapping: Properly set `last_modified` value into the Terraform state [GH-11491]
 * resource/aws_organizations_account: Properly set `joined_timestamp` value into the Terraform state [GH-11491]
+* resource/aws_redshift_cluster: Handle `available, prep-for-resize` pending status during creation and update [GH-10530]
 * resource/aws_ssm_activation: Properly set `expiration_date` value into the Terraform state and perform drift detection when configured [GH-11491]
 * resource/aws_ssm_document: Properly set `created_date` value into the Terraform state [GH-11491]
 * resource/aws_waf_sql_injection_match_set: Properly set `sql_injection_match_tuples` value into Terraform state [GH-11498]
