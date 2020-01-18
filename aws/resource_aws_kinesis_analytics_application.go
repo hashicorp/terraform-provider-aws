@@ -163,8 +163,9 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 							ValidateFunc: validateKinesisAnalyticsConfigurationType,
 						},
 						"log_level": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateLogLevel,
 						},
 						"metrics_level": {
 							Type:         schema.TypeString,

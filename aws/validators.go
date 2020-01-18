@@ -729,6 +729,20 @@ func validateKinesisAnalyticsConfigurationType(v interface{}, k string) (ws []st
 	return
 }
 
+func validateLogLevel(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value != kinesisanalyticsv2.LogLevelInfo &&
+		value != kinesisanalyticsv2.LogLevelWarn &&
+		value != kinesisanalyticsv2.LogLevelError &&
+		value != kinesisanalyticsv2.LogLevelDebug {
+		errors = append(errors, fmt.Errorf("'%s' is an invalid kinesisanalytics log level. Valid values are: %s", value,
+			fmt.Sprintf("%s, %s, %s, %s", kinesisanalyticsv2.LogLevelInfo, kinesisanalyticsv2.LogLevelWarn,
+				kinesisanalyticsv2.LogLevelError, kinesisanalyticsv2.LogLevelDebug)))
+	}
+	return
+}
+
 func validateArn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
