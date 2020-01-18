@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * data-source/aws_cloudwatch_log_group: Add `kms_key_id`, `retention_in_days`, and `tags` attributes [GH-10755]
+* data-source/aws_db_instance: Add `multi_az` attribute [GH-10795]
 * data-source/aws_sqs_queue: Add `tags` attribute [GH-10820]
 * resource/aws_acm_certificate: Support tag-on-create [GH-11073]
 * resource/aws_cognito_user_pool_client: Support plan-time validation values of `ALLOW_*` variations for `explicit_auth_flows` argument [GH-10976]
