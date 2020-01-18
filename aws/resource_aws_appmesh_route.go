@@ -187,6 +187,12 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 												"method_name": {
 													Type:         schema.TypeString,
 													Optional:     true,
+													ValidateFunc: validation.StringInSlice(appmesh.HttpMethod_Values(), false),
+												},
+
+												"prefix": {
+													Type:         schema.TypeString,
+													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 50),
 												},
 
@@ -265,6 +271,14 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"grpc_retry_events": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													MinItems: 0,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													Set:      schema.HashString,
+												},
+
 												"http_retry_events": {
 													Type:     schema.TypeSet,
 													Optional: true,

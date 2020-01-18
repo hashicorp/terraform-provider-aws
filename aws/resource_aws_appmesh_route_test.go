@@ -1296,6 +1296,222 @@ resource "aws_appmesh_route" "test" {
 `, rName))
 }
 
+func testAccAwsAppmeshRouteConfig_grpcRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    grpc_route {
+      match {
+        metadata {
+          name = "X-Testing1"
+        }
+      }
+
+      retry_policy {
+        grpc_retry_events = [
+          "deadline-exceeded",
+          "resource-exhausted",
+        ]
+
+        http_retry_events = [
+          "server-error",
+        ]
+
+        max_retries = 1
+
+        per_retry_timeout {
+          unit  = "s"
+          value = 15
+        }
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAwsAppmeshRouteConfig_grpcRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    grpc_route {
+      match {
+        method_name  = "test"
+        service_name = "test.local"
+
+        metadata {
+          name   = "X-Testing1"
+          invert = true
+        }
+
+        metadata {
+          name   = "X-Testing2"
+          invert = false
+
+          match {
+            range {
+              start = 2
+              end   = 7
+            }
+          }
+        }
+      }
+
+      retry_policy {
+        grpc_retry_events = [
+          "cancelled",
+        ]
+
+        http_retry_events = [
+          "client-error",
+          "gateway-error",
+        ]
+
+        max_retries = 3
+
+        per_retry_timeout {
+          unit  = "ms"
+          value = 250000
+        }
+
+        tcp_retry_events = [
+          "connection-error",
+        ]
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAwsAppmeshRouteConfig_http2Route(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    http2_route {
+      match {
+        prefix = "/"
+        method = "POST"
+        scheme = "http"
+
+        header {
+          name = "X-Testing1"
+        }
+      }
+
+      retry_policy {
+        http_retry_events = [
+          "server-error",
+        ]
+
+        max_retries = 1
+
+        per_retry_timeout {
+          unit  = "s"
+          value = 15
+        }
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAwsAppmeshRouteConfig_http2RouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    http2_route {
+      match {
+        prefix = "/path"
+        method = "PUT"
+        scheme = "https"
+
+        header {
+          name   = "X-Testing1"
+          invert = true
+        }
+
+        header {
+          name   = "X-Testing2"
+          invert = false
+
+          match {
+            range {
+              start = 2
+              end   = 7
+            }
+          }
+        }
+      }
+
+      retry_policy {
+        http_retry_events = [
+          "client-error",
+          "gateway-error",
+        ]
+
+        max_retries = 3
+
+        per_retry_timeout {
+          unit  = "ms"
+          value = 250000
+        }
+
+        tcp_retry_events = [
+          "connection-error",
+        ]
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
 func testAccAppmeshRouteConfig_httpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
