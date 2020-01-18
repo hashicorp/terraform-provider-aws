@@ -7,6 +7,7 @@ ENHANCEMENTS:
 * data-source/aws_db_instance: Add `multi_az` attribute [GH-10795]
 * data-source/aws_sqs_queue: Add `tags` attribute [GH-10820]
 * resource/aws_acm_certificate: Support tag-on-create [GH-11073]
+* resource/aws_api_gateway_rest_api: Add `endpoint_configuration` configuration block `vpc_endpoint_ids` argument [GH-10627]
 * resource/aws_cognito_user_pool_client: Support plan-time validation values of `ALLOW_*` variations for `explicit_auth_flows` argument [GH-10976]
 * resource/aws_egress_only_internet_gateway: Support resource import [GH-11071]
 * resource/aws_network_interface: Add `mac_address` attribute [GH-10633]
