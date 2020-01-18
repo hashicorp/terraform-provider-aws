@@ -458,7 +458,7 @@ argument is not required.
 
   * `failover_criteria` (Required) - The [failover criteria](#failover-criteria-arguments) for when to failover to the secondary origin
 
-  * `member` (Required) - Ordered [member](#member-arguments) configuration blocks assigned to the origin group, where the first member is the primary origin. Minimum 2.
+  * `member` (Required) - Ordered [member](#member-arguments) configuration blocks assigned to the origin group, where the first member is the primary origin. You must specify two members.
 
 ##### Failover Criteria Arguments
 
