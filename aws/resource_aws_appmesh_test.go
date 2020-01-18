@@ -12,11 +12,13 @@ func TestAccAWSAppmesh_serial(t *testing.T) {
 			"tags":         testAccAwsAppmeshMesh_tags,
 		},
 		"Route": {
+			"grpcRoute":       testAccAwsAppmeshRoute_grpcRoute,
+			"http2Route":      testAccAwsAppmeshRoute_http2Route,
 			"httpHeader":      testAccAwsAppmeshRoute_httpHeader,
 			"httpRetryPolicy": testAccAwsAppmeshRoute_httpRetryPolicy,
 			"httpRoute":       testAccAwsAppmeshRoute_httpRoute,
-			"tcpRoute":        testAccAwsAppmeshRoute_tcpRoute,
 			"routePriority":   testAccAwsAppmeshRoute_routePriority,
+			"tcpRoute":        testAccAwsAppmeshRoute_tcpRoute,
 			"tags":            testAccAwsAppmeshRoute_tags,
 		},
 		"VirtualNode": {
