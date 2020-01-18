@@ -114,6 +114,43 @@ resource "aws_appmesh_route" "serviceb" {
 }
 ```
 
+### Retry Policy
+
+```hcl
+resource "aws_appmesh_route" "serviceb" {
+  name                = "serviceB-route"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.serviceb.name}"
+
+  spec {
+    http_route {
+      match {
+        prefix = "/"
+      }
+
+      retry_policy {
+        http_retry_events = [
+          "server-error",
+        ]
+        max_retries = 1
+
+        per_retry_timeout {
+          unit  = "s"
+          value = 15
+        }
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.serviceb.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+```
+
 ### TCP Routing
 
 ```hcl
