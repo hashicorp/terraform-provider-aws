@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -89,7 +90,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`launch-template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
 					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "0"),
 				),
