@@ -33,11 +33,6 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", tag)),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -60,11 +55,6 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "My Activation"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSSSMActivationBasicConfig(name, "Foo"),
@@ -102,11 +92,6 @@ func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 					testAccCheckAWSSSMActivationExists(resourceName, &ssmActivation),
 					resource.TestCheckResourceAttr(resourceName, "expiration_date", expirationDateS),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
