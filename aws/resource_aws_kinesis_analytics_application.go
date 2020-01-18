@@ -1415,11 +1415,11 @@ func expandParallelismConfiguration(v map[string]interface{}) *kinesisanalyticsv
 	}
 	if p, ok := v["parallelism"]; ok {
 		num, _ := strconv.ParseInt(p.(string), 10, 64)
-		parallelism = aws.Int64(int64(num))
+		parallelism = aws.Int64(num)
 	}
 	if p, ok := v["parallelism_per_kpu"]; ok {
 		num, _ := strconv.ParseInt(p.(string), 10, 64)
-		parallelismPerKPU = aws.Int64(int64(num))
+		parallelismPerKPU = aws.Int64(num)
 	}
 	return &kinesisanalyticsv2.ParallelismConfiguration{
 		AutoScalingEnabled: autoscalingEnabled,
