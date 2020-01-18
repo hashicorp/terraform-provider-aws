@@ -1442,12 +1442,12 @@ func EfsUpdateTags(conn *efs.EFS, identifier string, oldTagsMap interface{}, new
 	newTags := New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &efs.DeleteTagsInput{
-			FileSystemId: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		input := &efs.UntagResourceInput{
+			ResourceId: aws.String(identifier),
+			TagKeys:    aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
-		_, err := conn.DeleteTags(input)
+		_, err := conn.UntagResource(input)
 
 		if err != nil {
 			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
@@ -1455,12 +1455,12 @@ func EfsUpdateTags(conn *efs.EFS, identifier string, oldTagsMap interface{}, new
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &efs.CreateTagsInput{
-			FileSystemId: aws.String(identifier),
-			Tags:         updatedTags.IgnoreAws().EfsTags(),
+		input := &efs.TagResourceInput{
+			ResourceId: aws.String(identifier),
+			Tags:       updatedTags.IgnoreAws().EfsTags(),
 		}
 
-		_, err := conn.CreateTags(input)
+		_, err := conn.TagResource(input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
