@@ -1666,3 +1666,84 @@ resource "aws_appmesh_route" "test" {
 }
 `, rName))
 }
+
+func testAccAwsAppmeshRouteConfig_httpRetryPolicy(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    http_route {
+      match {
+        prefix = "/"
+      }
+
+      retry_policy {
+        http_retry_events = [
+          "server-error",
+        ]
+
+        max_retries = 1
+
+        per_retry_timeout {
+          unit  = "s"
+          value = 15
+        }
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAwsAppmeshRouteConfig_httpRetryPolicyUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    http_route {
+      match {
+        prefix = "/"
+     }
+
+      retry_policy {
+        http_retry_events = [
+          "client-error",
+          "gateway-error",
+        ]
+
+        max_retries = 3
+
+        per_retry_timeout {
+          unit  = "ms"
+          value = 250000
+        }
+
+        tcp_retry_events = [
+          "connection-error",
+        ]
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
