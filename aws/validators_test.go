@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 )
 
 func TestValidateTypeStringNullableBoolean(t *testing.T) {
@@ -2836,6 +2837,119 @@ func TestValidateDxConnectionBandWidth(t *testing.T) {
 		_, errors := validateDxConnectionBandWidth()(v, "bandwidth")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid bandwidth", v)
+		}
+	}
+}
+
+func TestValidateKinesisAnalyticsRuntime(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "SQL-1_0",
+			ErrCount: 0,
+		},
+		{
+			Value:    "FLINK-1_6",
+			ErrCount: 0,
+		},
+		{
+			Value:    "FLINK-1_8",
+			ErrCount: 0,
+		},
+		{
+			Value:    "sql-1_0",
+			ErrCount: 1,
+		},
+		{
+			Value:    "INVALID",
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateKinesisAnalyticsRuntime(tc.Value, "")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected %d errors but found %d for %s",
+				tc.ErrCount, len(errors), tc.Value)
+		}
+	}
+}
+
+func TestValidateKinesisAnalyticsMetricLevel(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "APPLICATION",
+			ErrCount: 0,
+		},
+		{
+			Value:    "OPERATOR",
+			ErrCount: 0,
+		},
+		{
+			Value:    "PARALLELISM",
+			ErrCount: 0,
+		},
+		{
+			Value:    "TASK",
+			ErrCount: 0,
+		},
+		{
+			Value:    "application",
+			ErrCount: 1,
+		},
+		{
+			Value:    "INVALID",
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateKineisAnalyticsMetricsLevel(tc.Value, "")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected %d errors but found %d for %s",
+				tc.ErrCount, len(errors), tc.Value)
+		}
+	}
+}
+
+func TestValidateLogLevel(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "INFO",
+			ErrCount: 0,
+		},
+		{
+			Value:    "WARN",
+			ErrCount: 0,
+		},
+		{
+			Value:    "ERROR",
+			ErrCount: 0,
+		},
+		{
+			Value:    "DEBUG",
+			ErrCount: 0,
+		},
+		{
+			Value:    "debug",
+			ErrCount: 1,
+		},
+		{
+			Value:    "INVALID",
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateLogLevel(tc.Value, "")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected %d errors but found %d for %s",
+				tc.ErrCount, len(errors), tc.Value)
 		}
 	}
 }

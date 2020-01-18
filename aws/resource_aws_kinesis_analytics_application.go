@@ -52,7 +52,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 			"runtime": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateKinesisAnalayticsRuntime,
+				ValidateFunc: validateKinesisAnalyticsRuntime,
 			},
 
 			"s3_bucket": {

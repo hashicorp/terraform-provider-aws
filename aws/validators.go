@@ -693,11 +693,13 @@ func validateAwsAccountId(v interface{}, k string) (ws []string, errors []error)
 	return
 }
 
-func validateKinesisAnalayticsRuntime(v interface{}, k string) (ws []string, errors []error) {
+func validateKinesisAnalyticsRuntime(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if value != kinesisanalyticsv2.RuntimeEnvironmentSql10 &&
-		value != kinesisanalyticsv2.RuntimeEnvironmentFlink16 && value != kinesisanalyticsv2.RuntimeEnvironmentFlink18 {
+		value != kinesisanalyticsv2.RuntimeEnvironmentFlink16 &&
+		value != kinesisanalyticsv2.RuntimeEnvironmentFlink18 {
+
 		errors = append(errors, fmt.Errorf("'%s' is an invalid kinesisanalytics runtime. Valid runtimes are: %s", value, fmt.Sprintf("%s, %s, %s", kinesisanalyticsv2.RuntimeEnvironmentSql10, kinesisanalyticsv2.RuntimeEnvironmentFlink16,
 			kinesisanalyticsv2.RuntimeEnvironmentFlink18)))
 	}
