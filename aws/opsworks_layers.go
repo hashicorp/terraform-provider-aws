@@ -410,7 +410,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.Ops
 		Region:    meta.(*AWSClient).region,
 		Service:   "opsworks",
 		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("layer/%s/", d.Id()),
+		Resource:  fmt.Sprintf("layer/%s", d.Id()),
 	}.String()
 
 	if v, ok := d.GetOk("tags"); ok {
