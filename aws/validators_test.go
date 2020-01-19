@@ -2915,6 +2915,37 @@ func TestValidateKinesisAnalyticsMetricLevel(t *testing.T) {
 	}
 }
 
+func TestValidateKinesisAnalyticsConfigurationType(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "DEFAULT",
+			ErrCount: 0,
+		},
+		{
+			Value:    "CUSTOM",
+			ErrCount: 0,
+		},
+		{
+			Value:    "default",
+			ErrCount: 1,
+		},
+		{
+			Value:    "INVALID",
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateKinesisAnalyticsConfigurationType(tc.Value, "")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected %d errors but found %d for %s",
+				tc.ErrCount, len(errors), tc.Value)
+		}
+	}
+}
+
 func TestValidateLogLevel(t *testing.T) {
 	cases := []struct {
 		Value    string

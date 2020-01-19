@@ -695,7 +695,6 @@ func validateAwsAccountId(v interface{}, k string) (ws []string, errors []error)
 
 func validateKinesisAnalyticsRuntime(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-
 	if value != kinesisanalyticsv2.RuntimeEnvironmentSql10 &&
 		value != kinesisanalyticsv2.RuntimeEnvironmentFlink16 &&
 		value != kinesisanalyticsv2.RuntimeEnvironmentFlink18 {
@@ -721,7 +720,6 @@ func validateKineisAnalyticsMetricsLevel(v interface{}, k string) (ws []string, 
 
 func validateKinesisAnalyticsConfigurationType(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-
 	if value != kinesisanalyticsv2.ConfigurationTypeCustom &&
 		value != kinesisanalyticsv2.ConfigurationTypeDefault {
 		errors = append(errors, fmt.Errorf("'%s' is an invalid kinesisanalytics configuration type. Valid values are: %s", value,
@@ -733,7 +731,6 @@ func validateKinesisAnalyticsConfigurationType(v interface{}, k string) (ws []st
 
 func validateLogLevel(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-
 	if value != kinesisanalyticsv2.LogLevelInfo &&
 		value != kinesisanalyticsv2.LogLevelWarn &&
 		value != kinesisanalyticsv2.LogLevelError &&
