@@ -254,10 +254,10 @@ func testAccCheckAWSOpsworksCreateLayerAttributes(
 	}
 }
 
-func testAccCheckAwsOpsworksCustomLayerDestroy(s *terraform.State) error {
+func testAccCheckAwsOpsworksLayerDestroy(resourceType string, s *terraform.State) error {
 	opsworksconn := testAccProvider.Meta().(*AWSClient).opsworksconn
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_custom_layer" {
+		if rs.Type != resourceType {
 			continue
 		}
 		req := &opsworks.DescribeLayersInput{
@@ -275,7 +275,11 @@ func testAccCheckAwsOpsworksCustomLayerDestroy(s *terraform.State) error {
 		}
 	}
 
-	return fmt.Errorf("Fall through error on OpsWorks custom layer test")
+	return fmt.Errorf("Fall through error on OpsWorks layer test")
+}
+
+func testAccCheckAwsOpsworksCustomLayerDestroy(s *terraform.State) error {
+	return testAccCheckAwsOpsworksLayerDestroy("aws_opsworks_custom_layer", s)
 }
 
 func testAccAwsOpsworksCustomLayerSecurityGroups(name string) string {
