@@ -92,11 +92,17 @@ terminateInstancesWithExpiration.
   spot-fleet request. Can be specified multiple times to define different bids
 across different markets and instance types.
 
-    **Note:** This takes in similar but not
+    -> **Note:** This takes in similar but not
     identical inputs as [`aws_instance`](instance.html).  There are limitations on
     what you can specify. See the list of officially supported inputs in the
     [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used and it have
     a additional parameter `iam_instance_profile_arn` takes `aws_iam_instance_profile` attribute `arn` as input.
+    
+    ~> **Important:** Due to a weakness in the way the provider is currently implemented, 
+    changes to some attributes will be ignored by Terraform while others trigger a diff.
+    See [this bug](https://github.com/terraform-providers/terraform-provider-aws/issues/741) for details. 
+    
+    
 
 * `spot_price` - (Optional; Default: On-demand price) The maximum bid price per unit hour.
 * `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
