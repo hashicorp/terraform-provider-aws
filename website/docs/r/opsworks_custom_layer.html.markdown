@@ -67,6 +67,7 @@ An `ebs_volume` block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the layer.
+* `arn` - The Amazon Resource Name(ARN) of the layer.
 
 ## Import
 
