@@ -59,8 +59,9 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		},
 
 		"custom_instance_profile_arn": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: validateArn,
 		},
 
 		"elastic_load_balancer": {
