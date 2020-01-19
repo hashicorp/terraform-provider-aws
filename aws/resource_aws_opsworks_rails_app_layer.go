@@ -1,12 +1,13 @@
 package aws
 
 import (
+	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsOpsworksRailsAppLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
-		TypeName:         "rails-app",
+		TypeName:         opsworks.LayerTypeRailsApp,
 		DefaultLayerName: "Rails App Server",
 
 		Attributes: map[string]*opsworksLayerTypeAttribute{
