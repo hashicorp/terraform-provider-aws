@@ -186,11 +186,14 @@ func TestAccAWSKinesisAnalyticsApplication_flinkApplication(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
+					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
+					resource.TestCheckResourceAttr(resName, "property_groups.#", "1"),
+					resource.TestCheckResourceAttr(resName, "property_groups.0.property_group_id", "abcdef"),
 					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.checkpointing_enabled", "false"),
 					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.checkpoint_interval", "30000"),
 					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.configuration_type", "CUSTOM"),
 					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.min_pause_between_checkpoints", "10000"),
-					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttr(resName, "monitoring_configuration.configuration_type", "CUSTOM"),
 					resource.TestCheckResourceAttr(resName, "monitoring_configuration.log_level", "WARN"),
 					resource.TestCheckResourceAttr(resName, "monitoring_configuration.metrics_level", "APPLICATION"),
@@ -198,7 +201,6 @@ func TestAccAWSKinesisAnalyticsApplication_flinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "parallelism_configuration.autoscaling_enabled", "true"),
 					resource.TestCheckResourceAttr(resName, "parallelism_configuration.parallelism", "1"),
 					resource.TestCheckResourceAttr(resName, "parallelism_configuration.parallelism_per_kpu", "1"),
-					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 				),
 			},
 			{
@@ -1002,6 +1004,14 @@ resource "aws_kinesis_analytics_application" "test" {
     "configuration_type" = "CUSTOM"
     "log_level"          = "WARN"
     "metrics_level"      = "APPLICATION"
+  }
+
+  property_groups {
+    property_group_id  = "abcdef"
+    property_map       = {
+	key1 = "val1"
+	key2 = "val2"
+    }
   }
 
   service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
