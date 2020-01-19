@@ -28,7 +28,7 @@ func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigVpcCreate(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksCustomLayerExists(resourceName, &opslayer),
+					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", "true"),
@@ -68,7 +68,7 @@ func TestAccAWSOpsworksCustomLayer_tags(t *testing.T) {
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigTags1(name, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksCustomLayerExists(resourceName, &opslayer),
+					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -81,7 +81,7 @@ func TestAccAWSOpsworksCustomLayer_tags(t *testing.T) {
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigTags2(name, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksCustomLayerExists(resourceName, &opslayer),
+					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -90,7 +90,7 @@ func TestAccAWSOpsworksCustomLayer_tags(t *testing.T) {
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigTags1(name, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksCustomLayerExists(resourceName, &opslayer),
+					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -112,7 +112,7 @@ func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigNoVpcCreate(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksCustomLayerExists(resourceName, &opslayer),
+					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
 					testAccCheckAWSOpsworksCreateLayerAttributes(&opslayer, stackName),
 					resource.TestCheckResourceAttr(resourceName, "name", stackName),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
@@ -161,8 +161,7 @@ func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSOpsworksCustomLayerExists(
-	n string, opslayer *opsworks.Layer) resource.TestCheckFunc {
+func testAccCheckAWSOpsworksLayerExists(n string, opslayer *opsworks.Layer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
