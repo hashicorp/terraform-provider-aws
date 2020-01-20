@@ -1055,7 +1055,6 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 				if err != nil {
 					return fmt.Errorf("Unable to add application outputs: %s", err)
 				}
-				version = version + 1
 			}
 		}
 		arn := d.Get("arn").(string)
