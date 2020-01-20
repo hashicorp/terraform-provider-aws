@@ -41628,6 +41628,9 @@ type ClientVpnEndpoint struct {
 	// The transport protocol used by the Client VPN endpoint.
 	TransportProtocol *string `locationName:"transportProtocol" type:"string" enum:"TransportProtocol"`
 
+	// The port number for the Client VPN endpoint.
+	VpnPort *int64 `locationName:"vpnPort" type:"integer"`
+
 	// The protocol used by the VPN session.
 	VpnProtocol *string `locationName:"vpnProtocol" type:"string" enum:"VpnProtocol"`
 }
@@ -41729,6 +41732,12 @@ func (s *ClientVpnEndpoint) SetTags(v []*Tag) *ClientVpnEndpoint {
 // SetTransportProtocol sets the TransportProtocol field's value.
 func (s *ClientVpnEndpoint) SetTransportProtocol(v string) *ClientVpnEndpoint {
 	s.TransportProtocol = &v
+	return s
+}
+
+// SetVpnPort sets the VpnPort field's value.
+func (s *ClientVpnEndpoint) SetVpnPort(v int64) *ClientVpnEndpoint {
+	s.VpnPort = &v
 	return s
 }
 
@@ -43205,6 +43214,13 @@ type CreateClientVpnEndpointInput struct {
 	//
 	// Default value: udp
 	TransportProtocol *string `type:"string" enum:"TransportProtocol"`
+
+	// The port number to assign to the Client VPN endpoint for TCP and UDP traffic.
+	//
+	// Valid Values: 443 | 1194
+	//
+	// Default Value: 443
+	VpnPort *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -43302,6 +43318,12 @@ func (s *CreateClientVpnEndpointInput) SetTagSpecifications(v []*TagSpecificatio
 // SetTransportProtocol sets the TransportProtocol field's value.
 func (s *CreateClientVpnEndpointInput) SetTransportProtocol(v string) *CreateClientVpnEndpointInput {
 	s.TransportProtocol = &v
+	return s
+}
+
+// SetVpnPort sets the VpnPort field's value.
+func (s *CreateClientVpnEndpointInput) SetVpnPort(v int64) *CreateClientVpnEndpointInput {
+	s.VpnPort = &v
 	return s
 }
 
@@ -82818,6 +82840,13 @@ type ModifyClientVpnEndpointInput struct {
 	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
 	// in the AWS Client VPN Administrator Guide.
 	SplitTunnel *bool `type:"boolean"`
+
+	// The port number to assign to the Client VPN endpoint for TCP and UDP traffic.
+	//
+	// Valid Values: 443 | 1194
+	//
+	// Default Value: 443
+	VpnPort *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -82882,6 +82911,12 @@ func (s *ModifyClientVpnEndpointInput) SetServerCertificateArn(v string) *Modify
 // SetSplitTunnel sets the SplitTunnel field's value.
 func (s *ModifyClientVpnEndpointInput) SetSplitTunnel(v bool) *ModifyClientVpnEndpointInput {
 	s.SplitTunnel = &v
+	return s
+}
+
+// SetVpnPort sets the VpnPort field's value.
+func (s *ModifyClientVpnEndpointInput) SetVpnPort(v int64) *ModifyClientVpnEndpointInput {
+	s.VpnPort = &v
 	return s
 }
 
