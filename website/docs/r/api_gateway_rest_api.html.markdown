@@ -44,7 +44,7 @@ The following arguments are supported:
 * `minimum_compression_size` - (Optional) Minimum response size to compress for the REST API. Integer between -1 and 10485760 (10MB). Setting a value greater than -1 will enable compression, -1 disables compression (default).
 * `body` - (Optional) An OpenAPI specification that defines the set of routes and integrations to create as part of the REST API.
 * `body_base_path` - (Optional) Together with OpenAPI specification in `body`, instructs how to interpret the `basePath` field. Defined below.
-* `policy` - (Optional) JSON formatted policy document that controls access to the API Gateway. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html)
+* `policy` - (Optional) JSON formatted policy document that controls access to the API Gateway. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 * `api_key_source` - (Optional) The source of the API key for requests. Valid values are HEADER (default) and AUTHORIZER.
 * `tags` - (Optional) Key-value mapping of resource tags
 
