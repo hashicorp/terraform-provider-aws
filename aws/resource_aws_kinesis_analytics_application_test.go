@@ -158,8 +158,8 @@ func TestAccAWSKinesisAnalyticsApplication_inputsKinesisFirehose(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisFirehose(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.kinesis_firehose.#", "1"),
 				),
 			},
 			{
@@ -190,17 +190,17 @@ func TestAccAWSKinesisAnalyticsApplication_flinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 					resource.TestCheckResourceAttr(resName, "property_groups.#", "1"),
 					resource.TestCheckResourceAttr(resName, "property_groups.0.property_group_id", "abcdef"),
-					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.checkpointing_enabled", "false"),
-					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.checkpoint_interval", "30000"),
-					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.min_pause_between_checkpoints", "10000"),
-					resource.TestCheckResourceAttr(resName, "monitoring_configuration.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resName, "monitoring_configuration.log_level", "WARN"),
-					resource.TestCheckResourceAttr(resName, "monitoring_configuration.metrics_level", "APPLICATION"),
-					resource.TestCheckResourceAttr(resName, "parallelism_configuration.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resName, "parallelism_configuration.autoscaling_enabled", "true"),
-					resource.TestCheckResourceAttr(resName, "parallelism_configuration.parallelism", "1"),
-					resource.TestCheckResourceAttr(resName, "parallelism_configuration.parallelism_per_kpu", "1"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.checkpointing_enabled", "false"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.checkpoint_interval", "30000"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.configuration_type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.min_pause_between_checkpoints", "10000"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.monitoring_configuration.configuration_type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.monitoring_configuration.log_level", "WARN"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.monitoring_configuration.metrics_level", "APPLICATION"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.configuration_type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.autoscaling_enabled", "true"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.parallelism", "1"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.parallelism_per_kpu", "1"),
 				),
 			},
 			{
@@ -233,7 +233,7 @@ func TestAccAWSKinesisAnalyticsApplication_flinkApplicationUpdate(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "parallelism_configuration.autoscaling_enabled", "false"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.autoscaling_enabled", "false"),
 				),
 			},
 			{
@@ -260,14 +260,14 @@ func TestAccAWSKinesisAnalyticsApplication_inputsKinesisStream(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_columns.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.name_prefix", "test_prefix"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
 				),
 			},
 			{
@@ -340,10 +340,10 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.0.count", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.name_prefix", "test_prefix"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
 				),
 			},
 			{
@@ -351,12 +351,12 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix2"),
-					resource.TestCheckResourceAttrPair(resName, "inputs.0.kinesis_stream.0.resource_arn", "aws_kinesis_stream.test", "arn"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.0.count", "2"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_columns.0.name", "test2"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.name_prefix", "test_prefix2"),
+					resource.TestCheckResourceAttrPair(resName, "sql_application_configuration.0.inputs.0.kinesis_stream.0.resource_arn", "aws_kinesis_stream.test", "arn"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.parallelism.0.count", "2"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.0.record_columns.0.name", "test2"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
 				),
 			},
 			{
@@ -384,11 +384,11 @@ func TestAccAWSKinesisAnalyticsApplication_outputsKinesisStream(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "JSON"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.name", "test_name"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.schema.0.record_format_type", "JSON"),
 				),
 			},
 			{
@@ -416,7 +416,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsMultiple(t *testing.T) {
 				Config: step,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "2"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.#", "2"),
 				),
 			},
 			{
@@ -445,7 +445,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.#", "0"),
 				),
 			},
 			{
@@ -485,11 +485,11 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "JSON"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.name", "test_name"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.schema.0.record_format_type", "JSON"),
 				),
 			},
 			{
@@ -497,12 +497,12 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name2"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttrPair(resName, "outputs.0.kinesis_stream.0.resource_arn", "aws_kinesis_stream.test", "arn"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.name", "test_name2"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttrPair(resName, "sql_application_configuration.0.outputs.0.kinesis_stream.0.resource_arn", "aws_kinesis_stream.test", "arn"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.schema.0.record_format_type", "CSV"),
 				),
 			},
 			{
@@ -568,9 +568,9 @@ func TestAccAWSKinesisAnalyticsApplication_Outputs_Lambda_Create(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "outputs.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "outputs.0.lambda.0.resource_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sql_application_configuration.0.outputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sql_application_configuration.0.outputs.0.lambda.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "sql_application_configuration.0.outputs.0.lambda.0.resource_arn", lambdaFunctionResourceName, "arn"),
 				),
 			},
 			{
@@ -597,12 +597,12 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSource(t *testing.T) {
 				Config: firstStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.0.schema.0.record_format.#", "1"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
+					resource.TestCheckResourceAttr(resName, "version", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.reference_data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.reference_data_sources.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.reference_data_sources.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.reference_data_sources.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
 				),
 			},
 			{
@@ -630,16 +630,16 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSourceUpdate(t *testing.
 				Config: firstStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resName, "version", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.reference_data_sources.#", "1"),
 				),
 			},
 			{
 				Config: secondStep,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
-					resource.TestCheckResourceAttr(resName, "version", "3"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resName, "version", "2"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.reference_data_sources.#", "1"),
 				),
 			},
 			{
@@ -881,31 +881,33 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.test.arn}"
 
-  inputs {
-    name_prefix = "test_prefix"
+  sql_application_configuration {
+    inputs {
+      name_prefix = "test_prefix"
 
-    kinesis_firehose {
-      resource_arn = "${aws_kinesis_firehose_delivery_stream.test.arn}"
-    }
-
-    parallelism {
-      count = 1
-    }
-
-    schema {
-      record_columns {
-        mapping  = "$.test"
-        name     = "test"
-        sql_type = "VARCHAR(8)"
+      kinesis_firehose {
+        resource_arn = "${aws_kinesis_firehose_delivery_stream.test.arn}"
       }
 
-      record_encoding = "UTF-8"
+      parallelism {
+        count = 1
+      }
 
-      record_format {
-        mapping_parameters {
-          csv {
-            record_column_delimiter = ","
-            record_row_delimiter    = "\n"
+      schema {
+        record_columns {
+          mapping  = "$.test"
+          name     = "test"
+          sql_type = "VARCHAR(8)"
+        }
+
+        record_encoding = "UTF-8"
+
+        record_format {
+          mapping_parameters {
+            csv {
+              record_column_delimiter = ","
+              record_row_delimiter    = "\n"
+            }
           }
         }
       }
@@ -985,25 +987,28 @@ resource "aws_kinesis_analytics_application" "test" {
   s3_bucket         = "${aws_s3_bucket.test.arn}"
   s3_object         = "${aws_s3_bucket_object.object.key}"
   code_content_type = "zip"
+  snapshots_enabled = true
 
-  checkpoint_configuration = {
-    checkpointing_enabled         = false
-    checkpoint_interval           = 30000
-    configuration_type            = "CUSTOM"
-    min_pause_between_checkpoints = 10000
-  }
+  flink_application_configuration {
+    checkpoint_configuration = {
+      checkpointing_enabled         = false
+      checkpoint_interval           = 30000
+      configuration_type            = "CUSTOM"
+      min_pause_between_checkpoints = 10000
+    }
 
-  parallelism_configuration = {
-    "configuration_type"  = "CUSTOM"
-    "autoscaling_enabled" = true
-    "parallelism"         = 1
-    "parallelism_per_kpu" = 1
-  }
+    parallelism_configuration = {
+      configuration_type  = "CUSTOM"
+      autoscaling_enabled = true
+      parallelism         = 1
+      parallelism_per_kpu = 1
+    }
 
-  monitoring_configuration = {
-    "configuration_type" = "CUSTOM"
-    "log_level"          = "WARN"
-    "metrics_level"      = "APPLICATION"
+    monitoring_configuration = {
+      configuration_type = "CUSTOM"
+      log_level          = "WARN"
+      metrics_level      = "APPLICATION"
+    }
   }
 
   property_groups {
@@ -1032,25 +1037,28 @@ resource "aws_kinesis_analytics_application" "test" {
   s3_bucket         = "${aws_s3_bucket.test.arn}"
   s3_object         = "${aws_s3_bucket_object.object.key}"
   code_content_type = "zip"
+  snapshots_enabled = true
 
-  checkpoint_configuration = {
-    checkpointing_enabled         = false
-    checkpoint_interval           = 30000
-    configuration_type            = "CUSTOM"
-    min_pause_between_checkpoints = 10000
-  }
+  flink_application_configuration {
+    checkpoint_configuration = {
+      checkpointing_enabled         = false
+      checkpoint_interval           = 30000
+      configuration_type            = "CUSTOM"
+      min_pause_between_checkpoints = 10000
+    }
 
-  parallelism_configuration = {
-    "configuration_type"  = "CUSTOM"
-    "autoscaling_enabled" = false
-    "parallelism"         = 1
-    "parallelism_per_kpu" = 1
-  }
+    parallelism_configuration = {
+      configuration_type  = "CUSTOM"
+      autoscaling_enabled = false
+      parallelism         = 1
+      parallelism_per_kpu = 1
+    }
 
-  monitoring_configuration = {
-    "configuration_type" = "CUSTOM"
-    "log_level"          = "WARN"
-    "metrics_level"      = "APPLICATION"
+    monitoring_configuration = {
+      configuration_type = "CUSTOM"
+      log_level          = "WARN"
+      metrics_level      = "APPLICATION"
+    }
   }
 
   service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
@@ -1076,30 +1084,32 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.test.arn}"
 
-  inputs {
-    name_prefix = "test_prefix"
+  sql_application_configuration {
+    inputs {
+      name_prefix = "test_prefix"
 
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test.arn}"
-    }
-
-    parallelism {
-      count = 1
-    }
-
-    schema {
-      record_columns {
-        mapping  = "$.test"
-        name     = "test"
-        sql_type = "VARCHAR(8)"
+      kinesis_stream {
+        resource_arn = "${aws_kinesis_stream.test.arn}"
       }
 
-      record_encoding = "UTF-8"
+      parallelism {
+        count = 1
+      }
 
-      record_format {
-        mapping_parameters {
-          json {
-            record_row_path = "$"
+      schema {
+        record_columns {
+          mapping  = "$.test"
+          name     = "test"
+          sql_type = "VARCHAR(8)"
+        }
+
+        record_encoding = "UTF-8"
+
+        record_format {
+          mapping_parameters {
+            json {
+              record_row_path = "$"
+            }
           }
         }
       }
@@ -1123,31 +1133,33 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.test.arn}"
 
-  inputs {
-    name_prefix = "test_prefix2"
+  sql_application_configuration {
+    inputs {
+      name_prefix = "test_prefix2"
 
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test.arn}"
-    }
-
-    parallelism {
-      count = 2
-    }
-
-    schema {
-      record_columns {
-        mapping  = "$.test2"
-        name     = "test2"
-        sql_type = "VARCHAR(8)"
+      kinesis_stream {
+        resource_arn = "${aws_kinesis_stream.test.arn}"
       }
 
-      record_encoding = "UTF-8"
+      parallelism {
+        count = 2
+      }
 
-      record_format {
-        mapping_parameters {
-          csv {
-            record_column_delimiter = ","
-            record_row_delimiter    = "\n"
+      schema {
+        record_columns {
+          mapping  = "$.test2"
+          name     = "test2"
+          sql_type = "VARCHAR(8)"
+        }
+
+        record_encoding = "UTF-8"
+
+        record_format {
+          mapping_parameters {
+            csv {
+              record_column_delimiter = ","
+              record_row_delimiter    = "\n"
+            }
           }
         }
       }
@@ -1171,15 +1183,17 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.test.arn}"
 
-  outputs {
-    name = "test_name"
+  sql_application_configuration {
+    outputs {
+      name = "test_name"
 
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test.arn}"
-    }
+      kinesis_stream {
+        resource_arn = "${aws_kinesis_stream.test.arn}"
+      }
 
-    schema {
-      record_format_type = "JSON"
+      schema {
+        record_format_type = "JSON"
+      }
     }
   }
 }
@@ -1222,27 +1236,29 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
 
-  outputs {
-    name = "test_name1"
+  sql_application_configuration {
+    outputs {
+      name = "test_name1"
 
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test1.arn}"
+      kinesis_stream {
+        resource_arn = "${aws_kinesis_stream.test1.arn}"
+      }
+
+      schema {
+        record_format_type = "JSON"
+      }
     }
 
-    schema {
-      record_format_type = "JSON"
-    }
-  }
+    outputs {
+      name = "test_name2"
 
-  outputs {
-    name = "test_name2"
+      kinesis_stream {
+        resource_arn = "${aws_kinesis_stream.test2.arn}"
+      }
 
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test2.arn}"
-    }
-
-    schema {
-      record_format_type = "JSON"
+      schema {
+        record_format_type = "JSON"
+      }
     }
   }
 }
@@ -1307,15 +1323,17 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.test.arn}"
 
-  outputs {
-    name = "test_name"
+  sql_application_configuration {
+    outputs {
+      name = "test_name"
 
-    lambda {
-      resource_arn = "${aws_lambda_function.test.arn}"
-    }
+      lambda {
+        resource_arn = "${aws_lambda_function.test.arn}"
+      }
 
-    schema {
-      record_format_type = "JSON"
+      schema {
+        record_format_type = "JSON"
+      }
     }
   }
 }
@@ -1336,15 +1354,17 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.test.arn}"
 
-  outputs {
-    name = "test_name2"
+  sql_application_configuration {
+    outputs {
+      name = "test_name2"
 
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test.arn}"
-    }
+      kinesis_stream {
+        resource_arn = "${aws_kinesis_stream.test.arn}"
+      }
 
-    schema {
-      record_format_type = "CSV"
+      schema {
+        record_format_type = "CSV"
+      }
     }
   }
 }
@@ -1364,27 +1384,29 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.test.arn}"
 
-  reference_data_sources {
-    table_name = "test_table"
+  sql_application_configuration {
+    reference_data_sources {
+      table_name = "test_table"
 
-    s3 {
-      bucket_arn = "${aws_s3_bucket.test.arn}"
-      file_key   = "test_file_key"
-    }
-
-    schema {
-      record_columns {
-        mapping  = "$.test"
-        name     = "test"
-        sql_type = "VARCHAR(8)"
+      s3 {
+        bucket_arn = "${aws_s3_bucket.test.arn}"
+        file_key   = "test_file_key"
       }
 
-      record_encoding = "UTF-8"
+      schema {
+        record_columns {
+          mapping  = "$.test"
+          name     = "test"
+          sql_type = "VARCHAR(8)"
+        }
 
-      record_format {
-        mapping_parameters {
-          json {
-            record_row_path = "$"
+        record_encoding = "UTF-8"
+
+        record_format {
+          mapping_parameters {
+            json {
+              record_row_path = "$"
+            }
           }
         }
       }
@@ -1407,28 +1429,30 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.test.arn}"
 
-  reference_data_sources {
-    table_name = "test_table2"
+  sql_application_configuration {
+    reference_data_sources {
+      table_name = "test_table2"
 
-    s3 {
-      bucket_arn = "${aws_s3_bucket.test.arn}"
-      file_key   = "test_file_key"
-    }
-
-    schema {
-      record_columns {
-        mapping  = "$.test2"
-        name     = "test2"
-        sql_type = "VARCHAR(8)"
+      s3 {
+        bucket_arn = "${aws_s3_bucket.test.arn}"
+        file_key   = "test_file_key"
       }
 
-      record_encoding = "UTF-8"
+      schema {
+        record_columns {
+          mapping  = "$.test2"
+          name     = "test2"
+          sql_type = "VARCHAR(8)"
+        }
 
-      record_format {
-        mapping_parameters {
-          csv {
-            record_column_delimiter = ","
-            record_row_delimiter    = "\n"
+        record_encoding = "UTF-8"
+
+        record_format {
+          mapping_parameters {
+            csv {
+              record_column_delimiter = ","
+              record_row_delimiter    = "\n"
+            }
           }
         }
       }

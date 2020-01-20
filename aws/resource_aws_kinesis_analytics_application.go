@@ -140,160 +140,126 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 					},
 				},
 			},
-
-			"checkpoint_configuration": {
-				Type:     schema.TypeMap,
+			"snapshots_enabled": {
+				Type:     schema.TypeBool,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"checkpoint_interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  60000,
-						},
-						"checkpointing_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"configuration_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
-							ValidateFunc: validateKinesisAnalyticsConfigurationType,
-						},
-						"min_pause_between_checkpoints": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  5000,
-						},
-					},
-				},
-			},
-			// Flink only
-			"monitoring_configuration": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configuration_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
-							ValidateFunc: validateKinesisAnalyticsConfigurationType,
-						},
-						"log_level": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateLogLevel,
-						},
-						"metrics_level": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateKineisAnalyticsMetricsLevel,
-						},
-					},
-				},
-			},
-			// Flink only
-			"parallelism_configuration": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_scaling": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"configuration_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
-							ValidateFunc: validateKinesisAnalyticsConfigurationType,
-						},
-						"parallelism": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"parallelism_per_kpu": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-					},
-				},
 			},
 
-			// SQL only
-			"inputs": {
+			"flink_application_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"kinesis_firehose": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+						"checkpoint_configuration": {
+							Type:       schema.TypeMap,
+							Optional:   true,
+							ConfigMode: schema.SchemaConfigModeAttr,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"resource_arn": {
+									"checkpoint_interval": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  60000,
+									},
+									"checkpointing_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"configuration_type": {
 										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateArn,
+										Optional:     true,
+										Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
+										ValidateFunc: validateKinesisAnalyticsConfigurationType,
+									},
+									"min_pause_between_checkpoints": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  5000,
 									},
 								},
 							},
 						},
-
-						"kinesis_stream": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+						// Flink only
+						"monitoring_configuration": {
+							Type:       schema.TypeMap,
+							Optional:   true,
+							ConfigMode: schema.SchemaConfigModeAttr,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"resource_arn": {
+									"configuration_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
+										ValidateFunc: validateKinesisAnalyticsConfigurationType,
+									},
+									"log_level": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: validateLogLevel,
+									},
+									"metrics_level": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateKineisAnalyticsMetricsLevel,
 									},
 								},
 							},
 						},
-
-						"name_prefix": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"parallelism": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+						// Flink only
+						"parallelism_configuration": {
+							Type:       schema.TypeMap,
+							Optional:   true,
+							ConfigMode: schema.SchemaConfigModeAttr,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"count": {
+									"autoscaling_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									"configuration_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
+										ValidateFunc: validateKinesisAnalyticsConfigurationType,
+									},
+									"parallelism": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+									"parallelism_per_kpu": {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
 								},
 							},
 						},
+					},
+				},
+			},
 
-						"processing_configuration": {
+			"sql_application_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"inputs": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"lambda": {
+									"id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"kinesis_firehose": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -305,327 +271,254 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 											},
 										},
 									},
-								},
-							},
-						},
 
-						"schema": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"record_columns": {
+									"kinesis_stream": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"mapping": {
-													Type:     schema.TypeString,
-													Optional: true,
+												"resource_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateArn,
 												},
+											},
+										},
+									},
 
-												"name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
+									"name_prefix": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
 
-												"sql_type": {
-													Type:     schema.TypeString,
+									"parallelism": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"count": {
+													Type:     schema.TypeInt,
 													Required: true,
 												},
 											},
 										},
 									},
 
-									"record_encoding": {
-										Type:     schema.TypeString,
+									"processing_configuration": {
+										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"lambda": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"resource_arn": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validateArn,
+															},
+														},
+													},
+												},
+											},
+										},
 									},
 
-									"record_format": {
+									"schema": {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"mapping_parameters": {
+												"record_columns": {
 													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
+													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"csv": {
-																Type:     schema.TypeList,
+															"mapping": {
+																Type:     schema.TypeString,
 																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_column_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-
-																		"record_row_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
 															},
 
-															"json": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_row_path": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
+															"name": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+
+															"sql_type": {
+																Type:     schema.TypeString,
+																Required: true,
 															},
 														},
 													},
 												},
 
-												"record_format_type": {
+												"record_encoding": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												"record_format": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"mapping_parameters": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"csv": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"record_column_delimiter": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+
+																					"record_row_delimiter": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+
+																		"json": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"record_row_path": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+
+															"record_format_type": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+
+									"starting_position_configuration": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"starting_position": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
 											},
 										},
 									},
+
+									"stream_names": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
 								},
 							},
 						},
 
-						"starting_position_configuration": {
+						"outputs": {
 							Type:     schema.TypeList,
-							Computed: true,
+							Optional: true,
+							MaxItems: 3,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"starting_position": {
+									"id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-								},
-							},
-						},
 
-						"stream_names": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-
-			"outputs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 3,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"kinesis_firehose": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateArn,
-									},
-								},
-							},
-						},
-
-						"kinesis_stream": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateArn,
-									},
-								},
-							},
-						},
-
-						"lambda": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateArn,
-									},
-								},
-							},
-						},
-
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"schema": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"record_format_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											kinesisanalyticsv2.RecordFormatTypeCsv,
-											kinesisanalyticsv2.RecordFormatTypeJson,
-										}, false),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-
-			"reference_data_sources": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"s3": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bucket_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateArn,
-									},
-
-									"file_key": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"object_version": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-
-						"schema": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"record_columns": {
+									"kinesis_firehose": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"mapping": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-
-												"name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-
-												"sql_type": {
-													Type:     schema.TypeString,
-													Required: true,
+												"resource_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateArn,
 												},
 											},
 										},
 									},
 
-									"record_encoding": {
-										Type:     schema.TypeString,
+									"kinesis_stream": {
+										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"resource_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateArn,
+												},
+											},
+										},
 									},
 
-									"record_format": {
+									"lambda": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"resource_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateArn,
+												},
+											},
+										},
+									},
+
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"schema": {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"mapping_parameters": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"csv": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_column_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-
-																		"record_row_delimiter": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-
-															"json": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"record_row_path": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-
 												"record_format_type": {
 													Type:     schema.TypeString,
-													Computed: true,
+													Optional: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														kinesisanalyticsv2.RecordFormatTypeCsv,
+														kinesisanalyticsv2.RecordFormatTypeJson,
+													}, false),
 												},
 											},
 										},
@@ -634,9 +527,140 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 							},
 						},
 
-						"table_name": {
-							Type:     schema.TypeString,
-							Required: true,
+						"reference_data_sources": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"s3": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bucket_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateArn,
+												},
+
+												"file_key": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"object_version": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+
+									"schema": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"record_columns": {
+													Type:     schema.TypeList,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"mapping": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"name": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+
+															"sql_type": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+
+												"record_encoding": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												"record_format": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"mapping_parameters": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"csv": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"record_column_delimiter": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+
+																					"record_row_delimiter": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+
+																		"json": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"record_row_path": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+
+															"record_format_type": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+
+									"table_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -644,6 +668,11 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 			"tags": tagsSchema(),
 		},
 	}
+}
+
+func runtimeIsFlink(runtime string) bool {
+	return runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
+		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18
 }
 
 func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta interface{}) error {
@@ -660,13 +689,18 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 	var flinkApplicationConfiguration *kinesisanalyticsv2.FlinkApplicationConfiguration
 	switch {
 	case strings.HasPrefix(runtime, "SQL"):
+		sqlConfig, ok := d.GetOk("sql_application_configuration")
+		if !ok {
+			break
+		}
 		sqlApplicationConfiguration = &kinesisanalyticsv2.SqlApplicationConfiguration{}
-		if v, ok := d.GetOk("inputs"); ok {
-			i := v.([]interface{})[0].(map[string]interface{})
+		sc := sqlConfig.([]interface{})[0].(map[string]interface{})
+		if v := sc["inputs"].([]interface{}); len(v) > 0 {
+			i := v[0].(map[string]interface{})
 			inputs := expandKinesisAnalyticsInputs(i)
 			sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{inputs}
 		}
-		if v := d.Get("outputs").([]interface{}); len(v) > 0 {
+		if v := sc["outputs"].([]interface{}); len(v) > 0 {
 			outputs := make([]*kinesisanalyticsv2.Output, 0)
 			for _, o := range v {
 				output := expandKinesisAnalyticsOutputs(o.(map[string]interface{}))
@@ -674,17 +708,25 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 			}
 			sqlApplicationConfiguration.Outputs = outputs
 		}
+		if v := sc["reference_data_sources"].([]interface{}); len(v) > 0 {
+			references := make([]*kinesisanalyticsv2.ReferenceDataSource, 0)
+			for _, r := range v {
+				references = append(references, expandKinesisAnalyticsReferenceData(r.(map[string]interface{})))
+			}
+			sqlApplicationConfiguration.ReferenceDataSources = references
+		}
 	case strings.HasPrefix(runtime, "FLINK"):
 		flinkApplicationConfiguration = &kinesisanalyticsv2.FlinkApplicationConfiguration{}
-		if v, ok := d.GetOk("checkpoint_configuration"); ok {
+		fc := d.Get("flink_application_configuration").([]interface{})[0].(map[string]interface{})
+		if v, ok := fc["checkpoint_configuration"]; ok {
 			m := v.(map[string]interface{})
 			flinkApplicationConfiguration.CheckpointConfiguration = expandCheckpointConfiguration(m)
 		}
-		if v, ok := d.GetOk("monitoring_configuration"); ok {
+		if v, ok := fc["monitoring_configuration"]; ok {
 			m := v.(map[string]interface{})
-			flinkApplicationConfiguration.MonitoringConfiguration = expandMonitoringConfiguration(m)
+			flinkApplicationConfiguration.MonitoringConfiguration = expandKinesisAnalyticsMonitoringConfiguration(m)
 		}
-		if v, ok := d.GetOk("parallelism_configuration"); ok {
+		if v, ok := fc["parallelism_configuration"]; ok {
 			m := v.(map[string]interface{})
 			flinkApplicationConfiguration.ParallelismConfiguration = expandParallelismConfiguration(m)
 		}
@@ -716,6 +758,13 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 			PropertyGroups: expandPropertyGroups(m),
 		}
 	}
+	var snapshotConfig *kinesisanalyticsv2.ApplicationSnapshotConfiguration
+	if v, ok := d.GetOk("snapshots_enabled"); ok {
+		snapshotsEnabled, _ := v.(bool)
+		snapshotConfig = &kinesisanalyticsv2.ApplicationSnapshotConfiguration{
+			SnapshotsEnabled: aws.Bool(snapshotsEnabled),
+		}
+	}
 
 	var textContent *string
 	if textCode != "" {
@@ -727,9 +776,10 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		ApplicationName:      aws.String(name),
 		ServiceExecutionRole: aws.String(serviceExecutionRole),
 		ApplicationConfiguration: &kinesisanalyticsv2.ApplicationConfiguration{
-			SqlApplicationConfiguration:   sqlApplicationConfiguration,
-			FlinkApplicationConfiguration: flinkApplicationConfiguration,
-			EnvironmentProperties:         environmentProperties,
+			SqlApplicationConfiguration:      sqlApplicationConfiguration,
+			FlinkApplicationConfiguration:    flinkApplicationConfiguration,
+			EnvironmentProperties:            environmentProperties,
+			ApplicationSnapshotConfiguration: snapshotConfig,
 			ApplicationCodeConfiguration: &kinesisanalyticsv2.ApplicationCodeConfiguration{
 				CodeContent: &kinesisanalyticsv2.CodeContent{
 					S3ContentLocation: s3ContentLocation,
@@ -838,50 +888,29 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
 	}
 
+	if resp.ApplicationDetail.ApplicationConfigurationDescription.EnvironmentPropertyDescriptions != nil {
+		if err := d.Set("property_groups", flattenKinesisAnalyticsPropertyGroups(resp.ApplicationDetail.ApplicationConfigurationDescription.EnvironmentPropertyDescriptions.PropertyGroupDescriptions)); err != nil {
+			return fmt.Errorf("error setting property_groups: %s", err)
+		}
+	}
+
 	runtime := aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment)
 	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
 		if resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription != nil {
-			if err := d.Set("inputs", flattenKinesisAnalyticsInputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions)); err != nil {
-				return fmt.Errorf("error setting inputs: %s", err)
-			}
-
-			if err := d.Set("outputs", flattenKinesisAnalyticsOutputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.OutputDescriptions)); err != nil {
-				return fmt.Errorf("error setting outputs: %s", err)
-			}
-
-			if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.ReferenceDataSourceDescriptions)); err != nil {
-				return fmt.Errorf("error setting reference_data_sources: %s", err)
+			if err := d.Set("sql_application_configuration", flattenSqlApplicationConfigurationDescription(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription)); err != nil {
+				return fmt.Errorf("error setting sql_application_configuration: %s", err)
 			}
 		}
-	}
-	if err := d.Set("property_groups", flattenKinesisAnalyticsPropertyGroups(resp.ApplicationDetail.ApplicationConfigurationDescription.EnvironmentPropertyDescriptions.PropertyGroupDescriptions)); err != nil {
-		return fmt.Errorf("error setting property_groups: %s", err)
 	}
 	if runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
 		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18 {
-
-		if err := d.Set("checkpoint_configuration", map[string]interface{}{
-			"checkpoint_interval":           strconv.FormatInt(aws.Int64Value(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.CheckpointConfigurationDescription.CheckpointInterval), 10),
-			"checkpointing_enabled":         strconv.FormatBool(aws.BoolValue(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.CheckpointConfigurationDescription.CheckpointingEnabled)),
-			"configuration_type":            aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.CheckpointConfigurationDescription.ConfigurationType),
-			"min_pause_between_checkpoints": strconv.FormatInt(aws.Int64Value(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.CheckpointConfigurationDescription.MinPauseBetweenCheckpoints), 10),
-		}); err != nil {
-			return fmt.Errorf("error setting checkpoint_configuration: %s", err)
+		if err := d.Set("flink_application_configuration", flattenFlinkApplicationConfigurationDescription(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription)); err != nil {
+			return fmt.Errorf("error setting flink_application_configuration: %s", err)
 		}
-		if err := d.Set("monitoring_configuration", map[string]interface{}{
-			"configuration_type": aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.MonitoringConfigurationDescription.ConfigurationType),
-			"log_level":          aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.MonitoringConfigurationDescription.LogLevel),
-			"metrics_level":      aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.MonitoringConfigurationDescription.MetricsLevel),
-		}); err != nil {
-			return fmt.Errorf("error setting monitoring_configuration: %+s", err)
-		}
-		if err := d.Set("parallelism_configuration", map[string]interface{}{
-			"autoscaling_enabled": strconv.FormatBool(aws.BoolValue(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.ParallelismConfigurationDescription.AutoScalingEnabled)),
-			"configuration_type":  aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.ParallelismConfigurationDescription.ConfigurationType),
-			"parallelism":         strconv.FormatInt(aws.Int64Value(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.ParallelismConfigurationDescription.Parallelism), 10),
-			"parallelism_per_kpu": strconv.FormatInt(aws.Int64Value(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.ParallelismConfigurationDescription.ParallelismPerKPU), 10),
-		}); err != nil {
-			return fmt.Errorf("error setting parallelism_configuration: %+s", err)
+	}
+	if resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationSnapshotConfigurationDescription != nil {
+		if err := d.Set("snapshots_enabled", aws.BoolValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationSnapshotConfigurationDescription.SnapshotsEnabled)); err != nil {
+			return fmt.Errorf("error setting snapshots_enabled: %s", err)
 		}
 	}
 
@@ -909,7 +938,6 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 		version = 1
 	}
 
-	runtime := d.Get("runtime").(string)
 	if !d.IsNewResource() {
 		updateApplicationOpts := &kinesisanalyticsv2.UpdateApplicationInput{
 			ApplicationName:             aws.String(name),
@@ -962,119 +990,11 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 				version = version + 1
 			}
 		}
-
-		if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
-			oldInputs, newInputs := d.GetChange("inputs")
-			if len(oldInputs.([]interface{})) == 0 && len(newInputs.([]interface{})) > 0 {
-				if v, ok := d.GetOk("inputs"); ok {
-					i := v.([]interface{})[0].(map[string]interface{})
-					input := expandKinesisAnalyticsInputs(i)
-					addOpts := &kinesisanalyticsv2.AddApplicationInputInput{
-						ApplicationName:             aws.String(name),
-						CurrentApplicationVersionId: aws.Int64(int64(version)),
-						Input:                       input,
-					}
-					// Retry for IAM eventual consistency
-					err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-						_, err := conn.AddApplicationInput(addOpts)
-						if err != nil {
-							if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-								return resource.RetryableError(err)
-							}
-							// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
-							if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
-								return resource.RetryableError(err)
-							}
-							return resource.NonRetryableError(err)
-						}
-						return nil
-					})
-					if isResourceTimeoutError(err) {
-						_, err = conn.AddApplicationInput(addOpts)
-					}
-
-					if err != nil {
-						return fmt.Errorf("Unable to add application inputs: %s", err)
-					}
-					version = version + 1
-				}
-			}
-
-			oldOutputs, newOutputs := d.GetChange("outputs")
-			if len(oldOutputs.([]interface{})) == 0 && len(newOutputs.([]interface{})) > 0 {
-				if v, ok := d.GetOk("outputs"); ok {
-					o := v.([]interface{})[0].(map[string]interface{})
-					output := expandKinesisAnalyticsOutputs(o)
-					addOpts := &kinesisanalyticsv2.AddApplicationOutputInput{
-						ApplicationName:             aws.String(name),
-						CurrentApplicationVersionId: aws.Int64(int64(version)),
-						Output:                      output,
-					}
-					// Retry for IAM eventual consistency
-					err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-						_, err := conn.AddApplicationOutput(addOpts)
-						if err != nil {
-							if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-								return resource.RetryableError(err)
-							}
-							// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
-							if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
-								return resource.RetryableError(err)
-							}
-							return resource.NonRetryableError(err)
-						}
-						return nil
-					})
-					if isResourceTimeoutError(err) {
-						_, err = conn.AddApplicationOutput(addOpts)
-					}
-					if err != nil {
-						return fmt.Errorf("Unable to add application outputs: %s", err)
-					}
-					version = version + 1
-				}
-			}
-		}
 		arn := d.Get("arn").(string)
 		if d.HasChange("tags") {
 			o, n := d.GetChange("tags")
-
 			if err := keyvaluetags.Kinesisanalyticsv2UpdateTags(conn, arn, o, n); err != nil {
 				return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
-			}
-		}
-	}
-	oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
-	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 &&
-		len(oldReferenceData.([]interface{})) == 0 && len(newReferenceData.([]interface{})) > 0 {
-
-		if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 {
-			for _, r := range v {
-				rd := r.(map[string]interface{})
-				referenceData := expandKinesisAnalyticsReferenceData(rd)
-				addOpts := &kinesisanalyticsv2.AddApplicationReferenceDataSourceInput{
-					ApplicationName:             aws.String(name),
-					CurrentApplicationVersionId: aws.Int64(int64(version)),
-					ReferenceDataSource:         referenceData,
-				}
-				// Retry for IAM eventual consistency
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.AddApplicationReferenceDataSource(addOpts)
-					if err != nil {
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
-					}
-					return nil
-				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationReferenceDataSource(addOpts)
-				}
-				if err != nil {
-					return fmt.Errorf("Unable to add application reference data source: %s", err)
-				}
-				version = version + 1
 			}
 		}
 	}
@@ -1343,52 +1263,40 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 		var inputsUpdate []*kinesisanalyticsv2.InputUpdate
 		var outputsUpdate []*kinesisanalyticsv2.OutputUpdate
 		var referenceDataUpdate []*kinesisanalyticsv2.ReferenceDataSourceUpdate
-		oldInputs, newInputs := d.GetChange("inputs")
-		if len(oldInputs.([]interface{})) > 0 && len(newInputs.([]interface{})) > 0 {
-			if v, ok := d.GetOk("inputs"); ok {
-				vL := v.([]interface{})[0].(map[string]interface{})
-				inputsUpdate = []*kinesisanalyticsv2.InputUpdate{expandKinesisAnalyticsInputUpdate(vL)}
+
+		if d.HasChange("sql_application_configuration") {
+			sc := d.Get("sql_application_configuration").([]interface{})[0].(map[string]interface{})
+			if iConf, ok := sc["inputs"].([]interface{}); ok && len(iConf) > 0 {
+				inputsUpdate = []*kinesisanalyticsv2.InputUpdate{expandKinesisAnalyticsInputUpdate(iConf[0].(map[string]interface{}))}
 			}
-		}
-
-		oldOutputs, newOutputs := d.GetChange("outputs")
-		if len(oldOutputs.([]interface{})) > 0 && len(newOutputs.([]interface{})) > 0 {
-			if v, ok := d.GetOk("outputs"); ok {
-				vL := v.([]interface{})[0].(map[string]interface{})
-				outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{expandKinesisAnalyticsOutputUpdate(vL)}
+			if oConf, ok := sc["outputs"].([]interface{}); ok && len(oConf) > 0 {
+				outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{expandKinesisAnalyticsOutputUpdate(oConf[0].(map[string]interface{}))}
 			}
-		}
-
-		oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
-		if len(oldReferenceData.([]interface{})) > 0 && len(newReferenceData.([]interface{})) > 0 {
-			if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 {
-				for _, rd := range v {
-					rdL := rd.(map[string]interface{})
-					rdsu := &kinesisanalyticsv2.ReferenceDataSourceUpdate{
-						ReferenceId:     aws.String(rdL["id"].(string)),
-						TableNameUpdate: aws.String(rdL["table_name"].(string)),
-					}
-
-					if v := rdL["s3"].([]interface{}); len(v) > 0 {
-						vL := v[0].(map[string]interface{})
-						s3rdsu := &kinesisanalyticsv2.S3ReferenceDataSourceUpdate{
-							BucketARNUpdate: aws.String(vL["bucket_arn"].(string)),
-							FileKeyUpdate:   aws.String(vL["file_key"].(string)),
-						}
-						rdsu.S3ReferenceDataSourceUpdate = s3rdsu
-					}
-
-					if v := rdL["schema"].([]interface{}); len(v) > 0 {
-						vL := v[0].(map[string]interface{})
-						ss := expandKinesisAnalyticsSourceSchema(vL)
-						rdsu.ReferenceSchemaUpdate = ss
-					}
-
-					referenceDataUpdate = append(referenceDataUpdate, rdsu)
+			rConf := sc["reference_data_sources"].([]interface{})
+			for _, rd := range rConf {
+				rdL := rd.(map[string]interface{})
+				rdsu := &kinesisanalyticsv2.ReferenceDataSourceUpdate{
+					ReferenceId:     aws.String(rdL["id"].(string)),
+					TableNameUpdate: aws.String(rdL["table_name"].(string)),
 				}
+
+				if v := rdL["s3"].([]interface{}); len(v) > 0 {
+					vL := v[0].(map[string]interface{})
+					s3rdsu := &kinesisanalyticsv2.S3ReferenceDataSourceUpdate{
+						BucketARNUpdate: aws.String(vL["bucket_arn"].(string)),
+						FileKeyUpdate:   aws.String(vL["file_key"].(string)),
+					}
+					rdsu.S3ReferenceDataSourceUpdate = s3rdsu
+				}
+
+				if v := rdL["schema"].([]interface{}); len(v) > 0 {
+					vL := v[0].(map[string]interface{})
+					ss := expandKinesisAnalyticsSourceSchema(vL)
+					rdsu.ReferenceSchemaUpdate = ss
+				}
+
+				referenceDataUpdate = append(referenceDataUpdate, rdsu)
 			}
-		}
-		if inputsUpdate != nil || outputsUpdate != nil || referenceDataUpdate != nil {
 			sqlUpdate = &kinesisanalyticsv2.SqlApplicationConfigurationUpdate{
 				InputUpdates:               inputsUpdate,
 				OutputUpdates:              outputsUpdate,
@@ -1404,39 +1312,30 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 		var checkpointUpdate *kinesisanalyticsv2.CheckpointConfigurationUpdate
 		var monitoringUpdate *kinesisanalyticsv2.MonitoringConfigurationUpdate
 		var parallelismUpdate *kinesisanalyticsv2.ParallelismConfigurationUpdate
-		oldConfig, newConfig := d.GetChange("checkpoint_configuration")
-		if oldConfig != nil || newConfig != nil {
-			if v := d.Get("checkpoint_configuration").(map[string]interface{}); len(v) > 0 {
-				checkpointConfig := expandCheckpointConfiguration(v)
-				checkpointUpdate = &kinesisanalyticsv2.CheckpointConfigurationUpdate{
-					CheckpointIntervalUpdate:         checkpointConfig.CheckpointInterval,
-					CheckpointingEnabledUpdate:       checkpointConfig.CheckpointingEnabled,
-					ConfigurationTypeUpdate:          checkpointConfig.ConfigurationType,
-					MinPauseBetweenCheckpointsUpdate: checkpointConfig.MinPauseBetweenCheckpoints,
-				}
+		if d.HasChange("flink_application_configuration") {
+			fc := d.Get("flink_application_configuration").([]interface{})[0].(map[string]interface{})
+			cpConf := fc["checkpoint_configuration"].(map[string]interface{})
+			checkpointConfig := expandCheckpointConfiguration(cpConf)
+			checkpointUpdate = &kinesisanalyticsv2.CheckpointConfigurationUpdate{
+				CheckpointIntervalUpdate:         checkpointConfig.CheckpointInterval,
+				CheckpointingEnabledUpdate:       checkpointConfig.CheckpointingEnabled,
+				ConfigurationTypeUpdate:          checkpointConfig.ConfigurationType,
+				MinPauseBetweenCheckpointsUpdate: checkpointConfig.MinPauseBetweenCheckpoints,
 			}
-		}
-		oldConfig, newConfig = d.GetChange("monitoring_configuration")
-		if oldConfig != nil || newConfig != nil {
-			if v := d.Get("monitoring_configuration").(map[string]interface{}); len(v) > 0 {
-				monitoringConfig := expandMonitoringConfiguration(v)
-				monitoringUpdate = &kinesisanalyticsv2.MonitoringConfigurationUpdate{
-					ConfigurationTypeUpdate: monitoringConfig.ConfigurationType,
-					LogLevelUpdate:          monitoringConfig.LogLevel,
-					MetricsLevelUpdate:      monitoringConfig.MetricsLevel,
-				}
+			montConf := fc["monitoring_configuration"].(map[string]interface{})
+			monitoringConfig := expandKinesisAnalyticsMonitoringConfiguration(montConf)
+			monitoringUpdate = &kinesisanalyticsv2.MonitoringConfigurationUpdate{
+				ConfigurationTypeUpdate: monitoringConfig.ConfigurationType,
+				LogLevelUpdate:          monitoringConfig.LogLevel,
+				MetricsLevelUpdate:      monitoringConfig.MetricsLevel,
 			}
-		}
-		oldConfig, newConfig = d.GetChange("parallelism_configuration")
-		if oldConfig != nil || newConfig != nil {
-			if v := d.Get("parallelism_configuration").(map[string]interface{}); len(v) > 0 {
-				parallelismConfig := expandParallelismConfiguration(v)
-				parallelismUpdate = &kinesisanalyticsv2.ParallelismConfigurationUpdate{
-					AutoScalingEnabledUpdate: parallelismConfig.AutoScalingEnabled,
-					ConfigurationTypeUpdate:  parallelismConfig.ConfigurationType,
-					ParallelismUpdate:        parallelismConfig.Parallelism,
-					ParallelismPerKPUUpdate:  parallelismConfig.ParallelismPerKPU,
-				}
+			paraConf := fc["parallelism_configuration"].(map[string]interface{})
+			parallelismConfig := expandParallelismConfiguration(paraConf)
+			parallelismUpdate = &kinesisanalyticsv2.ParallelismConfigurationUpdate{
+				AutoScalingEnabledUpdate: parallelismConfig.AutoScalingEnabled,
+				ConfigurationTypeUpdate:  parallelismConfig.ConfigurationType,
+				ParallelismUpdate:        parallelismConfig.Parallelism,
+				ParallelismPerKPUUpdate:  parallelismConfig.ParallelismPerKPU,
 			}
 		}
 
@@ -1450,19 +1349,26 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 	}
 
 	var propertyGroupsUpdate *kinesisanalyticsv2.EnvironmentPropertyUpdates
-	oldPropertyGroups, newPropertyGroups := d.GetChange("property_groups")
-	if oldPropertyGroups != nil || newPropertyGroups != nil {
+	if d.HasChange("property_groups") {
 		propertyGroupsUpdate = &kinesisanalyticsv2.EnvironmentPropertyUpdates{
 			PropertyGroups: expandPropertyGroups(d.Get("property_groups").([]interface{})),
 		}
 	}
 
-	if flinkUpdate != nil || propertyGroupsUpdate != nil {
+	var snapshotUpdate *kinesisanalyticsv2.ApplicationSnapshotConfigurationUpdate
+	if d.HasChange("snapshots_enabled") {
+		snapshotUpdate = &kinesisanalyticsv2.ApplicationSnapshotConfigurationUpdate{
+			SnapshotsEnabledUpdate: aws.Bool(d.Get("snapshots_enabled").(bool)),
+		}
+	}
+
+	if sqlUpdate != nil || flinkUpdate != nil || propertyGroupsUpdate != nil || snapshotUpdate != nil {
 		applicationUpdate = &kinesisanalyticsv2.UpdateApplicationInput{
 			ApplicationConfigurationUpdate: &kinesisanalyticsv2.ApplicationConfigurationUpdate{
-				SqlApplicationConfigurationUpdate:   sqlUpdate,
-				FlinkApplicationConfigurationUpdate: flinkUpdate,
-				EnvironmentPropertyUpdates:          propertyGroupsUpdate,
+				SqlApplicationConfigurationUpdate:      sqlUpdate,
+				FlinkApplicationConfigurationUpdate:    flinkUpdate,
+				EnvironmentPropertyUpdates:             propertyGroupsUpdate,
+				ApplicationSnapshotConfigurationUpdate: snapshotUpdate,
 			},
 		}
 	}
@@ -1499,7 +1405,7 @@ func expandParallelismConfiguration(v map[string]interface{}) *kinesisanalyticsv
 	}
 }
 
-func expandMonitoringConfiguration(v map[string]interface{}) *kinesisanalyticsv2.MonitoringConfiguration {
+func expandKinesisAnalyticsMonitoringConfiguration(v map[string]interface{}) *kinesisanalyticsv2.MonitoringConfiguration {
 	var configurationType *string
 	var logLevel *string
 	var metricsLevel *string
@@ -1709,6 +1615,37 @@ func expandKinesisAnalyticsCloudwatchLoggingOptionUpdate(clo map[string]interfac
 	return cloudwatchLoggingOption
 }
 
+func flattenSqlApplicationConfigurationDescription(sqlApplicationConfig *kinesisanalyticsv2.SqlApplicationConfigurationDescription) []interface{} {
+	ret := map[string]interface{}{}
+
+	ret["inputs"] = flattenKinesisAnalyticsInputs(sqlApplicationConfig.InputDescriptions)
+	ret["outputs"] = flattenKinesisAnalyticsOutputs(sqlApplicationConfig.OutputDescriptions)
+	ret["reference_data_sources"] = flattenKinesisAnalyticsReferenceDataSources(sqlApplicationConfig.ReferenceDataSourceDescriptions)
+	return []interface{}{ret}
+}
+
+func flattenFlinkApplicationConfigurationDescription(flinkApplicationConfig *kinesisanalyticsv2.FlinkApplicationConfigurationDescription) []interface{} {
+	ret := map[string]interface{}{}
+	ret["checkpoint_configuration"] = map[string]interface{}{
+		"checkpoint_interval":           strconv.FormatInt(aws.Int64Value(flinkApplicationConfig.CheckpointConfigurationDescription.CheckpointInterval), 10),
+		"checkpointing_enabled":         strconv.FormatBool(aws.BoolValue(flinkApplicationConfig.CheckpointConfigurationDescription.CheckpointingEnabled)),
+		"configuration_type":            aws.StringValue(flinkApplicationConfig.CheckpointConfigurationDescription.ConfigurationType),
+		"min_pause_between_checkpoints": strconv.FormatInt(aws.Int64Value(flinkApplicationConfig.CheckpointConfigurationDescription.MinPauseBetweenCheckpoints), 10),
+	}
+	ret["monitoring_configuration"] = map[string]interface{}{
+		"configuration_type": aws.StringValue(flinkApplicationConfig.MonitoringConfigurationDescription.ConfigurationType),
+		"log_level":          aws.StringValue(flinkApplicationConfig.MonitoringConfigurationDescription.LogLevel),
+		"metrics_level":      aws.StringValue(flinkApplicationConfig.MonitoringConfigurationDescription.MetricsLevel),
+	}
+	ret["parallelism_configuration"] = map[string]interface{}{
+		"autoscaling_enabled": strconv.FormatBool(aws.BoolValue(flinkApplicationConfig.ParallelismConfigurationDescription.AutoScalingEnabled)),
+		"configuration_type":  aws.StringValue(flinkApplicationConfig.ParallelismConfigurationDescription.ConfigurationType),
+		"parallelism":         strconv.FormatInt(aws.Int64Value(flinkApplicationConfig.ParallelismConfigurationDescription.Parallelism), 10),
+		"parallelism_per_kpu": strconv.FormatInt(aws.Int64Value(flinkApplicationConfig.ParallelismConfigurationDescription.ParallelismPerKPU), 10),
+	}
+	return []interface{}{ret}
+}
+
 func flattenKinesisAnalyticsPropertyGroups(propGroups []*kinesisanalyticsv2.PropertyGroup) []interface{} {
 	s := []interface{}{}
 	for _, v := range propGroups {
@@ -1740,128 +1677,128 @@ func flattenKinesisAnalyticsCloudwatchLoggingOptions(options []*kinesisanalytics
 func flattenKinesisAnalyticsInputs(inputs []*kinesisanalyticsv2.InputDescription) []interface{} {
 	s := []interface{}{}
 
-	if len(inputs) > 0 {
-		id := inputs[0]
+	if len(inputs) == 0 {
+		return s
+	}
+	id := inputs[0]
 
-		input := map[string]interface{}{
-			"id":          aws.StringValue(id.InputId),
-			"name_prefix": aws.StringValue(id.NamePrefix),
+	input := map[string]interface{}{
+		"id":          aws.StringValue(id.InputId),
+		"name_prefix": aws.StringValue(id.NamePrefix),
+	}
+
+	list := schema.NewSet(schema.HashString, nil)
+	for _, sn := range id.InAppStreamNames {
+		list.Add(aws.StringValue(sn))
+	}
+	input["stream_names"] = list
+
+	if id.InputParallelism != nil {
+		input["parallelism"] = []interface{}{
+			map[string]interface{}{
+				"count": int(aws.Int64Value(id.InputParallelism.Count)),
+			},
 		}
+	}
 
-		list := schema.NewSet(schema.HashString, nil)
-		for _, sn := range id.InAppStreamNames {
-			list.Add(aws.StringValue(sn))
-		}
-		input["stream_names"] = list
+	if id.InputProcessingConfigurationDescription != nil {
+		ipcd := id.InputProcessingConfigurationDescription
 
-		if id.InputParallelism != nil {
-			input["parallelism"] = []interface{}{
+		if ipcd.InputLambdaProcessorDescription != nil {
+			input["processing_configuration"] = []interface{}{
 				map[string]interface{}{
-					"count": int(aws.Int64Value(id.InputParallelism.Count)),
-				},
-			}
-		}
-
-		if id.InputProcessingConfigurationDescription != nil {
-			ipcd := id.InputProcessingConfigurationDescription
-
-			if ipcd.InputLambdaProcessorDescription != nil {
-				input["processing_configuration"] = []interface{}{
-					map[string]interface{}{
-						"lambda": []interface{}{
-							map[string]interface{}{
-								"resource_arn": aws.StringValue(ipcd.InputLambdaProcessorDescription.ResourceARN),
-							},
+					"lambda": []interface{}{
+						map[string]interface{}{
+							"resource_arn": aws.StringValue(ipcd.InputLambdaProcessorDescription.ResourceARN),
 						},
 					},
-				}
-			}
-		}
-
-		if id.InputSchema != nil {
-			inputSchema := id.InputSchema
-			is := []interface{}{}
-			rcs := []interface{}{}
-			ss := map[string]interface{}{
-				"record_encoding": aws.StringValue(inputSchema.RecordEncoding),
-			}
-
-			for _, rc := range inputSchema.RecordColumns {
-				rcM := map[string]interface{}{
-					"mapping":  aws.StringValue(rc.Mapping),
-					"name":     aws.StringValue(rc.Name),
-					"sql_type": aws.StringValue(rc.SqlType),
-				}
-				rcs = append(rcs, rcM)
-			}
-			ss["record_columns"] = rcs
-
-			if inputSchema.RecordFormat != nil {
-				rf := inputSchema.RecordFormat
-				rfM := map[string]interface{}{
-					"record_format_type": aws.StringValue(rf.RecordFormatType),
-				}
-
-				if rf.MappingParameters != nil {
-					mps := []interface{}{}
-					if rf.MappingParameters.CSVMappingParameters != nil {
-						cmp := map[string]interface{}{
-							"csv": []interface{}{
-								map[string]interface{}{
-									"record_column_delimiter": aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordColumnDelimiter),
-									"record_row_delimiter":    aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordRowDelimiter),
-								},
-							},
-						}
-						mps = append(mps, cmp)
-					}
-
-					if rf.MappingParameters.JSONMappingParameters != nil {
-						jmp := map[string]interface{}{
-							"json": []interface{}{
-								map[string]interface{}{
-									"record_row_path": aws.StringValue(rf.MappingParameters.JSONMappingParameters.RecordRowPath),
-								},
-							},
-						}
-						mps = append(mps, jmp)
-					}
-
-					rfM["mapping_parameters"] = mps
-				}
-				ss["record_format"] = []interface{}{rfM}
-			}
-
-			is = append(is, ss)
-			input["schema"] = is
-		}
-
-		if id.InputStartingPositionConfiguration != nil && id.InputStartingPositionConfiguration.InputStartingPosition != nil {
-			input["starting_position_configuration"] = []interface{}{
-				map[string]interface{}{
-					"starting_position": aws.StringValue(id.InputStartingPositionConfiguration.InputStartingPosition),
 				},
 			}
 		}
-
-		if id.KinesisFirehoseInputDescription != nil {
-			input["kinesis_firehose"] = []interface{}{
-				map[string]interface{}{
-					"resource_arn": aws.StringValue(id.KinesisFirehoseInputDescription.ResourceARN),
-				},
-			}
-		}
-
-		if id.KinesisStreamsInputDescription != nil {
-			input["kinesis_stream"] = []interface{}{
-				map[string]interface{}{
-					"resource_arn": aws.StringValue(id.KinesisStreamsInputDescription.ResourceARN),
-				},
-			}
-		}
-
-		s = append(s, input)
 	}
+
+	if id.InputSchema != nil {
+		inputSchema := id.InputSchema
+		is := []interface{}{}
+		rcs := []interface{}{}
+		ss := map[string]interface{}{
+			"record_encoding": aws.StringValue(inputSchema.RecordEncoding),
+		}
+
+		for _, rc := range inputSchema.RecordColumns {
+			rcM := map[string]interface{}{
+				"mapping":  aws.StringValue(rc.Mapping),
+				"name":     aws.StringValue(rc.Name),
+				"sql_type": aws.StringValue(rc.SqlType),
+			}
+			rcs = append(rcs, rcM)
+		}
+		ss["record_columns"] = rcs
+
+		if inputSchema.RecordFormat != nil {
+			rf := inputSchema.RecordFormat
+			rfM := map[string]interface{}{
+				"record_format_type": aws.StringValue(rf.RecordFormatType),
+			}
+
+			if rf.MappingParameters != nil {
+				mps := []interface{}{}
+				if rf.MappingParameters.CSVMappingParameters != nil {
+					cmp := map[string]interface{}{
+						"csv": []interface{}{
+							map[string]interface{}{
+								"record_column_delimiter": aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordColumnDelimiter),
+								"record_row_delimiter":    aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordRowDelimiter),
+							},
+						},
+					}
+					mps = append(mps, cmp)
+				}
+
+				if rf.MappingParameters.JSONMappingParameters != nil {
+					jmp := map[string]interface{}{
+						"json": []interface{}{
+							map[string]interface{}{
+								"record_row_path": aws.StringValue(rf.MappingParameters.JSONMappingParameters.RecordRowPath),
+							},
+						},
+					}
+					mps = append(mps, jmp)
+				}
+
+				rfM["mapping_parameters"] = mps
+			}
+			ss["record_format"] = []interface{}{rfM}
+		}
+
+		is = append(is, ss)
+		input["schema"] = is
+	}
+
+	if id.InputStartingPositionConfiguration != nil && id.InputStartingPositionConfiguration.InputStartingPosition != nil {
+		input["starting_position_configuration"] = []interface{}{
+			map[string]interface{}{
+				"starting_position": aws.StringValue(id.InputStartingPositionConfiguration.InputStartingPosition),
+			},
+		}
+	}
+
+	if id.KinesisFirehoseInputDescription != nil {
+		input["kinesis_firehose"] = []interface{}{
+			map[string]interface{}{
+				"resource_arn": aws.StringValue(id.KinesisFirehoseInputDescription.ResourceARN),
+			},
+		}
+	}
+
+	if id.KinesisStreamsInputDescription != nil {
+		input["kinesis_stream"] = []interface{}{
+			map[string]interface{}{
+				"resource_arn": aws.StringValue(id.KinesisStreamsInputDescription.ResourceARN),
+			},
+		}
+	}
+	s = append(s, input)
 	return s
 }
 
