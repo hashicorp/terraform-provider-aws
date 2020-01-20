@@ -69,27 +69,27 @@ func (c *IoT) AcceptCertificateTransferRequest(input *AcceptCertificateTransferI
 // See the AWS API reference guide for AWS IoT's
 // API operation AcceptCertificateTransfer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeTransferAlreadyCompletedException "TransferAlreadyCompletedException"
+//   * TransferAlreadyCompletedException
 //   You can't revert the certificate transfer because the transfer is already
 //   complete.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) AcceptCertificateTransfer(input *AcceptCertificateTransferInput) (*AcceptCertificateTransferOutput, error) {
@@ -165,17 +165,17 @@ func (c *IoT) AddThingToBillingGroupRequest(input *AddThingToBillingGroupInput) 
 // See the AWS API reference guide for AWS IoT's
 // API operation AddThingToBillingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) AddThingToBillingGroup(input *AddThingToBillingGroupInput) (*AddThingToBillingGroupOutput, error) {
@@ -251,17 +251,17 @@ func (c *IoT) AddThingToThingGroupRequest(input *AddThingToThingGroupInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation AddThingToThingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) AddThingToThingGroup(input *AddThingToThingGroupInput) (*AddThingToThingGroupOutput, error) {
@@ -344,20 +344,20 @@ func (c *IoT) AssociateTargetsWithJobRequest(input *AssociateTargetsWithJobInput
 // See the AWS API reference guide for AWS IoT's
 // API operation AssociateTargetsWithJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) AssociateTargetsWithJob(input *AssociateTargetsWithJobInput) (*AssociateTargetsWithJobOutput, error) {
@@ -433,26 +433,26 @@ func (c *IoT) AttachPolicyRequest(input *AttachPolicyInput) (req *request.Reques
 // See the AWS API reference guide for AWS IoT's
 // API operation AttachPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 func (c *IoT) AttachPolicy(input *AttachPolicyInput) (*AttachPolicyOutput, error) {
@@ -536,26 +536,26 @@ func (c *IoT) AttachPrincipalPolicyRequest(input *AttachPrincipalPolicyInput) (r
 // See the AWS API reference guide for AWS IoT's
 // API operation AttachPrincipalPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 //
@@ -626,8 +626,8 @@ func (c *IoT) AttachSecurityProfileRequest(input *AttachSecurityProfileInput) (r
 
 // AttachSecurityProfile API operation for AWS IoT.
 //
-// Associates a Device Defender security profile with a thing group or with
-// this account. Each thing group or account can have up to five security profiles
+// Associates a Device Defender security profile with a thing group or this
+// account. Each thing group or account can have up to five security profiles
 // associated with it.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -637,24 +637,24 @@ func (c *IoT) AttachSecurityProfileRequest(input *AttachSecurityProfileInput) (r
 // See the AWS API reference guide for AWS IoT's
 // API operation AttachSecurityProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) AttachSecurityProfile(input *AttachSecurityProfileInput) (*AttachSecurityProfileOutput, error) {
@@ -721,7 +721,9 @@ func (c *IoT) AttachThingPrincipalRequest(input *AttachThingPrincipalInput) (req
 
 // AttachThingPrincipal API operation for AWS IoT.
 //
-// Attaches the specified principal to the specified thing.
+// Attaches the specified principal to the specified thing. A principal can
+// be X.509 certificates, IAM users, groups, and roles, Amazon Cognito identities
+// or federated identities.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -730,23 +732,23 @@ func (c *IoT) AttachThingPrincipalRequest(input *AttachThingPrincipalInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation AttachThingPrincipal for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) AttachThingPrincipal(input *AttachThingPrincipalInput) (*AttachThingPrincipalOutput, error) {
@@ -765,6 +767,93 @@ func (c *IoT) AttachThingPrincipal(input *AttachThingPrincipalInput) (*AttachThi
 // for more information on using Contexts.
 func (c *IoT) AttachThingPrincipalWithContext(ctx aws.Context, input *AttachThingPrincipalInput, opts ...request.Option) (*AttachThingPrincipalOutput, error) {
 	req, out := c.AttachThingPrincipalRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCancelAuditMitigationActionsTask = "CancelAuditMitigationActionsTask"
+
+// CancelAuditMitigationActionsTaskRequest generates a "aws/request.Request" representing the
+// client's request for the CancelAuditMitigationActionsTask operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelAuditMitigationActionsTask for more information on using the CancelAuditMitigationActionsTask
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelAuditMitigationActionsTaskRequest method.
+//    req, resp := client.CancelAuditMitigationActionsTaskRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CancelAuditMitigationActionsTaskRequest(input *CancelAuditMitigationActionsTaskInput) (req *request.Request, output *CancelAuditMitigationActionsTaskOutput) {
+	op := &request.Operation{
+		Name:       opCancelAuditMitigationActionsTask,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/audit/mitigationactions/tasks/{taskId}/cancel",
+	}
+
+	if input == nil {
+		input = &CancelAuditMitigationActionsTaskInput{}
+	}
+
+	output = &CancelAuditMitigationActionsTaskOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// CancelAuditMitigationActionsTask API operation for AWS IoT.
+//
+// Cancels a mitigation action task that is in progress. If the task is not
+// in progress, an InvalidRequestException occurs.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CancelAuditMitigationActionsTask for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) CancelAuditMitigationActionsTask(input *CancelAuditMitigationActionsTaskInput) (*CancelAuditMitigationActionsTaskOutput, error) {
+	req, out := c.CancelAuditMitigationActionsTaskRequest(input)
+	return out, req.Send()
+}
+
+// CancelAuditMitigationActionsTaskWithContext is the same as CancelAuditMitigationActionsTask with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelAuditMitigationActionsTask for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CancelAuditMitigationActionsTaskWithContext(ctx aws.Context, input *CancelAuditMitigationActionsTaskInput, opts ...request.Option) (*CancelAuditMitigationActionsTaskOutput, error) {
+	req, out := c.CancelAuditMitigationActionsTaskRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -824,17 +913,17 @@ func (c *IoT) CancelAuditTaskRequest(input *CancelAuditTaskInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation CancelAuditTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CancelAuditTask(input *CancelAuditTaskInput) (*CancelAuditTaskOutput, error) {
@@ -919,27 +1008,27 @@ func (c *IoT) CancelCertificateTransferRequest(input *CancelCertificateTransferI
 // See the AWS API reference guide for AWS IoT's
 // API operation CancelCertificateTransfer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeTransferAlreadyCompletedException "TransferAlreadyCompletedException"
+//   * TransferAlreadyCompletedException
 //   You can't revert the certificate transfer because the transfer is already
 //   complete.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CancelCertificateTransfer(input *CancelCertificateTransferInput) (*CancelCertificateTransferOutput, error) {
@@ -1014,17 +1103,17 @@ func (c *IoT) CancelJobRequest(input *CancelJobInput) (req *request.Request, out
 // See the AWS API reference guide for AWS IoT's
 // API operation CancelJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) CancelJob(input *CancelJobInput) (*CancelJobOutput, error) {
@@ -1100,25 +1189,25 @@ func (c *IoT) CancelJobExecutionRequest(input *CancelJobExecutionInput) (req *re
 // See the AWS API reference guide for AWS IoT's
 // API operation CancelJobExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInvalidStateTransitionException "InvalidStateTransitionException"
+//   * InvalidStateTransitionException
 //   An attempt was made to change to an invalid state, for example by deleting
 //   a job or a job execution which is "IN_PROGRESS" without setting the force
 //   parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
@@ -1195,23 +1284,23 @@ func (c *IoT) ClearDefaultAuthorizerRequest(input *ClearDefaultAuthorizerInput) 
 // See the AWS API reference guide for AWS IoT's
 // API operation ClearDefaultAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ClearDefaultAuthorizer(input *ClearDefaultAuthorizerInput) (*ClearDefaultAuthorizerOutput, error) {
@@ -1230,6 +1319,99 @@ func (c *IoT) ClearDefaultAuthorizer(input *ClearDefaultAuthorizerInput) (*Clear
 // for more information on using Contexts.
 func (c *IoT) ClearDefaultAuthorizerWithContext(ctx aws.Context, input *ClearDefaultAuthorizerInput, opts ...request.Option) (*ClearDefaultAuthorizerOutput, error) {
 	req, out := c.ClearDefaultAuthorizerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opConfirmTopicRuleDestination = "ConfirmTopicRuleDestination"
+
+// ConfirmTopicRuleDestinationRequest generates a "aws/request.Request" representing the
+// client's request for the ConfirmTopicRuleDestination operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ConfirmTopicRuleDestination for more information on using the ConfirmTopicRuleDestination
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ConfirmTopicRuleDestinationRequest method.
+//    req, resp := client.ConfirmTopicRuleDestinationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ConfirmTopicRuleDestinationRequest(input *ConfirmTopicRuleDestinationInput) (req *request.Request, output *ConfirmTopicRuleDestinationOutput) {
+	op := &request.Operation{
+		Name:       opConfirmTopicRuleDestination,
+		HTTPMethod: "GET",
+		HTTPPath:   "/confirmdestination/{confirmationToken+}",
+	}
+
+	if input == nil {
+		input = &ConfirmTopicRuleDestinationInput{}
+	}
+
+	output = &ConfirmTopicRuleDestinationOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// ConfirmTopicRuleDestination API operation for AWS IoT.
+//
+// Confirms a topic rule destination. When you create a rule requiring a destination,
+// AWS IoT sends a confirmation message to the endpoint or base address you
+// specify. The message includes a token which you pass back when calling ConfirmTopicRuleDestination
+// to confirm that you own or have access to the endpoint.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ConfirmTopicRuleDestination for usage and error information.
+//
+// Returned Error Types:
+//   * InternalException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ConflictingResourceUpdateException
+//   A conflicting resource update exception. This exception is thrown when two
+//   pending updates cause a conflict.
+//
+func (c *IoT) ConfirmTopicRuleDestination(input *ConfirmTopicRuleDestinationInput) (*ConfirmTopicRuleDestinationOutput, error) {
+	req, out := c.ConfirmTopicRuleDestinationRequest(input)
+	return out, req.Send()
+}
+
+// ConfirmTopicRuleDestinationWithContext is the same as ConfirmTopicRuleDestination with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ConfirmTopicRuleDestination for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ConfirmTopicRuleDestinationWithContext(ctx aws.Context, input *ConfirmTopicRuleDestinationInput, opts ...request.Option) (*ConfirmTopicRuleDestinationOutput, error) {
+	req, out := c.ConfirmTopicRuleDestinationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1286,26 +1468,26 @@ func (c *IoT) CreateAuthorizerRequest(input *CreateAuthorizerInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+// Returned Error Types:
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CreateAuthorizer(input *CreateAuthorizerInput) (*CreateAuthorizerOutput, error) {
@@ -1380,17 +1562,17 @@ func (c *IoT) CreateBillingGroupRequest(input *CreateBillingGroupInput) (req *re
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateBillingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CreateBillingGroup(input *CreateBillingGroupInput) (*CreateBillingGroupOutput, error) {
@@ -1506,20 +1688,20 @@ func (c *IoT) CreateCertificateFromCsrRequest(input *CreateCertificateFromCsrInp
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateCertificateFromCsr for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CreateCertificateFromCsr(input *CreateCertificateFromCsrInput) (*CreateCertificateFromCsrOutput, error) {
@@ -1538,6 +1720,105 @@ func (c *IoT) CreateCertificateFromCsr(input *CreateCertificateFromCsrInput) (*C
 // for more information on using Contexts.
 func (c *IoT) CreateCertificateFromCsrWithContext(ctx aws.Context, input *CreateCertificateFromCsrInput, opts ...request.Option) (*CreateCertificateFromCsrOutput, error) {
 	req, out := c.CreateCertificateFromCsrRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateDomainConfiguration = "CreateDomainConfiguration"
+
+// CreateDomainConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the CreateDomainConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateDomainConfiguration for more information on using the CreateDomainConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateDomainConfigurationRequest method.
+//    req, resp := client.CreateDomainConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateDomainConfigurationRequest(input *CreateDomainConfigurationInput) (req *request.Request, output *CreateDomainConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opCreateDomainConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/domainConfigurations/{domainConfigurationName}",
+	}
+
+	if input == nil {
+		input = &CreateDomainConfigurationInput{}
+	}
+
+	output = &CreateDomainConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateDomainConfiguration API operation for AWS IoT.
+//
+// Creates a domain configuration.
+//
+// The domain configuration feature is in public preview and is subject to change.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateDomainConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * LimitExceededException
+//   A limit has been exceeded.
+//
+//   * CertificateValidationException
+//   The certificate is invalid.
+//
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+func (c *IoT) CreateDomainConfiguration(input *CreateDomainConfigurationInput) (*CreateDomainConfigurationOutput, error) {
+	req, out := c.CreateDomainConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// CreateDomainConfigurationWithContext is the same as CreateDomainConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateDomainConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateDomainConfigurationWithContext(ctx aws.Context, input *CreateDomainConfigurationInput, opts ...request.Option) (*CreateDomainConfigurationOutput, error) {
+	req, out := c.CreateDomainConfigurationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1594,26 +1875,26 @@ func (c *IoT) CreateDynamicThingGroupRequest(input *CreateDynamicThingGroupInput
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateDynamicThingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidQueryException "InvalidQueryException"
+//   * InvalidQueryException
 //   The query is invalid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 func (c *IoT) CreateDynamicThingGroup(input *CreateDynamicThingGroupInput) (*CreateDynamicThingGroupOutput, error) {
@@ -1688,23 +1969,23 @@ func (c *IoT) CreateJobRequest(input *CreateJobInput) (req *request.Request, out
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) CreateJob(input *CreateJobInput) (*CreateJobOutput, error) {
@@ -1771,7 +2052,8 @@ func (c *IoT) CreateKeysAndCertificateRequest(input *CreateKeysAndCertificateInp
 // CreateKeysAndCertificate API operation for AWS IoT.
 //
 // Creates a 2048-bit RSA key pair and issues an X.509 certificate using the
-// issued public key.
+// issued public key. You can also call CreateKeysAndCertificate over MQTT from
+// a device, for more information, see Provisioning MQTT API (https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#provision-mqtt-api).
 //
 // Note This is the only time AWS IoT issues the private key for this certificate,
 // so it is important to keep it in a secure location.
@@ -1783,20 +2065,20 @@ func (c *IoT) CreateKeysAndCertificateRequest(input *CreateKeysAndCertificateInp
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateKeysAndCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CreateKeysAndCertificate(input *CreateKeysAndCertificateInput) (*CreateKeysAndCertificateOutput, error) {
@@ -1815,6 +2097,95 @@ func (c *IoT) CreateKeysAndCertificate(input *CreateKeysAndCertificateInput) (*C
 // for more information on using Contexts.
 func (c *IoT) CreateKeysAndCertificateWithContext(ctx aws.Context, input *CreateKeysAndCertificateInput, opts ...request.Option) (*CreateKeysAndCertificateOutput, error) {
 	req, out := c.CreateKeysAndCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateMitigationAction = "CreateMitigationAction"
+
+// CreateMitigationActionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateMitigationAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateMitigationAction for more information on using the CreateMitigationAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateMitigationActionRequest method.
+//    req, resp := client.CreateMitigationActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateMitigationActionRequest(input *CreateMitigationActionInput) (req *request.Request, output *CreateMitigationActionOutput) {
+	op := &request.Operation{
+		Name:       opCreateMitigationAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/mitigationactions/actions/{actionName}",
+	}
+
+	if input == nil {
+		input = &CreateMitigationActionInput{}
+	}
+
+	output = &CreateMitigationActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateMitigationAction API operation for AWS IoT.
+//
+// Defines an action that can be applied to audit findings by using StartAuditMitigationActionsTask.
+// Each mitigation action can apply only one type of change.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateMitigationAction for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * LimitExceededException
+//   A limit has been exceeded.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) CreateMitigationAction(input *CreateMitigationActionInput) (*CreateMitigationActionOutput, error) {
+	req, out := c.CreateMitigationActionRequest(input)
+	return out, req.Send()
+}
+
+// CreateMitigationActionWithContext is the same as CreateMitigationAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateMitigationAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateMitigationActionWithContext(ctx aws.Context, input *CreateMitigationActionInput, opts ...request.Option) (*CreateMitigationActionOutput, error) {
+	req, out := c.CreateMitigationActionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1871,29 +2242,29 @@ func (c *IoT) CreateOTAUpdateRequest(input *CreateOTAUpdateInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateOTAUpdate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) CreateOTAUpdate(input *CreateOTAUpdateInput) (*CreateOTAUpdateOutput, error) {
@@ -1972,26 +2343,26 @@ func (c *IoT) CreatePolicyRequest(input *CreatePolicyInput) (req *request.Reques
 // See the AWS API reference guide for AWS IoT's
 // API operation CreatePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+// Returned Error Types:
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeMalformedPolicyException "MalformedPolicyException"
+//   * MalformedPolicyException
 //   The policy documentation is not valid.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CreatePolicy(input *CreatePolicyInput) (*CreatePolicyOutput, error) {
@@ -2073,29 +2444,29 @@ func (c *IoT) CreatePolicyVersionRequest(input *CreatePolicyVersionInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation CreatePolicyVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeMalformedPolicyException "MalformedPolicyException"
+//   * MalformedPolicyException
 //   The policy documentation is not valid.
 //
-//   * ErrCodeVersionsLimitExceededException "VersionsLimitExceededException"
+//   * VersionsLimitExceededException
 //   The number of policy versions exceeds the limit.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CreatePolicyVersion(input *CreatePolicyVersionInput) (*CreatePolicyVersionOutput, error) {
@@ -2114,6 +2485,283 @@ func (c *IoT) CreatePolicyVersion(input *CreatePolicyVersionInput) (*CreatePolic
 // for more information on using Contexts.
 func (c *IoT) CreatePolicyVersionWithContext(ctx aws.Context, input *CreatePolicyVersionInput, opts ...request.Option) (*CreatePolicyVersionOutput, error) {
 	req, out := c.CreatePolicyVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateProvisioningClaim = "CreateProvisioningClaim"
+
+// CreateProvisioningClaimRequest generates a "aws/request.Request" representing the
+// client's request for the CreateProvisioningClaim operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateProvisioningClaim for more information on using the CreateProvisioningClaim
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateProvisioningClaimRequest method.
+//    req, resp := client.CreateProvisioningClaimRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateProvisioningClaimRequest(input *CreateProvisioningClaimInput) (req *request.Request, output *CreateProvisioningClaimOutput) {
+	op := &request.Operation{
+		Name:       opCreateProvisioningClaim,
+		HTTPMethod: "POST",
+		HTTPPath:   "/provisioning-templates/{templateName}/provisioning-claim",
+	}
+
+	if input == nil {
+		input = &CreateProvisioningClaimInput{}
+	}
+
+	output = &CreateProvisioningClaimOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateProvisioningClaim API operation for AWS IoT.
+//
+// Creates a provisioning claim.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateProvisioningClaim for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) CreateProvisioningClaim(input *CreateProvisioningClaimInput) (*CreateProvisioningClaimOutput, error) {
+	req, out := c.CreateProvisioningClaimRequest(input)
+	return out, req.Send()
+}
+
+// CreateProvisioningClaimWithContext is the same as CreateProvisioningClaim with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateProvisioningClaim for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateProvisioningClaimWithContext(ctx aws.Context, input *CreateProvisioningClaimInput, opts ...request.Option) (*CreateProvisioningClaimOutput, error) {
+	req, out := c.CreateProvisioningClaimRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateProvisioningTemplate = "CreateProvisioningTemplate"
+
+// CreateProvisioningTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the CreateProvisioningTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateProvisioningTemplate for more information on using the CreateProvisioningTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateProvisioningTemplateRequest method.
+//    req, resp := client.CreateProvisioningTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateProvisioningTemplateRequest(input *CreateProvisioningTemplateInput) (req *request.Request, output *CreateProvisioningTemplateOutput) {
+	op := &request.Operation{
+		Name:       opCreateProvisioningTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/provisioning-templates",
+	}
+
+	if input == nil {
+		input = &CreateProvisioningTemplateInput{}
+	}
+
+	output = &CreateProvisioningTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateProvisioningTemplate API operation for AWS IoT.
+//
+// Creates a fleet provisioning template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateProvisioningTemplate for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * LimitExceededException
+//   A limit has been exceeded.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+func (c *IoT) CreateProvisioningTemplate(input *CreateProvisioningTemplateInput) (*CreateProvisioningTemplateOutput, error) {
+	req, out := c.CreateProvisioningTemplateRequest(input)
+	return out, req.Send()
+}
+
+// CreateProvisioningTemplateWithContext is the same as CreateProvisioningTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateProvisioningTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateProvisioningTemplateWithContext(ctx aws.Context, input *CreateProvisioningTemplateInput, opts ...request.Option) (*CreateProvisioningTemplateOutput, error) {
+	req, out := c.CreateProvisioningTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateProvisioningTemplateVersion = "CreateProvisioningTemplateVersion"
+
+// CreateProvisioningTemplateVersionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateProvisioningTemplateVersion operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateProvisioningTemplateVersion for more information on using the CreateProvisioningTemplateVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateProvisioningTemplateVersionRequest method.
+//    req, resp := client.CreateProvisioningTemplateVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateProvisioningTemplateVersionRequest(input *CreateProvisioningTemplateVersionInput) (req *request.Request, output *CreateProvisioningTemplateVersionOutput) {
+	op := &request.Operation{
+		Name:       opCreateProvisioningTemplateVersion,
+		HTTPMethod: "POST",
+		HTTPPath:   "/provisioning-templates/{templateName}/versions",
+	}
+
+	if input == nil {
+		input = &CreateProvisioningTemplateVersionInput{}
+	}
+
+	output = &CreateProvisioningTemplateVersionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateProvisioningTemplateVersion API operation for AWS IoT.
+//
+// Creates a new version of a fleet provisioning template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateProvisioningTemplateVersion for usage and error information.
+//
+// Returned Error Types:
+//   * VersionsLimitExceededException
+//   The number of policy versions exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ConflictingResourceUpdateException
+//   A conflicting resource update exception. This exception is thrown when two
+//   pending updates cause a conflict.
+//
+func (c *IoT) CreateProvisioningTemplateVersion(input *CreateProvisioningTemplateVersionInput) (*CreateProvisioningTemplateVersionOutput, error) {
+	req, out := c.CreateProvisioningTemplateVersionRequest(input)
+	return out, req.Send()
+}
+
+// CreateProvisioningTemplateVersionWithContext is the same as CreateProvisioningTemplateVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateProvisioningTemplateVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateProvisioningTemplateVersionWithContext(ctx aws.Context, input *CreateProvisioningTemplateVersionInput, opts ...request.Option) (*CreateProvisioningTemplateVersionOutput, error) {
+	req, out := c.CreateProvisioningTemplateVersionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2170,26 +2818,26 @@ func (c *IoT) CreateRoleAliasRequest(input *CreateRoleAliasInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateRoleAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+// Returned Error Types:
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CreateRoleAlias(input *CreateRoleAliasInput) (*CreateRoleAliasOutput, error) {
@@ -2264,17 +2912,20 @@ func (c *IoT) CreateScheduledAuditRequest(input *CreateScheduledAuditInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateScheduledAudit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 func (c *IoT) CreateScheduledAudit(input *CreateScheduledAuditInput) (*CreateScheduledAuditOutput, error) {
@@ -2349,17 +3000,17 @@ func (c *IoT) CreateSecurityProfileRequest(input *CreateSecurityProfileInput) (r
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateSecurityProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CreateSecurityProfile(input *CreateSecurityProfileInput) (*CreateSecurityProfileOutput, error) {
@@ -2428,10 +3079,6 @@ func (c *IoT) CreateStreamRequest(input *CreateStreamInput) (req *request.Reques
 // Creates a stream for delivering one or more large files in chunks over MQTT.
 // A stream transports data bytes in chunks or blocks packaged as MQTT messages
 // from a source like S3. You can have one or more files associated with a stream.
-// The total size of a file associated with the stream cannot exceed more than
-// 2 MB. The stream will be created with version 0. If a stream is created with
-// the same streamID as a stream that existed and was deleted within last 90
-// days, we will resurrect that old stream by incrementing the version by 1.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2440,29 +3087,29 @@ func (c *IoT) CreateStreamRequest(input *CreateStreamInput) (req *request.Reques
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CreateStream(input *CreateStreamInput) (*CreateStreamOutput, error) {
@@ -2528,9 +3175,12 @@ func (c *IoT) CreateThingRequest(input *CreateThingInput) (req *request.Request,
 
 // CreateThing API operation for AWS IoT.
 //
-// Creates a thing record in the registry.
+// Creates a thing record in the registry. If this call is made multiple times
+// using the same thing name and configuration, the call will succeed. If this
+// call is made with the same thing name but different configuration a ResourceAlreadyExistsException
+// is thrown.
 //
-// This is a control plane operation. See Authorization (http://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
+// This is a control plane operation. See Authorization (https://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
 // for information about authorizing control plane actions.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2540,26 +3190,26 @@ func (c *IoT) CreateThingRequest(input *CreateThingInput) (req *request.Request,
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateThing for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) CreateThing(input *CreateThingInput) (*CreateThingOutput, error) {
@@ -2627,7 +3277,7 @@ func (c *IoT) CreateThingGroupRequest(input *CreateThingGroupInput) (req *reques
 //
 // Create a thing group.
 //
-// This is a control plane operation. See Authorization (http://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
+// This is a control plane operation. See Authorization (https://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
 // for information about authorizing control plane actions.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2637,17 +3287,17 @@ func (c *IoT) CreateThingGroupRequest(input *CreateThingGroupInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateThingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) CreateThingGroup(input *CreateThingGroupInput) (*CreateThingGroupOutput, error) {
@@ -2722,23 +3372,23 @@ func (c *IoT) CreateThingTypeRequest(input *CreateThingTypeInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateThingType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
 func (c *IoT) CreateThingType(input *CreateThingTypeInput) (*CreateThingTypeOutput, error) {
@@ -2816,23 +3466,23 @@ func (c *IoT) CreateTopicRuleRequest(input *CreateTopicRuleInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation CreateTopicRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeSqlParseException "SqlParseException"
+// Returned Error Types:
+//   * SqlParseException
 //   The Rule-SQL expression can't be parsed correctly.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeConflictingResourceUpdateException "ConflictingResourceUpdateException"
+//   * ConflictingResourceUpdateException
 //   A conflicting resource update exception. This exception is thrown when two
 //   pending updates cause a conflict.
 //
@@ -2852,6 +3502,96 @@ func (c *IoT) CreateTopicRule(input *CreateTopicRuleInput) (*CreateTopicRuleOutp
 // for more information on using Contexts.
 func (c *IoT) CreateTopicRuleWithContext(ctx aws.Context, input *CreateTopicRuleInput, opts ...request.Option) (*CreateTopicRuleOutput, error) {
 	req, out := c.CreateTopicRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateTopicRuleDestination = "CreateTopicRuleDestination"
+
+// CreateTopicRuleDestinationRequest generates a "aws/request.Request" representing the
+// client's request for the CreateTopicRuleDestination operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateTopicRuleDestination for more information on using the CreateTopicRuleDestination
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateTopicRuleDestinationRequest method.
+//    req, resp := client.CreateTopicRuleDestinationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateTopicRuleDestinationRequest(input *CreateTopicRuleDestinationInput) (req *request.Request, output *CreateTopicRuleDestinationOutput) {
+	op := &request.Operation{
+		Name:       opCreateTopicRuleDestination,
+		HTTPMethod: "POST",
+		HTTPPath:   "/destinations",
+	}
+
+	if input == nil {
+		input = &CreateTopicRuleDestinationInput{}
+	}
+
+	output = &CreateTopicRuleDestinationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateTopicRuleDestination API operation for AWS IoT.
+//
+// Creates a topic rule destination. The destination must be confirmed prior
+// to use.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateTopicRuleDestination for usage and error information.
+//
+// Returned Error Types:
+//   * InternalException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * ConflictingResourceUpdateException
+//   A conflicting resource update exception. This exception is thrown when two
+//   pending updates cause a conflict.
+//
+func (c *IoT) CreateTopicRuleDestination(input *CreateTopicRuleDestinationInput) (*CreateTopicRuleDestinationOutput, error) {
+	req, out := c.CreateTopicRuleDestinationRequest(input)
+	return out, req.Send()
+}
+
+// CreateTopicRuleDestinationWithContext is the same as CreateTopicRuleDestination with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateTopicRuleDestination for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateTopicRuleDestinationWithContext(ctx aws.Context, input *CreateTopicRuleDestinationInput, opts ...request.Option) (*CreateTopicRuleDestinationOutput, error) {
+	req, out := c.CreateTopicRuleDestinationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2911,17 +3651,17 @@ func (c *IoT) DeleteAccountAuditConfigurationRequest(input *DeleteAccountAuditCo
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteAccountAuditConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeleteAccountAuditConfiguration(input *DeleteAccountAuditConfigurationInput) (*DeleteAccountAuditConfigurationOutput, error) {
@@ -2997,26 +3737,26 @@ func (c *IoT) DeleteAuthorizerRequest(input *DeleteAuthorizerInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDeleteConflictException "DeleteConflictException"
+// Returned Error Types:
+//   * DeleteConflictException
 //   You can't delete the resource because it is attached to one or more resources.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeleteAuthorizer(input *DeleteAuthorizerInput) (*DeleteAuthorizerOutput, error) {
@@ -3092,18 +3832,18 @@ func (c *IoT) DeleteBillingGroupRequest(input *DeleteBillingGroupInput) (req *re
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteBillingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeleteBillingGroup(input *DeleteBillingGroupInput) (*DeleteBillingGroupOutput, error) {
@@ -3179,26 +3919,26 @@ func (c *IoT) DeleteCACertificateRequest(input *DeleteCACertificateInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteCACertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeCertificateStateException "CertificateStateException"
+//   * CertificateStateException
 //   The certificate operation is not allowed.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) DeleteCACertificate(input *DeleteCACertificateInput) (*DeleteCACertificateOutput, error) {
@@ -3267,10 +4007,10 @@ func (c *IoT) DeleteCertificateRequest(input *DeleteCertificateInput) (req *requ
 //
 // Deletes the specified certificate.
 //
-// A certificate cannot be deleted if it has a policy attached to it or if its
-// status is set to ACTIVE. To delete a certificate, first use the DetachPrincipalPolicy
-// API to detach all policies. Next, use the UpdateCertificate API to set the
-// certificate to the INACTIVE status.
+// A certificate cannot be deleted if it has a policy or IoT thing attached
+// to it or if its status is set to ACTIVE. To delete a certificate, first use
+// the DetachPrincipalPolicy API to detach all policies. Next, use the UpdateCertificate
+// API to set the certificate to the INACTIVE status.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3279,29 +4019,29 @@ func (c *IoT) DeleteCertificateRequest(input *DeleteCertificateInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCertificateStateException "CertificateStateException"
+// Returned Error Types:
+//   * CertificateStateException
 //   The certificate operation is not allowed.
 //
-//   * ErrCodeDeleteConflictException "DeleteConflictException"
+//   * DeleteConflictException
 //   You can't delete the resource because it is attached to one or more resources.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) DeleteCertificate(input *DeleteCertificateInput) (*DeleteCertificateOutput, error) {
@@ -3320,6 +4060,100 @@ func (c *IoT) DeleteCertificate(input *DeleteCertificateInput) (*DeleteCertifica
 // for more information on using Contexts.
 func (c *IoT) DeleteCertificateWithContext(ctx aws.Context, input *DeleteCertificateInput, opts ...request.Option) (*DeleteCertificateOutput, error) {
 	req, out := c.DeleteCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteDomainConfiguration = "DeleteDomainConfiguration"
+
+// DeleteDomainConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteDomainConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteDomainConfiguration for more information on using the DeleteDomainConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteDomainConfigurationRequest method.
+//    req, resp := client.DeleteDomainConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteDomainConfigurationRequest(input *DeleteDomainConfigurationInput) (req *request.Request, output *DeleteDomainConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteDomainConfiguration,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/domainConfigurations/{domainConfigurationName}",
+	}
+
+	if input == nil {
+		input = &DeleteDomainConfigurationInput{}
+	}
+
+	output = &DeleteDomainConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteDomainConfiguration API operation for AWS IoT.
+//
+// Deletes the specified domain configuration.
+//
+// The domain configuration feature is in public preview and is subject to change.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteDomainConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+func (c *IoT) DeleteDomainConfiguration(input *DeleteDomainConfigurationInput) (*DeleteDomainConfigurationOutput, error) {
+	req, out := c.DeleteDomainConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// DeleteDomainConfigurationWithContext is the same as DeleteDomainConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteDomainConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteDomainConfigurationWithContext(ctx aws.Context, input *DeleteDomainConfigurationInput, opts ...request.Option) (*DeleteDomainConfigurationOutput, error) {
+	req, out := c.DeleteDomainConfigurationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3377,18 +4211,18 @@ func (c *IoT) DeleteDynamicThingGroupRequest(input *DeleteDynamicThingGroupInput
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteDynamicThingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeleteDynamicThingGroup(input *DeleteDynamicThingGroupInput) (*DeleteDynamicThingGroupOutput, error) {
@@ -3473,25 +4307,25 @@ func (c *IoT) DeleteJobRequest(input *DeleteJobInput) (req *request.Request, out
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInvalidStateTransitionException "InvalidStateTransitionException"
+//   * InvalidStateTransitionException
 //   An attempt was made to change to an invalid state, for example by deleting
 //   a job or a job execution which is "IN_PROGRESS" without setting the force
 //   parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) DeleteJob(input *DeleteJobInput) (*DeleteJobOutput, error) {
@@ -3567,22 +4401,22 @@ func (c *IoT) DeleteJobExecutionRequest(input *DeleteJobExecutionInput) (req *re
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteJobExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInvalidStateTransitionException "InvalidStateTransitionException"
+//   * InvalidStateTransitionException
 //   An attempt was made to change to an invalid state, for example by deleting
 //   a job or a job execution which is "IN_PROGRESS" without setting the force
 //   parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) DeleteJobExecution(input *DeleteJobExecutionInput) (*DeleteJobExecutionOutput, error) {
@@ -3601,6 +4435,89 @@ func (c *IoT) DeleteJobExecution(input *DeleteJobExecutionInput) (*DeleteJobExec
 // for more information on using Contexts.
 func (c *IoT) DeleteJobExecutionWithContext(ctx aws.Context, input *DeleteJobExecutionInput, opts ...request.Option) (*DeleteJobExecutionOutput, error) {
 	req, out := c.DeleteJobExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteMitigationAction = "DeleteMitigationAction"
+
+// DeleteMitigationActionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteMitigationAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteMitigationAction for more information on using the DeleteMitigationAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteMitigationActionRequest method.
+//    req, resp := client.DeleteMitigationActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteMitigationActionRequest(input *DeleteMitigationActionInput) (req *request.Request, output *DeleteMitigationActionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteMitigationAction,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/mitigationactions/actions/{actionName}",
+	}
+
+	if input == nil {
+		input = &DeleteMitigationActionInput{}
+	}
+
+	output = &DeleteMitigationActionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteMitigationAction API operation for AWS IoT.
+//
+// Deletes a defined mitigation action from your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteMitigationAction for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) DeleteMitigationAction(input *DeleteMitigationActionInput) (*DeleteMitigationActionOutput, error) {
+	req, out := c.DeleteMitigationActionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteMitigationActionWithContext is the same as DeleteMitigationAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteMitigationAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteMitigationActionWithContext(ctx aws.Context, input *DeleteMitigationActionInput, opts ...request.Option) (*DeleteMitigationActionOutput, error) {
+	req, out := c.DeleteMitigationActionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3658,26 +4575,26 @@ func (c *IoT) DeleteOTAUpdateRequest(input *DeleteOTAUpdateInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteOTAUpdate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
@@ -3764,26 +4681,26 @@ func (c *IoT) DeletePolicyRequest(input *DeletePolicyInput) (req *request.Reques
 // See the AWS API reference guide for AWS IoT's
 // API operation DeletePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDeleteConflictException "DeleteConflictException"
+// Returned Error Types:
+//   * DeleteConflictException
 //   You can't delete the resource because it is attached to one or more resources.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeletePolicy(input *DeletePolicyInput) (*DeletePolicyOutput, error) {
@@ -3862,26 +4779,26 @@ func (c *IoT) DeletePolicyVersionRequest(input *DeletePolicyVersionInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation DeletePolicyVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDeleteConflictException "DeleteConflictException"
+// Returned Error Types:
+//   * DeleteConflictException
 //   You can't delete the resource because it is attached to one or more resources.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeletePolicyVersion(input *DeletePolicyVersionInput) (*DeletePolicyVersionOutput, error) {
@@ -3900,6 +4817,190 @@ func (c *IoT) DeletePolicyVersion(input *DeletePolicyVersionInput) (*DeletePolic
 // for more information on using Contexts.
 func (c *IoT) DeletePolicyVersionWithContext(ctx aws.Context, input *DeletePolicyVersionInput, opts ...request.Option) (*DeletePolicyVersionOutput, error) {
 	req, out := c.DeletePolicyVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteProvisioningTemplate = "DeleteProvisioningTemplate"
+
+// DeleteProvisioningTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteProvisioningTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteProvisioningTemplate for more information on using the DeleteProvisioningTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteProvisioningTemplateRequest method.
+//    req, resp := client.DeleteProvisioningTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteProvisioningTemplateRequest(input *DeleteProvisioningTemplateInput) (req *request.Request, output *DeleteProvisioningTemplateOutput) {
+	op := &request.Operation{
+		Name:       opDeleteProvisioningTemplate,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/provisioning-templates/{templateName}",
+	}
+
+	if input == nil {
+		input = &DeleteProvisioningTemplateInput{}
+	}
+
+	output = &DeleteProvisioningTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteProvisioningTemplate API operation for AWS IoT.
+//
+// Deletes a fleet provisioning template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteProvisioningTemplate for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * DeleteConflictException
+//   You can't delete the resource because it is attached to one or more resources.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+func (c *IoT) DeleteProvisioningTemplate(input *DeleteProvisioningTemplateInput) (*DeleteProvisioningTemplateOutput, error) {
+	req, out := c.DeleteProvisioningTemplateRequest(input)
+	return out, req.Send()
+}
+
+// DeleteProvisioningTemplateWithContext is the same as DeleteProvisioningTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteProvisioningTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteProvisioningTemplateWithContext(ctx aws.Context, input *DeleteProvisioningTemplateInput, opts ...request.Option) (*DeleteProvisioningTemplateOutput, error) {
+	req, out := c.DeleteProvisioningTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteProvisioningTemplateVersion = "DeleteProvisioningTemplateVersion"
+
+// DeleteProvisioningTemplateVersionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteProvisioningTemplateVersion operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteProvisioningTemplateVersion for more information on using the DeleteProvisioningTemplateVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteProvisioningTemplateVersionRequest method.
+//    req, resp := client.DeleteProvisioningTemplateVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteProvisioningTemplateVersionRequest(input *DeleteProvisioningTemplateVersionInput) (req *request.Request, output *DeleteProvisioningTemplateVersionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteProvisioningTemplateVersion,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/provisioning-templates/{templateName}/versions/{versionId}",
+	}
+
+	if input == nil {
+		input = &DeleteProvisioningTemplateVersionInput{}
+	}
+
+	output = &DeleteProvisioningTemplateVersionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteProvisioningTemplateVersion API operation for AWS IoT.
+//
+// Deletes a fleet provisioning template version.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteProvisioningTemplateVersion for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * DeleteConflictException
+//   You can't delete the resource because it is attached to one or more resources.
+//
+func (c *IoT) DeleteProvisioningTemplateVersion(input *DeleteProvisioningTemplateVersionInput) (*DeleteProvisioningTemplateVersionOutput, error) {
+	req, out := c.DeleteProvisioningTemplateVersionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteProvisioningTemplateVersionWithContext is the same as DeleteProvisioningTemplateVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteProvisioningTemplateVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteProvisioningTemplateVersionWithContext(ctx aws.Context, input *DeleteProvisioningTemplateVersionInput, opts ...request.Option) (*DeleteProvisioningTemplateVersionOutput, error) {
+	req, out := c.DeleteProvisioningTemplateVersionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3957,20 +5058,20 @@ func (c *IoT) DeleteRegistrationCodeRequest(input *DeleteRegistrationCodeInput) 
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteRegistrationCode for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeleteRegistrationCode(input *DeleteRegistrationCodeInput) (*DeleteRegistrationCodeOutput, error) {
@@ -4046,26 +5147,26 @@ func (c *IoT) DeleteRoleAliasRequest(input *DeleteRoleAliasInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteRoleAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDeleteConflictException "DeleteConflictException"
+// Returned Error Types:
+//   * DeleteConflictException
 //   You can't delete the resource because it is attached to one or more resources.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) DeleteRoleAlias(input *DeleteRoleAliasInput) (*DeleteRoleAliasOutput, error) {
@@ -4141,17 +5242,17 @@ func (c *IoT) DeleteScheduledAuditRequest(input *DeleteScheduledAuditInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteScheduledAudit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeleteScheduledAudit(input *DeleteScheduledAuditInput) (*DeleteScheduledAuditOutput, error) {
@@ -4227,17 +5328,17 @@ func (c *IoT) DeleteSecurityProfileRequest(input *DeleteSecurityProfileInput) (r
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteSecurityProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
@@ -4314,26 +5415,26 @@ func (c *IoT) DeleteStreamRequest(input *DeleteStreamInput) (req *request.Reques
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeDeleteConflictException "DeleteConflictException"
+//   * DeleteConflictException
 //   You can't delete the resource because it is attached to one or more resources.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeleteStream(input *DeleteStreamInput) (*DeleteStreamOutput, error) {
@@ -4410,27 +5511,27 @@ func (c *IoT) DeleteThingRequest(input *DeleteThingInput) (req *request.Request,
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteThing for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeleteThing(input *DeleteThingInput) (*DeleteThingOutput, error) {
@@ -4506,18 +5607,18 @@ func (c *IoT) DeleteThingGroupRequest(input *DeleteThingGroupInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteThingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeleteThingGroup(input *DeleteThingGroupInput) (*DeleteThingGroupOutput, error) {
@@ -4597,23 +5698,23 @@ func (c *IoT) DeleteThingTypeRequest(input *DeleteThingTypeInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteThingType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeleteThingType(input *DeleteThingTypeInput) (*DeleteThingTypeOutput, error) {
@@ -4689,20 +5790,20 @@ func (c *IoT) DeleteTopicRuleRequest(input *DeleteTopicRuleInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteTopicRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeConflictingResourceUpdateException "ConflictingResourceUpdateException"
+//   * ConflictingResourceUpdateException
 //   A conflicting resource update exception. This exception is thrown when two
 //   pending updates cause a conflict.
 //
@@ -4722,6 +5823,96 @@ func (c *IoT) DeleteTopicRule(input *DeleteTopicRuleInput) (*DeleteTopicRuleOutp
 // for more information on using Contexts.
 func (c *IoT) DeleteTopicRuleWithContext(ctx aws.Context, input *DeleteTopicRuleInput, opts ...request.Option) (*DeleteTopicRuleOutput, error) {
 	req, out := c.DeleteTopicRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTopicRuleDestination = "DeleteTopicRuleDestination"
+
+// DeleteTopicRuleDestinationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTopicRuleDestination operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTopicRuleDestination for more information on using the DeleteTopicRuleDestination
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTopicRuleDestinationRequest method.
+//    req, resp := client.DeleteTopicRuleDestinationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteTopicRuleDestinationRequest(input *DeleteTopicRuleDestinationInput) (req *request.Request, output *DeleteTopicRuleDestinationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTopicRuleDestination,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/destinations/{arn+}",
+	}
+
+	if input == nil {
+		input = &DeleteTopicRuleDestinationInput{}
+	}
+
+	output = &DeleteTopicRuleDestinationOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteTopicRuleDestination API operation for AWS IoT.
+//
+// Deletes a topic rule destination.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteTopicRuleDestination for usage and error information.
+//
+// Returned Error Types:
+//   * InternalException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ConflictingResourceUpdateException
+//   A conflicting resource update exception. This exception is thrown when two
+//   pending updates cause a conflict.
+//
+func (c *IoT) DeleteTopicRuleDestination(input *DeleteTopicRuleDestinationInput) (*DeleteTopicRuleDestinationOutput, error) {
+	req, out := c.DeleteTopicRuleDestinationRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTopicRuleDestinationWithContext is the same as DeleteTopicRuleDestination with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTopicRuleDestination for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteTopicRuleDestinationWithContext(ctx aws.Context, input *DeleteTopicRuleDestinationInput, opts ...request.Option) (*DeleteTopicRuleDestinationOutput, error) {
+	req, out := c.DeleteTopicRuleDestinationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4779,14 +5970,14 @@ func (c *IoT) DeleteV2LoggingLevelRequest(input *DeleteV2LoggingLevelInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation DeleteV2LoggingLevel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) DeleteV2LoggingLevel(input *DeleteV2LoggingLevelInput) (*DeleteV2LoggingLevelOutput, error) {
@@ -4863,23 +6054,23 @@ func (c *IoT) DeprecateThingTypeRequest(input *DeprecateThingTypeInput) (req *re
 // See the AWS API reference guide for AWS IoT's
 // API operation DeprecateThingType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DeprecateThingType(input *DeprecateThingTypeInput) (*DeprecateThingTypeOutput, error) {
@@ -4956,11 +6147,11 @@ func (c *IoT) DescribeAccountAuditConfigurationRequest(input *DescribeAccountAud
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeAccountAuditConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DescribeAccountAuditConfiguration(input *DescribeAccountAuditConfigurationInput) (*DescribeAccountAuditConfigurationOutput, error) {
@@ -4979,6 +6170,181 @@ func (c *IoT) DescribeAccountAuditConfiguration(input *DescribeAccountAuditConfi
 // for more information on using Contexts.
 func (c *IoT) DescribeAccountAuditConfigurationWithContext(ctx aws.Context, input *DescribeAccountAuditConfigurationInput, opts ...request.Option) (*DescribeAccountAuditConfigurationOutput, error) {
 	req, out := c.DescribeAccountAuditConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAuditFinding = "DescribeAuditFinding"
+
+// DescribeAuditFindingRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAuditFinding operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAuditFinding for more information on using the DescribeAuditFinding
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAuditFindingRequest method.
+//    req, resp := client.DescribeAuditFindingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeAuditFindingRequest(input *DescribeAuditFindingInput) (req *request.Request, output *DescribeAuditFindingOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAuditFinding,
+		HTTPMethod: "GET",
+		HTTPPath:   "/audit/findings/{findingId}",
+	}
+
+	if input == nil {
+		input = &DescribeAuditFindingInput{}
+	}
+
+	output = &DescribeAuditFindingOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAuditFinding API operation for AWS IoT.
+//
+// Gets information about a single audit finding. Properties include the reason
+// for noncompliance, the severity of the issue, and when the audit that returned
+// the finding was started.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeAuditFinding for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) DescribeAuditFinding(input *DescribeAuditFindingInput) (*DescribeAuditFindingOutput, error) {
+	req, out := c.DescribeAuditFindingRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAuditFindingWithContext is the same as DescribeAuditFinding with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAuditFinding for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeAuditFindingWithContext(ctx aws.Context, input *DescribeAuditFindingInput, opts ...request.Option) (*DescribeAuditFindingOutput, error) {
+	req, out := c.DescribeAuditFindingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAuditMitigationActionsTask = "DescribeAuditMitigationActionsTask"
+
+// DescribeAuditMitigationActionsTaskRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAuditMitigationActionsTask operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAuditMitigationActionsTask for more information on using the DescribeAuditMitigationActionsTask
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAuditMitigationActionsTaskRequest method.
+//    req, resp := client.DescribeAuditMitigationActionsTaskRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeAuditMitigationActionsTaskRequest(input *DescribeAuditMitigationActionsTaskInput) (req *request.Request, output *DescribeAuditMitigationActionsTaskOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAuditMitigationActionsTask,
+		HTTPMethod: "GET",
+		HTTPPath:   "/audit/mitigationactions/tasks/{taskId}",
+	}
+
+	if input == nil {
+		input = &DescribeAuditMitigationActionsTaskInput{}
+	}
+
+	output = &DescribeAuditMitigationActionsTaskOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAuditMitigationActionsTask API operation for AWS IoT.
+//
+// Gets information about an audit mitigation task that is used to apply mitigation
+// actions to a set of audit findings. Properties include the actions being
+// applied, the audit checks to which they're being applied, the task status,
+// and aggregated task statistics.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeAuditMitigationActionsTask for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) DescribeAuditMitigationActionsTask(input *DescribeAuditMitigationActionsTaskInput) (*DescribeAuditMitigationActionsTaskOutput, error) {
+	req, out := c.DescribeAuditMitigationActionsTaskRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAuditMitigationActionsTaskWithContext is the same as DescribeAuditMitigationActionsTask with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAuditMitigationActionsTask for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeAuditMitigationActionsTaskWithContext(ctx aws.Context, input *DescribeAuditMitigationActionsTaskInput, opts ...request.Option) (*DescribeAuditMitigationActionsTaskOutput, error) {
+	req, out := c.DescribeAuditMitigationActionsTaskRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5035,17 +6401,17 @@ func (c *IoT) DescribeAuditTaskRequest(input *DescribeAuditTaskInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeAuditTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DescribeAuditTask(input *DescribeAuditTaskInput) (*DescribeAuditTaskOutput, error) {
@@ -5120,23 +6486,23 @@ func (c *IoT) DescribeAuthorizerRequest(input *DescribeAuthorizerInput) (req *re
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DescribeAuthorizer(input *DescribeAuthorizerInput) (*DescribeAuthorizerOutput, error) {
@@ -5211,17 +6577,17 @@ func (c *IoT) DescribeBillingGroupRequest(input *DescribeBillingGroupInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeBillingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) DescribeBillingGroup(input *DescribeBillingGroupInput) (*DescribeBillingGroupOutput, error) {
@@ -5296,23 +6662,23 @@ func (c *IoT) DescribeCACertificateRequest(input *DescribeCACertificateInput) (r
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeCACertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) DescribeCACertificate(input *DescribeCACertificateInput) (*DescribeCACertificateOutput, error) {
@@ -5387,23 +6753,23 @@ func (c *IoT) DescribeCertificateRequest(input *DescribeCertificateInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) DescribeCertificate(input *DescribeCertificateInput) (*DescribeCertificateOutput, error) {
@@ -5478,23 +6844,23 @@ func (c *IoT) DescribeDefaultAuthorizerRequest(input *DescribeDefaultAuthorizerI
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeDefaultAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DescribeDefaultAuthorizer(input *DescribeDefaultAuthorizerInput) (*DescribeDefaultAuthorizerOutput, error) {
@@ -5513,6 +6879,96 @@ func (c *IoT) DescribeDefaultAuthorizer(input *DescribeDefaultAuthorizerInput) (
 // for more information on using Contexts.
 func (c *IoT) DescribeDefaultAuthorizerWithContext(ctx aws.Context, input *DescribeDefaultAuthorizerInput, opts ...request.Option) (*DescribeDefaultAuthorizerOutput, error) {
 	req, out := c.DescribeDefaultAuthorizerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeDomainConfiguration = "DescribeDomainConfiguration"
+
+// DescribeDomainConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeDomainConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeDomainConfiguration for more information on using the DescribeDomainConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeDomainConfigurationRequest method.
+//    req, resp := client.DescribeDomainConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeDomainConfigurationRequest(input *DescribeDomainConfigurationInput) (req *request.Request, output *DescribeDomainConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDescribeDomainConfiguration,
+		HTTPMethod: "GET",
+		HTTPPath:   "/domainConfigurations/{domainConfigurationName}",
+	}
+
+	if input == nil {
+		input = &DescribeDomainConfigurationInput{}
+	}
+
+	output = &DescribeDomainConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeDomainConfiguration API operation for AWS IoT.
+//
+// Gets summary information about a domain configuration.
+//
+// The domain configuration feature is in public preview and is subject to change.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeDomainConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) DescribeDomainConfiguration(input *DescribeDomainConfigurationInput) (*DescribeDomainConfigurationOutput, error) {
+	req, out := c.DescribeDomainConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// DescribeDomainConfigurationWithContext is the same as DescribeDomainConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeDomainConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeDomainConfigurationWithContext(ctx aws.Context, input *DescribeDomainConfigurationInput, opts ...request.Option) (*DescribeDomainConfigurationOutput, error) {
+	req, out := c.DescribeDomainConfigurationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5569,17 +7025,17 @@ func (c *IoT) DescribeEndpointRequest(input *DescribeEndpointInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalFailureException "InternalFailureException"
+// Returned Error Types:
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
 func (c *IoT) DescribeEndpoint(input *DescribeEndpointInput) (*DescribeEndpointOutput, error) {
@@ -5654,11 +7110,11 @@ func (c *IoT) DescribeEventConfigurationsRequest(input *DescribeEventConfigurati
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeEventConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalFailureException "InternalFailureException"
+// Returned Error Types:
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
 func (c *IoT) DescribeEventConfigurations(input *DescribeEventConfigurationsInput) (*DescribeEventConfigurationsOutput, error) {
@@ -5733,23 +7189,23 @@ func (c *IoT) DescribeIndexRequest(input *DescribeIndexInput) (req *request.Requ
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeIndex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) DescribeIndex(input *DescribeIndexInput) (*DescribeIndexOutput, error) {
@@ -5824,17 +7280,17 @@ func (c *IoT) DescribeJobRequest(input *DescribeJobInput) (req *request.Request,
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) DescribeJob(input *DescribeJobInput) (*DescribeJobOutput, error) {
@@ -5909,17 +7365,17 @@ func (c *IoT) DescribeJobExecutionRequest(input *DescribeJobExecutionInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeJobExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) DescribeJobExecution(input *DescribeJobExecutionInput) (*DescribeJobExecutionOutput, error) {
@@ -5938,6 +7394,267 @@ func (c *IoT) DescribeJobExecution(input *DescribeJobExecutionInput) (*DescribeJ
 // for more information on using Contexts.
 func (c *IoT) DescribeJobExecutionWithContext(ctx aws.Context, input *DescribeJobExecutionInput, opts ...request.Option) (*DescribeJobExecutionOutput, error) {
 	req, out := c.DescribeJobExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeMitigationAction = "DescribeMitigationAction"
+
+// DescribeMitigationActionRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeMitigationAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeMitigationAction for more information on using the DescribeMitigationAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeMitigationActionRequest method.
+//    req, resp := client.DescribeMitigationActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeMitigationActionRequest(input *DescribeMitigationActionInput) (req *request.Request, output *DescribeMitigationActionOutput) {
+	op := &request.Operation{
+		Name:       opDescribeMitigationAction,
+		HTTPMethod: "GET",
+		HTTPPath:   "/mitigationactions/actions/{actionName}",
+	}
+
+	if input == nil {
+		input = &DescribeMitigationActionInput{}
+	}
+
+	output = &DescribeMitigationActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeMitigationAction API operation for AWS IoT.
+//
+// Gets information about a mitigation action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeMitigationAction for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) DescribeMitigationAction(input *DescribeMitigationActionInput) (*DescribeMitigationActionOutput, error) {
+	req, out := c.DescribeMitigationActionRequest(input)
+	return out, req.Send()
+}
+
+// DescribeMitigationActionWithContext is the same as DescribeMitigationAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeMitigationAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeMitigationActionWithContext(ctx aws.Context, input *DescribeMitigationActionInput, opts ...request.Option) (*DescribeMitigationActionOutput, error) {
+	req, out := c.DescribeMitigationActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeProvisioningTemplate = "DescribeProvisioningTemplate"
+
+// DescribeProvisioningTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeProvisioningTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeProvisioningTemplate for more information on using the DescribeProvisioningTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeProvisioningTemplateRequest method.
+//    req, resp := client.DescribeProvisioningTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeProvisioningTemplateRequest(input *DescribeProvisioningTemplateInput) (req *request.Request, output *DescribeProvisioningTemplateOutput) {
+	op := &request.Operation{
+		Name:       opDescribeProvisioningTemplate,
+		HTTPMethod: "GET",
+		HTTPPath:   "/provisioning-templates/{templateName}",
+	}
+
+	if input == nil {
+		input = &DescribeProvisioningTemplateInput{}
+	}
+
+	output = &DescribeProvisioningTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeProvisioningTemplate API operation for AWS IoT.
+//
+// Returns information about a fleet provisioning template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeProvisioningTemplate for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+func (c *IoT) DescribeProvisioningTemplate(input *DescribeProvisioningTemplateInput) (*DescribeProvisioningTemplateOutput, error) {
+	req, out := c.DescribeProvisioningTemplateRequest(input)
+	return out, req.Send()
+}
+
+// DescribeProvisioningTemplateWithContext is the same as DescribeProvisioningTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeProvisioningTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeProvisioningTemplateWithContext(ctx aws.Context, input *DescribeProvisioningTemplateInput, opts ...request.Option) (*DescribeProvisioningTemplateOutput, error) {
+	req, out := c.DescribeProvisioningTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeProvisioningTemplateVersion = "DescribeProvisioningTemplateVersion"
+
+// DescribeProvisioningTemplateVersionRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeProvisioningTemplateVersion operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeProvisioningTemplateVersion for more information on using the DescribeProvisioningTemplateVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeProvisioningTemplateVersionRequest method.
+//    req, resp := client.DescribeProvisioningTemplateVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeProvisioningTemplateVersionRequest(input *DescribeProvisioningTemplateVersionInput) (req *request.Request, output *DescribeProvisioningTemplateVersionOutput) {
+	op := &request.Operation{
+		Name:       opDescribeProvisioningTemplateVersion,
+		HTTPMethod: "GET",
+		HTTPPath:   "/provisioning-templates/{templateName}/versions/{versionId}",
+	}
+
+	if input == nil {
+		input = &DescribeProvisioningTemplateVersionInput{}
+	}
+
+	output = &DescribeProvisioningTemplateVersionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeProvisioningTemplateVersion API operation for AWS IoT.
+//
+// Returns information about a fleet provisioning template version.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeProvisioningTemplateVersion for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+func (c *IoT) DescribeProvisioningTemplateVersion(input *DescribeProvisioningTemplateVersionInput) (*DescribeProvisioningTemplateVersionOutput, error) {
+	req, out := c.DescribeProvisioningTemplateVersionRequest(input)
+	return out, req.Send()
+}
+
+// DescribeProvisioningTemplateVersionWithContext is the same as DescribeProvisioningTemplateVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeProvisioningTemplateVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeProvisioningTemplateVersionWithContext(ctx aws.Context, input *DescribeProvisioningTemplateVersionInput, opts ...request.Option) (*DescribeProvisioningTemplateVersionOutput, error) {
+	req, out := c.DescribeProvisioningTemplateVersionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5994,23 +7711,23 @@ func (c *IoT) DescribeRoleAliasRequest(input *DescribeRoleAliasInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeRoleAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) DescribeRoleAlias(input *DescribeRoleAliasInput) (*DescribeRoleAliasOutput, error) {
@@ -6085,17 +7802,17 @@ func (c *IoT) DescribeScheduledAuditRequest(input *DescribeScheduledAuditInput) 
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeScheduledAudit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DescribeScheduledAudit(input *DescribeScheduledAuditInput) (*DescribeScheduledAuditOutput, error) {
@@ -6170,17 +7887,17 @@ func (c *IoT) DescribeSecurityProfileRequest(input *DescribeSecurityProfileInput
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeSecurityProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DescribeSecurityProfile(input *DescribeSecurityProfileInput) (*DescribeSecurityProfileOutput, error) {
@@ -6255,23 +7972,23 @@ func (c *IoT) DescribeStreamRequest(input *DescribeStreamInput) (req *request.Re
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DescribeStream(input *DescribeStreamInput) (*DescribeStreamOutput, error) {
@@ -6346,23 +8063,23 @@ func (c *IoT) DescribeThingRequest(input *DescribeThingInput) (req *request.Requ
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeThing for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DescribeThing(input *DescribeThingInput) (*DescribeThingOutput, error) {
@@ -6437,17 +8154,17 @@ func (c *IoT) DescribeThingGroupRequest(input *DescribeThingGroupInput) (req *re
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeThingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) DescribeThingGroup(input *DescribeThingGroupInput) (*DescribeThingGroupOutput, error) {
@@ -6522,20 +8239,20 @@ func (c *IoT) DescribeThingRegistrationTaskRequest(input *DescribeThingRegistrat
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeThingRegistrationTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) DescribeThingRegistrationTask(input *DescribeThingRegistrationTaskInput) (*DescribeThingRegistrationTaskOutput, error) {
@@ -6610,23 +8327,23 @@ func (c *IoT) DescribeThingTypeRequest(input *DescribeThingTypeInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation DescribeThingType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DescribeThingType(input *DescribeThingTypeInput) (*DescribeThingTypeOutput, error) {
@@ -6702,23 +8419,23 @@ func (c *IoT) DetachPolicyRequest(input *DetachPolicyInput) (req *request.Reques
 // See the AWS API reference guide for AWS IoT's
 // API operation DetachPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 func (c *IoT) DetachPolicy(input *DetachPolicyInput) (*DetachPolicyOutput, error) {
@@ -6801,23 +8518,23 @@ func (c *IoT) DetachPrincipalPolicyRequest(input *DetachPrincipalPolicyInput) (r
 // See the AWS API reference guide for AWS IoT's
 // API operation DetachPrincipalPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 //
@@ -6898,17 +8615,17 @@ func (c *IoT) DetachSecurityProfileRequest(input *DetachSecurityProfileInput) (r
 // See the AWS API reference guide for AWS IoT's
 // API operation DetachSecurityProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DetachSecurityProfile(input *DetachSecurityProfileInput) (*DetachSecurityProfileOutput, error) {
@@ -6975,7 +8692,9 @@ func (c *IoT) DetachThingPrincipalRequest(input *DetachThingPrincipalInput) (req
 
 // DetachThingPrincipal API operation for AWS IoT.
 //
-// Detaches the specified principal from the specified thing.
+// Detaches the specified principal from the specified thing. A principal can
+// be X.509 certificates, IAM users, groups, and roles, Amazon Cognito identities
+// or federated identities.
 //
 // This call is asynchronous. It might take several seconds for the detachment
 // to propagate.
@@ -6987,23 +8706,23 @@ func (c *IoT) DetachThingPrincipalRequest(input *DetachThingPrincipalInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation DetachThingPrincipal for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) DetachThingPrincipal(input *DetachThingPrincipalInput) (*DetachThingPrincipalOutput, error) {
@@ -7079,20 +8798,20 @@ func (c *IoT) DisableTopicRuleRequest(input *DisableTopicRuleInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation DisableTopicRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeConflictingResourceUpdateException "ConflictingResourceUpdateException"
+//   * ConflictingResourceUpdateException
 //   A conflicting resource update exception. This exception is thrown when two
 //   pending updates cause a conflict.
 //
@@ -7169,20 +8888,20 @@ func (c *IoT) EnableTopicRuleRequest(input *EnableTopicRuleInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation EnableTopicRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeConflictingResourceUpdateException "ConflictingResourceUpdateException"
+//   * ConflictingResourceUpdateException
 //   A conflicting resource update exception. This exception is thrown when two
 //   pending updates cause a conflict.
 //
@@ -7202,6 +8921,106 @@ func (c *IoT) EnableTopicRule(input *EnableTopicRuleInput) (*EnableTopicRuleOutp
 // for more information on using Contexts.
 func (c *IoT) EnableTopicRuleWithContext(ctx aws.Context, input *EnableTopicRuleInput, opts ...request.Option) (*EnableTopicRuleOutput, error) {
 	req, out := c.EnableTopicRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetCardinality = "GetCardinality"
+
+// GetCardinalityRequest generates a "aws/request.Request" representing the
+// client's request for the GetCardinality operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCardinality for more information on using the GetCardinality
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCardinalityRequest method.
+//    req, resp := client.GetCardinalityRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) GetCardinalityRequest(input *GetCardinalityInput) (req *request.Request, output *GetCardinalityOutput) {
+	op := &request.Operation{
+		Name:       opGetCardinality,
+		HTTPMethod: "POST",
+		HTTPPath:   "/indices/cardinality",
+	}
+
+	if input == nil {
+		input = &GetCardinalityInput{}
+	}
+
+	output = &GetCardinalityOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCardinality API operation for AWS IoT.
+//
+// Returns the approximate count of unique values that match the query.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation GetCardinality for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * InvalidQueryException
+//   The query is invalid.
+//
+//   * InvalidAggregationException
+//   The aggregation is invalid.
+//
+//   * IndexNotReadyException
+//   The index is not ready.
+//
+func (c *IoT) GetCardinality(input *GetCardinalityInput) (*GetCardinalityOutput, error) {
+	req, out := c.GetCardinalityRequest(input)
+	return out, req.Send()
+}
+
+// GetCardinalityWithContext is the same as GetCardinality with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCardinality for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) GetCardinalityWithContext(ctx aws.Context, input *GetCardinalityInput, opts ...request.Option) (*GetCardinalityOutput, error) {
+	req, out := c.GetCardinalityRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7259,26 +9078,26 @@ func (c *IoT) GetEffectivePoliciesRequest(input *GetEffectivePoliciesInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation GetEffectivePolicies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 func (c *IoT) GetEffectivePolicies(input *GetEffectivePoliciesInput) (*GetEffectivePoliciesOutput, error) {
@@ -7344,7 +9163,7 @@ func (c *IoT) GetIndexingConfigurationRequest(input *GetIndexingConfigurationInp
 
 // GetIndexingConfiguration API operation for AWS IoT.
 //
-// Gets the search configuration.
+// Gets the indexing configuration.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7353,20 +9172,20 @@ func (c *IoT) GetIndexingConfigurationRequest(input *GetIndexingConfigurationInp
 // See the AWS API reference guide for AWS IoT's
 // API operation GetIndexingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) GetIndexingConfiguration(input *GetIndexingConfigurationInput) (*GetIndexingConfigurationOutput, error) {
@@ -7441,17 +9260,17 @@ func (c *IoT) GetJobDocumentRequest(input *GetJobDocumentInput) (req *request.Re
 // See the AWS API reference guide for AWS IoT's
 // API operation GetJobDocument for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) GetJobDocument(input *GetJobDocumentInput) (*GetJobDocumentOutput, error) {
@@ -7528,14 +9347,14 @@ func (c *IoT) GetLoggingOptionsRequest(input *GetLoggingOptionsInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation GetLoggingOptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) GetLoggingOptions(input *GetLoggingOptionsInput) (*GetLoggingOptionsOutput, error) {
@@ -7610,23 +9429,23 @@ func (c *IoT) GetOTAUpdateRequest(input *GetOTAUpdateInput) (req *request.Reques
 // See the AWS API reference guide for AWS IoT's
 // API operation GetOTAUpdate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) GetOTAUpdate(input *GetOTAUpdateInput) (*GetOTAUpdateOutput, error) {
@@ -7645,6 +9464,115 @@ func (c *IoT) GetOTAUpdate(input *GetOTAUpdateInput) (*GetOTAUpdateOutput, error
 // for more information on using Contexts.
 func (c *IoT) GetOTAUpdateWithContext(ctx aws.Context, input *GetOTAUpdateInput, opts ...request.Option) (*GetOTAUpdateOutput, error) {
 	req, out := c.GetOTAUpdateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetPercentiles = "GetPercentiles"
+
+// GetPercentilesRequest generates a "aws/request.Request" representing the
+// client's request for the GetPercentiles operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetPercentiles for more information on using the GetPercentiles
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetPercentilesRequest method.
+//    req, resp := client.GetPercentilesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) GetPercentilesRequest(input *GetPercentilesInput) (req *request.Request, output *GetPercentilesOutput) {
+	op := &request.Operation{
+		Name:       opGetPercentiles,
+		HTTPMethod: "POST",
+		HTTPPath:   "/indices/percentiles",
+	}
+
+	if input == nil {
+		input = &GetPercentilesInput{}
+	}
+
+	output = &GetPercentilesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetPercentiles API operation for AWS IoT.
+//
+// Groups the aggregated values that match the query into percentile groupings.
+// The default percentile groupings are: 1,5,25,50,75,95,99, although you can
+// specify your own when you call GetPercentiles. This function returns a value
+// for each percentile group specified (or the default percentile groupings).
+// The percentile group "1" contains the aggregated field value that occurs
+// in approximately one percent of the values that match the query. The percentile
+// group "5" contains the aggregated field value that occurs in approximately
+// five percent of the values that match the query, and so on. The result is
+// an approximation, the more values that match the query, the more accurate
+// the percentile values.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation GetPercentiles for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * InvalidQueryException
+//   The query is invalid.
+//
+//   * InvalidAggregationException
+//   The aggregation is invalid.
+//
+//   * IndexNotReadyException
+//   The index is not ready.
+//
+func (c *IoT) GetPercentiles(input *GetPercentilesInput) (*GetPercentilesOutput, error) {
+	req, out := c.GetPercentilesRequest(input)
+	return out, req.Send()
+}
+
+// GetPercentilesWithContext is the same as GetPercentiles with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetPercentiles for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) GetPercentilesWithContext(ctx aws.Context, input *GetPercentilesInput, opts ...request.Option) (*GetPercentilesOutput, error) {
+	req, out := c.GetPercentilesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7702,23 +9630,23 @@ func (c *IoT) GetPolicyRequest(input *GetPolicyInput) (req *request.Request, out
 // See the AWS API reference guide for AWS IoT's
 // API operation GetPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) GetPolicy(input *GetPolicyInput) (*GetPolicyOutput, error) {
@@ -7793,23 +9721,23 @@ func (c *IoT) GetPolicyVersionRequest(input *GetPolicyVersionInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation GetPolicyVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) GetPolicyVersion(input *GetPolicyVersionInput) (*GetPolicyVersionOutput, error) {
@@ -7884,20 +9812,20 @@ func (c *IoT) GetRegistrationCodeRequest(input *GetRegistrationCodeInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation GetRegistrationCode for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
 func (c *IoT) GetRegistrationCode(input *GetRegistrationCodeInput) (*GetRegistrationCodeOutput, error) {
@@ -7916,6 +9844,108 @@ func (c *IoT) GetRegistrationCode(input *GetRegistrationCodeInput) (*GetRegistra
 // for more information on using Contexts.
 func (c *IoT) GetRegistrationCodeWithContext(ctx aws.Context, input *GetRegistrationCodeInput, opts ...request.Option) (*GetRegistrationCodeOutput, error) {
 	req, out := c.GetRegistrationCodeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetStatistics = "GetStatistics"
+
+// GetStatisticsRequest generates a "aws/request.Request" representing the
+// client's request for the GetStatistics operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetStatistics for more information on using the GetStatistics
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetStatisticsRequest method.
+//    req, resp := client.GetStatisticsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) GetStatisticsRequest(input *GetStatisticsInput) (req *request.Request, output *GetStatisticsOutput) {
+	op := &request.Operation{
+		Name:       opGetStatistics,
+		HTTPMethod: "POST",
+		HTTPPath:   "/indices/statistics",
+	}
+
+	if input == nil {
+		input = &GetStatisticsInput{}
+	}
+
+	output = &GetStatisticsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetStatistics API operation for AWS IoT.
+//
+// Returns the count, average, sum, minimum, maximum, sum of squares, variance,
+// and standard deviation for the specified aggregated field. If the aggregation
+// field is of type String, only the count statistic is returned.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation GetStatistics for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * InvalidQueryException
+//   The query is invalid.
+//
+//   * InvalidAggregationException
+//   The aggregation is invalid.
+//
+//   * IndexNotReadyException
+//   The index is not ready.
+//
+func (c *IoT) GetStatistics(input *GetStatisticsInput) (*GetStatisticsOutput, error) {
+	req, out := c.GetStatisticsRequest(input)
+	return out, req.Send()
+}
+
+// GetStatisticsWithContext is the same as GetStatistics with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetStatistics for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) GetStatisticsWithContext(ctx aws.Context, input *GetStatisticsInput, opts ...request.Option) (*GetStatisticsOutput, error) {
+	req, out := c.GetStatisticsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7972,17 +10002,17 @@ func (c *IoT) GetTopicRuleRequest(input *GetTopicRuleInput) (req *request.Reques
 // See the AWS API reference guide for AWS IoT's
 // API operation GetTopicRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
 func (c *IoT) GetTopicRule(input *GetTopicRuleInput) (*GetTopicRuleOutput, error) {
@@ -8001,6 +10031,91 @@ func (c *IoT) GetTopicRule(input *GetTopicRuleInput) (*GetTopicRuleOutput, error
 // for more information on using Contexts.
 func (c *IoT) GetTopicRuleWithContext(ctx aws.Context, input *GetTopicRuleInput, opts ...request.Option) (*GetTopicRuleOutput, error) {
 	req, out := c.GetTopicRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetTopicRuleDestination = "GetTopicRuleDestination"
+
+// GetTopicRuleDestinationRequest generates a "aws/request.Request" representing the
+// client's request for the GetTopicRuleDestination operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetTopicRuleDestination for more information on using the GetTopicRuleDestination
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetTopicRuleDestinationRequest method.
+//    req, resp := client.GetTopicRuleDestinationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) GetTopicRuleDestinationRequest(input *GetTopicRuleDestinationInput) (req *request.Request, output *GetTopicRuleDestinationOutput) {
+	op := &request.Operation{
+		Name:       opGetTopicRuleDestination,
+		HTTPMethod: "GET",
+		HTTPPath:   "/destinations/{arn+}",
+	}
+
+	if input == nil {
+		input = &GetTopicRuleDestinationInput{}
+	}
+
+	output = &GetTopicRuleDestinationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetTopicRuleDestination API operation for AWS IoT.
+//
+// Gets information about a topic rule destination.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation GetTopicRuleDestination for usage and error information.
+//
+// Returned Error Types:
+//   * InternalException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+func (c *IoT) GetTopicRuleDestination(input *GetTopicRuleDestinationInput) (*GetTopicRuleDestinationOutput, error) {
+	req, out := c.GetTopicRuleDestinationRequest(input)
+	return out, req.Send()
+}
+
+// GetTopicRuleDestinationWithContext is the same as GetTopicRuleDestination with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetTopicRuleDestination for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) GetTopicRuleDestinationWithContext(ctx aws.Context, input *GetTopicRuleDestinationInput, opts ...request.Option) (*GetTopicRuleDestinationOutput, error) {
+	req, out := c.GetTopicRuleDestinationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8057,14 +10172,14 @@ func (c *IoT) GetV2LoggingOptionsRequest(input *GetV2LoggingOptionsInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation GetV2LoggingOptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeNotConfiguredException "NotConfiguredException"
+//   * NotConfiguredException
 //   The resource is not configured.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) GetV2LoggingOptions(input *GetV2LoggingOptionsInput) (*GetV2LoggingOptionsOutput, error) {
@@ -8139,17 +10254,17 @@ func (c *IoT) ListActiveViolationsRequest(input *ListActiveViolationsInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation ListActiveViolations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListActiveViolations(input *ListActiveViolationsInput) (*ListActiveViolationsOutput, error) {
@@ -8224,26 +10339,26 @@ func (c *IoT) ListAttachedPoliciesRequest(input *ListAttachedPoliciesInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation ListAttachedPolicies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 func (c *IoT) ListAttachedPolicies(input *ListAttachedPoliciesInput) (*ListAttachedPoliciesOutput, error) {
@@ -8320,14 +10435,14 @@ func (c *IoT) ListAuditFindingsRequest(input *ListAuditFindingsInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation ListAuditFindings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListAuditFindings(input *ListAuditFindingsInput) (*ListAuditFindingsOutput, error) {
@@ -8346,6 +10461,170 @@ func (c *IoT) ListAuditFindings(input *ListAuditFindingsInput) (*ListAuditFindin
 // for more information on using Contexts.
 func (c *IoT) ListAuditFindingsWithContext(ctx aws.Context, input *ListAuditFindingsInput, opts ...request.Option) (*ListAuditFindingsOutput, error) {
 	req, out := c.ListAuditFindingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListAuditMitigationActionsExecutions = "ListAuditMitigationActionsExecutions"
+
+// ListAuditMitigationActionsExecutionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListAuditMitigationActionsExecutions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListAuditMitigationActionsExecutions for more information on using the ListAuditMitigationActionsExecutions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListAuditMitigationActionsExecutionsRequest method.
+//    req, resp := client.ListAuditMitigationActionsExecutionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListAuditMitigationActionsExecutionsRequest(input *ListAuditMitigationActionsExecutionsInput) (req *request.Request, output *ListAuditMitigationActionsExecutionsOutput) {
+	op := &request.Operation{
+		Name:       opListAuditMitigationActionsExecutions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/audit/mitigationactions/executions",
+	}
+
+	if input == nil {
+		input = &ListAuditMitigationActionsExecutionsInput{}
+	}
+
+	output = &ListAuditMitigationActionsExecutionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListAuditMitigationActionsExecutions API operation for AWS IoT.
+//
+// Gets the status of audit mitigation action tasks that were executed.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListAuditMitigationActionsExecutions for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) ListAuditMitigationActionsExecutions(input *ListAuditMitigationActionsExecutionsInput) (*ListAuditMitigationActionsExecutionsOutput, error) {
+	req, out := c.ListAuditMitigationActionsExecutionsRequest(input)
+	return out, req.Send()
+}
+
+// ListAuditMitigationActionsExecutionsWithContext is the same as ListAuditMitigationActionsExecutions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListAuditMitigationActionsExecutions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuditMitigationActionsExecutionsWithContext(ctx aws.Context, input *ListAuditMitigationActionsExecutionsInput, opts ...request.Option) (*ListAuditMitigationActionsExecutionsOutput, error) {
+	req, out := c.ListAuditMitigationActionsExecutionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListAuditMitigationActionsTasks = "ListAuditMitigationActionsTasks"
+
+// ListAuditMitigationActionsTasksRequest generates a "aws/request.Request" representing the
+// client's request for the ListAuditMitigationActionsTasks operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListAuditMitigationActionsTasks for more information on using the ListAuditMitigationActionsTasks
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListAuditMitigationActionsTasksRequest method.
+//    req, resp := client.ListAuditMitigationActionsTasksRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListAuditMitigationActionsTasksRequest(input *ListAuditMitigationActionsTasksInput) (req *request.Request, output *ListAuditMitigationActionsTasksOutput) {
+	op := &request.Operation{
+		Name:       opListAuditMitigationActionsTasks,
+		HTTPMethod: "GET",
+		HTTPPath:   "/audit/mitigationactions/tasks",
+	}
+
+	if input == nil {
+		input = &ListAuditMitigationActionsTasksInput{}
+	}
+
+	output = &ListAuditMitigationActionsTasksOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListAuditMitigationActionsTasks API operation for AWS IoT.
+//
+// Gets a list of audit mitigation action tasks that match the specified filters.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListAuditMitigationActionsTasks for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) ListAuditMitigationActionsTasks(input *ListAuditMitigationActionsTasksInput) (*ListAuditMitigationActionsTasksOutput, error) {
+	req, out := c.ListAuditMitigationActionsTasksRequest(input)
+	return out, req.Send()
+}
+
+// ListAuditMitigationActionsTasksWithContext is the same as ListAuditMitigationActionsTasks with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListAuditMitigationActionsTasks for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuditMitigationActionsTasksWithContext(ctx aws.Context, input *ListAuditMitigationActionsTasksInput, opts ...request.Option) (*ListAuditMitigationActionsTasksOutput, error) {
+	req, out := c.ListAuditMitigationActionsTasksRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8403,14 +10682,14 @@ func (c *IoT) ListAuditTasksRequest(input *ListAuditTasksInput) (req *request.Re
 // See the AWS API reference guide for AWS IoT's
 // API operation ListAuditTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListAuditTasks(input *ListAuditTasksInput) (*ListAuditTasksOutput, error) {
@@ -8485,20 +10764,20 @@ func (c *IoT) ListAuthorizersRequest(input *ListAuthorizersInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation ListAuthorizers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListAuthorizers(input *ListAuthorizersInput) (*ListAuthorizersOutput, error) {
@@ -8573,17 +10852,17 @@ func (c *IoT) ListBillingGroupsRequest(input *ListBillingGroupsInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation ListBillingGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
 func (c *IoT) ListBillingGroups(input *ListBillingGroupsInput) (*ListBillingGroupsOutput, error) {
@@ -8661,20 +10940,20 @@ func (c *IoT) ListCACertificatesRequest(input *ListCACertificatesInput) (req *re
 // See the AWS API reference guide for AWS IoT's
 // API operation ListCACertificates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListCACertificates(input *ListCACertificatesInput) (*ListCACertificatesOutput, error) {
@@ -8752,20 +11031,20 @@ func (c *IoT) ListCertificatesRequest(input *ListCertificatesInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation ListCertificates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListCertificates(input *ListCertificatesInput) (*ListCertificatesOutput, error) {
@@ -8840,20 +11119,20 @@ func (c *IoT) ListCertificatesByCARequest(input *ListCertificatesByCAInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation ListCertificatesByCA for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListCertificatesByCA(input *ListCertificatesByCAInput) (*ListCertificatesByCAOutput, error) {
@@ -8872,6 +11151,97 @@ func (c *IoT) ListCertificatesByCA(input *ListCertificatesByCAInput) (*ListCerti
 // for more information on using Contexts.
 func (c *IoT) ListCertificatesByCAWithContext(ctx aws.Context, input *ListCertificatesByCAInput, opts ...request.Option) (*ListCertificatesByCAOutput, error) {
 	req, out := c.ListCertificatesByCARequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListDomainConfigurations = "ListDomainConfigurations"
+
+// ListDomainConfigurationsRequest generates a "aws/request.Request" representing the
+// client's request for the ListDomainConfigurations operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListDomainConfigurations for more information on using the ListDomainConfigurations
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListDomainConfigurationsRequest method.
+//    req, resp := client.ListDomainConfigurationsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListDomainConfigurationsRequest(input *ListDomainConfigurationsInput) (req *request.Request, output *ListDomainConfigurationsOutput) {
+	op := &request.Operation{
+		Name:       opListDomainConfigurations,
+		HTTPMethod: "GET",
+		HTTPPath:   "/domainConfigurations",
+	}
+
+	if input == nil {
+		input = &ListDomainConfigurationsInput{}
+	}
+
+	output = &ListDomainConfigurationsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListDomainConfigurations API operation for AWS IoT.
+//
+// Gets a list of domain configurations for the user. This list is sorted alphabetically
+// by domain configuration name.
+//
+// The domain configuration feature is in public preview and is subject to change.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListDomainConfigurations for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) ListDomainConfigurations(input *ListDomainConfigurationsInput) (*ListDomainConfigurationsOutput, error) {
+	req, out := c.ListDomainConfigurationsRequest(input)
+	return out, req.Send()
+}
+
+// ListDomainConfigurationsWithContext is the same as ListDomainConfigurations with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDomainConfigurations for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListDomainConfigurationsWithContext(ctx aws.Context, input *ListDomainConfigurationsInput, opts ...request.Option) (*ListDomainConfigurationsOutput, error) {
+	req, out := c.ListDomainConfigurationsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8928,20 +11298,20 @@ func (c *IoT) ListIndicesRequest(input *ListIndicesInput) (req *request.Request,
 // See the AWS API reference guide for AWS IoT's
 // API operation ListIndices for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListIndices(input *ListIndicesInput) (*ListIndicesOutput, error) {
@@ -9016,17 +11386,17 @@ func (c *IoT) ListJobExecutionsForJobRequest(input *ListJobExecutionsForJobInput
 // See the AWS API reference guide for AWS IoT's
 // API operation ListJobExecutionsForJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) ListJobExecutionsForJob(input *ListJobExecutionsForJobInput) (*ListJobExecutionsForJobOutput, error) {
@@ -9101,17 +11471,17 @@ func (c *IoT) ListJobExecutionsForThingRequest(input *ListJobExecutionsForThingI
 // See the AWS API reference guide for AWS IoT's
 // API operation ListJobExecutionsForThing for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) ListJobExecutionsForThing(input *ListJobExecutionsForThingInput) (*ListJobExecutionsForThingOutput, error) {
@@ -9186,17 +11556,17 @@ func (c *IoT) ListJobsRequest(input *ListJobsInput) (req *request.Request, outpu
 // See the AWS API reference guide for AWS IoT's
 // API operation ListJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) ListJobs(input *ListJobsInput) (*ListJobsOutput, error) {
@@ -9215,6 +11585,88 @@ func (c *IoT) ListJobs(input *ListJobsInput) (*ListJobsOutput, error) {
 // for more information on using Contexts.
 func (c *IoT) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, opts ...request.Option) (*ListJobsOutput, error) {
 	req, out := c.ListJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListMitigationActions = "ListMitigationActions"
+
+// ListMitigationActionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListMitigationActions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListMitigationActions for more information on using the ListMitigationActions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListMitigationActionsRequest method.
+//    req, resp := client.ListMitigationActionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListMitigationActionsRequest(input *ListMitigationActionsInput) (req *request.Request, output *ListMitigationActionsOutput) {
+	op := &request.Operation{
+		Name:       opListMitigationActions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/mitigationactions/actions",
+	}
+
+	if input == nil {
+		input = &ListMitigationActionsInput{}
+	}
+
+	output = &ListMitigationActionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListMitigationActions API operation for AWS IoT.
+//
+// Gets a list of all mitigation actions that match the specified filter criteria.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListMitigationActions for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) ListMitigationActions(input *ListMitigationActionsInput) (*ListMitigationActionsOutput, error) {
+	req, out := c.ListMitigationActionsRequest(input)
+	return out, req.Send()
+}
+
+// ListMitigationActionsWithContext is the same as ListMitigationActions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListMitigationActions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListMitigationActionsWithContext(ctx aws.Context, input *ListMitigationActionsInput, opts ...request.Option) (*ListMitigationActionsOutput, error) {
+	req, out := c.ListMitigationActionsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -9271,20 +11723,20 @@ func (c *IoT) ListOTAUpdatesRequest(input *ListOTAUpdatesInput) (req *request.Re
 // See the AWS API reference guide for AWS IoT's
 // API operation ListOTAUpdates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) ListOTAUpdates(input *ListOTAUpdatesInput) (*ListOTAUpdatesOutput, error) {
@@ -9359,20 +11811,20 @@ func (c *IoT) ListOutgoingCertificatesRequest(input *ListOutgoingCertificatesInp
 // See the AWS API reference guide for AWS IoT's
 // API operation ListOutgoingCertificates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListOutgoingCertificates(input *ListOutgoingCertificatesInput) (*ListOutgoingCertificatesOutput, error) {
@@ -9447,20 +11899,20 @@ func (c *IoT) ListPoliciesRequest(input *ListPoliciesInput) (req *request.Reques
 // See the AWS API reference guide for AWS IoT's
 // API operation ListPolicies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListPolicies(input *ListPoliciesInput) (*ListPoliciesOutput, error) {
@@ -9542,23 +11994,23 @@ func (c *IoT) ListPolicyPrincipalsRequest(input *ListPolicyPrincipalsInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation ListPolicyPrincipals for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 //
@@ -9637,23 +12089,23 @@ func (c *IoT) ListPolicyVersionsRequest(input *ListPolicyVersionsInput) (req *re
 // See the AWS API reference guide for AWS IoT's
 // API operation ListPolicyVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListPolicyVersions(input *ListPolicyVersionsInput) (*ListPolicyVersionsOutput, error) {
@@ -9725,7 +12177,7 @@ func (c *IoT) ListPrincipalPoliciesRequest(input *ListPrincipalPoliciesInput) (r
 // ListPrincipalPolicies API operation for AWS IoT.
 //
 // Lists the policies attached to the specified principal. If you use an Cognito
-// identity, the ID must be in AmazonCognito Identity format (http://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_GetCredentialsForIdentity.html#API_GetCredentialsForIdentity_RequestSyntax).
+// identity, the ID must be in AmazonCognito Identity format (https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_GetCredentialsForIdentity.html#API_GetCredentialsForIdentity_RequestSyntax).
 //
 // Note: This API is deprecated. Please use ListAttachedPolicies instead.
 //
@@ -9736,23 +12188,23 @@ func (c *IoT) ListPrincipalPoliciesRequest(input *ListPrincipalPoliciesInput) (r
 // See the AWS API reference guide for AWS IoT's
 // API operation ListPrincipalPolicies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 //
@@ -9822,7 +12274,9 @@ func (c *IoT) ListPrincipalThingsRequest(input *ListPrincipalThingsInput) (req *
 
 // ListPrincipalThings API operation for AWS IoT.
 //
-// Lists the things associated with the specified principal.
+// Lists the things associated with the specified principal. A principal can
+// be X.509 certificates, IAM users, groups, and roles, Amazon Cognito identities
+// or federated identities.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9831,23 +12285,23 @@ func (c *IoT) ListPrincipalThingsRequest(input *ListPrincipalThingsInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation ListPrincipalThings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) ListPrincipalThings(input *ListPrincipalThingsInput) (*ListPrincipalThingsOutput, error) {
@@ -9866,6 +12320,179 @@ func (c *IoT) ListPrincipalThings(input *ListPrincipalThingsInput) (*ListPrincip
 // for more information on using Contexts.
 func (c *IoT) ListPrincipalThingsWithContext(ctx aws.Context, input *ListPrincipalThingsInput, opts ...request.Option) (*ListPrincipalThingsOutput, error) {
 	req, out := c.ListPrincipalThingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListProvisioningTemplateVersions = "ListProvisioningTemplateVersions"
+
+// ListProvisioningTemplateVersionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListProvisioningTemplateVersions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListProvisioningTemplateVersions for more information on using the ListProvisioningTemplateVersions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListProvisioningTemplateVersionsRequest method.
+//    req, resp := client.ListProvisioningTemplateVersionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListProvisioningTemplateVersionsRequest(input *ListProvisioningTemplateVersionsInput) (req *request.Request, output *ListProvisioningTemplateVersionsOutput) {
+	op := &request.Operation{
+		Name:       opListProvisioningTemplateVersions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/provisioning-templates/{templateName}/versions",
+	}
+
+	if input == nil {
+		input = &ListProvisioningTemplateVersionsInput{}
+	}
+
+	output = &ListProvisioningTemplateVersionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListProvisioningTemplateVersions API operation for AWS IoT.
+//
+// A list of fleet provisioning template versions.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListProvisioningTemplateVersions for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+func (c *IoT) ListProvisioningTemplateVersions(input *ListProvisioningTemplateVersionsInput) (*ListProvisioningTemplateVersionsOutput, error) {
+	req, out := c.ListProvisioningTemplateVersionsRequest(input)
+	return out, req.Send()
+}
+
+// ListProvisioningTemplateVersionsWithContext is the same as ListProvisioningTemplateVersions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListProvisioningTemplateVersions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListProvisioningTemplateVersionsWithContext(ctx aws.Context, input *ListProvisioningTemplateVersionsInput, opts ...request.Option) (*ListProvisioningTemplateVersionsOutput, error) {
+	req, out := c.ListProvisioningTemplateVersionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListProvisioningTemplates = "ListProvisioningTemplates"
+
+// ListProvisioningTemplatesRequest generates a "aws/request.Request" representing the
+// client's request for the ListProvisioningTemplates operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListProvisioningTemplates for more information on using the ListProvisioningTemplates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListProvisioningTemplatesRequest method.
+//    req, resp := client.ListProvisioningTemplatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListProvisioningTemplatesRequest(input *ListProvisioningTemplatesInput) (req *request.Request, output *ListProvisioningTemplatesOutput) {
+	op := &request.Operation{
+		Name:       opListProvisioningTemplates,
+		HTTPMethod: "GET",
+		HTTPPath:   "/provisioning-templates",
+	}
+
+	if input == nil {
+		input = &ListProvisioningTemplatesInput{}
+	}
+
+	output = &ListProvisioningTemplatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListProvisioningTemplates API operation for AWS IoT.
+//
+// Lists the fleet provisioning templates in your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListProvisioningTemplates for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+func (c *IoT) ListProvisioningTemplates(input *ListProvisioningTemplatesInput) (*ListProvisioningTemplatesOutput, error) {
+	req, out := c.ListProvisioningTemplatesRequest(input)
+	return out, req.Send()
+}
+
+// ListProvisioningTemplatesWithContext is the same as ListProvisioningTemplates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListProvisioningTemplates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListProvisioningTemplatesWithContext(ctx aws.Context, input *ListProvisioningTemplatesInput, opts ...request.Option) (*ListProvisioningTemplatesOutput, error) {
+	req, out := c.ListProvisioningTemplatesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -9922,20 +12549,20 @@ func (c *IoT) ListRoleAliasesRequest(input *ListRoleAliasesInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation ListRoleAliases for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListRoleAliases(input *ListRoleAliasesInput) (*ListRoleAliasesOutput, error) {
@@ -10010,14 +12637,14 @@ func (c *IoT) ListScheduledAuditsRequest(input *ListScheduledAuditsInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation ListScheduledAudits for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListScheduledAudits(input *ListScheduledAuditsInput) (*ListScheduledAuditsOutput, error) {
@@ -10094,14 +12721,14 @@ func (c *IoT) ListSecurityProfilesRequest(input *ListSecurityProfilesInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation ListSecurityProfiles for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListSecurityProfiles(input *ListSecurityProfilesInput) (*ListSecurityProfilesOutput, error) {
@@ -10176,17 +12803,17 @@ func (c *IoT) ListSecurityProfilesForTargetRequest(input *ListSecurityProfilesFo
 // See the AWS API reference guide for AWS IoT's
 // API operation ListSecurityProfilesForTarget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) ListSecurityProfilesForTarget(input *ListSecurityProfilesForTargetInput) (*ListSecurityProfilesForTargetOutput, error) {
@@ -10261,20 +12888,20 @@ func (c *IoT) ListStreamsRequest(input *ListStreamsInput) (req *request.Request,
 // See the AWS API reference guide for AWS IoT's
 // API operation ListStreams for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListStreams(input *ListStreamsInput) (*ListStreamsOutput, error) {
@@ -10349,17 +12976,17 @@ func (c *IoT) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
 func (c *IoT) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
@@ -10434,26 +13061,26 @@ func (c *IoT) ListTargetsForPolicyRequest(input *ListTargetsForPolicyInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation ListTargetsForPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 func (c *IoT) ListTargetsForPolicy(input *ListTargetsForPolicyInput) (*ListTargetsForPolicyOutput, error) {
@@ -10529,17 +13156,17 @@ func (c *IoT) ListTargetsForSecurityProfileRequest(input *ListTargetsForSecurity
 // See the AWS API reference guide for AWS IoT's
 // API operation ListTargetsForSecurityProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListTargetsForSecurityProfile(input *ListTargetsForSecurityProfileInput) (*ListTargetsForSecurityProfileOutput, error) {
@@ -10614,14 +13241,14 @@ func (c *IoT) ListThingGroupsRequest(input *ListThingGroupsInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation ListThingGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) ListThingGroups(input *ListThingGroupsInput) (*ListThingGroupsOutput, error) {
@@ -10696,14 +13323,14 @@ func (c *IoT) ListThingGroupsForThingRequest(input *ListThingGroupsForThingInput
 // See the AWS API reference guide for AWS IoT's
 // API operation ListThingGroupsForThing for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) ListThingGroupsForThing(input *ListThingGroupsForThingInput) (*ListThingGroupsForThingOutput, error) {
@@ -10769,7 +13396,9 @@ func (c *IoT) ListThingPrincipalsRequest(input *ListThingPrincipalsInput) (req *
 
 // ListThingPrincipals API operation for AWS IoT.
 //
-// Lists the principals associated with the specified thing.
+// Lists the principals associated with the specified thing. A principal can
+// be X.509 certificates, IAM users, groups, and roles, Amazon Cognito identities
+// or federated identities.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10778,23 +13407,23 @@ func (c *IoT) ListThingPrincipalsRequest(input *ListThingPrincipalsInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation ListThingPrincipals for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) ListThingPrincipals(input *ListThingPrincipalsInput) (*ListThingPrincipalsOutput, error) {
@@ -10869,17 +13498,17 @@ func (c *IoT) ListThingRegistrationTaskReportsRequest(input *ListThingRegistrati
 // See the AWS API reference guide for AWS IoT's
 // API operation ListThingRegistrationTaskReports for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListThingRegistrationTaskReports(input *ListThingRegistrationTaskReportsInput) (*ListThingRegistrationTaskReportsOutput, error) {
@@ -10954,17 +13583,17 @@ func (c *IoT) ListThingRegistrationTasksRequest(input *ListThingRegistrationTask
 // See the AWS API reference guide for AWS IoT's
 // API operation ListThingRegistrationTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListThingRegistrationTasks(input *ListThingRegistrationTasksInput) (*ListThingRegistrationTasksOutput, error) {
@@ -11039,20 +13668,20 @@ func (c *IoT) ListThingTypesRequest(input *ListThingTypesInput) (req *request.Re
 // See the AWS API reference guide for AWS IoT's
 // API operation ListThingTypes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListThingTypes(input *ListThingTypesInput) (*ListThingTypesOutput, error) {
@@ -11130,20 +13759,20 @@ func (c *IoT) ListThingsRequest(input *ListThingsInput) (req *request.Request, o
 // See the AWS API reference guide for AWS IoT's
 // API operation ListThings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListThings(input *ListThingsInput) (*ListThingsOutput, error) {
@@ -11218,17 +13847,17 @@ func (c *IoT) ListThingsInBillingGroupRequest(input *ListThingsInBillingGroupInp
 // See the AWS API reference guide for AWS IoT's
 // API operation ListThingsInBillingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
 func (c *IoT) ListThingsInBillingGroup(input *ListThingsInBillingGroupInput) (*ListThingsInBillingGroupOutput, error) {
@@ -11303,14 +13932,14 @@ func (c *IoT) ListThingsInThingGroupRequest(input *ListThingsInThingGroupInput) 
 // See the AWS API reference guide for AWS IoT's
 // API operation ListThingsInThingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) ListThingsInThingGroup(input *ListThingsInThingGroupInput) (*ListThingsInThingGroupOutput, error) {
@@ -11329,6 +13958,91 @@ func (c *IoT) ListThingsInThingGroup(input *ListThingsInThingGroupInput) (*ListT
 // for more information on using Contexts.
 func (c *IoT) ListThingsInThingGroupWithContext(ctx aws.Context, input *ListThingsInThingGroupInput, opts ...request.Option) (*ListThingsInThingGroupOutput, error) {
 	req, out := c.ListThingsInThingGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListTopicRuleDestinations = "ListTopicRuleDestinations"
+
+// ListTopicRuleDestinationsRequest generates a "aws/request.Request" representing the
+// client's request for the ListTopicRuleDestinations operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTopicRuleDestinations for more information on using the ListTopicRuleDestinations
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTopicRuleDestinationsRequest method.
+//    req, resp := client.ListTopicRuleDestinationsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListTopicRuleDestinationsRequest(input *ListTopicRuleDestinationsInput) (req *request.Request, output *ListTopicRuleDestinationsOutput) {
+	op := &request.Operation{
+		Name:       opListTopicRuleDestinations,
+		HTTPMethod: "GET",
+		HTTPPath:   "/destinations",
+	}
+
+	if input == nil {
+		input = &ListTopicRuleDestinationsInput{}
+	}
+
+	output = &ListTopicRuleDestinationsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTopicRuleDestinations API operation for AWS IoT.
+//
+// Lists all the topic rule destinations in your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListTopicRuleDestinations for usage and error information.
+//
+// Returned Error Types:
+//   * InternalException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+func (c *IoT) ListTopicRuleDestinations(input *ListTopicRuleDestinationsInput) (*ListTopicRuleDestinationsOutput, error) {
+	req, out := c.ListTopicRuleDestinationsRequest(input)
+	return out, req.Send()
+}
+
+// ListTopicRuleDestinationsWithContext is the same as ListTopicRuleDestinations with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTopicRuleDestinations for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListTopicRuleDestinationsWithContext(ctx aws.Context, input *ListTopicRuleDestinationsInput, opts ...request.Option) (*ListTopicRuleDestinationsOutput, error) {
+	req, out := c.ListTopicRuleDestinationsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -11385,14 +14099,14 @@ func (c *IoT) ListTopicRulesRequest(input *ListTopicRulesInput) (req *request.Re
 // See the AWS API reference guide for AWS IoT's
 // API operation ListTopicRules for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) ListTopicRules(input *ListTopicRulesInput) (*ListTopicRulesOutput, error) {
@@ -11467,17 +14181,17 @@ func (c *IoT) ListV2LoggingLevelsRequest(input *ListV2LoggingLevelsInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation ListV2LoggingLevels for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeNotConfiguredException "NotConfiguredException"
+//   * NotConfiguredException
 //   The resource is not configured.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) ListV2LoggingLevels(input *ListV2LoggingLevelsInput) (*ListV2LoggingLevelsOutput, error) {
@@ -11545,7 +14259,7 @@ func (c *IoT) ListViolationEventsRequest(input *ListViolationEventsInput) (req *
 //
 // Lists the Device Defender security profile violations discovered during the
 // given time period. You can use filters to limit the results to those alerts
-// issued for a particular security profile, behavior or thing (device).
+// issued for a particular security profile, behavior, or thing (device).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11554,14 +14268,14 @@ func (c *IoT) ListViolationEventsRequest(input *ListViolationEventsInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation ListViolationEvents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ListViolationEvents(input *ListViolationEventsInput) (*ListViolationEventsOutput, error) {
@@ -11642,32 +14356,32 @@ func (c *IoT) RegisterCACertificateRequest(input *RegisterCACertificateInput) (r
 // See the AWS API reference guide for AWS IoT's
 // API operation RegisterCACertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+// Returned Error Types:
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeRegistrationCodeValidationException "RegistrationCodeValidationException"
+//   * RegistrationCodeValidationException
 //   The registration code is invalid.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeCertificateValidationException "CertificateValidationException"
+//   * CertificateValidationException
 //   The certificate is invalid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) RegisterCACertificate(input *RegisterCACertificateInput) (*RegisterCACertificateOutput, error) {
@@ -11744,34 +14458,34 @@ func (c *IoT) RegisterCertificateRequest(input *RegisterCertificateInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation RegisterCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+// Returned Error Types:
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeCertificateValidationException "CertificateValidationException"
+//   * CertificateValidationException
 //   The certificate is invalid.
 //
-//   * ErrCodeCertificateStateException "CertificateStateException"
+//   * CertificateStateException
 //   The certificate operation is not allowed.
 //
-//   * ErrCodeCertificateConflictException "CertificateConflictException"
+//   * CertificateConflictException
 //   Unable to verify the CA certificate used to sign the device certificate you
 //   are attempting to register. This is happens when you have registered more
 //   than one CA certificate that has the same subject field and public key.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) RegisterCertificate(input *RegisterCertificateInput) (*RegisterCertificateOutput, error) {
@@ -11837,7 +14551,11 @@ func (c *IoT) RegisterThingRequest(input *RegisterThingInput) (req *request.Requ
 
 // RegisterThing API operation for AWS IoT.
 //
-// Provisions a thing.
+// Provisions a thing in the device registry. RegisterThing calls other AWS
+// IoT control plane APIs. These calls might exceed your account level AWS IoT
+// Throttling Limits (https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_iot)
+// and cause throttle errors. Please contact AWS Customer Support (https://console.aws.amazon.com/support/home)
+// to raise your throttling limits if necessary.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11846,27 +14564,27 @@ func (c *IoT) RegisterThingRequest(input *RegisterThingInput) (req *request.Requ
 // See the AWS API reference guide for AWS IoT's
 // API operation RegisterThing for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalFailureException "InternalFailureException"
+// Returned Error Types:
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeConflictingResourceUpdateException "ConflictingResourceUpdateException"
+//   * ConflictingResourceUpdateException
 //   A conflicting resource update exception. This exception is thrown when two
 //   pending updates cause a conflict.
 //
-//   * ErrCodeResourceRegistrationFailureException "ResourceRegistrationFailureException"
+//   * ResourceRegistrationFailureException
 //   The resource registration failed.
 //
 func (c *IoT) RegisterThing(input *RegisterThingInput) (*RegisterThingOutput, error) {
@@ -11950,27 +14668,27 @@ func (c *IoT) RejectCertificateTransferRequest(input *RejectCertificateTransferI
 // See the AWS API reference guide for AWS IoT's
 // API operation RejectCertificateTransfer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeTransferAlreadyCompletedException "TransferAlreadyCompletedException"
+//   * TransferAlreadyCompletedException
 //   You can't revert the certificate transfer because the transfer is already
 //   complete.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) RejectCertificateTransfer(input *RejectCertificateTransferInput) (*RejectCertificateTransferOutput, error) {
@@ -12046,17 +14764,17 @@ func (c *IoT) RemoveThingFromBillingGroupRequest(input *RemoveThingFromBillingGr
 // See the AWS API reference guide for AWS IoT's
 // API operation RemoveThingFromBillingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) RemoveThingFromBillingGroup(input *RemoveThingFromBillingGroupInput) (*RemoveThingFromBillingGroupOutput, error) {
@@ -12132,17 +14850,17 @@ func (c *IoT) RemoveThingFromThingGroupRequest(input *RemoveThingFromThingGroupI
 // See the AWS API reference guide for AWS IoT's
 // API operation RemoveThingFromThingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) RemoveThingFromThingGroup(input *RemoveThingFromThingGroupInput) (*RemoveThingFromThingGroupOutput, error) {
@@ -12220,23 +14938,23 @@ func (c *IoT) ReplaceTopicRuleRequest(input *ReplaceTopicRuleInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation ReplaceTopicRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeSqlParseException "SqlParseException"
+// Returned Error Types:
+//   * SqlParseException
 //   The Rule-SQL expression can't be parsed correctly.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeConflictingResourceUpdateException "ConflictingResourceUpdateException"
+//   * ConflictingResourceUpdateException
 //   A conflicting resource update exception. This exception is thrown when two
 //   pending updates cause a conflict.
 //
@@ -12312,29 +15030,29 @@ func (c *IoT) SearchIndexRequest(input *SearchIndexInput) (req *request.Request,
 // See the AWS API reference guide for AWS IoT's
 // API operation SearchIndex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidQueryException "InvalidQueryException"
+//   * InvalidQueryException
 //   The query is invalid.
 //
-//   * ErrCodeIndexNotReadyException "IndexNotReadyException"
+//   * IndexNotReadyException
 //   The index is not ready.
 //
 func (c *IoT) SearchIndex(input *SearchIndexInput) (*SearchIndexOutput, error) {
@@ -12410,26 +15128,26 @@ func (c *IoT) SetDefaultAuthorizerRequest(input *SetDefaultAuthorizerInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation SetDefaultAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
 func (c *IoT) SetDefaultAuthorizer(input *SetDefaultAuthorizerInput) (*SetDefaultAuthorizerOutput, error) {
@@ -12508,23 +15226,23 @@ func (c *IoT) SetDefaultPolicyVersionRequest(input *SetDefaultPolicyVersionInput
 // See the AWS API reference guide for AWS IoT's
 // API operation SetDefaultPolicyVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) SetDefaultPolicyVersion(input *SetDefaultPolicyVersionInput) (*SetDefaultPolicyVersionOutput, error) {
@@ -12602,14 +15320,14 @@ func (c *IoT) SetLoggingOptionsRequest(input *SetLoggingOptionsInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation SetLoggingOptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) SetLoggingOptions(input *SetLoggingOptionsInput) (*SetLoggingOptionsOutput, error) {
@@ -12685,17 +15403,17 @@ func (c *IoT) SetV2LoggingLevelRequest(input *SetV2LoggingLevelInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation SetV2LoggingLevel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeNotConfiguredException "NotConfiguredException"
+//   * NotConfiguredException
 //   The resource is not configured.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) SetV2LoggingLevel(input *SetV2LoggingLevelInput) (*SetV2LoggingLevelOutput, error) {
@@ -12771,14 +15489,14 @@ func (c *IoT) SetV2LoggingOptionsRequest(input *SetV2LoggingOptionsInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation SetV2LoggingOptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) SetV2LoggingOptions(input *SetV2LoggingOptionsInput) (*SetV2LoggingOptionsOutput, error) {
@@ -12797,6 +15515,95 @@ func (c *IoT) SetV2LoggingOptions(input *SetV2LoggingOptionsInput) (*SetV2Loggin
 // for more information on using Contexts.
 func (c *IoT) SetV2LoggingOptionsWithContext(ctx aws.Context, input *SetV2LoggingOptionsInput, opts ...request.Option) (*SetV2LoggingOptionsOutput, error) {
 	req, out := c.SetV2LoggingOptionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStartAuditMitigationActionsTask = "StartAuditMitigationActionsTask"
+
+// StartAuditMitigationActionsTaskRequest generates a "aws/request.Request" representing the
+// client's request for the StartAuditMitigationActionsTask operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartAuditMitigationActionsTask for more information on using the StartAuditMitigationActionsTask
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartAuditMitigationActionsTaskRequest method.
+//    req, resp := client.StartAuditMitigationActionsTaskRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) StartAuditMitigationActionsTaskRequest(input *StartAuditMitigationActionsTaskInput) (req *request.Request, output *StartAuditMitigationActionsTaskOutput) {
+	op := &request.Operation{
+		Name:       opStartAuditMitigationActionsTask,
+		HTTPMethod: "POST",
+		HTTPPath:   "/audit/mitigationactions/tasks/{taskId}",
+	}
+
+	if input == nil {
+		input = &StartAuditMitigationActionsTaskInput{}
+	}
+
+	output = &StartAuditMitigationActionsTaskOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartAuditMitigationActionsTask API operation for AWS IoT.
+//
+// Starts a task that applies a set of mitigation actions to the specified target.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation StartAuditMitigationActionsTask for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * TaskAlreadyExistsException
+//   This exception occurs if you attempt to start a task with the same task-id
+//   as an existing task but with a different clientRequestToken.
+//
+//   * LimitExceededException
+//   A limit has been exceeded.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) StartAuditMitigationActionsTask(input *StartAuditMitigationActionsTaskInput) (*StartAuditMitigationActionsTaskOutput, error) {
+	req, out := c.StartAuditMitigationActionsTaskRequest(input)
+	return out, req.Send()
+}
+
+// StartAuditMitigationActionsTaskWithContext is the same as StartAuditMitigationActionsTask with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartAuditMitigationActionsTask for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) StartAuditMitigationActionsTaskWithContext(ctx aws.Context, input *StartAuditMitigationActionsTaskInput, opts ...request.Option) (*StartAuditMitigationActionsTaskOutput, error) {
+	req, out := c.StartAuditMitigationActionsTaskRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -12853,17 +15660,17 @@ func (c *IoT) StartOnDemandAuditTaskRequest(input *StartOnDemandAuditTaskInput) 
 // See the AWS API reference guide for AWS IoT's
 // API operation StartOnDemandAuditTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 func (c *IoT) StartOnDemandAuditTask(input *StartOnDemandAuditTaskInput) (*StartOnDemandAuditTaskOutput, error) {
@@ -12938,17 +15745,17 @@ func (c *IoT) StartThingRegistrationTaskRequest(input *StartThingRegistrationTas
 // See the AWS API reference guide for AWS IoT's
 // API operation StartThingRegistrationTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) StartThingRegistrationTask(input *StartThingRegistrationTaskInput) (*StartThingRegistrationTaskOutput, error) {
@@ -13024,20 +15831,20 @@ func (c *IoT) StopThingRegistrationTaskRequest(input *StopThingRegistrationTaskI
 // See the AWS API reference guide for AWS IoT's
 // API operation StopThingRegistrationTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) StopThingRegistrationTask(input *StopThingRegistrationTaskInput) (*StopThingRegistrationTaskOutput, error) {
@@ -13114,20 +15921,20 @@ func (c *IoT) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 // See the AWS API reference guide for AWS IoT's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 func (c *IoT) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
@@ -13204,26 +16011,26 @@ func (c *IoT) TestAuthorizationRequest(input *TestAuthorizationInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation TestAuthorization for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
 func (c *IoT) TestAuthorization(input *TestAuthorizationInput) (*TestAuthorizationOutput, error) {
@@ -13300,26 +16107,26 @@ func (c *IoT) TestInvokeAuthorizerRequest(input *TestInvokeAuthorizerInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation TestInvokeAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeInvalidResponseException "InvalidResponseException"
+//   * InvalidResponseException
 //   The response is invalid.
 //
 func (c *IoT) TestInvokeAuthorizer(input *TestInvokeAuthorizerInput) (*TestInvokeAuthorizerOutput, error) {
@@ -13405,30 +16212,30 @@ func (c *IoT) TransferCertificateRequest(input *TransferCertificateInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation TransferCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeCertificateStateException "CertificateStateException"
+//   * CertificateStateException
 //   The certificate operation is not allowed.
 //
-//   * ErrCodeTransferConflictException "TransferConflictException"
+//   * TransferConflictException
 //   You can't transfer the certificate because authorization policies are still
 //   attached.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) TransferCertificate(input *TransferCertificateInput) (*TransferCertificateOutput, error) {
@@ -13504,17 +16311,17 @@ func (c *IoT) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 // See the AWS API reference guide for AWS IoT's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
 func (c *IoT) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
@@ -13592,14 +16399,14 @@ func (c *IoT) UpdateAccountAuditConfigurationRequest(input *UpdateAccountAuditCo
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateAccountAuditConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) UpdateAccountAuditConfiguration(input *UpdateAccountAuditConfigurationInput) (*UpdateAccountAuditConfigurationOutput, error) {
@@ -13674,26 +16481,26 @@ func (c *IoT) UpdateAuthorizerRequest(input *UpdateAuthorizerInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit has been exceeded.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) UpdateAuthorizer(input *UpdateAuthorizerInput) (*UpdateAuthorizerOutput, error) {
@@ -13768,21 +16575,21 @@ func (c *IoT) UpdateBillingGroupRequest(input *UpdateBillingGroupInput) (req *re
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateBillingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) UpdateBillingGroup(input *UpdateBillingGroupInput) (*UpdateBillingGroupOutput, error) {
@@ -13858,23 +16665,23 @@ func (c *IoT) UpdateCACertificateRequest(input *UpdateCACertificateInput) (req *
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateCACertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) UpdateCACertificate(input *UpdateCACertificateInput) (*UpdateCACertificateOutput, error) {
@@ -13956,26 +16763,26 @@ func (c *IoT) UpdateCertificateRequest(input *UpdateCertificateInput) (req *requ
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeCertificateStateException "CertificateStateException"
+//   * CertificateStateException
 //   The certificate operation is not allowed.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) UpdateCertificate(input *UpdateCertificateInput) (*UpdateCertificateOutput, error) {
@@ -13994,6 +16801,103 @@ func (c *IoT) UpdateCertificate(input *UpdateCertificateInput) (*UpdateCertifica
 // for more information on using Contexts.
 func (c *IoT) UpdateCertificateWithContext(ctx aws.Context, input *UpdateCertificateInput, opts ...request.Option) (*UpdateCertificateOutput, error) {
 	req, out := c.UpdateCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateDomainConfiguration = "UpdateDomainConfiguration"
+
+// UpdateDomainConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateDomainConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateDomainConfiguration for more information on using the UpdateDomainConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateDomainConfigurationRequest method.
+//    req, resp := client.UpdateDomainConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) UpdateDomainConfigurationRequest(input *UpdateDomainConfigurationInput) (req *request.Request, output *UpdateDomainConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateDomainConfiguration,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/domainConfigurations/{domainConfigurationName}",
+	}
+
+	if input == nil {
+		input = &UpdateDomainConfigurationInput{}
+	}
+
+	output = &UpdateDomainConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateDomainConfiguration API operation for AWS IoT.
+//
+// Updates values stored in the domain configuration. Domain configurations
+// for default endpoints can't be updated.
+//
+// The domain configuration feature is in public preview and is subject to change.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation UpdateDomainConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * CertificateValidationException
+//   The certificate is invalid.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) UpdateDomainConfiguration(input *UpdateDomainConfigurationInput) (*UpdateDomainConfigurationOutput, error) {
+	req, out := c.UpdateDomainConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateDomainConfigurationWithContext is the same as UpdateDomainConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateDomainConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) UpdateDomainConfigurationWithContext(ctx aws.Context, input *UpdateDomainConfigurationInput, opts ...request.Option) (*UpdateDomainConfigurationOutput, error) {
+	req, out := c.UpdateDomainConfigurationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -14050,24 +16954,24 @@ func (c *IoT) UpdateDynamicThingGroupRequest(input *UpdateDynamicThingGroupInput
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateDynamicThingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidQueryException "InvalidQueryException"
+//   * InvalidQueryException
 //   The query is invalid.
 //
 func (c *IoT) UpdateDynamicThingGroup(input *UpdateDynamicThingGroupInput) (*UpdateDynamicThingGroupOutput, error) {
@@ -14143,14 +17047,14 @@ func (c *IoT) UpdateEventConfigurationsRequest(input *UpdateEventConfigurationsI
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateEventConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
 func (c *IoT) UpdateEventConfigurations(input *UpdateEventConfigurationsInput) (*UpdateEventConfigurationsOutput, error) {
@@ -14226,20 +17130,20 @@ func (c *IoT) UpdateIndexingConfigurationRequest(input *UpdateIndexingConfigurat
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateIndexingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) UpdateIndexingConfiguration(input *UpdateIndexingConfigurationInput) (*UpdateIndexingConfigurationOutput, error) {
@@ -14315,17 +17219,17 @@ func (c *IoT) UpdateJobRequest(input *UpdateJobInput) (req *request.Request, out
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
 func (c *IoT) UpdateJob(input *UpdateJobInput) (*UpdateJobOutput, error) {
@@ -14344,6 +17248,181 @@ func (c *IoT) UpdateJob(input *UpdateJobInput) (*UpdateJobOutput, error) {
 // for more information on using Contexts.
 func (c *IoT) UpdateJobWithContext(ctx aws.Context, input *UpdateJobInput, opts ...request.Option) (*UpdateJobOutput, error) {
 	req, out := c.UpdateJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateMitigationAction = "UpdateMitigationAction"
+
+// UpdateMitigationActionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateMitigationAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateMitigationAction for more information on using the UpdateMitigationAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateMitigationActionRequest method.
+//    req, resp := client.UpdateMitigationActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) UpdateMitigationActionRequest(input *UpdateMitigationActionInput) (req *request.Request, output *UpdateMitigationActionOutput) {
+	op := &request.Operation{
+		Name:       opUpdateMitigationAction,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/mitigationactions/actions/{actionName}",
+	}
+
+	if input == nil {
+		input = &UpdateMitigationActionInput{}
+	}
+
+	output = &UpdateMitigationActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateMitigationAction API operation for AWS IoT.
+//
+// Updates the definition for the specified mitigation action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation UpdateMitigationAction for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) UpdateMitigationAction(input *UpdateMitigationActionInput) (*UpdateMitigationActionOutput, error) {
+	req, out := c.UpdateMitigationActionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateMitigationActionWithContext is the same as UpdateMitigationAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateMitigationAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) UpdateMitigationActionWithContext(ctx aws.Context, input *UpdateMitigationActionInput, opts ...request.Option) (*UpdateMitigationActionOutput, error) {
+	req, out := c.UpdateMitigationActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateProvisioningTemplate = "UpdateProvisioningTemplate"
+
+// UpdateProvisioningTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateProvisioningTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateProvisioningTemplate for more information on using the UpdateProvisioningTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateProvisioningTemplateRequest method.
+//    req, resp := client.UpdateProvisioningTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) UpdateProvisioningTemplateRequest(input *UpdateProvisioningTemplateInput) (req *request.Request, output *UpdateProvisioningTemplateOutput) {
+	op := &request.Operation{
+		Name:       opUpdateProvisioningTemplate,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/provisioning-templates/{templateName}",
+	}
+
+	if input == nil {
+		input = &UpdateProvisioningTemplateInput{}
+	}
+
+	output = &UpdateProvisioningTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateProvisioningTemplate API operation for AWS IoT.
+//
+// Updates a fleet provisioning template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation UpdateProvisioningTemplate for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ConflictingResourceUpdateException
+//   A conflicting resource update exception. This exception is thrown when two
+//   pending updates cause a conflict.
+//
+func (c *IoT) UpdateProvisioningTemplate(input *UpdateProvisioningTemplateInput) (*UpdateProvisioningTemplateOutput, error) {
+	req, out := c.UpdateProvisioningTemplateRequest(input)
+	return out, req.Send()
+}
+
+// UpdateProvisioningTemplateWithContext is the same as UpdateProvisioningTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateProvisioningTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) UpdateProvisioningTemplateWithContext(ctx aws.Context, input *UpdateProvisioningTemplateInput, opts ...request.Option) (*UpdateProvisioningTemplateOutput, error) {
+	req, out := c.UpdateProvisioningTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -14400,23 +17479,23 @@ func (c *IoT) UpdateRoleAliasRequest(input *UpdateRoleAliasInput) (req *request.
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateRoleAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) UpdateRoleAlias(input *UpdateRoleAliasInput) (*UpdateRoleAliasOutput, error) {
@@ -14482,7 +17561,7 @@ func (c *IoT) UpdateScheduledAuditRequest(input *UpdateScheduledAuditInput) (req
 
 // UpdateScheduledAudit API operation for AWS IoT.
 //
-// Updates a scheduled audit, including what checks are performed and how often
+// Updates a scheduled audit, including which checks are performed and how often
 // the audit takes place.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -14492,17 +17571,17 @@ func (c *IoT) UpdateScheduledAuditRequest(input *UpdateScheduledAuditInput) (req
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateScheduledAudit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) UpdateScheduledAudit(input *UpdateScheduledAuditInput) (*UpdateScheduledAuditOutput, error) {
@@ -14577,21 +17656,21 @@ func (c *IoT) UpdateSecurityProfileRequest(input *UpdateSecurityProfileInput) (r
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateSecurityProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) UpdateSecurityProfile(input *UpdateSecurityProfileInput) (*UpdateSecurityProfileOutput, error) {
@@ -14666,23 +17745,23 @@ func (c *IoT) UpdateStreamRequest(input *UpdateStreamInput) (req *request.Reques
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) UpdateStream(input *UpdateStreamInput) (*UpdateStreamOutput, error) {
@@ -14758,27 +17837,27 @@ func (c *IoT) UpdateThingRequest(input *UpdateThingInput) (req *request.Request,
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateThing for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) UpdateThing(input *UpdateThingInput) (*UpdateThingOutput, error) {
@@ -14853,21 +17932,21 @@ func (c *IoT) UpdateThingGroupRequest(input *UpdateThingGroupInput) (req *reques
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateThingGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeVersionConflictException "VersionConflictException"
+//   * VersionConflictException
 //   An exception thrown when the version of an entity specified with the expectedVersion
 //   parameter does not match the latest version in the system.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) UpdateThingGroup(input *UpdateThingGroupInput) (*UpdateThingGroupOutput, error) {
@@ -14943,17 +18022,17 @@ func (c *IoT) UpdateThingGroupsForThingRequest(input *UpdateThingGroupsForThingI
 // See the AWS API reference guide for AWS IoT's
 // API operation UpdateThingGroupsForThing for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource does not exist.
 //
 func (c *IoT) UpdateThingGroupsForThing(input *UpdateThingGroupsForThingInput) (*UpdateThingGroupsForThingOutput, error) {
@@ -14972,6 +18051,97 @@ func (c *IoT) UpdateThingGroupsForThing(input *UpdateThingGroupsForThingInput) (
 // for more information on using Contexts.
 func (c *IoT) UpdateThingGroupsForThingWithContext(ctx aws.Context, input *UpdateThingGroupsForThingInput, opts ...request.Option) (*UpdateThingGroupsForThingOutput, error) {
 	req, out := c.UpdateThingGroupsForThingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateTopicRuleDestination = "UpdateTopicRuleDestination"
+
+// UpdateTopicRuleDestinationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateTopicRuleDestination operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateTopicRuleDestination for more information on using the UpdateTopicRuleDestination
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateTopicRuleDestinationRequest method.
+//    req, resp := client.UpdateTopicRuleDestinationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) UpdateTopicRuleDestinationRequest(input *UpdateTopicRuleDestinationInput) (req *request.Request, output *UpdateTopicRuleDestinationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateTopicRuleDestination,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/destinations",
+	}
+
+	if input == nil {
+		input = &UpdateTopicRuleDestinationInput{}
+	}
+
+	output = &UpdateTopicRuleDestinationOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateTopicRuleDestination API operation for AWS IoT.
+//
+// Updates a topic rule destination. You use this to change the status, endpoint
+// URL, or confirmation URL of the destination.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation UpdateTopicRuleDestination for usage and error information.
+//
+// Returned Error Types:
+//   * InternalException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ConflictingResourceUpdateException
+//   A conflicting resource update exception. This exception is thrown when two
+//   pending updates cause a conflict.
+//
+func (c *IoT) UpdateTopicRuleDestination(input *UpdateTopicRuleDestinationInput) (*UpdateTopicRuleDestinationOutput, error) {
+	req, out := c.UpdateTopicRuleDestinationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateTopicRuleDestinationWithContext is the same as UpdateTopicRuleDestination with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateTopicRuleDestination for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) UpdateTopicRuleDestinationWithContext(ctx aws.Context, input *UpdateTopicRuleDestinationInput, opts ...request.Option) (*UpdateTopicRuleDestinationOutput, error) {
+	req, out := c.UpdateTopicRuleDestinationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -15028,14 +18198,14 @@ func (c *IoT) ValidateSecurityProfileBehaviorsRequest(input *ValidateSecurityPro
 // See the AWS API reference guide for AWS IoT's
 // API operation ValidateSecurityProfileBehaviors for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The rate exceeds the limit.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An unexpected error has occurred.
 //
 func (c *IoT) ValidateSecurityProfileBehaviors(input *ValidateSecurityProfileBehaviorsInput) (*ValidateSecurityProfileBehaviorsOutput, error) {
@@ -15289,11 +18459,18 @@ type Action struct {
 	// Write to an Amazon Kinesis Firehose stream.
 	Firehose *FirehoseAction `locationName:"firehose" type:"structure"`
 
+	// Send data to an HTTPS endpoint.
+	Http *HttpAction `locationName:"http" type:"structure"`
+
 	// Sends message data to an AWS IoT Analytics channel.
 	IotAnalytics *IotAnalyticsAction `locationName:"iotAnalytics" type:"structure"`
 
 	// Sends an input to an AWS IoT Events detector.
 	IotEvents *IotEventsAction `locationName:"iotEvents" type:"structure"`
+
+	// Sends data from the MQTT message that triggered the rule to AWS IoT SiteWise
+	// asset properties.
+	IotSiteWise *IotSiteWiseAction `locationName:"iotSiteWise" type:"structure"`
 
 	// Write data to an Amazon Kinesis stream.
 	Kinesis *KinesisAction `locationName:"kinesis" type:"structure"`
@@ -15363,9 +18540,19 @@ func (s *Action) Validate() error {
 			invalidParams.AddNested("Firehose", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Http != nil {
+		if err := s.Http.Validate(); err != nil {
+			invalidParams.AddNested("Http", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.IotEvents != nil {
 		if err := s.IotEvents.Validate(); err != nil {
 			invalidParams.AddNested("IotEvents", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.IotSiteWise != nil {
+		if err := s.IotSiteWise.Validate(); err != nil {
+			invalidParams.AddNested("IotSiteWise", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Kinesis != nil {
@@ -15451,6 +18638,12 @@ func (s *Action) SetFirehose(v *FirehoseAction) *Action {
 	return s
 }
 
+// SetHttp sets the Http field's value.
+func (s *Action) SetHttp(v *HttpAction) *Action {
+	s.Http = v
+	return s
+}
+
 // SetIotAnalytics sets the IotAnalytics field's value.
 func (s *Action) SetIotAnalytics(v *IotAnalyticsAction) *Action {
 	s.IotAnalytics = v
@@ -15460,6 +18653,12 @@ func (s *Action) SetIotAnalytics(v *IotAnalyticsAction) *Action {
 // SetIotEvents sets the IotEvents field's value.
 func (s *Action) SetIotEvents(v *IotEventsAction) *Action {
 	s.IotEvents = v
+	return s
+}
+
+// SetIotSiteWise sets the IotSiteWise field's value.
+func (s *Action) SetIotSiteWise(v *IotSiteWiseAction) *Action {
+	s.IotSiteWise = v
 	return s
 }
 
@@ -15761,6 +18960,61 @@ func (s AddThingToThingGroupOutput) GoString() string {
 	return s.String()
 }
 
+// Parameters used when defining a mitigation action that move a set of things
+// to a thing group.
+type AddThingsToThingGroupParams struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies if this mitigation action can move the things that triggered the
+	// mitigation action even if they are part of one or more dynamic things groups.
+	OverrideDynamicGroups *bool `locationName:"overrideDynamicGroups" type:"boolean"`
+
+	// The list of groups to which you want to add the things that triggered the
+	// mitigation action. You can add a thing to a maximum of 10 groups, but you
+	// cannot add a thing to more than one group in the same hierarchy.
+	//
+	// ThingGroupNames is a required field
+	ThingGroupNames []*string `locationName:"thingGroupNames" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AddThingsToThingGroupParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AddThingsToThingGroupParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AddThingsToThingGroupParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AddThingsToThingGroupParams"}
+	if s.ThingGroupNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThingGroupNames"))
+	}
+	if s.ThingGroupNames != nil && len(s.ThingGroupNames) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThingGroupNames", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOverrideDynamicGroups sets the OverrideDynamicGroups field's value.
+func (s *AddThingsToThingGroupParams) SetOverrideDynamicGroups(v bool) *AddThingsToThingGroupParams {
+	s.OverrideDynamicGroups = &v
+	return s
+}
+
+// SetThingGroupNames sets the ThingGroupNames field's value.
+func (s *AddThingsToThingGroupParams) SetThingGroupNames(v []*string) *AddThingsToThingGroupParams {
+	s.ThingGroupNames = v
+	return s
+}
+
 // A structure containing the alert target ARN and the role ARN.
 type AlertTarget struct {
 	_ struct{} `type:"structure"`
@@ -15839,6 +19093,196 @@ func (s Allowed) GoString() string {
 // SetPolicies sets the Policies field's value.
 func (s *Allowed) SetPolicies(v []*Policy) *Allowed {
 	s.Policies = v
+	return s
+}
+
+// An asset property timestamp entry containing the following information.
+type AssetPropertyTimestamp struct {
+	_ struct{} `type:"structure"`
+
+	// Optional. A string that contains the nanosecond time offset. Accepts substitution
+	// templates.
+	OffsetInNanos *string `locationName:"offsetInNanos" type:"string"`
+
+	// A string that contains the time in seconds since epoch. Accepts substitution
+	// templates.
+	//
+	// TimeInSeconds is a required field
+	TimeInSeconds *string `locationName:"timeInSeconds" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssetPropertyTimestamp) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssetPropertyTimestamp) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssetPropertyTimestamp) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssetPropertyTimestamp"}
+	if s.TimeInSeconds == nil {
+		invalidParams.Add(request.NewErrParamRequired("TimeInSeconds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOffsetInNanos sets the OffsetInNanos field's value.
+func (s *AssetPropertyTimestamp) SetOffsetInNanos(v string) *AssetPropertyTimestamp {
+	s.OffsetInNanos = &v
+	return s
+}
+
+// SetTimeInSeconds sets the TimeInSeconds field's value.
+func (s *AssetPropertyTimestamp) SetTimeInSeconds(v string) *AssetPropertyTimestamp {
+	s.TimeInSeconds = &v
+	return s
+}
+
+// An asset property value entry containing the following information.
+type AssetPropertyValue struct {
+	_ struct{} `type:"structure"`
+
+	// Optional. A string that describes the quality of the value. Accepts substitution
+	// templates. Must be GOOD, BAD, or UNCERTAIN.
+	Quality *string `locationName:"quality" type:"string"`
+
+	// The asset property value timestamp.
+	//
+	// Timestamp is a required field
+	Timestamp *AssetPropertyTimestamp `locationName:"timestamp" type:"structure" required:"true"`
+
+	// The value of the asset property.
+	//
+	// Value is a required field
+	Value *AssetPropertyVariant `locationName:"value" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s AssetPropertyValue) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssetPropertyValue) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssetPropertyValue) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssetPropertyValue"}
+	if s.Timestamp == nil {
+		invalidParams.Add(request.NewErrParamRequired("Timestamp"))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+	if s.Timestamp != nil {
+		if err := s.Timestamp.Validate(); err != nil {
+			invalidParams.AddNested("Timestamp", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Value != nil {
+		if err := s.Value.Validate(); err != nil {
+			invalidParams.AddNested("Value", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetQuality sets the Quality field's value.
+func (s *AssetPropertyValue) SetQuality(v string) *AssetPropertyValue {
+	s.Quality = &v
+	return s
+}
+
+// SetTimestamp sets the Timestamp field's value.
+func (s *AssetPropertyValue) SetTimestamp(v *AssetPropertyTimestamp) *AssetPropertyValue {
+	s.Timestamp = v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *AssetPropertyValue) SetValue(v *AssetPropertyVariant) *AssetPropertyValue {
+	s.Value = v
+	return s
+}
+
+// Contains an asset property value (of a single type).
+type AssetPropertyVariant struct {
+	_ struct{} `type:"structure"`
+
+	// Optional. A string that contains the boolean value (true or false) of the
+	// value entry. Accepts substitution templates.
+	BooleanValue *string `locationName:"booleanValue" type:"string"`
+
+	// Optional. A string that contains the double value of the value entry. Accepts
+	// substitution templates.
+	DoubleValue *string `locationName:"doubleValue" type:"string"`
+
+	// Optional. A string that contains the integer value of the value entry. Accepts
+	// substitution templates.
+	IntegerValue *string `locationName:"integerValue" type:"string"`
+
+	// Optional. The string value of the value entry. Accepts substitution templates.
+	StringValue *string `locationName:"stringValue" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AssetPropertyVariant) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssetPropertyVariant) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssetPropertyVariant) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssetPropertyVariant"}
+	if s.StringValue != nil && len(*s.StringValue) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StringValue", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBooleanValue sets the BooleanValue field's value.
+func (s *AssetPropertyVariant) SetBooleanValue(v string) *AssetPropertyVariant {
+	s.BooleanValue = &v
+	return s
+}
+
+// SetDoubleValue sets the DoubleValue field's value.
+func (s *AssetPropertyVariant) SetDoubleValue(v string) *AssetPropertyVariant {
+	s.DoubleValue = &v
+	return s
+}
+
+// SetIntegerValue sets the IntegerValue field's value.
+func (s *AssetPropertyVariant) SetIntegerValue(v string) *AssetPropertyVariant {
+	s.IntegerValue = &v
+	return s
+}
+
+// SetStringValue sets the StringValue field's value.
+func (s *AssetPropertyVariant) SetStringValue(v string) *AssetPropertyVariant {
+	s.StringValue = &v
 	return s
 }
 
@@ -16165,7 +19609,8 @@ func (s AttachSecurityProfileOutput) GoString() string {
 type AttachThingPrincipalInput struct {
 	_ struct{} `type:"structure"`
 
-	// The principal, such as a certificate or other credential.
+	// The principal, which can be a certificate ARN (as returned from the CreateCertificate
+	// operation) or an Amazon Cognito ID.
 	//
 	// Principal is a required field
 	Principal *string `location:"header" locationName:"x-amzn-principal" type:"string" required:"true"`
@@ -16247,7 +19692,7 @@ type AttributePayload struct {
 	//
 	// To remove an attribute, call UpdateThing with an empty attribute value.
 	//
-	// The merge attribute is only valid when calling UpdateThing.
+	// The merge attribute is only valid when calling UpdateThing or UpdateThingGroup.
 	Merge *bool `locationName:"merge" type:"boolean"`
 }
 
@@ -16301,22 +19746,22 @@ func (s *AuditCheckConfiguration) SetEnabled(v bool) *AuditCheckConfiguration {
 type AuditCheckDetails struct {
 	_ struct{} `type:"structure"`
 
-	// True if the check completed and found all resources compliant.
+	// True if the check is complete and found all resources compliant.
 	CheckCompliant *bool `locationName:"checkCompliant" type:"boolean"`
 
-	// The completion status of this check, one of "IN_PROGRESS", "WAITING_FOR_DATA_COLLECTION",
+	// The completion status of this check. One of "IN_PROGRESS", "WAITING_FOR_DATA_COLLECTION",
 	// "CANCELED", "COMPLETED_COMPLIANT", "COMPLETED_NON_COMPLIANT", or "FAILED".
 	CheckRunStatus *string `locationName:"checkRunStatus" type:"string" enum:"AuditCheckRunStatus"`
 
-	// The code of any error encountered when performing this check during this
-	// audit. One of "INSUFFICIENT_PERMISSIONS", or "AUDIT_CHECK_DISABLED".
+	// The code of any error encountered when this check is performed during this
+	// audit. One of "INSUFFICIENT_PERMISSIONS" or "AUDIT_CHECK_DISABLED".
 	ErrorCode *string `locationName:"errorCode" type:"string"`
 
-	// The message associated with any error encountered when performing this check
+	// The message associated with any error encountered when this check is performed
 	// during this audit.
 	Message *string `locationName:"message" type:"string"`
 
-	// The number of resources that the check found non-compliant.
+	// The number of resources that were found noncompliant during the check.
 	NonCompliantResourcesCount *int64 `locationName:"nonCompliantResourcesCount" type:"long"`
 
 	// The number of resources on which the check was performed.
@@ -16376,16 +19821,20 @@ type AuditFinding struct {
 	// The audit check that generated this result.
 	CheckName *string `locationName:"checkName" type:"string"`
 
+	// A unique identifier for this set of audit findings. This identifier is used
+	// to apply mitigation tasks to one or more sets of findings.
+	FindingId *string `locationName:"findingId" min:"1" type:"string"`
+
 	// The time the result (finding) was discovered.
 	FindingTime *time.Time `locationName:"findingTime" type:"timestamp"`
 
-	// The resource that was found to be non-compliant with the audit check.
+	// The resource that was found to be noncompliant with the audit check.
 	NonCompliantResource *NonCompliantResource `locationName:"nonCompliantResource" type:"structure"`
 
-	// The reason the resource was non-compliant.
+	// The reason the resource was noncompliant.
 	ReasonForNonCompliance *string `locationName:"reasonForNonCompliance" type:"string"`
 
-	// A code which indicates the reason that the resource was non-compliant.
+	// A code that indicates the reason that the resource was noncompliant.
 	ReasonForNonComplianceCode *string `locationName:"reasonForNonComplianceCode" type:"string"`
 
 	// The list of related resources.
@@ -16394,7 +19843,7 @@ type AuditFinding struct {
 	// The severity of the result (finding).
 	Severity *string `locationName:"severity" type:"string" enum:"AuditFindingSeverity"`
 
-	// The ID of the audit that generated this result (finding)
+	// The ID of the audit that generated this result (finding).
 	TaskId *string `locationName:"taskId" min:"1" type:"string"`
 
 	// The time the audit started.
@@ -16414,6 +19863,12 @@ func (s AuditFinding) GoString() string {
 // SetCheckName sets the CheckName field's value.
 func (s *AuditFinding) SetCheckName(v string) *AuditFinding {
 	s.CheckName = &v
+	return s
+}
+
+// SetFindingId sets the FindingId field's value.
+func (s *AuditFinding) SetFindingId(v string) *AuditFinding {
+	s.FindingId = &v
 	return s
 }
 
@@ -16462,6 +19917,210 @@ func (s *AuditFinding) SetTaskId(v string) *AuditFinding {
 // SetTaskStartTime sets the TaskStartTime field's value.
 func (s *AuditFinding) SetTaskStartTime(v time.Time) *AuditFinding {
 	s.TaskStartTime = &v
+	return s
+}
+
+// Returned by ListAuditMitigationActionsTask, this object contains information
+// that describes a mitigation action that has been started.
+type AuditMitigationActionExecutionMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the mitigation action being applied by the task.
+	ActionId *string `locationName:"actionId" type:"string"`
+
+	// The friendly name of the mitigation action being applied by the task.
+	ActionName *string `locationName:"actionName" type:"string"`
+
+	// The date and time when the task was completed or canceled. Blank if the task
+	// is still running.
+	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
+
+	// If an error occurred, the code that indicates which type of error occurred.
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// The unique identifier for the findings to which the task and associated mitigation
+	// action are applied.
+	FindingId *string `locationName:"findingId" min:"1" type:"string"`
+
+	// If an error occurred, a message that describes the error.
+	Message *string `locationName:"message" type:"string"`
+
+	// The date and time when the task was started.
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+
+	// The current status of the task being executed.
+	Status *string `locationName:"status" type:"string" enum:"AuditMitigationActionsExecutionStatus"`
+
+	// The unique identifier for the task that applies the mitigation action.
+	TaskId *string `locationName:"taskId" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AuditMitigationActionExecutionMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuditMitigationActionExecutionMetadata) GoString() string {
+	return s.String()
+}
+
+// SetActionId sets the ActionId field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetActionId(v string) *AuditMitigationActionExecutionMetadata {
+	s.ActionId = &v
+	return s
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetActionName(v string) *AuditMitigationActionExecutionMetadata {
+	s.ActionName = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetEndTime(v time.Time) *AuditMitigationActionExecutionMetadata {
+	s.EndTime = &v
+	return s
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetErrorCode(v string) *AuditMitigationActionExecutionMetadata {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetFindingId sets the FindingId field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetFindingId(v string) *AuditMitigationActionExecutionMetadata {
+	s.FindingId = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetMessage(v string) *AuditMitigationActionExecutionMetadata {
+	s.Message = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetStartTime(v time.Time) *AuditMitigationActionExecutionMetadata {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetStatus(v string) *AuditMitigationActionExecutionMetadata {
+	s.Status = &v
+	return s
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetTaskId(v string) *AuditMitigationActionExecutionMetadata {
+	s.TaskId = &v
+	return s
+}
+
+// Information about an audit mitigation actions task that is returned by ListAuditMitigationActionsTasks.
+type AuditMitigationActionsTaskMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The time at which the audit mitigation actions task was started.
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+
+	// The unique identifier for the task.
+	TaskId *string `locationName:"taskId" min:"1" type:"string"`
+
+	// The current state of the audit mitigation actions task.
+	TaskStatus *string `locationName:"taskStatus" type:"string" enum:"AuditMitigationActionsTaskStatus"`
+}
+
+// String returns the string representation
+func (s AuditMitigationActionsTaskMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuditMitigationActionsTaskMetadata) GoString() string {
+	return s.String()
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *AuditMitigationActionsTaskMetadata) SetStartTime(v time.Time) *AuditMitigationActionsTaskMetadata {
+	s.StartTime = &v
+	return s
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *AuditMitigationActionsTaskMetadata) SetTaskId(v string) *AuditMitigationActionsTaskMetadata {
+	s.TaskId = &v
+	return s
+}
+
+// SetTaskStatus sets the TaskStatus field's value.
+func (s *AuditMitigationActionsTaskMetadata) SetTaskStatus(v string) *AuditMitigationActionsTaskMetadata {
+	s.TaskStatus = &v
+	return s
+}
+
+// Used in MitigationActionParams, this information identifies the target findings
+// to which the mitigation actions are applied. Only one entry appears.
+type AuditMitigationActionsTaskTarget struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies a filter in the form of an audit check and set of reason codes
+	// that identify the findings from the audit to which the audit mitigation actions
+	// task apply.
+	AuditCheckToReasonCodeFilter map[string][]*string `locationName:"auditCheckToReasonCodeFilter" type:"map"`
+
+	// If the task will apply a mitigation action to findings from a specific audit,
+	// this value uniquely identifies the audit.
+	AuditTaskId *string `locationName:"auditTaskId" min:"1" type:"string"`
+
+	// If the task will apply a mitigation action to one or more listed findings,
+	// this value uniquely identifies those findings.
+	FindingIds []*string `locationName:"findingIds" min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s AuditMitigationActionsTaskTarget) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuditMitigationActionsTaskTarget) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AuditMitigationActionsTaskTarget) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AuditMitigationActionsTaskTarget"}
+	if s.AuditTaskId != nil && len(*s.AuditTaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AuditTaskId", 1))
+	}
+	if s.FindingIds != nil && len(s.FindingIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingIds", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuditCheckToReasonCodeFilter sets the AuditCheckToReasonCodeFilter field's value.
+func (s *AuditMitigationActionsTaskTarget) SetAuditCheckToReasonCodeFilter(v map[string][]*string) *AuditMitigationActionsTaskTarget {
+	s.AuditCheckToReasonCodeFilter = v
+	return s
+}
+
+// SetAuditTaskId sets the AuditTaskId field's value.
+func (s *AuditMitigationActionsTaskTarget) SetAuditTaskId(v string) *AuditMitigationActionsTaskTarget {
+	s.AuditTaskId = &v
+	return s
+}
+
+// SetFindingIds sets the FindingIds field's value.
+func (s *AuditMitigationActionsTaskTarget) SetFindingIds(v []*string) *AuditMitigationActionsTaskTarget {
+	s.FindingIds = v
 	return s
 }
 
@@ -16527,11 +20186,11 @@ type AuditTaskMetadata struct {
 	// The ID of this audit.
 	TaskId *string `locationName:"taskId" min:"1" type:"string"`
 
-	// The status of this audit: one of "IN_PROGRESS", "COMPLETED", "FAILED" or
+	// The status of this audit. One of "IN_PROGRESS", "COMPLETED", "FAILED", or
 	// "CANCELED".
 	TaskStatus *string `locationName:"taskStatus" type:"string" enum:"AuditTaskStatus"`
 
-	// The type of this audit: one of "ON_DEMAND_AUDIT_TASK" or "SCHEDULED_AUDIT_TASK".
+	// The type of this audit. One of "ON_DEMAND_AUDIT_TASK" or "SCHEDULED_AUDIT_TASK".
 	TaskType *string `locationName:"taskType" type:"string" enum:"AuditTaskType"`
 }
 
@@ -16659,6 +20318,53 @@ func (s *AuthResult) SetMissingContextValues(v []*string) *AuthResult {
 	return s
 }
 
+// An object that specifies the authorization service for a domain.
+type AuthorizerConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A Boolean that specifies whether the domain configuration's authorization
+	// service can be overridden.
+	AllowAuthorizerOverride *bool `locationName:"allowAuthorizerOverride" type:"boolean"`
+
+	// The name of the authorization service for a domain configuration.
+	DefaultAuthorizerName *string `locationName:"defaultAuthorizerName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AuthorizerConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuthorizerConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AuthorizerConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AuthorizerConfig"}
+	if s.DefaultAuthorizerName != nil && len(*s.DefaultAuthorizerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DefaultAuthorizerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAllowAuthorizerOverride sets the AllowAuthorizerOverride field's value.
+func (s *AuthorizerConfig) SetAllowAuthorizerOverride(v bool) *AuthorizerConfig {
+	s.AllowAuthorizerOverride = &v
+	return s
+}
+
+// SetDefaultAuthorizerName sets the DefaultAuthorizerName field's value.
+func (s *AuthorizerConfig) SetDefaultAuthorizerName(v string) *AuthorizerConfig {
+	s.DefaultAuthorizerName = &v
+	return s
+}
+
 // The authorizer description.
 type AuthorizerDescription struct {
 	_ struct{} `type:"structure"`
@@ -16677,6 +20383,10 @@ type AuthorizerDescription struct {
 
 	// The UNIX timestamp of when the authorizer was last updated.
 	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
+
+	// Specifies whether AWS IoT validates the token signature in an authorization
+	// request.
+	SigningDisabled *bool `locationName:"signingDisabled" type:"boolean"`
 
 	// The status of the authorizer.
 	Status *string `locationName:"status" type:"string" enum:"AuthorizerStatus"`
@@ -16726,6 +20436,12 @@ func (s *AuthorizerDescription) SetCreationDate(v time.Time) *AuthorizerDescript
 // SetLastModifiedDate sets the LastModifiedDate field's value.
 func (s *AuthorizerDescription) SetLastModifiedDate(v time.Time) *AuthorizerDescription {
 	s.LastModifiedDate = &v
+	return s
+}
+
+// SetSigningDisabled sets the SigningDisabled field's value.
+func (s *AuthorizerDescription) SetSigningDisabled(v bool) *AuthorizerDescription {
+	s.SigningDisabled = &v
 	return s
 }
 
@@ -16817,6 +20533,33 @@ func (s *AwsJobExecutionsRolloutConfig) SetMaximumPerMinute(v int64) *AwsJobExec
 	return s
 }
 
+// Configuration information for pre-signed URLs. Valid when protocols contains
+// HTTP.
+type AwsJobPresignedUrlConfig struct {
+	_ struct{} `type:"structure"`
+
+	// How long (in seconds) pre-signed URLs are valid. Valid values are 60 - 3600,
+	// the default value is 1800 seconds. Pre-signed URLs are generated when a request
+	// for the job document is received.
+	ExpiresInSec *int64 `locationName:"expiresInSec" type:"long"`
+}
+
+// String returns the string representation
+func (s AwsJobPresignedUrlConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobPresignedUrlConfig) GoString() string {
+	return s.String()
+}
+
+// SetExpiresInSec sets the ExpiresInSec field's value.
+func (s *AwsJobPresignedUrlConfig) SetExpiresInSec(v int64) *AwsJobPresignedUrlConfig {
+	s.ExpiresInSec = &v
+	return s
+}
+
 // A Device Defender security profile behavior.
 type Behavior struct {
 	_ struct{} `type:"structure"`
@@ -16853,6 +20596,11 @@ func (s *Behavior) Validate() error {
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
+	if s.Criteria != nil {
+		if err := s.Criteria.Validate(); err != nil {
+			invalidParams.AddNested("Criteria", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -16882,12 +20630,30 @@ func (s *Behavior) SetName(v string) *Behavior {
 type BehaviorCriteria struct {
 	_ struct{} `type:"structure"`
 
-	// The operator that relates the thing measured (metric) to the criteria (value).
+	// The operator that relates the thing measured (metric) to the criteria (containing
+	// a value or statisticalThreshold).
 	ComparisonOperator *string `locationName:"comparisonOperator" type:"string" enum:"ComparisonOperator"`
 
-	// Use this to specify the period of time over which the behavior is evaluated,
+	// If a device is in violation of the behavior for the specified number of consecutive
+	// datapoints, an alarm occurs. If not specified, the default is 1.
+	ConsecutiveDatapointsToAlarm *int64 `locationName:"consecutiveDatapointsToAlarm" min:"1" type:"integer"`
+
+	// If an alarm has occurred and the offending device is no longer in violation
+	// of the behavior for the specified number of consecutive datapoints, the alarm
+	// is cleared. If not specified, the default is 1.
+	ConsecutiveDatapointsToClear *int64 `locationName:"consecutiveDatapointsToClear" min:"1" type:"integer"`
+
+	// Use this to specify the time duration over which the behavior is evaluated,
 	// for those criteria which have a time dimension (for example, NUM_MESSAGES_SENT).
+	// For a statisticalThreshhold metric comparison, measurements from all devices
+	// are accumulated over this time duration before being used to calculate percentiles,
+	// and later, measurements from an individual device are also accumulated over
+	// this time duration before being given a percentile rank.
 	DurationSeconds *int64 `locationName:"durationSeconds" type:"integer"`
+
+	// A statistical ranking (percentile) which indicates a threshold value by which
+	// a behavior is determined to be in compliance or in violation of the behavior.
+	StatisticalThreshold *StatisticalThreshold `locationName:"statisticalThreshold" type:"structure"`
 
 	// The value to be compared with the metric.
 	Value *MetricValue `locationName:"value" type:"structure"`
@@ -16903,15 +20669,49 @@ func (s BehaviorCriteria) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BehaviorCriteria) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BehaviorCriteria"}
+	if s.ConsecutiveDatapointsToAlarm != nil && *s.ConsecutiveDatapointsToAlarm < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ConsecutiveDatapointsToAlarm", 1))
+	}
+	if s.ConsecutiveDatapointsToClear != nil && *s.ConsecutiveDatapointsToClear < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ConsecutiveDatapointsToClear", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetComparisonOperator sets the ComparisonOperator field's value.
 func (s *BehaviorCriteria) SetComparisonOperator(v string) *BehaviorCriteria {
 	s.ComparisonOperator = &v
 	return s
 }
 
+// SetConsecutiveDatapointsToAlarm sets the ConsecutiveDatapointsToAlarm field's value.
+func (s *BehaviorCriteria) SetConsecutiveDatapointsToAlarm(v int64) *BehaviorCriteria {
+	s.ConsecutiveDatapointsToAlarm = &v
+	return s
+}
+
+// SetConsecutiveDatapointsToClear sets the ConsecutiveDatapointsToClear field's value.
+func (s *BehaviorCriteria) SetConsecutiveDatapointsToClear(v int64) *BehaviorCriteria {
+	s.ConsecutiveDatapointsToClear = &v
+	return s
+}
+
 // SetDurationSeconds sets the DurationSeconds field's value.
 func (s *BehaviorCriteria) SetDurationSeconds(v int64) *BehaviorCriteria {
 	s.DurationSeconds = &v
+	return s
+}
+
+// SetStatisticalThreshold sets the StatisticalThreshold field's value.
+func (s *BehaviorCriteria) SetStatisticalThreshold(v *StatisticalThreshold) *BehaviorCriteria {
+	s.StatisticalThreshold = v
 	return s
 }
 
@@ -17135,6 +20935,61 @@ func (s *CACertificateDescription) SetStatus(v string) *CACertificateDescription
 func (s *CACertificateDescription) SetValidity(v *CertificateValidity) *CACertificateDescription {
 	s.Validity = v
 	return s
+}
+
+type CancelAuditMitigationActionsTaskInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the task that you want to cancel.
+	//
+	// TaskId is a required field
+	TaskId *string `location:"uri" locationName:"taskId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CancelAuditMitigationActionsTaskInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelAuditMitigationActionsTaskInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelAuditMitigationActionsTaskInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelAuditMitigationActionsTaskInput"}
+	if s.TaskId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskId"))
+	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *CancelAuditMitigationActionsTaskInput) SetTaskId(v string) *CancelAuditMitigationActionsTaskInput {
+	s.TaskId = &v
+	return s
+}
+
+type CancelAuditMitigationActionsTaskOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s CancelAuditMitigationActionsTaskOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelAuditMitigationActionsTaskOutput) GoString() string {
+	return s.String()
 }
 
 type CancelAuditTaskInput struct {
@@ -17535,6 +21390,65 @@ func (s *Certificate) SetStatus(v string) *Certificate {
 	return s
 }
 
+// Unable to verify the CA certificate used to sign the device certificate you
+// are attempting to register. This is happens when you have registered more
+// than one CA certificate that has the same subject field and public key.
+type CertificateConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s CertificateConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CertificateConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorCertificateConflictException(v protocol.ResponseMetadata) error {
+	return &CertificateConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CertificateConflictException) Code() string {
+	return "CertificateConflictException"
+}
+
+// Message returns the exception's message.
+func (s CertificateConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CertificateConflictException) OrigErr() error {
+	return nil
+}
+
+func (s CertificateConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CertificateConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CertificateConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Describes a certificate.
 type CertificateDescription struct {
 	_ struct{} `type:"structure"`
@@ -17665,6 +21579,120 @@ func (s *CertificateDescription) SetTransferData(v *TransferData) *CertificateDe
 func (s *CertificateDescription) SetValidity(v *CertificateValidity) *CertificateDescription {
 	s.Validity = v
 	return s
+}
+
+// The certificate operation is not allowed.
+type CertificateStateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s CertificateStateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CertificateStateException) GoString() string {
+	return s.String()
+}
+
+func newErrorCertificateStateException(v protocol.ResponseMetadata) error {
+	return &CertificateStateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CertificateStateException) Code() string {
+	return "CertificateStateException"
+}
+
+// Message returns the exception's message.
+func (s CertificateStateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CertificateStateException) OrigErr() error {
+	return nil
+}
+
+func (s CertificateStateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CertificateStateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CertificateStateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The certificate is invalid.
+type CertificateValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// Additional information about the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s CertificateValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CertificateValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorCertificateValidationException(v protocol.ResponseMetadata) error {
+	return &CertificateValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CertificateValidationException) Code() string {
+	return "CertificateValidationException"
+}
+
+// Message returns the exception's message.
+func (s CertificateValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CertificateValidationException) OrigErr() error {
+	return nil
+}
+
+func (s CertificateValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CertificateValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CertificateValidationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // When the certificate is valid.
@@ -17823,10 +21851,10 @@ type CloudwatchMetricAction struct {
 	// MetricNamespace is a required field
 	MetricNamespace *string `locationName:"metricNamespace" type:"string" required:"true"`
 
-	// An optional Unix timestamp (http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#about_timestamp).
+	// An optional Unix timestamp (https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#about_timestamp).
 	MetricTimestamp *string `locationName:"metricTimestamp" type:"string"`
 
-	// The metric unit (http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#Unit)
+	// The metric unit (https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#Unit)
 	// supported by CloudWatch.
 	//
 	// MetricUnit is a required field
@@ -18054,6 +22082,120 @@ func (s *Configuration) SetEnabled(v bool) *Configuration {
 	return s
 }
 
+type ConfirmTopicRuleDestinationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The token used to confirm ownership or access to the topic rule confirmation
+	// URL.
+	//
+	// ConfirmationToken is a required field
+	ConfirmationToken *string `location:"uri" locationName:"confirmationToken" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ConfirmTopicRuleDestinationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConfirmTopicRuleDestinationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ConfirmTopicRuleDestinationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ConfirmTopicRuleDestinationInput"}
+	if s.ConfirmationToken == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConfirmationToken"))
+	}
+	if s.ConfirmationToken != nil && len(*s.ConfirmationToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConfirmationToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfirmationToken sets the ConfirmationToken field's value.
+func (s *ConfirmTopicRuleDestinationInput) SetConfirmationToken(v string) *ConfirmTopicRuleDestinationInput {
+	s.ConfirmationToken = &v
+	return s
+}
+
+type ConfirmTopicRuleDestinationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ConfirmTopicRuleDestinationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConfirmTopicRuleDestinationOutput) GoString() string {
+	return s.String()
+}
+
+// A conflicting resource update exception. This exception is thrown when two
+// pending updates cause a conflict.
+type ConflictingResourceUpdateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictingResourceUpdateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictingResourceUpdateException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictingResourceUpdateException(v protocol.ResponseMetadata) error {
+	return &ConflictingResourceUpdateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictingResourceUpdateException) Code() string {
+	return "ConflictingResourceUpdateException"
+}
+
+// Message returns the exception's message.
+func (s ConflictingResourceUpdateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictingResourceUpdateException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictingResourceUpdateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictingResourceUpdateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictingResourceUpdateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type CreateAuthorizerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18067,19 +22209,19 @@ type CreateAuthorizerInput struct {
 	// AuthorizerName is a required field
 	AuthorizerName *string `location:"uri" locationName:"authorizerName" min:"1" type:"string" required:"true"`
 
+	// Specifies whether AWS IoT validates the token signature in an authorization
+	// request.
+	SigningDisabled *bool `locationName:"signingDisabled" type:"boolean"`
+
 	// The status of the create authorizer request.
 	Status *string `locationName:"status" type:"string" enum:"AuthorizerStatus"`
 
 	// The name of the token key used to extract the token from the HTTP headers.
-	//
-	// TokenKeyName is a required field
-	TokenKeyName *string `locationName:"tokenKeyName" min:"1" type:"string" required:"true"`
+	TokenKeyName *string `locationName:"tokenKeyName" min:"1" type:"string"`
 
 	// The public keys used to verify the digital signature returned by your custom
 	// authentication service.
-	//
-	// TokenSigningPublicKeys is a required field
-	TokenSigningPublicKeys map[string]*string `locationName:"tokenSigningPublicKeys" type:"map" required:"true"`
+	TokenSigningPublicKeys map[string]*string `locationName:"tokenSigningPublicKeys" type:"map"`
 }
 
 // String returns the string representation
@@ -18104,14 +22246,8 @@ func (s *CreateAuthorizerInput) Validate() error {
 	if s.AuthorizerName != nil && len(*s.AuthorizerName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AuthorizerName", 1))
 	}
-	if s.TokenKeyName == nil {
-		invalidParams.Add(request.NewErrParamRequired("TokenKeyName"))
-	}
 	if s.TokenKeyName != nil && len(*s.TokenKeyName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TokenKeyName", 1))
-	}
-	if s.TokenSigningPublicKeys == nil {
-		invalidParams.Add(request.NewErrParamRequired("TokenSigningPublicKeys"))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -18129,6 +22265,12 @@ func (s *CreateAuthorizerInput) SetAuthorizerFunctionArn(v string) *CreateAuthor
 // SetAuthorizerName sets the AuthorizerName field's value.
 func (s *CreateAuthorizerInput) SetAuthorizerName(v string) *CreateAuthorizerInput {
 	s.AuthorizerName = &v
+	return s
+}
+
+// SetSigningDisabled sets the SigningDisabled field's value.
+func (s *CreateAuthorizerInput) SetSigningDisabled(v bool) *CreateAuthorizerInput {
+	s.SigningDisabled = &v
 	return s
 }
 
@@ -18377,6 +22519,139 @@ func (s *CreateCertificateFromCsrOutput) SetCertificatePem(v string) *CreateCert
 	return s
 }
 
+type CreateDomainConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// An object that specifies the authorization service for a domain.
+	AuthorizerConfig *AuthorizerConfig `locationName:"authorizerConfig" type:"structure"`
+
+	// The name of the domain configuration. This value must be unique to a region.
+	//
+	// DomainConfigurationName is a required field
+	DomainConfigurationName *string `location:"uri" locationName:"domainConfigurationName" min:"1" type:"string" required:"true"`
+
+	// The name of the domain.
+	DomainName *string `locationName:"domainName" min:"1" type:"string"`
+
+	// The ARNs of the certificates that AWS IoT passes to the device during the
+	// TLS handshake. Currently you can specify only one certificate ARN. This value
+	// is not required for AWS-managed domains.
+	ServerCertificateArns []*string `locationName:"serverCertificateArns" type:"list"`
+
+	// The type of service delivered by the endpoint.
+	ServiceType *string `locationName:"serviceType" type:"string" enum:"ServiceType"`
+
+	// The certificate used to validate the server certificate and prove domain
+	// name ownership. This certificate must be signed by a public certificate authority.
+	// This value is not required for AWS-managed domains.
+	ValidationCertificateArn *string `locationName:"validationCertificateArn" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateDomainConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDomainConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateDomainConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateDomainConfigurationInput"}
+	if s.DomainConfigurationName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainConfigurationName"))
+	}
+	if s.DomainConfigurationName != nil && len(*s.DomainConfigurationName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainConfigurationName", 1))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
+	if s.ValidationCertificateArn != nil && len(*s.ValidationCertificateArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ValidationCertificateArn", 1))
+	}
+	if s.AuthorizerConfig != nil {
+		if err := s.AuthorizerConfig.Validate(); err != nil {
+			invalidParams.AddNested("AuthorizerConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthorizerConfig sets the AuthorizerConfig field's value.
+func (s *CreateDomainConfigurationInput) SetAuthorizerConfig(v *AuthorizerConfig) *CreateDomainConfigurationInput {
+	s.AuthorizerConfig = v
+	return s
+}
+
+// SetDomainConfigurationName sets the DomainConfigurationName field's value.
+func (s *CreateDomainConfigurationInput) SetDomainConfigurationName(v string) *CreateDomainConfigurationInput {
+	s.DomainConfigurationName = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *CreateDomainConfigurationInput) SetDomainName(v string) *CreateDomainConfigurationInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetServerCertificateArns sets the ServerCertificateArns field's value.
+func (s *CreateDomainConfigurationInput) SetServerCertificateArns(v []*string) *CreateDomainConfigurationInput {
+	s.ServerCertificateArns = v
+	return s
+}
+
+// SetServiceType sets the ServiceType field's value.
+func (s *CreateDomainConfigurationInput) SetServiceType(v string) *CreateDomainConfigurationInput {
+	s.ServiceType = &v
+	return s
+}
+
+// SetValidationCertificateArn sets the ValidationCertificateArn field's value.
+func (s *CreateDomainConfigurationInput) SetValidationCertificateArn(v string) *CreateDomainConfigurationInput {
+	s.ValidationCertificateArn = &v
+	return s
+}
+
+type CreateDomainConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the domain configuration.
+	DomainConfigurationArn *string `locationName:"domainConfigurationArn" type:"string"`
+
+	// The name of the domain configuration.
+	DomainConfigurationName *string `locationName:"domainConfigurationName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateDomainConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDomainConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetDomainConfigurationArn sets the DomainConfigurationArn field's value.
+func (s *CreateDomainConfigurationOutput) SetDomainConfigurationArn(v string) *CreateDomainConfigurationOutput {
+	s.DomainConfigurationArn = &v
+	return s
+}
+
+// SetDomainConfigurationName sets the DomainConfigurationName field's value.
+func (s *CreateDomainConfigurationOutput) SetDomainConfigurationName(v string) *CreateDomainConfigurationOutput {
+	s.DomainConfigurationName = &v
+	return s
+}
+
 type CreateDynamicThingGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18387,7 +22662,7 @@ type CreateDynamicThingGroupInput struct {
 
 	// The dynamic thing group search query string.
 	//
-	// See Query Syntax (http://docs.aws.amazon.com/iot/latest/developerguide/query-syntax.html)
+	// See Query Syntax (https://docs.aws.amazon.com/iot/latest/developerguide/query-syntax.html)
 	// for information about query string syntax.
 	//
 	// QueryString is a required field
@@ -18843,6 +23118,125 @@ func (s *CreateKeysAndCertificateOutput) SetKeyPair(v *KeyPair) *CreateKeysAndCe
 	return s
 }
 
+type CreateMitigationActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// A friendly name for the action. Choose a friendly name that accurately describes
+	// the action (for example, EnableLoggingAction).
+	//
+	// ActionName is a required field
+	ActionName *string `location:"uri" locationName:"actionName" type:"string" required:"true"`
+
+	// Defines the type of action and the parameters for that action.
+	//
+	// ActionParams is a required field
+	ActionParams *MitigationActionParams `locationName:"actionParams" type:"structure" required:"true"`
+
+	// The ARN of the IAM role that is used to apply the mitigation action.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
+
+	// Metadata that can be used to manage the mitigation action.
+	Tags []*Tag `locationName:"tags" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateMitigationActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateMitigationActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateMitigationActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateMitigationActionInput"}
+	if s.ActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionName"))
+	}
+	if s.ActionName != nil && len(*s.ActionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ActionName", 1))
+	}
+	if s.ActionParams == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionParams"))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
+	}
+	if s.ActionParams != nil {
+		if err := s.ActionParams.Validate(); err != nil {
+			invalidParams.AddNested("ActionParams", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *CreateMitigationActionInput) SetActionName(v string) *CreateMitigationActionInput {
+	s.ActionName = &v
+	return s
+}
+
+// SetActionParams sets the ActionParams field's value.
+func (s *CreateMitigationActionInput) SetActionParams(v *MitigationActionParams) *CreateMitigationActionInput {
+	s.ActionParams = v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *CreateMitigationActionInput) SetRoleArn(v string) *CreateMitigationActionInput {
+	s.RoleArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateMitigationActionInput) SetTags(v []*Tag) *CreateMitigationActionInput {
+	s.Tags = v
+	return s
+}
+
+type CreateMitigationActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN for the new mitigation action.
+	ActionArn *string `locationName:"actionArn" type:"string"`
+
+	// A unique identifier for the new mitigation action.
+	ActionId *string `locationName:"actionId" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateMitigationActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateMitigationActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionArn sets the ActionArn field's value.
+func (s *CreateMitigationActionOutput) SetActionArn(v string) *CreateMitigationActionOutput {
+	s.ActionArn = &v
+	return s
+}
+
+// SetActionId sets the ActionId field's value.
+func (s *CreateMitigationActionOutput) SetActionId(v string) *CreateMitigationActionOutput {
+	s.ActionId = &v
+	return s
+}
+
 type CreateOTAUpdateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18851,6 +23245,9 @@ type CreateOTAUpdateInput struct {
 
 	// Configuration for the rollout of OTA updates.
 	AwsJobExecutionsRolloutConfig *AwsJobExecutionsRolloutConfig `locationName:"awsJobExecutionsRolloutConfig" type:"structure"`
+
+	// Configuration information for pre-signed URLs.
+	AwsJobPresignedUrlConfig *AwsJobPresignedUrlConfig `locationName:"awsJobPresignedUrlConfig" type:"structure"`
 
 	// The description of the OTA update.
 	Description *string `locationName:"description" type:"string"`
@@ -18865,10 +23262,18 @@ type CreateOTAUpdateInput struct {
 	// OtaUpdateId is a required field
 	OtaUpdateId *string `location:"uri" locationName:"otaUpdateId" min:"1" type:"string" required:"true"`
 
+	// The protocol used to transfer the OTA update image. Valid values are [HTTP],
+	// [MQTT], [HTTP, MQTT]. When both HTTP and MQTT are specified, the target device
+	// can choose the protocol.
+	Protocols []*string `locationName:"protocols" min:"1" type:"list"`
+
 	// The IAM role that allows access to the AWS IoT Jobs service.
 	//
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
+
+	// Metadata which can be used to manage updates.
+	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// Specifies whether the update will continue to run (CONTINUOUS), or will be
 	// complete after all the things specified as targets have completed the update
@@ -18908,6 +23313,9 @@ func (s *CreateOTAUpdateInput) Validate() error {
 	}
 	if s.OtaUpdateId != nil && len(*s.OtaUpdateId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("OtaUpdateId", 1))
+	}
+	if s.Protocols != nil && len(s.Protocols) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Protocols", 1))
 	}
 	if s.RoleArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
@@ -18955,6 +23363,12 @@ func (s *CreateOTAUpdateInput) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecuti
 	return s
 }
 
+// SetAwsJobPresignedUrlConfig sets the AwsJobPresignedUrlConfig field's value.
+func (s *CreateOTAUpdateInput) SetAwsJobPresignedUrlConfig(v *AwsJobPresignedUrlConfig) *CreateOTAUpdateInput {
+	s.AwsJobPresignedUrlConfig = v
+	return s
+}
+
 // SetDescription sets the Description field's value.
 func (s *CreateOTAUpdateInput) SetDescription(v string) *CreateOTAUpdateInput {
 	s.Description = &v
@@ -18973,9 +23387,21 @@ func (s *CreateOTAUpdateInput) SetOtaUpdateId(v string) *CreateOTAUpdateInput {
 	return s
 }
 
+// SetProtocols sets the Protocols field's value.
+func (s *CreateOTAUpdateInput) SetProtocols(v []*string) *CreateOTAUpdateInput {
+	s.Protocols = v
+	return s
+}
+
 // SetRoleArn sets the RoleArn field's value.
 func (s *CreateOTAUpdateInput) SetRoleArn(v string) *CreateOTAUpdateInput {
 	s.RoleArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateOTAUpdateInput) SetTags(v []*Tag) *CreateOTAUpdateInput {
+	s.Tags = v
 	return s
 }
 
@@ -19277,6 +23703,359 @@ func (s *CreatePolicyVersionOutput) SetPolicyVersionId(v string) *CreatePolicyVe
 	return s
 }
 
+type CreateProvisioningClaimInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the provisioning template to use.
+	//
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"templateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateProvisioningClaimInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateProvisioningClaimInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateProvisioningClaimInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateProvisioningClaimInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *CreateProvisioningClaimInput) SetTemplateName(v string) *CreateProvisioningClaimInput {
+	s.TemplateName = &v
+	return s
+}
+
+type CreateProvisioningClaimOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the certificate.
+	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
+
+	// The provisioning claim certificate.
+	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string"`
+
+	// The provisioning claim expiration time.
+	Expiration *time.Time `locationName:"expiration" type:"timestamp"`
+
+	// The provisioning claim key pair.
+	KeyPair *KeyPair `locationName:"keyPair" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateProvisioningClaimOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateProvisioningClaimOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificateId sets the CertificateId field's value.
+func (s *CreateProvisioningClaimOutput) SetCertificateId(v string) *CreateProvisioningClaimOutput {
+	s.CertificateId = &v
+	return s
+}
+
+// SetCertificatePem sets the CertificatePem field's value.
+func (s *CreateProvisioningClaimOutput) SetCertificatePem(v string) *CreateProvisioningClaimOutput {
+	s.CertificatePem = &v
+	return s
+}
+
+// SetExpiration sets the Expiration field's value.
+func (s *CreateProvisioningClaimOutput) SetExpiration(v time.Time) *CreateProvisioningClaimOutput {
+	s.Expiration = &v
+	return s
+}
+
+// SetKeyPair sets the KeyPair field's value.
+func (s *CreateProvisioningClaimOutput) SetKeyPair(v *KeyPair) *CreateProvisioningClaimOutput {
+	s.KeyPair = v
+	return s
+}
+
+type CreateProvisioningTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The description of the fleet provisioning template.
+	Description *string `locationName:"description" type:"string"`
+
+	// True to enable the fleet provisioning template, otherwise false.
+	Enabled *bool `locationName:"enabled" type:"boolean"`
+
+	// The role ARN for the role associated with the fleet provisioning template.
+	// This IoT role grants permission to provision a device.
+	//
+	// ProvisioningRoleArn is a required field
+	ProvisioningRoleArn *string `locationName:"provisioningRoleArn" min:"20" type:"string" required:"true"`
+
+	// Metadata which can be used to manage the fleet provisioning template.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
+
+	// The JSON formatted contents of the fleet provisioning template.
+	//
+	// TemplateBody is a required field
+	TemplateBody *string `locationName:"templateBody" type:"string" required:"true"`
+
+	// The name of the fleet provisioning template.
+	//
+	// TemplateName is a required field
+	TemplateName *string `locationName:"templateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateProvisioningTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateProvisioningTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateProvisioningTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateProvisioningTemplateInput"}
+	if s.ProvisioningRoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisioningRoleArn"))
+	}
+	if s.ProvisioningRoleArn != nil && len(*s.ProvisioningRoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisioningRoleArn", 20))
+	}
+	if s.TemplateBody == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateBody"))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateProvisioningTemplateInput) SetDescription(v string) *CreateProvisioningTemplateInput {
+	s.Description = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *CreateProvisioningTemplateInput) SetEnabled(v bool) *CreateProvisioningTemplateInput {
+	s.Enabled = &v
+	return s
+}
+
+// SetProvisioningRoleArn sets the ProvisioningRoleArn field's value.
+func (s *CreateProvisioningTemplateInput) SetProvisioningRoleArn(v string) *CreateProvisioningTemplateInput {
+	s.ProvisioningRoleArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateProvisioningTemplateInput) SetTags(v []*Tag) *CreateProvisioningTemplateInput {
+	s.Tags = v
+	return s
+}
+
+// SetTemplateBody sets the TemplateBody field's value.
+func (s *CreateProvisioningTemplateInput) SetTemplateBody(v string) *CreateProvisioningTemplateInput {
+	s.TemplateBody = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *CreateProvisioningTemplateInput) SetTemplateName(v string) *CreateProvisioningTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type CreateProvisioningTemplateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The default version of the fleet provisioning template.
+	DefaultVersionId *int64 `locationName:"defaultVersionId" type:"integer"`
+
+	// The ARN that identifies the provisioning template.
+	TemplateArn *string `locationName:"templateArn" type:"string"`
+
+	// The name of the fleet provisioning template.
+	TemplateName *string `locationName:"templateName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateProvisioningTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateProvisioningTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetDefaultVersionId sets the DefaultVersionId field's value.
+func (s *CreateProvisioningTemplateOutput) SetDefaultVersionId(v int64) *CreateProvisioningTemplateOutput {
+	s.DefaultVersionId = &v
+	return s
+}
+
+// SetTemplateArn sets the TemplateArn field's value.
+func (s *CreateProvisioningTemplateOutput) SetTemplateArn(v string) *CreateProvisioningTemplateOutput {
+	s.TemplateArn = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *CreateProvisioningTemplateOutput) SetTemplateName(v string) *CreateProvisioningTemplateOutput {
+	s.TemplateName = &v
+	return s
+}
+
+type CreateProvisioningTemplateVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// Sets a fleet provision template version as the default version.
+	SetAsDefault *bool `location:"querystring" locationName:"setAsDefault" type:"boolean"`
+
+	// The JSON formatted contents of the fleet provisioning template.
+	//
+	// TemplateBody is a required field
+	TemplateBody *string `locationName:"templateBody" type:"string" required:"true"`
+
+	// The name of the fleet provisioning template.
+	//
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"templateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateProvisioningTemplateVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateProvisioningTemplateVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateProvisioningTemplateVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateProvisioningTemplateVersionInput"}
+	if s.TemplateBody == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateBody"))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSetAsDefault sets the SetAsDefault field's value.
+func (s *CreateProvisioningTemplateVersionInput) SetSetAsDefault(v bool) *CreateProvisioningTemplateVersionInput {
+	s.SetAsDefault = &v
+	return s
+}
+
+// SetTemplateBody sets the TemplateBody field's value.
+func (s *CreateProvisioningTemplateVersionInput) SetTemplateBody(v string) *CreateProvisioningTemplateVersionInput {
+	s.TemplateBody = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *CreateProvisioningTemplateVersionInput) SetTemplateName(v string) *CreateProvisioningTemplateVersionInput {
+	s.TemplateName = &v
+	return s
+}
+
+type CreateProvisioningTemplateVersionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// True if the fleet provisioning template version is the default version, otherwise
+	// false.
+	IsDefaultVersion *bool `locationName:"isDefaultVersion" type:"boolean"`
+
+	// The ARN that identifies the provisioning template.
+	TemplateArn *string `locationName:"templateArn" type:"string"`
+
+	// The name of the fleet provisioning template.
+	TemplateName *string `locationName:"templateName" min:"1" type:"string"`
+
+	// The version of the fleet provisioning template.
+	VersionId *int64 `locationName:"versionId" type:"integer"`
+}
+
+// String returns the string representation
+func (s CreateProvisioningTemplateVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateProvisioningTemplateVersionOutput) GoString() string {
+	return s.String()
+}
+
+// SetIsDefaultVersion sets the IsDefaultVersion field's value.
+func (s *CreateProvisioningTemplateVersionOutput) SetIsDefaultVersion(v bool) *CreateProvisioningTemplateVersionOutput {
+	s.IsDefaultVersion = &v
+	return s
+}
+
+// SetTemplateArn sets the TemplateArn field's value.
+func (s *CreateProvisioningTemplateVersionOutput) SetTemplateArn(v string) *CreateProvisioningTemplateVersionOutput {
+	s.TemplateArn = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *CreateProvisioningTemplateVersionOutput) SetTemplateName(v string) *CreateProvisioningTemplateVersionOutput {
+	s.TemplateName = &v
+	return s
+}
+
+// SetVersionId sets the VersionId field's value.
+func (s *CreateProvisioningTemplateVersionOutput) SetVersionId(v int64) *CreateProvisioningTemplateVersionOutput {
+	s.VersionId = &v
+	return s
+}
+
 type CreateRoleAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -19355,7 +24134,7 @@ type CreateRoleAliasOutput struct {
 	RoleAlias *string `locationName:"roleAlias" min:"1" type:"string"`
 
 	// The role alias ARN.
-	RoleAliasArn *string `locationName:"roleAliasArn" type:"string"`
+	RoleAliasArn *string `locationName:"roleAliasArn" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -19390,13 +24169,13 @@ type CreateScheduledAuditInput struct {
 	DayOfMonth *string `locationName:"dayOfMonth" type:"string"`
 
 	// The day of the week on which the scheduled audit takes place. Can be one
-	// of "SUN", "MON", "TUE", "WED", "THU", "FRI" or "SAT". This field is required
+	// of "SUN", "MON", "TUE", "WED", "THU", "FRI", or "SAT". This field is required
 	// if the "frequency" parameter is set to "WEEKLY" or "BIWEEKLY".
 	DayOfWeek *string `locationName:"dayOfWeek" type:"string" enum:"DayOfWeek"`
 
 	// How often the scheduled audit takes place. Can be one of "DAILY", "WEEKLY",
-	// "BIWEEKLY" or "MONTHLY". The actual start time of each audit is determined
-	// by the system.
+	// "BIWEEKLY" or "MONTHLY". The start time of each audit is determined by the
+	// system.
 	//
 	// Frequency is a required field
 	Frequency *string `locationName:"frequency" type:"string" required:"true" enum:"AuditFrequency"`
@@ -19406,9 +24185,12 @@ type CreateScheduledAuditInput struct {
 	// ScheduledAuditName is a required field
 	ScheduledAuditName *string `location:"uri" locationName:"scheduledAuditName" min:"1" type:"string" required:"true"`
 
+	// Metadata that can be used to manage the scheduled audit.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// Which checks are performed during the scheduled audit. Checks must be enabled
 	// for your account. (Use DescribeAccountAuditConfiguration to see the list
-	// of all checks including those that are enabled or UpdateAccountAuditConfiguration
+	// of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
 	// to select which checks are enabled.)
 	//
 	// TargetCheckNames is a required field
@@ -19471,6 +24253,12 @@ func (s *CreateScheduledAuditInput) SetScheduledAuditName(v string) *CreateSched
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateScheduledAuditInput) SetTags(v []*Tag) *CreateScheduledAuditInput {
+	s.Tags = v
+	return s
+}
+
 // SetTargetCheckNames sets the TargetCheckNames field's value.
 func (s *CreateScheduledAuditInput) SetTargetCheckNames(v []*string) *CreateScheduledAuditInput {
 	s.TargetCheckNames = v
@@ -19503,15 +24291,18 @@ func (s *CreateScheduledAuditOutput) SetScheduledAuditArn(v string) *CreateSched
 type CreateSecurityProfileInput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the profile's behaviors, but it is also retained for
+	// any metric specified here.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
+
 	// Specifies the destinations to which alerts are sent. (Alerts are always sent
 	// to the console.) Alerts are generated when a device (thing) violates a behavior.
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
 
 	// Specifies the behaviors that, when violated by a device (thing), cause an
 	// alert.
-	//
-	// Behaviors is a required field
-	Behaviors []*Behavior `locationName:"behaviors" type:"list" required:"true"`
+	Behaviors []*Behavior `locationName:"behaviors" type:"list"`
 
 	// A description of the security profile.
 	SecurityProfileDescription *string `locationName:"securityProfileDescription" type:"string"`
@@ -19521,7 +24312,7 @@ type CreateSecurityProfileInput struct {
 	// SecurityProfileName is a required field
 	SecurityProfileName *string `location:"uri" locationName:"securityProfileName" min:"1" type:"string" required:"true"`
 
-	// Metadata which can be used to manage the security profile.
+	// Metadata that can be used to manage the security profile.
 	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
@@ -19538,9 +24329,6 @@ func (s CreateSecurityProfileInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateSecurityProfileInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateSecurityProfileInput"}
-	if s.Behaviors == nil {
-		invalidParams.Add(request.NewErrParamRequired("Behaviors"))
-	}
 	if s.SecurityProfileName == nil {
 		invalidParams.Add(request.NewErrParamRequired("SecurityProfileName"))
 	}
@@ -19572,6 +24360,12 @@ func (s *CreateSecurityProfileInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
+func (s *CreateSecurityProfileInput) SetAdditionalMetricsToRetain(v []*string) *CreateSecurityProfileInput {
+	s.AdditionalMetricsToRetain = v
+	return s
 }
 
 // SetAlertTargets sets the AlertTargets field's value.
@@ -19657,6 +24451,9 @@ type CreateStreamInput struct {
 	//
 	// StreamId is a required field
 	StreamId *string `location:"uri" locationName:"streamId" min:"1" type:"string" required:"true"`
+
+	// Metadata which can be used to manage streams.
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -19728,6 +24525,12 @@ func (s *CreateStreamInput) SetRoleArn(v string) *CreateStreamInput {
 // SetStreamId sets the StreamId field's value.
 func (s *CreateStreamInput) SetStreamId(v string) *CreateStreamInput {
 	s.StreamId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateStreamInput) SetTags(v []*Tag) *CreateStreamInput {
+	s.Tags = v
 	return s
 }
 
@@ -20117,6 +24920,72 @@ func (s *CreateThingTypeOutput) SetThingTypeName(v string) *CreateThingTypeOutpu
 	return s
 }
 
+type CreateTopicRuleDestinationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The topic rule destination configuration.
+	//
+	// DestinationConfiguration is a required field
+	DestinationConfiguration *TopicRuleDestinationConfiguration `locationName:"destinationConfiguration" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateTopicRuleDestinationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTopicRuleDestinationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateTopicRuleDestinationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateTopicRuleDestinationInput"}
+	if s.DestinationConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("DestinationConfiguration"))
+	}
+	if s.DestinationConfiguration != nil {
+		if err := s.DestinationConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("DestinationConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestinationConfiguration sets the DestinationConfiguration field's value.
+func (s *CreateTopicRuleDestinationInput) SetDestinationConfiguration(v *TopicRuleDestinationConfiguration) *CreateTopicRuleDestinationInput {
+	s.DestinationConfiguration = v
+	return s
+}
+
+type CreateTopicRuleDestinationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The topic rule destination.
+	TopicRuleDestination *TopicRuleDestination `locationName:"topicRuleDestination" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateTopicRuleDestinationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTopicRuleDestinationOutput) GoString() string {
+	return s.String()
+}
+
+// SetTopicRuleDestination sets the TopicRuleDestination field's value.
+func (s *CreateTopicRuleDestinationOutput) SetTopicRuleDestination(v *TopicRuleDestination) *CreateTopicRuleDestinationOutput {
+	s.TopicRuleDestination = v
+	return s
+}
+
 // The input for the CreateTopicRule operation.
 type CreateTopicRuleInput struct {
 	_ struct{} `type:"structure" payload:"TopicRulePayload"`
@@ -20484,7 +25353,8 @@ type DeleteCertificateInput struct {
 	// CertificateId is a required field
 	CertificateId *string `location:"uri" locationName:"certificateId" min:"64" type:"string" required:"true"`
 
-	// Forces a certificate request to be deleted.
+	// Forces the deletion of a certificate if it is inactive and is not attached
+	// to an IoT thing.
 	ForceDelete *bool `location:"querystring" locationName:"forceDelete" type:"boolean"`
 }
 
@@ -20537,6 +25407,118 @@ func (s DeleteCertificateOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteCertificateOutput) GoString() string {
+	return s.String()
+}
+
+// You can't delete the resource because it is attached to one or more resources.
+type DeleteConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorDeleteConflictException(v protocol.ResponseMetadata) error {
+	return &DeleteConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DeleteConflictException) Code() string {
+	return "DeleteConflictException"
+}
+
+// Message returns the exception's message.
+func (s DeleteConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DeleteConflictException) OrigErr() error {
+	return nil
+}
+
+func (s DeleteConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DeleteConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DeleteConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+type DeleteDomainConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain configuration to be deleted.
+	//
+	// DomainConfigurationName is a required field
+	DomainConfigurationName *string `location:"uri" locationName:"domainConfigurationName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteDomainConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDomainConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteDomainConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteDomainConfigurationInput"}
+	if s.DomainConfigurationName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainConfigurationName"))
+	}
+	if s.DomainConfigurationName != nil && len(*s.DomainConfigurationName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainConfigurationName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainConfigurationName sets the DomainConfigurationName field's value.
+func (s *DeleteDomainConfigurationInput) SetDomainConfigurationName(v string) *DeleteDomainConfigurationInput {
+	s.DomainConfigurationName = &v
+	return s
+}
+
+type DeleteDomainConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteDomainConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDomainConfigurationOutput) GoString() string {
 	return s.String()
 }
 
@@ -20785,6 +25767,61 @@ func (s DeleteJobOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteMitigationActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the mitigation action that you want to delete.
+	//
+	// ActionName is a required field
+	ActionName *string `location:"uri" locationName:"actionName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteMitigationActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMitigationActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteMitigationActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteMitigationActionInput"}
+	if s.ActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionName"))
+	}
+	if s.ActionName != nil && len(*s.ActionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ActionName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *DeleteMitigationActionInput) SetActionName(v string) *DeleteMitigationActionInput {
+	s.ActionName = &v
+	return s
+}
+
+type DeleteMitigationActionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteMitigationActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMitigationActionOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteOTAUpdateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -20989,6 +26026,130 @@ func (s DeletePolicyVersionOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteProvisioningTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the fleet provision template to delete.
+	//
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"templateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteProvisioningTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteProvisioningTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteProvisioningTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteProvisioningTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *DeleteProvisioningTemplateInput) SetTemplateName(v string) *DeleteProvisioningTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type DeleteProvisioningTemplateOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteProvisioningTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteProvisioningTemplateOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteProvisioningTemplateVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the fleet provisioning template version to delete.
+	//
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"templateName" min:"1" type:"string" required:"true"`
+
+	// The fleet provisioning template version ID to delete.
+	//
+	// VersionId is a required field
+	VersionId *int64 `location:"uri" locationName:"versionId" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteProvisioningTemplateVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteProvisioningTemplateVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteProvisioningTemplateVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteProvisioningTemplateVersionInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+	if s.VersionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VersionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *DeleteProvisioningTemplateVersionInput) SetTemplateName(v string) *DeleteProvisioningTemplateVersionInput {
+	s.TemplateName = &v
+	return s
+}
+
+// SetVersionId sets the VersionId field's value.
+func (s *DeleteProvisioningTemplateVersionInput) SetVersionId(v int64) *DeleteProvisioningTemplateVersionInput {
+	s.VersionId = &v
+	return s
+}
+
+type DeleteProvisioningTemplateVersionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteProvisioningTemplateVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteProvisioningTemplateVersionOutput) GoString() string {
+	return s.String()
+}
+
 // The input for the DeleteRegistrationCode operation.
 type DeleteRegistrationCodeInput struct {
 	_ struct{} `type:"structure"`
@@ -21134,7 +26295,7 @@ type DeleteSecurityProfileInput struct {
 
 	// The expected version of the security profile. A new version is generated
 	// whenever the security profile is updated. If you specify a value that is
-	// different than the actual version, a VersionConflictException is thrown.
+	// different from the actual version, a VersionConflictException is thrown.
 	ExpectedVersion *int64 `location:"querystring" locationName:"expectedVersion" type:"long"`
 
 	// The name of the security profile to be deleted.
@@ -21439,6 +26600,61 @@ func (s DeleteThingTypeOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteTopicRuleDestinationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the topic rule destination to delete.
+	//
+	// Arn is a required field
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTopicRuleDestinationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTopicRuleDestinationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTopicRuleDestinationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTopicRuleDestinationInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteTopicRuleDestinationInput) SetArn(v string) *DeleteTopicRuleDestinationInput {
+	s.Arn = &v
+	return s
+}
+
+type DeleteTopicRuleDestinationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteTopicRuleDestinationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTopicRuleDestinationOutput) GoString() string {
+	return s.String()
+}
+
 // The input for the DeleteTopicRule operation.
 type DeleteTopicRuleInput struct {
 	_ struct{} `type:"structure"`
@@ -21688,10 +26904,10 @@ type DescribeAccountAuditConfigurationOutput struct {
 	AuditNotificationTargetConfigurations map[string]*AuditNotificationTarget `locationName:"auditNotificationTargetConfigurations" type:"map"`
 
 	// The ARN of the role that grants permission to AWS IoT to access information
-	// about your devices, policies, certificates and other items as necessary when
+	// about your devices, policies, certificates, and other items as required when
 	// performing an audit.
 	//
-	// On the first call to UpdateAccountAuditConfiguration this parameter is required.
+	// On the first call to UpdateAccountAuditConfiguration, this parameter is required.
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
 }
 
@@ -21720,6 +26936,193 @@ func (s *DescribeAccountAuditConfigurationOutput) SetAuditNotificationTargetConf
 // SetRoleArn sets the RoleArn field's value.
 func (s *DescribeAccountAuditConfigurationOutput) SetRoleArn(v string) *DescribeAccountAuditConfigurationOutput {
 	s.RoleArn = &v
+	return s
+}
+
+type DescribeAuditFindingInput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for a single audit finding. You can use this identifier
+	// to apply mitigation actions to the finding.
+	//
+	// FindingId is a required field
+	FindingId *string `location:"uri" locationName:"findingId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAuditFindingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAuditFindingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAuditFindingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAuditFindingInput"}
+	if s.FindingId == nil {
+		invalidParams.Add(request.NewErrParamRequired("FindingId"))
+	}
+	if s.FindingId != nil && len(*s.FindingId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFindingId sets the FindingId field's value.
+func (s *DescribeAuditFindingInput) SetFindingId(v string) *DescribeAuditFindingInput {
+	s.FindingId = &v
+	return s
+}
+
+type DescribeAuditFindingOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The findings (results) of the audit.
+	Finding *AuditFinding `locationName:"finding" type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeAuditFindingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAuditFindingOutput) GoString() string {
+	return s.String()
+}
+
+// SetFinding sets the Finding field's value.
+func (s *DescribeAuditFindingOutput) SetFinding(v *AuditFinding) *DescribeAuditFindingOutput {
+	s.Finding = v
+	return s
+}
+
+type DescribeAuditMitigationActionsTaskInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the audit mitigation task.
+	//
+	// TaskId is a required field
+	TaskId *string `location:"uri" locationName:"taskId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAuditMitigationActionsTaskInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAuditMitigationActionsTaskInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAuditMitigationActionsTaskInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAuditMitigationActionsTaskInput"}
+	if s.TaskId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskId"))
+	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *DescribeAuditMitigationActionsTaskInput) SetTaskId(v string) *DescribeAuditMitigationActionsTaskInput {
+	s.TaskId = &v
+	return s
+}
+
+type DescribeAuditMitigationActionsTaskOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the mitigation actions and their parameters that are applied as
+	// part of this task.
+	ActionsDefinition []*MitigationAction `locationName:"actionsDefinition" type:"list"`
+
+	// Specifies the mitigation actions that should be applied to specific audit
+	// checks.
+	AuditCheckToActionsMapping map[string][]*string `locationName:"auditCheckToActionsMapping" type:"map"`
+
+	// The date and time when the task was completed or canceled.
+	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
+
+	// The date and time when the task was started.
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+
+	// Identifies the findings to which the mitigation actions are applied. This
+	// can be by audit checks, by audit task, or a set of findings.
+	Target *AuditMitigationActionsTaskTarget `locationName:"target" type:"structure"`
+
+	// Aggregate counts of the results when the mitigation tasks were applied to
+	// the findings for this audit mitigation actions task.
+	TaskStatistics map[string]*TaskStatisticsForAuditCheck `locationName:"taskStatistics" type:"map"`
+
+	// The current status of the task.
+	TaskStatus *string `locationName:"taskStatus" type:"string" enum:"AuditMitigationActionsTaskStatus"`
+}
+
+// String returns the string representation
+func (s DescribeAuditMitigationActionsTaskOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAuditMitigationActionsTaskOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionsDefinition sets the ActionsDefinition field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetActionsDefinition(v []*MitigationAction) *DescribeAuditMitigationActionsTaskOutput {
+	s.ActionsDefinition = v
+	return s
+}
+
+// SetAuditCheckToActionsMapping sets the AuditCheckToActionsMapping field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetAuditCheckToActionsMapping(v map[string][]*string) *DescribeAuditMitigationActionsTaskOutput {
+	s.AuditCheckToActionsMapping = v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetEndTime(v time.Time) *DescribeAuditMitigationActionsTaskOutput {
+	s.EndTime = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetStartTime(v time.Time) *DescribeAuditMitigationActionsTaskOutput {
+	s.StartTime = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetTarget(v *AuditMitigationActionsTaskTarget) *DescribeAuditMitigationActionsTaskOutput {
+	s.Target = v
+	return s
+}
+
+// SetTaskStatistics sets the TaskStatistics field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetTaskStatistics(v map[string]*TaskStatisticsForAuditCheck) *DescribeAuditMitigationActionsTaskOutput {
+	s.TaskStatistics = v
+	return s
+}
+
+// SetTaskStatus sets the TaskStatus field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetTaskStatus(v string) *DescribeAuditMitigationActionsTaskOutput {
+	s.TaskStatus = &v
 	return s
 }
 
@@ -22185,6 +27588,134 @@ func (s *DescribeDefaultAuthorizerOutput) SetAuthorizerDescription(v *Authorizer
 	return s
 }
 
+type DescribeDomainConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain configuration.
+	//
+	// DomainConfigurationName is a required field
+	DomainConfigurationName *string `location:"uri" locationName:"domainConfigurationName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeDomainConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeDomainConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeDomainConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeDomainConfigurationInput"}
+	if s.DomainConfigurationName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainConfigurationName"))
+	}
+	if s.DomainConfigurationName != nil && len(*s.DomainConfigurationName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainConfigurationName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainConfigurationName sets the DomainConfigurationName field's value.
+func (s *DescribeDomainConfigurationInput) SetDomainConfigurationName(v string) *DescribeDomainConfigurationInput {
+	s.DomainConfigurationName = &v
+	return s
+}
+
+type DescribeDomainConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object that specifies the authorization service for a domain.
+	AuthorizerConfig *AuthorizerConfig `locationName:"authorizerConfig" type:"structure"`
+
+	// The ARN of the domain configuration.
+	DomainConfigurationArn *string `locationName:"domainConfigurationArn" type:"string"`
+
+	// The name of the domain configuration.
+	DomainConfigurationName *string `locationName:"domainConfigurationName" min:"1" type:"string"`
+
+	// A Boolean value that specifies the current state of the domain configuration.
+	DomainConfigurationStatus *string `locationName:"domainConfigurationStatus" type:"string" enum:"DomainConfigurationStatus"`
+
+	// The name of the domain.
+	DomainName *string `locationName:"domainName" min:"1" type:"string"`
+
+	// The type of the domain.
+	DomainType *string `locationName:"domainType" type:"string" enum:"DomainType"`
+
+	// A list containing summary information about the server certificate included
+	// in the domain configuration.
+	ServerCertificates []*ServerCertificateSummary `locationName:"serverCertificates" type:"list"`
+
+	// The type of service delivered by the endpoint.
+	ServiceType *string `locationName:"serviceType" type:"string" enum:"ServiceType"`
+}
+
+// String returns the string representation
+func (s DescribeDomainConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeDomainConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetAuthorizerConfig sets the AuthorizerConfig field's value.
+func (s *DescribeDomainConfigurationOutput) SetAuthorizerConfig(v *AuthorizerConfig) *DescribeDomainConfigurationOutput {
+	s.AuthorizerConfig = v
+	return s
+}
+
+// SetDomainConfigurationArn sets the DomainConfigurationArn field's value.
+func (s *DescribeDomainConfigurationOutput) SetDomainConfigurationArn(v string) *DescribeDomainConfigurationOutput {
+	s.DomainConfigurationArn = &v
+	return s
+}
+
+// SetDomainConfigurationName sets the DomainConfigurationName field's value.
+func (s *DescribeDomainConfigurationOutput) SetDomainConfigurationName(v string) *DescribeDomainConfigurationOutput {
+	s.DomainConfigurationName = &v
+	return s
+}
+
+// SetDomainConfigurationStatus sets the DomainConfigurationStatus field's value.
+func (s *DescribeDomainConfigurationOutput) SetDomainConfigurationStatus(v string) *DescribeDomainConfigurationOutput {
+	s.DomainConfigurationStatus = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *DescribeDomainConfigurationOutput) SetDomainName(v string) *DescribeDomainConfigurationOutput {
+	s.DomainName = &v
+	return s
+}
+
+// SetDomainType sets the DomainType field's value.
+func (s *DescribeDomainConfigurationOutput) SetDomainType(v string) *DescribeDomainConfigurationOutput {
+	s.DomainType = &v
+	return s
+}
+
+// SetServerCertificates sets the ServerCertificates field's value.
+func (s *DescribeDomainConfigurationOutput) SetServerCertificates(v []*ServerCertificateSummary) *DescribeDomainConfigurationOutput {
+	s.ServerCertificates = v
+	return s
+}
+
+// SetServiceType sets the ServiceType field's value.
+func (s *DescribeDomainConfigurationOutput) SetServiceType(v string) *DescribeDomainConfigurationOutput {
+	s.ServiceType = &v
+	return s
+}
+
 // The input for the DescribeEndpoint operation.
 type DescribeEndpointInput struct {
 	_ struct{} `type:"structure"`
@@ -22350,16 +27881,16 @@ type DescribeIndexOutput struct {
 	// Contains a value that specifies the type of indexing performed. Valid values
 	// are:
 	//
-	//    * REGISTRY – Your thing index will contain only registry data.
+	//    * REGISTRY – Your thing index contains only registry data.
 	//
-	//    * REGISTRY_AND_SHADOW - Your thing index will contain registry data and
-	//    shadow data.
+	//    * REGISTRY_AND_SHADOW - Your thing index contains registry data and shadow
+	//    data.
 	//
-	//    * REGISTRY_AND_CONNECTIVITY_STATUS - Your thing index will contain registry
+	//    * REGISTRY_AND_CONNECTIVITY_STATUS - Your thing index contains registry
 	//    data and thing connectivity status data.
 	//
-	//    * REGISTRY_AND_SHADOW_AND_CONNECTIVITY_STATUS - Your thing index will
-	//    contain registry data, shadow data, and thing connectivity status data.
+	//    * REGISTRY_AND_SHADOW_AND_CONNECTIVITY_STATUS - Your thing index contains
+	//    registry data, shadow data, and thing connectivity status data.
 	Schema *string `locationName:"schema" type:"string"`
 }
 
@@ -22555,6 +28086,376 @@ func (s *DescribeJobOutput) SetJob(v *Job) *DescribeJobOutput {
 	return s
 }
 
+type DescribeMitigationActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The friendly name that uniquely identifies the mitigation action.
+	//
+	// ActionName is a required field
+	ActionName *string `location:"uri" locationName:"actionName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeMitigationActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMitigationActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeMitigationActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeMitigationActionInput"}
+	if s.ActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionName"))
+	}
+	if s.ActionName != nil && len(*s.ActionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ActionName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *DescribeMitigationActionInput) SetActionName(v string) *DescribeMitigationActionInput {
+	s.ActionName = &v
+	return s
+}
+
+type DescribeMitigationActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN that identifies this migration action.
+	ActionArn *string `locationName:"actionArn" type:"string"`
+
+	// A unique identifier for this action.
+	ActionId *string `locationName:"actionId" type:"string"`
+
+	// The friendly name that uniquely identifies the mitigation action.
+	ActionName *string `locationName:"actionName" type:"string"`
+
+	// Parameters that control how the mitigation action is applied, specific to
+	// the type of mitigation action.
+	ActionParams *MitigationActionParams `locationName:"actionParams" type:"structure"`
+
+	// The type of mitigation action.
+	ActionType *string `locationName:"actionType" type:"string" enum:"MitigationActionType"`
+
+	// The date and time when the mitigation action was added to your AWS account.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+
+	// The date and time when the mitigation action was last changed.
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
+
+	// The ARN of the IAM role used to apply this action.
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeMitigationActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMitigationActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionArn sets the ActionArn field's value.
+func (s *DescribeMitigationActionOutput) SetActionArn(v string) *DescribeMitigationActionOutput {
+	s.ActionArn = &v
+	return s
+}
+
+// SetActionId sets the ActionId field's value.
+func (s *DescribeMitigationActionOutput) SetActionId(v string) *DescribeMitigationActionOutput {
+	s.ActionId = &v
+	return s
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *DescribeMitigationActionOutput) SetActionName(v string) *DescribeMitigationActionOutput {
+	s.ActionName = &v
+	return s
+}
+
+// SetActionParams sets the ActionParams field's value.
+func (s *DescribeMitigationActionOutput) SetActionParams(v *MitigationActionParams) *DescribeMitigationActionOutput {
+	s.ActionParams = v
+	return s
+}
+
+// SetActionType sets the ActionType field's value.
+func (s *DescribeMitigationActionOutput) SetActionType(v string) *DescribeMitigationActionOutput {
+	s.ActionType = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *DescribeMitigationActionOutput) SetCreationDate(v time.Time) *DescribeMitigationActionOutput {
+	s.CreationDate = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *DescribeMitigationActionOutput) SetLastModifiedDate(v time.Time) *DescribeMitigationActionOutput {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *DescribeMitigationActionOutput) SetRoleArn(v string) *DescribeMitigationActionOutput {
+	s.RoleArn = &v
+	return s
+}
+
+type DescribeProvisioningTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the fleet provisioning template.
+	//
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"templateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeProvisioningTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeProvisioningTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeProvisioningTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeProvisioningTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *DescribeProvisioningTemplateInput) SetTemplateName(v string) *DescribeProvisioningTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type DescribeProvisioningTemplateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The date when the fleet provisioning template was created.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+
+	// The default fleet template version ID.
+	DefaultVersionId *int64 `locationName:"defaultVersionId" type:"integer"`
+
+	// The description of the fleet provisioning template.
+	Description *string `locationName:"description" type:"string"`
+
+	// True if the fleet provisioning template is enabled, otherwise false.
+	Enabled *bool `locationName:"enabled" type:"boolean"`
+
+	// The date when the fleet provisioning template was last modified.
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
+
+	// The ARN of the role associated with the provisioning template. This IoT role
+	// grants permission to provision a device.
+	ProvisioningRoleArn *string `locationName:"provisioningRoleArn" min:"20" type:"string"`
+
+	// The ARN of the fleet provisioning template.
+	TemplateArn *string `locationName:"templateArn" type:"string"`
+
+	// The JSON formatted contents of the fleet provisioning template.
+	TemplateBody *string `locationName:"templateBody" type:"string"`
+
+	// The name of the fleet provisioning template.
+	TemplateName *string `locationName:"templateName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeProvisioningTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeProvisioningTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *DescribeProvisioningTemplateOutput) SetCreationDate(v time.Time) *DescribeProvisioningTemplateOutput {
+	s.CreationDate = &v
+	return s
+}
+
+// SetDefaultVersionId sets the DefaultVersionId field's value.
+func (s *DescribeProvisioningTemplateOutput) SetDefaultVersionId(v int64) *DescribeProvisioningTemplateOutput {
+	s.DefaultVersionId = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *DescribeProvisioningTemplateOutput) SetDescription(v string) *DescribeProvisioningTemplateOutput {
+	s.Description = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *DescribeProvisioningTemplateOutput) SetEnabled(v bool) *DescribeProvisioningTemplateOutput {
+	s.Enabled = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *DescribeProvisioningTemplateOutput) SetLastModifiedDate(v time.Time) *DescribeProvisioningTemplateOutput {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetProvisioningRoleArn sets the ProvisioningRoleArn field's value.
+func (s *DescribeProvisioningTemplateOutput) SetProvisioningRoleArn(v string) *DescribeProvisioningTemplateOutput {
+	s.ProvisioningRoleArn = &v
+	return s
+}
+
+// SetTemplateArn sets the TemplateArn field's value.
+func (s *DescribeProvisioningTemplateOutput) SetTemplateArn(v string) *DescribeProvisioningTemplateOutput {
+	s.TemplateArn = &v
+	return s
+}
+
+// SetTemplateBody sets the TemplateBody field's value.
+func (s *DescribeProvisioningTemplateOutput) SetTemplateBody(v string) *DescribeProvisioningTemplateOutput {
+	s.TemplateBody = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *DescribeProvisioningTemplateOutput) SetTemplateName(v string) *DescribeProvisioningTemplateOutput {
+	s.TemplateName = &v
+	return s
+}
+
+type DescribeProvisioningTemplateVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The template name.
+	//
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"templateName" min:"1" type:"string" required:"true"`
+
+	// The fleet provisioning template version ID.
+	//
+	// VersionId is a required field
+	VersionId *int64 `location:"uri" locationName:"versionId" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeProvisioningTemplateVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeProvisioningTemplateVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeProvisioningTemplateVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeProvisioningTemplateVersionInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+	if s.VersionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VersionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *DescribeProvisioningTemplateVersionInput) SetTemplateName(v string) *DescribeProvisioningTemplateVersionInput {
+	s.TemplateName = &v
+	return s
+}
+
+// SetVersionId sets the VersionId field's value.
+func (s *DescribeProvisioningTemplateVersionInput) SetVersionId(v int64) *DescribeProvisioningTemplateVersionInput {
+	s.VersionId = &v
+	return s
+}
+
+type DescribeProvisioningTemplateVersionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The date when the fleet provisioning template version was created.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+
+	// True if the fleet provisioning template version is the default version.
+	IsDefaultVersion *bool `locationName:"isDefaultVersion" type:"boolean"`
+
+	// The JSON formatted contents of the fleet provisioning template version.
+	TemplateBody *string `locationName:"templateBody" type:"string"`
+
+	// The fleet provisioning template version ID.
+	VersionId *int64 `locationName:"versionId" type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeProvisioningTemplateVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeProvisioningTemplateVersionOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *DescribeProvisioningTemplateVersionOutput) SetCreationDate(v time.Time) *DescribeProvisioningTemplateVersionOutput {
+	s.CreationDate = &v
+	return s
+}
+
+// SetIsDefaultVersion sets the IsDefaultVersion field's value.
+func (s *DescribeProvisioningTemplateVersionOutput) SetIsDefaultVersion(v bool) *DescribeProvisioningTemplateVersionOutput {
+	s.IsDefaultVersion = &v
+	return s
+}
+
+// SetTemplateBody sets the TemplateBody field's value.
+func (s *DescribeProvisioningTemplateVersionOutput) SetTemplateBody(v string) *DescribeProvisioningTemplateVersionOutput {
+	s.TemplateBody = &v
+	return s
+}
+
+// SetVersionId sets the VersionId field's value.
+func (s *DescribeProvisioningTemplateVersionOutput) SetVersionId(v int64) *DescribeProvisioningTemplateVersionOutput {
+	s.VersionId = &v
+	return s
+}
+
 type DescribeRoleAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -22669,11 +28570,11 @@ type DescribeScheduledAuditOutput struct {
 	DayOfMonth *string `locationName:"dayOfMonth" type:"string"`
 
 	// The day of the week on which the scheduled audit takes place. One of "SUN",
-	// "MON", "TUE", "WED", "THU", "FRI" or "SAT".
+	// "MON", "TUE", "WED", "THU", "FRI", or "SAT".
 	DayOfWeek *string `locationName:"dayOfWeek" type:"string" enum:"DayOfWeek"`
 
-	// How often the scheduled audit takes place. One of "DAILY", "WEEKLY", "BIWEEKLY"
-	// or "MONTHLY". The actual start time of each audit is determined by the system.
+	// How often the scheduled audit takes place. One of "DAILY", "WEEKLY", "BIWEEKLY",
+	// or "MONTHLY". The start time of each audit is determined by the system.
 	Frequency *string `locationName:"frequency" type:"string" enum:"AuditFrequency"`
 
 	// The ARN of the scheduled audit.
@@ -22682,9 +28583,9 @@ type DescribeScheduledAuditOutput struct {
 	// The name of the scheduled audit.
 	ScheduledAuditName *string `locationName:"scheduledAuditName" min:"1" type:"string"`
 
-	// Which checks are performed during the scheduled audit. (Note that checks
-	// must be enabled for your account. (Use DescribeAccountAuditConfiguration
-	// to see the list of all checks including those that are enabled or UpdateAccountAuditConfiguration
+	// Which checks are performed during the scheduled audit. Checks must be enabled
+	// for your account. (Use DescribeAccountAuditConfiguration to see the list
+	// of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
 	// to select which checks are enabled.)
 	TargetCheckNames []*string `locationName:"targetCheckNames" type:"list"`
 }
@@ -22779,6 +28680,11 @@ func (s *DescribeSecurityProfileInput) SetSecurityProfileName(v string) *Describ
 type DescribeSecurityProfileOutput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the profile's behaviors, but it is also retained for
+	// any metric specified here.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
+
 	// Where the alerts are sent. (Alerts are always sent to the console.)
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
 
@@ -22815,6 +28721,12 @@ func (s DescribeSecurityProfileOutput) String() string {
 // GoString returns the string representation
 func (s DescribeSecurityProfileOutput) GoString() string {
 	return s.String()
+}
+
+// SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
+func (s *DescribeSecurityProfileOutput) SetAdditionalMetricsToRetain(v []*string) *DescribeSecurityProfileOutput {
+	s.AdditionalMetricsToRetain = v
+	return s
 }
 
 // SetAlertTargets sets the AlertTargets field's value.
@@ -23854,6 +29766,59 @@ func (s DisableTopicRuleOutput) GoString() string {
 	return s.String()
 }
 
+// The summary of a domain configuration. A domain configuration specifies custom
+// IoT-specific information about a domain. A domain configuration can be associated
+// with an AWS-managed domain (for example, dbc123defghijk.iot.us-west-2.amazonaws.com),
+// a customer managed domain, or a default endpoint.
+//
+//    * Data
+//
+//    * Jobs
+//
+//    * CredentialProvider
+//
+// The domain configuration feature is in public preview and is subject to change.
+type DomainConfigurationSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the domain configuration.
+	DomainConfigurationArn *string `locationName:"domainConfigurationArn" type:"string"`
+
+	// The name of the domain configuration. This value must be unique to a region.
+	DomainConfigurationName *string `locationName:"domainConfigurationName" min:"1" type:"string"`
+
+	// The type of service delivered by the endpoint.
+	ServiceType *string `locationName:"serviceType" type:"string" enum:"ServiceType"`
+}
+
+// String returns the string representation
+func (s DomainConfigurationSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainConfigurationSummary) GoString() string {
+	return s.String()
+}
+
+// SetDomainConfigurationArn sets the DomainConfigurationArn field's value.
+func (s *DomainConfigurationSummary) SetDomainConfigurationArn(v string) *DomainConfigurationSummary {
+	s.DomainConfigurationArn = &v
+	return s
+}
+
+// SetDomainConfigurationName sets the DomainConfigurationName field's value.
+func (s *DomainConfigurationSummary) SetDomainConfigurationName(v string) *DomainConfigurationSummary {
+	s.DomainConfigurationName = &v
+	return s
+}
+
+// SetServiceType sets the ServiceType field's value.
+func (s *DomainConfigurationSummary) SetServiceType(v string) *DomainConfigurationSummary {
+	s.ServiceType = &v
+	return s
+}
+
 // Describes an action to write to a DynamoDB table.
 //
 // The tableName, hashKeyField, and rangeKeyField values must match the values
@@ -24212,6 +30177,62 @@ func (s *ElasticsearchAction) SetType(v string) *ElasticsearchAction {
 	return s
 }
 
+// Parameters used when defining a mitigation action that enable AWS IoT logging.
+type EnableIoTLoggingParams struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the types of information to be logged.
+	//
+	// LogLevel is a required field
+	LogLevel *string `locationName:"logLevel" type:"string" required:"true" enum:"LogLevel"`
+
+	// The ARN of the IAM role used for logging.
+	//
+	// RoleArnForLogging is a required field
+	RoleArnForLogging *string `locationName:"roleArnForLogging" min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s EnableIoTLoggingParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EnableIoTLoggingParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EnableIoTLoggingParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EnableIoTLoggingParams"}
+	if s.LogLevel == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogLevel"))
+	}
+	if s.RoleArnForLogging == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArnForLogging"))
+	}
+	if s.RoleArnForLogging != nil && len(*s.RoleArnForLogging) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArnForLogging", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *EnableIoTLoggingParams) SetLogLevel(v string) *EnableIoTLoggingParams {
+	s.LogLevel = &v
+	return s
+}
+
+// SetRoleArnForLogging sets the RoleArnForLogging field's value.
+func (s *EnableIoTLoggingParams) SetRoleArnForLogging(v string) *EnableIoTLoggingParams {
+	s.RoleArnForLogging = &v
+	return s
+}
+
 // The input for the EnableTopicRuleRequest operation.
 type EnableTopicRuleInput struct {
 	_ struct{} `type:"structure"`
@@ -24408,6 +30429,39 @@ func (s *ExponentialRolloutRate) SetRateIncreaseCriteria(v *RateIncreaseCriteria
 	return s
 }
 
+// Describes the name and data type at a field.
+type Field struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the field.
+	Name *string `locationName:"name" type:"string"`
+
+	// The datatype of the field.
+	Type *string `locationName:"type" type:"string" enum:"FieldType"`
+}
+
+// String returns the string representation
+func (s Field) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Field) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *Field) SetName(v string) *Field {
+	s.Name = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *Field) SetType(v string) *Field {
+	s.Type = &v
+	return s
+}
+
 // The location of the OTA update.
 type FileLocation struct {
 	_ struct{} `type:"structure"`
@@ -24522,6 +30576,103 @@ func (s *FirehoseAction) SetRoleArn(v string) *FirehoseAction {
 // SetSeparator sets the Separator field's value.
 func (s *FirehoseAction) SetSeparator(v string) *FirehoseAction {
 	s.Separator = &v
+	return s
+}
+
+type GetCardinalityInput struct {
+	_ struct{} `type:"structure"`
+
+	// The field to aggregate.
+	AggregationField *string `locationName:"aggregationField" min:"1" type:"string"`
+
+	// The name of the index to search.
+	IndexName *string `locationName:"indexName" min:"1" type:"string"`
+
+	// The search query.
+	//
+	// QueryString is a required field
+	QueryString *string `locationName:"queryString" min:"1" type:"string" required:"true"`
+
+	// The query version.
+	QueryVersion *string `locationName:"queryVersion" type:"string"`
+}
+
+// String returns the string representation
+func (s GetCardinalityInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCardinalityInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCardinalityInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCardinalityInput"}
+	if s.AggregationField != nil && len(*s.AggregationField) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AggregationField", 1))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 1))
+	}
+	if s.QueryString == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryString"))
+	}
+	if s.QueryString != nil && len(*s.QueryString) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QueryString", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAggregationField sets the AggregationField field's value.
+func (s *GetCardinalityInput) SetAggregationField(v string) *GetCardinalityInput {
+	s.AggregationField = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *GetCardinalityInput) SetIndexName(v string) *GetCardinalityInput {
+	s.IndexName = &v
+	return s
+}
+
+// SetQueryString sets the QueryString field's value.
+func (s *GetCardinalityInput) SetQueryString(v string) *GetCardinalityInput {
+	s.QueryString = &v
+	return s
+}
+
+// SetQueryVersion sets the QueryVersion field's value.
+func (s *GetCardinalityInput) SetQueryVersion(v string) *GetCardinalityInput {
+	s.QueryVersion = &v
+	return s
+}
+
+type GetCardinalityOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The approximate count of unique values that match the query.
+	Cardinality *int64 `locationName:"cardinality" type:"integer"`
+}
+
+// String returns the string representation
+func (s GetCardinalityOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCardinalityOutput) GoString() string {
+	return s.String()
+}
+
+// SetCardinality sets the Cardinality field's value.
+func (s *GetCardinalityOutput) SetCardinality(v int64) *GetCardinalityOutput {
+	s.Cardinality = &v
 	return s
 }
 
@@ -24824,6 +30975,112 @@ func (s *GetOTAUpdateOutput) SetOtaUpdateInfo(v *OTAUpdateInfo) *GetOTAUpdateOut
 	return s
 }
 
+type GetPercentilesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The field to aggregate.
+	AggregationField *string `locationName:"aggregationField" min:"1" type:"string"`
+
+	// The name of the index to search.
+	IndexName *string `locationName:"indexName" min:"1" type:"string"`
+
+	// The percentile groups returned.
+	Percents []*float64 `locationName:"percents" type:"list"`
+
+	// The query string.
+	//
+	// QueryString is a required field
+	QueryString *string `locationName:"queryString" min:"1" type:"string" required:"true"`
+
+	// The query version.
+	QueryVersion *string `locationName:"queryVersion" type:"string"`
+}
+
+// String returns the string representation
+func (s GetPercentilesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPercentilesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetPercentilesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetPercentilesInput"}
+	if s.AggregationField != nil && len(*s.AggregationField) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AggregationField", 1))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 1))
+	}
+	if s.QueryString == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryString"))
+	}
+	if s.QueryString != nil && len(*s.QueryString) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QueryString", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAggregationField sets the AggregationField field's value.
+func (s *GetPercentilesInput) SetAggregationField(v string) *GetPercentilesInput {
+	s.AggregationField = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *GetPercentilesInput) SetIndexName(v string) *GetPercentilesInput {
+	s.IndexName = &v
+	return s
+}
+
+// SetPercents sets the Percents field's value.
+func (s *GetPercentilesInput) SetPercents(v []*float64) *GetPercentilesInput {
+	s.Percents = v
+	return s
+}
+
+// SetQueryString sets the QueryString field's value.
+func (s *GetPercentilesInput) SetQueryString(v string) *GetPercentilesInput {
+	s.QueryString = &v
+	return s
+}
+
+// SetQueryVersion sets the QueryVersion field's value.
+func (s *GetPercentilesInput) SetQueryVersion(v string) *GetPercentilesInput {
+	s.QueryVersion = &v
+	return s
+}
+
+type GetPercentilesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The percentile values of the aggregated fields.
+	Percentiles []*PercentPair `locationName:"percentiles" type:"list"`
+}
+
+// String returns the string representation
+func (s GetPercentilesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPercentilesOutput) GoString() string {
+	return s.String()
+}
+
+// SetPercentiles sets the Percentiles field's value.
+func (s *GetPercentilesOutput) SetPercentiles(v []*PercentPair) *GetPercentilesOutput {
+	s.Percentiles = v
+	return s
+}
+
 // The input for the GetPolicy operation.
 type GetPolicyInput struct {
 	_ struct{} `type:"structure"`
@@ -25007,7 +31264,7 @@ func (s *GetPolicyVersionInput) SetPolicyVersionId(v string) *GetPolicyVersionIn
 type GetPolicyVersionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The date the policy version was created.
+	// The date the policy was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The generation ID of the policy version.
@@ -25016,7 +31273,7 @@ type GetPolicyVersionOutput struct {
 	// Specifies whether the policy version is the default.
 	IsDefaultVersion *bool `locationName:"isDefaultVersion" type:"boolean"`
 
-	// The date the policy version was last modified.
+	// The date the policy was last modified.
 	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// The policy ARN.
@@ -25126,6 +31383,169 @@ func (s GetRegistrationCodeOutput) GoString() string {
 // SetRegistrationCode sets the RegistrationCode field's value.
 func (s *GetRegistrationCodeOutput) SetRegistrationCode(v string) *GetRegistrationCodeOutput {
 	s.RegistrationCode = &v
+	return s
+}
+
+type GetStatisticsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The aggregation field name.
+	AggregationField *string `locationName:"aggregationField" min:"1" type:"string"`
+
+	// The name of the index to search. The default value is AWS_Things.
+	IndexName *string `locationName:"indexName" min:"1" type:"string"`
+
+	// The query used to search. You can specify "*" for the query string to get
+	// the count of all indexed things in your AWS account.
+	//
+	// QueryString is a required field
+	QueryString *string `locationName:"queryString" min:"1" type:"string" required:"true"`
+
+	// The version of the query used to search.
+	QueryVersion *string `locationName:"queryVersion" type:"string"`
+}
+
+// String returns the string representation
+func (s GetStatisticsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetStatisticsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetStatisticsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetStatisticsInput"}
+	if s.AggregationField != nil && len(*s.AggregationField) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AggregationField", 1))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 1))
+	}
+	if s.QueryString == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryString"))
+	}
+	if s.QueryString != nil && len(*s.QueryString) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QueryString", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAggregationField sets the AggregationField field's value.
+func (s *GetStatisticsInput) SetAggregationField(v string) *GetStatisticsInput {
+	s.AggregationField = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *GetStatisticsInput) SetIndexName(v string) *GetStatisticsInput {
+	s.IndexName = &v
+	return s
+}
+
+// SetQueryString sets the QueryString field's value.
+func (s *GetStatisticsInput) SetQueryString(v string) *GetStatisticsInput {
+	s.QueryString = &v
+	return s
+}
+
+// SetQueryVersion sets the QueryVersion field's value.
+func (s *GetStatisticsInput) SetQueryVersion(v string) *GetStatisticsInput {
+	s.QueryVersion = &v
+	return s
+}
+
+type GetStatisticsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The statistics returned by the Fleet Indexing service based on the query
+	// and aggregation field.
+	Statistics *Statistics `locationName:"statistics" type:"structure"`
+}
+
+// String returns the string representation
+func (s GetStatisticsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetStatisticsOutput) GoString() string {
+	return s.String()
+}
+
+// SetStatistics sets the Statistics field's value.
+func (s *GetStatisticsOutput) SetStatistics(v *Statistics) *GetStatisticsOutput {
+	s.Statistics = v
+	return s
+}
+
+type GetTopicRuleDestinationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the topic rule destination.
+	//
+	// Arn is a required field
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetTopicRuleDestinationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTopicRuleDestinationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetTopicRuleDestinationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetTopicRuleDestinationInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *GetTopicRuleDestinationInput) SetArn(v string) *GetTopicRuleDestinationInput {
+	s.Arn = &v
+	return s
+}
+
+type GetTopicRuleDestinationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The topic rule destination.
+	TopicRuleDestination *TopicRuleDestination `locationName:"topicRuleDestination" type:"structure"`
+}
+
+// String returns the string representation
+func (s GetTopicRuleDestinationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTopicRuleDestinationOutput) GoString() string {
+	return s.String()
+}
+
+// SetTopicRuleDestination sets the TopicRuleDestination field's value.
+func (s *GetTopicRuleDestinationOutput) SetTopicRuleDestination(v *TopicRuleDestination) *GetTopicRuleDestinationOutput {
+	s.TopicRuleDestination = v
 	return s
 }
 
@@ -25292,6 +31712,325 @@ func (s *GroupNameAndArn) SetGroupName(v string) *GroupNameAndArn {
 	return s
 }
 
+// Send data to an HTTPS endpoint.
+type HttpAction struct {
+	_ struct{} `type:"structure"`
+
+	// The authentication method to use when sending data to an HTTPS endpoint.
+	Auth *HttpAuthorization `locationName:"auth" type:"structure"`
+
+	// The URL to which AWS IoT sends a confirmation message. The value of the confirmation
+	// URL must be a prefix of the endpoint URL. If you do not specify a confirmation
+	// URL AWS IoT uses the endpoint URL as the confirmation URL. If you use substitution
+	// templates in the confirmationUrl, you must create and enable topic rule destinations
+	// that match each possible value of the substituion template before traffic
+	// is allowed to your endpoint URL.
+	ConfirmationUrl *string `locationName:"confirmationUrl" type:"string"`
+
+	// The HTTP headers to send with the message data.
+	Headers []*HttpActionHeader `locationName:"headers" type:"list"`
+
+	// The endpoint URL. If substitution templates are used in the URL, you must
+	// also specify a confirmationUrl. If this is a new destination, a new TopicRuleDestination
+	// is created if possible.
+	//
+	// Url is a required field
+	Url *string `locationName:"url" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s HttpAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HttpAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HttpAction"}
+	if s.Url == nil {
+		invalidParams.Add(request.NewErrParamRequired("Url"))
+	}
+	if s.Auth != nil {
+		if err := s.Auth.Validate(); err != nil {
+			invalidParams.AddNested("Auth", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Headers != nil {
+		for i, v := range s.Headers {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Headers", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuth sets the Auth field's value.
+func (s *HttpAction) SetAuth(v *HttpAuthorization) *HttpAction {
+	s.Auth = v
+	return s
+}
+
+// SetConfirmationUrl sets the ConfirmationUrl field's value.
+func (s *HttpAction) SetConfirmationUrl(v string) *HttpAction {
+	s.ConfirmationUrl = &v
+	return s
+}
+
+// SetHeaders sets the Headers field's value.
+func (s *HttpAction) SetHeaders(v []*HttpActionHeader) *HttpAction {
+	s.Headers = v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *HttpAction) SetUrl(v string) *HttpAction {
+	s.Url = &v
+	return s
+}
+
+// The HTTP action header.
+type HttpActionHeader struct {
+	_ struct{} `type:"structure"`
+
+	// The HTTP header key.
+	//
+	// Key is a required field
+	Key *string `locationName:"key" min:"1" type:"string" required:"true"`
+
+	// The HTTP header value. Substitution templates are supported.
+	//
+	// Value is a required field
+	Value *string `locationName:"value" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s HttpActionHeader) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpActionHeader) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HttpActionHeader) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HttpActionHeader"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *HttpActionHeader) SetKey(v string) *HttpActionHeader {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *HttpActionHeader) SetValue(v string) *HttpActionHeader {
+	s.Value = &v
+	return s
+}
+
+// The authorization method used to send messages.
+type HttpAuthorization struct {
+	_ struct{} `type:"structure"`
+
+	// Use Sig V4 authorization. For more information, see Signature Version 4 Signing
+	// Process (https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html).
+	Sigv4 *SigV4Authorization `locationName:"sigv4" type:"structure"`
+}
+
+// String returns the string representation
+func (s HttpAuthorization) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpAuthorization) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HttpAuthorization) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HttpAuthorization"}
+	if s.Sigv4 != nil {
+		if err := s.Sigv4.Validate(); err != nil {
+			invalidParams.AddNested("Sigv4", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSigv4 sets the Sigv4 field's value.
+func (s *HttpAuthorization) SetSigv4(v *SigV4Authorization) *HttpAuthorization {
+	s.Sigv4 = v
+	return s
+}
+
+// Specifies the HTTP context to use for the test authorizer request.
+type HttpContext struct {
+	_ struct{} `type:"structure"`
+
+	// The header keys and values in an HTTP authorization request.
+	Headers map[string]*string `locationName:"headers" type:"map"`
+
+	// The query string keys and values in an HTTP authorization request.
+	QueryString *string `locationName:"queryString" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s HttpContext) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpContext) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HttpContext) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HttpContext"}
+	if s.QueryString != nil && len(*s.QueryString) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QueryString", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHeaders sets the Headers field's value.
+func (s *HttpContext) SetHeaders(v map[string]*string) *HttpContext {
+	s.Headers = v
+	return s
+}
+
+// SetQueryString sets the QueryString field's value.
+func (s *HttpContext) SetQueryString(v string) *HttpContext {
+	s.QueryString = &v
+	return s
+}
+
+// HTTP URL destination configuration used by the topic rule's HTTP action.
+type HttpUrlDestinationConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The URL AWS IoT uses to confirm ownership of or access to the topic rule
+	// destination URL.
+	//
+	// ConfirmationUrl is a required field
+	ConfirmationUrl *string `locationName:"confirmationUrl" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s HttpUrlDestinationConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpUrlDestinationConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HttpUrlDestinationConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HttpUrlDestinationConfiguration"}
+	if s.ConfirmationUrl == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConfirmationUrl"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfirmationUrl sets the ConfirmationUrl field's value.
+func (s *HttpUrlDestinationConfiguration) SetConfirmationUrl(v string) *HttpUrlDestinationConfiguration {
+	s.ConfirmationUrl = &v
+	return s
+}
+
+// HTTP URL destination properties.
+type HttpUrlDestinationProperties struct {
+	_ struct{} `type:"structure"`
+
+	// The URL used to confirm the HTTP topic rule destination URL.
+	ConfirmationUrl *string `locationName:"confirmationUrl" type:"string"`
+}
+
+// String returns the string representation
+func (s HttpUrlDestinationProperties) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpUrlDestinationProperties) GoString() string {
+	return s.String()
+}
+
+// SetConfirmationUrl sets the ConfirmationUrl field's value.
+func (s *HttpUrlDestinationProperties) SetConfirmationUrl(v string) *HttpUrlDestinationProperties {
+	s.ConfirmationUrl = &v
+	return s
+}
+
+// Information about an HTTP URL destination.
+type HttpUrlDestinationSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The URL used to confirm ownership of or access to the HTTP topic rule destination
+	// URL.
+	ConfirmationUrl *string `locationName:"confirmationUrl" type:"string"`
+}
+
+// String returns the string representation
+func (s HttpUrlDestinationSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpUrlDestinationSummary) GoString() string {
+	return s.String()
+}
+
+// SetConfirmationUrl sets the ConfirmationUrl field's value.
+func (s *HttpUrlDestinationSummary) SetConfirmationUrl(v string) *HttpUrlDestinationSummary {
+	s.ConfirmationUrl = &v
+	return s
+}
+
 // Information that implicitly denies authorization. When policy doesn't explicitly
 // deny or allow an action on a resource it is considered an implicit deny.
 type ImplicitDeny struct {
@@ -25318,7 +32057,464 @@ func (s *ImplicitDeny) SetPolicies(v []*Policy) *ImplicitDeny {
 	return s
 }
 
-// Sends messge data to an AWS IoT Analytics channel.
+// The index is not ready.
+type IndexNotReadyException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s IndexNotReadyException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IndexNotReadyException) GoString() string {
+	return s.String()
+}
+
+func newErrorIndexNotReadyException(v protocol.ResponseMetadata) error {
+	return &IndexNotReadyException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IndexNotReadyException) Code() string {
+	return "IndexNotReadyException"
+}
+
+// Message returns the exception's message.
+func (s IndexNotReadyException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IndexNotReadyException) OrigErr() error {
+	return nil
+}
+
+func (s IndexNotReadyException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IndexNotReadyException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IndexNotReadyException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An unexpected error has occurred.
+type InternalException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalException(v protocol.ResponseMetadata) error {
+	return &InternalException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalException) Code() string {
+	return "InternalException"
+}
+
+// Message returns the exception's message.
+func (s InternalException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalException) OrigErr() error {
+	return nil
+}
+
+func (s InternalException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An unexpected error has occurred.
+type InternalFailureException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
+	return &InternalFailureException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalFailureException) Code() string {
+	return "InternalFailureException"
+}
+
+// Message returns the exception's message.
+func (s InternalFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalFailureException) OrigErr() error {
+	return nil
+}
+
+func (s InternalFailureException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalFailureException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalFailureException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The aggregation is invalid.
+type InvalidAggregationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidAggregationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidAggregationException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidAggregationException(v protocol.ResponseMetadata) error {
+	return &InvalidAggregationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidAggregationException) Code() string {
+	return "InvalidAggregationException"
+}
+
+// Message returns the exception's message.
+func (s InvalidAggregationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidAggregationException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidAggregationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidAggregationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidAggregationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The query is invalid.
+type InvalidQueryException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidQueryException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidQueryException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidQueryException(v protocol.ResponseMetadata) error {
+	return &InvalidQueryException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidQueryException) Code() string {
+	return "InvalidQueryException"
+}
+
+// Message returns the exception's message.
+func (s InvalidQueryException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidQueryException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidQueryException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidQueryException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidQueryException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The request is not valid.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The response is invalid.
+type InvalidResponseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidResponseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidResponseException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidResponseException(v protocol.ResponseMetadata) error {
+	return &InvalidResponseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidResponseException) Code() string {
+	return "InvalidResponseException"
+}
+
+// Message returns the exception's message.
+func (s InvalidResponseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidResponseException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidResponseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidResponseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidResponseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An attempt was made to change to an invalid state, for example by deleting
+// a job or a job execution which is "IN_PROGRESS" without setting the force
+// parameter.
+type InvalidStateTransitionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidStateTransitionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidStateTransitionException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidStateTransitionException(v protocol.ResponseMetadata) error {
+	return &InvalidStateTransitionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidStateTransitionException) Code() string {
+	return "InvalidStateTransitionException"
+}
+
+// Message returns the exception's message.
+func (s InvalidStateTransitionException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidStateTransitionException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidStateTransitionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidStateTransitionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidStateTransitionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Sends message data to an AWS IoT Analytics channel.
 type IotAnalyticsAction struct {
 	_ struct{} `type:"structure"`
 
@@ -25429,6 +32625,75 @@ func (s *IotEventsAction) SetRoleArn(v string) *IotEventsAction {
 	return s
 }
 
+// Describes an action to send data from an MQTT message that triggered the
+// rule to AWS IoT SiteWise asset properties.
+type IotSiteWiseAction struct {
+	_ struct{} `type:"structure"`
+
+	// A list of asset property value entries.
+	//
+	// PutAssetPropertyValueEntries is a required field
+	PutAssetPropertyValueEntries []*PutAssetPropertyValueEntry `locationName:"putAssetPropertyValueEntries" min:"1" type:"list" required:"true"`
+
+	// The ARN of the role that grants AWS IoT permission to send an asset property
+	// value to AWS IoTSiteWise. ("Action": "iotsitewise:BatchPutAssetPropertyValue").
+	// The trust policy can restrict access to specific asset hierarchy paths.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s IotSiteWiseAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IotSiteWiseAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *IotSiteWiseAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "IotSiteWiseAction"}
+	if s.PutAssetPropertyValueEntries == nil {
+		invalidParams.Add(request.NewErrParamRequired("PutAssetPropertyValueEntries"))
+	}
+	if s.PutAssetPropertyValueEntries != nil && len(s.PutAssetPropertyValueEntries) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PutAssetPropertyValueEntries", 1))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.PutAssetPropertyValueEntries != nil {
+		for i, v := range s.PutAssetPropertyValueEntries {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PutAssetPropertyValueEntries", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPutAssetPropertyValueEntries sets the PutAssetPropertyValueEntries field's value.
+func (s *IotSiteWiseAction) SetPutAssetPropertyValueEntries(v []*PutAssetPropertyValueEntry) *IotSiteWiseAction {
+	s.PutAssetPropertyValueEntries = v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *IotSiteWiseAction) SetRoleArn(v string) *IotSiteWiseAction {
+	s.RoleArn = &v
+	return s
+}
+
 // The Job object contains details about a job.
 type Job struct {
 	_ struct{} `type:"structure"`
@@ -25439,10 +32704,10 @@ type Job struct {
 	// If the job was updated, describes the reason for the update.
 	Comment *string `locationName:"comment" type:"string"`
 
-	// The time, in milliseconds since the epoch, when the job was completed.
+	// The time, in seconds since the epoch, when the job was completed.
 	CompletedAt *time.Time `locationName:"completedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job was created.
+	// The time, in seconds since the epoch, when the job was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// A short text description of the job.
@@ -25464,7 +32729,7 @@ type Job struct {
 	// Details about the job process.
 	JobProcessDetails *JobProcessDetails `locationName:"jobProcessDetails" type:"structure"`
 
-	// The time, in milliseconds since the epoch, when the job was last updated.
+	// The time, in seconds since the epoch, when the job was last updated.
 	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
 	// Configuration for pre-signed S3 URLs.
@@ -25631,14 +32896,13 @@ type JobExecution struct {
 	// The unique identifier you assigned to the job when it was created.
 	JobId *string `locationName:"jobId" min:"1" type:"string"`
 
-	// The time, in milliseconds since the epoch, when the job execution was last
-	// updated.
+	// The time, in seconds since the epoch, when the job execution was last updated.
 	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job execution was queued.
+	// The time, in seconds since the epoch, when the job execution was queued.
 	QueuedAt *time.Time `locationName:"queuedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job execution started.
+	// The time, in seconds since the epoch, when the job execution started.
 	StartedAt *time.Time `locationName:"startedAt" type:"timestamp"`
 
 	// The status of the job execution (IN_PROGRESS, QUEUED, FAILED, SUCCEEDED,
@@ -25765,14 +33029,13 @@ type JobExecutionSummary struct {
 	// in commands which return or update job execution information.
 	ExecutionNumber *int64 `locationName:"executionNumber" type:"long"`
 
-	// The time, in milliseconds since the epoch, when the job execution was last
-	// updated.
+	// The time, in seconds since the epoch, when the job execution was last updated.
 	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job execution was queued.
+	// The time, in seconds since the epoch, when the job execution was queued.
 	QueuedAt *time.Time `locationName:"queuedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job execution started.
+	// The time, in seconds since the epoch, when the job execution started.
 	StartedAt *time.Time `locationName:"startedAt" type:"timestamp"`
 
 	// The status of the job execution.
@@ -26042,10 +33305,10 @@ func (s *JobProcessDetails) SetProcessingTargets(v []*string) *JobProcessDetails
 type JobSummary struct {
 	_ struct{} `type:"structure"`
 
-	// The time, in milliseconds since the epoch, when the job completed.
+	// The time, in seconds since the epoch, when the job completed.
 	CompletedAt *time.Time `locationName:"completedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job was created.
+	// The time, in seconds since the epoch, when the job was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The job ARN.
@@ -26054,7 +33317,7 @@ type JobSummary struct {
 	// The unique identifier you assigned to this job when it was created.
 	JobId *string `locationName:"jobId" min:"1" type:"string"`
 
-	// The time, in milliseconds since the epoch, when the job was last updated.
+	// The time, in seconds since the epoch, when the job was last updated.
 	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
 	// The job summary status.
@@ -26264,6 +33527,63 @@ func (s *LambdaAction) SetFunctionArn(v string) *LambdaAction {
 	return s
 }
 
+// A limit has been exceeded.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ListActiveViolationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -26379,7 +33699,7 @@ type ListAttachedPoliciesInput struct {
 	// When true, recursively list attached policies.
 	Recursive *bool `location:"querystring" locationName:"recursive" type:"boolean"`
 
-	// The group for which the policies will be listed.
+	// The group or principal for which the policies will be listed.
 	//
 	// Target is a required field
 	Target *string `location:"uri" locationName:"target" type:"string" required:"true"`
@@ -26487,7 +33807,7 @@ type ListAuditFindingsInput struct {
 	// The token for the next set of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
-	// Information identifying the non-compliant resource.
+	// Information identifying the noncompliant resource.
 	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure"`
 
 	// A filter to limit results to those found after the specified time. You must
@@ -26605,6 +33925,271 @@ func (s *ListAuditFindingsOutput) SetNextToken(v string) *ListAuditFindingsOutpu
 	return s
 }
 
+type ListAuditMitigationActionsExecutionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specify this filter to limit results to those with a specific status.
+	ActionStatus *string `location:"querystring" locationName:"actionStatus" type:"string" enum:"AuditMitigationActionsExecutionStatus"`
+
+	// Specify this filter to limit results to those that were applied to a specific
+	// audit finding.
+	//
+	// FindingId is a required field
+	FindingId *string `location:"querystring" locationName:"findingId" min:"1" type:"string" required:"true"`
+
+	// The maximum number of results to return at one time. The default is 25.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	// Specify this filter to limit results to actions for a specific audit mitigation
+	// actions task.
+	//
+	// TaskId is a required field
+	TaskId *string `location:"querystring" locationName:"taskId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListAuditMitigationActionsExecutionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAuditMitigationActionsExecutionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAuditMitigationActionsExecutionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAuditMitigationActionsExecutionsInput"}
+	if s.FindingId == nil {
+		invalidParams.Add(request.NewErrParamRequired("FindingId"))
+	}
+	if s.FindingId != nil && len(*s.FindingId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingId", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.TaskId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskId"))
+	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionStatus sets the ActionStatus field's value.
+func (s *ListAuditMitigationActionsExecutionsInput) SetActionStatus(v string) *ListAuditMitigationActionsExecutionsInput {
+	s.ActionStatus = &v
+	return s
+}
+
+// SetFindingId sets the FindingId field's value.
+func (s *ListAuditMitigationActionsExecutionsInput) SetFindingId(v string) *ListAuditMitigationActionsExecutionsInput {
+	s.FindingId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListAuditMitigationActionsExecutionsInput) SetMaxResults(v int64) *ListAuditMitigationActionsExecutionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAuditMitigationActionsExecutionsInput) SetNextToken(v string) *ListAuditMitigationActionsExecutionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *ListAuditMitigationActionsExecutionsInput) SetTaskId(v string) *ListAuditMitigationActionsExecutionsInput {
+	s.TaskId = &v
+	return s
+}
+
+type ListAuditMitigationActionsExecutionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A set of task execution results based on the input parameters. Details include
+	// the mitigation action applied, start time, and task status.
+	ActionsExecutions []*AuditMitigationActionExecutionMetadata `locationName:"actionsExecutions" type:"list"`
+
+	// The token for the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListAuditMitigationActionsExecutionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAuditMitigationActionsExecutionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionsExecutions sets the ActionsExecutions field's value.
+func (s *ListAuditMitigationActionsExecutionsOutput) SetActionsExecutions(v []*AuditMitigationActionExecutionMetadata) *ListAuditMitigationActionsExecutionsOutput {
+	s.ActionsExecutions = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAuditMitigationActionsExecutionsOutput) SetNextToken(v string) *ListAuditMitigationActionsExecutionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListAuditMitigationActionsTasksInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specify this filter to limit results to tasks that were applied to results
+	// for a specific audit.
+	AuditTaskId *string `location:"querystring" locationName:"auditTaskId" min:"1" type:"string"`
+
+	// Specify this filter to limit results to tasks that were completed or canceled
+	// on or before a specific date and time.
+	//
+	// EndTime is a required field
+	EndTime *time.Time `location:"querystring" locationName:"endTime" type:"timestamp" required:"true"`
+
+	// Specify this filter to limit results to tasks that were applied to a specific
+	// audit finding.
+	FindingId *string `location:"querystring" locationName:"findingId" min:"1" type:"string"`
+
+	// The maximum number of results to return at one time. The default is 25.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	// Specify this filter to limit results to tasks that began on or after a specific
+	// date and time.
+	//
+	// StartTime is a required field
+	StartTime *time.Time `location:"querystring" locationName:"startTime" type:"timestamp" required:"true"`
+
+	// Specify this filter to limit results to tasks that are in a specific state.
+	TaskStatus *string `location:"querystring" locationName:"taskStatus" type:"string" enum:"AuditMitigationActionsTaskStatus"`
+}
+
+// String returns the string representation
+func (s ListAuditMitigationActionsTasksInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAuditMitigationActionsTasksInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAuditMitigationActionsTasksInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAuditMitigationActionsTasksInput"}
+	if s.AuditTaskId != nil && len(*s.AuditTaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AuditTaskId", 1))
+	}
+	if s.EndTime == nil {
+		invalidParams.Add(request.NewErrParamRequired("EndTime"))
+	}
+	if s.FindingId != nil && len(*s.FindingId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingId", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.StartTime == nil {
+		invalidParams.Add(request.NewErrParamRequired("StartTime"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuditTaskId sets the AuditTaskId field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetAuditTaskId(v string) *ListAuditMitigationActionsTasksInput {
+	s.AuditTaskId = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetEndTime(v time.Time) *ListAuditMitigationActionsTasksInput {
+	s.EndTime = &v
+	return s
+}
+
+// SetFindingId sets the FindingId field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetFindingId(v string) *ListAuditMitigationActionsTasksInput {
+	s.FindingId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetMaxResults(v int64) *ListAuditMitigationActionsTasksInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetNextToken(v string) *ListAuditMitigationActionsTasksInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetStartTime(v time.Time) *ListAuditMitigationActionsTasksInput {
+	s.StartTime = &v
+	return s
+}
+
+// SetTaskStatus sets the TaskStatus field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetTaskStatus(v string) *ListAuditMitigationActionsTasksInput {
+	s.TaskStatus = &v
+	return s
+}
+
+type ListAuditMitigationActionsTasksOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The collection of audit mitigation tasks that matched the filter criteria.
+	Tasks []*AuditMitigationActionsTaskMetadata `locationName:"tasks" type:"list"`
+}
+
+// String returns the string representation
+func (s ListAuditMitigationActionsTasksOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAuditMitigationActionsTasksOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAuditMitigationActionsTasksOutput) SetNextToken(v string) *ListAuditMitigationActionsTasksOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTasks sets the Tasks field's value.
+func (s *ListAuditMitigationActionsTasksOutput) SetTasks(v []*AuditMitigationActionsTaskMetadata) *ListAuditMitigationActionsTasksOutput {
+	s.Tasks = v
+	return s
+}
+
 type ListAuditTasksInput struct {
 	_ struct{} `type:"structure"`
 
@@ -26619,15 +34204,15 @@ type ListAuditTasksInput struct {
 	// The token for the next set of results.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
-	// The beginning of the time period. Note that audit information is retained
-	// for a limited time (180 days). Requesting a start time prior to what is retained
-	// results in an "InvalidRequestException".
+	// The beginning of the time period. Audit information is retained for a limited
+	// time (180 days). Requesting a start time prior to what is retained results
+	// in an "InvalidRequestException".
 	//
 	// StartTime is a required field
 	StartTime *time.Time `location:"querystring" locationName:"startTime" type:"timestamp" required:"true"`
 
 	// A filter to limit the output to audits with the specified completion status:
-	// can be one of "IN_PROGRESS", "COMPLETED", "FAILED" or "CANCELED".
+	// can be one of "IN_PROGRESS", "COMPLETED", "FAILED", or "CANCELED".
 	TaskStatus *string `location:"querystring" locationName:"taskStatus" type:"string" enum:"AuditTaskStatus"`
 
 	// A filter to limit the output to the specified type of audit: can be one of
@@ -27204,6 +34789,93 @@ func (s *ListCertificatesOutput) SetNextMarker(v string) *ListCertificatesOutput
 	return s
 }
 
+type ListDomainConfigurationsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The marker for the next set of results.
+	Marker *string `location:"querystring" locationName:"marker" type:"string"`
+
+	// The result page size.
+	PageSize *int64 `location:"querystring" locationName:"pageSize" min:"1" type:"integer"`
+
+	// The type of service delivered by the endpoint.
+	ServiceType *string `location:"querystring" locationName:"serviceType" type:"string" enum:"ServiceType"`
+}
+
+// String returns the string representation
+func (s ListDomainConfigurationsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDomainConfigurationsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListDomainConfigurationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListDomainConfigurationsInput"}
+	if s.PageSize != nil && *s.PageSize < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("PageSize", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListDomainConfigurationsInput) SetMarker(v string) *ListDomainConfigurationsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListDomainConfigurationsInput) SetPageSize(v int64) *ListDomainConfigurationsInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetServiceType sets the ServiceType field's value.
+func (s *ListDomainConfigurationsInput) SetServiceType(v string) *ListDomainConfigurationsInput {
+	s.ServiceType = &v
+	return s
+}
+
+type ListDomainConfigurationsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of objects that contain summary information about the user's domain
+	// configurations.
+	DomainConfigurations []*DomainConfigurationSummary `locationName:"domainConfigurations" type:"list"`
+
+	// The marker for the next set of results.
+	NextMarker *string `locationName:"nextMarker" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDomainConfigurationsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDomainConfigurationsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDomainConfigurations sets the DomainConfigurations field's value.
+func (s *ListDomainConfigurationsOutput) SetDomainConfigurations(v []*DomainConfigurationSummary) *ListDomainConfigurationsOutput {
+	s.DomainConfigurations = v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListDomainConfigurationsOutput) SetNextMarker(v string) *ListDomainConfigurationsOutput {
+	s.NextMarker = &v
+	return s
+}
+
 type ListIndicesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27614,6 +35286,93 @@ func (s *ListJobsOutput) SetJobs(v []*JobSummary) *ListJobsOutput {
 
 // SetNextToken sets the NextToken field's value.
 func (s *ListJobsOutput) SetNextToken(v string) *ListJobsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListMitigationActionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specify a value to limit the result to mitigation actions with a specific
+	// action type.
+	ActionType *string `location:"querystring" locationName:"actionType" type:"string" enum:"MitigationActionType"`
+
+	// The maximum number of results to return at one time. The default is 25.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListMitigationActionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMitigationActionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListMitigationActionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListMitigationActionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionType sets the ActionType field's value.
+func (s *ListMitigationActionsInput) SetActionType(v string) *ListMitigationActionsInput {
+	s.ActionType = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListMitigationActionsInput) SetMaxResults(v int64) *ListMitigationActionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMitigationActionsInput) SetNextToken(v string) *ListMitigationActionsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListMitigationActionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A set of actions that matched the specified filter criteria.
+	ActionIdentifiers []*MitigationActionIdentifier `locationName:"actionIdentifiers" type:"list"`
+
+	// The token for the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListMitigationActionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMitigationActionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionIdentifiers sets the ActionIdentifiers field's value.
+func (s *ListMitigationActionsOutput) SetActionIdentifiers(v []*MitigationActionIdentifier) *ListMitigationActionsOutput {
+	s.ActionIdentifiers = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMitigationActionsOutput) SetNextToken(v string) *ListMitigationActionsOutput {
 	s.NextToken = &v
 	return s
 }
@@ -28254,6 +36013,177 @@ func (s *ListPrincipalThingsOutput) SetThings(v []*string) *ListPrincipalThingsO
 	return s
 }
 
+type ListProvisioningTemplateVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of results to return at one time.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// A token to retrieve the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	// The name of the fleet provisioning template.
+	//
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"templateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListProvisioningTemplateVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisioningTemplateVersionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListProvisioningTemplateVersionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListProvisioningTemplateVersionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListProvisioningTemplateVersionsInput) SetMaxResults(v int64) *ListProvisioningTemplateVersionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListProvisioningTemplateVersionsInput) SetNextToken(v string) *ListProvisioningTemplateVersionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *ListProvisioningTemplateVersionsInput) SetTemplateName(v string) *ListProvisioningTemplateVersionsInput {
+	s.TemplateName = &v
+	return s
+}
+
+type ListProvisioningTemplateVersionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A token to retrieve the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The list of fleet provisioning template versions.
+	Versions []*ProvisioningTemplateVersionSummary `locationName:"versions" type:"list"`
+}
+
+// String returns the string representation
+func (s ListProvisioningTemplateVersionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisioningTemplateVersionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListProvisioningTemplateVersionsOutput) SetNextToken(v string) *ListProvisioningTemplateVersionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetVersions sets the Versions field's value.
+func (s *ListProvisioningTemplateVersionsOutput) SetVersions(v []*ProvisioningTemplateVersionSummary) *ListProvisioningTemplateVersionsOutput {
+	s.Versions = v
+	return s
+}
+
+type ListProvisioningTemplatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of results to return at one time.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// A token to retrieve the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListProvisioningTemplatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisioningTemplatesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListProvisioningTemplatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListProvisioningTemplatesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListProvisioningTemplatesInput) SetMaxResults(v int64) *ListProvisioningTemplatesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListProvisioningTemplatesInput) SetNextToken(v string) *ListProvisioningTemplatesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListProvisioningTemplatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A token to retrieve the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// A list of fleet provisioning templates
+	Templates []*ProvisioningTemplateSummary `locationName:"templates" type:"list"`
+}
+
+// String returns the string representation
+func (s ListProvisioningTemplatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisioningTemplatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListProvisioningTemplatesOutput) SetNextToken(v string) *ListProvisioningTemplatesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTemplates sets the Templates field's value.
+func (s *ListProvisioningTemplatesOutput) SetTemplates(v []*ProvisioningTemplateSummary) *ListProvisioningTemplatesOutput {
+	s.Templates = v
+	return s
+}
+
 type ListRoleAliasesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -28427,7 +36357,7 @@ type ListSecurityProfilesForTargetInput struct {
 	// The token for the next set of results.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
-	// If true, return child groups as well.
+	// If true, return child groups too.
 	Recursive *bool `location:"querystring" locationName:"recursive" type:"boolean"`
 
 	// The ARN of the target (thing group) whose attached security profiles you
@@ -29831,6 +37761,83 @@ func (s *ListThingsOutput) SetThings(v []*ThingAttribute) *ListThingsOutput {
 	return s
 }
 
+type ListTopicRuleDestinationsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of results to return at one time.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token to retrieve the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListTopicRuleDestinationsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTopicRuleDestinationsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTopicRuleDestinationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTopicRuleDestinationsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListTopicRuleDestinationsInput) SetMaxResults(v int64) *ListTopicRuleDestinationsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTopicRuleDestinationsInput) SetNextToken(v string) *ListTopicRuleDestinationsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListTopicRuleDestinationsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about a topic rule destination.
+	DestinationSummaries []*TopicRuleDestinationSummary `locationName:"destinationSummaries" type:"list"`
+
+	// The token to retrieve the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListTopicRuleDestinationsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTopicRuleDestinationsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDestinationSummaries sets the DestinationSummaries field's value.
+func (s *ListTopicRuleDestinationsOutput) SetDestinationSummaries(v []*TopicRuleDestinationSummary) *ListTopicRuleDestinationsOutput {
+	s.DestinationSummaries = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTopicRuleDestinationsOutput) SetNextToken(v string) *ListTopicRuleDestinationsOutput {
+	s.NextToken = &v
+	return s
+}
+
 // The input for the ListTopicRules operation.
 type ListTopicRulesInput struct {
 	_ struct{} `type:"structure"`
@@ -30122,7 +38129,7 @@ type ListViolationEventsOutput struct {
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The security profile violation alerts issued for this account during the
-	// given time frame, potentially filtered by security profile, behavior violated,
+	// given time period, potentially filtered by security profile, behavior violated,
 	// or thing (device) violating.
 	ViolationEvents []*ViolationEvent `locationName:"violationEvents" type:"list"`
 }
@@ -30278,6 +38285,63 @@ func (s *LoggingOptionsPayload) SetRoleArn(v string) *LoggingOptionsPayload {
 	return s
 }
 
+// The policy documentation is not valid.
+type MalformedPolicyException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s MalformedPolicyException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MalformedPolicyException) GoString() string {
+	return s.String()
+}
+
+func newErrorMalformedPolicyException(v protocol.ResponseMetadata) error {
+	return &MalformedPolicyException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MalformedPolicyException) Code() string {
+	return "MalformedPolicyException"
+}
+
+// Message returns the exception's message.
+func (s MalformedPolicyException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MalformedPolicyException) OrigErr() error {
+	return nil
+}
+
+func (s MalformedPolicyException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MalformedPolicyException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MalformedPolicyException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The value to be compared with the metric.
 type MetricValue struct {
 	_ struct{} `type:"structure"`
@@ -30323,17 +38387,293 @@ func (s *MetricValue) SetPorts(v []*int64) *MetricValue {
 	return s
 }
 
-// Information about the resource that was non-compliant with the audit check.
+// Describes which changes should be applied as part of a mitigation action.
+type MitigationAction struct {
+	_ struct{} `type:"structure"`
+
+	// The set of parameters for this mitigation action. The parameters vary, depending
+	// on the kind of action you apply.
+	ActionParams *MitigationActionParams `locationName:"actionParams" type:"structure"`
+
+	// A unique identifier for the mitigation action.
+	Id *string `locationName:"id" type:"string"`
+
+	// A user-friendly name for the mitigation action.
+	Name *string `locationName:"name" type:"string"`
+
+	// The IAM role ARN used to apply this mitigation action.
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s MitigationAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MitigationAction) GoString() string {
+	return s.String()
+}
+
+// SetActionParams sets the ActionParams field's value.
+func (s *MitigationAction) SetActionParams(v *MitigationActionParams) *MitigationAction {
+	s.ActionParams = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *MitigationAction) SetId(v string) *MitigationAction {
+	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *MitigationAction) SetName(v string) *MitigationAction {
+	s.Name = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *MitigationAction) SetRoleArn(v string) *MitigationAction {
+	s.RoleArn = &v
+	return s
+}
+
+// Information that identifies a mitigation action. This information is returned
+// by ListMitigationActions.
+type MitigationActionIdentifier struct {
+	_ struct{} `type:"structure"`
+
+	// The IAM role ARN used to apply this mitigation action.
+	ActionArn *string `locationName:"actionArn" type:"string"`
+
+	// The friendly name of the mitigation action.
+	ActionName *string `locationName:"actionName" type:"string"`
+
+	// The date when this mitigation action was created.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+}
+
+// String returns the string representation
+func (s MitigationActionIdentifier) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MitigationActionIdentifier) GoString() string {
+	return s.String()
+}
+
+// SetActionArn sets the ActionArn field's value.
+func (s *MitigationActionIdentifier) SetActionArn(v string) *MitigationActionIdentifier {
+	s.ActionArn = &v
+	return s
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *MitigationActionIdentifier) SetActionName(v string) *MitigationActionIdentifier {
+	s.ActionName = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *MitigationActionIdentifier) SetCreationDate(v time.Time) *MitigationActionIdentifier {
+	s.CreationDate = &v
+	return s
+}
+
+// The set of parameters for this mitigation action. You can specify only one
+// type of parameter (in other words, you can apply only one action for each
+// defined mitigation action).
+type MitigationActionParams struct {
+	_ struct{} `type:"structure"`
+
+	// Parameters to define a mitigation action that moves devices associated with
+	// a certificate to one or more specified thing groups, typically for quarantine.
+	AddThingsToThingGroupParams *AddThingsToThingGroupParams `locationName:"addThingsToThingGroupParams" type:"structure"`
+
+	// Parameters to define a mitigation action that enables AWS IoT logging at
+	// a specified level of detail.
+	EnableIoTLoggingParams *EnableIoTLoggingParams `locationName:"enableIoTLoggingParams" type:"structure"`
+
+	// Parameters to define a mitigation action that publishes findings to Amazon
+	// SNS. You can implement your own custom actions in response to the Amazon
+	// SNS messages.
+	PublishFindingToSnsParams *PublishFindingToSnsParams `locationName:"publishFindingToSnsParams" type:"structure"`
+
+	// Parameters to define a mitigation action that adds a blank policy to restrict
+	// permissions.
+	ReplaceDefaultPolicyVersionParams *ReplaceDefaultPolicyVersionParams `locationName:"replaceDefaultPolicyVersionParams" type:"structure"`
+
+	// Parameters to define a mitigation action that changes the state of the CA
+	// certificate to inactive.
+	UpdateCACertificateParams *UpdateCACertificateParams `locationName:"updateCACertificateParams" type:"structure"`
+
+	// Parameters to define a mitigation action that changes the state of the device
+	// certificate to inactive.
+	UpdateDeviceCertificateParams *UpdateDeviceCertificateParams `locationName:"updateDeviceCertificateParams" type:"structure"`
+}
+
+// String returns the string representation
+func (s MitigationActionParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MitigationActionParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MitigationActionParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MitigationActionParams"}
+	if s.AddThingsToThingGroupParams != nil {
+		if err := s.AddThingsToThingGroupParams.Validate(); err != nil {
+			invalidParams.AddNested("AddThingsToThingGroupParams", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.EnableIoTLoggingParams != nil {
+		if err := s.EnableIoTLoggingParams.Validate(); err != nil {
+			invalidParams.AddNested("EnableIoTLoggingParams", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.PublishFindingToSnsParams != nil {
+		if err := s.PublishFindingToSnsParams.Validate(); err != nil {
+			invalidParams.AddNested("PublishFindingToSnsParams", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.ReplaceDefaultPolicyVersionParams != nil {
+		if err := s.ReplaceDefaultPolicyVersionParams.Validate(); err != nil {
+			invalidParams.AddNested("ReplaceDefaultPolicyVersionParams", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.UpdateCACertificateParams != nil {
+		if err := s.UpdateCACertificateParams.Validate(); err != nil {
+			invalidParams.AddNested("UpdateCACertificateParams", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.UpdateDeviceCertificateParams != nil {
+		if err := s.UpdateDeviceCertificateParams.Validate(); err != nil {
+			invalidParams.AddNested("UpdateDeviceCertificateParams", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAddThingsToThingGroupParams sets the AddThingsToThingGroupParams field's value.
+func (s *MitigationActionParams) SetAddThingsToThingGroupParams(v *AddThingsToThingGroupParams) *MitigationActionParams {
+	s.AddThingsToThingGroupParams = v
+	return s
+}
+
+// SetEnableIoTLoggingParams sets the EnableIoTLoggingParams field's value.
+func (s *MitigationActionParams) SetEnableIoTLoggingParams(v *EnableIoTLoggingParams) *MitigationActionParams {
+	s.EnableIoTLoggingParams = v
+	return s
+}
+
+// SetPublishFindingToSnsParams sets the PublishFindingToSnsParams field's value.
+func (s *MitigationActionParams) SetPublishFindingToSnsParams(v *PublishFindingToSnsParams) *MitigationActionParams {
+	s.PublishFindingToSnsParams = v
+	return s
+}
+
+// SetReplaceDefaultPolicyVersionParams sets the ReplaceDefaultPolicyVersionParams field's value.
+func (s *MitigationActionParams) SetReplaceDefaultPolicyVersionParams(v *ReplaceDefaultPolicyVersionParams) *MitigationActionParams {
+	s.ReplaceDefaultPolicyVersionParams = v
+	return s
+}
+
+// SetUpdateCACertificateParams sets the UpdateCACertificateParams field's value.
+func (s *MitigationActionParams) SetUpdateCACertificateParams(v *UpdateCACertificateParams) *MitigationActionParams {
+	s.UpdateCACertificateParams = v
+	return s
+}
+
+// SetUpdateDeviceCertificateParams sets the UpdateDeviceCertificateParams field's value.
+func (s *MitigationActionParams) SetUpdateDeviceCertificateParams(v *UpdateDeviceCertificateParams) *MitigationActionParams {
+	s.UpdateDeviceCertificateParams = v
+	return s
+}
+
+// Specifies the MQTT context to use for the test authorizer request
+type MqttContext struct {
+	_ struct{} `type:"structure"`
+
+	// The value of the clientId key in an MQTT authorization request.
+	ClientId *string `locationName:"clientId" min:"1" type:"string"`
+
+	// The value of the password key in an MQTT authorization request.
+	//
+	// Password is automatically base64 encoded/decoded by the SDK.
+	Password []byte `locationName:"password" min:"1" type:"blob"`
+
+	// The value of the username key in an MQTT authorization request.
+	Username *string `locationName:"username" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s MqttContext) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MqttContext) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MqttContext) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MqttContext"}
+	if s.ClientId != nil && len(*s.ClientId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientId", 1))
+	}
+	if s.Password != nil && len(s.Password) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Password", 1))
+	}
+	if s.Username != nil && len(*s.Username) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientId sets the ClientId field's value.
+func (s *MqttContext) SetClientId(v string) *MqttContext {
+	s.ClientId = &v
+	return s
+}
+
+// SetPassword sets the Password field's value.
+func (s *MqttContext) SetPassword(v []byte) *MqttContext {
+	s.Password = v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *MqttContext) SetUsername(v string) *MqttContext {
+	s.Username = &v
+	return s
+}
+
+// Information about the resource that was noncompliant with the audit check.
 type NonCompliantResource struct {
 	_ struct{} `type:"structure"`
 
-	// Additional information about the non-compliant resource.
+	// Other information about the noncompliant resource.
 	AdditionalInfo map[string]*string `locationName:"additionalInfo" type:"map"`
 
-	// Information identifying the non-compliant resource.
+	// Information that identifies the noncompliant resource.
 	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure"`
 
-	// The type of the non-compliant resource.
+	// The type of the noncompliant resource.
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 }
 
@@ -30363,6 +38703,63 @@ func (s *NonCompliantResource) SetResourceIdentifier(v *ResourceIdentifier) *Non
 func (s *NonCompliantResource) SetResourceType(v string) *NonCompliantResource {
 	s.ResourceType = &v
 	return s
+}
+
+// The resource is not configured.
+type NotConfiguredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotConfiguredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotConfiguredException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotConfiguredException(v protocol.ResponseMetadata) error {
+	return &NotConfiguredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotConfiguredException) Code() string {
+	return "NotConfiguredException"
+}
+
+// Message returns the exception's message.
+func (s NotConfiguredException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotConfiguredException) OrigErr() error {
+	return nil
+}
+
+func (s NotConfiguredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotConfiguredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotConfiguredException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes a file to be associated with an OTA update.
@@ -30461,6 +38858,10 @@ type OTAUpdateInfo struct {
 	// Configuration for the rollout of OTA updates.
 	AwsJobExecutionsRolloutConfig *AwsJobExecutionsRolloutConfig `locationName:"awsJobExecutionsRolloutConfig" type:"structure"`
 
+	// Configuration information for pre-signed URLs. Valid when protocols contains
+	// HTTP.
+	AwsJobPresignedUrlConfig *AwsJobPresignedUrlConfig `locationName:"awsJobPresignedUrlConfig" type:"structure"`
+
 	// The date when the OTA update was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
@@ -30484,6 +38885,11 @@ type OTAUpdateInfo struct {
 
 	// The status of the OTA update.
 	OtaUpdateStatus *string `locationName:"otaUpdateStatus" type:"string" enum:"OTAUpdateStatus"`
+
+	// The protocol used to transfer the OTA update image. Valid values are [HTTP],
+	// [MQTT], [HTTP, MQTT]. When both HTTP and MQTT are specified, the target device
+	// can choose the protocol.
+	Protocols []*string `locationName:"protocols" min:"1" type:"list"`
 
 	// Specifies whether the OTA update will continue to run (CONTINUOUS), or will
 	// be complete after all those things specified as targets have completed the
@@ -30528,6 +38934,12 @@ func (s *OTAUpdateInfo) SetAwsIotJobId(v string) *OTAUpdateInfo {
 // SetAwsJobExecutionsRolloutConfig sets the AwsJobExecutionsRolloutConfig field's value.
 func (s *OTAUpdateInfo) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecutionsRolloutConfig) *OTAUpdateInfo {
 	s.AwsJobExecutionsRolloutConfig = v
+	return s
+}
+
+// SetAwsJobPresignedUrlConfig sets the AwsJobPresignedUrlConfig field's value.
+func (s *OTAUpdateInfo) SetAwsJobPresignedUrlConfig(v *AwsJobPresignedUrlConfig) *OTAUpdateInfo {
+	s.AwsJobPresignedUrlConfig = v
 	return s
 }
 
@@ -30576,6 +38988,12 @@ func (s *OTAUpdateInfo) SetOtaUpdateId(v string) *OTAUpdateInfo {
 // SetOtaUpdateStatus sets the OtaUpdateStatus field's value.
 func (s *OTAUpdateInfo) SetOtaUpdateStatus(v string) *OTAUpdateInfo {
 	s.OtaUpdateStatus = &v
+	return s
+}
+
+// SetProtocols sets the Protocols field's value.
+func (s *OTAUpdateInfo) SetProtocols(v []*string) *OTAUpdateInfo {
+	s.Protocols = v
 	return s
 }
 
@@ -30699,6 +39117,39 @@ func (s *OutgoingCertificate) SetTransferMessage(v string) *OutgoingCertificate 
 // SetTransferredTo sets the TransferredTo field's value.
 func (s *OutgoingCertificate) SetTransferredTo(v string) *OutgoingCertificate {
 	s.TransferredTo = &v
+	return s
+}
+
+// Describes the percentile and percentile value.
+type PercentPair struct {
+	_ struct{} `type:"structure"`
+
+	// The percentile.
+	Percent *float64 `locationName:"percent" type:"double"`
+
+	// The value of the percentile.
+	Value *float64 `locationName:"value" type:"double"`
+}
+
+// String returns the string representation
+func (s PercentPair) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PercentPair) GoString() string {
+	return s.String()
+}
+
+// SetPercent sets the Percent field's value.
+func (s *PercentPair) SetPercent(v float64) *PercentPair {
+	s.Percent = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *PercentPair) SetValue(v float64) *PercentPair {
+	s.Value = &v
 	return s
 }
 
@@ -30876,12 +39327,263 @@ func (s *PresignedUrlConfig) SetRoleArn(v string) *PresignedUrlConfig {
 	return s
 }
 
+// A summary of information about a fleet provisioning template.
+type ProvisioningTemplateSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The date when the fleet provisioning template summary was created.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+
+	// The description of the fleet provisioning template.
+	Description *string `locationName:"description" type:"string"`
+
+	// True if the fleet provision template is enabled, otherwise false.
+	Enabled *bool `locationName:"enabled" type:"boolean"`
+
+	// The date when the fleet provisioning template summary was last modified.
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
+
+	// The ARN of the fleet provisioning template.
+	TemplateArn *string `locationName:"templateArn" type:"string"`
+
+	// The name of the fleet provisioning template.
+	TemplateName *string `locationName:"templateName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisioningTemplateSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisioningTemplateSummary) GoString() string {
+	return s.String()
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *ProvisioningTemplateSummary) SetCreationDate(v time.Time) *ProvisioningTemplateSummary {
+	s.CreationDate = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *ProvisioningTemplateSummary) SetDescription(v string) *ProvisioningTemplateSummary {
+	s.Description = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *ProvisioningTemplateSummary) SetEnabled(v bool) *ProvisioningTemplateSummary {
+	s.Enabled = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *ProvisioningTemplateSummary) SetLastModifiedDate(v time.Time) *ProvisioningTemplateSummary {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetTemplateArn sets the TemplateArn field's value.
+func (s *ProvisioningTemplateSummary) SetTemplateArn(v string) *ProvisioningTemplateSummary {
+	s.TemplateArn = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *ProvisioningTemplateSummary) SetTemplateName(v string) *ProvisioningTemplateSummary {
+	s.TemplateName = &v
+	return s
+}
+
+// A summary of information about a fleet provision template version.
+type ProvisioningTemplateVersionSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The date when the fleet provisioning template version was created
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+
+	// True if the fleet provisioning template version is the default version, otherwise
+	// false.
+	IsDefaultVersion *bool `locationName:"isDefaultVersion" type:"boolean"`
+
+	// The ID of the fleet privisioning template version.
+	VersionId *int64 `locationName:"versionId" type:"integer"`
+}
+
+// String returns the string representation
+func (s ProvisioningTemplateVersionSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisioningTemplateVersionSummary) GoString() string {
+	return s.String()
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *ProvisioningTemplateVersionSummary) SetCreationDate(v time.Time) *ProvisioningTemplateVersionSummary {
+	s.CreationDate = &v
+	return s
+}
+
+// SetIsDefaultVersion sets the IsDefaultVersion field's value.
+func (s *ProvisioningTemplateVersionSummary) SetIsDefaultVersion(v bool) *ProvisioningTemplateVersionSummary {
+	s.IsDefaultVersion = &v
+	return s
+}
+
+// SetVersionId sets the VersionId field's value.
+func (s *ProvisioningTemplateVersionSummary) SetVersionId(v int64) *ProvisioningTemplateVersionSummary {
+	s.VersionId = &v
+	return s
+}
+
+// Parameters to define a mitigation action that publishes findings to Amazon
+// SNS. You can implement your own custom actions in response to the Amazon
+// SNS messages.
+type PublishFindingToSnsParams struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the topic to which you want to publish the findings.
+	//
+	// TopicArn is a required field
+	TopicArn *string `locationName:"topicArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PublishFindingToSnsParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PublishFindingToSnsParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PublishFindingToSnsParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PublishFindingToSnsParams"}
+	if s.TopicArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("TopicArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTopicArn sets the TopicArn field's value.
+func (s *PublishFindingToSnsParams) SetTopicArn(v string) *PublishFindingToSnsParams {
+	s.TopicArn = &v
+	return s
+}
+
+// An asset property value entry containing the following information.
+type PutAssetPropertyValueEntry struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS IoT SiteWise asset. You must specify either a propertyAlias
+	// or both an aliasId and a propertyId. Accepts substitution templates.
+	AssetId *string `locationName:"assetId" type:"string"`
+
+	// Optional. A unique identifier for this entry that you can define to better
+	// track which message caused an error in case of failure. Accepts substitution
+	// templates. Defaults to a new UUID.
+	EntryId *string `locationName:"entryId" type:"string"`
+
+	// The name of the property alias associated with your asset property. You must
+	// specify either a propertyAlias or both an aliasId and a propertyId. Accepts
+	// substitution templates.
+	PropertyAlias *string `locationName:"propertyAlias" min:"1" type:"string"`
+
+	// The ID of the asset's property. You must specify either a propertyAlias or
+	// both an aliasId and a propertyId. Accepts substitution templates.
+	PropertyId *string `locationName:"propertyId" type:"string"`
+
+	// A list of property values to insert that each contain timestamp, quality,
+	// and value (TQV) information.
+	//
+	// PropertyValues is a required field
+	PropertyValues []*AssetPropertyValue `locationName:"propertyValues" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s PutAssetPropertyValueEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutAssetPropertyValueEntry) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutAssetPropertyValueEntry) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutAssetPropertyValueEntry"}
+	if s.PropertyAlias != nil && len(*s.PropertyAlias) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PropertyAlias", 1))
+	}
+	if s.PropertyValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("PropertyValues"))
+	}
+	if s.PropertyValues != nil && len(s.PropertyValues) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PropertyValues", 1))
+	}
+	if s.PropertyValues != nil {
+		for i, v := range s.PropertyValues {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PropertyValues", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAssetId sets the AssetId field's value.
+func (s *PutAssetPropertyValueEntry) SetAssetId(v string) *PutAssetPropertyValueEntry {
+	s.AssetId = &v
+	return s
+}
+
+// SetEntryId sets the EntryId field's value.
+func (s *PutAssetPropertyValueEntry) SetEntryId(v string) *PutAssetPropertyValueEntry {
+	s.EntryId = &v
+	return s
+}
+
+// SetPropertyAlias sets the PropertyAlias field's value.
+func (s *PutAssetPropertyValueEntry) SetPropertyAlias(v string) *PutAssetPropertyValueEntry {
+	s.PropertyAlias = &v
+	return s
+}
+
+// SetPropertyId sets the PropertyId field's value.
+func (s *PutAssetPropertyValueEntry) SetPropertyId(v string) *PutAssetPropertyValueEntry {
+	s.PropertyId = &v
+	return s
+}
+
+// SetPropertyValues sets the PropertyValues field's value.
+func (s *PutAssetPropertyValueEntry) SetPropertyValues(v []*AssetPropertyValue) *PutAssetPropertyValueEntry {
+	s.PropertyValues = v
+	return s
+}
+
 // The input for the DynamoActionVS action that specifies the DynamoDB table
 // to which the message data will be written.
 type PutItemInput struct {
 	_ struct{} `type:"structure"`
 
-	// The table where the message data will be written
+	// The table where the message data will be written.
 	//
 	// TableName is a required field
 	TableName *string `locationName:"tableName" type:"string" required:"true"`
@@ -31104,7 +39806,7 @@ type RegisterCertificateInput struct {
 	// CertificatePem is a required field
 	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string" required:"true"`
 
-	// A boolean value that specifies if the CA certificate is set to active.
+	// A boolean value that specifies if the certificate is set to active.
 	//
 	// Deprecated: SetAsActive has been deprecated
 	SetAsActive *bool `location:"querystring" locationName:"setAsActive" deprecated:"true" type:"boolean"`
@@ -31202,11 +39904,11 @@ func (s *RegisterCertificateOutput) SetCertificateId(v string) *RegisterCertific
 type RegisterThingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The parameters for provisioning a thing. See Programmatic Provisioning (http://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
+	// The parameters for provisioning a thing. See Programmatic Provisioning (https://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
 	// for more information.
 	Parameters map[string]*string `locationName:"parameters" type:"map"`
 
-	// The provisioning template. See Programmatic Provisioning (http://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
+	// The provisioning template. See Programmatic Provisioning (https://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
 	// for more information.
 	//
 	// TemplateBody is a required field
@@ -31278,6 +39980,63 @@ func (s *RegisterThingOutput) SetCertificatePem(v string) *RegisterThingOutput {
 func (s *RegisterThingOutput) SetResourceArns(v map[string]*string) *RegisterThingOutput {
 	s.ResourceArns = v
 	return s
+}
+
+// The registration code is invalid.
+type RegistrationCodeValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// Additional information about the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s RegistrationCodeValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RegistrationCodeValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorRegistrationCodeValidationException(v protocol.ResponseMetadata) error {
+	return &RegistrationCodeValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RegistrationCodeValidationException) Code() string {
+	return "RegistrationCodeValidationException"
+}
+
+// Message returns the exception's message.
+func (s RegistrationCodeValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RegistrationCodeValidationException) OrigErr() error {
+	return nil
+}
+
+func (s RegistrationCodeValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RegistrationCodeValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RegistrationCodeValidationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The registration configuration.
@@ -31396,10 +40155,10 @@ func (s RejectCertificateTransferOutput) GoString() string {
 type RelatedResource struct {
 	_ struct{} `type:"structure"`
 
-	// Additional information about the resource.
+	// Other information about the resource.
 	AdditionalInfo map[string]*string `locationName:"additionalInfo" type:"map"`
 
-	// Information identifying the resource.
+	// Information that identifies the resource.
 	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure"`
 
 	// The type of resource.
@@ -31594,6 +40353,46 @@ func (s RemoveThingFromThingGroupOutput) GoString() string {
 	return s.String()
 }
 
+// Parameters to define a mitigation action that adds a blank policy to restrict
+// permissions.
+type ReplaceDefaultPolicyVersionParams struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the template to be applied. The only supported value is BLANK_POLICY.
+	//
+	// TemplateName is a required field
+	TemplateName *string `locationName:"templateName" type:"string" required:"true" enum:"PolicyTemplateName"`
+}
+
+// String returns the string representation
+func (s ReplaceDefaultPolicyVersionParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplaceDefaultPolicyVersionParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ReplaceDefaultPolicyVersionParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ReplaceDefaultPolicyVersionParams"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *ReplaceDefaultPolicyVersionParams) SetTemplateName(v string) *ReplaceDefaultPolicyVersionParams {
+	s.TemplateName = &v
+	return s
+}
+
 // The input for the ReplaceTopicRule operation.
 type ReplaceTopicRuleInput struct {
 	_ struct{} `type:"structure" payload:"TopicRulePayload"`
@@ -31673,6 +40472,10 @@ func (s ReplaceTopicRuleOutput) GoString() string {
 type RepublishAction struct {
 	_ struct{} `type:"structure"`
 
+	// The Quality of Service (QoS) level to use when republishing messages. The
+	// default value is 0.
+	Qos *int64 `locationName:"qos" type:"integer"`
+
 	// The ARN of the IAM role that grants access.
 	//
 	// RoleArn is a required field
@@ -31710,6 +40513,12 @@ func (s *RepublishAction) Validate() error {
 	return nil
 }
 
+// SetQos sets the Qos field's value.
+func (s *RepublishAction) SetQos(v int64) *RepublishAction {
+	s.Qos = &v
+	return s
+}
+
 // SetRoleArn sets the RoleArn field's value.
 func (s *RepublishAction) SetRoleArn(v string) *RepublishAction {
 	s.RoleArn = &v
@@ -31722,7 +40531,70 @@ func (s *RepublishAction) SetTopic(v string) *RepublishAction {
 	return s
 }
 
-// Information identifying the non-compliant resource.
+// The resource already exists.
+type ResourceAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The ARN of the resource that caused the exception.
+	ResourceArn *string `locationName:"resourceArn" type:"string"`
+
+	// The ID of the resource that caused the exception.
+	ResourceId *string `locationName:"resourceId" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ResourceAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceAlreadyExistsException) Code() string {
+	return "ResourceAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Information that identifies the noncompliant resource.
 type ResourceIdentifier struct {
 	_ struct{} `type:"structure"`
 
@@ -31735,14 +40607,20 @@ type ResourceIdentifier struct {
 	// The client ID.
 	ClientId *string `locationName:"clientId" type:"string"`
 
-	// The ID of the Cognito Identity Pool.
+	// The ID of the Amazon Cognito identity pool.
 	CognitoIdentityPoolId *string `locationName:"cognitoIdentityPoolId" type:"string"`
 
 	// The ID of the certificate attached to the resource.
 	DeviceCertificateId *string `locationName:"deviceCertificateId" min:"64" type:"string"`
 
+	// The ARN of the IAM role that has overly permissive actions.
+	IamRoleArn *string `locationName:"iamRoleArn" min:"20" type:"string"`
+
 	// The version of the policy associated with the resource.
 	PolicyVersionIdentifier *PolicyVersionIdentifier `locationName:"policyVersionIdentifier" type:"structure"`
+
+	// The ARN of the role alias that has overly permissive actions.
+	RoleAliasArn *string `locationName:"roleAliasArn" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -31766,6 +40644,12 @@ func (s *ResourceIdentifier) Validate() error {
 	}
 	if s.DeviceCertificateId != nil && len(*s.DeviceCertificateId) < 64 {
 		invalidParams.Add(request.NewErrParamMinLen("DeviceCertificateId", 64))
+	}
+	if s.IamRoleArn != nil && len(*s.IamRoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("IamRoleArn", 20))
+	}
+	if s.RoleAliasArn != nil && len(*s.RoleAliasArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleAliasArn", 1))
 	}
 	if s.PolicyVersionIdentifier != nil {
 		if err := s.PolicyVersionIdentifier.Validate(); err != nil {
@@ -31809,10 +40693,136 @@ func (s *ResourceIdentifier) SetDeviceCertificateId(v string) *ResourceIdentifie
 	return s
 }
 
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *ResourceIdentifier) SetIamRoleArn(v string) *ResourceIdentifier {
+	s.IamRoleArn = &v
+	return s
+}
+
 // SetPolicyVersionIdentifier sets the PolicyVersionIdentifier field's value.
 func (s *ResourceIdentifier) SetPolicyVersionIdentifier(v *PolicyVersionIdentifier) *ResourceIdentifier {
 	s.PolicyVersionIdentifier = v
 	return s
+}
+
+// SetRoleAliasArn sets the RoleAliasArn field's value.
+func (s *ResourceIdentifier) SetRoleAliasArn(v string) *ResourceIdentifier {
+	s.RoleAliasArn = &v
+	return s
+}
+
+// The specified resource does not exist.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource registration failed.
+type ResourceRegistrationFailureException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceRegistrationFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceRegistrationFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceRegistrationFailureException(v protocol.ResponseMetadata) error {
+	return &ResourceRegistrationFailureException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceRegistrationFailureException) Code() string {
+	return "ResourceRegistrationFailureException"
+}
+
+// Message returns the exception's message.
+func (s ResourceRegistrationFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceRegistrationFailureException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceRegistrationFailureException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceRegistrationFailureException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceRegistrationFailureException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Role alias description.
@@ -31835,7 +40845,7 @@ type RoleAliasDescription struct {
 	RoleAlias *string `locationName:"roleAlias" min:"1" type:"string"`
 
 	// The ARN of the role alias.
-	RoleAliasArn *string `locationName:"roleAliasArn" type:"string"`
+	RoleAliasArn *string `locationName:"roleAliasArn" min:"1" type:"string"`
 
 	// The role ARN.
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
@@ -31903,7 +40913,7 @@ type S3Action struct {
 	BucketName *string `locationName:"bucketName" type:"string" required:"true"`
 
 	// The Amazon S3 canned ACL that controls access to the object identified by
-	// the object key. For more information, see S3 canned ACLs (http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
+	// the object key. For more information, see S3 canned ACLs (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
 	CannedAcl *string `locationName:"cannedAcl" type:"string" enum:"CannedAccessControlList"`
 
 	// The object key.
@@ -32146,7 +41156,7 @@ type ScheduledAuditMetadata struct {
 	// is "WEEKLY" or "BIWEEKLY").
 	DayOfWeek *string `locationName:"dayOfWeek" type:"string" enum:"DayOfWeek"`
 
-	// How often the scheduled audit takes place.
+	// How often the scheduled audit occurs.
 	Frequency *string `locationName:"frequency" type:"string" enum:"AuditFrequency"`
 
 	// The ARN of the scheduled audit.
@@ -32416,6 +41426,105 @@ func (s *SecurityProfileTargetMapping) SetSecurityProfileIdentifier(v *SecurityP
 func (s *SecurityProfileTargetMapping) SetTarget(v *SecurityProfileTarget) *SecurityProfileTargetMapping {
 	s.Target = v
 	return s
+}
+
+// An object that contains information about a server certificate.
+type ServerCertificateSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the server certificate.
+	ServerCertificateArn *string `locationName:"serverCertificateArn" min:"1" type:"string"`
+
+	// The status of the server certificate.
+	ServerCertificateStatus *string `locationName:"serverCertificateStatus" type:"string" enum:"ServerCertificateStatus"`
+
+	// Details that explain the status of the server certificate.
+	ServerCertificateStatusDetail *string `locationName:"serverCertificateStatusDetail" type:"string"`
+}
+
+// String returns the string representation
+func (s ServerCertificateSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServerCertificateSummary) GoString() string {
+	return s.String()
+}
+
+// SetServerCertificateArn sets the ServerCertificateArn field's value.
+func (s *ServerCertificateSummary) SetServerCertificateArn(v string) *ServerCertificateSummary {
+	s.ServerCertificateArn = &v
+	return s
+}
+
+// SetServerCertificateStatus sets the ServerCertificateStatus field's value.
+func (s *ServerCertificateSummary) SetServerCertificateStatus(v string) *ServerCertificateSummary {
+	s.ServerCertificateStatus = &v
+	return s
+}
+
+// SetServerCertificateStatusDetail sets the ServerCertificateStatusDetail field's value.
+func (s *ServerCertificateSummary) SetServerCertificateStatusDetail(v string) *ServerCertificateSummary {
+	s.ServerCertificateStatusDetail = &v
+	return s
+}
+
+// The service is temporarily unavailable.
+type ServiceUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
+	return &ServiceUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceUnavailableException) Code() string {
+	return "ServiceUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s ServiceUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type SetDefaultAuthorizerInput struct {
@@ -32748,6 +41857,73 @@ func (s SetV2LoggingOptionsOutput) GoString() string {
 	return s.String()
 }
 
+// Use Sig V4 authorization.
+type SigV4Authorization struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the signing role.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" type:"string" required:"true"`
+
+	// The service name to use while signing with Sig V4.
+	//
+	// ServiceName is a required field
+	ServiceName *string `locationName:"serviceName" type:"string" required:"true"`
+
+	// The signing region.
+	//
+	// SigningRegion is a required field
+	SigningRegion *string `locationName:"signingRegion" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s SigV4Authorization) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SigV4Authorization) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SigV4Authorization) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SigV4Authorization"}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.ServiceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceName"))
+	}
+	if s.SigningRegion == nil {
+		invalidParams.Add(request.NewErrParamRequired("SigningRegion"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *SigV4Authorization) SetRoleArn(v string) *SigV4Authorization {
+	s.RoleArn = &v
+	return s
+}
+
+// SetServiceName sets the ServiceName field's value.
+func (s *SigV4Authorization) SetServiceName(v string) *SigV4Authorization {
+	s.ServiceName = &v
+	return s
+}
+
+// SetSigningRegion sets the SigningRegion field's value.
+func (s *SigV4Authorization) SetSigningRegion(v string) *SigV4Authorization {
+	s.SigningRegion = &v
+	return s
+}
+
 // Describes the code-signing profile.
 type SigningProfileParameter struct {
 	_ struct{} `type:"structure"`
@@ -32798,7 +41974,7 @@ type SnsAction struct {
 	// are "JSON" and "RAW". The default value of the attribute is "RAW". SNS uses
 	// this setting to determine if the payload should be parsed and relevant platform-specific
 	// bits of the payload should be extracted. To read more about SNS message formats,
-	// see http://docs.aws.amazon.com/sns/latest/dg/json-formats.html (http://docs.aws.amazon.com/sns/latest/dg/json-formats.html)
+	// see https://docs.aws.amazon.com/sns/latest/dg/json-formats.html (https://docs.aws.amazon.com/sns/latest/dg/json-formats.html)
 	// refer to their official documentation.
 	MessageFormat *string `locationName:"messageFormat" type:"string" enum:"MessageFormat"`
 
@@ -32855,6 +42031,63 @@ func (s *SnsAction) SetRoleArn(v string) *SnsAction {
 func (s *SnsAction) SetTargetArn(v string) *SnsAction {
 	s.TargetArn = &v
 	return s
+}
+
+// The Rule-SQL expression can't be parsed correctly.
+type SqlParseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s SqlParseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SqlParseException) GoString() string {
+	return s.String()
+}
+
+func newErrorSqlParseException(v protocol.ResponseMetadata) error {
+	return &SqlParseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SqlParseException) Code() string {
+	return "SqlParseException"
+}
+
+// Message returns the exception's message.
+func (s SqlParseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SqlParseException) OrigErr() error {
+	return nil
+}
+
+func (s SqlParseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SqlParseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SqlParseException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes an action to publish data to an Amazon SQS queue.
@@ -32919,12 +42152,129 @@ func (s *SqsAction) SetUseBase64(v bool) *SqsAction {
 	return s
 }
 
+type StartAuditMitigationActionsTaskInput struct {
+	_ struct{} `type:"structure"`
+
+	// For an audit check, specifies which mitigation actions to apply. Those actions
+	// must be defined in your AWS account.
+	//
+	// AuditCheckToActionsMapping is a required field
+	AuditCheckToActionsMapping map[string][]*string `locationName:"auditCheckToActionsMapping" type:"map" required:"true"`
+
+	// Each audit mitigation task must have a unique client request token. If you
+	// try to start a new task with the same token as a task that already exists,
+	// an exception occurs. If you omit this value, a unique client request token
+	// is generated automatically.
+	ClientRequestToken *string `locationName:"clientRequestToken" min:"1" type:"string" idempotencyToken:"true"`
+
+	// Specifies the audit findings to which the mitigation actions are applied.
+	// You can apply them to a type of audit check, to all findings from an audit,
+	// or to a speecific set of findings.
+	//
+	// Target is a required field
+	Target *AuditMitigationActionsTaskTarget `locationName:"target" type:"structure" required:"true"`
+
+	// A unique identifier for the task. You can use this identifier to check the
+	// status of the task or to cancel it.
+	//
+	// TaskId is a required field
+	TaskId *string `location:"uri" locationName:"taskId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartAuditMitigationActionsTaskInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAuditMitigationActionsTaskInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartAuditMitigationActionsTaskInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartAuditMitigationActionsTaskInput"}
+	if s.AuditCheckToActionsMapping == nil {
+		invalidParams.Add(request.NewErrParamRequired("AuditCheckToActionsMapping"))
+	}
+	if s.ClientRequestToken != nil && len(*s.ClientRequestToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientRequestToken", 1))
+	}
+	if s.Target == nil {
+		invalidParams.Add(request.NewErrParamRequired("Target"))
+	}
+	if s.TaskId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskId"))
+	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
+	}
+	if s.Target != nil {
+		if err := s.Target.Validate(); err != nil {
+			invalidParams.AddNested("Target", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuditCheckToActionsMapping sets the AuditCheckToActionsMapping field's value.
+func (s *StartAuditMitigationActionsTaskInput) SetAuditCheckToActionsMapping(v map[string][]*string) *StartAuditMitigationActionsTaskInput {
+	s.AuditCheckToActionsMapping = v
+	return s
+}
+
+// SetClientRequestToken sets the ClientRequestToken field's value.
+func (s *StartAuditMitigationActionsTaskInput) SetClientRequestToken(v string) *StartAuditMitigationActionsTaskInput {
+	s.ClientRequestToken = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *StartAuditMitigationActionsTaskInput) SetTarget(v *AuditMitigationActionsTaskTarget) *StartAuditMitigationActionsTaskInput {
+	s.Target = v
+	return s
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *StartAuditMitigationActionsTaskInput) SetTaskId(v string) *StartAuditMitigationActionsTaskInput {
+	s.TaskId = &v
+	return s
+}
+
+type StartAuditMitigationActionsTaskOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the audit mitigation task. This matches the taskId
+	// that you specified in the request.
+	TaskId *string `locationName:"taskId" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s StartAuditMitigationActionsTaskOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAuditMitigationActionsTaskOutput) GoString() string {
+	return s.String()
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *StartAuditMitigationActionsTaskOutput) SetTaskId(v string) *StartAuditMitigationActionsTaskOutput {
+	s.TaskId = &v
+	return s
+}
+
 type StartOnDemandAuditTaskInput struct {
 	_ struct{} `type:"structure"`
 
 	// Which checks are performed during the audit. The checks you specify must
 	// be enabled for your account or an exception occurs. Use DescribeAccountAuditConfiguration
-	// to see the list of all checks including those that are enabled or UpdateAccountAuditConfiguration
+	// to see the list of all checks, including those that are enabled or UpdateAccountAuditConfiguration
 	// to select which checks are enabled.
 	//
 	// TargetCheckNames is a required field
@@ -33151,6 +42501,126 @@ func (s StartThingRegistrationTaskOutput) GoString() string {
 // SetTaskId sets the TaskId field's value.
 func (s *StartThingRegistrationTaskOutput) SetTaskId(v string) *StartThingRegistrationTaskOutput {
 	s.TaskId = &v
+	return s
+}
+
+// A statistical ranking (percentile) which indicates a threshold value by which
+// a behavior is determined to be in compliance or in violation of the behavior.
+type StatisticalThreshold struct {
+	_ struct{} `type:"structure"`
+
+	// The percentile which resolves to a threshold value by which compliance with
+	// a behavior is determined. Metrics are collected over the specified period
+	// (durationSeconds) from all reporting devices in your account and statistical
+	// ranks are calculated. Then, the measurements from a device are collected
+	// over the same period. If the accumulated measurements from the device fall
+	// above or below (comparisonOperator) the value associated with the percentile
+	// specified, then the device is considered to be in compliance with the behavior,
+	// otherwise a violation occurs.
+	Statistic *string `locationName:"statistic" type:"string"`
+}
+
+// String returns the string representation
+func (s StatisticalThreshold) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StatisticalThreshold) GoString() string {
+	return s.String()
+}
+
+// SetStatistic sets the Statistic field's value.
+func (s *StatisticalThreshold) SetStatistic(v string) *StatisticalThreshold {
+	s.Statistic = &v
+	return s
+}
+
+// A map of key-value pairs for all supported statistics. Currently, only count
+// is supported.
+type Statistics struct {
+	_ struct{} `type:"structure"`
+
+	// The average of the aggregated field values.
+	Average *float64 `locationName:"average" type:"double"`
+
+	// The count of things that match the query.
+	Count *int64 `locationName:"count" type:"integer"`
+
+	// The maximum aggregated field value.
+	Maximum *float64 `locationName:"maximum" type:"double"`
+
+	// The minimum aggregated field value.
+	Minimum *float64 `locationName:"minimum" type:"double"`
+
+	// The standard deviation of the aggregated field values.
+	StdDeviation *float64 `locationName:"stdDeviation" type:"double"`
+
+	// The sum of the aggregated field values.
+	Sum *float64 `locationName:"sum" type:"double"`
+
+	// The sum of the squares of the aggregated field values.
+	SumOfSquares *float64 `locationName:"sumOfSquares" type:"double"`
+
+	// The variance of the aggregated field values.
+	Variance *float64 `locationName:"variance" type:"double"`
+}
+
+// String returns the string representation
+func (s Statistics) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Statistics) GoString() string {
+	return s.String()
+}
+
+// SetAverage sets the Average field's value.
+func (s *Statistics) SetAverage(v float64) *Statistics {
+	s.Average = &v
+	return s
+}
+
+// SetCount sets the Count field's value.
+func (s *Statistics) SetCount(v int64) *Statistics {
+	s.Count = &v
+	return s
+}
+
+// SetMaximum sets the Maximum field's value.
+func (s *Statistics) SetMaximum(v float64) *Statistics {
+	s.Maximum = &v
+	return s
+}
+
+// SetMinimum sets the Minimum field's value.
+func (s *Statistics) SetMinimum(v float64) *Statistics {
+	s.Minimum = &v
+	return s
+}
+
+// SetStdDeviation sets the StdDeviation field's value.
+func (s *Statistics) SetStdDeviation(v float64) *Statistics {
+	s.StdDeviation = &v
+	return s
+}
+
+// SetSum sets the Sum field's value.
+func (s *Statistics) SetSum(v float64) *Statistics {
+	s.Sum = &v
+	return s
+}
+
+// SetSumOfSquares sets the SumOfSquares field's value.
+func (s *Statistics) SetSumOfSquares(v float64) *Statistics {
+	s.SumOfSquares = &v
+	return s
+}
+
+// SetVariance sets the Variance field's value.
+func (s *Statistics) SetVariance(v float64) *Statistics {
+	s.Variance = &v
 	return s
 }
 
@@ -33605,6 +43075,63 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// This exception occurs if you attempt to start a task with the same task-id
+// as an existing task but with a different clientRequestToken.
+type TaskAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TaskAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTaskAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &TaskAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TaskAlreadyExistsException) Code() string {
+	return "TaskAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s TaskAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TaskAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s TaskAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TaskAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TaskAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Statistics for the checks performed during the audit.
 type TaskStatistics struct {
 	_ struct{} `type:"structure"`
@@ -33615,13 +43142,13 @@ type TaskStatistics struct {
 	// The number of checks that found compliant resources.
 	CompliantChecks *int64 `locationName:"compliantChecks" type:"integer"`
 
-	// The number of checks
+	// The number of checks.
 	FailedChecks *int64 `locationName:"failedChecks" type:"integer"`
 
 	// The number of checks in progress.
 	InProgressChecks *int64 `locationName:"inProgressChecks" type:"integer"`
 
-	// The number of checks that found non-compliant resources.
+	// The number of checks that found noncompliant resources.
 	NonCompliantChecks *int64 `locationName:"nonCompliantChecks" type:"integer"`
 
 	// The number of checks in this audit.
@@ -33680,6 +43207,70 @@ func (s *TaskStatistics) SetTotalChecks(v int64) *TaskStatistics {
 // SetWaitingForDataCollectionChecks sets the WaitingForDataCollectionChecks field's value.
 func (s *TaskStatistics) SetWaitingForDataCollectionChecks(v int64) *TaskStatistics {
 	s.WaitingForDataCollectionChecks = &v
+	return s
+}
+
+// Provides summary counts of how many tasks for findings are in a particular
+// state. This information is included in the response from DescribeAuditMitigationActionsTask.
+type TaskStatisticsForAuditCheck struct {
+	_ struct{} `type:"structure"`
+
+	// The number of findings to which the mitigation action task was canceled when
+	// applied.
+	CanceledFindingsCount *int64 `locationName:"canceledFindingsCount" type:"long"`
+
+	// The number of findings for which at least one of the actions failed when
+	// applied.
+	FailedFindingsCount *int64 `locationName:"failedFindingsCount" type:"long"`
+
+	// The number of findings skipped because of filter conditions provided in the
+	// parameters to the command.
+	SkippedFindingsCount *int64 `locationName:"skippedFindingsCount" type:"long"`
+
+	// The number of findings for which all mitigation actions succeeded when applied.
+	SucceededFindingsCount *int64 `locationName:"succeededFindingsCount" type:"long"`
+
+	// The total number of findings to which a task is being applied.
+	TotalFindingsCount *int64 `locationName:"totalFindingsCount" type:"long"`
+}
+
+// String returns the string representation
+func (s TaskStatisticsForAuditCheck) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskStatisticsForAuditCheck) GoString() string {
+	return s.String()
+}
+
+// SetCanceledFindingsCount sets the CanceledFindingsCount field's value.
+func (s *TaskStatisticsForAuditCheck) SetCanceledFindingsCount(v int64) *TaskStatisticsForAuditCheck {
+	s.CanceledFindingsCount = &v
+	return s
+}
+
+// SetFailedFindingsCount sets the FailedFindingsCount field's value.
+func (s *TaskStatisticsForAuditCheck) SetFailedFindingsCount(v int64) *TaskStatisticsForAuditCheck {
+	s.FailedFindingsCount = &v
+	return s
+}
+
+// SetSkippedFindingsCount sets the SkippedFindingsCount field's value.
+func (s *TaskStatisticsForAuditCheck) SetSkippedFindingsCount(v int64) *TaskStatisticsForAuditCheck {
+	s.SkippedFindingsCount = &v
+	return s
+}
+
+// SetSucceededFindingsCount sets the SucceededFindingsCount field's value.
+func (s *TaskStatisticsForAuditCheck) SetSucceededFindingsCount(v int64) *TaskStatisticsForAuditCheck {
+	s.SucceededFindingsCount = &v
+	return s
+}
+
+// SetTotalFindingsCount sets the TotalFindingsCount field's value.
+func (s *TaskStatisticsForAuditCheck) SetTotalFindingsCount(v int64) *TaskStatisticsForAuditCheck {
+	s.TotalFindingsCount = &v
 	return s
 }
 
@@ -33803,16 +43394,21 @@ type TestInvokeAuthorizerInput struct {
 	// AuthorizerName is a required field
 	AuthorizerName *string `location:"uri" locationName:"authorizerName" min:"1" type:"string" required:"true"`
 
+	// Specifies a test HTTP authorization request.
+	HttpContext *HttpContext `locationName:"httpContext" type:"structure"`
+
+	// Specifies a test MQTT authorization request.
+	MqttContext *MqttContext `locationName:"mqttContext" type:"structure"`
+
+	// Specifies a test TLS authorization request.
+	TlsContext *TlsContext `locationName:"tlsContext" type:"structure"`
+
 	// The token returned by your custom authentication service.
-	//
-	// Token is a required field
-	Token *string `locationName:"token" min:"1" type:"string" required:"true"`
+	Token *string `locationName:"token" min:"1" type:"string"`
 
 	// The signature made with the token and your custom authentication service's
 	// private key.
-	//
-	// TokenSignature is a required field
-	TokenSignature *string `locationName:"tokenSignature" min:"1" type:"string" required:"true"`
+	TokenSignature *string `locationName:"tokenSignature" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -33834,17 +43430,26 @@ func (s *TestInvokeAuthorizerInput) Validate() error {
 	if s.AuthorizerName != nil && len(*s.AuthorizerName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AuthorizerName", 1))
 	}
-	if s.Token == nil {
-		invalidParams.Add(request.NewErrParamRequired("Token"))
-	}
 	if s.Token != nil && len(*s.Token) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Token", 1))
 	}
-	if s.TokenSignature == nil {
-		invalidParams.Add(request.NewErrParamRequired("TokenSignature"))
-	}
 	if s.TokenSignature != nil && len(*s.TokenSignature) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TokenSignature", 1))
+	}
+	if s.HttpContext != nil {
+		if err := s.HttpContext.Validate(); err != nil {
+			invalidParams.AddNested("HttpContext", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.MqttContext != nil {
+		if err := s.MqttContext.Validate(); err != nil {
+			invalidParams.AddNested("MqttContext", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.TlsContext != nil {
+		if err := s.TlsContext.Validate(); err != nil {
+			invalidParams.AddNested("TlsContext", err.(request.ErrInvalidParams))
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -33856,6 +43461,24 @@ func (s *TestInvokeAuthorizerInput) Validate() error {
 // SetAuthorizerName sets the AuthorizerName field's value.
 func (s *TestInvokeAuthorizerInput) SetAuthorizerName(v string) *TestInvokeAuthorizerInput {
 	s.AuthorizerName = &v
+	return s
+}
+
+// SetHttpContext sets the HttpContext field's value.
+func (s *TestInvokeAuthorizerInput) SetHttpContext(v *HttpContext) *TestInvokeAuthorizerInput {
+	s.HttpContext = v
+	return s
+}
+
+// SetMqttContext sets the MqttContext field's value.
+func (s *TestInvokeAuthorizerInput) SetMqttContext(v *MqttContext) *TestInvokeAuthorizerInput {
+	s.MqttContext = v
+	return s
+}
+
+// SetTlsContext sets the TlsContext field's value.
+func (s *TestInvokeAuthorizerInput) SetTlsContext(v *TlsContext) *TestInvokeAuthorizerInput {
+	s.TlsContext = v
 	return s
 }
 
@@ -33995,13 +43618,13 @@ func (s *ThingAttribute) SetVersion(v int64) *ThingAttribute {
 type ThingConnectivity struct {
 	_ struct{} `type:"structure"`
 
-	// True if the thing is connected to the AWS IoT service, false if it is not
+	// True if the thing is connected to the AWS IoT service; false if it is not
 	// connected.
 	Connected *bool `locationName:"connected" type:"boolean"`
 
 	// The epoch time (in milliseconds) when the thing last connected or disconnected.
-	// Note that if the thing has been disconnected for more than a few weeks, the
-	// time value can be missing.
+	// If the thing has been disconnected for more than a few weeks, the time value
+	// might be missing.
 	Timestamp *int64 `locationName:"timestamp" type:"long"`
 }
 
@@ -34034,7 +43657,7 @@ type ThingDocument struct {
 	// The attributes.
 	Attributes map[string]*string `locationName:"attributes" type:"map"`
 
-	// Indicates whether or not the thing is connected to the AWS IoT service.
+	// Indicates whether the thing is connected to the AWS IoT service.
 	Connectivity *ThingConnectivity `locationName:"connectivity" type:"structure"`
 
 	// The shadow.
@@ -34169,6 +43792,16 @@ func (s *ThingGroupDocument) SetThingGroupName(v string) *ThingGroupDocument {
 type ThingGroupIndexingConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// A list of thing group fields to index. This list cannot contain any managed
+	// fields. Use the GetIndexingConfiguration API to get a list of managed fields.
+	//
+	// Contains custom field names and their data type.
+	CustomFields []*Field `locationName:"customFields" type:"list"`
+
+	// Contains fields that are indexed and whose types are already known by the
+	// Fleet Indexing service.
+	ManagedFields []*Field `locationName:"managedFields" type:"list"`
+
 	// Thing group indexing mode.
 	//
 	// ThingGroupIndexingMode is a required field
@@ -34196,6 +43829,18 @@ func (s *ThingGroupIndexingConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCustomFields sets the CustomFields field's value.
+func (s *ThingGroupIndexingConfiguration) SetCustomFields(v []*Field) *ThingGroupIndexingConfiguration {
+	s.CustomFields = v
+	return s
+}
+
+// SetManagedFields sets the ManagedFields field's value.
+func (s *ThingGroupIndexingConfiguration) SetManagedFields(v []*Field) *ThingGroupIndexingConfiguration {
+	s.ManagedFields = v
+	return s
 }
 
 // SetThingGroupIndexingMode sets the ThingGroupIndexingMode field's value.
@@ -34284,20 +43929,26 @@ func (s *ThingGroupProperties) SetThingGroupDescription(v string) *ThingGroupPro
 type ThingIndexingConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// Contains custom field names and their data type.
+	CustomFields []*Field `locationName:"customFields" type:"list"`
+
+	// Contains fields that are indexed and whose types are already known by the
+	// Fleet Indexing service.
+	ManagedFields []*Field `locationName:"managedFields" type:"list"`
+
 	// Thing connectivity indexing mode. Valid values are:
 	//
-	//    * STATUS – Your thing index will contain connectivity status. In order
-	//    to enable thing connectivity indexing, thingIndexMode must not be set
-	//    to OFF.
+	//    * STATUS – Your thing index contains connectivity status. To enable
+	//    thing connectivity indexing, thingIndexMode must not be set to OFF.
 	//
 	//    * OFF - Thing connectivity status indexing is disabled.
 	ThingConnectivityIndexingMode *string `locationName:"thingConnectivityIndexingMode" type:"string" enum:"ThingConnectivityIndexingMode"`
 
 	// Thing indexing mode. Valid values are:
 	//
-	//    * REGISTRY – Your thing index will contain only registry data.
+	//    * REGISTRY – Your thing index contains registry data only.
 	//
-	//    * REGISTRY_AND_SHADOW - Your thing index will contain registry and shadow
+	//    * REGISTRY_AND_SHADOW - Your thing index contains registry and shadow
 	//    data.
 	//
 	//    * OFF - Thing indexing is disabled.
@@ -34327,6 +43978,18 @@ func (s *ThingIndexingConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCustomFields sets the CustomFields field's value.
+func (s *ThingIndexingConfiguration) SetCustomFields(v []*Field) *ThingIndexingConfiguration {
+	s.CustomFields = v
+	return s
+}
+
+// SetManagedFields sets the ManagedFields field's value.
+func (s *ThingIndexingConfiguration) SetManagedFields(v []*Field) *ThingIndexingConfiguration {
+	s.ManagedFields = v
+	return s
 }
 
 // SetThingConnectivityIndexingMode sets the ThingConnectivityIndexingMode field's value.
@@ -34473,6 +44136,63 @@ func (s *ThingTypeProperties) SetThingTypeDescription(v string) *ThingTypeProper
 	return s
 }
 
+// The rate exceeds the limit.
+type ThrottlingException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ThrottlingException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThrottlingException) GoString() string {
+	return s.String()
+}
+
+func newErrorThrottlingException(v protocol.ResponseMetadata) error {
+	return &ThrottlingException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ThrottlingException) Code() string {
+	return "ThrottlingException"
+}
+
+// Message returns the exception's message.
+func (s ThrottlingException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ThrottlingException) OrigErr() error {
+	return nil
+}
+
+func (s ThrottlingException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ThrottlingException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ThrottlingException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Specifies the amount of time each device has to finish its execution of the
 // job. A timer is started when the job execution status is set to IN_PROGRESS.
 // If the job execution status is not set to another terminal state before the
@@ -34502,6 +44222,43 @@ func (s TimeoutConfig) GoString() string {
 // SetInProgressTimeoutInMinutes sets the InProgressTimeoutInMinutes field's value.
 func (s *TimeoutConfig) SetInProgressTimeoutInMinutes(v int64) *TimeoutConfig {
 	s.InProgressTimeoutInMinutes = &v
+	return s
+}
+
+// Specifies the TLS context to use for the test authorizer request.
+type TlsContext struct {
+	_ struct{} `type:"structure"`
+
+	// The value of the serverName key in a TLS authorization request.
+	ServerName *string `locationName:"serverName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TlsContext) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsContext) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TlsContext) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TlsContext"}
+	if s.ServerName != nil && len(*s.ServerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetServerName sets the ServerName field's value.
+func (s *TlsContext) SetServerName(v string) *TlsContext {
+	s.ServerName = &v
 	return s
 }
 
@@ -34593,6 +44350,198 @@ func (s *TopicRule) SetSql(v string) *TopicRule {
 	return s
 }
 
+// A topic rule destination.
+type TopicRuleDestination struct {
+	_ struct{} `type:"structure"`
+
+	// The topic rule destination URL.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// Properties of the HTTP URL.
+	HttpUrlProperties *HttpUrlDestinationProperties `locationName:"httpUrlProperties" type:"structure"`
+
+	// The status of the topic rule destination. Valid values are:
+	//
+	// IN_PROGRESS
+	//
+	// A topic rule destination was created but has not been confirmed. You can
+	// set status to IN_PROGRESS by calling UpdateTopicRuleDestination. Calling
+	// UpdateTopicRuleDestination causes a new confirmation challenge to be sent
+	// to your confirmation endpoint.
+	//
+	// ENABLED
+	//
+	// Confirmation was completed, and traffic to this destination is allowed. You
+	// can set status to DISABLED by calling UpdateTopicRuleDestination.
+	//
+	// DISABLED
+	//
+	// Confirmation was completed, and traffic to this destination is not allowed.
+	// You can set status to ENABLED by calling UpdateTopicRuleDestination.
+	//
+	// ERROR
+	//
+	// Confirmation could not be completed, for example if the confirmation timed
+	// out. You can call GetTopicRuleDestination for details about the error. You
+	// can set status to IN_PROGRESS by calling UpdateTopicRuleDestination. Calling
+	// UpdateTopicRuleDestination causes a new confirmation challenge to be sent
+	// to your confirmation endpoint.
+	Status *string `locationName:"status" type:"string" enum:"TopicRuleDestinationStatus"`
+
+	// Additional details or reason why the topic rule destination is in the current
+	// status.
+	StatusReason *string `locationName:"statusReason" type:"string"`
+}
+
+// String returns the string representation
+func (s TopicRuleDestination) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TopicRuleDestination) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *TopicRuleDestination) SetArn(v string) *TopicRuleDestination {
+	s.Arn = &v
+	return s
+}
+
+// SetHttpUrlProperties sets the HttpUrlProperties field's value.
+func (s *TopicRuleDestination) SetHttpUrlProperties(v *HttpUrlDestinationProperties) *TopicRuleDestination {
+	s.HttpUrlProperties = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *TopicRuleDestination) SetStatus(v string) *TopicRuleDestination {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *TopicRuleDestination) SetStatusReason(v string) *TopicRuleDestination {
+	s.StatusReason = &v
+	return s
+}
+
+// Configuration of the topic rule destination.
+type TopicRuleDestinationConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Configuration of the HTTP URL.
+	HttpUrlConfiguration *HttpUrlDestinationConfiguration `locationName:"httpUrlConfiguration" type:"structure"`
+}
+
+// String returns the string representation
+func (s TopicRuleDestinationConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TopicRuleDestinationConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TopicRuleDestinationConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TopicRuleDestinationConfiguration"}
+	if s.HttpUrlConfiguration != nil {
+		if err := s.HttpUrlConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("HttpUrlConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHttpUrlConfiguration sets the HttpUrlConfiguration field's value.
+func (s *TopicRuleDestinationConfiguration) SetHttpUrlConfiguration(v *HttpUrlDestinationConfiguration) *TopicRuleDestinationConfiguration {
+	s.HttpUrlConfiguration = v
+	return s
+}
+
+// Information about the topic rule destination.
+type TopicRuleDestinationSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The topic rule destination ARN.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// Information about the HTTP URL.
+	HttpUrlSummary *HttpUrlDestinationSummary `locationName:"httpUrlSummary" type:"structure"`
+
+	// The status of the topic rule destination. Valid values are:
+	//
+	// IN_PROGRESS
+	//
+	// A topic rule destination was created but has not been confirmed. You can
+	// set status to IN_PROGRESS by calling UpdateTopicRuleDestination. Calling
+	// UpdateTopicRuleDestination causes a new confirmation challenge to be sent
+	// to your confirmation endpoint.
+	//
+	// ENABLED
+	//
+	// Confirmation was completed, and traffic to this destination is allowed. You
+	// can set status to DISABLED by calling UpdateTopicRuleDestination.
+	//
+	// DISABLED
+	//
+	// Confirmation was completed, and traffic to this destination is not allowed.
+	// You can set status to ENABLED by calling UpdateTopicRuleDestination.
+	//
+	// ERROR
+	//
+	// Confirmation could not be completed, for example if the confirmation timed
+	// out. You can call GetTopicRuleDestination for details about the error. You
+	// can set status to IN_PROGRESS by calling UpdateTopicRuleDestination. Calling
+	// UpdateTopicRuleDestination causes a new confirmation challenge to be sent
+	// to your confirmation endpoint.
+	Status *string `locationName:"status" type:"string" enum:"TopicRuleDestinationStatus"`
+
+	// The reason the topic rule destination is in the current status.
+	StatusReason *string `locationName:"statusReason" type:"string"`
+}
+
+// String returns the string representation
+func (s TopicRuleDestinationSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TopicRuleDestinationSummary) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *TopicRuleDestinationSummary) SetArn(v string) *TopicRuleDestinationSummary {
+	s.Arn = &v
+	return s
+}
+
+// SetHttpUrlSummary sets the HttpUrlSummary field's value.
+func (s *TopicRuleDestinationSummary) SetHttpUrlSummary(v *HttpUrlDestinationSummary) *TopicRuleDestinationSummary {
+	s.HttpUrlSummary = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *TopicRuleDestinationSummary) SetStatus(v string) *TopicRuleDestinationSummary {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *TopicRuleDestinationSummary) SetStatusReason(v string) *TopicRuleDestinationSummary {
+	s.StatusReason = &v
+	return s
+}
+
 // Describes a rule.
 type TopicRuleListItem struct {
 	_ struct{} `type:"structure"`
@@ -34675,7 +44624,7 @@ type TopicRulePayload struct {
 	RuleDisabled *bool `locationName:"ruleDisabled" type:"boolean"`
 
 	// The SQL statement used to query the topic. For more information, see AWS
-	// IoT SQL Reference (http://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference)
+	// IoT SQL Reference (https://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference)
 	// in the AWS IoT Developer Guide.
 	//
 	// Sql is a required field
@@ -34757,6 +44706,64 @@ func (s *TopicRulePayload) SetRuleDisabled(v bool) *TopicRulePayload {
 func (s *TopicRulePayload) SetSql(v string) *TopicRulePayload {
 	s.Sql = &v
 	return s
+}
+
+// You can't revert the certificate transfer because the transfer is already
+// complete.
+type TransferAlreadyCompletedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TransferAlreadyCompletedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransferAlreadyCompletedException) GoString() string {
+	return s.String()
+}
+
+func newErrorTransferAlreadyCompletedException(v protocol.ResponseMetadata) error {
+	return &TransferAlreadyCompletedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TransferAlreadyCompletedException) Code() string {
+	return "TransferAlreadyCompletedException"
+}
+
+// Message returns the exception's message.
+func (s TransferAlreadyCompletedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TransferAlreadyCompletedException) OrigErr() error {
+	return nil
+}
+
+func (s TransferAlreadyCompletedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TransferAlreadyCompletedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TransferAlreadyCompletedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The input for the TransferCertificate operation.
@@ -34852,6 +44859,64 @@ func (s *TransferCertificateOutput) SetTransferredCertificateArn(v string) *Tran
 	return s
 }
 
+// You can't transfer the certificate because authorization policies are still
+// attached.
+type TransferConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TransferConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransferConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorTransferConflictException(v protocol.ResponseMetadata) error {
+	return &TransferConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TransferConflictException) Code() string {
+	return "TransferConflictException"
+}
+
+// Message returns the exception's message.
+func (s TransferConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TransferConflictException) OrigErr() error {
+	return nil
+}
+
+func (s TransferConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TransferConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TransferConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Data used to transfer a certificate to an AWS account.
 type TransferData struct {
 	_ struct{} `type:"structure"`
@@ -34910,6 +44975,63 @@ func (s *TransferData) SetTransferDate(v time.Time) *TransferData {
 func (s *TransferData) SetTransferMessage(v string) *TransferData {
 	s.TransferMessage = &v
 	return s
+}
+
+// You are not authorized to perform this operation.
+type UnauthorizedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnauthorizedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnauthorizedException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
+	return &UnauthorizedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnauthorizedException) Code() string {
+	return "UnauthorizedException"
+}
+
+// Message returns the exception's message.
+func (s UnauthorizedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnauthorizedException) OrigErr() error {
+	return nil
+}
+
+func (s UnauthorizedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnauthorizedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnauthorizedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -34982,18 +45104,18 @@ type UpdateAccountAuditConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies which audit checks are enabled and disabled for this account. Use
-	// DescribeAccountAuditConfiguration to see the list of all checks including
+	// DescribeAccountAuditConfiguration to see the list of all checks, including
 	// those that are currently enabled.
 	//
-	// Note that some data collection may begin immediately when certain checks
-	// are enabled. When a check is disabled, any data collected so far in relation
-	// to the check is deleted.
+	// Some data collection might start immediately when certain checks are enabled.
+	// When a check is disabled, any data collected so far in relation to the check
+	// is deleted.
 	//
 	// You cannot disable a check if it is used by any scheduled audit. You must
 	// first delete the check from the scheduled audit or delete the scheduled audit
 	// itself.
 	//
-	// On the first call to UpdateAccountAuditConfiguration this parameter is required
+	// On the first call to UpdateAccountAuditConfiguration, this parameter is required
 	// and must specify at least one enabled check.
 	AuditCheckConfigurations map[string]*AuditCheckConfiguration `locationName:"auditCheckConfigurations" type:"map"`
 
@@ -35001,7 +45123,7 @@ type UpdateAccountAuditConfigurationInput struct {
 	AuditNotificationTargetConfigurations map[string]*AuditNotificationTarget `locationName:"auditNotificationTargetConfigurations" type:"map"`
 
 	// The ARN of the role that grants permission to AWS IoT to access information
-	// about your devices, policies, certificates and other items as necessary when
+	// about your devices, policies, certificates and other items as required when
 	// performing an audit.
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
 }
@@ -35294,7 +45416,7 @@ type UpdateCACertificateInput struct {
 	// Information about the registration configuration.
 	RegistrationConfig *RegistrationConfig `locationName:"registrationConfig" type:"structure"`
 
-	// If true, remove auto registration.
+	// If true, removes auto registration.
 	RemoveAutoRegistration *bool `locationName:"removeAutoRegistration" type:"boolean"`
 }
 
@@ -35373,6 +45495,47 @@ func (s UpdateCACertificateOutput) GoString() string {
 	return s.String()
 }
 
+// Parameters to define a mitigation action that changes the state of the CA
+// certificate to inactive.
+type UpdateCACertificateParams struct {
+	_ struct{} `type:"structure"`
+
+	// The action that you want to apply to the CA cerrtificate. The only supported
+	// value is DEACTIVATE.
+	//
+	// Action is a required field
+	Action *string `locationName:"action" type:"string" required:"true" enum:"CACertificateUpdateAction"`
+}
+
+// String returns the string representation
+func (s UpdateCACertificateParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateCACertificateParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateCACertificateParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateCACertificateParams"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *UpdateCACertificateParams) SetAction(v string) *UpdateCACertificateParams {
+	s.Action = &v
+	return s
+}
+
 // The input for the UpdateCertificate operation.
 type UpdateCertificateInput struct {
 	_ struct{} `type:"structure"`
@@ -35449,6 +45612,152 @@ func (s UpdateCertificateOutput) String() string {
 // GoString returns the string representation
 func (s UpdateCertificateOutput) GoString() string {
 	return s.String()
+}
+
+// Parameters to define a mitigation action that changes the state of the device
+// certificate to inactive.
+type UpdateDeviceCertificateParams struct {
+	_ struct{} `type:"structure"`
+
+	// The action that you want to apply to the device cerrtificate. The only supported
+	// value is DEACTIVATE.
+	//
+	// Action is a required field
+	Action *string `locationName:"action" type:"string" required:"true" enum:"DeviceCertificateUpdateAction"`
+}
+
+// String returns the string representation
+func (s UpdateDeviceCertificateParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDeviceCertificateParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateDeviceCertificateParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateDeviceCertificateParams"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *UpdateDeviceCertificateParams) SetAction(v string) *UpdateDeviceCertificateParams {
+	s.Action = &v
+	return s
+}
+
+type UpdateDomainConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// An object that specifies the authorization service for a domain.
+	AuthorizerConfig *AuthorizerConfig `locationName:"authorizerConfig" type:"structure"`
+
+	// The name of the domain configuration to be updated.
+	//
+	// DomainConfigurationName is a required field
+	DomainConfigurationName *string `location:"uri" locationName:"domainConfigurationName" min:"1" type:"string" required:"true"`
+
+	// The status to which the domain configuration should be updated.
+	DomainConfigurationStatus *string `locationName:"domainConfigurationStatus" type:"string" enum:"DomainConfigurationStatus"`
+
+	// Removes the authorization configuration from a domain.
+	RemoveAuthorizerConfig *bool `locationName:"removeAuthorizerConfig" type:"boolean"`
+}
+
+// String returns the string representation
+func (s UpdateDomainConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDomainConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateDomainConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateDomainConfigurationInput"}
+	if s.DomainConfigurationName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainConfigurationName"))
+	}
+	if s.DomainConfigurationName != nil && len(*s.DomainConfigurationName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainConfigurationName", 1))
+	}
+	if s.AuthorizerConfig != nil {
+		if err := s.AuthorizerConfig.Validate(); err != nil {
+			invalidParams.AddNested("AuthorizerConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthorizerConfig sets the AuthorizerConfig field's value.
+func (s *UpdateDomainConfigurationInput) SetAuthorizerConfig(v *AuthorizerConfig) *UpdateDomainConfigurationInput {
+	s.AuthorizerConfig = v
+	return s
+}
+
+// SetDomainConfigurationName sets the DomainConfigurationName field's value.
+func (s *UpdateDomainConfigurationInput) SetDomainConfigurationName(v string) *UpdateDomainConfigurationInput {
+	s.DomainConfigurationName = &v
+	return s
+}
+
+// SetDomainConfigurationStatus sets the DomainConfigurationStatus field's value.
+func (s *UpdateDomainConfigurationInput) SetDomainConfigurationStatus(v string) *UpdateDomainConfigurationInput {
+	s.DomainConfigurationStatus = &v
+	return s
+}
+
+// SetRemoveAuthorizerConfig sets the RemoveAuthorizerConfig field's value.
+func (s *UpdateDomainConfigurationInput) SetRemoveAuthorizerConfig(v bool) *UpdateDomainConfigurationInput {
+	s.RemoveAuthorizerConfig = &v
+	return s
+}
+
+type UpdateDomainConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the domain configuration that was updated.
+	DomainConfigurationArn *string `locationName:"domainConfigurationArn" type:"string"`
+
+	// The name of the domain configuration that was updated.
+	DomainConfigurationName *string `locationName:"domainConfigurationName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateDomainConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDomainConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetDomainConfigurationArn sets the DomainConfigurationArn field's value.
+func (s *UpdateDomainConfigurationOutput) SetDomainConfigurationArn(v string) *UpdateDomainConfigurationOutput {
+	s.DomainConfigurationArn = &v
+	return s
+}
+
+// SetDomainConfigurationName sets the DomainConfigurationName field's value.
+func (s *UpdateDomainConfigurationOutput) SetDomainConfigurationName(v string) *UpdateDomainConfigurationOutput {
+	s.DomainConfigurationName = &v
+	return s
 }
 
 type UpdateDynamicThingGroupInput struct {
@@ -35797,6 +46106,202 @@ func (s UpdateJobOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateMitigationActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The friendly name for the mitigation action. You can't change the name by
+	// using UpdateMitigationAction. Instead, you must delete and re-create the
+	// mitigation action with the new name.
+	//
+	// ActionName is a required field
+	ActionName *string `location:"uri" locationName:"actionName" type:"string" required:"true"`
+
+	// Defines the type of action and the parameters for that action.
+	ActionParams *MitigationActionParams `locationName:"actionParams" type:"structure"`
+
+	// The ARN of the IAM role that is used to apply the mitigation action.
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateMitigationActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMitigationActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateMitigationActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateMitigationActionInput"}
+	if s.ActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionName"))
+	}
+	if s.ActionName != nil && len(*s.ActionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ActionName", 1))
+	}
+	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
+	}
+	if s.ActionParams != nil {
+		if err := s.ActionParams.Validate(); err != nil {
+			invalidParams.AddNested("ActionParams", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *UpdateMitigationActionInput) SetActionName(v string) *UpdateMitigationActionInput {
+	s.ActionName = &v
+	return s
+}
+
+// SetActionParams sets the ActionParams field's value.
+func (s *UpdateMitigationActionInput) SetActionParams(v *MitigationActionParams) *UpdateMitigationActionInput {
+	s.ActionParams = v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *UpdateMitigationActionInput) SetRoleArn(v string) *UpdateMitigationActionInput {
+	s.RoleArn = &v
+	return s
+}
+
+type UpdateMitigationActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN for the new mitigation action.
+	ActionArn *string `locationName:"actionArn" type:"string"`
+
+	// A unique identifier for the mitigation action.
+	ActionId *string `locationName:"actionId" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateMitigationActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMitigationActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionArn sets the ActionArn field's value.
+func (s *UpdateMitigationActionOutput) SetActionArn(v string) *UpdateMitigationActionOutput {
+	s.ActionArn = &v
+	return s
+}
+
+// SetActionId sets the ActionId field's value.
+func (s *UpdateMitigationActionOutput) SetActionId(v string) *UpdateMitigationActionOutput {
+	s.ActionId = &v
+	return s
+}
+
+type UpdateProvisioningTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the default provisioning template version.
+	DefaultVersionId *int64 `locationName:"defaultVersionId" type:"integer"`
+
+	// The description of the fleet provisioning template.
+	Description *string `locationName:"description" type:"string"`
+
+	// True to enable the fleet provisioning template, otherwise false.
+	Enabled *bool `locationName:"enabled" type:"boolean"`
+
+	// The ARN of the role associated with the provisioning template. This IoT role
+	// grants permission to provision a device.
+	ProvisioningRoleArn *string `locationName:"provisioningRoleArn" min:"20" type:"string"`
+
+	// The name of the fleet provisioning template.
+	//
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"templateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateProvisioningTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateProvisioningTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateProvisioningTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateProvisioningTemplateInput"}
+	if s.ProvisioningRoleArn != nil && len(*s.ProvisioningRoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisioningRoleArn", 20))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDefaultVersionId sets the DefaultVersionId field's value.
+func (s *UpdateProvisioningTemplateInput) SetDefaultVersionId(v int64) *UpdateProvisioningTemplateInput {
+	s.DefaultVersionId = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *UpdateProvisioningTemplateInput) SetDescription(v string) *UpdateProvisioningTemplateInput {
+	s.Description = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *UpdateProvisioningTemplateInput) SetEnabled(v bool) *UpdateProvisioningTemplateInput {
+	s.Enabled = &v
+	return s
+}
+
+// SetProvisioningRoleArn sets the ProvisioningRoleArn field's value.
+func (s *UpdateProvisioningTemplateInput) SetProvisioningRoleArn(v string) *UpdateProvisioningTemplateInput {
+	s.ProvisioningRoleArn = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *UpdateProvisioningTemplateInput) SetTemplateName(v string) *UpdateProvisioningTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type UpdateProvisioningTemplateOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateProvisioningTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateProvisioningTemplateOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateRoleAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -35869,7 +46374,7 @@ type UpdateRoleAliasOutput struct {
 	RoleAlias *string `locationName:"roleAlias" min:"1" type:"string"`
 
 	// The role alias ARN.
-	RoleAliasArn *string `locationName:"roleAliasArn" type:"string"`
+	RoleAliasArn *string `locationName:"roleAliasArn" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -35904,13 +46409,13 @@ type UpdateScheduledAuditInput struct {
 	DayOfMonth *string `locationName:"dayOfMonth" type:"string"`
 
 	// The day of the week on which the scheduled audit takes place. Can be one
-	// of "SUN", "MON", "TUE", "WED", "THU", "FRI" or "SAT". This field is required
+	// of "SUN", "MON", "TUE", "WED", "THU", "FRI", or "SAT". This field is required
 	// if the "frequency" parameter is set to "WEEKLY" or "BIWEEKLY".
 	DayOfWeek *string `locationName:"dayOfWeek" type:"string" enum:"DayOfWeek"`
 
 	// How often the scheduled audit takes place. Can be one of "DAILY", "WEEKLY",
-	// "BIWEEKLY" or "MONTHLY". The actual start time of each audit is determined
-	// by the system.
+	// "BIWEEKLY", or "MONTHLY". The start time of each audit is determined by the
+	// system.
 	Frequency *string `locationName:"frequency" type:"string" enum:"AuditFrequency"`
 
 	// The name of the scheduled audit. (Max. 128 chars)
@@ -35920,7 +46425,7 @@ type UpdateScheduledAuditInput struct {
 
 	// Which checks are performed during the scheduled audit. Checks must be enabled
 	// for your account. (Use DescribeAccountAuditConfiguration to see the list
-	// of all checks including those that are enabled or UpdateAccountAuditConfiguration
+	// of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
 	// to select which checks are enabled.)
 	TargetCheckNames []*string `locationName:"targetCheckNames" type:"list"`
 }
@@ -36007,6 +46512,11 @@ func (s *UpdateScheduledAuditOutput) SetScheduledAuditArn(v string) *UpdateSched
 type UpdateSecurityProfileInput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the profile's behaviors, but it is also retained for
+	// any metric specified here.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
+
 	// Where the alerts are sent. (Alerts are always sent to the console.)
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
 
@@ -36014,9 +46524,22 @@ type UpdateSecurityProfileInput struct {
 	// alert.
 	Behaviors []*Behavior `locationName:"behaviors" type:"list"`
 
+	// If true, delete all additionalMetricsToRetain defined for this security profile.
+	// If any additionalMetricsToRetain are defined in the current invocation, an
+	// exception occurs.
+	DeleteAdditionalMetricsToRetain *bool `locationName:"deleteAdditionalMetricsToRetain" type:"boolean"`
+
+	// If true, delete all alertTargets defined for this security profile. If any
+	// alertTargets are defined in the current invocation, an exception occurs.
+	DeleteAlertTargets *bool `locationName:"deleteAlertTargets" type:"boolean"`
+
+	// If true, delete all behaviors defined for this security profile. If any behaviors
+	// are defined in the current invocation, an exception occurs.
+	DeleteBehaviors *bool `locationName:"deleteBehaviors" type:"boolean"`
+
 	// The expected version of the security profile. A new version is generated
 	// whenever the security profile is updated. If you specify a value that is
-	// different than the actual version, a VersionConflictException is thrown.
+	// different from the actual version, a VersionConflictException is thrown.
 	ExpectedVersion *int64 `location:"querystring" locationName:"expectedVersion" type:"long"`
 
 	// A description of the security profile.
@@ -36074,6 +46597,12 @@ func (s *UpdateSecurityProfileInput) Validate() error {
 	return nil
 }
 
+// SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
+func (s *UpdateSecurityProfileInput) SetAdditionalMetricsToRetain(v []*string) *UpdateSecurityProfileInput {
+	s.AdditionalMetricsToRetain = v
+	return s
+}
+
 // SetAlertTargets sets the AlertTargets field's value.
 func (s *UpdateSecurityProfileInput) SetAlertTargets(v map[string]*AlertTarget) *UpdateSecurityProfileInput {
 	s.AlertTargets = v
@@ -36083,6 +46612,24 @@ func (s *UpdateSecurityProfileInput) SetAlertTargets(v map[string]*AlertTarget) 
 // SetBehaviors sets the Behaviors field's value.
 func (s *UpdateSecurityProfileInput) SetBehaviors(v []*Behavior) *UpdateSecurityProfileInput {
 	s.Behaviors = v
+	return s
+}
+
+// SetDeleteAdditionalMetricsToRetain sets the DeleteAdditionalMetricsToRetain field's value.
+func (s *UpdateSecurityProfileInput) SetDeleteAdditionalMetricsToRetain(v bool) *UpdateSecurityProfileInput {
+	s.DeleteAdditionalMetricsToRetain = &v
+	return s
+}
+
+// SetDeleteAlertTargets sets the DeleteAlertTargets field's value.
+func (s *UpdateSecurityProfileInput) SetDeleteAlertTargets(v bool) *UpdateSecurityProfileInput {
+	s.DeleteAlertTargets = &v
+	return s
+}
+
+// SetDeleteBehaviors sets the DeleteBehaviors field's value.
+func (s *UpdateSecurityProfileInput) SetDeleteBehaviors(v bool) *UpdateSecurityProfileInput {
+	s.DeleteBehaviors = &v
 	return s
 }
 
@@ -36106,6 +46653,11 @@ func (s *UpdateSecurityProfileInput) SetSecurityProfileName(v string) *UpdateSec
 
 type UpdateSecurityProfileOutput struct {
 	_ struct{} `type:"structure"`
+
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the security profile's behaviors, but it is also retained
+	// for any metric specified here.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
 
 	// Where the alerts are sent. (Alerts are always sent to the console.)
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
@@ -36141,6 +46693,12 @@ func (s UpdateSecurityProfileOutput) String() string {
 // GoString returns the string representation
 func (s UpdateSecurityProfileOutput) GoString() string {
 	return s.String()
+}
+
+// SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
+func (s *UpdateSecurityProfileOutput) SetAdditionalMetricsToRetain(v []*string) *UpdateSecurityProfileOutput {
+	s.AdditionalMetricsToRetain = v
+	return s
 }
 
 // SetAlertTargets sets the AlertTargets field's value.
@@ -36597,6 +47155,97 @@ func (s UpdateThingOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateTopicRuleDestinationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the topic rule destination.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" type:"string" required:"true"`
+
+	// The status of the topic rule destination. Valid values are:
+	//
+	// IN_PROGRESS
+	//
+	// A topic rule destination was created but has not been confirmed. You can
+	// set status to IN_PROGRESS by calling UpdateTopicRuleDestination. Calling
+	// UpdateTopicRuleDestination causes a new confirmation challenge to be sent
+	// to your confirmation endpoint.
+	//
+	// ENABLED
+	//
+	// Confirmation was completed, and traffic to this destination is allowed. You
+	// can set status to DISABLED by calling UpdateTopicRuleDestination.
+	//
+	// DISABLED
+	//
+	// Confirmation was completed, and traffic to this destination is not allowed.
+	// You can set status to ENABLED by calling UpdateTopicRuleDestination.
+	//
+	// ERROR
+	//
+	// Confirmation could not be completed, for example if the confirmation timed
+	// out. You can call GetTopicRuleDestination for details about the error. You
+	// can set status to IN_PROGRESS by calling UpdateTopicRuleDestination. Calling
+	// UpdateTopicRuleDestination causes a new confirmation challenge to be sent
+	// to your confirmation endpoint.
+	//
+	// Status is a required field
+	Status *string `locationName:"status" type:"string" required:"true" enum:"TopicRuleDestinationStatus"`
+}
+
+// String returns the string representation
+func (s UpdateTopicRuleDestinationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateTopicRuleDestinationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateTopicRuleDestinationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateTopicRuleDestinationInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Status == nil {
+		invalidParams.Add(request.NewErrParamRequired("Status"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateTopicRuleDestinationInput) SetArn(v string) *UpdateTopicRuleDestinationInput {
+	s.Arn = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *UpdateTopicRuleDestinationInput) SetStatus(v string) *UpdateTopicRuleDestinationInput {
+	s.Status = &v
+	return s
+}
+
+type UpdateTopicRuleDestinationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateTopicRuleDestinationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateTopicRuleDestinationOutput) GoString() string {
+	return s.String()
+}
+
 type ValidateSecurityProfileBehaviorsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -36700,6 +47349,121 @@ func (s ValidationError) GoString() string {
 func (s *ValidationError) SetErrorMessage(v string) *ValidationError {
 	s.ErrorMessage = &v
 	return s
+}
+
+// An exception thrown when the version of an entity specified with the expectedVersion
+// parameter does not match the latest version in the system.
+type VersionConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s VersionConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VersionConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorVersionConflictException(v protocol.ResponseMetadata) error {
+	return &VersionConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s VersionConflictException) Code() string {
+	return "VersionConflictException"
+}
+
+// Message returns the exception's message.
+func (s VersionConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s VersionConflictException) OrigErr() error {
+	return nil
+}
+
+func (s VersionConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s VersionConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s VersionConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The number of policy versions exceeds the limit.
+type VersionsLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s VersionsLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VersionsLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorVersionsLimitExceededException(v protocol.ResponseMetadata) error {
+	return &VersionsLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s VersionsLimitExceededException) Code() string {
+	return "VersionsLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s VersionsLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s VersionsLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s VersionsLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s VersionsLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s VersionsLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information about a Device Defender security profile behavior violation.
@@ -36854,6 +47618,40 @@ const (
 )
 
 const (
+	// AuditMitigationActionsExecutionStatusInProgress is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusInProgress = "IN_PROGRESS"
+
+	// AuditMitigationActionsExecutionStatusCompleted is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusCompleted = "COMPLETED"
+
+	// AuditMitigationActionsExecutionStatusFailed is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusFailed = "FAILED"
+
+	// AuditMitigationActionsExecutionStatusCanceled is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusCanceled = "CANCELED"
+
+	// AuditMitigationActionsExecutionStatusSkipped is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusSkipped = "SKIPPED"
+
+	// AuditMitigationActionsExecutionStatusPending is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusPending = "PENDING"
+)
+
+const (
+	// AuditMitigationActionsTaskStatusInProgress is a AuditMitigationActionsTaskStatus enum value
+	AuditMitigationActionsTaskStatusInProgress = "IN_PROGRESS"
+
+	// AuditMitigationActionsTaskStatusCompleted is a AuditMitigationActionsTaskStatus enum value
+	AuditMitigationActionsTaskStatusCompleted = "COMPLETED"
+
+	// AuditMitigationActionsTaskStatusFailed is a AuditMitigationActionsTaskStatus enum value
+	AuditMitigationActionsTaskStatusFailed = "FAILED"
+
+	// AuditMitigationActionsTaskStatusCanceled is a AuditMitigationActionsTaskStatus enum value
+	AuditMitigationActionsTaskStatusCanceled = "CANCELED"
+)
+
+const (
 	// AuditNotificationTypeSns is a AuditNotificationType enum value
 	AuditNotificationTypeSns = "SNS"
 )
@@ -36913,6 +47711,11 @@ const (
 
 	// CACertificateStatusInactive is a CACertificateStatus enum value
 	CACertificateStatusInactive = "INACTIVE"
+)
+
+const (
+	// CACertificateUpdateActionDeactivate is a CACertificateUpdateAction enum value
+	CACertificateUpdateActionDeactivate = "DEACTIVATE"
 )
 
 const (
@@ -37011,6 +47814,30 @@ const (
 )
 
 const (
+	// DeviceCertificateUpdateActionDeactivate is a DeviceCertificateUpdateAction enum value
+	DeviceCertificateUpdateActionDeactivate = "DEACTIVATE"
+)
+
+const (
+	// DomainConfigurationStatusEnabled is a DomainConfigurationStatus enum value
+	DomainConfigurationStatusEnabled = "ENABLED"
+
+	// DomainConfigurationStatusDisabled is a DomainConfigurationStatus enum value
+	DomainConfigurationStatusDisabled = "DISABLED"
+)
+
+const (
+	// DomainTypeEndpoint is a DomainType enum value
+	DomainTypeEndpoint = "ENDPOINT"
+
+	// DomainTypeAwsManaged is a DomainType enum value
+	DomainTypeAwsManaged = "AWS_MANAGED"
+
+	// DomainTypeCustomerManaged is a DomainType enum value
+	DomainTypeCustomerManaged = "CUSTOMER_MANAGED"
+)
+
+const (
 	// DynamicGroupStatusActive is a DynamicGroupStatus enum value
 	DynamicGroupStatusActive = "ACTIVE"
 
@@ -37062,6 +47889,17 @@ const (
 
 	// EventTypeCaCertificate is a EventType enum value
 	EventTypeCaCertificate = "CA_CERTIFICATE"
+)
+
+const (
+	// FieldTypeNumber is a FieldType enum value
+	FieldTypeNumber = "Number"
+
+	// FieldTypeString is a FieldType enum value
+	FieldTypeString = "String"
+
+	// FieldTypeBoolean is a FieldType enum value
+	FieldTypeBoolean = "Boolean"
 )
 
 const (
@@ -37163,6 +48001,26 @@ const (
 )
 
 const (
+	// MitigationActionTypeUpdateDeviceCertificate is a MitigationActionType enum value
+	MitigationActionTypeUpdateDeviceCertificate = "UPDATE_DEVICE_CERTIFICATE"
+
+	// MitigationActionTypeUpdateCaCertificate is a MitigationActionType enum value
+	MitigationActionTypeUpdateCaCertificate = "UPDATE_CA_CERTIFICATE"
+
+	// MitigationActionTypeAddThingsToThingGroup is a MitigationActionType enum value
+	MitigationActionTypeAddThingsToThingGroup = "ADD_THINGS_TO_THING_GROUP"
+
+	// MitigationActionTypeReplaceDefaultPolicyVersion is a MitigationActionType enum value
+	MitigationActionTypeReplaceDefaultPolicyVersion = "REPLACE_DEFAULT_POLICY_VERSION"
+
+	// MitigationActionTypeEnableIotLogging is a MitigationActionType enum value
+	MitigationActionTypeEnableIotLogging = "ENABLE_IOT_LOGGING"
+
+	// MitigationActionTypePublishFindingToSns is a MitigationActionType enum value
+	MitigationActionTypePublishFindingToSns = "PUBLISH_FINDING_TO_SNS"
+)
+
+const (
 	// OTAUpdateStatusCreatePending is a OTAUpdateStatus enum value
 	OTAUpdateStatusCreatePending = "CREATE_PENDING"
 
@@ -37174,6 +48032,19 @@ const (
 
 	// OTAUpdateStatusCreateFailed is a OTAUpdateStatus enum value
 	OTAUpdateStatusCreateFailed = "CREATE_FAILED"
+)
+
+const (
+	// PolicyTemplateNameBlankPolicy is a PolicyTemplateName enum value
+	PolicyTemplateNameBlankPolicy = "BLANK_POLICY"
+)
+
+const (
+	// ProtocolMqtt is a Protocol enum value
+	ProtocolMqtt = "MQTT"
+
+	// ProtocolHttp is a Protocol enum value
+	ProtocolHttp = "HTTP"
 )
 
 const (
@@ -37202,6 +48073,31 @@ const (
 
 	// ResourceTypeAccountSettings is a ResourceType enum value
 	ResourceTypeAccountSettings = "ACCOUNT_SETTINGS"
+
+	// ResourceTypeRoleAlias is a ResourceType enum value
+	ResourceTypeRoleAlias = "ROLE_ALIAS"
+
+	// ResourceTypeIamRole is a ResourceType enum value
+	ResourceTypeIamRole = "IAM_ROLE"
+)
+
+const (
+	// ServerCertificateStatusInvalid is a ServerCertificateStatus enum value
+	ServerCertificateStatusInvalid = "INVALID"
+
+	// ServerCertificateStatusValid is a ServerCertificateStatus enum value
+	ServerCertificateStatusValid = "VALID"
+)
+
+const (
+	// ServiceTypeData is a ServiceType enum value
+	ServiceTypeData = "DATA"
+
+	// ServiceTypeCredentialProvider is a ServiceType enum value
+	ServiceTypeCredentialProvider = "CREDENTIAL_PROVIDER"
+
+	// ServiceTypeJobs is a ServiceType enum value
+	ServiceTypeJobs = "JOBS"
 )
 
 const (
@@ -37254,6 +48150,20 @@ const (
 
 	// ThingIndexingModeRegistryAndShadow is a ThingIndexingMode enum value
 	ThingIndexingModeRegistryAndShadow = "REGISTRY_AND_SHADOW"
+)
+
+const (
+	// TopicRuleDestinationStatusEnabled is a TopicRuleDestinationStatus enum value
+	TopicRuleDestinationStatusEnabled = "ENABLED"
+
+	// TopicRuleDestinationStatusInProgress is a TopicRuleDestinationStatus enum value
+	TopicRuleDestinationStatusInProgress = "IN_PROGRESS"
+
+	// TopicRuleDestinationStatusDisabled is a TopicRuleDestinationStatus enum value
+	TopicRuleDestinationStatusDisabled = "DISABLED"
+
+	// TopicRuleDestinationStatusError is a TopicRuleDestinationStatus enum value
+	TopicRuleDestinationStatusError = "ERROR"
 )
 
 const (

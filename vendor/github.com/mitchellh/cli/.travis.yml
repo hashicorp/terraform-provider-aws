@@ -3,11 +3,12 @@ sudo: false
 language: go
 
 go:
-  - 1.8
-  - tip
+  - "1.8"
+  - "1.9"
+  - "1.10"
+
+branches:
+  only:
+    - master
 
 script: make updatedeps test testrace
-
-matrix:
-  allow_failures:
-    - go: tip

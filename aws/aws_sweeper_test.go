@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestMain(m *testing.M) {
@@ -20,7 +20,8 @@ func sharedClientForRegion(region string) (interface{}, error) {
 	}
 
 	conf := &Config{
-		Region: region,
+		MaxRetries: 5,
+		Region:     region,
 	}
 
 	// configures a default client for the region, using the above env vars

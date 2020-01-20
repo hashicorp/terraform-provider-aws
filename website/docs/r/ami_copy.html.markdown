@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ami_copy"
-sidebar_current: "docs-aws-resource-ami-copy"
 description: |-
   Duplicates an existing Amazon Machine Image (AMI)
 ---
 
-# aws_ami_copy
+# Resource: aws_ami_copy
 
 The "AMI copy" resource allows duplication of an Amazon Machine Image (AMI),
 including cross-region copies.

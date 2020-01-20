@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_eip"
-sidebar_current: "docs-aws-resource-eip"
 description: |-
   Provides an Elastic IP resource.
 ---
 
-# aws_eip
+# Resource: aws_eip
 
 Provides an Elastic IP resource.
 
@@ -117,12 +117,16 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Contains the EIP allocation ID.
 * `private_ip` - Contains the private IP address (if in VPC).
+* `private_dns` - The Private DNS associated with the Elastic IP address (if in VPC).
 * `associate_with_private_ip` - Contains the user specified private IP address
 (if in VPC).
 * `public_ip` - Contains the public IP address.
+* `public_dns` - Public DNS associated with the Elastic IP address.
 * `instance` - Contains the ID of the attached instance.
 * `network_interface` - Contains the ID of the attached network interface.
 * `public_ipv4_pool` - EC2 IPv4 address pool identifier (if in VPC).
+
+~> **Note:** The resource computes the `public_dns` and `private_dns` attributes according to the [VPC DNS Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames) as they are not available with the EC2 API.
 
 ## Timeouts
 `aws_eip` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:

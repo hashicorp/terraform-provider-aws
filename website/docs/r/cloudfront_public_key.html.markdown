@@ -1,12 +1,12 @@
 ---
+subcategory: "CloudFront"
 layout: "aws"
-page_title: "AWS: cloudfront_public_key"
-sidebar_current: "docs-aws-resource-cloudfront-public-key"
+page_title: "AWS: aws_cloudfront_public_key"
 description: |-
   Provides a CloudFront Public Key which you add to CloudFront to use with features like field-level encryption.
 ---
 
-# aws_cloudfront_public_key
+# Resource: aws_cloudfront_public_key
 
 ## Example Usage
 

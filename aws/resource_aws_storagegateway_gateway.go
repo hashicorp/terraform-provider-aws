@@ -9,10 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform/helper/customdiff"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsStorageGatewayGateway() *schema.Resource {
@@ -122,6 +123,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 					"IBM-ULT3580-TD5",
 				}, false),
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -153,9 +155,10 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 			return fmt.Errorf("error creating HTTP request: %s", err)
 		}
 
+		var response *http.Response
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
-			response, err := client.Do(request)
+			response, err = client.Do(request)
 			if err != nil {
 				if err, ok := err.(net.Error); ok {
 					errMessage := fmt.Errorf("error making HTTP request: %s", err)
@@ -164,24 +167,26 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 				}
 				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %s", err))
 			}
-
-			log.Printf("[DEBUG] Received HTTP response: %#v", response)
-			if response.StatusCode != 302 {
-				return resource.NonRetryableError(fmt.Errorf("expected HTTP status code 302, received: %d", response.StatusCode))
-			}
-
-			redirectURL, err := response.Location()
-			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("error extracting HTTP Location header: %s", err))
-			}
-
-			activationKey = redirectURL.Query().Get("activationKey")
-
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			response, err = client.Do(request)
+		}
 		if err != nil {
 			return fmt.Errorf("error retrieving activation key from IP Address (%s): %s", gatewayIpAddress, err)
 		}
+
+		log.Printf("[DEBUG] Received HTTP response: %#v", response)
+		if response.StatusCode != 302 {
+			return fmt.Errorf("expected HTTP status code 302, received: %d", response.StatusCode)
+		}
+
+		redirectURL, err := response.Location()
+		if err != nil {
+			return fmt.Errorf("error extracting HTTP Location header: %s", err)
+		}
+
+		activationKey = redirectURL.Query().Get("activationKey")
 		if activationKey == "" {
 			return fmt.Errorf("empty activationKey received from IP Address: %s", gatewayIpAddress)
 		}
@@ -193,6 +198,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		GatewayName:     aws.String(d.Get("gateway_name").(string)),
 		GatewayTimezone: aws.String(d.Get("gateway_timezone").(string)),
 		GatewayType:     aws.String(d.Get("gateway_type").(string)),
+		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
 	}
 
 	if v, ok := d.GetOk("medium_changer_type"); ok {
@@ -212,10 +218,11 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(output.GatewayARN))
 
 	// Gateway activations can take a few minutes
+	gwInput := &storagegateway.DescribeGatewayInformationInput{
+		GatewayARN: aws.String(d.Id()),
+	}
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err := conn.DescribeGatewayInformation(&storagegateway.DescribeGatewayInformationInput{
-			GatewayARN: aws.String(d.Id()),
-		})
+		_, err := conn.DescribeGatewayInformation(gwInput)
 		if err != nil {
 			if isAWSErr(err, storagegateway.ErrorCodeGatewayNotConnected, "") {
 				return resource.RetryableError(err)
@@ -228,6 +235,9 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeGatewayInformation(gwInput)
+	}
 	if err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway Gateway activation: %s", err)
 	}
@@ -281,6 +291,10 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 			return nil
 		}
 		return fmt.Errorf("error reading Storage Gateway Gateway: %s", err)
+	}
+
+	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(output.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	smbSettingsInput := &storagegateway.DescribeSMBSettingsInput{
@@ -375,6 +389,13 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		_, err := conn.UpdateGatewayInformation(input)
 		if err != nil {
 			return fmt.Errorf("error updating Storage Gateway Gateway: %s", err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 

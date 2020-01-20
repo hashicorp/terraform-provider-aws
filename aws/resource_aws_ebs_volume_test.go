@@ -3,16 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
-	"testing"
-
 	"regexp"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -34,23 +32,10 @@ func testSweepEbsVolumes(region string) error {
 
 	err = conn.DescribeVolumesPages(&ec2.DescribeVolumesInput{}, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
 		for _, volume := range page.Volumes {
-			var nameTag string
 			id := aws.StringValue(volume.VolumeId)
 
 			if aws.StringValue(volume.State) != ec2.VolumeStateAvailable {
 				log.Printf("[INFO] Skipping unavailable EC2 EBS Volume: %s", id)
-				continue
-			}
-
-			for _, volumeTag := range volume.Tags {
-				if aws.StringValue(volumeTag.Key) == "Name" {
-					nameTag = aws.StringValue(volumeTag.Value)
-					break
-				}
-			}
-
-			if !strings.HasPrefix(nameTag, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping EC2 EBS Volume: %s", id)
 				continue
 			}
 
@@ -89,6 +74,7 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
@@ -96,8 +82,8 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 					testAccCheckVolumeExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckNoResourceAttr(resourceName, "iops"),
-					resource.TestCheckNoResourceAttr(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
@@ -120,6 +106,7 @@ func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsAttachedVolumeConfig,
@@ -152,6 +139,7 @@ func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
@@ -184,6 +172,7 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
@@ -216,6 +205,7 @@ func TestAccAWSEBSVolume_updateIops(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigWithIops,
@@ -251,6 +241,7 @@ func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -274,8 +265,9 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigWithNoIops,
@@ -284,10 +276,9 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"iops"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -301,6 +292,7 @@ func TestAccAWSEBSVolume_withTags(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigWithTags,
@@ -317,6 +309,38 @@ func TestAccAWSEBSVolume_withTags(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckVolumeDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_ebs_volume" {
+			continue
+		}
+
+		request := &ec2.DescribeVolumesInput{
+			VolumeIds: []*string{aws.String(rs.Primary.ID)},
+		}
+
+		resp, err := conn.DescribeVolumes(request)
+
+		if isAWSErr(err, "InvalidVolume.NotFound", "") {
+			continue
+		}
+
+		if err == nil {
+			for _, volume := range resp.Volumes {
+				if aws.StringValue(volume.VolumeId) == rs.Primary.ID {
+					return fmt.Errorf("Volume still exists")
+				}
+			}
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {

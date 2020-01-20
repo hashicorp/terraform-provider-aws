@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 const testAccGameliftFleetPrefix = "tf_acc_fleet_"
@@ -50,10 +49,6 @@ func testSweepGameliftFleets(region string) error {
 		log.Printf("[INFO] Found %d Gamelift Fleets", len(out.FleetAttributes))
 
 		for _, attr := range out.FleetAttributes {
-			if !strings.HasPrefix(*attr.Name, testAccGameliftFleetPrefix) {
-				continue
-			}
-
 			log.Printf("[INFO] Deleting Gamelift Fleet %q", *attr.FleetId)
 			err := resource.Retry(60*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{
@@ -251,6 +246,11 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
+
+	if isResourceNotFoundError(err) {
+		t.Skip(err)
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -264,7 +264,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 	params := g.Parameters(33435)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
@@ -325,6 +325,11 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
+
+	if isResourceNotFoundError(err) {
+		t.Skip(err)
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -341,7 +346,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
@@ -496,79 +501,89 @@ func testAccCheckAWSGameliftFleetDestroy(s *terraform.State) error {
 func testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
-  build_id = "${aws_gamelift_build.test.id}"
+  build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
-  name = "%s"
+  name              = "%s"
+
   runtime_configuration {
     server_process {
       concurrent_executions = 1
-      launch_path = %q
-      parameters = "%s"
+      launch_path           = %q
+      parameters            = "%s"
     }
   }
 }
+
 %s
+
 `, fleetName, launchPath, params, testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
 }
 
 func testAccAWSGameliftFleetBasicUpdatedConfig(desc, fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
-  build_id = "${aws_gamelift_build.test.id}"
-  ec2_instance_type = "c4.large"
-  description = "%s"
-  name = "%s"
-  metric_groups = ["UpdatedGroup"]
+  build_id                           = "${aws_gamelift_build.test.id}"
+  ec2_instance_type                  = "c4.large"
+  description                        = "%s"
+  name                               = "%s"
+  metric_groups                      = ["UpdatedGroup"]
   new_game_session_protection_policy = "FullProtection"
+
   resource_creation_limit_policy {
     new_game_sessions_per_creator = 2
-    policy_period_in_minutes = 15
+    policy_period_in_minutes      = 15
   }
+
   runtime_configuration {
     server_process {
       concurrent_executions = 1
-      launch_path = %q
-      parameters = "%s"
+      launch_path           = %q
+      parameters            = "%s"
     }
   }
 }
+
 %s
+
 `, desc, fleetName, launchPath, params, testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
 }
 
 func testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
-  build_id = "${aws_gamelift_build.test.id}"
+  build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
-  name = "%s"
-  description = "%s"
+  name              = "%s"
+  description       = "%s"
+  instance_role_arn = "${aws_iam_role.test.arn}"
 
   ec2_inbound_permission {
     from_port = 8080
-    ip_range = "8.8.8.8/32"
-    protocol = "TCP"
-    to_port = 8080
-  }
-  ec2_inbound_permission {
-    from_port = 8443
-    ip_range = "8.8.0.0/16"
-    protocol = "TCP"
-    to_port = 8443
-  }
-  ec2_inbound_permission {
-    from_port = 60000
-    ip_range = "8.8.8.8/32"
-    protocol = "UDP"
-    to_port = 60000
+    ip_range  = "8.8.8.8/32"
+    protocol  = "TCP"
+    to_port   = 8080
   }
 
-  metric_groups = ["TerraformAccTest"]
+  ec2_inbound_permission {
+    from_port = 8443
+    ip_range  = "8.8.0.0/16"
+    protocol  = "TCP"
+    to_port   = 8443
+  }
+
+  ec2_inbound_permission {
+    from_port = 60000
+    ip_range  = "8.8.8.8/32"
+    protocol  = "UDP"
+    to_port   = 60000
+  }
+
+  metric_groups                      = ["TerraformAccTest"]
   new_game_session_protection_policy = "FullProtection"
-  
+
   resource_creation_limit_policy {
     new_game_sessions_per_creator = 4
-    policy_period_in_minutes = 25
+    policy_period_in_minutes      = 25
   }
 
   runtime_configuration {
@@ -577,49 +592,56 @@ resource "aws_gamelift_fleet" "test" {
 
     server_process {
       concurrent_executions = 1
-      launch_path = %q
-      parameters = "%s"
+      launch_path           = %q
+      parameters            = "%s"
     }
   }
 }
+
 %s
+
+%s
+
 `, fleetName, desc, launchPath, params,
-		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
+		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn), testAccAWSGameLiftFleetIAMRole(buildName))
 }
 
 func testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
-  build_id = "${aws_gamelift_build.test.id}"
+  build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
-  name = "%s"
-  description = "%s"
+  name              = "%s"
+  description       = "%s"
+  instance_role_arn = "${aws_iam_role.test.arn}"
 
   ec2_inbound_permission {
     from_port = 8888
-    ip_range = "8.8.8.8/32"
-    protocol = "TCP"
-    to_port = 8888
-  }
-  ec2_inbound_permission {
-    from_port = 8443
-    ip_range = "8.4.0.0/16"
-    protocol = "TCP"
-    to_port = 8443
-  }
-  ec2_inbound_permission {
-    from_port = 60000
-    ip_range = "8.8.8.8/32"
-    protocol = "UDP"
-    to_port = 60000
+    ip_range  = "8.8.8.8/32"
+    protocol  = "TCP"
+    to_port   = 8888
   }
 
-  metric_groups = ["TerraformAccTest"]
+  ec2_inbound_permission {
+    from_port = 8443
+    ip_range  = "8.4.0.0/16"
+    protocol  = "TCP"
+    to_port   = 8443
+  }
+
+  ec2_inbound_permission {
+    from_port = 60000
+    ip_range  = "8.8.8.8/32"
+    protocol  = "UDP"
+    to_port   = 60000
+  }
+
+  metric_groups                      = ["TerraformAccTest"]
   new_game_session_protection_policy = "FullProtection"
-  
+
   resource_creation_limit_policy {
     new_game_sessions_per_creator = 4
-    policy_period_in_minutes = 25
+    policy_period_in_minutes      = 25
   }
 
   runtime_configuration {
@@ -628,25 +650,85 @@ resource "aws_gamelift_fleet" "test" {
 
     server_process {
       concurrent_executions = 1
-      launch_path = %q
-      parameters = "%s"
+      launch_path           = %q
+      parameters            = "%s"
     }
   }
 }
+
 %s
+
+%s
+
 `, fleetName, desc, launchPath, params,
-		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
+		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn), testAccAWSGameLiftFleetIAMRole(buildName))
 }
 
 func testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn string) string {
-	return fmt.Sprintf(`resource "aws_gamelift_build" "test" {
-  name = "%s"
+	return fmt.Sprintf(`
+resource "aws_gamelift_build" "test" {
+  name             = "%s"
   operating_system = "WINDOWS_2012"
+
   storage_location {
-    bucket = "%s"
-    key = "%s"
+    bucket   = "%s"
+    key      = "%s"
     role_arn = "%s"
   }
 }
 `, buildName, bucketName, key, roleArn)
+}
+
+func testAccAWSGameLiftFleetIAMRole(rName string) string {
+	return fmt.Sprintf(`
+	resource "aws_iam_role" "test" {
+		name = "test-role-%[1]s"
+
+		assume_role_policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+	{
+		"Sid": "",
+		"Effect": "Allow",
+		"Principal": {
+			"Service": [
+			"gamelift.amazonaws.com"
+			]
+		},
+		"Action": [
+			"sts:AssumeRole"
+			]
+		}
+	]
+}
+EOF
+	  }
+
+	  resource "aws_iam_policy" "test" {
+		name        = "test-policy-%[1]s"
+		path        = "/"
+		description = "GameLift Fleet PassRole Policy"
+
+		policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [{
+	"Effect": "Allow",
+	"Action": [
+		"iam:PassRole",
+		"sts:AssumeRole"
+		],
+	"Resource": ["*"]
+}]
+}
+EOF
+	  }
+
+	  resource "aws_iam_policy_attachment" "test-attach" {
+		name       = "test-attachment-%[1]s"
+		roles      = ["${aws_iam_role.test.name}"]
+		policy_arn = "${aws_iam_policy.test.arn}"
+	  }
+`, rName)
 }

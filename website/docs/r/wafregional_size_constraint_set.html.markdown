@@ -1,12 +1,12 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
-page_title: "AWS: wafregional_size_constraint_set"
-sidebar_current: "docs-aws-resource-wafregional-size-constraint-set"
+page_title: "AWS: aws_wafregional_size_constraint_set"
 description: |-
   Provides an AWS WAF Regional Size Constraint Set resource for use with ALB.
 ---
 
-# aws_wafregional_size_constraint_set
+# Resource: aws_wafregional_size_constraint_set
 
 Provides a WAF Regional Size Constraint Set Resource for use with Application Load Balancer.
 
@@ -70,3 +70,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Size Constraint Set.
+
+## Import
+
+WAF Size Constraint Set can be imported using the id, e.g.
+
+```
+$ terraform import aws_wafregional_size_constraint_set.size_constraint_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

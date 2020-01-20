@@ -10,6 +10,12 @@ const (
 	// The resource with the name requested already exists.
 	ErrCodeAlreadyExistsException = "AlreadyExistsException"
 
+	// ErrCodeCFNRegistryException for service response error code
+	// "CFNRegistryException".
+	//
+	// An error occurred during a CloudFormation registry operation.
+	ErrCodeCFNRegistryException = "CFNRegistryException"
+
 	// ErrCodeChangeSetNotFoundException for service response error code
 	// "ChangeSetNotFound".
 	//
@@ -44,12 +50,20 @@ const (
 	// The specified operation isn't valid.
 	ErrCodeInvalidOperationException = "InvalidOperationException"
 
+	// ErrCodeInvalidStateTransitionException for service response error code
+	// "InvalidStateTransition".
+	//
+	// Error reserved for use by the CloudFormation CLI (https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/what-is-cloudformation-cli.html).
+	// CloudFormation does not return this error to users.
+	ErrCodeInvalidStateTransitionException = "InvalidStateTransition"
+
 	// ErrCodeLimitExceededException for service response error code
 	// "LimitExceededException".
 	//
 	// The quota for the resource has already been reached.
 	//
-	// For information on stack set limitations, see Limitations of StackSets (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-limitations.html).
+	// For information on resource and stack limitations, see Limits (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html)
+	// in the AWS CloudFormation User Guide.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
 	// ErrCodeNameAlreadyExistsException for service response error code
@@ -76,6 +90,13 @@ const (
 	//
 	// The specified ID refers to an operation that doesn't exist.
 	ErrCodeOperationNotFoundException = "OperationNotFoundException"
+
+	// ErrCodeOperationStatusCheckFailedException for service response error code
+	// "ConditionalCheckFailed".
+	//
+	// Error reserved for use by the CloudFormation CLI (https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/what-is-cloudformation-cli.html).
+	// CloudFormation does not return this error to users.
+	ErrCodeOperationStatusCheckFailedException = "ConditionalCheckFailed"
 
 	// ErrCodeStackInstanceNotFoundException for service response error code
 	// "StackInstanceNotFoundException".
@@ -109,4 +130,10 @@ const (
 	//
 	// A client request token already exists.
 	ErrCodeTokenAlreadyExistsException = "TokenAlreadyExistsException"
+
+	// ErrCodeTypeNotFoundException for service response error code
+	// "TypeNotFoundException".
+	//
+	// The specified type does not exist in the CloudFormation registry.
+	ErrCodeTypeNotFoundException = "TypeNotFoundException"
 )

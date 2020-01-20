@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
@@ -17,7 +17,7 @@ func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDynamodbGlobalTable(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDynamoDbGlobalTableDestroy,
 		Steps: []resource.TestStep{
@@ -43,6 +43,11 @@ func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 						regexp.MustCompile("^arn:aws:dynamodb::[0-9]{12}:global-table/[a-z0-9-]+$")),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -52,7 +57,7 @@ func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDynamodbGlobalTable(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDynamoDbGlobalTableDestroy,
 		Steps: []resource.TestStep{
@@ -66,6 +71,11 @@ func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "arn",
 						regexp.MustCompile("^arn:aws:dynamodb::[0-9]{12}:global-table/[a-z0-9-]+$")),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName),
@@ -84,28 +94,6 @@ func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.2896117718.region_name", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceName, "replica.3965887460.region_name", "us-west-2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDynamoDbGlobalTable_import(t *testing.T) {
-	resourceName := "aws_dynamodb_global_table.test"
-	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSesTemplateDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDynamoDbGlobalTableConfig_basic(tableName),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -148,11 +136,25 @@ func testAccCheckAwsDynamoDbGlobalTableExists(name string) resource.TestCheckFun
 	}
 }
 
+func testAccPreCheckAWSDynamodbGlobalTable(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+
+	input := &dynamodb.ListGlobalTablesInput{}
+
+	_, err := conn.ListGlobalTables(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccDynamoDbGlobalTableConfig_basic(tableName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {
-  current = true
-}
+data "aws_region" "current" {}
 
 resource "aws_dynamodb_table" "test" {
   hash_key         = "myAttribute"
@@ -243,7 +245,8 @@ resource "aws_dynamodb_table" "us-west-2" {
     name = "myAttribute"
     type = "S"
   }
-}`, tableName, tableName, tableName)
+}
+`, tableName, tableName, tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string {
@@ -252,14 +255,15 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
   replica {
     region_name = "us-east-1"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string {
@@ -268,7 +272,7 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-east-2"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
@@ -279,7 +283,8 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-2"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions3(tableName string) string {
@@ -288,7 +293,7 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions3(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-west-2"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
@@ -299,7 +304,8 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-west-2"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {
@@ -310,5 +316,6 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-1"
   }
-}`, tableName)
+}
+`, tableName)
 }

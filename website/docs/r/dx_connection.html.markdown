@@ -1,12 +1,12 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_connection"
-sidebar_current: "docs-aws-resource-dx-connection"
 description: |-
   Provides a Connection of Direct Connect.
 ---
 
-# aws_dx_connection
+# Resource: aws_dx_connection
 
 Provides a Connection of Direct Connect.
 
@@ -36,6 +36,8 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the connection.
 * `arn` - The ARN of the connection.
 * `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
+* `has_logical_redundancy` - Indicates whether the connection supports a secondary BGP peer in the same address family (IPv4/IPv6).
+* `aws_device` - The Direct Connect endpoint on which the physical connection terminates.
 
 ## Import
 

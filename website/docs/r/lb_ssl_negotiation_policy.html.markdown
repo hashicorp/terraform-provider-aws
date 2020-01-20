@@ -1,12 +1,12 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_lb_ssl_negotiation_policy"
-sidebar_current: "docs-aws-resource-lb-ssl-negotiation-policy"
 description: |-
   Provides a load balancer SSL negotiation policy, which allows an ELB to control which ciphers and protocols are supported during SSL negotiations between a client and a load balancer.
 ---
 
-# aws_lb_ssl_negotiation_policy
+# Resource: aws_lb_ssl_negotiation_policy
 
 Provides a load balancer SSL negotiation policy, which allows an ELB to control the ciphers and protocols that are supported during SSL negotiations between a client and a load balancer.
 

@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsSagemakerNotebookInstance() *schema.Resource {
@@ -66,6 +67,12 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"lifecycle_config_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -91,9 +98,12 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 		createOpts.KmsKeyId = aws.String(k.(string))
 	}
 
+	if l, ok := d.GetOk("lifecycle_config_name"); ok {
+		createOpts.LifecycleConfigName = aws.String(l.(string))
+	}
+
 	if v, ok := d.GetOk("tags"); ok {
-		tagsIn := v.(map[string]interface{})
-		createOpts.Tags = tagsFromMapSagemaker(tagsIn)
+		createOpts.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SagemakerTags()
 	}
 
 	log.Printf("[DEBUG] sagemaker notebook instance create config: %#v", *createOpts)
@@ -160,19 +170,23 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error setting kms_key_id for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("lifecycle_config_name", notebookInstance.NotebookInstanceLifecycleConfigName); err != nil {
+		return fmt.Errorf("error setting lifecycle_config_name for sagemaker notebook instance (%s): %s", d.Id(), err)
+	}
+
 	if err := d.Set("arn", notebookInstance.NotebookInstanceArn); err != nil {
 		return fmt.Errorf("error setting arn for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
-	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
-		ResourceArn: notebookInstance.NotebookInstanceArn,
-	})
+
+	tags, err := keyvaluetags.SagemakerListTags(conn, aws.StringValue(notebookInstance.NotebookInstanceArn))
 	if err != nil {
-		return fmt.Errorf("error listing tags for sagemaker notebook instance (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for Sagemaker Notebook Instance (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags)); err != nil {
-		return fmt.Errorf("error setting tags for notebook instance (%s): %s", d.Id(), err)
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
+
 	return nil
 }
 
@@ -181,8 +195,12 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 
 	d.Partial(true)
 
-	if err := setSagemakerTags(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Sagemaker Notebook Instance (%s) tags: %s", d.Id(), err)
+		}
 	}
 	d.SetPartial("tags")
 
@@ -234,33 +252,42 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 			startOpts := &sagemaker.StartNotebookInstanceInput{
 				NotebookInstanceName: aws.String(d.Id()),
 			}
-
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{
+					sagemaker.NotebookInstanceStatusStopped,
+				},
+				Target:  []string{sagemaker.NotebookInstanceStatusInService, sagemaker.NotebookInstanceStatusPending},
+				Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id()),
+				Timeout: 30 * time.Second,
+			}
 			// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
 			// it doesn't change we'll send another request
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-				if _, err := conn.StartNotebookInstance(startOpts); err != nil {
+				_, err := conn.StartNotebookInstance(startOpts)
+				if err != nil {
 					return resource.NonRetryableError(fmt.Errorf("error starting sagemaker notebook instance (%s): %s", d.Id(), err))
 				}
-				stateConf := &resource.StateChangeConf{
-					Pending: []string{
-						sagemaker.NotebookInstanceStatusStopped,
-					},
-					Target:  []string{sagemaker.NotebookInstanceStatusInService, sagemaker.NotebookInstanceStatusPending},
-					Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id()),
-					Timeout: 30 * time.Second,
-				}
-				_, err := stateConf.WaitForState()
+
+				_, err = stateConf.WaitForState()
 				if err != nil {
 					return resource.RetryableError(fmt.Errorf("error waiting for sagemaker notebook instance (%s) to start: %s", d.Id(), err))
 				}
 
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.StartNotebookInstance(startOpts)
+				if err != nil {
+					return fmt.Errorf("error starting sagemaker notebook instance (%s): %s", d.Id(), err)
+				}
+
+				_, err = stateConf.WaitForState()
+			}
 			if err != nil {
-				return err
+				return fmt.Errorf("Error waiting for sagemaker notebook instance to start: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf = &resource.StateChangeConf{
 				Pending: []string{
 					sagemaker.NotebookInstanceStatusUpdating,
 					sagemaker.NotebookInstanceStatusPending,

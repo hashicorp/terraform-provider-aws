@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsEip_Filter(t *testing.T) {
@@ -21,6 +21,7 @@ func TestAccDataSourceAwsEip_Filter(t *testing.T) {
 				Config: testAccDataSourceAwsEipConfigFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
 			},
@@ -40,6 +41,7 @@ func TestAccDataSourceAwsEip_Id(t *testing.T) {
 				Config: testAccDataSourceAwsEipConfigId,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
 			},
@@ -61,6 +63,7 @@ func TestAccDataSourceAwsEip_PublicIP_EC2Classic(t *testing.T) {
 				Config: testAccDataSourceAwsEipConfigPublicIpEc2Classic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
 			},
@@ -80,6 +83,7 @@ func TestAccDataSourceAwsEip_PublicIP_VPC(t *testing.T) {
 				Config: testAccDataSourceAwsEipConfigPublicIpVpc,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "domain", resourceName, "domain"),
 				),
@@ -101,6 +105,7 @@ func TestAccDataSourceAwsEip_Tags(t *testing.T) {
 				Config: testAccDataSourceAwsEipConfigTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
 			},
@@ -121,6 +126,7 @@ func TestAccDataSourceAwsEip_NetworkInterface(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_interface_id", resourceName, "network_interface"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "private_dns", resourceName, "private_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "private_ip", resourceName, "private_ip"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "domain", resourceName, "domain"),
 				),
@@ -250,11 +256,18 @@ data "aws_eip" "test" {
 `
 
 const testAccDataSourceAwsEipConfigInstance = `
+data "aws_availability_zones" "available" {
+  # Error launching source instance: Unsupported: Your requested instance type (t2.micro) is not supported in your requested Availability Zone (us-west-2d).
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.2.0.0/16"
 }
 
 resource "aws_subnet" "test" {
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.2.0.0/24"
 }

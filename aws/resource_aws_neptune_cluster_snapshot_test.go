@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSNeptuneClusterSnapshot_basic(t *testing.T) {
@@ -113,8 +113,8 @@ func testAccCheckNeptuneClusterSnapshotExists(resourceName string, dbClusterSnap
 func testAccAwsNeptuneClusterSnapshotConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier   = %q
-  skip_final_snapshot  = true
+  cluster_identifier  = %q
+  skip_final_snapshot = true
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {

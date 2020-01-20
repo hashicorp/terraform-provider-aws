@@ -1,12 +1,12 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_instance"
-sidebar_current: "docs-aws-resource-opsworks-instance"
 description: |-
   Provides an OpsWorks instance resource.
 ---
 
-# aws_opsworks_instance
+# Resource: aws_opsworks_instance
 
 Provides an OpsWorks instance resource.
 

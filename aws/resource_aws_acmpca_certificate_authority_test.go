@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -44,7 +44,8 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 		arn := aws.StringValue(certificateAuthority.Arn)
 		log.Printf("[INFO] Deleting ACMPCA Certificate Authority: %s", arn)
 		input := &acmpca.DeleteCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn:     aws.String(arn),
+			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
 		}
 
 		_, err := conn.DeleteCertificateAuthority(input)
@@ -72,7 +73,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
 				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:acm-pca:[^:]+:[^:]+:certificate-authority/.+$`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.key_algorithm", "RSA_4096"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.signing_algorithm", "SHA512WITHRSA"),
@@ -82,8 +83,9 @@ func TestAccAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
-					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
+					testAccCheckResourceAttrRfc3339(resourceName, "not_after"),
+					testAccCheckResourceAttrRfc3339(resourceName, "not_before"),
+					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
@@ -134,6 +136,9 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 		},
 	})
@@ -167,6 +172,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 			// Test updating revocation configuration
 			{
@@ -249,6 +257,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 			// Test disabling revocation configuration
 			{
@@ -315,6 +326,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 			// Test updating revocation configuration
 			{
@@ -388,6 +402,37 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAwsAcmpcaCertificateAuthority_Type_Root(t *testing.T) {
+	var certificateAuthority acmpca.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAcmpcaCertificateAuthorityConfigType(acmpca.CertificateAuthorityTypeRoot),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 		},
 	})
@@ -473,7 +518,8 @@ func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.Certificat
 func testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
-  enabled = %t
+  enabled                         = %[1]t
+  permanent_deletion_time_in_days = 7
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -505,6 +551,8 @@ func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfi
 %s
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -533,6 +581,8 @@ func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfi
 %s
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -558,6 +608,8 @@ func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfi
 %s
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -615,6 +667,8 @@ resource "aws_s3_bucket_policy" "test" {
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Single = `
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -632,6 +686,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_SingleUpdated = `
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -649,6 +705,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Multiple = `
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -664,3 +722,21 @@ resource "aws_acmpca_certificate_authority" "test" {
   }
 }
 `
+
+func testAccAwsAcmpcaCertificateAuthorityConfigType(certificateAuthorityType string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = %[1]q
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "terraformtesting.com"
+    }
+  }
+}
+`, certificateAuthorityType)
+}

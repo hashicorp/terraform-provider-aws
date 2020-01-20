@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_rest_api"
-sidebar_current: "docs-aws-resource-api-gateway-rest-api"
 description: |-
   Provides an API Gateway REST API.
 ---
 
-# aws_api_gateway_rest_api
+# Resource: aws_api_gateway_rest_api
 
 Provides an API Gateway REST API.
 
@@ -46,6 +46,7 @@ The following arguments are supported:
 * `body_base_path` - (Optional) Together with OpenAPI specification in `body`, instructs how to interpret the `basePath` field. Defined below.
 * `policy` - (Optional) JSON formatted policy document that controls access to the API Gateway. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html)
 * `api_key_source` - (Optional) The source of the API key for requests. Valid values are HEADER (default) and AUTHORIZER.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 __Note__: If the `body` argument is provided, the OpenAPI specification will be used to configure the resources, methods and integrations for the Rest API. If this argument is provided, the following resources should not be managed as separate ones, as updates may cause manual resource updates to be overwritten:
 
@@ -61,6 +62,7 @@ __Note__: If the `body` argument is provided, the OpenAPI specification will be 
 ### endpoint_configuration
 
 * `types` - (Required) A list of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE`, `REGIONAL` or `PRIVATE`. If unspecified, defaults to `EDGE`. Must be declared as `REGIONAL` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
+* `vpc_endpoint_ids` - (Optional) A list of VPC Endpoint Ids. It is only supported for PRIVATE endpoint type.
 
 ### body_base_path
 
@@ -76,6 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 * `execution_arn` - The execution ARN part to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn`
   when allowing API Gateway to invoke a Lambda function,
   e.g. `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j`, which can be concatenated with allowed stage, method and resource path.
+* `arn` - Amazon Resource Name (ARN)
 
 ## Import
 

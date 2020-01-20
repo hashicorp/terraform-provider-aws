@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpn_connection"
-sidebar_current: "docs-aws-resource-vpn-connection"
 description: |-
   Manages an EC2 VPN connection. These objects can be connected to customer gateways, and allow you to establish tunnels between your network and Amazon.
 ---
 
-# aws_vpn_connection
+# Resource: aws_vpn_connection
 
 Manages an EC2 VPN connection. These objects can be connected to customer gateways, and allow you to establish tunnels between your network and Amazon.
 
@@ -78,7 +78,7 @@ Other arguments:
 * `static_routes_only` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `tags` - (Optional) Tags to apply to the connection.
 * `tunnel1_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel.
-* `tunnel2_inside_cidr` - (Optional) The CIDR block of the second IP addresses for the first VPN tunnel.
+* `tunnel2_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the second VPN tunnel.
 * `tunnel1_preshared_key` - (Optional) The preshared key of the first VPN tunnel.
 * `tunnel2_preshared_key` - (Optional) The preshared key of the second VPN tunnel.
 
@@ -93,6 +93,7 @@ In addition to all arguments above, the following attributes are exported:
 * `customer_gateway_id` - The ID of the customer gateway to which the connection is attached.
 * `static_routes_only` - Whether the VPN connection uses static routes exclusively.
 * `tags` - Tags applied to the connection.
+* `transit_gateway_attachment_id` - When associated with an EC2 Transit Gateway (`transit_gateway_id` argument), the attachment ID.
 * `tunnel1_address` - The public IP address of the first VPN tunnel.
 * `tunnel1_cgw_inside_address` - The RFC 6890 link-local address of the first VPN tunnel (Customer Gateway Side).
 * `tunnel1_vgw_inside_address` - The RFC 6890 link-local address of the first VPN tunnel (VPN Gateway Side).

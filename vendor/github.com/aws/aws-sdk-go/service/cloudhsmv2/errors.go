@@ -2,6 +2,10 @@
 
 package cloudhsmv2
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCloudHsmAccessDeniedException for service response error code
@@ -36,3 +40,11 @@ const (
 	// The request was rejected because an error occurred.
 	ErrCodeCloudHsmServiceException = "CloudHsmServiceException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CloudHsmAccessDeniedException":     newErrorCloudHsmAccessDeniedException,
+	"CloudHsmInternalFailureException":  newErrorCloudHsmInternalFailureException,
+	"CloudHsmInvalidRequestException":   newErrorCloudHsmInvalidRequestException,
+	"CloudHsmResourceNotFoundException": newErrorCloudHsmResourceNotFoundException,
+	"CloudHsmServiceException":          newErrorCloudHsmServiceException,
+}

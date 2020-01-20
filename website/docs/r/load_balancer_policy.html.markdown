@@ -1,12 +1,12 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_load_balancer_policy"
-sidebar_current: "docs-aws-resource-load-balancer-policy"
 description: |-
   Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 ---
 
-# aws_load_balancer_policy
+# Resource: aws_load_balancer_policy
 
 Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 
@@ -65,6 +65,17 @@ resource "aws_load_balancer_policy" "wu-tang-ssl" {
   policy_attribute {
     name  = "Protocol-TLSv1.2"
     value = "true"
+  }
+}
+
+resource "aws_load_balancer_policy" "wu-tang-ssl-tls-1-1" {
+  load_balancer_name = "${aws_elb.wu-tang.name}"
+  policy_name        = "wu-tang-ssl"
+  policy_type_name   = "SSLNegotiationPolicyType"
+
+  policy_attribute {
+    name  = "Reference-Security-Policy"
+    value = "ELBSecurityPolicy-TLS-1-1-2017-01"
   }
 }
 

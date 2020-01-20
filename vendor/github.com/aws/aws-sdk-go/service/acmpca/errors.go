@@ -2,6 +2,10 @@
 
 package acmpca
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCertificateMismatchException for service response error code
@@ -39,9 +43,15 @@ const (
 	// ErrCodeInvalidPolicyException for service response error code
 	// "InvalidPolicyException".
 	//
-	// The S3 bucket policy is not valid. The policy must give ACM PCA rights to
-	// read from and write to the bucket and find the bucket location.
+	// The S3 bucket policy is not valid. The policy must give ACM Private CA rights
+	// to read from and write to the bucket and find the bucket location.
 	ErrCodeInvalidPolicyException = "InvalidPolicyException"
+
+	// ErrCodeInvalidRequestException for service response error code
+	// "InvalidRequestException".
+	//
+	// The request action cannot be performed or is prohibited.
+	ErrCodeInvalidRequestException = "InvalidRequestException"
 
 	// ErrCodeInvalidStateException for service response error code
 	// "InvalidStateException".
@@ -60,8 +70,8 @@ const (
 	// ErrCodeLimitExceededException for service response error code
 	// "LimitExceededException".
 	//
-	// An ACM PCA limit has been exceeded. See the exception message returned to
-	// determine the limit that was exceeded.
+	// An ACM Private CA limit has been exceeded. See the exception message returned
+	// to determine the limit that was exceeded.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
 	// ErrCodeMalformedCSRException for service response error code
@@ -75,6 +85,12 @@ const (
 	//
 	// One or more fields in the certificate are invalid.
 	ErrCodeMalformedCertificateException = "MalformedCertificateException"
+
+	// ErrCodePermissionAlreadyExistsException for service response error code
+	// "PermissionAlreadyExistsException".
+	//
+	// The designated permission has already been given to the user.
+	ErrCodePermissionAlreadyExistsException = "PermissionAlreadyExistsException"
 
 	// ErrCodeRequestAlreadyProcessedException for service response error code
 	// "RequestAlreadyProcessedException".
@@ -108,3 +124,24 @@ const (
 	// is contained in the exception message field.
 	ErrCodeTooManyTagsException = "TooManyTagsException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CertificateMismatchException":     newErrorCertificateMismatchException,
+	"ConcurrentModificationException":  newErrorConcurrentModificationException,
+	"InvalidArgsException":             newErrorInvalidArgsException,
+	"InvalidArnException":              newErrorInvalidArnException,
+	"InvalidNextTokenException":        newErrorInvalidNextTokenException,
+	"InvalidPolicyException":           newErrorInvalidPolicyException,
+	"InvalidRequestException":          newErrorInvalidRequestException,
+	"InvalidStateException":            newErrorInvalidStateException,
+	"InvalidTagException":              newErrorInvalidTagException,
+	"LimitExceededException":           newErrorLimitExceededException,
+	"MalformedCSRException":            newErrorMalformedCSRException,
+	"MalformedCertificateException":    newErrorMalformedCertificateException,
+	"PermissionAlreadyExistsException": newErrorPermissionAlreadyExistsException,
+	"RequestAlreadyProcessedException": newErrorRequestAlreadyProcessedException,
+	"RequestFailedException":           newErrorRequestFailedException,
+	"RequestInProgressException":       newErrorRequestInProgressException,
+	"ResourceNotFoundException":        newErrorResourceNotFoundException,
+	"TooManyTagsException":             newErrorTooManyTagsException,
+}

@@ -1,27 +1,27 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_topic_rule"
-sidebar_current: "docs-aws-resource-iot-topic-rule"
 description: |-
     Creates and manages an AWS IoT topic rule
 ---
 
-# aws_iot_topic_rule
+# Resource: aws_iot_topic_rule
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_iot_topic_rule" "rule" {
-  name = "MyRule"
+  name        = "MyRule"
   description = "Example rule"
-  enabled = true
-  sql = "SELECT * FROM 'topic/test'"
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
   sql_version = "2015-10-08"
 
   sns {
     message_format = "RAW"
-    role_arn = "${aws_iam_role.role.arn}"
-    target_arn = "${aws_sns_topic.mytopic.arn}"
+    role_arn       = "${aws_iam_role.role.arn}"
+    target_arn     = "${aws_sns_topic.mytopic.arn}"
   }
 }
 
@@ -30,8 +30,9 @@ resource "aws_sns_topic" "mytopic" {
 }
 
 resource "aws_iam_role" "role" {
-    name = "myrole"
-    assume_role_policy = <<EOF
+  name = "myrole"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -48,9 +49,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-    name = "mypolicy"
-    role = "${aws_iam_role.role.id}"
-    policy = <<EOF
+  name = "mypolicy"
+  role = "${aws_iam_role.role.id}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [

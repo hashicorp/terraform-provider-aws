@@ -3,21 +3,19 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const (
-	MINIMUM_VERSIONED_SCHEMA             = 2.0
 	SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT = 20
 )
 
@@ -27,6 +25,9 @@ func resourceAwsSsmDocument() *schema.Resource {
 		Read:   resourceAwsSsmDocumentRead,
 		Update: resourceAwsSsmDocumentUpdate,
 		Delete: resourceAwsSsmDocumentDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -37,6 +38,33 @@ func resourceAwsSsmDocument() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateAwsSSMName,
+			},
+			"attachments_source": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ssm.AttachmentsSourceKeyAttachmentReference,
+								ssm.AttachmentsSourceKeySourceUrl,
+								ssm.AttachmentsSourceKeyS3fileUrl,
+							}, false),
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							MinItems: 1,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 			"content": {
 				Type:     schema.TypeString,
@@ -59,6 +87,7 @@ func resourceAwsSsmDocument() *schema.Resource {
 					ssm.DocumentTypePolicy,
 					ssm.DocumentTypeAutomation,
 					ssm.DocumentTypeSession,
+					ssm.DocumentTypePackage,
 				}, false),
 			},
 			"schema_version": {
@@ -159,21 +188,34 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 		DocumentType:   aws.String(d.Get("document_type").(string)),
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		docInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
+	}
+
+	if v, ok := d.GetOk("attachments_source"); ok {
+		docInput.Attachments = expandSsmAttachmentsSources(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be created", d.Get("name").(string))
+	var resp *ssm.CreateDocumentOutput
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		resp, err := ssmconn.CreateDocument(docInput)
+		var err error
+		resp, err = ssmconn.CreateDocument(docInput)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-
-		d.SetId(*resp.DocumentDescription.Name)
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		resp, err = ssmconn.CreateDocument(docInput)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating SSM document: %s", err)
 	}
+
+	d.SetId(*resp.DocumentDescription.Name)
 
 	if v, ok := d.GetOk("permissions"); ok && v != nil {
 		if err := setDocumentPermissions(d, meta); err != nil {
@@ -181,10 +223,6 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	} else {
 		log.Printf("[DEBUG] Not setting permissions for %q", d.Id())
-	}
-
-	if err := setTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingDocument); err != nil {
-		return fmt.Errorf("error setting SSM Document tags: %s", err)
 	}
 
 	return resourceAwsSsmDocumentRead(d, meta)
@@ -195,31 +233,51 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Reading SSM Document: %s", d.Id())
 
-	docInput := &ssm.DescribeDocumentInput{
-		Name: aws.String(d.Get("name").(string)),
+	describeDocumentInput := &ssm.DescribeDocumentInput{
+		Name: aws.String(d.Id()),
 	}
 
-	resp, err := ssmconn.DescribeDocument(docInput)
+	describeDocumentOutput, err := ssmconn.DescribeDocument(describeDocumentInput)
+
+	if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+		log.Printf("[WARN] SSM Document not found so removing from state")
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if ssmErr, ok := err.(awserr.Error); ok && ssmErr.Code() == "InvalidDocument" {
-			log.Printf("[WARN] SSM Document not found so removing from state")
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error describing SSM document: %s", err)
+		return fmt.Errorf("error describing SSM Document (%s): %s", d.Id(), err)
 	}
 
-	doc := resp.Document
-	d.Set("created_date", doc.CreatedDate)
+	if describeDocumentOutput == nil || describeDocumentOutput.Document == nil {
+		return fmt.Errorf("error describing SSM Document (%s): empty result", d.Id())
+	}
+
+	getDocumentInput := &ssm.GetDocumentInput{
+		DocumentFormat:  describeDocumentOutput.Document.DocumentFormat,
+		DocumentVersion: aws.String("$LATEST"),
+		Name:            describeDocumentOutput.Document.Name,
+	}
+
+	getDocumentOutput, err := ssmconn.GetDocument(getDocumentInput)
+
+	if err != nil {
+		return fmt.Errorf("error getting SSM Document (%s): %s", d.Id(), err)
+	}
+
+	if getDocumentOutput == nil {
+		return fmt.Errorf("error getting SSM Document (%s): empty result", d.Id())
+	}
+
+	doc := describeDocumentOutput.Document
+
+	d.Set("content", getDocumentOutput.Content)
+	d.Set("created_date", aws.TimeValue(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set("description", doc.Description)
 	d.Set("schema_version", doc.SchemaVersion)
-
-	if _, ok := d.GetOk("document_type"); ok {
-		d.Set("document_type", doc.DocumentType)
-	}
-
 	d.Set("document_format", doc.DocumentFormat)
+	d.Set("document_type", doc.DocumentType)
 	d.Set("document_version", doc.DocumentVersion)
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
@@ -269,22 +327,13 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		params = append(params, param)
 	}
 
-	if len(params) == 0 {
-		params = make([]map[string]interface{}, 1)
-	}
-
 	if err := d.Set("parameter", params); err != nil {
 		return err
 	}
 
-	tagList, err := ssmconn.ListTagsForResource(&ssm.ListTagsForResourceInput{
-		ResourceId:   aws.String(d.Id()),
-		ResourceType: aws.String(ssm.ResourceTypeForTaggingDocument),
-	})
-	if err != nil {
-		return fmt.Errorf("error listing SSM Document tags for %s: %s", d.Id(), err)
+	if err := d.Set("tags", keyvaluetags.SsmKeyValueTags(doc.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
-	d.Set("tags", tagsToMapSSM(tagList.TagList))
 
 	return nil
 }
@@ -293,8 +342,10 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	if d.HasChange("tags") {
-		if err := setTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingDocument); err != nil {
-			return fmt.Errorf("error setting SSM Document tags: %s", err)
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.SsmUpdateTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingDocument, o, n); err != nil {
+			return fmt.Errorf("error updating SSM Document (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -308,15 +359,6 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if !d.HasChange("content") {
 		return nil
-	}
-
-	if schemaVersion, ok := d.GetOk("schemaVersion"); ok {
-		schemaNumber, _ := strconv.ParseFloat(schemaVersion.(string), 64)
-
-		if schemaNumber < MINIMUM_VERSIONED_SCHEMA {
-			log.Printf("[DEBUG] Skipping document update because document version is not 2.0 %q", d.Id())
-			return nil
-		}
 	}
 
 	if err := updateAwsSSMDocument(d, meta); err != nil {
@@ -344,32 +386,59 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
+	input := &ssm.DescribeDocumentInput{
+		Name: aws.String(d.Get("name").(string)),
+	}
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be deleted", d.Get("name").(string))
 	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := ssmconn.DescribeDocument(&ssm.DescribeDocumentInput{
-			Name: aws.String(d.Get("name").(string)),
-		})
+		_, err := ssmconn.DescribeDocument(input)
+
+		if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+			return nil
+		}
 
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if !ok {
-				return resource.NonRetryableError(err)
-			}
-
-			if awsErr.Code() == "InvalidDocument" {
-				return nil
-			}
-
 			return resource.NonRetryableError(err)
 		}
 
 		return resource.RetryableError(fmt.Errorf("SSM Document (%s) still exists", d.Id()))
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = ssmconn.DescribeDocument(input)
+	}
+	if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("error waiting for SSM Document (%s) deletion: %s", d.Id(), err)
 	}
-
 	return nil
+}
+
+func expandSsmAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
+	if len(a) == 0 {
+		return nil
+	}
+
+	results := make([]*ssm.AttachmentsSource, 0)
+	for _, raw := range a {
+		at := raw.(map[string]interface{})
+		s := &ssm.AttachmentsSource{}
+		if val, ok := at["key"]; ok {
+			s.Key = aws.String(val.(string))
+		}
+		if val, ok := at["name"]; ok && val != "" {
+			s.Name = aws.String(val.(string))
+		}
+		if val, ok := at["values"]; ok {
+			s.Values = expandStringList(val.([]interface{}))
+		}
+
+		results = append(results, s)
+	}
+	return results
+
 }
 
 func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
@@ -558,6 +627,10 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 		Content:         aws.String(d.Get("content").(string)),
 		DocumentFormat:  aws.String(d.Get("document_format").(string)),
 		DocumentVersion: aws.String(d.Get("default_version").(string)),
+	}
+
+	if d.HasChange("attachments_source") {
+		updateDocInput.Attachments = expandSsmAttachmentsSources(d.Get("attachments_source").([]interface{}))
 	}
 
 	newDefaultVersion := d.Get("default_version").(string)

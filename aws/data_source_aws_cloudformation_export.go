@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsCloudFormationExport() *schema.Resource {
@@ -51,7 +51,7 @@ func dataSourceAwsCloudFormationExportRead(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return fmt.Errorf("Failed listing CloudFormation exports: %s", err)
 	}
-	if "" == value {
+	if value == "" {
 		return fmt.Errorf("%s was not found in CloudFormation Exports for region %s", name, region)
 	}
 	return nil

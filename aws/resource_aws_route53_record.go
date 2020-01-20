@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -83,12 +83,6 @@ func resourceAwsRoute53Record() *schema.Resource {
 				ConflictsWith: []string{"alias"},
 			},
 
-			"weight": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Removed:  "Now implemented as weighted_routing_policy; Please see https://www.terraform.io/docs/providers/aws/r/route53_record.html",
-			},
-
 			"set_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -101,8 +95,9 @@ func resourceAwsRoute53Record() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"zone_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 
 						"name": {
@@ -110,8 +105,9 @@ func resourceAwsRoute53Record() *schema.Resource {
 							Required:  true,
 							StateFunc: normalizeAwsAliasName,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return strings.ToLower(old) == strings.ToLower(new)
+								return strings.EqualFold(old, new)
 							},
+							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
 
 						"evaluate_target_health": {
@@ -121,12 +117,6 @@ func resourceAwsRoute53Record() *schema.Resource {
 					},
 				},
 				Set: resourceAwsRoute53AliasRecordHash,
-			},
-
-			"failover": { // PRIMARY | SECONDARY
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Now implemented as failover_routing_policy; see docs",
 			},
 
 			"failover_routing_policy": {
@@ -247,7 +237,7 @@ func resourceAwsRoute53Record() *schema.Resource {
 			"allow_overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
 			},
 		},
 	}
@@ -262,7 +252,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if !d.HasChange("type") && !d.HasChange("set_identifier") {
 		// If neither type nor set_identifier changed we use UPSERT,
-		// for resouce update here we simply fall through to
+		// for resource update here we simply fall through to
 		// our resource create function.
 		return resourceAwsRoute53RecordCreate(d, meta)
 	}
@@ -288,6 +278,18 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 	oldRec := &route53.ResourceRecordSet{
 		Name: aws.String(en),
 		Type: aws.String(typeo.(string)),
+	}
+
+	// If the old record had a weighted_routing_policy we need to pass that in
+	// here because otherwise the API will give us an error.
+	if v, _ := d.GetChange("weighted_routing_policy"); v != nil {
+		if o, ok := v.([]interface{}); ok {
+			if len(o) == 1 {
+				if v, ok := o[0].(map[string]interface{}); ok {
+					oldRec.Weight = aws.Int64(int64(v["weight"].(int)))
+				}
+			}
+		}
 	}
 
 	if v, _ := d.GetChange("ttl"); v.(int) != 0 {

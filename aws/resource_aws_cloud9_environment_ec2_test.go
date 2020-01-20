@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
@@ -18,11 +18,10 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	envName := fmt.Sprintf("tf_acc_env_basic_%s", rString)
 	uEnvName := fmt.Sprintf("tf_acc_env_basic_updated_%s", rString)
-
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloud9(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
 		Steps: []resource.TestStep{
@@ -35,6 +34,12 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:cloud9:[^:]+:[^:]+:environment:.+$`)),
 					resource.TestMatchResourceAttr(resourceName, "owner_arn", regexp.MustCompile(`^arn:`)),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"instance_type"},
 			},
 			{
 				Config: testAccAWSCloud9EnvironmentEc2Config(uEnvName),
@@ -59,11 +64,10 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 	description := fmt.Sprintf("Tf Acc Test %s", rString)
 	uDescription := fmt.Sprintf("Tf Acc Test Updated %s", rString)
 	userName := fmt.Sprintf("tf_acc_cloud9_env_%s", rString)
-
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloud9(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
 		Steps: []resource.TestStep{
@@ -79,6 +83,12 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"instance_type", "automatic_stop_time_minutes", "subnet_id"},
+			},
+			{
 				Config: testAccAWSCloud9EnvironmentEc2AllFieldsConfig(uEnvName, uDescription, userName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
@@ -88,30 +98,6 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "owner_arn", regexp.MustCompile(`^arn:`)),
 					resource.TestCheckResourceAttr(resourceName, "type", "ec2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSCloud9EnvironmentEc2_importBasic(t *testing.T) {
-	rString := acctest.RandString(8)
-	name := fmt.Sprintf("tf_acc_api_doc_part_import_%s", rString)
-
-	resourceName := "aws_cloud9_environment_ec2.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloud9EnvironmentEc2Config(name),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"instance_type"},
 			},
 		},
 	})
@@ -180,11 +166,27 @@ func testAccCheckAWSCloud9EnvironmentEc2Destroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccPreCheckAWSCloud9(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).cloud9conn
+
+	input := &cloud9.ListEnvironmentsInput{}
+
+	_, err := conn.ListEnvironments(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAWSCloud9EnvironmentEc2Config(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
-  name = "%s"
+  name          = "%s"
 }
 `, name)
 }
@@ -192,25 +194,27 @@ resource "aws_cloud9_environment_ec2" "test" {
 func testAccAWSCloud9EnvironmentEc2AllFieldsConfig(name, description, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
-  instance_type = "t2.micro"
-  name = "%s"
-  description = "%s"
+  instance_type               = "t2.micro"
+  name                        = "%s"
+  description                 = "%s"
   automatic_stop_time_minutes = 60
-  subnet_id = "${aws_subnet.test.id}"
-  owner_arn = "${aws_iam_user.test.arn}"
-  depends_on = ["aws_route_table_association.test"]
+  subnet_id                   = "${aws_subnet.test.id}"
+  owner_arn                   = "${aws_iam_user.test.arn}"
+  depends_on                  = ["aws_route_table_association.test"]
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
+
   tags = {
     Name = "terraform-testacc-cloud9-environment-ec2-all-fields"
   }
 }
 
 resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "10.10.0.0/19"
+
   tags = {
     Name = "tf-acc-cloud9-environment-ec2-all-fields"
   }
@@ -222,6 +226,7 @@ resource "aws_internet_gateway" "test" {
 
 resource "aws_route_table" "test" {
   vpc_id = "${aws_vpc.test.id}"
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.test.id}"

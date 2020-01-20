@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway"
-sidebar_current: "docs-aws-resource-vpn-gateway-x"
 description: |-
   Provides a resource to create a VPC VPN Gateway.
 ---
 
-# aws_vpn_gateway
+# Resource: aws_vpn_gateway
 
 Provides a resource to create a VPC VPN Gateway.
 

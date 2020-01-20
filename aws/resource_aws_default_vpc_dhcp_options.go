@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDefaultVpcDhcpOptions() *schema.Resource {
@@ -65,16 +65,28 @@ func resourceAwsDefaultVpcDhcpOptionsCreate(d *schema.ResourceData, meta interfa
 		},
 	}
 
-	resp, err := conn.DescribeDhcpOptions(req)
+	var dhcpOptions []*ec2.DhcpOptions
+	err := conn.DescribeDhcpOptionsPages(req, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
+		dhcpOptions = append(dhcpOptions, page.DhcpOptions...)
+		return !lastPage
+	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Error describing DHCP options: %s", err)
 	}
 
-	if len(resp.DhcpOptions) != 1 || resp.DhcpOptions[0] == nil {
+	if len(dhcpOptions) == 0 {
 		return fmt.Errorf("Default DHCP Options Set not found")
 	}
 
-	d.SetId(aws.StringValue(resp.DhcpOptions[0].DhcpOptionsId))
+	if len(dhcpOptions) > 1 {
+		return fmt.Errorf("Multiple default DHCP Options Sets found")
+	}
+
+	if dhcpOptions[0] == nil {
+		return fmt.Errorf("Default DHCP Options Set is empty")
+	}
+	d.SetId(aws.StringValue(dhcpOptions[0].DhcpOptionsId))
 
 	return resourceAwsVpcDhcpOptionsUpdate(d, meta)
 }

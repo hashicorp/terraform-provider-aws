@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Beanstalk"
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_solution_stack"
-sidebar_current: "docs-aws-datasource-elastic-beanstalk-solution-stack"
 description: |-
   Get an elastic beanstalk solution stack.
 ---

@@ -3,15 +3,17 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCognitoUserPool() *schema.Resource {
@@ -128,37 +130,53 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"email_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"reply_to_email_address": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateCognitoUserPoolReplyEmailAddress,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.StringInSlice([]string{""}, false),
+								validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+							),
 						},
 						"source_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validateArn,
 						},
+						"email_sending_account": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
+								cognitoidentityprovider.EmailSendingAccountTypeDeveloper,
+							}, false),
+						},
 					},
 				},
 			},
 
 			"email_verification_subject": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateCognitoUserPoolEmailVerificationSubject,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validateCognitoUserPoolEmailVerificationSubject,
+				ConflictsWith: []string{"verification_message_template.0.email_subject"},
 			},
 
 			"email_verification_message": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateCognitoUserPoolEmailVerificationMessage,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validateCognitoUserPoolEmailVerificationMessage,
+				ConflictsWith: []string{"verification_message_template.0.email_message"},
 			},
 
 			"endpoint": {
@@ -391,9 +409,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"sms_verification_message": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateCognitoUserPoolSmsVerificationMessage,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validateCognitoUserPoolSmsVerificationMessage,
+				ConflictsWith: []string{"verification_message_template.0.sms_message"},
 			},
 
 			"tags": tagsSchema(),
@@ -410,6 +430,25 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					}, false),
 				},
 				ConflictsWith: []string{"alias_attributes"},
+			},
+
+			"user_pool_add_ons": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"advanced_security_mode": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.AdvancedSecurityModeTypeAudit,
+								cognitoidentityprovider.AdvancedSecurityModeTypeEnforced,
+								cognitoidentityprovider.AdvancedSecurityModeTypeOff,
+							}, false),
+						},
+					},
+				},
 			},
 
 			"verification_message_template": {
@@ -429,10 +468,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							}, false),
 						},
 						"email_message": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateEmailMessage,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateEmailMessage,
+							ConflictsWith: []string{"email_verification_message"},
 						},
 						"email_message_by_link": {
 							Type:         schema.TypeString,
@@ -441,10 +481,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateCognitoUserPoolTemplateEmailMessageByLink,
 						},
 						"email_subject": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateEmailSubject,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateEmailSubject,
+							ConflictsWith: []string{"email_verification_subject"},
 						},
 						"email_subject_by_link": {
 							Type:         schema.TypeString,
@@ -453,10 +494,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateCognitoUserPoolTemplateEmailSubjectByLink,
 						},
 						"sms_message": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateSmsMessage,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateSmsMessage,
+							ConflictsWith: []string{"sms_verification_message"},
 						},
 					},
 				},
@@ -502,6 +544,10 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 
 			if v, ok := config["source_arn"]; ok && v.(string) != "" {
 				emailConfigurationType.SourceArn = aws.String(v.(string))
+			}
+
+			if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
+				emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
 			}
 
 			params.EmailConfiguration = emailConfigurationType
@@ -580,6 +626,20 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.UsernameAttributes = expandStringList(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("user_pool_add_ons"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok {
+			userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
+
+			if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
+				userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
+			}
+			params.UserPoolAddOns = userPoolAddons
+		}
+	}
+
 	if v, ok := d.GetOk("verification_message_template"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -594,7 +654,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		params.UserPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
+		params.UserPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityproviderTags()
 	}
 	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
 
@@ -604,17 +664,20 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateUserPool(params)
-		if isAWSErr(err, "InvalidSmsRoleTrustRelationshipException", "Role does not have a trust relationship allowing Cognito to assume the role") {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, "InvalidSmsRoleAccessPolicyException", "Role does not have permission to publish with SNS") {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
 			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateUserPool(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating Cognito User Pool: %s", err)
 	}
@@ -636,7 +699,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	resp, err := conn.DescribeUserPool(params)
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == cognitoidentityprovider.ErrCodeResourceNotFoundException {
 			log.Printf("[WARN] Cognito User Pool %s is already gone", d.Id())
 			d.SetId("")
 			return nil
@@ -684,8 +747,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Failed setting device_configuration: %s", err)
 	}
 
-	if err := d.Set("email_configuration", flattenCognitoUserPoolEmailConfiguration(resp.UserPool.EmailConfiguration)); err != nil {
-		return fmt.Errorf("Failed setting email_configuration: %s", err)
+	if resp.UserPool.EmailConfiguration != nil {
+		if err := d.Set("email_configuration", flattenCognitoUserPoolEmailConfiguration(resp.UserPool.EmailConfiguration)); err != nil {
+			return fmt.Errorf("Failed setting email_configuration: %s", err)
+		}
 	}
 
 	if resp.UserPool.Policies != nil && resp.UserPool.Policies.PasswordPolicy != nil {
@@ -710,6 +775,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("username_attributes", flattenStringList(resp.UserPool.UsernameAttributes))
 	}
 
+	if err := d.Set("user_pool_add_ons", flattenCognitoUserPoolUserPoolAddOns(resp.UserPool.UserPoolAddOns)); err != nil {
+		return fmt.Errorf("Failed setting user_pool_add_ons: %s", err)
+	}
+
 	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
 		return fmt.Errorf("Failed setting verification_message_template: %s", err)
 	}
@@ -717,7 +786,9 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("creation_date", resp.UserPool.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", resp.UserPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", resp.UserPool.Name)
-	d.Set("tags", tagsToMapGeneric(resp.UserPool.UserPoolTags))
+	if err := d.Set("tags", keyvaluetags.CognitoidentityKeyValueTags(resp.UserPool.UserPoolTags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -752,10 +823,12 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("email_configuration"); ok {
+
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
+			log.Printf("[DEBUG] Set Values to update from configs")
 			emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
 
 			if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
@@ -764,6 +837,10 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 			if v, ok := config["source_arn"]; ok && v.(string) != "" {
 				emailConfigurationType.SourceArn = aws.String(v.(string))
+			}
+
+			if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
+				emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
 			}
 
 			params.EmailConfiguration = emailConfigurationType
@@ -815,6 +892,20 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if v, ok := d.GetOk("user_pool_add_ons"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
+
+			if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
+				userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
+			}
+			params.UserPoolAddOns = userPoolAddons
+		}
+	}
+
 	if v, ok := d.GetOk("verification_message_template"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -839,7 +930,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		params.UserPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
+		params.UserPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityproviderTags()
 	}
 
 	log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
@@ -849,17 +940,20 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		_, err = conn.UpdateUserPool(params)
-		if isAWSErr(err, "InvalidSmsRoleTrustRelationshipException", "Role does not have a trust relationship allowing Cognito to assume the role") {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, "InvalidSmsRoleAccessPolicyException", "Role does not have permission to publish with SNS") {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
 			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateUserPool(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error updating Cognito User pool: %s", err)
 	}

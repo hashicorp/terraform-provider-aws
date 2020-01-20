@@ -1,12 +1,12 @@
 ---
+subcategory: "Macie"
 layout: "aws"
 page_title: "AWS: aws_macie_member_account_association"
-sidebar_current: "docs-aws-macie-member-account-association"
 description: |-
   Associates an AWS account with Amazon Macie as a member account.
 ---
 
-# aws_macie_member_account_association
+# Resource: aws_macie_member_account_association
 
 Associates an AWS account with Amazon Macie as a member account.
 

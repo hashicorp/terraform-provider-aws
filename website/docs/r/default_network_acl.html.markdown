@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_network_acl"
-sidebar_current: "docs-aws-resource-default-network-acl"
 description: |-
   Manage the default Network ACL resource.
 ---
 
-# aws_default_network_acl
+# Resource: aws_default_network_acl
 
 Provides a resource to manage the default AWS Network ACL. VPC Only.
 
@@ -51,7 +51,7 @@ resource "aws_default_network_acl" "default" {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = # set a CIDR block here
     from_port  = 0
     to_port    = 0
   }
@@ -84,7 +84,7 @@ resource "aws_default_network_acl" "default" {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = # set a CIDR block here
     from_port  = 0
     to_port    = 0
   }

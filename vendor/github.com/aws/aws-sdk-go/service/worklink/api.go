@@ -3,6 +3,7 @@
 package worklink
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +12,196 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
+
+const opAssociateDomain = "AssociateDomain"
+
+// AssociateDomainRequest generates a "aws/request.Request" representing the
+// client's request for the AssociateDomain operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociateDomain for more information on using the AssociateDomain
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociateDomainRequest method.
+//    req, resp := client.AssociateDomainRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/AssociateDomain
+func (c *WorkLink) AssociateDomainRequest(input *AssociateDomainInput) (req *request.Request, output *AssociateDomainOutput) {
+	op := &request.Operation{
+		Name:       opAssociateDomain,
+		HTTPMethod: "POST",
+		HTTPPath:   "/associateDomain",
+	}
+
+	if input == nil {
+		input = &AssociateDomainInput{}
+	}
+
+	output = &AssociateDomainOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// AssociateDomain API operation for Amazon WorkLink.
+//
+// Specifies a domain to be associated to Amazon WorkLink.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation AssociateDomain for usage and error information.
+//
+// Returned Error Types:
+//   * UnauthorizedException
+//   You are not authorized to perform this action.
+//
+//   * InternalServerErrorException
+//   The service is temporarily unavailable.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The requested resource was not found.
+//
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * TooManyRequestsException
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/AssociateDomain
+func (c *WorkLink) AssociateDomain(input *AssociateDomainInput) (*AssociateDomainOutput, error) {
+	req, out := c.AssociateDomainRequest(input)
+	return out, req.Send()
+}
+
+// AssociateDomainWithContext is the same as AssociateDomain with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociateDomain for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) AssociateDomainWithContext(ctx aws.Context, input *AssociateDomainInput, opts ...request.Option) (*AssociateDomainOutput, error) {
+	req, out := c.AssociateDomainRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opAssociateWebsiteAuthorizationProvider = "AssociateWebsiteAuthorizationProvider"
+
+// AssociateWebsiteAuthorizationProviderRequest generates a "aws/request.Request" representing the
+// client's request for the AssociateWebsiteAuthorizationProvider operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociateWebsiteAuthorizationProvider for more information on using the AssociateWebsiteAuthorizationProvider
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociateWebsiteAuthorizationProviderRequest method.
+//    req, resp := client.AssociateWebsiteAuthorizationProviderRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/AssociateWebsiteAuthorizationProvider
+func (c *WorkLink) AssociateWebsiteAuthorizationProviderRequest(input *AssociateWebsiteAuthorizationProviderInput) (req *request.Request, output *AssociateWebsiteAuthorizationProviderOutput) {
+	op := &request.Operation{
+		Name:       opAssociateWebsiteAuthorizationProvider,
+		HTTPMethod: "POST",
+		HTTPPath:   "/associateWebsiteAuthorizationProvider",
+	}
+
+	if input == nil {
+		input = &AssociateWebsiteAuthorizationProviderInput{}
+	}
+
+	output = &AssociateWebsiteAuthorizationProviderOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AssociateWebsiteAuthorizationProvider API operation for Amazon WorkLink.
+//
+// Associates a website authorization provider with a specified fleet. This
+// is used to authorize users against associated websites in the company network.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation AssociateWebsiteAuthorizationProvider for usage and error information.
+//
+// Returned Error Types:
+//   * UnauthorizedException
+//   You are not authorized to perform this action.
+//
+//   * InternalServerErrorException
+//   The service is temporarily unavailable.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The requested resource was not found.
+//
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * TooManyRequestsException
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/AssociateWebsiteAuthorizationProvider
+func (c *WorkLink) AssociateWebsiteAuthorizationProvider(input *AssociateWebsiteAuthorizationProviderInput) (*AssociateWebsiteAuthorizationProviderOutput, error) {
+	req, out := c.AssociateWebsiteAuthorizationProviderRequest(input)
+	return out, req.Send()
+}
+
+// AssociateWebsiteAuthorizationProviderWithContext is the same as AssociateWebsiteAuthorizationProvider with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociateWebsiteAuthorizationProvider for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) AssociateWebsiteAuthorizationProviderWithContext(ctx aws.Context, input *AssociateWebsiteAuthorizationProviderInput, opts ...request.Option) (*AssociateWebsiteAuthorizationProviderOutput, error) {
+	req, out := c.AssociateWebsiteAuthorizationProviderRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
 
 const opAssociateWebsiteCertificateAuthority = "AssociateWebsiteCertificateAuthority"
 
@@ -66,23 +257,23 @@ func (c *WorkLink) AssociateWebsiteCertificateAuthorityRequest(input *AssociateW
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation AssociateWebsiteCertificateAuthority for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/AssociateWebsiteCertificateAuthority
@@ -162,23 +353,23 @@ func (c *WorkLink) CreateFleetRequest(input *CreateFleetInput) (req *request.Req
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation CreateFleet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/CreateFleet
@@ -257,20 +448,20 @@ func (c *WorkLink) DeleteFleetRequest(input *DeleteFleetInput) (req *request.Req
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation DeleteFleet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DeleteFleet
@@ -349,20 +540,20 @@ func (c *WorkLink) DescribeAuditStreamConfigurationRequest(input *DescribeAuditS
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation DescribeAuditStreamConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DescribeAuditStreamConfiguration
@@ -441,20 +632,20 @@ func (c *WorkLink) DescribeCompanyNetworkConfigurationRequest(input *DescribeCom
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation DescribeCompanyNetworkConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DescribeCompanyNetworkConfiguration
@@ -532,20 +723,20 @@ func (c *WorkLink) DescribeDeviceRequest(input *DescribeDeviceInput) (req *reque
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation DescribeDevice for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DescribeDevice
@@ -623,20 +814,20 @@ func (c *WorkLink) DescribeDevicePolicyConfigurationRequest(input *DescribeDevic
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation DescribeDevicePolicyConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DescribeDevicePolicyConfiguration
@@ -656,6 +847,97 @@ func (c *WorkLink) DescribeDevicePolicyConfiguration(input *DescribeDevicePolicy
 // for more information on using Contexts.
 func (c *WorkLink) DescribeDevicePolicyConfigurationWithContext(ctx aws.Context, input *DescribeDevicePolicyConfigurationInput, opts ...request.Option) (*DescribeDevicePolicyConfigurationOutput, error) {
 	req, out := c.DescribeDevicePolicyConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeDomain = "DescribeDomain"
+
+// DescribeDomainRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeDomain operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeDomain for more information on using the DescribeDomain
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeDomainRequest method.
+//    req, resp := client.DescribeDomainRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DescribeDomain
+func (c *WorkLink) DescribeDomainRequest(input *DescribeDomainInput) (req *request.Request, output *DescribeDomainOutput) {
+	op := &request.Operation{
+		Name:       opDescribeDomain,
+		HTTPMethod: "POST",
+		HTTPPath:   "/describeDomain",
+	}
+
+	if input == nil {
+		input = &DescribeDomainInput{}
+	}
+
+	output = &DescribeDomainOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeDomain API operation for Amazon WorkLink.
+//
+// Provides information about the domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation DescribeDomain for usage and error information.
+//
+// Returned Error Types:
+//   * UnauthorizedException
+//   You are not authorized to perform this action.
+//
+//   * InternalServerErrorException
+//   The service is temporarily unavailable.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The requested resource was not found.
+//
+//   * TooManyRequestsException
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DescribeDomain
+func (c *WorkLink) DescribeDomain(input *DescribeDomainInput) (*DescribeDomainOutput, error) {
+	req, out := c.DescribeDomainRequest(input)
+	return out, req.Send()
+}
+
+// DescribeDomainWithContext is the same as DescribeDomain with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeDomain for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) DescribeDomainWithContext(ctx aws.Context, input *DescribeDomainInput, opts ...request.Option) (*DescribeDomainOutput, error) {
+	req, out := c.DescribeDomainRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -715,20 +997,20 @@ func (c *WorkLink) DescribeFleetMetadataRequest(input *DescribeFleetMetadataInpu
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation DescribeFleetMetadata for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DescribeFleetMetadata
@@ -806,20 +1088,20 @@ func (c *WorkLink) DescribeIdentityProviderConfigurationRequest(input *DescribeI
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation DescribeIdentityProviderConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DescribeIdentityProviderConfiguration
@@ -897,20 +1179,20 @@ func (c *WorkLink) DescribeWebsiteCertificateAuthorityRequest(input *DescribeWeb
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation DescribeWebsiteCertificateAuthority for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DescribeWebsiteCertificateAuthority
@@ -930,6 +1212,196 @@ func (c *WorkLink) DescribeWebsiteCertificateAuthority(input *DescribeWebsiteCer
 // for more information on using Contexts.
 func (c *WorkLink) DescribeWebsiteCertificateAuthorityWithContext(ctx aws.Context, input *DescribeWebsiteCertificateAuthorityInput, opts ...request.Option) (*DescribeWebsiteCertificateAuthorityOutput, error) {
 	req, out := c.DescribeWebsiteCertificateAuthorityRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDisassociateDomain = "DisassociateDomain"
+
+// DisassociateDomainRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateDomain operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateDomain for more information on using the DisassociateDomain
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateDomainRequest method.
+//    req, resp := client.DisassociateDomainRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DisassociateDomain
+func (c *WorkLink) DisassociateDomainRequest(input *DisassociateDomainInput) (req *request.Request, output *DisassociateDomainOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateDomain,
+		HTTPMethod: "POST",
+		HTTPPath:   "/disassociateDomain",
+	}
+
+	if input == nil {
+		input = &DisassociateDomainInput{}
+	}
+
+	output = &DisassociateDomainOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisassociateDomain API operation for Amazon WorkLink.
+//
+// Disassociates a domain from Amazon WorkLink. End users lose the ability to
+// access the domain with Amazon WorkLink.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation DisassociateDomain for usage and error information.
+//
+// Returned Error Types:
+//   * UnauthorizedException
+//   You are not authorized to perform this action.
+//
+//   * InternalServerErrorException
+//   The service is temporarily unavailable.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The requested resource was not found.
+//
+//   * TooManyRequestsException
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DisassociateDomain
+func (c *WorkLink) DisassociateDomain(input *DisassociateDomainInput) (*DisassociateDomainOutput, error) {
+	req, out := c.DisassociateDomainRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateDomainWithContext is the same as DisassociateDomain with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateDomain for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) DisassociateDomainWithContext(ctx aws.Context, input *DisassociateDomainInput, opts ...request.Option) (*DisassociateDomainOutput, error) {
+	req, out := c.DisassociateDomainRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDisassociateWebsiteAuthorizationProvider = "DisassociateWebsiteAuthorizationProvider"
+
+// DisassociateWebsiteAuthorizationProviderRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateWebsiteAuthorizationProvider operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateWebsiteAuthorizationProvider for more information on using the DisassociateWebsiteAuthorizationProvider
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateWebsiteAuthorizationProviderRequest method.
+//    req, resp := client.DisassociateWebsiteAuthorizationProviderRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DisassociateWebsiteAuthorizationProvider
+func (c *WorkLink) DisassociateWebsiteAuthorizationProviderRequest(input *DisassociateWebsiteAuthorizationProviderInput) (req *request.Request, output *DisassociateWebsiteAuthorizationProviderOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateWebsiteAuthorizationProvider,
+		HTTPMethod: "POST",
+		HTTPPath:   "/disassociateWebsiteAuthorizationProvider",
+	}
+
+	if input == nil {
+		input = &DisassociateWebsiteAuthorizationProviderInput{}
+	}
+
+	output = &DisassociateWebsiteAuthorizationProviderOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisassociateWebsiteAuthorizationProvider API operation for Amazon WorkLink.
+//
+// Disassociates a website authorization provider from a specified fleet. After
+// the disassociation, users can't load any associated websites that require
+// this authorization provider.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation DisassociateWebsiteAuthorizationProvider for usage and error information.
+//
+// Returned Error Types:
+//   * UnauthorizedException
+//   You are not authorized to perform this action.
+//
+//   * InternalServerErrorException
+//   The service is temporarily unavailable.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The requested resource was not found.
+//
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * TooManyRequestsException
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DisassociateWebsiteAuthorizationProvider
+func (c *WorkLink) DisassociateWebsiteAuthorizationProvider(input *DisassociateWebsiteAuthorizationProviderInput) (*DisassociateWebsiteAuthorizationProviderOutput, error) {
+	req, out := c.DisassociateWebsiteAuthorizationProviderRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateWebsiteAuthorizationProviderWithContext is the same as DisassociateWebsiteAuthorizationProvider with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateWebsiteAuthorizationProvider for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) DisassociateWebsiteAuthorizationProviderWithContext(ctx aws.Context, input *DisassociateWebsiteAuthorizationProviderInput, opts ...request.Option) (*DisassociateWebsiteAuthorizationProviderOutput, error) {
+	req, out := c.DisassociateWebsiteAuthorizationProviderRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -989,20 +1461,20 @@ func (c *WorkLink) DisassociateWebsiteCertificateAuthorityRequest(input *Disasso
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation DisassociateWebsiteCertificateAuthority for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DisassociateWebsiteCertificateAuthority
@@ -1086,20 +1558,20 @@ func (c *WorkLink) ListDevicesRequest(input *ListDevicesInput) (req *request.Req
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation ListDevices for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/ListDevices
@@ -1135,7 +1607,7 @@ func (c *WorkLink) ListDevicesWithContext(ctx aws.Context, input *ListDevicesInp
 //    // Example iterating over at most 3 pages of a ListDevices operation.
 //    pageNum := 0
 //    err := client.ListDevicesPages(params,
-//        func(page *ListDevicesOutput, lastPage bool) bool {
+//        func(page *worklink.ListDevicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1167,10 +1639,158 @@ func (c *WorkLink) ListDevicesPagesWithContext(ctx aws.Context, input *ListDevic
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDevicesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDevicesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
+	return p.Err()
+}
+
+const opListDomains = "ListDomains"
+
+// ListDomainsRequest generates a "aws/request.Request" representing the
+// client's request for the ListDomains operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListDomains for more information on using the ListDomains
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListDomainsRequest method.
+//    req, resp := client.ListDomainsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/ListDomains
+func (c *WorkLink) ListDomainsRequest(input *ListDomainsInput) (req *request.Request, output *ListDomainsOutput) {
+	op := &request.Operation{
+		Name:       opListDomains,
+		HTTPMethod: "POST",
+		HTTPPath:   "/listDomains",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListDomainsInput{}
+	}
+
+	output = &ListDomainsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListDomains API operation for Amazon WorkLink.
+//
+// Retrieves a list of domains associated to a specified fleet.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation ListDomains for usage and error information.
+//
+// Returned Error Types:
+//   * UnauthorizedException
+//   You are not authorized to perform this action.
+//
+//   * InternalServerErrorException
+//   The service is temporarily unavailable.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * TooManyRequestsException
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/ListDomains
+func (c *WorkLink) ListDomains(input *ListDomainsInput) (*ListDomainsOutput, error) {
+	req, out := c.ListDomainsRequest(input)
+	return out, req.Send()
+}
+
+// ListDomainsWithContext is the same as ListDomains with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDomains for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) ListDomainsWithContext(ctx aws.Context, input *ListDomainsInput, opts ...request.Option) (*ListDomainsOutput, error) {
+	req, out := c.ListDomainsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListDomainsPages iterates over the pages of a ListDomains operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDomains method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDomains operation.
+//    pageNum := 0
+//    err := client.ListDomainsPages(params,
+//        func(page *worklink.ListDomainsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *WorkLink) ListDomainsPages(input *ListDomainsInput, fn func(*ListDomainsOutput, bool) bool) error {
+	return c.ListDomainsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDomainsPagesWithContext same as ListDomainsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) ListDomainsPagesWithContext(ctx aws.Context, input *ListDomainsInput, fn func(*ListDomainsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListDomainsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListDomainsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListDomainsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
 	return p.Err()
 }
 
@@ -1233,17 +1853,17 @@ func (c *WorkLink) ListFleetsRequest(input *ListFleetsInput) (req *request.Reque
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation ListFleets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/ListFleets
@@ -1279,7 +1899,7 @@ func (c *WorkLink) ListFleetsWithContext(ctx aws.Context, input *ListFleetsInput
 //    // Example iterating over at most 3 pages of a ListFleets operation.
 //    pageNum := 0
 //    err := client.ListFleetsPages(params,
-//        func(page *ListFleetsOutput, lastPage bool) bool {
+//        func(page *worklink.ListFleetsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1311,10 +1931,162 @@ func (c *WorkLink) ListFleetsPagesWithContext(ctx aws.Context, input *ListFleets
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListFleetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListFleetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
+	return p.Err()
+}
+
+const opListWebsiteAuthorizationProviders = "ListWebsiteAuthorizationProviders"
+
+// ListWebsiteAuthorizationProvidersRequest generates a "aws/request.Request" representing the
+// client's request for the ListWebsiteAuthorizationProviders operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListWebsiteAuthorizationProviders for more information on using the ListWebsiteAuthorizationProviders
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListWebsiteAuthorizationProvidersRequest method.
+//    req, resp := client.ListWebsiteAuthorizationProvidersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/ListWebsiteAuthorizationProviders
+func (c *WorkLink) ListWebsiteAuthorizationProvidersRequest(input *ListWebsiteAuthorizationProvidersInput) (req *request.Request, output *ListWebsiteAuthorizationProvidersOutput) {
+	op := &request.Operation{
+		Name:       opListWebsiteAuthorizationProviders,
+		HTTPMethod: "POST",
+		HTTPPath:   "/listWebsiteAuthorizationProviders",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListWebsiteAuthorizationProvidersInput{}
+	}
+
+	output = &ListWebsiteAuthorizationProvidersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListWebsiteAuthorizationProviders API operation for Amazon WorkLink.
+//
+// Retrieves a list of website authorization providers associated with a specified
+// fleet.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation ListWebsiteAuthorizationProviders for usage and error information.
+//
+// Returned Error Types:
+//   * UnauthorizedException
+//   You are not authorized to perform this action.
+//
+//   * InternalServerErrorException
+//   The service is temporarily unavailable.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The requested resource was not found.
+//
+//   * TooManyRequestsException
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/ListWebsiteAuthorizationProviders
+func (c *WorkLink) ListWebsiteAuthorizationProviders(input *ListWebsiteAuthorizationProvidersInput) (*ListWebsiteAuthorizationProvidersOutput, error) {
+	req, out := c.ListWebsiteAuthorizationProvidersRequest(input)
+	return out, req.Send()
+}
+
+// ListWebsiteAuthorizationProvidersWithContext is the same as ListWebsiteAuthorizationProviders with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListWebsiteAuthorizationProviders for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) ListWebsiteAuthorizationProvidersWithContext(ctx aws.Context, input *ListWebsiteAuthorizationProvidersInput, opts ...request.Option) (*ListWebsiteAuthorizationProvidersOutput, error) {
+	req, out := c.ListWebsiteAuthorizationProvidersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListWebsiteAuthorizationProvidersPages iterates over the pages of a ListWebsiteAuthorizationProviders operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListWebsiteAuthorizationProviders method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListWebsiteAuthorizationProviders operation.
+//    pageNum := 0
+//    err := client.ListWebsiteAuthorizationProvidersPages(params,
+//        func(page *worklink.ListWebsiteAuthorizationProvidersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *WorkLink) ListWebsiteAuthorizationProvidersPages(input *ListWebsiteAuthorizationProvidersInput, fn func(*ListWebsiteAuthorizationProvidersOutput, bool) bool) error {
+	return c.ListWebsiteAuthorizationProvidersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListWebsiteAuthorizationProvidersPagesWithContext same as ListWebsiteAuthorizationProvidersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) ListWebsiteAuthorizationProvidersPagesWithContext(ctx aws.Context, input *ListWebsiteAuthorizationProvidersInput, fn func(*ListWebsiteAuthorizationProvidersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListWebsiteAuthorizationProvidersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListWebsiteAuthorizationProvidersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListWebsiteAuthorizationProvidersOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
 	return p.Err()
 }
 
@@ -1378,17 +2150,17 @@ func (c *WorkLink) ListWebsiteCertificateAuthoritiesRequest(input *ListWebsiteCe
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation ListWebsiteCertificateAuthorities for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/ListWebsiteCertificateAuthorities
@@ -1424,7 +2196,7 @@ func (c *WorkLink) ListWebsiteCertificateAuthoritiesWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a ListWebsiteCertificateAuthorities operation.
 //    pageNum := 0
 //    err := client.ListWebsiteCertificateAuthoritiesPages(params,
-//        func(page *ListWebsiteCertificateAuthoritiesOutput, lastPage bool) bool {
+//        func(page *worklink.ListWebsiteCertificateAuthoritiesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1456,11 +2228,197 @@ func (c *WorkLink) ListWebsiteCertificateAuthoritiesPagesWithContext(ctx aws.Con
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWebsiteCertificateAuthoritiesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWebsiteCertificateAuthoritiesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
+}
+
+const opRestoreDomainAccess = "RestoreDomainAccess"
+
+// RestoreDomainAccessRequest generates a "aws/request.Request" representing the
+// client's request for the RestoreDomainAccess operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RestoreDomainAccess for more information on using the RestoreDomainAccess
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RestoreDomainAccessRequest method.
+//    req, resp := client.RestoreDomainAccessRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/RestoreDomainAccess
+func (c *WorkLink) RestoreDomainAccessRequest(input *RestoreDomainAccessInput) (req *request.Request, output *RestoreDomainAccessOutput) {
+	op := &request.Operation{
+		Name:       opRestoreDomainAccess,
+		HTTPMethod: "POST",
+		HTTPPath:   "/restoreDomainAccess",
+	}
+
+	if input == nil {
+		input = &RestoreDomainAccessInput{}
+	}
+
+	output = &RestoreDomainAccessOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// RestoreDomainAccess API operation for Amazon WorkLink.
+//
+// Moves a domain to ACTIVE status if it was in the INACTIVE status.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation RestoreDomainAccess for usage and error information.
+//
+// Returned Error Types:
+//   * UnauthorizedException
+//   You are not authorized to perform this action.
+//
+//   * InternalServerErrorException
+//   The service is temporarily unavailable.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The requested resource was not found.
+//
+//   * TooManyRequestsException
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/RestoreDomainAccess
+func (c *WorkLink) RestoreDomainAccess(input *RestoreDomainAccessInput) (*RestoreDomainAccessOutput, error) {
+	req, out := c.RestoreDomainAccessRequest(input)
+	return out, req.Send()
+}
+
+// RestoreDomainAccessWithContext is the same as RestoreDomainAccess with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RestoreDomainAccess for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) RestoreDomainAccessWithContext(ctx aws.Context, input *RestoreDomainAccessInput, opts ...request.Option) (*RestoreDomainAccessOutput, error) {
+	req, out := c.RestoreDomainAccessRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRevokeDomainAccess = "RevokeDomainAccess"
+
+// RevokeDomainAccessRequest generates a "aws/request.Request" representing the
+// client's request for the RevokeDomainAccess operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RevokeDomainAccess for more information on using the RevokeDomainAccess
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RevokeDomainAccessRequest method.
+//    req, resp := client.RevokeDomainAccessRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/RevokeDomainAccess
+func (c *WorkLink) RevokeDomainAccessRequest(input *RevokeDomainAccessInput) (req *request.Request, output *RevokeDomainAccessOutput) {
+	op := &request.Operation{
+		Name:       opRevokeDomainAccess,
+		HTTPMethod: "POST",
+		HTTPPath:   "/revokeDomainAccess",
+	}
+
+	if input == nil {
+		input = &RevokeDomainAccessInput{}
+	}
+
+	output = &RevokeDomainAccessOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// RevokeDomainAccess API operation for Amazon WorkLink.
+//
+// Moves a domain to INACTIVE status if it was in the ACTIVE status.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation RevokeDomainAccess for usage and error information.
+//
+// Returned Error Types:
+//   * UnauthorizedException
+//   You are not authorized to perform this action.
+//
+//   * InternalServerErrorException
+//   The service is temporarily unavailable.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The requested resource was not found.
+//
+//   * TooManyRequestsException
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/RevokeDomainAccess
+func (c *WorkLink) RevokeDomainAccess(input *RevokeDomainAccessInput) (*RevokeDomainAccessOutput, error) {
+	req, out := c.RevokeDomainAccessRequest(input)
+	return out, req.Send()
+}
+
+// RevokeDomainAccessWithContext is the same as RevokeDomainAccess with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RevokeDomainAccess for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) RevokeDomainAccessWithContext(ctx aws.Context, input *RevokeDomainAccessInput, opts ...request.Option) (*RevokeDomainAccessOutput, error) {
+	req, out := c.RevokeDomainAccessRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opSignOutUser = "SignOutUser"
@@ -1518,20 +2476,20 @@ func (c *WorkLink) SignOutUserRequest(input *SignOutUserInput) (req *request.Req
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation SignOutUser for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/SignOutUser
@@ -1610,20 +2568,20 @@ func (c *WorkLink) UpdateAuditStreamConfigurationRequest(input *UpdateAuditStrea
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation UpdateAuditStreamConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/UpdateAuditStreamConfiguration
@@ -1702,20 +2660,20 @@ func (c *WorkLink) UpdateCompanyNetworkConfigurationRequest(input *UpdateCompany
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation UpdateCompanyNetworkConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/UpdateCompanyNetworkConfiguration
@@ -1794,20 +2752,20 @@ func (c *WorkLink) UpdateDevicePolicyConfigurationRequest(input *UpdateDevicePol
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation UpdateDevicePolicyConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/UpdateDevicePolicyConfiguration
@@ -1827,6 +2785,98 @@ func (c *WorkLink) UpdateDevicePolicyConfiguration(input *UpdateDevicePolicyConf
 // for more information on using Contexts.
 func (c *WorkLink) UpdateDevicePolicyConfigurationWithContext(ctx aws.Context, input *UpdateDevicePolicyConfigurationInput, opts ...request.Option) (*UpdateDevicePolicyConfigurationOutput, error) {
 	req, out := c.UpdateDevicePolicyConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateDomainMetadata = "UpdateDomainMetadata"
+
+// UpdateDomainMetadataRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateDomainMetadata operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateDomainMetadata for more information on using the UpdateDomainMetadata
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateDomainMetadataRequest method.
+//    req, resp := client.UpdateDomainMetadataRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/UpdateDomainMetadata
+func (c *WorkLink) UpdateDomainMetadataRequest(input *UpdateDomainMetadataInput) (req *request.Request, output *UpdateDomainMetadataOutput) {
+	op := &request.Operation{
+		Name:       opUpdateDomainMetadata,
+		HTTPMethod: "POST",
+		HTTPPath:   "/updateDomainMetadata",
+	}
+
+	if input == nil {
+		input = &UpdateDomainMetadataInput{}
+	}
+
+	output = &UpdateDomainMetadataOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateDomainMetadata API operation for Amazon WorkLink.
+//
+// Updates domain metadata, such as DisplayName.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation UpdateDomainMetadata for usage and error information.
+//
+// Returned Error Types:
+//   * UnauthorizedException
+//   You are not authorized to perform this action.
+//
+//   * InternalServerErrorException
+//   The service is temporarily unavailable.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The requested resource was not found.
+//
+//   * TooManyRequestsException
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/UpdateDomainMetadata
+func (c *WorkLink) UpdateDomainMetadata(input *UpdateDomainMetadataInput) (*UpdateDomainMetadataOutput, error) {
+	req, out := c.UpdateDomainMetadataRequest(input)
+	return out, req.Send()
+}
+
+// UpdateDomainMetadataWithContext is the same as UpdateDomainMetadata with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateDomainMetadata for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) UpdateDomainMetadataWithContext(ctx aws.Context, input *UpdateDomainMetadataInput, opts ...request.Option) (*UpdateDomainMetadataOutput, error) {
+	req, out := c.UpdateDomainMetadataRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1886,20 +2936,20 @@ func (c *WorkLink) UpdateFleetMetadataRequest(input *UpdateFleetMetadataInput) (
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation UpdateFleetMetadata for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/UpdateFleetMetadata
@@ -1978,20 +3028,20 @@ func (c *WorkLink) UpdateIdentityProviderConfigurationRequest(input *UpdateIdent
 // See the AWS API reference guide for Amazon WorkLink's
 // API operation UpdateIdentityProviderConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   You are not authorized to perform this action.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The service is temporarily unavailable.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource was not found.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The number of requests exceeds the limit.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/UpdateIdentityProviderConfiguration
@@ -2014,6 +3064,192 @@ func (c *WorkLink) UpdateIdentityProviderConfigurationWithContext(ctx aws.Contex
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+type AssociateDomainInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of an issued ACM certificate that is valid for the domain being associated.
+	//
+	// AcmCertificateArn is a required field
+	AcmCertificateArn *string `type:"string" required:"true"`
+
+	// The name to display.
+	DisplayName *string `type:"string"`
+
+	// The fully qualified domain name (FQDN).
+	//
+	// DomainName is a required field
+	DomainName *string `min:"1" type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociateDomainInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateDomainInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociateDomainInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociateDomainInput"}
+	if s.AcmCertificateArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AcmCertificateArn"))
+	}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcmCertificateArn sets the AcmCertificateArn field's value.
+func (s *AssociateDomainInput) SetAcmCertificateArn(v string) *AssociateDomainInput {
+	s.AcmCertificateArn = &v
+	return s
+}
+
+// SetDisplayName sets the DisplayName field's value.
+func (s *AssociateDomainInput) SetDisplayName(v string) *AssociateDomainInput {
+	s.DisplayName = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *AssociateDomainInput) SetDomainName(v string) *AssociateDomainInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *AssociateDomainInput) SetFleetArn(v string) *AssociateDomainInput {
+	s.FleetArn = &v
+	return s
+}
+
+type AssociateDomainOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AssociateDomainOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateDomainOutput) GoString() string {
+	return s.String()
+}
+
+type AssociateWebsiteAuthorizationProviderInput struct {
+	_ struct{} `type:"structure"`
+
+	// The authorization provider type.
+	//
+	// AuthorizationProviderType is a required field
+	AuthorizationProviderType *string `type:"string" required:"true" enum:"AuthorizationProviderType"`
+
+	// The domain name of the authorization provider. This applies only to SAML-based
+	// authorization providers.
+	DomainName *string `min:"1" type:"string"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociateWebsiteAuthorizationProviderInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateWebsiteAuthorizationProviderInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociateWebsiteAuthorizationProviderInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociateWebsiteAuthorizationProviderInput"}
+	if s.AuthorizationProviderType == nil {
+		invalidParams.Add(request.NewErrParamRequired("AuthorizationProviderType"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthorizationProviderType sets the AuthorizationProviderType field's value.
+func (s *AssociateWebsiteAuthorizationProviderInput) SetAuthorizationProviderType(v string) *AssociateWebsiteAuthorizationProviderInput {
+	s.AuthorizationProviderType = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *AssociateWebsiteAuthorizationProviderInput) SetDomainName(v string) *AssociateWebsiteAuthorizationProviderInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *AssociateWebsiteAuthorizationProviderInput) SetFleetArn(v string) *AssociateWebsiteAuthorizationProviderInput {
+	s.FleetArn = &v
+	return s
+}
+
+type AssociateWebsiteAuthorizationProviderOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for the authorization provider.
+	AuthorizationProviderId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AssociateWebsiteAuthorizationProviderOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateWebsiteAuthorizationProviderOutput) GoString() string {
+	return s.String()
+}
+
+// SetAuthorizationProviderId sets the AuthorizationProviderId field's value.
+func (s *AssociateWebsiteAuthorizationProviderOutput) SetAuthorizationProviderId(v string) *AssociateWebsiteAuthorizationProviderOutput {
+	s.AuthorizationProviderId = &v
+	return s
 }
 
 type AssociateWebsiteCertificateAuthorityInput struct {
@@ -2608,6 +3844,123 @@ func (s *DescribeDevicePolicyConfigurationOutput) SetDeviceCaCertificate(v strin
 	return s
 }
 
+type DescribeDomainInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain.
+	//
+	// DomainName is a required field
+	DomainName *string `min:"1" type:"string" required:"true"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeDomainInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeDomainInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeDomainInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeDomainInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *DescribeDomainInput) SetDomainName(v string) *DescribeDomainInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *DescribeDomainInput) SetFleetArn(v string) *DescribeDomainInput {
+	s.FleetArn = &v
+	return s
+}
+
+type DescribeDomainOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of an issued ACM certificate that is valid for the domain being associated.
+	AcmCertificateArn *string `type:"string"`
+
+	// The time that the domain was added.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The name to display.
+	DisplayName *string `type:"string"`
+
+	// The name of the domain.
+	DomainName *string `min:"1" type:"string"`
+
+	// The current state for the domain.
+	DomainStatus *string `type:"string" enum:"DomainStatus"`
+}
+
+// String returns the string representation
+func (s DescribeDomainOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeDomainOutput) GoString() string {
+	return s.String()
+}
+
+// SetAcmCertificateArn sets the AcmCertificateArn field's value.
+func (s *DescribeDomainOutput) SetAcmCertificateArn(v string) *DescribeDomainOutput {
+	s.AcmCertificateArn = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *DescribeDomainOutput) SetCreatedTime(v time.Time) *DescribeDomainOutput {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetDisplayName sets the DisplayName field's value.
+func (s *DescribeDomainOutput) SetDisplayName(v string) *DescribeDomainOutput {
+	s.DisplayName = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *DescribeDomainOutput) SetDomainName(v string) *DescribeDomainOutput {
+	s.DomainName = &v
+	return s
+}
+
+// SetDomainStatus sets the DomainStatus field's value.
+func (s *DescribeDomainOutput) SetDomainStatus(v string) *DescribeDomainOutput {
+	s.DomainStatus = &v
+	return s
+}
+
 type DescribeFleetMetadataInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2941,6 +4294,150 @@ func (s *DeviceSummary) SetDeviceStatus(v string) *DeviceSummary {
 	return s
 }
 
+type DisassociateDomainInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain.
+	//
+	// DomainName is a required field
+	DomainName *string `min:"1" type:"string" required:"true"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateDomainInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateDomainInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateDomainInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateDomainInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *DisassociateDomainInput) SetDomainName(v string) *DisassociateDomainInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *DisassociateDomainInput) SetFleetArn(v string) *DisassociateDomainInput {
+	s.FleetArn = &v
+	return s
+}
+
+type DisassociateDomainOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateDomainOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateDomainOutput) GoString() string {
+	return s.String()
+}
+
+type DisassociateWebsiteAuthorizationProviderInput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for the authorization provider.
+	//
+	// AuthorizationProviderId is a required field
+	AuthorizationProviderId *string `min:"1" type:"string" required:"true"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateWebsiteAuthorizationProviderInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateWebsiteAuthorizationProviderInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateWebsiteAuthorizationProviderInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateWebsiteAuthorizationProviderInput"}
+	if s.AuthorizationProviderId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AuthorizationProviderId"))
+	}
+	if s.AuthorizationProviderId != nil && len(*s.AuthorizationProviderId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AuthorizationProviderId", 1))
+	}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthorizationProviderId sets the AuthorizationProviderId field's value.
+func (s *DisassociateWebsiteAuthorizationProviderInput) SetAuthorizationProviderId(v string) *DisassociateWebsiteAuthorizationProviderInput {
+	s.AuthorizationProviderId = &v
+	return s
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *DisassociateWebsiteAuthorizationProviderInput) SetFleetArn(v string) *DisassociateWebsiteAuthorizationProviderInput {
+	s.FleetArn = &v
+	return s
+}
+
+type DisassociateWebsiteAuthorizationProviderOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateWebsiteAuthorizationProviderOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateWebsiteAuthorizationProviderOutput) GoString() string {
+	return s.String()
+}
+
 type DisassociateWebsiteCertificateAuthorityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3011,6 +4508,63 @@ func (s DisassociateWebsiteCertificateAuthorityOutput) String() string {
 // GoString returns the string representation
 func (s DisassociateWebsiteCertificateAuthorityOutput) GoString() string {
 	return s.String()
+}
+
+// The summary of the domain.
+type DomainSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The time that the domain was created.
+	//
+	// CreatedTime is a required field
+	CreatedTime *time.Time `type:"timestamp" required:"true"`
+
+	// The name to display.
+	DisplayName *string `type:"string"`
+
+	// The name of the domain.
+	//
+	// DomainName is a required field
+	DomainName *string `min:"1" type:"string" required:"true"`
+
+	// The status of the domain.
+	//
+	// DomainStatus is a required field
+	DomainStatus *string `type:"string" required:"true" enum:"DomainStatus"`
+}
+
+// String returns the string representation
+func (s DomainSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainSummary) GoString() string {
+	return s.String()
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *DomainSummary) SetCreatedTime(v time.Time) *DomainSummary {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetDisplayName sets the DisplayName field's value.
+func (s *DomainSummary) SetDisplayName(v string) *DomainSummary {
+	s.DisplayName = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *DomainSummary) SetDomainName(v string) *DomainSummary {
+	s.DomainName = &v
+	return s
+}
+
+// SetDomainStatus sets the DomainStatus field's value.
+func (s *DomainSummary) SetDomainStatus(v string) *DomainSummary {
+	s.DomainStatus = &v
+	return s
 }
 
 // The summary of the fleet.
@@ -3089,6 +4643,118 @@ func (s *FleetSummary) SetFleetStatus(v string) *FleetSummary {
 func (s *FleetSummary) SetLastUpdatedTime(v time.Time) *FleetSummary {
 	s.LastUpdatedTime = &v
 	return s
+}
+
+// The service is temporarily unavailable.
+type InternalServerErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
+	return &InternalServerErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerErrorException) Code() string {
+	return "InternalServerErrorException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerErrorException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The request is not valid.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListDevicesInput struct {
@@ -3190,6 +4856,105 @@ func (s *ListDevicesOutput) SetNextToken(v string) *ListDevicesOutput {
 	return s
 }
 
+type ListDomainsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+
+	// The maximum number of results to be included in the next page.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The pagination token used to retrieve the next page of results for this operation.
+	// If this value is null, it retrieves the first page.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDomainsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDomainsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListDomainsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListDomainsInput"}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *ListDomainsInput) SetFleetArn(v string) *ListDomainsInput {
+	s.FleetArn = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListDomainsInput) SetMaxResults(v int64) *ListDomainsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDomainsInput) SetNextToken(v string) *ListDomainsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListDomainsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the domains.
+	Domains []*DomainSummary `type:"list"`
+
+	// The pagination token used to retrieve the next page of results for this operation.
+	// If there are no more pages, this value is null.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDomainsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDomainsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDomains sets the Domains field's value.
+func (s *ListDomainsOutput) SetDomains(v []*DomainSummary) *ListDomainsOutput {
+	s.Domains = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDomainsOutput) SetNextToken(v string) *ListDomainsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListFleetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3269,6 +5034,105 @@ func (s *ListFleetsOutput) SetFleetSummaryList(v []*FleetSummary) *ListFleetsOut
 // SetNextToken sets the NextToken field's value.
 func (s *ListFleetsOutput) SetNextToken(v string) *ListFleetsOutput {
 	s.NextToken = &v
+	return s
+}
+
+type ListWebsiteAuthorizationProvidersInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+
+	// The maximum number of results to be included in the next page.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The pagination token to use to retrieve the next page of results for this
+	// operation. If this value is null, it retrieves the first page.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListWebsiteAuthorizationProvidersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListWebsiteAuthorizationProvidersInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListWebsiteAuthorizationProvidersInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListWebsiteAuthorizationProvidersInput"}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *ListWebsiteAuthorizationProvidersInput) SetFleetArn(v string) *ListWebsiteAuthorizationProvidersInput {
+	s.FleetArn = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListWebsiteAuthorizationProvidersInput) SetMaxResults(v int64) *ListWebsiteAuthorizationProvidersInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListWebsiteAuthorizationProvidersInput) SetNextToken(v string) *ListWebsiteAuthorizationProvidersInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListWebsiteAuthorizationProvidersOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The pagination token to use to retrieve the next page of results for this
+	// operation. If this value is null, it retrieves the first page.
+	NextToken *string `min:"1" type:"string"`
+
+	// The website authorization providers.
+	WebsiteAuthorizationProviders []*WebsiteAuthorizationProviderSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListWebsiteAuthorizationProvidersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListWebsiteAuthorizationProvidersOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListWebsiteAuthorizationProvidersOutput) SetNextToken(v string) *ListWebsiteAuthorizationProvidersOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetWebsiteAuthorizationProviders sets the WebsiteAuthorizationProviders field's value.
+func (s *ListWebsiteAuthorizationProvidersOutput) SetWebsiteAuthorizationProviders(v []*WebsiteAuthorizationProviderSummary) *ListWebsiteAuthorizationProvidersOutput {
+	s.WebsiteAuthorizationProviders = v
 	return s
 }
 
@@ -3371,6 +5235,262 @@ func (s *ListWebsiteCertificateAuthoritiesOutput) SetWebsiteCertificateAuthoriti
 	return s
 }
 
+// The resource already exists.
+type ResourceAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ResourceAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceAlreadyExistsException) Code() string {
+	return "ResourceAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The requested resource was not found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+type RestoreDomainAccessInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain.
+	//
+	// DomainName is a required field
+	DomainName *string `min:"1" type:"string" required:"true"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RestoreDomainAccessInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RestoreDomainAccessInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RestoreDomainAccessInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RestoreDomainAccessInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *RestoreDomainAccessInput) SetDomainName(v string) *RestoreDomainAccessInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *RestoreDomainAccessInput) SetFleetArn(v string) *RestoreDomainAccessInput {
+	s.FleetArn = &v
+	return s
+}
+
+type RestoreDomainAccessOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s RestoreDomainAccessOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RestoreDomainAccessOutput) GoString() string {
+	return s.String()
+}
+
+type RevokeDomainAccessInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain.
+	//
+	// DomainName is a required field
+	DomainName *string `min:"1" type:"string" required:"true"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RevokeDomainAccessInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RevokeDomainAccessInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RevokeDomainAccessInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RevokeDomainAccessInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *RevokeDomainAccessInput) SetDomainName(v string) *RevokeDomainAccessInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *RevokeDomainAccessInput) SetFleetArn(v string) *RevokeDomainAccessInput {
+	s.FleetArn = &v
+	return s
+}
+
+type RevokeDomainAccessOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s RevokeDomainAccessOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RevokeDomainAccessOutput) GoString() string {
+	return s.String()
+}
+
 type SignOutUserInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3441,6 +5561,118 @@ func (s SignOutUserOutput) String() string {
 // GoString returns the string representation
 func (s SignOutUserOutput) GoString() string {
 	return s.String()
+}
+
+// The number of requests exceeds the limit.
+type TooManyRequestsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyRequestsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyRequestsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You are not authorized to perform this action.
+type UnauthorizedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnauthorizedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnauthorizedException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
+	return &UnauthorizedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnauthorizedException) Code() string {
+	return "UnauthorizedException"
+}
+
+// Message returns the exception's message.
+func (s UnauthorizedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnauthorizedException) OrigErr() error {
+	return nil
+}
+
+func (s UnauthorizedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnauthorizedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnauthorizedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UpdateAuditStreamConfigurationInput struct {
@@ -3672,6 +5904,87 @@ func (s UpdateDevicePolicyConfigurationOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateDomainMetadataInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name to display.
+	DisplayName *string `type:"string"`
+
+	// The name of the domain.
+	//
+	// DomainName is a required field
+	DomainName *string `min:"1" type:"string" required:"true"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateDomainMetadataInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDomainMetadataInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateDomainMetadataInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateDomainMetadataInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDisplayName sets the DisplayName field's value.
+func (s *UpdateDomainMetadataInput) SetDisplayName(v string) *UpdateDomainMetadataInput {
+	s.DisplayName = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *UpdateDomainMetadataInput) SetDomainName(v string) *UpdateDomainMetadataInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *UpdateDomainMetadataInput) SetFleetArn(v string) *UpdateDomainMetadataInput {
+	s.FleetArn = &v
+	return s
+}
+
+type UpdateDomainMetadataOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateDomainMetadataOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDomainMetadataOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateFleetMetadataInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3828,6 +6141,60 @@ func (s UpdateIdentityProviderConfigurationOutput) GoString() string {
 	return s.String()
 }
 
+// The summary of the website authorization provider.
+type WebsiteAuthorizationProviderSummary struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for the authorization provider.
+	AuthorizationProviderId *string `min:"1" type:"string"`
+
+	// The authorization provider type.
+	//
+	// AuthorizationProviderType is a required field
+	AuthorizationProviderType *string `type:"string" required:"true" enum:"AuthorizationProviderType"`
+
+	// The time of creation.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The domain name of the authorization provider. This applies only to SAML-based
+	// authorization providers.
+	DomainName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s WebsiteAuthorizationProviderSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WebsiteAuthorizationProviderSummary) GoString() string {
+	return s.String()
+}
+
+// SetAuthorizationProviderId sets the AuthorizationProviderId field's value.
+func (s *WebsiteAuthorizationProviderSummary) SetAuthorizationProviderId(v string) *WebsiteAuthorizationProviderSummary {
+	s.AuthorizationProviderId = &v
+	return s
+}
+
+// SetAuthorizationProviderType sets the AuthorizationProviderType field's value.
+func (s *WebsiteAuthorizationProviderSummary) SetAuthorizationProviderType(v string) *WebsiteAuthorizationProviderSummary {
+	s.AuthorizationProviderType = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *WebsiteAuthorizationProviderSummary) SetCreatedTime(v time.Time) *WebsiteAuthorizationProviderSummary {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *WebsiteAuthorizationProviderSummary) SetDomainName(v string) *WebsiteAuthorizationProviderSummary {
+	s.DomainName = &v
+	return s
+}
+
 // The summary of the certificate authority (CA).
 type WebsiteCaSummary struct {
 	_ struct{} `type:"structure"`
@@ -3871,11 +6238,42 @@ func (s *WebsiteCaSummary) SetWebsiteCaId(v string) *WebsiteCaSummary {
 }
 
 const (
+	// AuthorizationProviderTypeSaml is a AuthorizationProviderType enum value
+	AuthorizationProviderTypeSaml = "SAML"
+)
+
+const (
 	// DeviceStatusActive is a DeviceStatus enum value
 	DeviceStatusActive = "ACTIVE"
 
 	// DeviceStatusSignedOut is a DeviceStatus enum value
 	DeviceStatusSignedOut = "SIGNED_OUT"
+)
+
+const (
+	// DomainStatusPendingValidation is a DomainStatus enum value
+	DomainStatusPendingValidation = "PENDING_VALIDATION"
+
+	// DomainStatusAssociating is a DomainStatus enum value
+	DomainStatusAssociating = "ASSOCIATING"
+
+	// DomainStatusActive is a DomainStatus enum value
+	DomainStatusActive = "ACTIVE"
+
+	// DomainStatusInactive is a DomainStatus enum value
+	DomainStatusInactive = "INACTIVE"
+
+	// DomainStatusDisassociating is a DomainStatus enum value
+	DomainStatusDisassociating = "DISASSOCIATING"
+
+	// DomainStatusDisassociated is a DomainStatus enum value
+	DomainStatusDisassociated = "DISASSOCIATED"
+
+	// DomainStatusFailedToAssociate is a DomainStatus enum value
+	DomainStatusFailedToAssociate = "FAILED_TO_ASSOCIATE"
+
+	// DomainStatusFailedToDisassociate is a DomainStatus enum value
+	DomainStatusFailedToDisassociate = "FAILED_TO_DISASSOCIATE"
 )
 
 const (

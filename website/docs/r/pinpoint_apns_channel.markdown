@@ -1,12 +1,12 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_apns_channel"
-sidebar_current: "docs-aws-resource-pinpoint-apns-channel"
 description: |-
   Provides a Pinpoint APNs Channel resource.
 ---
 
-# aws_pinpoint_apns_channel
+# Resource: aws_pinpoint_apns_channel
 
 Provides a Pinpoint APNs Channel resource.
 

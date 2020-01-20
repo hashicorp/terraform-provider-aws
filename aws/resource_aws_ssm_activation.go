@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsSsmActivation() *schema.Resource {
@@ -36,6 +37,7 @@ func resourceAwsSsmActivation() *schema.Resource {
 			"expiration_date": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.ValidateRFC3339TimeString,
 			},
@@ -57,6 +59,7 @@ func resourceAwsSsmActivation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchemaForceNew(),
 		},
 	}
 }
@@ -90,6 +93,9 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 	if _, ok := d.GetOk("registration_limit"); ok {
 		activationInput.RegistrationLimit = aws.Int64(int64(d.Get("registration_limit").(int)))
 	}
+	if v, ok := d.GetOk("tags"); ok {
+		activationInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
+	}
 
 	// Retry to allow iam_role to be created and policy attachment to take place
 	var resp *ssm.CreateActivationOutput
@@ -104,6 +110,10 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 
 		return resource.NonRetryableError(err)
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = ssmconn.CreateActivation(activationInput)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error creating SSM activation: %s", err)
@@ -147,11 +157,14 @@ func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) erro
 	activation := resp.ActivationList[0] // Only 1 result as MaxResults is 1 above
 	d.Set("name", activation.DefaultInstanceName)
 	d.Set("description", activation.Description)
-	d.Set("expiration_date", activation.ExpirationDate)
+	d.Set("expiration_date", aws.TimeValue(activation.ExpirationDate).Format(time.RFC3339))
 	d.Set("expired", activation.Expired)
 	d.Set("iam_role", activation.IamRole)
 	d.Set("registration_limit", activation.RegistrationLimit)
 	d.Set("registration_count", activation.RegistrationsCount)
+	if err := d.Set("tags", keyvaluetags.SsmKeyValueTags(activation.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }

@@ -1,12 +1,12 @@
 ---
+subcategory: "Application Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_appautoscaling_policy"
-sidebar_current: "docs-aws-resource-appautoscaling-policy"
 description: |-
   Provides an Application AutoScaling Policy resource.
 ---
 
-# aws_appautoscaling_policy
+# Resource: aws_appautoscaling_policy
 
 Provides an Application AutoScaling Policy resource.
 
@@ -56,9 +56,9 @@ resource "aws_appautoscaling_target" "ecs_target" {
 resource "aws_appautoscaling_policy" "ecs_policy" {
   name               = "scale-down"
   policy_type        = "StepScaling"
-  resource_id        = "service/clusterName/serviceName"
-  scalable_dimension = "ecs:service:DesiredCount"
-  service_namespace  = "ecs"
+  resource_id        = "${aws_appautoscaling_target.ecs_target.resource_id}"
+  scalable_dimension = "${aws_appautoscaling_target.ecs_target.scalable_dimension}"
+  service_namespace  = "${aws_appautoscaling_target.ecs_target.service_namespace}"
 
   step_scaling_policy_configuration {
     adjustment_type         = "ChangeInCapacity"
@@ -70,8 +70,6 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
       scaling_adjustment          = -1
     }
   }
-
-  depends_on = ["aws_appautoscaling_target.ecs_target"]
 }
 ```
 
@@ -174,7 +172,7 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 * `disable_scale_in` - (Optional) Indicates whether scale in by the target tracking policy is disabled. If the value is true, scale in is disabled and the target tracking policy won't remove capacity from the scalable resource. Otherwise, scale in is enabled and the target tracking policy can remove capacity from the scalable resource. The default value is `false`.
 * `scale_in_cooldown` - (Optional) The amount of time, in seconds, after a scale in activity completes before another scale in activity can start.
 * `scale_out_cooldown` - (Optional) The amount of time, in seconds, after a scale out activity completes before another scale out activity can start.
-* `customized_metric_specification` - (Optional) Reserved for future use. See supported fields below.
+* `customized_metric_specification` - (Optional) A custom CloudWatch metric. Documentation can be found  at: [AWS Customized Metric Specification](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_CustomizedMetricSpecification.html). See supported fields below.
 * `predefined_metric_specification` - (Optional) A predefined metric. See supported fields below.
 
 ### `customized_metric_specification`
@@ -191,7 +189,15 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 * `resource_label` - (Optional) Reserved for future use.
 
 ## Attribute Reference
-* `adjustment_type` - The scaling policy's adjustment type.
+
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.
 * `policy_type` - The scaling policy's type.
+
+## Import
+
+Application AutoScaling Policy can be imported using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`.
+
+```
+$ terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
+```

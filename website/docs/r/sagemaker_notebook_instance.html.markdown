@@ -1,12 +1,12 @@
 ---
+subcategory: "Sagemaker"
 layout: "aws"
-page_title: "AWS: sagemaker_notebook_instance"
-sidebar_current: "docs-aws-resource-sagemaker-notebook-instance"
+page_title: "AWS: aws_sagemaker_notebook_instance"
 description: |-
   Provides a Sagemaker Notebook Instance resource.
 ---
 
-# aws_sagemaker_notebook_instance
+# Resource: aws_sagemaker_notebook_instance
 
 Provides a Sagemaker Notebook Instance resource.
 
@@ -16,11 +16,11 @@ Basic usage:
 
 ```hcl
 resource "aws_sagemaker_notebook_instance" "ni" {
-  name = "my-notebook-instance"
-  role_arn = "${aws_iam_role.role.arn}"
+  name          = "my-notebook-instance"
+  role_arn      = "${aws_iam_role.role.arn}"
   instance_type = "ml.t2.medium"
 
-  tags {
+  tags = {
     Name = "foo"
   }
 }
@@ -36,6 +36,7 @@ The following arguments are supported:
 * `subnet_id` - (Optional) The VPC subnet ID.
 * `security_groups` - (Optional) The associated security groups.
 * `kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
+*  `lifecycle_config_name` - (Optional) The name of a lifecycle configuration to associate with the notebook instance.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference

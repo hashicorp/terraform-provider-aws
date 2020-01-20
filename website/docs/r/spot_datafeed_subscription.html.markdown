@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_spot_datafeed_subscription"
-sidebar_current: "docs-aws-resource-spot-datafeed-subscription"
 description: |-
   Provides a Spot Datafeed Subscription resource.
 ---
 
-# aws_spot_datafeed_subscription
+# Resource: aws_spot_datafeed_subscription
 
 -> **Note:** There is only a single subscription allowed per account.
 

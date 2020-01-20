@@ -2,12 +2,17 @@
 
 package databasemigrationservice
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedFault for service response error code
 	// "AccessDeniedFault".
 	//
-	// AWS DMS was denied access to the endpoint.
+	// AWS DMS was denied access to the endpoint. Check that the role is correctly
+	// configured.
 	ErrCodeAccessDeniedFault = "AccessDeniedFault"
 
 	// ErrCodeInsufficientResourceCapacityFault for service response error code
@@ -35,11 +40,42 @@ const (
 	// The subnet provided is invalid.
 	ErrCodeInvalidSubnet = "InvalidSubnet"
 
+	// ErrCodeKMSAccessDeniedFault for service response error code
+	// "KMSAccessDeniedFault".
+	//
+	// The ciphertext references a key that doesn't exist or that the DMS account
+	// doesn't have access to.
+	ErrCodeKMSAccessDeniedFault = "KMSAccessDeniedFault"
+
+	// ErrCodeKMSDisabledFault for service response error code
+	// "KMSDisabledFault".
+	//
+	// The specified master key (CMK) isn't enabled.
+	ErrCodeKMSDisabledFault = "KMSDisabledFault"
+
+	// ErrCodeKMSInvalidStateFault for service response error code
+	// "KMSInvalidStateFault".
+	//
+	// The state of the specified AWS KMS resource isn't valid for this request.
+	ErrCodeKMSInvalidStateFault = "KMSInvalidStateFault"
+
 	// ErrCodeKMSKeyNotAccessibleFault for service response error code
 	// "KMSKeyNotAccessibleFault".
 	//
-	// AWS DMS cannot access the KMS key.
+	// AWS DMS cannot access the AWS KMS key.
 	ErrCodeKMSKeyNotAccessibleFault = "KMSKeyNotAccessibleFault"
+
+	// ErrCodeKMSNotFoundFault for service response error code
+	// "KMSNotFoundFault".
+	//
+	// The specified AWS KMS entity or resource can't be found.
+	ErrCodeKMSNotFoundFault = "KMSNotFoundFault"
+
+	// ErrCodeKMSThrottlingFault for service response error code
+	// "KMSThrottlingFault".
+	//
+	// This request triggered AWS KMS request throttling.
+	ErrCodeKMSThrottlingFault = "KMSThrottlingFault"
 
 	// ErrCodeReplicationSubnetGroupDoesNotCoverEnoughAZs for service response error code
 	// "ReplicationSubnetGroupDoesNotCoverEnoughAZs".
@@ -96,3 +132,26 @@ const (
 	// An upgrade dependency is preventing the database migration.
 	ErrCodeUpgradeDependencyFailureFault = "UpgradeDependencyFailureFault"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedFault":                           newErrorAccessDeniedFault,
+	"InsufficientResourceCapacityFault":           newErrorInsufficientResourceCapacityFault,
+	"InvalidCertificateFault":                     newErrorInvalidCertificateFault,
+	"InvalidResourceStateFault":                   newErrorInvalidResourceStateFault,
+	"InvalidSubnet":                               newErrorInvalidSubnet,
+	"KMSAccessDeniedFault":                        newErrorKMSAccessDeniedFault,
+	"KMSDisabledFault":                            newErrorKMSDisabledFault,
+	"KMSInvalidStateFault":                        newErrorKMSInvalidStateFault,
+	"KMSKeyNotAccessibleFault":                    newErrorKMSKeyNotAccessibleFault,
+	"KMSNotFoundFault":                            newErrorKMSNotFoundFault,
+	"KMSThrottlingFault":                          newErrorKMSThrottlingFault,
+	"ReplicationSubnetGroupDoesNotCoverEnoughAZs": newErrorReplicationSubnetGroupDoesNotCoverEnoughAZs,
+	"ResourceAlreadyExistsFault":                  newErrorResourceAlreadyExistsFault,
+	"ResourceNotFoundFault":                       newErrorResourceNotFoundFault,
+	"ResourceQuotaExceededFault":                  newErrorResourceQuotaExceededFault,
+	"SNSInvalidTopicFault":                        newErrorSNSInvalidTopicFault,
+	"SNSNoAuthorizationFault":                     newErrorSNSNoAuthorizationFault,
+	"StorageQuotaExceededFault":                   newErrorStorageQuotaExceededFault,
+	"SubnetAlreadyInUse":                          newErrorSubnetAlreadyInUse,
+	"UpgradeDependencyFailureFault":               newErrorUpgradeDependencyFailureFault,
+}

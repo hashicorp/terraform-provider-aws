@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
 page_title: "AWS: aws_lb_listener"
-sidebar_current: "docs-aws-datasource-lb-listener"
 description: |-
   Provides a Load Balancer Listener data source.
 ---
@@ -46,7 +46,7 @@ data "aws_lb_listener" "selected443" {
 The following arguments are supported:
 
 * `arn` - (Optional) The arn of the listener. Required if `load_balancer_arn` and `port` is not set.
-* `load_balancer_arn` - (Optional) The arn of the load balander. Required if `arn` is not set.
+* `load_balancer_arn` - (Optional) The arn of the load balancer. Required if `arn` is not set.
 * `port` - (Optional) The port of the listener. Required if `arn` is not set.
 
 ## Attributes Reference

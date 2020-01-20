@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCognitoUserPoolClient() *schema.Resource {
@@ -55,6 +55,11 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 						cognitoidentityprovider.ExplicitAuthFlowsTypeAdminNoSrpAuth,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeCustomAuthFlowOnly,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeUserPasswordAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowAdminUserPasswordAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowCustomAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowUserPasswordAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowUserSrpAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowRefreshTokenAuth,
 					}, false),
 				},
 			},
@@ -104,7 +109,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 			"allowed_oauth_scopes": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 25,
+				MaxItems: 50,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					// https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html
@@ -267,6 +272,10 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 	params := &cognitoidentityprovider.UpdateUserPoolClientInput{
 		ClientId:   aws.String(d.Id()),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		params.ClientName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("explicit_auth_flows"); ok {

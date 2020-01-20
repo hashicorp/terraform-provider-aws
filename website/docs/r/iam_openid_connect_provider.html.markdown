@@ -1,12 +1,12 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_openid_connect_provider"
-sidebar_current: "docs-aws-resource-iam-openid-connect-provider"
 description: |-
   Provides an IAM OpenID Connect provider.
 ---
 
-# aws_iam_openid_connect_provider
+# Resource: aws_iam_openid_connect_provider
 
 Provides an IAM OpenID Connect provider.
 

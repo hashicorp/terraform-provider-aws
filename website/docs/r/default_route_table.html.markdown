@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_route_table"
-sidebar_current: "docs-aws-resource-default-route-table"
 description: |-
   Provides a resource to manage a Default VPC Routing Table.
 ---
 
-# aws_default_route_table
+# Resource: aws_default_route_table
 
 Provides a resource to manage a Default VPC Routing Table.
 
@@ -62,6 +62,7 @@ The following arguments are supported:
 
 * `default_route_table_id` - (Required) The ID of the Default Routing Table.
 * `route` - (Optional) A list of route objects. Their keys are documented below.
+  This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `propagating_vgws` - (Optional) A list of virtual gateways for propagation.
 
@@ -70,7 +71,7 @@ The following arguments are supported:
 One of the following destination arguments must be supplied:
 
 * `cidr_block` - (Required) The CIDR block of the route.
-* `ipv6_cidr_block` - Optional) The Ipv6 CIDR block of the route
+* `ipv6_cidr_block` - (Optional) The Ipv6 CIDR block of the route
 
 One of the following target arguments must be supplied:
 
