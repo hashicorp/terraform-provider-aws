@@ -941,7 +941,6 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 		version = 1
 	}
 
-	oldChanges, newChanges := d.GetChange("sql_application_configuration")
 	if !d.IsNewResource() {
 		updateApplicationOpts := &kinesisanalyticsv2.UpdateApplicationInput{
 			ApplicationName:             aws.String(name),

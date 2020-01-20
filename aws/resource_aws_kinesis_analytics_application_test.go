@@ -453,10 +453,10 @@ func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "sql_application_configuration.outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "sql_application_configuration.outputs.0.name", "test_name"),
-					resource.TestCheckResourceAttr(resName, "sql_application_configuration.outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "sql_application_configuration.outputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.name", "test_name"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.outputs.0.schema.#", "1"),
 				),
 			},
 			{
