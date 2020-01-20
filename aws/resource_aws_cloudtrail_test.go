@@ -123,7 +123,7 @@ func TestAccAWSCloudTrail_serial(t *testing.T) {
 
 func testAccAWSCloudTrail_basic(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
@@ -162,7 +162,7 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 
 func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test-cw")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-cw")
 	resourceName := "aws_cloudtrail.test"
 	cwResourceName := "aws_cloudwatch_log_group.test"
 	roleResourceName := "aws_iam_role.test"
@@ -199,7 +199,7 @@ func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
 
 func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test-log")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-log")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
@@ -247,7 +247,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 
 func testAccAWSCloudTrail_tags(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
@@ -291,7 +291,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 
 func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test-multi")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-multi")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
@@ -337,7 +337,7 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 
 func testAccAWSCloudTrail_is_organization(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test-org")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-org")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
@@ -374,7 +374,7 @@ func testAccAWSCloudTrail_is_organization(t *testing.T) {
 
 func testAccAWSCloudTrail_logValidation(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test-log-val")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-log-val")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
@@ -413,7 +413,7 @@ func testAccAWSCloudTrail_logValidation(t *testing.T) {
 
 func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test-kms")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-kms")
 	resourceName := "aws_cloudtrail.test"
 	kmsResourceName := "aws_kms_key.foo"
 
@@ -499,7 +499,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 
 func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test-events")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-events")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
@@ -524,7 +524,7 @@ func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 }
 
 func testAccAWSCloudTrail_event_selector(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test-event")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-event")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
@@ -577,7 +577,7 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.1.data_resource.0.values.1", "s3", fmt.Sprintf("%s/tf2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.type", "AWS::Lambda::Function"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.values.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "event_selector.1.data_resource.1.values.0", "lambda", regexp.MustCompile(fmt.Sprintf(`%s-\d+$`, rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "event_selector.1.data_resource.1.values.0", "lambda", regexp.MustCompile(fmt.Sprintf(`%s.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.read_write_type", "All"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", "0"),
@@ -588,7 +588,7 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 }
 
 func testAccAWSCloudTrail_event_selector_exclude(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test-exclude")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-exclude")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
@@ -622,7 +622,7 @@ func testAccAWSCloudTrail_event_selector_exclude(t *testing.T) {
 
 func testAccAWSCloudTrail_disappears(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test-disappears")
+	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-disappears")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
