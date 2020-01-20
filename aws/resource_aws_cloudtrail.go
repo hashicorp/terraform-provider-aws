@@ -384,7 +384,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.CloudtrailUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating Cloudtrail (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
