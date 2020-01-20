@@ -670,11 +670,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 	}
 }
 
-func runtimeIsFlink(runtime string) bool {
-	return runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
-		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18
-}
-
 func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	name := d.Get("name").(string)
@@ -903,8 +898,7 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 			return fmt.Errorf("error setting sql_application_configuration: %s", err)
 		}
 	}
-	if runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
-		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18 {
+	if runtimeIsFlink(runtime) {
 		if err := d.Set("flink_application_configuration", flattenFlinkApplicationConfigurationDescription(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription)); err != nil {
 			return fmt.Errorf("error setting flink_application_configuration: %s", err)
 		}
@@ -1393,9 +1387,7 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 	}
 
 	var flinkUpdate *kinesisanalyticsv2.FlinkApplicationConfigurationUpdate
-	if runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
-		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18 {
-
+	if runtimeIsFlink(runtime) {
 		var checkpointUpdate *kinesisanalyticsv2.CheckpointConfigurationUpdate
 		var monitoringUpdate *kinesisanalyticsv2.MonitoringConfigurationUpdate
 		var parallelismUpdate *kinesisanalyticsv2.ParallelismConfigurationUpdate
@@ -2061,4 +2053,9 @@ func refreshKinesisAnalyticsApplicationStatus(conn *kinesisanalyticsv2.KinesisAn
 		}
 		return application, aws.StringValue(application.ApplicationStatus), nil
 	}
+}
+
+func runtimeIsFlink(runtime string) bool {
+	return runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
+		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18
 }
