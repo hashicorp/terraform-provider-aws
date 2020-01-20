@@ -899,10 +899,8 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 
 	runtime := aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment)
 	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
-		if resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription != nil {
-			if err := d.Set("sql_application_configuration", flattenSqlApplicationConfigurationDescription(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription)); err != nil {
-				return fmt.Errorf("error setting sql_application_configuration: %s", err)
-			}
+		if err := d.Set("sql_application_configuration", flattenSqlApplicationConfigurationDescription(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription)); err != nil {
+			return fmt.Errorf("error setting sql_application_configuration: %s", err)
 		}
 	}
 	if runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
@@ -1707,6 +1705,10 @@ func expandKinesisAnalyticsCloudwatchLoggingOptionUpdate(clo map[string]interfac
 func flattenSqlApplicationConfigurationDescription(sqlApplicationConfig *kinesisanalyticsv2.SqlApplicationConfigurationDescription) []interface{} {
 	ret := map[string]interface{}{}
 
+	if sqlApplicationConfig == nil {
+		return []interface{}{ret}
+	}
+
 	ret["inputs"] = flattenKinesisAnalyticsInputs(sqlApplicationConfig.InputDescriptions)
 	ret["outputs"] = flattenKinesisAnalyticsOutputs(sqlApplicationConfig.OutputDescriptions)
 	ret["reference_data_sources"] = flattenKinesisAnalyticsReferenceDataSources(sqlApplicationConfig.ReferenceDataSourceDescriptions)
@@ -1715,6 +1717,9 @@ func flattenSqlApplicationConfigurationDescription(sqlApplicationConfig *kinesis
 
 func flattenFlinkApplicationConfigurationDescription(flinkApplicationConfig *kinesisanalyticsv2.FlinkApplicationConfigurationDescription) []interface{} {
 	ret := map[string]interface{}{}
+	if flinkApplicationConfig == nil {
+		return []interface{}{ret}
+	}
 	ret["checkpoint_configuration"] = map[string]interface{}{
 		"checkpoint_interval":           strconv.FormatInt(aws.Int64Value(flinkApplicationConfig.CheckpointConfigurationDescription.CheckpointInterval), 10),
 		"checkpointing_enabled":         strconv.FormatBool(aws.BoolValue(flinkApplicationConfig.CheckpointConfigurationDescription.CheckpointingEnabled)),
