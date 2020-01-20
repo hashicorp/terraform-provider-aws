@@ -84,6 +84,9 @@ func testSweepCloudhsmv2Clusters(region string) error {
 }
 
 func TestAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
+	var cluster cloudhsmv2.Cluster
+	resourceName := "aws_cloudhsm_v2_cluster.cluster"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -92,16 +95,16 @@ func TestAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudHsmV2ClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudHsmV2ClusterExists("aws_cloudhsm_v2_cluster.cluster"),
-					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "cluster_id"),
-					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "vpc_id"),
-					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "security_group_id"),
-					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "cluster_state"),
-					resource.TestCheckResourceAttr("aws_cloudhsm_v2_cluster.cluster", "tags.%", "0"),
+					testAccCheckAWSCloudHsmV2ClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_state"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:            "aws_cloudhsm_v2_cluster.cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"cluster_certificates"},
@@ -111,6 +114,7 @@ func TestAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
+	var cluster cloudhsmv2.Cluster
 	resourceName := "aws_cloudhsm_v2_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -121,7 +125,7 @@ func TestAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
 			{
 				Config: testAccAWSCloudHsmV2ClusterConfigTags2("key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
+					testAccCheckAWSCloudHsmV2ClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -136,7 +140,7 @@ func TestAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
 			{
 				Config: testAccAWSCloudHsmV2ClusterConfigTags1("key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
+					testAccCheckAWSCloudHsmV2ClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 				),
@@ -144,11 +148,32 @@ func TestAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
 			{
 				Config: testAccAWSCloudHsmV2ClusterConfigTags2("key1", "value1updated", "key3", "value3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
+					testAccCheckAWSCloudHsmV2ClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key3", "value3"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudHsm2Cluster_disappears(t *testing.T) {
+	var cluster cloudhsmv2.Cluster
+	resourceName := "aws_cloudhsm_v2_cluster.cluster"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudHsmV2ClusterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCloudHsmV2ClusterExists(resourceName, &cluster),
+					testAccCheckAWSCloudHsmV2ClusterDisappears(&cluster),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -232,7 +257,7 @@ func testAccCheckAWSCloudHsmV2ClusterDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if cluster != nil && aws.StringValue(cluster.State) != "DELETED" {
+		if cluster != nil && aws.StringValue(cluster.State) != cloudhsmv2.ClusterStateDeleted {
 			return fmt.Errorf("CloudHSM cluster still exists %s", cluster)
 		}
 	}
@@ -240,7 +265,7 @@ func testAccCheckAWSCloudHsmV2ClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSCloudHsmV2ClusterExists(name string) resource.TestCheckFunc {
+func testAccCheckAWSCloudHsmV2ClusterExists(name string, cluster *cloudhsmv2.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
 		it, ok := s.RootModule().Resources[name]
@@ -248,12 +273,24 @@ func testAccCheckAWSCloudHsmV2ClusterExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		_, err := describeCloudHsmV2Cluster(conn, it.Primary.ID)
+		resp, err := describeCloudHsmV2Cluster(conn, it.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("CloudHSM cluster not found: %s", err)
 		}
 
+		*cluster = *resp
+
 		return nil
+	}
+}
+
+func testAccCheckAWSCloudHsmV2ClusterDisappears(cluster *cloudhsmv2.Cluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+		input := &cloudhsmv2.DeleteClusterInput{ClusterId: cluster.ClusterId}
+
+		_, err := conn.DeleteCluster(input)
+		return err
 	}
 }
