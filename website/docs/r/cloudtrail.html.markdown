@@ -181,6 +181,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The name of the trail.
 * `home_region` - The region in which the trail was created.
 * `arn` - The Amazon Resource Name of the trail.
+* `sns_topic_arn` - The Amazon Resource Name of the Amazon SNS topic defined for notification of log file delivery.
 
 
 ## Import
