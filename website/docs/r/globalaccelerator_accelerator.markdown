@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_globalaccelerator_accelerator
 
-Provides a Global Accelerator accelerator.
+Creates a Global Accelerator accelerator.
 
 ## Example Usage
 
@@ -46,12 +46,18 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) of the accelerator.
+* `dns_name` - The DNS name of the accelerator. For example, `a5d53ff5ee6bca4ce.awsglobalaccelerator.com`.
+* `hosted_zone_id` --  The Global Accelerator Route 53 zone ID that can be used to
+  route an [Alias Resource Record Set][1] to the Global Accelerator. This attribute
+  is simply an alias for the zone ID `Z2BJ6XQ5FK7U4H`.
 * `ip_sets` - IP address set associated with the accelerator.
 
 **ip_sets** exports the following attributes:
 
-* `ip_addresses` - The array of IP addresses in the IP address set.
+* `ip_addresses` - A list of IP addresses in the IP address set.
 * `ip_family` - The types of IP addresses included in this IP set.
+
+[1]: http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html
 
 ## Import
 
