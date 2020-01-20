@@ -104,6 +104,7 @@ func TestAccAWSCloudTrail_serial(t *testing.T) {
 			"kmsKey":                     testAccAWSCloudTrail_kmsKey,
 			"tags":                       testAccAWSCloudTrail_tags,
 			"eventSelector":              testAccAWSCloudTrail_event_selector,
+			"eventSelectorWExclude":      testAccAWSCloudTrail_event_selector_exclude,
 		},
 	}
 
@@ -123,7 +124,7 @@ func TestAccAWSCloudTrail_serial(t *testing.T) {
 func testAccAWSCloudTrail_basic(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -197,7 +198,7 @@ func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
 func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -245,7 +246,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -291,7 +292,7 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 func testAccAWSCloudTrail_is_organization(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
@@ -328,7 +329,7 @@ func testAccAWSCloudTrail_is_organization(t *testing.T) {
 func testAccAWSCloudTrail_logValidation(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -368,7 +369,7 @@ func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
 
-	resourceName := "aws_cloudtrail.foobar"
+	resourceName := "aws_cloudtrail.test"
 	kmsResourceName := "aws_kms_key.foo"
 
 	resource.Test(t, resource.TestCase{
@@ -400,7 +401,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 	var trailTags []*cloudtrail.Tag
 	var trailTagsModified []*cloudtrail.Tag
 	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -454,7 +455,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -479,7 +480,7 @@ func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 
 func testAccAWSCloudTrail_event_selector(t *testing.T) {
 	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -497,6 +498,7 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "event_selector.0.data_resource.0.values.1", regexp.MustCompile(`^arn:[^:]+:s3:::.+/baz$`)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", "0"),
 				),
 			},
 			{
@@ -533,6 +535,34 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "event_selector.1.data_resource.1.values.0", regexp.MustCompile(`^arn:[^:]+:lambda:.+:tf-test-trail-event-select-\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.read_write_type", "All"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSCloudTrail_event_selector_exclude(t *testing.T) {
+	cloudTrailRandInt := acctest.RandInt()
+	resourceName := "aws_cloudtrail.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudTrailConfig_eventSelectorExclude(cloudTrailRandInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::S3::Object"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", "2"),
+					resource.TestMatchResourceAttr(resourceName, "event_selector.0.data_resource.0.values.0", regexp.MustCompile(`^arn:[^:]+:s3:::.+/foobar$`)),
+					resource.TestMatchResourceAttr(resourceName, "event_selector.0.data_resource.0.values.1", regexp.MustCompile(`^arn:[^:]+:s3:::.+/baz$`)),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", "1"),
 				),
 			},
 			{
@@ -670,8 +700,8 @@ func testAccCheckCloudTrailLoadTags(trail *cloudtrail.Trail, tags *[]*cloudtrail
 
 func testAccAWSCloudTrailConfig(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudtrail" "foobar" {
-  name           = "tf-trail-foobar-%d"
+resource "aws_cloudtrail" "test" {
+  name           = "tf-trail-test-%d"
   s3_bucket_name = "${aws_s3_bucket.foo.id}"
 }
 
@@ -711,8 +741,8 @@ POLICY
 
 func testAccAWSCloudTrailConfigModified(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudtrail" "foobar" {
-  name                          = "tf-trail-foobar-%d"
+resource "aws_cloudtrail" "test" {
+  name                          = "tf-trail-test-%d"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
@@ -939,8 +969,8 @@ POLICY
 
 func testAccAWSCloudTrailConfigMultiRegion(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudtrail" "foobar" {
-  name                  = "tf-trail-foobar-%d"
+resource "aws_cloudtrail" "test" {
+  name                  = "tf-trail-test-%d"
   s3_bucket_name        = "${aws_s3_bucket.foo.id}"
   is_multi_region_trail = true
 }
@@ -985,9 +1015,9 @@ resource "aws_organizations_organization" "test" {
   aws_service_access_principals = ["cloudtrail.amazonaws.com"]
 }
 
-resource "aws_cloudtrail" "foobar" {
+resource "aws_cloudtrail" "test" {
   is_organization_trail = true
-  name                  = "tf-trail-foobar-%d"
+  name                  = "tf-trail-test-%d"
   s3_bucket_name        = "${aws_s3_bucket.foo.id}"
 }
 
@@ -1027,7 +1057,7 @@ POLICY
 
 func testAccAWSCloudTrailConfig_logValidation(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudtrail" "foobar" {
+resource "aws_cloudtrail" "test" {
   name                          = "tf-acc-trail-log-validation-test-%d"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
   is_multi_region_trail         = true
@@ -1071,7 +1101,7 @@ POLICY
 
 func testAccAWSCloudTrailConfig_logValidationModified(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudtrail" "foobar" {
+resource "aws_cloudtrail" "test" {
   name                          = "tf-acc-trail-log-validation-test-%d"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
   include_global_service_events = true
@@ -1135,7 +1165,7 @@ resource "aws_kms_key" "foo" {
 POLICY
 }
 
-resource "aws_cloudtrail" "foobar" {
+resource "aws_cloudtrail" "test" {
   name                          = "tf-acc-trail-log-validation-test-%d"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
   include_global_service_events = true
@@ -1177,7 +1207,7 @@ POLICY
 }
 
 var testAccAWSCloudTrailConfig_tags_tpl = `
-resource "aws_cloudtrail" "foobar" {
+resource "aws_cloudtrail" "test" {
     name = "tf-acc-trail-log-validation-test-%d"
     s3_bucket_name = "${aws_s3_bucket.foo.id}"
     %s
@@ -1217,8 +1247,8 @@ POLICY
 
 func testAccAWSCloudTrailConfig_include_global_service_events(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudtrail" "foobar" {
-  name                          = "tf-trail-foobar-%d"
+resource "aws_cloudtrail" "test" {
+  name                          = "tf-trail-test-%d"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
   include_global_service_events = false
 }
@@ -1291,8 +1321,8 @@ func testAccAWSCloudTrailConfig_tagsModifiedAgain(cloudTrailRandInt int) string 
 
 func testAccAWSCloudTrailConfig_eventSelector(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudtrail" "foobar" {
-  name           = "tf-trail-foobar-%d"
+resource "aws_cloudtrail" "test" {
+  name           = "tf-trail-test-%d"
   s3_bucket_name = "${aws_s3_bucket.foo.id}"
 
   event_selector {
@@ -1394,10 +1424,72 @@ POLICY
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
 
+func testAccAWSCloudTrailConfig_eventSelectorExclude(cloudTrailRandInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  name           = "tf-trail-test-%d"
+  s3_bucket_name = "${aws_s3_bucket.foo.id}"
+
+  event_selector {
+    read_write_type                  = "ReadOnly"
+    include_management_events        = true
+    exclude_management_event_sources = ["kms.amazonaws.com"]
+
+
+    data_resource {
+      type = "AWS::S3::Object"
+
+      values = [
+        "${aws_s3_bucket.bar.arn}/foobar",
+        "${aws_s3_bucket.bar.arn}/baz",
+      ]
+    }
+  }
+}
+
+resource "aws_s3_bucket" "foo" {
+  bucket        = "tf-test-trail-%d"
+  force_destroy = true
+
+  policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AWSCloudTrailAclCheck",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetBucketAcl",
+			"Resource": "arn:aws:s3:::tf-test-trail-%d"
+		},
+		{
+			"Sid": "AWSCloudTrailWrite",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:PutObject",
+			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+			"Condition": {
+				"StringEquals": {
+					"s3:x-amz-acl": "bucket-owner-full-control"
+				}
+			}
+		}
+	]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "bar" {
+  bucket        = "tf-test-trail-event-select-%d"
+  force_destroy = true
+}
+`, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
+}
+
 func testAccAWSCloudTrailConfig_eventSelectorModified(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudtrail" "foobar" {
-  name           = "tf-trail-foobar-%d"
+resource "aws_cloudtrail" "test" {
+  name           = "tf-trail-test-%d"
   s3_bucket_name = "${aws_s3_bucket.foo.id}"
 
   event_selector {

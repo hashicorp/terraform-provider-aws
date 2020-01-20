@@ -43,12 +43,14 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Optional: true,
 			},
 			"cloud_watch_logs_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"cloud_watch_logs_group_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"include_global_service_events": {
 				Type:     schema.TypeBool,
@@ -66,8 +68,9 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Default:  false,
 			},
 			"sns_topic_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
 			"enable_log_file_validation": {
 				Type:     schema.TypeBool,
@@ -116,10 +119,18 @@ func resourceAwsCloudTrail() *schema.Resource {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 250,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateArn,
+										},
 									},
 								},
 							},
+						},
+						"exclude_management_event_sources": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -133,6 +144,10 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
+			"sns_topic_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -262,6 +277,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("is_multi_region_trail", trail.IsMultiRegionTrail)
 	d.Set("is_organization_trail", trail.IsOrganizationTrail)
 	d.Set("sns_topic_name", trail.SnsTopicName)
+	d.Set("sns_topic_arn", trail.SnsTopicARN)
 	d.Set("enable_log_file_validation", trail.LogFileValidationEnabled)
 
 	// TODO: Make it possible to use KMS Key names, not just ARNs
@@ -481,11 +497,16 @@ func expandAwsCloudTrailEventSelector(configured []interface{}) []*cloudtrail.Ev
 		data := raw.(map[string]interface{})
 		dataResources := expandAwsCloudTrailEventSelectorDataResource(data["data_resource"].([]interface{}))
 
+		includeManagementEvents := data["include_management_events"].(bool)
 		es := &cloudtrail.EventSelector{
-			IncludeManagementEvents: aws.Bool(data["include_management_events"].(bool)),
+			IncludeManagementEvents: aws.Bool(includeManagementEvents),
 			ReadWriteType:           aws.String(data["read_write_type"].(string)),
 			DataResources:           dataResources,
 		}
+		if data["exclude_management_event_sources"] != nil && includeManagementEvents {
+			es.ExcludeManagementEventSources = expandStringList(data["exclude_management_event_sources"].([]interface{}))
+		}
+
 		eventSelectors = append(eventSelectors, es)
 	}
 
@@ -528,6 +549,7 @@ func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) [
 		item["read_write_type"] = *raw.ReadWriteType
 		item["include_management_events"] = *raw.IncludeManagementEvents
 		item["data_resource"] = flattenAwsCloudTrailEventSelectorDataResource(raw.DataResources)
+		item["exclude_management_event_sources"] = flattenStringList(raw.ExcludeManagementEventSources)
 
 		eventSelectors = append(eventSelectors, item)
 	}
