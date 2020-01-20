@@ -577,7 +577,7 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.1.data_resource.0.values.1", "s3", fmt.Sprintf("%s/tf2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.type", "AWS::Lambda::Function"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.values.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "event_selector.1.data_resource.1.values.0", "lambda", regexp.MustCompile(fmt.Sprintf(`%s.+`, rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "event_selector.1.data_resource.1.values.0", "lambda", regexp.MustCompile(`function:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.read_write_type", "All"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", "0"),
