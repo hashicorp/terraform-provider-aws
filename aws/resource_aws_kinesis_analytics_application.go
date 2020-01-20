@@ -694,26 +694,29 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 			break
 		}
 		sqlApplicationConfiguration = &kinesisanalyticsv2.SqlApplicationConfiguration{}
-		sc := sqlConfig.([]interface{})[0].(map[string]interface{})
-		if v := sc["inputs"].([]interface{}); len(v) > 0 {
-			i := v[0].(map[string]interface{})
-			inputs := expandKinesisAnalyticsInputs(i)
-			sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{inputs}
-		}
-		if v := sc["outputs"].([]interface{}); len(v) > 0 {
-			outputs := make([]*kinesisanalyticsv2.Output, 0)
-			for _, o := range v {
-				output := expandKinesisAnalyticsOutputs(o.(map[string]interface{}))
-				outputs = append(outputs, output)
+		sc := sqlConfig.([]interface{})[0]
+		if sc != nil {
+			scm := sc.(map[string]interface{})
+			if v := scm["inputs"].([]interface{}); len(v) > 0 {
+				i := v[0].(map[string]interface{})
+				inputs := expandKinesisAnalyticsInputs(i)
+				sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{inputs}
 			}
-			sqlApplicationConfiguration.Outputs = outputs
-		}
-		if v := sc["reference_data_sources"].([]interface{}); len(v) > 0 {
-			references := make([]*kinesisanalyticsv2.ReferenceDataSource, 0)
-			for _, r := range v {
-				references = append(references, expandKinesisAnalyticsReferenceData(r.(map[string]interface{})))
+			if v := scm["outputs"].([]interface{}); len(v) > 0 {
+				outputs := make([]*kinesisanalyticsv2.Output, 0)
+				for _, o := range v {
+					output := expandKinesisAnalyticsOutputs(o.(map[string]interface{}))
+					outputs = append(outputs, output)
+				}
+				sqlApplicationConfiguration.Outputs = outputs
 			}
-			sqlApplicationConfiguration.ReferenceDataSources = references
+			if v := scm["reference_data_sources"].([]interface{}); len(v) > 0 {
+				references := make([]*kinesisanalyticsv2.ReferenceDataSource, 0)
+				for _, r := range v {
+					references = append(references, expandKinesisAnalyticsReferenceData(r.(map[string]interface{})))
+				}
+				sqlApplicationConfiguration.ReferenceDataSources = references
+			}
 		}
 	case strings.HasPrefix(runtime, "FLINK"):
 		flinkApplicationConfiguration = &kinesisanalyticsv2.FlinkApplicationConfiguration{}
@@ -938,6 +941,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 		version = 1
 	}
 
+	oldChanges, newChanges := d.GetChange("sql_application_configuration")
 	if !d.IsNewResource() {
 		updateApplicationOpts := &kinesisanalyticsv2.UpdateApplicationInput{
 			ApplicationName:             aws.String(name),
@@ -986,6 +990,79 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 
 				if err != nil {
 					return fmt.Errorf("Unable to add CloudWatch logging options: %s", err)
+				}
+				version = version + 1
+			}
+		}
+		if d.HasChange("sql_application_configuration") {
+			oldConf, newConf := d.GetChange("sql_application_configuration")
+			o := oldConf.([]interface{})[0].(map[string]interface{})
+			n := newConf.([]interface{})[0].(map[string]interface{})
+			oldInputs := o["inputs"].([]interface{})
+			oldOutputs := o["outputs"].([]interface{})
+			newInputs := n["inputs"].([]interface{})
+			newOutputs := n["outputs"].([]interface{})
+
+			if len(oldInputs) == 0 && len(newInputs) > 0 {
+				i := newInputs[0].(map[string]interface{})
+				input := expandKinesisAnalyticsInputs(i)
+				addOpts := &kinesisanalyticsv2.AddApplicationInputInput{
+					ApplicationName:             aws.String(name),
+					CurrentApplicationVersionId: aws.Int64(int64(version)),
+					Input:                       input,
+				}
+				// Retry for IAM eventual consistency
+				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+					_, err := conn.AddApplicationInput(addOpts)
+					if err != nil {
+						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
+						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationInput(addOpts)
+				}
+
+				if err != nil {
+					return fmt.Errorf("Unable to add application inputs: %s", err)
+				}
+				version = version + 1
+			}
+			if len(oldOutputs) == 0 && len(newOutputs) > 0 {
+				o := newOutputs[0].(map[string]interface{})
+				output := expandKinesisAnalyticsOutputs(o)
+				addOpts := &kinesisanalyticsv2.AddApplicationOutputInput{
+					ApplicationName:             aws.String(name),
+					CurrentApplicationVersionId: aws.Int64(int64(version)),
+					Output:                      output,
+				}
+				// Retry for IAM eventual consistency
+				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+					_, err := conn.AddApplicationOutput(addOpts)
+					if err != nil {
+						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
+						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationOutput(addOpts)
+				}
+				if err != nil {
+					return fmt.Errorf("Unable to add application outputs: %s", err)
 				}
 				version = version + 1
 			}
@@ -1266,11 +1343,22 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 
 		if d.HasChange("sql_application_configuration") {
 			sc := d.Get("sql_application_configuration").([]interface{})[0].(map[string]interface{})
-			if iConf, ok := sc["inputs"].([]interface{}); ok && len(iConf) > 0 {
-				inputsUpdate = []*kinesisanalyticsv2.InputUpdate{expandKinesisAnalyticsInputUpdate(iConf[0].(map[string]interface{}))}
+			oldConfigIfc, _ := d.GetChange("sql_application_configuration")
+			oldConfig := oldConfigIfc.([]interface{})
+			var hasOldInputs, hasOldOutputs bool
+			if len(oldConfig) > 0 {
+				hasOldInputs = len(oldConfig[0].(map[string]interface{})["inputs"].([]interface{})) > 0
+				hasOldOutputs = len(oldConfig[0].(map[string]interface{})["outputs"].([]interface{})) > 0
 			}
-			if oConf, ok := sc["outputs"].([]interface{}); ok && len(oConf) > 0 {
-				outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{expandKinesisAnalyticsOutputUpdate(oConf[0].(map[string]interface{}))}
+			if hasOldInputs {
+				if iConf, ok := sc["inputs"].([]interface{}); ok && len(iConf) > 0 {
+					inputsUpdate = []*kinesisanalyticsv2.InputUpdate{expandKinesisAnalyticsInputUpdate(iConf[0].(map[string]interface{}))}
+				}
+			}
+			if hasOldOutputs {
+				if oConf, ok := sc["outputs"].([]interface{}); ok && len(oConf) > 0 {
+					outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{expandKinesisAnalyticsOutputUpdate(oConf[0].(map[string]interface{}))}
+				}
 			}
 			rConf := sc["reference_data_sources"].([]interface{})
 			for _, rd := range rConf {
@@ -1297,10 +1385,12 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 
 				referenceDataUpdate = append(referenceDataUpdate, rdsu)
 			}
-			sqlUpdate = &kinesisanalyticsv2.SqlApplicationConfigurationUpdate{
-				InputUpdates:               inputsUpdate,
-				OutputUpdates:              outputsUpdate,
-				ReferenceDataSourceUpdates: referenceDataUpdate,
+			if inputsUpdate != nil || outputsUpdate != nil || referenceDataUpdate != nil {
+				sqlUpdate = &kinesisanalyticsv2.SqlApplicationConfigurationUpdate{
+					InputUpdates:               inputsUpdate,
+					OutputUpdates:              outputsUpdate,
+					ReferenceDataSourceUpdates: referenceDataUpdate,
+				}
 			}
 		}
 	}

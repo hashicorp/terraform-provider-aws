@@ -296,7 +296,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsAdd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.#", "0"),
 				),
 			},
 			{
@@ -304,14 +304,14 @@ func TestAccAWSKinesisAnalyticsApplication_inputsAdd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_columns.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.name_prefix", "test_prefix"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
 				),
 			},
 			{
@@ -453,10 +453,10 @@ func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.outputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.outputs.0.name", "test_name"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.outputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttr(resName, "sql_application_configuration.outputs.0.schema.#", "1"),
 				),
 			},
 			{
@@ -776,6 +776,8 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   runtime                = "SQL-1_0"
   service_execution_role = "${aws_iam_role.test.arn}"
+
+  sql_application_configuration {}
 }
 `, rInt)
 }
@@ -788,6 +790,8 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   runtime                = "SQL-1_0"
   service_execution_role = "${aws_iam_role.test.arn}"
+
+  sql_application_configuration {}
 }
 `, rInt)
 }
@@ -809,6 +813,8 @@ resource "aws_kinesis_analytics_application" "test" {
   runtime                = "SQL-1_0"
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.test.arn}"
+
+  sql_application_configuration {}
 
   cloudwatch_logging_options {
     log_stream_arn = "${aws_cloudwatch_log_stream.test.arn}"
@@ -1526,6 +1532,8 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type      = "plain_text"
   code                   = "testCode\n"
 
+  sql_application_configuration {}
+
   tags = {
     firstTag  = "%s"
     secondTag = "%s"
@@ -1559,6 +1567,8 @@ resource "aws_kinesis_analytics_application" "test" {
   service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
   code_content_type      = "plain_text"
   code                   = "testCode\n"
+
+  sql_application_configuration {}
 
   tags = {
     firstTag  = "%s"
