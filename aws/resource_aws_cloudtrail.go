@@ -366,7 +366,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
+			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

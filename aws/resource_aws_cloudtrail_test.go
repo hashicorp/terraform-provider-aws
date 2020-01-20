@@ -165,6 +165,7 @@ func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-cloudtrail-test-cw")
 	resourceName := "aws_cloudtrail.test"
 	cwResourceName := "aws_cloudwatch_log_group.test"
+	cwChangeResourceName := "aws_cloudwatch_log_group.second"
 	roleResourceName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
@@ -189,7 +190,7 @@ func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
 				Config: testAccAWSCloudTrailConfigCloudWatchModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
-					resource.TestCheckResourceAttrPair(resourceName, "cloud_watch_logs_group_arn", cwResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloud_watch_logs_group_arn", cwChangeResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloud_watch_logs_role_arn", roleResourceName, "arn"),
 				),
 			},
@@ -836,6 +837,18 @@ resource "aws_cloudtrail" "test" {
   include_global_service_events = false
   enable_logging                = false
 }
+`, rName)
+}
+
+func testAccAWSCloudTrailConfigSNS(rName string) string {
+	return testAccAWSCloudTrailConfigS3Base(rName) + fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  name           = %[1]q
+  s3_bucket_name = "${aws_s3_bucket.test.id}"
+  sns_topic_name = "${aws_sns_topic.test.name}"
+}
+
+resource "aws_sns_topic" "test" {}
 `, rName)
 }
 
