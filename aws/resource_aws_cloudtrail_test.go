@@ -135,6 +135,7 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 				Config: testAccAWSCloudTrailConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", fmt.Sprintf("trail/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "false"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
