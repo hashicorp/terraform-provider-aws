@@ -181,7 +181,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 								},
 							},
 						},
-						// Flink only
 						"monitoring_configuration": {
 							Type:       schema.TypeMap,
 							Optional:   true,
@@ -207,7 +206,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 								},
 							},
 						},
-						// Flink only
 						"parallelism_configuration": {
 							Type:       schema.TypeMap,
 							Optional:   true,
@@ -1703,17 +1701,14 @@ func expandKinesisAnalayticsSqlApplicationConfiguration(appConfig map[string]int
 
 func expandKinesisAnalyticsFlinkApplicationConfiguration(appConfig map[string]interface{}) *kinesisanalyticsv2.FlinkApplicationConfiguration {
 	flinkApplicationConfiguration := &kinesisanalyticsv2.FlinkApplicationConfiguration{}
-	if v, ok := appConfig["checkpoint_configuration"]; ok {
-		m := v.(map[string]interface{})
-		flinkApplicationConfiguration.CheckpointConfiguration = expandCheckpointConfiguration(m)
+	if v := appConfig["checkpoint_configuration"].(map[string]interface{}); len(v) > 0 {
+		flinkApplicationConfiguration.CheckpointConfiguration = expandCheckpointConfiguration(v)
 	}
-	if v, ok := appConfig["monitoring_configuration"]; ok {
-		m := v.(map[string]interface{})
-		flinkApplicationConfiguration.MonitoringConfiguration = expandKinesisAnalyticsMonitoringConfiguration(m)
+	if v := appConfig["monitoring_configuration"].(map[string]interface{}); len(v) > 0 {
+		flinkApplicationConfiguration.MonitoringConfiguration = expandKinesisAnalyticsMonitoringConfiguration(v)
 	}
-	if v, ok := appConfig["parallelism_configuration"]; ok {
-		m := v.(map[string]interface{})
-		flinkApplicationConfiguration.ParallelismConfiguration = expandParallelismConfiguration(m)
+	if v := appConfig["parallelism_configuration"].(map[string]interface{}); len(v) > 0 {
+		flinkApplicationConfiguration.ParallelismConfiguration = expandParallelismConfiguration(v)
 	}
 	return flinkApplicationConfiguration
 }
