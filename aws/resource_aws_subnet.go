@@ -250,16 +250,14 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", subnet.SubnetArn)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnorePrefixes(ignoreTagPrefixes).Ignore(ignoreTags).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	_, tagsAreDefined := d.GetOk("tags")
+	if tagsAreDefined {
+		if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnorePrefixes(ignoreTagPrefixes).Ignore(ignoreTags).Map()); err != nil {
+			return fmt.Errorf("error setting tags: %s", err)
+		}
 	}
 
 	d.Set("owner_id", subnet.OwnerId)
-
-	_, tagsAreDefined := d.GetOk("tags")
-	if tagsAreDefined {
-		d.Set("tags", tagsToMap(subnet.Tags))
-	}
 
 	return nil
 }
