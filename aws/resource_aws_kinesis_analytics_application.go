@@ -688,45 +688,19 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		if !ok {
 			break
 		}
-		sqlApplicationConfiguration = &kinesisanalyticsv2.SqlApplicationConfiguration{}
 		sc := sqlConfig.([]interface{})[0]
 		if sc != nil {
-			scm := sc.(map[string]interface{})
-			if v := scm["inputs"].([]interface{}); len(v) > 0 {
-				i := v[0].(map[string]interface{})
-				inputs := expandKinesisAnalyticsInputs(i)
-				sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{inputs}
-			}
-			if v := scm["outputs"].([]interface{}); len(v) > 0 {
-				outputs := make([]*kinesisanalyticsv2.Output, 0)
-				for _, o := range v {
-					output := expandKinesisAnalyticsOutputs(o.(map[string]interface{}))
-					outputs = append(outputs, output)
-				}
-				sqlApplicationConfiguration.Outputs = outputs
-			}
-			if v := scm["reference_data_sources"].([]interface{}); len(v) > 0 {
-				references := make([]*kinesisanalyticsv2.ReferenceDataSource, 0)
-				for _, r := range v {
-					references = append(references, expandKinesisAnalyticsReferenceData(r.(map[string]interface{})))
-				}
-				sqlApplicationConfiguration.ReferenceDataSources = references
-			}
+			sqlApplicationConfiguration = expandKinesisAnalayticsSqlApplicationConfiguration(sc.(map[string]interface{}))
 		}
+
 	case strings.HasPrefix(runtime, "FLINK"):
-		flinkApplicationConfiguration = &kinesisanalyticsv2.FlinkApplicationConfiguration{}
-		fc := d.Get("flink_application_configuration").([]interface{})[0].(map[string]interface{})
-		if v, ok := fc["checkpoint_configuration"]; ok {
-			m := v.(map[string]interface{})
-			flinkApplicationConfiguration.CheckpointConfiguration = expandCheckpointConfiguration(m)
+		flinkConfig, ok := d.GetOk("flink_application_configuration")
+		if !ok {
+			break
 		}
-		if v, ok := fc["monitoring_configuration"]; ok {
-			m := v.(map[string]interface{})
-			flinkApplicationConfiguration.MonitoringConfiguration = expandKinesisAnalyticsMonitoringConfiguration(m)
-		}
-		if v, ok := fc["parallelism_configuration"]; ok {
-			m := v.(map[string]interface{})
-			flinkApplicationConfiguration.ParallelismConfiguration = expandParallelismConfiguration(m)
+		fc := flinkConfig.([]interface{})[0]
+		if fc != nil {
+			flinkApplicationConfiguration = expandKinesisAnalyticsFlinkApplicationConfiguration(fc.(map[string]interface{}))
 		}
 	}
 
@@ -1325,105 +1299,13 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 
 	runtime := d.Get("runtime").(string)
 	var sqlUpdate *kinesisanalyticsv2.SqlApplicationConfigurationUpdate
-
 	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
-		var inputsUpdate []*kinesisanalyticsv2.InputUpdate
-		var outputsUpdate []*kinesisanalyticsv2.OutputUpdate
-		var referenceDataUpdate []*kinesisanalyticsv2.ReferenceDataSourceUpdate
-
-		if d.HasChange("sql_application_configuration") {
-			sc := d.Get("sql_application_configuration").([]interface{})[0].(map[string]interface{})
-			oldConfigIfc, _ := d.GetChange("sql_application_configuration")
-			oldConfig := oldConfigIfc.([]interface{})
-			var hasOldInputs, hasOldOutputs bool
-			if len(oldConfig) > 0 {
-				hasOldInputs = len(oldConfig[0].(map[string]interface{})["inputs"].([]interface{})) > 0
-				hasOldOutputs = len(oldConfig[0].(map[string]interface{})["outputs"].([]interface{})) > 0
-			}
-			if hasOldInputs {
-				if iConf, ok := sc["inputs"].([]interface{}); ok && len(iConf) > 0 {
-					inputsUpdate = []*kinesisanalyticsv2.InputUpdate{expandKinesisAnalyticsInputUpdate(iConf[0].(map[string]interface{}))}
-				}
-			}
-			if hasOldOutputs {
-				if oConf, ok := sc["outputs"].([]interface{}); ok && len(oConf) > 0 {
-					outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{expandKinesisAnalyticsOutputUpdate(oConf[0].(map[string]interface{}))}
-				}
-			}
-			rConf := sc["reference_data_sources"].([]interface{})
-			for _, rd := range rConf {
-				rdL := rd.(map[string]interface{})
-				rdsu := &kinesisanalyticsv2.ReferenceDataSourceUpdate{
-					ReferenceId:     aws.String(rdL["id"].(string)),
-					TableNameUpdate: aws.String(rdL["table_name"].(string)),
-				}
-
-				if v := rdL["s3"].([]interface{}); len(v) > 0 {
-					vL := v[0].(map[string]interface{})
-					s3rdsu := &kinesisanalyticsv2.S3ReferenceDataSourceUpdate{
-						BucketARNUpdate: aws.String(vL["bucket_arn"].(string)),
-						FileKeyUpdate:   aws.String(vL["file_key"].(string)),
-					}
-					rdsu.S3ReferenceDataSourceUpdate = s3rdsu
-				}
-
-				if v := rdL["schema"].([]interface{}); len(v) > 0 {
-					vL := v[0].(map[string]interface{})
-					ss := expandKinesisAnalyticsSourceSchema(vL)
-					rdsu.ReferenceSchemaUpdate = ss
-				}
-
-				referenceDataUpdate = append(referenceDataUpdate, rdsu)
-			}
-			if inputsUpdate != nil || outputsUpdate != nil || referenceDataUpdate != nil {
-				sqlUpdate = &kinesisanalyticsv2.SqlApplicationConfigurationUpdate{
-					InputUpdates:               inputsUpdate,
-					OutputUpdates:              outputsUpdate,
-					ReferenceDataSourceUpdates: referenceDataUpdate,
-				}
-			}
-		}
+		sqlUpdate = createKinesisAnalyticsSqlUpdateOpts(d)
 	}
 
 	var flinkUpdate *kinesisanalyticsv2.FlinkApplicationConfigurationUpdate
 	if runtimeIsFlink(runtime) {
-		var checkpointUpdate *kinesisanalyticsv2.CheckpointConfigurationUpdate
-		var monitoringUpdate *kinesisanalyticsv2.MonitoringConfigurationUpdate
-		var parallelismUpdate *kinesisanalyticsv2.ParallelismConfigurationUpdate
-		if d.HasChange("flink_application_configuration") {
-			fc := d.Get("flink_application_configuration").([]interface{})[0].(map[string]interface{})
-			cpConf := fc["checkpoint_configuration"].(map[string]interface{})
-			checkpointConfig := expandCheckpointConfiguration(cpConf)
-			checkpointUpdate = &kinesisanalyticsv2.CheckpointConfigurationUpdate{
-				CheckpointIntervalUpdate:         checkpointConfig.CheckpointInterval,
-				CheckpointingEnabledUpdate:       checkpointConfig.CheckpointingEnabled,
-				ConfigurationTypeUpdate:          checkpointConfig.ConfigurationType,
-				MinPauseBetweenCheckpointsUpdate: checkpointConfig.MinPauseBetweenCheckpoints,
-			}
-			montConf := fc["monitoring_configuration"].(map[string]interface{})
-			monitoringConfig := expandKinesisAnalyticsMonitoringConfiguration(montConf)
-			monitoringUpdate = &kinesisanalyticsv2.MonitoringConfigurationUpdate{
-				ConfigurationTypeUpdate: monitoringConfig.ConfigurationType,
-				LogLevelUpdate:          monitoringConfig.LogLevel,
-				MetricsLevelUpdate:      monitoringConfig.MetricsLevel,
-			}
-			paraConf := fc["parallelism_configuration"].(map[string]interface{})
-			parallelismConfig := expandParallelismConfiguration(paraConf)
-			parallelismUpdate = &kinesisanalyticsv2.ParallelismConfigurationUpdate{
-				AutoScalingEnabledUpdate: parallelismConfig.AutoScalingEnabled,
-				ConfigurationTypeUpdate:  parallelismConfig.ConfigurationType,
-				ParallelismUpdate:        parallelismConfig.Parallelism,
-				ParallelismPerKPUUpdate:  parallelismConfig.ParallelismPerKPU,
-			}
-		}
-
-		if checkpointUpdate != nil || monitoringUpdate != nil || parallelismUpdate != nil {
-			flinkUpdate = &kinesisanalyticsv2.FlinkApplicationConfigurationUpdate{
-				CheckpointConfigurationUpdate:  checkpointUpdate,
-				MonitoringConfigurationUpdate:  monitoringUpdate,
-				ParallelismConfigurationUpdate: parallelismUpdate,
-			}
-		}
+		flinkUpdate = createKinesisAnalyticsFlinkUpdateOpts(d)
 	}
 
 	var propertyGroupsUpdate *kinesisanalyticsv2.EnvironmentPropertyUpdates
@@ -1452,6 +1334,107 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 	}
 
 	return applicationUpdate, nil
+}
+
+func createKinesisAnalyticsSqlUpdateOpts(d *schema.ResourceData) *kinesisanalyticsv2.SqlApplicationConfigurationUpdate {
+	var sqlUpdate *kinesisanalyticsv2.SqlApplicationConfigurationUpdate
+	var inputsUpdate []*kinesisanalyticsv2.InputUpdate
+	var outputsUpdate []*kinesisanalyticsv2.OutputUpdate
+	var referenceDataUpdate []*kinesisanalyticsv2.ReferenceDataSourceUpdate
+
+	sc := d.Get("sql_application_configuration").([]interface{})[0].(map[string]interface{})
+	oldConfigIfc, _ := d.GetChange("sql_application_configuration")
+	oldConfig := oldConfigIfc.([]interface{})
+	var hasOldInputs, hasOldOutputs bool
+	if len(oldConfig) > 0 {
+		hasOldInputs = len(oldConfig[0].(map[string]interface{})["inputs"].([]interface{})) > 0
+		hasOldOutputs = len(oldConfig[0].(map[string]interface{})["outputs"].([]interface{})) > 0
+	}
+	if hasOldInputs {
+		if iConf, ok := sc["inputs"].([]interface{}); ok && len(iConf) > 0 {
+			inputsUpdate = []*kinesisanalyticsv2.InputUpdate{expandKinesisAnalyticsInputUpdate(iConf[0].(map[string]interface{}))}
+		}
+	}
+	if hasOldOutputs {
+		if oConf, ok := sc["outputs"].([]interface{}); ok && len(oConf) > 0 {
+			outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{expandKinesisAnalyticsOutputUpdate(oConf[0].(map[string]interface{}))}
+		}
+	}
+	rConf := sc["reference_data_sources"].([]interface{})
+	for _, rd := range rConf {
+		rdL := rd.(map[string]interface{})
+		rdsu := &kinesisanalyticsv2.ReferenceDataSourceUpdate{
+			ReferenceId:     aws.String(rdL["id"].(string)),
+			TableNameUpdate: aws.String(rdL["table_name"].(string)),
+		}
+
+		if v := rdL["s3"].([]interface{}); len(v) > 0 {
+			vL := v[0].(map[string]interface{})
+			s3rdsu := &kinesisanalyticsv2.S3ReferenceDataSourceUpdate{
+				BucketARNUpdate: aws.String(vL["bucket_arn"].(string)),
+				FileKeyUpdate:   aws.String(vL["file_key"].(string)),
+			}
+			rdsu.S3ReferenceDataSourceUpdate = s3rdsu
+		}
+
+		if v := rdL["schema"].([]interface{}); len(v) > 0 {
+			vL := v[0].(map[string]interface{})
+			ss := expandKinesisAnalyticsSourceSchema(vL)
+			rdsu.ReferenceSchemaUpdate = ss
+		}
+
+		referenceDataUpdate = append(referenceDataUpdate, rdsu)
+	}
+	if inputsUpdate != nil || outputsUpdate != nil || referenceDataUpdate != nil {
+		sqlUpdate = &kinesisanalyticsv2.SqlApplicationConfigurationUpdate{
+			InputUpdates:               inputsUpdate,
+			OutputUpdates:              outputsUpdate,
+			ReferenceDataSourceUpdates: referenceDataUpdate,
+		}
+	}
+	return sqlUpdate
+}
+
+func createKinesisAnalyticsFlinkUpdateOpts(d *schema.ResourceData) *kinesisanalyticsv2.FlinkApplicationConfigurationUpdate {
+	var flinkUpdate *kinesisanalyticsv2.FlinkApplicationConfigurationUpdate
+	var checkpointUpdate *kinesisanalyticsv2.CheckpointConfigurationUpdate
+	var monitoringUpdate *kinesisanalyticsv2.MonitoringConfigurationUpdate
+	var parallelismUpdate *kinesisanalyticsv2.ParallelismConfigurationUpdate
+	if d.HasChange("flink_application_configuration") {
+		fc := d.Get("flink_application_configuration").([]interface{})[0].(map[string]interface{})
+		cpConf := fc["checkpoint_configuration"].(map[string]interface{})
+		checkpointConfig := expandCheckpointConfiguration(cpConf)
+		checkpointUpdate = &kinesisanalyticsv2.CheckpointConfigurationUpdate{
+			CheckpointIntervalUpdate:         checkpointConfig.CheckpointInterval,
+			CheckpointingEnabledUpdate:       checkpointConfig.CheckpointingEnabled,
+			ConfigurationTypeUpdate:          checkpointConfig.ConfigurationType,
+			MinPauseBetweenCheckpointsUpdate: checkpointConfig.MinPauseBetweenCheckpoints,
+		}
+		montConf := fc["monitoring_configuration"].(map[string]interface{})
+		monitoringConfig := expandKinesisAnalyticsMonitoringConfiguration(montConf)
+		monitoringUpdate = &kinesisanalyticsv2.MonitoringConfigurationUpdate{
+			ConfigurationTypeUpdate: monitoringConfig.ConfigurationType,
+			LogLevelUpdate:          monitoringConfig.LogLevel,
+			MetricsLevelUpdate:      monitoringConfig.MetricsLevel,
+		}
+		paraConf := fc["parallelism_configuration"].(map[string]interface{})
+		parallelismConfig := expandParallelismConfiguration(paraConf)
+		parallelismUpdate = &kinesisanalyticsv2.ParallelismConfigurationUpdate{
+			AutoScalingEnabledUpdate: parallelismConfig.AutoScalingEnabled,
+			ConfigurationTypeUpdate:  parallelismConfig.ConfigurationType,
+			ParallelismUpdate:        parallelismConfig.Parallelism,
+			ParallelismPerKPUUpdate:  parallelismConfig.ParallelismPerKPU,
+		}
+	}
+
+	if checkpointUpdate != nil || monitoringUpdate != nil || parallelismUpdate != nil {
+		flinkUpdate = &kinesisanalyticsv2.FlinkApplicationConfigurationUpdate{
+			CheckpointConfigurationUpdate:  checkpointUpdate,
+			MonitoringConfigurationUpdate:  monitoringUpdate,
+			ParallelismConfigurationUpdate: parallelismUpdate,
+		}
+	}
+	return flinkUpdate
 }
 
 func expandParallelismConfiguration(v map[string]interface{}) *kinesisanalyticsv2.ParallelismConfiguration {
@@ -1691,6 +1674,48 @@ func expandKinesisAnalyticsCloudwatchLoggingOptionUpdate(clo map[string]interfac
 		LogStreamARNUpdate:        aws.String(clo["log_stream_arn"].(string)),
 	}
 	return cloudwatchLoggingOption
+}
+
+func expandKinesisAnalayticsSqlApplicationConfiguration(appConfig map[string]interface{}) *kinesisanalyticsv2.SqlApplicationConfiguration {
+	sqlApplicationConfiguration := &kinesisanalyticsv2.SqlApplicationConfiguration{}
+	if v := appConfig["inputs"].([]interface{}); len(v) > 0 {
+		i := v[0].(map[string]interface{})
+		inputs := expandKinesisAnalyticsInputs(i)
+		sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{inputs}
+	}
+	if v := appConfig["outputs"].([]interface{}); len(v) > 0 {
+		outputs := make([]*kinesisanalyticsv2.Output, 0)
+		for _, o := range v {
+			output := expandKinesisAnalyticsOutputs(o.(map[string]interface{}))
+			outputs = append(outputs, output)
+		}
+		sqlApplicationConfiguration.Outputs = outputs
+	}
+	if v := appConfig["reference_data_sources"].([]interface{}); len(v) > 0 {
+		references := make([]*kinesisanalyticsv2.ReferenceDataSource, 0)
+		for _, r := range v {
+			references = append(references, expandKinesisAnalyticsReferenceData(r.(map[string]interface{})))
+		}
+		sqlApplicationConfiguration.ReferenceDataSources = references
+	}
+	return sqlApplicationConfiguration
+}
+
+func expandKinesisAnalyticsFlinkApplicationConfiguration(appConfig map[string]interface{}) *kinesisanalyticsv2.FlinkApplicationConfiguration {
+	flinkApplicationConfiguration := &kinesisanalyticsv2.FlinkApplicationConfiguration{}
+	if v, ok := appConfig["checkpoint_configuration"]; ok {
+		m := v.(map[string]interface{})
+		flinkApplicationConfiguration.CheckpointConfiguration = expandCheckpointConfiguration(m)
+	}
+	if v, ok := appConfig["monitoring_configuration"]; ok {
+		m := v.(map[string]interface{})
+		flinkApplicationConfiguration.MonitoringConfiguration = expandKinesisAnalyticsMonitoringConfiguration(m)
+	}
+	if v, ok := appConfig["parallelism_configuration"]; ok {
+		m := v.(map[string]interface{})
+		flinkApplicationConfiguration.ParallelismConfiguration = expandParallelismConfiguration(m)
+	}
+	return flinkApplicationConfiguration
 }
 
 func flattenSqlApplicationConfigurationDescription(sqlApplicationConfig *kinesisanalyticsv2.SqlApplicationConfigurationDescription) []interface{} {
