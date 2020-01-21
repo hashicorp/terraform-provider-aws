@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsEip() *schema.Resource {
@@ -145,7 +146,10 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
-	d.Set("tags", tagsToMap(eip.Tags))
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eip.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }

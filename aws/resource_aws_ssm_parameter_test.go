@@ -29,8 +29,7 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", "Standard"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "My Parameter"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
@@ -138,9 +137,9 @@ func TestAccAWSSSMParameter_overwrite(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_updateTags(t *testing.T) {
+func TestAccAWSSSMParameter_tags(t *testing.T) {
 	var param ssm.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -149,7 +148,12 @@ func TestAccAWSSSMParameter_updateTags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
+				Config: testAccAWSSSMParameterBasicConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
 			},
 			{
 				ResourceName:            resourceName,
@@ -158,12 +162,20 @@ func TestAccAWSSSMParameter_updateTags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterBasicConfigTagsUpdated(name, "String", "test3"),
+				Config: testAccAWSSSMParameterBasicConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "My Parameter Updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.AnotherTag", "AnotherTagValue"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSSMParameterBasicConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -449,13 +461,9 @@ func testAccCheckAWSSSMParameterDestroy(s *terraform.State) error {
 func testAccAWSSSMParameterBasicConfig(rName, pType, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name  = "%s"
-  type  = "%s"
-  value = "%s"
-
-  tags = {
-    Name = "My Parameter"
-  }
+  name  = %[1]q
+  type  = %[2]q
+  value = %[3]q
 }
 `, rName, pType, value)
 }
@@ -471,19 +479,33 @@ resource "aws_ssm_parameter" "test" {
 `, rName, tier)
 }
 
-func testAccAWSSSMParameterBasicConfigTagsUpdated(rName, pType, value string) string {
+func testAccAWSSSMParameterBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name  = "%s"
-  type  = "%s"
-  value = "%s"
+  name  =  %[1]q
+  type  = "String"
+  value =  %[1]q
 
   tags = {
-    Name       = "My Parameter Updated"
-    AnotherTag = "AnotherTagValue"
+    %[2]q = %[3]q
   }
 }
-`, rName, pType, value)
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSSSMParameterBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name  =  %[1]q
+  type  = "String"
+  value =  %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSSSMParameterBasicConfigOverwrite(rName, pType, value string) string {

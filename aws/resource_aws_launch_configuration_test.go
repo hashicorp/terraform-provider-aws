@@ -77,6 +77,7 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckAWSLaunchConfigurationGeneratedNamePrefix(resourceName, "terraform-"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(`launchConfiguration:.+`)),
 				),
 			},
 			{

@@ -89,7 +89,7 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.T) {
 	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
-	rName := acctest.RandomWithPrefix("tf-acc-test")[:28]
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum)) // len = 28
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -602,7 +602,6 @@ func TestAccAWSElasticSearchDomain_NodeToNodeEncryption(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	var td elasticsearch.ListTagsOutput
 	ri := acctest.RandInt()
 	resourceId := fmt.Sprintf("tf-test-%d", ri)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -616,6 +615,7 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 				Config: testAccESDomainConfig(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -628,9 +628,9 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 				Config: testAccESDomainConfig_TagUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
-					testAccLoadESTags(&domain, &td),
-					testAccCheckElasticsearchServiceTags(&td.TagList, "foo", "bar"),
-					testAccCheckElasticsearchServiceTags(&td.TagList, "new", "type"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.new", "type"),
 				),
 			},
 		},
@@ -833,24 +833,6 @@ func testAccCheckESCognitoOptions(enabled bool, status *elasticsearch.Elasticsea
 		conf := status.CognitoOptions
 		if *conf.Enabled != enabled {
 			return fmt.Errorf("CognitoOptions not set properly. Given: %t, Expected: %t", *conf.Enabled, enabled)
-		}
-		return nil
-	}
-}
-
-func testAccLoadESTags(conf *elasticsearch.ElasticsearchDomainStatus, td *elasticsearch.ListTagsOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).esconn
-
-		describe, err := conn.ListTags(&elasticsearch.ListTagsInput{
-			ARN: conf.ARN,
-		})
-
-		if err != nil {
-			return err
-		}
-		if len(describe.TagList) > 0 {
-			*td = *describe
 		}
 		return nil
 	}
@@ -1630,7 +1612,7 @@ resource "aws_cognito_identity_pool" "example" {
 }
 
 resource "aws_iam_role" "example" {
-	name = "tf-test-%d" 
+	name = "tf-test-%d"
 	path = "/service-role/"
 	assume_role_policy = "${data.aws_iam_policy_document.assume-role-policy.json}"
 }
@@ -1640,14 +1622,14 @@ data "aws_iam_policy_document" "assume-role-policy" {
     sid     = ""
 		actions = ["sts:AssumeRole"]
 		effect  = "Allow"
-		
+
     principals {
       type        = "Service"
       identifiers = ["es.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
-	
+
 resource "aws_iam_role_policy_attachment" "example" {
 	role       = "${aws_iam_role.example.name}"
 	policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonESCognitoAccess"
@@ -1659,7 +1641,7 @@ resource "aws_elasticsearch_domain" "test" {
 	elasticsearch_version = "6.0"
 
 	%s
-	
+
   ebs_options {
     ebs_enabled = true
     volume_size = 10

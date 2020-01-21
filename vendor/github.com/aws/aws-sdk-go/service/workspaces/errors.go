@@ -2,6 +2,10 @@
 
 package workspaces
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -97,3 +101,20 @@ const (
 	// the workspaces_DefaultRole Role (https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-access-control.html#create-default-role).
 	ErrCodeWorkspacesDefaultRoleNotFoundException = "WorkspacesDefaultRoleNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":                      newErrorAccessDeniedException,
+	"InvalidParameterValuesException":            newErrorInvalidParameterValuesException,
+	"InvalidResourceStateException":              newErrorInvalidResourceStateException,
+	"OperationInProgressException":               newErrorOperationInProgressException,
+	"OperationNotSupportedException":             newErrorOperationNotSupportedException,
+	"ResourceAlreadyExistsException":             newErrorResourceAlreadyExistsException,
+	"ResourceAssociatedException":                newErrorResourceAssociatedException,
+	"ResourceCreationFailedException":            newErrorResourceCreationFailedException,
+	"ResourceLimitExceededException":             newErrorResourceLimitExceededException,
+	"ResourceNotFoundException":                  newErrorResourceNotFoundException,
+	"ResourceUnavailableException":               newErrorResourceUnavailableException,
+	"UnsupportedNetworkConfigurationException":   newErrorUnsupportedNetworkConfigurationException,
+	"UnsupportedWorkspaceConfigurationException": newErrorUnsupportedWorkspaceConfigurationException,
+	"WorkspacesDefaultRoleNotFoundException":     newErrorWorkspacesDefaultRoleNotFoundException,
+}

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -489,21 +490,17 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	// This should mean that if the creation fails (eg because your token expired
 	// whilst the operation is being performed), we still get the required tags on
 	// the resources.
-	tags := tagsFromMapElasticsearchService(d.Get("tags").(map[string]interface{}))
-
-	if err := setTagsElasticsearchService(conn, d, aws.StringValue(out.DomainStatus.ARN)); err != nil {
-		return err
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+		}
 	}
-
-	d.Set("tags", tagsToMapElasticsearchService(tags))
-	d.SetPartial("tags")
 
 	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be created", d.Id())
 	err = waitForElasticSearchDomainCreation(conn, d.Get("domain_name").(string), d.Id())
 	if err != nil {
 		return err
 	}
-	d.Partial(false)
 
 	log.Printf("[DEBUG] ElasticSearch domain %q created", d.Id())
 
@@ -644,19 +641,15 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("arn", ds.ARN)
 
-	listOut, err := conn.ListTags(&elasticsearch.ListTagsInput{
-		ARN: ds.ARN,
-	})
+	tags, err := keyvaluetags.ElasticsearchserviceListTags(conn, d.Id())
 
 	if err != nil {
-		return err
-	}
-	var est []*elasticsearch.Tag
-	if len(listOut.TagList) > 0 {
-		est = listOut.TagList
+		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set("tags", tagsToMapElasticsearchService(est))
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -664,13 +657,13 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
 
-	d.Partial(true)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	if err := setTagsElasticsearchService(conn, d, d.Id()); err != nil {
-		return err
+		if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+		}
 	}
-
-	d.SetPartial("tags")
 
 	input := elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -808,8 +801,6 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 			return waitErr
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsElasticSearchDomainRead(d, meta)
 }

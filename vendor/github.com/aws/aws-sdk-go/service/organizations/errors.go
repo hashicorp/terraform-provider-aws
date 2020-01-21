@@ -2,6 +2,10 @@
 
 package organizations
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAWSOrganizationsNotInUseException for service response error code
@@ -163,8 +167,13 @@ const (
 	//    * OU_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the number of OUs
 	//    that you can have in an organization.
 	//
-	//    * POLICY_NUMBER_LIMIT_EXCEEDED. You attempted to exceed the number of
+	//    * POLICY_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the number of
 	//    policies that you can have in an organization.
+	//
+	//    * TAG_POLICY_VIOLATION: Tags associated with the resource must be compliant
+	//    with the tag policy that’s in effect for the account. For more information,
+	//    see Tag Policies (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html)
+	//    in the AWS Organizations User Guide.
 	ErrCodeConstraintViolationException = "ConstraintViolationException"
 
 	// ErrCodeCreateAccountStatusNotFoundException for service response error code
@@ -503,3 +512,48 @@ const (
 	// This action isn't available in the current Region.
 	ErrCodeUnsupportedAPIEndpointException = "UnsupportedAPIEndpointException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AWSOrganizationsNotInUseException":              newErrorAWSOrganizationsNotInUseException,
+	"AccessDeniedException":                          newErrorAccessDeniedException,
+	"AccessDeniedForDependencyException":             newErrorAccessDeniedForDependencyException,
+	"AccountNotFoundException":                       newErrorAccountNotFoundException,
+	"AccountOwnerNotVerifiedException":               newErrorAccountOwnerNotVerifiedException,
+	"AlreadyInOrganizationException":                 newErrorAlreadyInOrganizationException,
+	"ChildNotFoundException":                         newErrorChildNotFoundException,
+	"ConcurrentModificationException":                newErrorConcurrentModificationException,
+	"ConstraintViolationException":                   newErrorConstraintViolationException,
+	"CreateAccountStatusNotFoundException":           newErrorCreateAccountStatusNotFoundException,
+	"DestinationParentNotFoundException":             newErrorDestinationParentNotFoundException,
+	"DuplicateAccountException":                      newErrorDuplicateAccountException,
+	"DuplicateHandshakeException":                    newErrorDuplicateHandshakeException,
+	"DuplicateOrganizationalUnitException":           newErrorDuplicateOrganizationalUnitException,
+	"DuplicatePolicyAttachmentException":             newErrorDuplicatePolicyAttachmentException,
+	"DuplicatePolicyException":                       newErrorDuplicatePolicyException,
+	"EffectivePolicyNotFoundException":               newErrorEffectivePolicyNotFoundException,
+	"FinalizingOrganizationException":                newErrorFinalizingOrganizationException,
+	"HandshakeAlreadyInStateException":               newErrorHandshakeAlreadyInStateException,
+	"HandshakeConstraintViolationException":          newErrorHandshakeConstraintViolationException,
+	"HandshakeNotFoundException":                     newErrorHandshakeNotFoundException,
+	"InvalidHandshakeTransitionException":            newErrorInvalidHandshakeTransitionException,
+	"InvalidInputException":                          newErrorInvalidInputException,
+	"MalformedPolicyDocumentException":               newErrorMalformedPolicyDocumentException,
+	"MasterCannotLeaveOrganizationException":         newErrorMasterCannotLeaveOrganizationException,
+	"OrganizationNotEmptyException":                  newErrorOrganizationNotEmptyException,
+	"OrganizationalUnitNotEmptyException":            newErrorOrganizationalUnitNotEmptyException,
+	"OrganizationalUnitNotFoundException":            newErrorOrganizationalUnitNotFoundException,
+	"ParentNotFoundException":                        newErrorParentNotFoundException,
+	"PolicyChangesInProgressException":               newErrorPolicyChangesInProgressException,
+	"PolicyInUseException":                           newErrorPolicyInUseException,
+	"PolicyNotAttachedException":                     newErrorPolicyNotAttachedException,
+	"PolicyNotFoundException":                        newErrorPolicyNotFoundException,
+	"PolicyTypeAlreadyEnabledException":              newErrorPolicyTypeAlreadyEnabledException,
+	"PolicyTypeNotAvailableForOrganizationException": newErrorPolicyTypeNotAvailableForOrganizationException,
+	"PolicyTypeNotEnabledException":                  newErrorPolicyTypeNotEnabledException,
+	"RootNotFoundException":                          newErrorRootNotFoundException,
+	"ServiceException":                               newErrorServiceException,
+	"SourceParentNotFoundException":                  newErrorSourceParentNotFoundException,
+	"TargetNotFoundException":                        newErrorTargetNotFoundException,
+	"TooManyRequestsException":                       newErrorTooManyRequestsException,
+	"UnsupportedAPIEndpointException":                newErrorUnsupportedAPIEndpointException,
+}

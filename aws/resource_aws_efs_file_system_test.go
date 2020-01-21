@@ -2,18 +2,68 @@ package aws
 
 import (
 	"fmt"
-	"reflect"
+	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/efs"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_efs_file_system", &resource.Sweeper{
+		Name: "aws_efs_file_system",
+		F:    testSweepEfsFileSystems,
+		Dependencies: []string{
+			"aws_efs_mount_target",
+		},
+	})
+}
+
+func testSweepEfsFileSystems(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).efsconn
+
+	var errors error
+	input := &efs.DescribeFileSystemsInput{}
+	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
+		for _, filesystem := range page.FileSystems {
+			id := aws.StringValue(filesystem.FileSystemId)
+
+			log.Printf("[INFO] Deleting EFS File System: %s", id)
+
+			_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
+				FileSystemId: filesystem.FileSystemId,
+			})
+			if err != nil {
+				errors = multierror.Append(errors, fmt.Errorf("error deleting EFS File System %q: %w", id, err))
+				continue
+			}
+
+			err = waitForDeleteEfsFileSystem(conn, id, 10*time.Minute)
+			if err != nil {
+				errors = multierror.Append(fmt.Errorf("error waiting for EFS File System %q to delete: %w", id, err))
+				continue
+			}
+		}
+		return true
+	})
+	if err != nil {
+		errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
+	}
+
+	return errors
+}
 
 func TestResourceAWSEFSFileSystem_hasEmptyFileSystems(t *testing.T) {
 	fs := &efs.DescribeFileSystemsOutput{
@@ -86,13 +136,25 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 						"aws_efs_file_system.test",
 						"generalPurpose",
 					),
-					testAccCheckEfsFileSystemTags(
-						"aws_efs_file_system.test",
-						map[string]string{
-							"Name":    fmt.Sprintf("test-efs-%d", rInt),
-							"Another": "tag",
-						},
+					resource.TestCheckResourceAttr("aws_efs_file_system.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test", "tags.Name", fmt.Sprintf("test-efs-%d", rInt)),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test", "tags.Another", "tag"),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfigWithMaxTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(
+						"aws_efs_file_system.test1",
 					),
+					testAccCheckEfsFileSystemPerformanceMode(
+						"aws_efs_file_system.test1",
+						"generalPurpose",
+					),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test1", "tags.%", "50"),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test1", "tags.Name", fmt.Sprintf("test-efs-%d", rInt)),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test1", "tags.Another", "tag"),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test1", "tags.Tag45", "TestTagValue"),
 				),
 			},
 			{
@@ -449,35 +511,6 @@ func testAccCheckEfsCreationToken(resourceID string, expectedToken string) resou
 	}
 }
 
-func testAccCheckEfsFileSystemTags(resourceID string, expectedTags map[string]string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceID]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
-		resp, err := conn.DescribeTags(&efs.DescribeTagsInput{
-			FileSystemId: aws.String(rs.Primary.ID),
-		})
-
-		if !reflect.DeepEqual(expectedTags, tagsToMapEFS(resp.Tags)) {
-			return fmt.Errorf("Tags mismatch.\nExpected: %#v\nGiven: %#v",
-				expectedTags, resp.Tags)
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckEfsFileSystemPerformanceMode(resourceID string, expectedMode string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceID]
@@ -584,6 +617,66 @@ resource "aws_efs_file_system" "test" {
   tags = {
     Name    = "test-efs-%d"
     Another = "tag"
+  }
+}
+`, rInt)
+}
+
+func testAccAWSEFSFileSystemConfigWithMaxTags(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test1" {
+  tags = {
+    Name    = "test-efs-%d"
+    Another = "tag"
+
+		Tag00 = "TestTagValue"
+		Tag01 = "TestTagValue"
+		Tag02 = "TestTagValue"
+		Tag03 = "TestTagValue"
+		Tag04 = "TestTagValue"
+		Tag05 = "TestTagValue"
+		Tag06 = "TestTagValue"
+		Tag07 = "TestTagValue"
+		Tag08 = "TestTagValue"
+		Tag09 = "TestTagValue"
+		Tag10 = "TestTagValue"
+		Tag11 = "TestTagValue"
+		Tag12 = "TestTagValue"
+		Tag13 = "TestTagValue"
+		Tag14 = "TestTagValue"
+		Tag15 = "TestTagValue"
+		Tag16 = "TestTagValue"
+		Tag17 = "TestTagValue"
+		Tag18 = "TestTagValue"
+		Tag19 = "TestTagValue"
+		Tag20 = "TestTagValue"
+		Tag21 = "TestTagValue"
+		Tag22 = "TestTagValue"
+		Tag23 = "TestTagValue"
+		Tag24 = "TestTagValue"
+		Tag25 = "TestTagValue"
+		Tag26 = "TestTagValue"
+		Tag27 = "TestTagValue"
+		Tag28 = "TestTagValue"
+		Tag29 = "TestTagValue"
+		Tag30 = "TestTagValue"
+		Tag31 = "TestTagValue"
+		Tag32 = "TestTagValue"
+		Tag33 = "TestTagValue"
+		Tag34 = "TestTagValue"
+		Tag35 = "TestTagValue"
+		Tag36 = "TestTagValue"
+		Tag37 = "TestTagValue"
+		Tag38 = "TestTagValue"
+		Tag39 = "TestTagValue"
+		Tag40 = "TestTagValue"
+		Tag41 = "TestTagValue"
+		Tag42 = "TestTagValue"
+		Tag43 = "TestTagValue"
+		Tag44 = "TestTagValue"
+		Tag45 = "TestTagValue"
+		Tag46 = "TestTagValue"
+		Tag47 = "TestTagValue"
   }
 }
 `, rInt)
