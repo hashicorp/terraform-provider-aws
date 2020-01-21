@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -44,8 +43,9 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			},
 
 			"arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"input": {
@@ -63,8 +63,9 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			},
 
 			"role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"run_command_targets": {
@@ -101,7 +102,11 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						"launch_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "EC2",
+							Default:  events.LaunchTypeEc2,
+							ValidateFunc: validation.StringInSlice([]string{
+								events.LaunchTypeEc2,
+								events.LaunchTypeFargate,
+							}, true),
 						},
 						"network_configuration": {
 							Type:     schema.TypeList,
@@ -143,7 +148,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						"task_definition_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1600),
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -276,22 +281,20 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 			d.SetId("")
 			return nil
 		}
-		if awsErr, ok := err.(awserr.Error); ok {
-			// This should never happen, but it's useful
-			// for recovering from https://github.com/hashicorp/terraform/issues/5389
-			if awsErr.Code() == "ValidationException" {
-				log.Printf("[WARN] Removing CloudWatch Event Target %q because it never existed.", d.Id())
-				d.SetId("")
-				return nil
-			}
-
-			if awsErr.Code() == "ResourceNotFoundException" {
-				log.Printf("[WARN] CloudWatch Event Target (%q) not found. Removing it from state.", d.Id())
-				d.SetId("")
-				return nil
-			}
-
+		// This should never happen, but it's useful
+		// for recovering from https://github.com/hashicorp/terraform/issues/5389
+		if isAWSErr(err, "ValidationException", "") {
+			log.Printf("[WARN] Removing CloudWatch Event Target %q because it never existed.", d.Id())
+			d.SetId("")
+			return nil
 		}
+
+		if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] CloudWatch Event Target (%q) not found. Removing it from state.", d.Id())
+			d.SetId("")
+			return nil
+		}
+
 		return err
 	}
 	log.Printf("[DEBUG] Found Event Target: %s", t)
