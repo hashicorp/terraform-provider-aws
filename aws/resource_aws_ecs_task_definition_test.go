@@ -65,6 +65,12 @@ func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -72,8 +78,7 @@ func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	rString := acctest.RandString(8)
-	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
+	tdName := acctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,6 +102,12 @@ func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.labels.stack", "april"),
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.labels.environment", "test"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -123,15 +134,20 @@ func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.driver", "local"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
+func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	rString := acctest.RandString(8)
-	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
+	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume-min")
 	resourceName := "aws_ecs_task_definition.test"
 	efsResourceName := "aws_efs_file_system.test"
 
@@ -141,13 +157,51 @@ func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWithEFSVolume(tdName),
+				Config: testAccAWSEcsTaskDefinitionWithEFSVolume(tdName, "/home/test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "volume.584193650.efs_volume_configuration.0.file_system_id", efsResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.root_directory", "/home/test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
+	resourceName := "aws_ecs_task_definition.test"
+	efsResourceName := "aws_efs_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionWithEFSVolumeMinimal(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume.584193650.efs_volume_configuration.0.file_system_id", efsResourceName, "id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -156,8 +210,7 @@ func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	rString := acctest.RandString(8)
-	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
+	tdName := acctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -175,6 +228,12 @@ func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.scope", "task"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -184,10 +243,9 @@ func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 	var def ecs.TaskDefinition
 	var service ecs.Service
 
-	rString := acctest.RandString(8)
-	clusterName := fmt.Sprintf("tf_acc_cluster_with_ecs_service_%s", rString)
-	svcName := fmt.Sprintf("tf_acc_td_with_ecs_service_%s", rString)
-	tdName := fmt.Sprintf("tf_acc_td_with_ecs_service_%s", rString)
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster-with-ecs-service")
+	svcName := acctest.RandomWithPrefix("tf-acc-td-with-ecs-service")
+	tdName := acctest.RandomWithPrefix("tf-acc-td-with-ecs-service")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -209,6 +267,12 @@ func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.test", &service),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -216,10 +280,9 @@ func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withTaskRoleArn(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	rString := acctest.RandString(8)
-	roleName := fmt.Sprintf("tf_acc_role_ecs_td_with_task_role_arn_%s", rString)
-	policyName := fmt.Sprintf("tf-acc-policy-ecs-td-with-task-role-arn-%s", rString)
-	tdName := fmt.Sprintf("tf_acc_td_with_task_role_arn_%s", rString)
+	roleName := acctest.RandomWithPrefix("tf-acc-role-ecs-td-with-task-role-arn")
+	policyName := acctest.RandomWithPrefix("tf-acc-policy-ecs-td-with-task-role-arn")
+	tdName := acctest.RandomWithPrefix("tf-acc-td-with-task-role-arn")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -232,6 +295,12 @@ func TestAccAWSEcsTaskDefinition_withTaskRoleArn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -257,6 +326,12 @@ func TestAccAWSEcsTaskDefinition_withNetworkMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_mode", "bridge"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -280,6 +355,12 @@ func TestAccAWSEcsTaskDefinition_withIPCMode(t *testing.T) {
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "ipc_mode", "host"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -305,6 +386,12 @@ func TestAccAWSEcsTaskDefinition_withPidMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "pid_mode", "host"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -327,6 +414,12 @@ func TestAccAWSEcsTaskDefinition_constraint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
 					testAccCheckAWSTaskDefinitionConstraintsAttrs(&def),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -357,6 +450,12 @@ func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 					testAccCheckEcsTaskDefinitionRecreated(t, &before, &after),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -366,8 +465,7 @@ func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 	var conf ecs.TaskDefinition
 	resourceName := "aws_ecs_task_definition.test"
 
-	rString := acctest.RandString(8)
-	tdName := fmt.Sprintf("tf_acc_td_arrays_%s", rString)
+	tdName := acctest.RandomWithPrefix("tf-acc-td-arrays")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -379,6 +477,12 @@ func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &conf),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -403,6 +507,12 @@ func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cpu", "256"),
 					resource.TestCheckResourceAttr(resourceName, "memory", "512"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				ExpectNonEmptyPlan: false,
@@ -431,6 +541,12 @@ func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &conf),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -467,6 +583,12 @@ func TestAccAWSEcsTaskDefinition_Inactive(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
 				Config:    testAccAWSEcsTaskDefinition(tdName),
 				PreConfig: markTaskDefinitionInactive,
 				Check:     resource.TestCheckResourceAttr(resourceName, "revision", "2"), // should get re-created
@@ -492,6 +614,12 @@ func TestAccAWSEcsTaskDefinition_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSEcsTaskDefinitionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -1247,7 +1375,7 @@ TASK_DEFINITION
 `, tdName)
 }
 
-func testAccAWSEcsTaskDefinitionWithEFSVolume(tdName string) string {
+func testAccAWSEcsTaskDefinitionWithEFSVolumeMinimal(tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
 	creation_token = %[1]q
@@ -1278,6 +1406,40 @@ TASK_DEFINITION
   }
 }
 `, tdName)
+}
+
+func testAccAWSEcsTaskDefinitionWithEFSVolume(tdName, rDir string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+	creation_token = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = "database_scratch"
+
+    efs_volume_configuration {
+      file_system_id = "${aws_efs_file_system.test.id}"
+      root_directory = %[2]q
+    }
+  }
+}
+`, tdName, rDir)
 }
 
 func testAccAWSEcsTaskDefinitionWithTaskRoleArn(roleName, policyName, tdName string) string {
