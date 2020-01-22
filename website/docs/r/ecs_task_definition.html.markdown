@@ -136,8 +136,6 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 * `file_system_id` - (Required) The ID of the EFS File System.
 * `root_directory` - (Optional) The path to mount on the host
 
-
-
 ##### Example Usage:
 ```hcl
 resource "aws_ecs_task_definition" "service" {

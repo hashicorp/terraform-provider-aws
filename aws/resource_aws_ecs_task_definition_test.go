@@ -157,13 +157,12 @@ func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWithEFSVolume(tdName, "/home/test"),
+				Config: testAccAWSEcsTaskDefinitionWithEFSVolumeMinimal(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume.584193650.efs_volume_configuration.0.file_system_id", efsResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.root_directory", "/home/test"),
 				),
 			},
 			{
@@ -189,12 +188,13 @@ func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWithEFSVolumeMinimal(tdName),
+				Config: testAccAWSEcsTaskDefinitionWithEFSVolume(tdName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume.584193650.efs_volume_configuration.0.file_system_id", efsResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.root_directory", "/home/test"),
 				),
 			},
 			{
