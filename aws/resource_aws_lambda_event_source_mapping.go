@@ -328,12 +328,10 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 
 	if err == nil && eventSourceArn.Service != sqs.ServiceName {
 		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
-		if eventSourceArn.Service != dynamodb.ServiceName {
-			params.BisectBatchOnFunctionError = aws.Bool(d.Get("bisect_batch_on_function_error").(bool))
-			params.MaximumRecordAgeInSeconds = aws.Int64(int64(d.Get("maximum_record_age_in_seconds").(int)))
-			params.MaximumRetryAttempts = aws.Int64(int64(d.Get("maximum_retry_attempts").(int)))
-			params.ParallelizationFactor = aws.Int64(int64(d.Get("parallelization_factor").(int)))
-		}
+		params.BisectBatchOnFunctionError = aws.Bool(d.Get("bisect_batch_on_function_error").(bool))
+		params.MaximumRecordAgeInSeconds = aws.Int64(int64(d.Get("maximum_record_age_in_seconds").(int)))
+		params.MaximumRetryAttempts = aws.Int64(int64(d.Get("maximum_retry_attempts").(int)))
+		params.ParallelizationFactor = aws.Int64(int64(d.Get("parallelization_factor").(int)))
 	}
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
