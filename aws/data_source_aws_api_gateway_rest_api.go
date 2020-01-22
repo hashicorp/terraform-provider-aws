@@ -55,18 +55,22 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 
 	d.SetId(*match.Id)
 
-	resp, err := conn.GetResources(&apigateway.GetResourcesInput{
+	resourceParams := &apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
-	})
-	if err != nil {
-		return err
 	}
 
-	for _, item := range resp.Items {
-		if *item.Path == "/" {
-			d.Set("root_resource_id", item.Id)
-			break
+	err = conn.GetResourcesPages(resourceParams, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
+		for _, item := range page.Items {
+			if *item.Path == "/" {
+				d.Set("root_resource_id", item.Id)
+				return false
+			}
 		}
+		return !lastPage
+	})
+
+	if err != nil {
+		return err
 	}
 
 	return nil
