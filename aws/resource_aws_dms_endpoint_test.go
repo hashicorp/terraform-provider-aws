@@ -2,13 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"testing"
-
 	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"testing"
+
+	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 )
 
 func TestAccAwsDmsEndpoint_Basic(t *testing.T) {
@@ -50,6 +50,8 @@ func TestAccAwsDmsEndpoint_Basic(t *testing.T) {
 	})
 }
 
+type TestCheckFunc func(*terraform.State) error
+
 func TestAccAwsDmsEndpoint_S3_Csv(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-s3"
@@ -60,7 +62,8 @@ func TestAccAwsDmsEndpoint_S3_Csv(t *testing.T) {
 		CheckDestroy: dmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointS3Config(randId),
+				PreventDiskCleanup: true,
+				Config:             dmsEndpointS3Config(randId),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
@@ -70,6 +73,8 @@ func TestAccAwsDmsEndpoint_S3_Csv(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
+					resource.TestCheckNoResourceAttr(resourceName, "s3_settings.0.enable_statistics"),
+					resource.TestCheckNoResourceAttr(resourceName, "s3_settings.0.timestamp_column_name"),
 				),
 			},
 			{
@@ -95,7 +100,6 @@ func TestAccAwsDmsEndpoint_S3_Csv(t *testing.T) {
 		},
 	})
 }
-
 func TestAccAwsDmsEndpoint_S3_Parquet(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-s3"
@@ -113,6 +117,12 @@ func TestAccAwsDmsEndpoint_S3_Parquet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
+					resource.TestCheckNoResourceAttr(resourceName, "s3_settings.0.enable_statistics"),
+					resource.TestCheckNoResourceAttr(resourceName, "s3_settings.0.timestamp_column_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "s3_settings.0.enable_statistics"),
+					resource.TestCheckNoResourceAttr(resourceName, "s3_settings.0.data_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "s3_settings.0.parquet_version"),
+					resource.TestCheckNoResourceAttr(resourceName, "s3_settings.0.server_side_encryption_kms_key_id"),
 				),
 			},
 			{
@@ -135,6 +145,7 @@ func TestAccAwsDmsEndpoint_S3_Parquet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.data_format", "parquet"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-2-0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_S3"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_settings.0.data_format"),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_settings.0.server_side_encryption_kms_key_id"),
 				),
 			},
@@ -346,23 +357,23 @@ func checkDmsEndpointExists(n string) resource.TestCheckFunc {
 func dmsEndpointBasicConfig(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  database_name               = "tf-test-dms-db"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "source"
-  engine_name                 = "aurora"
-  extra_connection_attributes = ""
-  password                    = "tftest"
-  port                        = 3306
-  server_name                 = "tftest"
-  ssl_mode                    = "none"
+ database_name               = "tf-test-dms-db"
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "source"
+ engine_name                 = "aurora"
+ extra_connection_attributes = ""
+ password                    = "tftest"
+ port                        = 3306
+ server_name                 = "tftest"
+ ssl_mode                    = "none"
 
-  tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
-    Update = "to-update"
-    Remove = "to-remove"
-  }
+ tags = {
+   Name   = "tf-test-dms-endpoint-%[1]s"
+   Update = "to-update"
+   Remove = "to-remove"
+ }
 
-  username = "tftest"
+ username = "tftest"
 }
 `, randId)
 }
@@ -370,23 +381,23 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 func dmsEndpointBasicConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  database_name               = "tf-test-dms-db-updated"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "source"
-  engine_name                 = "aurora"
-  extra_connection_attributes = "extra"
-  password                    = "tftestupdate"
-  port                        = 3303
-  server_name                 = "tftestupdate"
-  ssl_mode                    = "none"
+ database_name               = "tf-test-dms-db-updated"
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "source"
+ engine_name                 = "aurora"
+ extra_connection_attributes = "extra"
+ password                    = "tftestupdate"
+ port                        = 3303
+ server_name                 = "tftestupdate"
+ ssl_mode                    = "none"
 
-  tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
-    Update = "updated"
-    Add    = "added"
-  }
+ tags = {
+   Name   = "tf-test-dms-endpoint-%[1]s"
+   Update = "updated"
+   Add    = "added"
+ }
 
-  username = "tftestupdate"
+ username = "tftestupdate"
 }
 `, randId)
 }
@@ -394,25 +405,25 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 func dmsEndpointDynamoDbConfig(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id         = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type       = "target"
-  engine_name         = "dynamodb"
-  service_access_role = "${aws_iam_role.iam_role.arn}"
-  ssl_mode            = "none"
+ endpoint_id         = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type       = "target"
+ engine_name         = "dynamodb"
+ service_access_role = "${aws_iam_role.iam_role.arn}"
+ ssl_mode            = "none"
 
-  tags = {
-    Name   = "tf-test-dynamodb-endpoint-%[1]s"
-    Update = "to-update"
-    Remove = "to-remove"
-  }
+ tags = {
+   Name   = "tf-test-dynamodb-endpoint-%[1]s"
+   Update = "to-update"
+   Remove = "to-remove"
+ }
 
-  depends_on = ["aws_iam_role_policy.dms_dynamodb_access"]
+ depends_on = ["aws_iam_role_policy.dms_dynamodb_access"]
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-dynamodb-role-%[1]s"
+ name = "tf-test-iam-dynamodb-role-%[1]s"
 
-  assume_role_policy = <<EOF
+ assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -429,10 +440,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
-  name = "tf-test-iam-dynamodb-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+ name = "tf-test-iam-dynamodb-role-policy-%[1]s"
+ role = "${aws_iam_role.iam_role.name}"
 
-  policy = <<EOF
+ policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -458,23 +469,23 @@ EOF
 func dmsEndpointDynamoDbConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id         = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type       = "target"
-  engine_name         = "dynamodb"
-  service_access_role = "${aws_iam_role.iam_role.arn}"
-  ssl_mode            = "none"
+ endpoint_id         = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type       = "target"
+ engine_name         = "dynamodb"
+ service_access_role = "${aws_iam_role.iam_role.arn}"
+ ssl_mode            = "none"
 
-  tags = {
-    Name   = "tf-test-dynamodb-endpoint-%[1]s"
-    Update = "updated"
-    Add    = "added"
-  }
+ tags = {
+   Name   = "tf-test-dynamodb-endpoint-%[1]s"
+   Update = "updated"
+   Add    = "added"
+ }
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-dynamodb-role-%[1]s"
+ name = "tf-test-iam-dynamodb-role-%[1]s"
 
-  assume_role_policy = <<EOF
+ assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -491,10 +502,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
-  name = "tf-test-iam-dynamodb-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+ name = "tf-test-iam-dynamodb-role-policy-%[1]s"
+ role = "${aws_iam_role.iam_role.name}"
 
-  policy = <<EOF
+ policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -520,30 +531,30 @@ EOF
 func dmsEndpointS3Config(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "target"
+ engine_name                 = "s3"
+ ssl_mode                    = "none"
+ extra_connection_attributes = ""
 
-  tags = {
-    Name   = "tf-test-s3-endpoint-%[1]s"
-    Update = "to-update"
-    Remove = "to-remove"
-  }
+ tags = {
+   Name   = "tf-test-s3-endpoint-%[1]s"
+   Update = "to-update"
+   Remove = "to-remove"
+ }
 
-  s3_settings {
-    service_access_role_arn = "${aws_iam_role.iam_role.arn}"
-    bucket_name             = "bucket_name"
-  }
+ s3_settings {
+   service_access_role_arn = "${aws_iam_role.iam_role.arn}"
+   bucket_name             = "bucket_name"
+ }
 
-  depends_on = ["aws_iam_role_policy.dms_s3_access"]
+ depends_on = ["aws_iam_role_policy.dms_s3_access"]
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-s3-role-%[1]s"
+ name = "tf-test-iam-s3-role-%[1]s"
 
-  assume_role_policy = <<EOF
+ assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -560,10 +571,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-  name = "tf-test-iam-s3-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+ name = "tf-test-iam-s3-role-policy-%[1]s"
+ role = "${aws_iam_role.iam_role.name}"
 
-  policy = <<EOF
+ policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -594,33 +605,33 @@ EOF
 func dmsEndpointS3CsvConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = "key=value;"
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "target"
+ engine_name                 = "s3"
+ ssl_mode                    = "none"
+ extra_connection_attributes = "key=value;"
 
-  tags = {
-    Name   = "tf-test-s3-endpoint-%[1]s"
-    Update = "updated"
-    Add    = "added"
-  }
+ tags = {
+   Name   = "tf-test-s3-endpoint-%[1]s"
+   Update = "updated"
+   Add    = "added"
+ }
 
-  s3_settings {
-    service_access_role_arn   = "${aws_iam_role.iam_role.arn}"
-    external_table_definition = "new-external_table_definition"
-    csv_row_delimiter         = "\\r"
-    csv_delimiter             = "."
-    bucket_folder             = "new-bucket_folder"
-    bucket_name               = "new-bucket_name"
-    compression_type          = "GZIP"
-  }
+ s3_settings {
+   service_access_role_arn   = "${aws_iam_role.iam_role.arn}"
+   external_table_definition = "new-external_table_definition"
+   csv_row_delimiter         = "\\r"
+   csv_delimiter             = "."
+   bucket_folder             = "new-bucket_folder"
+   bucket_name               = "new-bucket_name"
+   compression_type          = "GZIP"
+ }
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-s3-role-%[1]s"
+ name = "tf-test-iam-s3-role-%[1]s"
 
-  assume_role_policy = <<EOF
+ assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -637,10 +648,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-  name = "tf-test-iam-s3-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+ name = "tf-test-iam-s3-role-policy-%[1]s"
+ role = "${aws_iam_role.iam_role.name}"
 
-  policy = <<EOF
+ policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -671,40 +682,40 @@ EOF
 func dmsEndpointS3ParquetConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
-  name = "alias/aws/dms"
+ name = "alias/aws/dms"
 }
 
 resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = "key=value;"
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "target"
+ engine_name                 = "s3"
+ ssl_mode                    = "none"
+ extra_connection_attributes = "key=value;"
 
-  tags = {
-    Name   = "tf-test-s3-endpoint-%[1]s"
-    Update = "updated"
-    Add    = "added"
-  }
+ tags = {
+   Name   = "tf-test-s3-endpoint-%[1]s"
+   Update = "updated"
+   Add    = "added"
+ }
 
-  s3_settings {
-    service_access_role_arn           = "${aws_iam_role.iam_role.arn}"
-    external_table_definition         = "new-external_table_definition"
-    bucket_folder                     = "new-bucket_folder"
-    bucket_name                       = "new-bucket_name"
+ s3_settings {
+   service_access_role_arn           = "${aws_iam_role.iam_role.arn}"
+   external_table_definition         = "new-external_table_definition"
+   bucket_folder                     = "new-bucket_folder"
+   bucket_name                       = "new-bucket_name"
 	compression_type                  = "GZIP"
 	timestamp_column_name             = "some_timestamp_column_name"
 	data_format                       = "parquet"
 	parquet_version                   = "parquet-2-0"
 	encryption_mode                   = "SSE_S3"
 	server_side_encryption_kms_key_id = "${data.aws_kms_alias.dms.target_key_arn}"
-  }
+ }
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-s3-role-%[1]s"
+ name = "tf-test-iam-s3-role-%[1]s"
 
-  assume_role_policy = <<EOF
+ assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -721,10 +732,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-  name = "tf-test-iam-s3-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+ name = "tf-test-iam-s3-role-policy-%[1]s"
+ role = "${aws_iam_role.iam_role.name}"
 
-  policy = <<EOF
+ policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -755,36 +766,36 @@ EOF
 func dmsEndpointMongoDbConfig(randId string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
-  name = "alias/aws/dms"
+ name = "alias/aws/dms"
 }
 
 resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "source"
-  engine_name                 = "mongodb"
-  server_name                 = "tftest"
-  port                        = 27017
-  username                    = "tftest"
-  password                    = "tftest"
-  database_name               = "tftest"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
-  kms_key_arn                 = "${data.aws_kms_alias.dms.target_key_arn}"
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "source"
+ engine_name                 = "mongodb"
+ server_name                 = "tftest"
+ port                        = 27017
+ username                    = "tftest"
+ password                    = "tftest"
+ database_name               = "tftest"
+ ssl_mode                    = "none"
+ extra_connection_attributes = ""
+ kms_key_arn                 = "${data.aws_kms_alias.dms.target_key_arn}"
 
-  tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
-    Update = "to-update"
-    Remove = "to-remove"
-  }
+ tags = {
+   Name   = "tf-test-dms-endpoint-%[1]s"
+   Update = "to-update"
+   Remove = "to-remove"
+ }
 
-  mongodb_settings {
-    auth_type           = "password"
-    auth_mechanism      = "default"
-    nesting_level       = "none"
-    extract_doc_id      = "false"
-    docs_to_investigate = "1000"
-    auth_source         = "admin"
-  }
+ mongodb_settings {
+   auth_type           = "password"
+   auth_mechanism      = "default"
+   nesting_level       = "none"
+   extract_doc_id      = "false"
+   docs_to_investigate = "1000"
+   auth_source         = "admin"
+ }
 }
 `, randId)
 }
@@ -792,34 +803,34 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 func dmsEndpointMongoDbConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
-  name = "alias/aws/dms"
+ name = "alias/aws/dms"
 }
 
 resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "source"
-  engine_name                 = "mongodb"
-  server_name                 = "tftest-new-server_name"
-  port                        = 27018
-  username                    = "tftest-new-username"
-  password                    = "tftest-new-password"
-  database_name               = "tftest-new-database_name"
-  ssl_mode                    = "require"
-  extra_connection_attributes = "key=value;"
-  kms_key_arn                 = "${data.aws_kms_alias.dms.target_key_arn}"
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "source"
+ engine_name                 = "mongodb"
+ server_name                 = "tftest-new-server_name"
+ port                        = 27018
+ username                    = "tftest-new-username"
+ password                    = "tftest-new-password"
+ database_name               = "tftest-new-database_name"
+ ssl_mode                    = "require"
+ extra_connection_attributes = "key=value;"
+ kms_key_arn                 = "${data.aws_kms_alias.dms.target_key_arn}"
 
-  tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
-    Update = "updated"
-    Add    = "added"
-  }
+ tags = {
+   Name   = "tf-test-dms-endpoint-%[1]s"
+   Update = "updated"
+   Add    = "added"
+ }
 
-  mongodb_settings {
-    auth_mechanism      = "scram-sha-1"
-    nesting_level       = "one"
-    extract_doc_id      = "true"
-    docs_to_investigate = "1001"
-  }
+ mongodb_settings {
+   auth_mechanism      = "scram-sha-1"
+   nesting_level       = "one"
+   extract_doc_id      = "true"
+   docs_to_investigate = "1001"
+ }
 }
 `, randId)
 }
@@ -827,23 +838,23 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 func dmsEndpointDocDBConfig(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  database_name               = "tf-test-dms-db"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "target"
-  engine_name                 = "docdb"
-  extra_connection_attributes = ""
-  password                    = "tftest"
-  port                        = 27017
-  server_name                 = "tftest"
-  ssl_mode                    = "none"
+ database_name               = "tf-test-dms-db"
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "target"
+ engine_name                 = "docdb"
+ extra_connection_attributes = ""
+ password                    = "tftest"
+ port                        = 27017
+ server_name                 = "tftest"
+ ssl_mode                    = "none"
 
-  tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
-    Update = "to-update"
-    Remove = "to-remove"
-  }
+ tags = {
+   Name   = "tf-test-dms-endpoint-%[1]s"
+   Update = "to-update"
+   Remove = "to-remove"
+ }
 
-  username = "tftest"
+ username = "tftest"
 }
 `, randId)
 }
@@ -851,23 +862,23 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 func dmsEndpointDocDBConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  database_name               = "tf-test-dms-db-updated"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "target"
-  engine_name                 = "docdb"
-  extra_connection_attributes = "extra"
-  password                    = "tftestupdate"
-  port                        = 27019
-  server_name                 = "tftestupdate"
-  ssl_mode                    = "none"
+ database_name               = "tf-test-dms-db-updated"
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "target"
+ engine_name                 = "docdb"
+ extra_connection_attributes = "extra"
+ password                    = "tftestupdate"
+ port                        = 27019
+ server_name                 = "tftestupdate"
+ ssl_mode                    = "none"
 
-  tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
-    Update = "updated"
-    Add    = "added"
-  }
+ tags = {
+   Name   = "tf-test-dms-endpoint-%[1]s"
+   Update = "updated"
+   Add    = "added"
+ }
 
-  username = "tftestupdate"
+ username = "tftestupdate"
 }
 `, randId)
 }
@@ -875,23 +886,23 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 func dmsEndpointDb2Config(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  database_name               = "tf-test-dms-db"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "source"
-  engine_name                 = "db2"
-  extra_connection_attributes = ""
-  password                    = "tftest"
-  port                        = 27017
-  server_name                 = "tftest"
-  ssl_mode                    = "none"
+ database_name               = "tf-test-dms-db"
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "source"
+ engine_name                 = "db2"
+ extra_connection_attributes = ""
+ password                    = "tftest"
+ port                        = 27017
+ server_name                 = "tftest"
+ ssl_mode                    = "none"
 
-  tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
-    Update = "to-update"
-    Remove = "to-remove"
-  }
+ tags = {
+   Name   = "tf-test-dms-endpoint-%[1]s"
+   Update = "to-update"
+   Remove = "to-remove"
+ }
 
-  username = "tftest"
+ username = "tftest"
 }
 `, randId)
 }
@@ -899,23 +910,47 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 func dmsEndpointDb2ConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  database_name               = "tf-test-dms-db-updated"
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "source"
-  engine_name                 = "db2"
-  extra_connection_attributes = "extra"
-  password                    = "tftestupdate"
-  port                        = 27019
-  server_name                 = "tftestupdate"
-  ssl_mode                    = "none"
+ database_name               = "tf-test-dms-db-updated"
+ endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+ endpoint_type               = "source"
+ engine_name                 = "db2"
+ extra_connection_attributes = "extra"
+ password                    = "tftestupdate"
+ port                        = 27019
+ server_name                 = "tftestupdate"
+ ssl_mode                    = "none"
 
-  tags = {
-    Name   = "tf-test-dms-endpoint-%[1]s"
-    Update = "updated"
-    Add    = "added"
-  }
+ tags = {
+   Name   = "tf-test-dms-endpoint-%[1]s"
+   Update = "updated"
+   Add    = "added"
+ }
 
-  username = "tftestupdate"
+ username = "tftestupdate"
 }
 `, randId)
+}
+
+func Test_flattenDmsS3Settings_key_should_exist(t *testing.T) {
+	expected := `some resource arn`
+	testSettings := dms.S3Settings{ServiceAccessRoleArn: &expected}
+	result := flattenDmsS3Settings(&testSettings)[0]
+	if result["service_access_role_arn"].(string) != expected {
+		t.Fatalf("test fail")
+	}
+}
+func Test_flattenDmsS3Settings_key_should_not_exist(t *testing.T) {
+	nonTimeStampAttributeValue := `some resource arn`
+	testSettings := dms.S3Settings{ServiceAccessRoleArn: &nonTimeStampAttributeValue}
+	result := flattenDmsS3Settings(&testSettings)[0]
+	if _, ok := result["timestamp_column_name"].(string); ok {
+		t.Fatalf("attribute timestamp_column_name could be found but was never set")
+	}
+}
+func Test_flattenDmsS3Settings_key_should_not_exist_if_set_to_nil(t *testing.T) {
+	testSettings := dms.S3Settings{EncryptionMode: nil}
+	result := flattenDmsS3Settings(&testSettings)[0]
+	if _, ok := result["encryption_mode"].(string); ok {
+		t.Fatalf("attribute encryption_mode is not empty but was set to nil")
+	}
 }
