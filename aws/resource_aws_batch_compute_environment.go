@@ -496,7 +496,7 @@ func deleteBatchComputeEnvironment(computeEnvironment string, timeout time.Durat
 	}
 
 	stateChangeConf := &resource.StateChangeConf{
-		Pending:    []string{batch.CEStatusDeleting},
+		Pending:    []string{batch.CEStatusDeleting, batch.CEStatusInvalid},
 		Target:     []string{batch.CEStatusDeleted},
 		Refresh:    resourceAwsBatchComputeEnvironmentDeleteRefreshFunc(computeEnvironment, conn),
 		Timeout:    timeout,
