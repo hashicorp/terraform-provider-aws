@@ -119,6 +119,7 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 parameter of container definition in the `mountPoints` section.
 * `host_path` - (Optional) The path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
 * `docker_volume_configuration` - (Optional) Used to configure a [docker volume](#docker-volume-configuration-arguments)
+* `efs_volume_configuration` - (Optional) Used to configure a [EFS volume](#efs-volume-configuration-arguments). Can be used only with an EC2 type task.
 
 #### Docker Volume Configuration Arguments
 
@@ -129,6 +130,11 @@ For more information, see [Specifying a Docker volume in your Task Definition De
 * `driver` - (Optional) The Docker volume driver to use. The driver value must match the driver name provided by Docker because it is used for task placement.
 * `driver_opts` - (Optional) A map of Docker driver specific options.
 * `labels` - (Optional) A map of custom metadata to add to your Docker volume.
+
+#### EFS Volume Configuration Arguments
+For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_efs.html)
+* `file_system_id` - (Required) The ID of the EFS File System.
+* `root_directory` - (Optional) The path to mount on the host
 
 ##### Example Usage:
 ```hcl
