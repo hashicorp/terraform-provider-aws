@@ -47,7 +47,11 @@ resource "aws_lambda_event_source_mapping" "example" {
 ## Argument Reference
 
 * `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB and Kinesis, `10` for SQS.
+* `bisect_batch_on_function_error` - (Optional) If the function returns an error, split the batch in two and retry.
 * `maximum_batching_window_in_seconds` - (Optional) The maximum amount of time to gather records before invoking the function, in seconds.  Records will continue to buffer until either `maximum_batching_window_in_seconds` expires or `batch_size` has been met. Defaults to as soon as records are available in the stream. If the batch it reads from the stream only has one record in it, Lambda only sends one record to the function.
+* `maximum_record_age_in_seconds` - (Optional) The maximum age of a record that Lambda sends to a function for processing.
+* `maximum_retry_attempts` - (Optional) The maximum number of times to retry when the function returns an error.
+* `parallelization_factor` - (Optional) The number of batches to process from each shard concurrently.
 * `event_source_arn` - (Required) The event source ARN - can be a Kinesis stream, DynamoDB stream, or SQS queue.
 * `enabled` - (Optional) Determines if the mapping will be enabled on creation. Defaults to `true`.
 * `function_name` - (Required) The name or the ARN of the Lambda function that will be subscribing to events.
