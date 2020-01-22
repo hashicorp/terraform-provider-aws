@@ -107,15 +107,15 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 			"maximum_record_age_in_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
-            },
-            "maximum_retry_attempts": {
-                Type:     schema.TypeInt,
-                Optional: true,
-            },
-            "parallelization_factor": {
-                Type:     schema.TypeInt,
-                Optional: true,
-            },
+			},
+			"maximum_retry_attempts": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"parallelization_factor": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"function_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -155,9 +155,9 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Creating Lambda event source mapping: source %s to function %s", eventSourceArn, functionName)
 
 	params := &lambda.CreateEventSourceMappingInput{
-		EventSourceArn:             aws.String(eventSourceArn),
-		FunctionName:               aws.String(functionName),
-		Enabled:                    aws.Bool(d.Get("enabled").(bool)),
+		EventSourceArn: aws.String(eventSourceArn),
+		FunctionName:   aws.String(functionName),
+		Enabled:        aws.Bool(d.Get("enabled").(bool)),
 	}
 
 	if batchSize, ok := d.GetOk("batch_size"); ok {
@@ -170,17 +170,17 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 
 	if batchWindow, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
 		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(batchWindow.(int)))
-    }
+	}
 
-    if recordAgeInSeconds, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
+	if recordAgeInSeconds, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
 		params.MaximumRecordAgeInSeconds = aws.Int64(int64(recordAgeInSeconds.(int)))
 	}
 
-    if retryAttempts, ok := d.GetOk("maximum_retry_attempts"); ok {
+	if retryAttempts, ok := d.GetOk("maximum_retry_attempts"); ok {
 		params.MaximumRetryAttempts = aws.Int64(int64(retryAttempts.(int)))
 	}
 
-    if parallelizationFactor, ok := d.GetOk("parallelization_factor"); ok {
+	if parallelizationFactor, ok := d.GetOk("parallelization_factor"); ok {
 		params.ParallelizationFactor = aws.Int64(int64(parallelizationFactor.(int)))
 	}
 
@@ -329,10 +329,10 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	if err == nil && eventSourceArn.Service != sqs.ServiceName {
 		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
 		if eventSourceArn.Service != dynamodb.ServiceName {
-			params.BisectBatchOnFunctionError = aws.Bool(Bool(d.Get("bisect_batch_on_function_error").(bool)))
-			params.MaximumRecordAgeInSeconds  = aws.Int64(int64(d.Get("maximum_record_age_in_seconds").(int)))
-			params.MaximumRetryAttempts       = aws.Int64(int64(d.Get("maximum_retry_attempts").(int)))
-			params.ParallelizationFactor      = aws.Int64(int64(d.Get("parallelization_factor").(int)))
+			params.BisectBatchOnFunctionError = aws.Bool(d.Get("bisect_batch_on_function_error").(bool))
+			params.MaximumRecordAgeInSeconds = aws.Int64(int64(d.Get("maximum_record_age_in_seconds").(int)))
+			params.MaximumRetryAttempts = aws.Int64(int64(d.Get("maximum_retry_attempts").(int)))
+			params.ParallelizationFactor = aws.Int64(int64(d.Get("parallelization_factor").(int)))
 		}
 	}
 
