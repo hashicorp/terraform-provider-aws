@@ -32,6 +32,16 @@ const (
 	// Unable to modify the tag due to a simultaneous update request.
 	ErrCodeConcurrentModificationException = "ConcurrentModificationException"
 
+	// ErrCodeDuplicatedStopRequestException for service response error code
+	// "DuplicatedStopRequestException".
+	//
+	// The pipeline execution is already in a Stopping state. If you already chose
+	// to stop and wait, you cannot make that request again. You can choose to stop
+	// and abandon now, but be aware that this option can lead to failed tasks or
+	// out of sequence tasks. If you already chose to stop and abandon, you cannot
+	// make that request again.
+	ErrCodeDuplicatedStopRequestException = "DuplicatedStopRequestException"
+
 	// ErrCodeInvalidActionDeclarationException for service response error code
 	// "InvalidActionDeclarationException".
 	//
@@ -150,6 +160,13 @@ const (
 	// or an execution ID does not belong to the specified pipeline.
 	ErrCodePipelineExecutionNotFoundException = "PipelineExecutionNotFoundException"
 
+	// ErrCodePipelineExecutionNotStoppableException for service response error code
+	// "PipelineExecutionNotStoppableException".
+	//
+	// Unable to stop the pipeline execution. The execution might already be in
+	// a Stopped state, or it might no longer be in progress.
+	ErrCodePipelineExecutionNotStoppableException = "PipelineExecutionNotStoppableException"
+
 	// ErrCodePipelineNameInUseException for service response error code
 	// "PipelineNameInUseException".
 	//
@@ -211,6 +228,7 @@ var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
 	"ActionTypeNotFoundException":                     newErrorActionTypeNotFoundException,
 	"ApprovalAlreadyCompletedException":               newErrorApprovalAlreadyCompletedException,
 	"ConcurrentModificationException":                 newErrorConcurrentModificationException,
+	"DuplicatedStopRequestException":                  newErrorDuplicatedStopRequestException,
 	"InvalidActionDeclarationException":               newErrorInvalidActionDeclarationException,
 	"InvalidApprovalTokenException":                   newErrorInvalidApprovalTokenException,
 	"InvalidArnException":                             newErrorInvalidArnException,
@@ -230,6 +248,7 @@ var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
 	"NotLatestPipelineExecutionException":             newErrorNotLatestPipelineExecutionException,
 	"OutputVariablesSizeExceededException":            newErrorOutputVariablesSizeExceededException,
 	"PipelineExecutionNotFoundException":              newErrorPipelineExecutionNotFoundException,
+	"PipelineExecutionNotStoppableException":          newErrorPipelineExecutionNotStoppableException,
 	"PipelineNameInUseException":                      newErrorPipelineNameInUseException,
 	"PipelineNotFoundException":                       newErrorPipelineNotFoundException,
 	"PipelineVersionNotFoundException":                newErrorPipelineVersionNotFoundException,

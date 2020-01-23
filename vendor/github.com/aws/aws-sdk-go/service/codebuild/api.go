@@ -2800,6 +2800,8 @@ func (c *CodeBuild) UpdateWebhookWithContext(ctx aws.Context, input *UpdateWebho
 type AccountLimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2825,6 +2827,9 @@ func (s AccountLimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s AccountLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5307,6 +5312,8 @@ func (s *ImportSourceCredentialsOutput) SetArn(v string) *ImportSourceCredential
 type InvalidInputException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5332,6 +5339,9 @@ func (s InvalidInputException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidInputException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6557,6 +6567,8 @@ func (s *NetworkInterface) SetSubnetId(v string) *NetworkInterface {
 type OAuthProviderException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6582,6 +6594,9 @@ func (s OAuthProviderException) Code() string {
 
 // Message returns the exception's message.
 func (s OAuthProviderException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -8136,6 +8151,8 @@ func (s *ReportGroup) SetType(v string) *ReportGroup {
 type ResourceAlreadyExistsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -8161,6 +8178,9 @@ func (s ResourceAlreadyExistsException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -8187,6 +8207,8 @@ func (s ResourceAlreadyExistsException) RequestID() string {
 type ResourceNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -8212,6 +8234,9 @@ func (s ResourceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

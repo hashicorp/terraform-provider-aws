@@ -957,9 +957,9 @@ func (c *CodePipeline) GetJobDetailsRequest(input *GetJobDetailsInput) (req *req
 // Returns information about a job. Used for custom actions only.
 //
 // When this API is called, AWS CodePipeline returns temporary credentials for
-// the Amazon S3 bucket used to store artifacts for the pipeline, if the action
-// requires access to that Amazon S3 bucket for input or output artifacts. This
-// API also returns any secret values defined for the action.
+// the S3 bucket used to store artifacts for the pipeline, if the action requires
+// access to that S3 bucket for input or output artifacts. This API also returns
+// any secret values defined for the action.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1306,9 +1306,9 @@ func (c *CodePipeline) GetThirdPartyJobDetailsRequest(input *GetThirdPartyJobDet
 // actions only.
 //
 // When this API is called, AWS CodePipeline returns temporary credentials for
-// the Amazon S3 bucket used to store artifacts for the pipeline, if the action
-// requires access to that Amazon S3 bucket for input or output artifacts. This
-// API also returns any secret values defined for the action.
+// the S3 bucket used to store artifacts for the pipeline, if the action requires
+// access to that S3 bucket for input or output artifacts. This API also returns
+// any secret values defined for the action.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2267,9 +2267,9 @@ func (c *CodePipeline) PollForJobsRequest(input *PollForJobsInput) (req *request
 // returns an error.
 //
 // When this API is called, AWS CodePipeline returns temporary credentials for
-// the Amazon S3 bucket used to store artifacts for the pipeline, if the action
-// requires access to that Amazon S3 bucket for input or output artifacts. This
-// API also returns any secret values defined for the action.
+// the S3 bucket used to store artifacts for the pipeline, if the action requires
+// access to that S3 bucket for input or output artifacts. This API also returns
+// any secret values defined for the action.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2355,8 +2355,8 @@ func (c *CodePipeline) PollForThirdPartyJobsRequest(input *PollForThirdPartyJobs
 // on. Used for partner actions only.
 //
 // When this API is called, AWS CodePipeline returns temporary credentials for
-// the Amazon S3 bucket used to store artifacts for the pipeline, if the action
-// requires access to that Amazon S3 bucket for input or output artifacts.
+// the S3 bucket used to store artifacts for the pipeline, if the action requires
+// access to that S3 bucket for input or output artifacts.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3305,6 +3305,104 @@ func (c *CodePipeline) StartPipelineExecutionWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+const opStopPipelineExecution = "StopPipelineExecution"
+
+// StopPipelineExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the StopPipelineExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopPipelineExecution for more information on using the StopPipelineExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopPipelineExecutionRequest method.
+//    req, resp := client.StopPipelineExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codepipeline-2015-07-09/StopPipelineExecution
+func (c *CodePipeline) StopPipelineExecutionRequest(input *StopPipelineExecutionInput) (req *request.Request, output *StopPipelineExecutionOutput) {
+	op := &request.Operation{
+		Name:       opStopPipelineExecution,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopPipelineExecutionInput{}
+	}
+
+	output = &StopPipelineExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StopPipelineExecution API operation for AWS CodePipeline.
+//
+// Stops the specified pipeline execution. You choose to either stop the pipeline
+// execution by completing in-progress actions without starting subsequent actions,
+// or by abandoning in-progress actions. While completing or abandoning in-progress
+// actions, the pipeline execution is in a Stopping state. After all in-progress
+// actions are completed or abandoned, the pipeline execution is in a Stopped
+// state.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodePipeline's
+// API operation StopPipelineExecution for usage and error information.
+//
+// Returned Error Types:
+//   * ValidationException
+//   The validation was specified in an invalid format.
+//
+//   * PipelineNotFoundException
+//   The pipeline was specified in an invalid format or cannot be found.
+//
+//   * PipelineExecutionNotStoppableException
+//   Unable to stop the pipeline execution. The execution might already be in
+//   a Stopped state, or it might no longer be in progress.
+//
+//   * DuplicatedStopRequestException
+//   The pipeline execution is already in a Stopping state. If you already chose
+//   to stop and wait, you cannot make that request again. You can choose to stop
+//   and abandon now, but be aware that this option can lead to failed tasks or
+//   out of sequence tasks. If you already chose to stop and abandon, you cannot
+//   make that request again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codepipeline-2015-07-09/StopPipelineExecution
+func (c *CodePipeline) StopPipelineExecution(input *StopPipelineExecutionInput) (*StopPipelineExecutionOutput, error) {
+	req, out := c.StopPipelineExecutionRequest(input)
+	return out, req.Send()
+}
+
+// StopPipelineExecutionWithContext is the same as StopPipelineExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopPipelineExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodePipeline) StopPipelineExecutionWithContext(ctx aws.Context, input *StopPipelineExecutionInput, opts ...request.Option) (*StopPipelineExecutionOutput, error) {
+	req, out := c.StopPipelineExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opTagResource = "TagResource"
 
 // TagResourceRequest generates a "aws/request.Request" representing the
@@ -3593,8 +3691,8 @@ func (c *CodePipeline) UpdatePipelineWithContext(ctx aws.Context, input *UpdateP
 
 // Represents an AWS session credentials object. These credentials are temporary
 // credentials that are issued by AWS Secure Token Service (STS). They can be
-// used to access input and output artifacts in the Amazon S3 bucket used to
-// store artifact for the pipeline in AWS CodePipeline.
+// used to access input and output artifacts in the S3 bucket used to store
+// artifact for the pipeline in AWS CodePipeline.
 type AWSSessionCredentials struct {
 	_ struct{} `type:"structure" sensitive:"true"`
 
@@ -4588,6 +4686,8 @@ func (s *ActionExecutionResult) SetExternalExecutionUrl(v string) *ActionExecuti
 type ActionNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4613,6 +4713,9 @@ func (s ActionNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ActionNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4936,6 +5039,8 @@ func (s *ActionTypeId) SetVersion(v string) *ActionTypeId {
 type ActionTypeNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4961,6 +5066,9 @@ func (s ActionTypeNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ActionTypeNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5070,6 +5178,8 @@ func (s *ActionTypeSettings) SetThirdPartyConfigurationUrl(v string) *ActionType
 type ApprovalAlreadyCompletedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5095,6 +5205,9 @@ func (s ApprovalAlreadyCompletedException) Code() string {
 
 // Message returns the exception's message.
 func (s ApprovalAlreadyCompletedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5304,7 +5417,7 @@ func (s *ArtifactDetails) SetMinimumCount(v int64) *ArtifactDetails {
 type ArtifactLocation struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon S3 bucket that contains the artifact.
+	// The S3 bucket that contains the artifact.
 	S3Location *S3ArtifactLocation `locationName:"s3Location" type:"structure"`
 
 	// The type of artifact in the location.
@@ -5410,7 +5523,7 @@ func (s *ArtifactRevision) SetRevisionUrl(v string) *ArtifactRevision {
 	return s
 }
 
-// The Amazon S3 bucket where artifacts for the pipeline are stored.
+// The S3 bucket where artifacts for the pipeline are stored.
 //
 // You must include either artifactStore or artifactStores in your pipeline,
 // but you cannot use both. If you create a cross-region action in your pipeline,
@@ -5423,11 +5536,11 @@ type ArtifactStore struct {
 	// key for Amazon S3 is used.
 	EncryptionKey *EncryptionKey `locationName:"encryptionKey" type:"structure"`
 
-	// The Amazon S3 bucket used for storing the artifacts for a pipeline. You can
-	// specify the name of an S3 bucket but not a folder in the bucket. A folder
-	// to contain the pipeline artifacts is created for you based on the name of
-	// the pipeline. You can use any Amazon S3 bucket in the same AWS Region as
-	// the pipeline to store your pipeline artifacts.
+	// The S3 bucket used for storing the artifacts for a pipeline. You can specify
+	// the name of an S3 bucket but not a folder in the bucket. A folder to contain
+	// the pipeline artifacts is created for you based on the name of the pipeline.
+	// You can use any S3 bucket in the same AWS Region as the pipeline to store
+	// your pipeline artifacts.
 	//
 	// Location is a required field
 	Location *string `locationName:"location" min:"3" type:"string" required:"true"`
@@ -6346,6 +6459,66 @@ func (s DisableStageTransitionOutput) GoString() string {
 	return s.String()
 }
 
+// The pipeline execution is already in a Stopping state. If you already chose
+// to stop and wait, you cannot make that request again. You can choose to stop
+// and abandon now, but be aware that this option can lead to failed tasks or
+// out of sequence tasks. If you already chose to stop and abandon, you cannot
+// make that request again.
+type DuplicatedStopRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DuplicatedStopRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DuplicatedStopRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorDuplicatedStopRequestException(v protocol.ResponseMetadata) error {
+	return &DuplicatedStopRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DuplicatedStopRequestException) Code() string {
+	return "DuplicatedStopRequestException"
+}
+
+// Message returns the exception's message.
+func (s DuplicatedStopRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DuplicatedStopRequestException) OrigErr() error {
+	return nil
+}
+
+func (s DuplicatedStopRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DuplicatedStopRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DuplicatedStopRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Represents the input of an EnableStageTransition action.
 type EnableStageTransitionInput struct {
 	_ struct{} `type:"structure"`
@@ -7176,6 +7349,8 @@ func (s *InputArtifact) SetName(v string) *InputArtifact {
 type InvalidActionDeclarationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7201,6 +7376,9 @@ func (s InvalidActionDeclarationException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidActionDeclarationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7227,6 +7405,8 @@ func (s InvalidActionDeclarationException) RequestID() string {
 type InvalidApprovalTokenException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7252,6 +7432,9 @@ func (s InvalidApprovalTokenException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidApprovalTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7334,6 +7517,8 @@ func (s InvalidArnException) RequestID() string {
 type InvalidBlockerDeclarationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7359,6 +7544,9 @@ func (s InvalidBlockerDeclarationException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidBlockerDeclarationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7385,6 +7573,8 @@ func (s InvalidBlockerDeclarationException) RequestID() string {
 type InvalidClientTokenException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7410,6 +7600,9 @@ func (s InvalidClientTokenException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidClientTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7436,6 +7629,8 @@ func (s InvalidClientTokenException) RequestID() string {
 type InvalidJobException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7461,6 +7656,9 @@ func (s InvalidJobException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidJobException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7487,6 +7685,8 @@ func (s InvalidJobException) RequestID() string {
 type InvalidJobStateException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7512,6 +7712,9 @@ func (s InvalidJobStateException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidJobStateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7539,6 +7742,8 @@ func (s InvalidJobStateException) RequestID() string {
 type InvalidNextTokenException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7564,6 +7769,9 @@ func (s InvalidNextTokenException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7590,6 +7798,8 @@ func (s InvalidNextTokenException) RequestID() string {
 type InvalidNonceException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7615,6 +7825,9 @@ func (s InvalidNonceException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidNonceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7641,6 +7854,8 @@ func (s InvalidNonceException) RequestID() string {
 type InvalidStageDeclarationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7666,6 +7881,9 @@ func (s InvalidStageDeclarationException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidStageDeclarationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7692,6 +7910,8 @@ func (s InvalidStageDeclarationException) RequestID() string {
 type InvalidStructureException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7717,6 +7937,9 @@ func (s InvalidStructureException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidStructureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7799,6 +8022,8 @@ func (s InvalidTagsException) RequestID() string {
 type InvalidWebhookAuthenticationParametersException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7824,6 +8049,9 @@ func (s InvalidWebhookAuthenticationParametersException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidWebhookAuthenticationParametersException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7850,6 +8078,8 @@ func (s InvalidWebhookAuthenticationParametersException) RequestID() string {
 type InvalidWebhookFilterPatternException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7875,6 +8105,9 @@ func (s InvalidWebhookFilterPatternException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidWebhookFilterPatternException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7963,8 +8196,8 @@ type JobData struct {
 
 	// Represents an AWS session credentials object. These credentials are temporary
 	// credentials that are issued by AWS Secure Token Service (STS). They can be
-	// used to access input and output artifacts in the Amazon S3 bucket used to
-	// store artifacts for the pipeline in AWS CodePipeline.
+	// used to access input and output artifacts in the S3 bucket used to store
+	// artifacts for the pipeline in AWS CodePipeline.
 	ArtifactCredentials *AWSSessionCredentials `locationName:"artifactCredentials" type:"structure" sensitive:"true"`
 
 	// A system-generated token, such as a AWS CodeDeploy deployment ID, required
@@ -8092,6 +8325,8 @@ func (s *JobDetails) SetId(v string) *JobDetails {
 type JobNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -8117,6 +8352,9 @@ func (s JobNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s JobNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -8144,6 +8382,8 @@ func (s JobNotFoundException) RequestID() string {
 type LimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -8169,6 +8409,9 @@ func (s LimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -8845,6 +9088,8 @@ func (s *ListWebhooksOutput) SetWebhooks(v []*ListWebhookItem) *ListWebhooksOutp
 type NotLatestPipelineExecutionException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -8870,6 +9115,9 @@ func (s NotLatestPipelineExecutionException) Code() string {
 
 // Message returns the exception's message.
 func (s NotLatestPipelineExecutionException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -9067,8 +9315,8 @@ func (s *PipelineContext) SetStage(v *StageContext) *PipelineContext {
 type PipelineDeclaration struct {
 	_ struct{} `type:"structure"`
 
-	// Represents information about the Amazon S3 bucket where artifacts are stored
-	// for the pipeline.
+	// Represents information about the S3 bucket where artifacts are stored for
+	// the pipeline.
 	//
 	// You must include either artifactStore or artifactStores in your pipeline,
 	// but you cannot use both. If you create a cross-region action in your pipeline,
@@ -9212,21 +9460,30 @@ type PipelineExecution struct {
 	// The ID of the pipeline execution.
 	PipelineExecutionId *string `locationName:"pipelineExecutionId" type:"string"`
 
-	// The name of the pipeline that was executed.
+	// The name of the pipeline with the specified pipeline execution.
 	PipelineName *string `locationName:"pipelineName" min:"1" type:"string"`
 
-	// The version number of the pipeline that was executed.
+	// The version number of the pipeline with the specified pipeline execution.
 	PipelineVersion *int64 `locationName:"pipelineVersion" min:"1" type:"integer"`
 
 	// The status of the pipeline execution.
 	//
 	//    * InProgress: The pipeline execution is currently running.
 	//
+	//    * Stopped: The pipeline execution was manually stopped. For more information,
+	//    see Stopped Executions (https://docs.aws.amazon.com/codepipeline/latest/userguide/concepts.html#concepts-executions-stopped).
+	//
+	//    * Stopping: The pipeline execution received a request to be manually stopped.
+	//    Depending on the selected stop mode, the execution is either completing
+	//    or abandoning in-progress actions. For more information, see Stopped Executions
+	//    (https://docs.aws.amazon.com/codepipeline/latest/userguide/concepts.html#concepts-executions-stopped).
+	//
 	//    * Succeeded: The pipeline execution was completed successfully.
 	//
 	//    * Superseded: While this pipeline execution was waiting for the next stage
 	//    to be completed, a newer pipeline execution advanced and continued through
-	//    the pipeline instead.
+	//    the pipeline instead. For more information, see Superseded Executions
+	//    (https://docs.aws.amazon.com/codepipeline/latest/userguide/concepts.html#concepts-superseded).
 	//
 	//    * Failed: The pipeline execution was not completed successfully.
 	Status *string `locationName:"status" type:"string" enum:"PipelineExecutionStatus"`
@@ -9277,6 +9534,8 @@ func (s *PipelineExecution) SetStatus(v string) *PipelineExecution {
 type PipelineExecutionNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -9302,6 +9561,9 @@ func (s PipelineExecutionNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s PipelineExecutionNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -9321,6 +9583,63 @@ func (s PipelineExecutionNotFoundException) StatusCode() int {
 
 // RequestID returns the service's response RequestID for request.
 func (s PipelineExecutionNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Unable to stop the pipeline execution. The execution might already be in
+// a Stopped state, or it might no longer be in progress.
+type PipelineExecutionNotStoppableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s PipelineExecutionNotStoppableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PipelineExecutionNotStoppableException) GoString() string {
+	return s.String()
+}
+
+func newErrorPipelineExecutionNotStoppableException(v protocol.ResponseMetadata) error {
+	return &PipelineExecutionNotStoppableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PipelineExecutionNotStoppableException) Code() string {
+	return "PipelineExecutionNotStoppableException"
+}
+
+// Message returns the exception's message.
+func (s PipelineExecutionNotStoppableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PipelineExecutionNotStoppableException) OrigErr() error {
+	return nil
+}
+
+func (s PipelineExecutionNotStoppableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PipelineExecutionNotStoppableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PipelineExecutionNotStoppableException) RequestID() string {
 	return s.respMetadata.RequestID
 }
 
@@ -9345,14 +9664,26 @@ type PipelineExecutionSummary struct {
 	//
 	//    * InProgress: The pipeline execution is currently running.
 	//
+	//    * Stopped: The pipeline execution was manually stopped. For more information,
+	//    see Stopped Executions (https://docs.aws.amazon.com/codepipeline/latest/userguide/concepts.html#concepts-executions-stopped).
+	//
+	//    * Stopping: The pipeline execution received a request to be manually stopped.
+	//    Depending on the selected stop mode, the execution is either completing
+	//    or abandoning in-progress actions. For more information, see Stopped Executions
+	//    (https://docs.aws.amazon.com/codepipeline/latest/userguide/concepts.html#concepts-executions-stopped).
+	//
 	//    * Succeeded: The pipeline execution was completed successfully.
 	//
 	//    * Superseded: While this pipeline execution was waiting for the next stage
 	//    to be completed, a newer pipeline execution advanced and continued through
-	//    the pipeline instead.
+	//    the pipeline instead. For more information, see Superseded Executions
+	//    (https://docs.aws.amazon.com/codepipeline/latest/userguide/concepts.html#concepts-superseded).
 	//
 	//    * Failed: The pipeline execution was not completed successfully.
 	Status *string `locationName:"status" type:"string" enum:"PipelineExecutionStatus"`
+
+	// The interaction that stopped a pipeline execution.
+	StopTrigger *StopExecutionTrigger `locationName:"stopTrigger" type:"structure"`
 
 	// The interaction or event that started a pipeline execution, such as automated
 	// change detection or a StartPipelineExecution API call.
@@ -9396,6 +9727,12 @@ func (s *PipelineExecutionSummary) SetStartTime(v time.Time) *PipelineExecutionS
 // SetStatus sets the Status field's value.
 func (s *PipelineExecutionSummary) SetStatus(v string) *PipelineExecutionSummary {
 	s.Status = &v
+	return s
+}
+
+// SetStopTrigger sets the StopTrigger field's value.
+func (s *PipelineExecutionSummary) SetStopTrigger(v *StopExecutionTrigger) *PipelineExecutionSummary {
+	s.StopTrigger = v
 	return s
 }
 
@@ -9451,6 +9788,8 @@ func (s *PipelineMetadata) SetUpdated(v time.Time) *PipelineMetadata {
 type PipelineNameInUseException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -9476,6 +9815,9 @@ func (s PipelineNameInUseException) Code() string {
 
 // Message returns the exception's message.
 func (s PipelineNameInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -9502,6 +9844,8 @@ func (s PipelineNameInUseException) RequestID() string {
 type PipelineNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -9527,6 +9871,9 @@ func (s PipelineNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s PipelineNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -9604,6 +9951,8 @@ func (s *PipelineSummary) SetVersion(v int64) *PipelineSummary {
 type PipelineVersionNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -9629,6 +9978,9 @@ func (s PipelineVersionNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s PipelineVersionNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -10630,6 +10982,8 @@ func (s RegisterWebhookWithThirdPartyOutput) GoString() string {
 type ResourceNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -10655,6 +11009,9 @@ func (s ResourceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -10790,17 +11147,17 @@ func (s *RetryStageExecutionOutput) SetPipelineExecutionId(v string) *RetryStage
 	return s
 }
 
-// The location of the Amazon S3 bucket that contains a revision.
+// The location of the S3 bucket that contains a revision.
 type S3ArtifactLocation struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Amazon S3 bucket.
+	// The name of the S3 bucket.
 	//
 	// BucketName is a required field
 	BucketName *string `locationName:"bucketName" type:"string" required:"true"`
 
-	// The key of the object in the Amazon S3 bucket, which uniquely identifies
-	// the object in the bucket.
+	// The key of the object in the S3 bucket, which uniquely identifies the object
+	// in the bucket.
 	//
 	// ObjectKey is a required field
 	ObjectKey *string `locationName:"objectKey" type:"string" required:"true"`
@@ -11072,6 +11429,8 @@ func (s *StageExecution) SetStatus(v string) *StageExecution {
 type StageNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -11097,6 +11456,9 @@ func (s StageNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s StageNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -11124,6 +11486,8 @@ func (s StageNotFoundException) RequestID() string {
 type StageNotRetryableException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -11149,6 +11513,9 @@ func (s StageNotRetryableException) Code() string {
 
 // Message returns the exception's message.
 func (s StageNotRetryableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -11297,6 +11664,130 @@ func (s StartPipelineExecutionOutput) GoString() string {
 
 // SetPipelineExecutionId sets the PipelineExecutionId field's value.
 func (s *StartPipelineExecutionOutput) SetPipelineExecutionId(v string) *StartPipelineExecutionOutput {
+	s.PipelineExecutionId = &v
+	return s
+}
+
+// The interaction that stopped a pipeline execution.
+type StopExecutionTrigger struct {
+	_ struct{} `type:"structure"`
+
+	// The user-specified reason the pipeline was stopped.
+	Reason *string `locationName:"reason" type:"string"`
+}
+
+// String returns the string representation
+func (s StopExecutionTrigger) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopExecutionTrigger) GoString() string {
+	return s.String()
+}
+
+// SetReason sets the Reason field's value.
+func (s *StopExecutionTrigger) SetReason(v string) *StopExecutionTrigger {
+	s.Reason = &v
+	return s
+}
+
+type StopPipelineExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// Use this option to stop the pipeline execution by abandoning, rather than
+	// finishing, in-progress actions.
+	//
+	// This option can lead to failed or out-of-sequence tasks.
+	Abandon *bool `locationName:"abandon" type:"boolean"`
+
+	// The ID of the pipeline execution to be stopped in the current stage. Use
+	// the GetPipelineState action to retrieve the current pipelineExecutionId.
+	//
+	// PipelineExecutionId is a required field
+	PipelineExecutionId *string `locationName:"pipelineExecutionId" type:"string" required:"true"`
+
+	// The name of the pipeline to stop.
+	//
+	// PipelineName is a required field
+	PipelineName *string `locationName:"pipelineName" min:"1" type:"string" required:"true"`
+
+	// Use this option to enter comments, such as the reason the pipeline was stopped.
+	Reason *string `locationName:"reason" type:"string"`
+}
+
+// String returns the string representation
+func (s StopPipelineExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopPipelineExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopPipelineExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopPipelineExecutionInput"}
+	if s.PipelineExecutionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PipelineExecutionId"))
+	}
+	if s.PipelineName == nil {
+		invalidParams.Add(request.NewErrParamRequired("PipelineName"))
+	}
+	if s.PipelineName != nil && len(*s.PipelineName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PipelineName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAbandon sets the Abandon field's value.
+func (s *StopPipelineExecutionInput) SetAbandon(v bool) *StopPipelineExecutionInput {
+	s.Abandon = &v
+	return s
+}
+
+// SetPipelineExecutionId sets the PipelineExecutionId field's value.
+func (s *StopPipelineExecutionInput) SetPipelineExecutionId(v string) *StopPipelineExecutionInput {
+	s.PipelineExecutionId = &v
+	return s
+}
+
+// SetPipelineName sets the PipelineName field's value.
+func (s *StopPipelineExecutionInput) SetPipelineName(v string) *StopPipelineExecutionInput {
+	s.PipelineName = &v
+	return s
+}
+
+// SetReason sets the Reason field's value.
+func (s *StopPipelineExecutionInput) SetReason(v string) *StopPipelineExecutionInput {
+	s.Reason = &v
+	return s
+}
+
+type StopPipelineExecutionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique system-generated ID of the pipeline execution that was stopped.
+	PipelineExecutionId *string `locationName:"pipelineExecutionId" type:"string"`
+}
+
+// String returns the string representation
+func (s StopPipelineExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopPipelineExecutionOutput) GoString() string {
+	return s.String()
+}
+
+// SetPipelineExecutionId sets the PipelineExecutionId field's value.
+func (s *StopPipelineExecutionOutput) SetPipelineExecutionId(v string) *StopPipelineExecutionOutput {
 	s.PipelineExecutionId = &v
 	return s
 }
@@ -11480,8 +11971,8 @@ type ThirdPartyJobData struct {
 
 	// Represents an AWS session credentials object. These credentials are temporary
 	// credentials that are issued by AWS Secure Token Service (STS). They can be
-	// used to access input and output artifacts in the Amazon S3 bucket used to
-	// store artifact for the pipeline in AWS CodePipeline.
+	// used to access input and output artifacts in the S3 bucket used to store
+	// artifact for the pipeline in AWS CodePipeline.
 	ArtifactCredentials *AWSSessionCredentials `locationName:"artifactCredentials" type:"structure" sensitive:"true"`
 
 	// A system-generated token, such as a AWS CodeDeploy deployment ID, that a
@@ -11860,6 +12351,8 @@ func (s *UpdatePipelineOutput) SetPipeline(v *PipelineDeclaration) *UpdatePipeli
 type ValidationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -11885,6 +12378,9 @@ func (s ValidationException) Code() string {
 
 // Message returns the exception's message.
 func (s ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -12179,6 +12675,8 @@ func (s *WebhookFilterRule) SetMatchEquals(v string) *WebhookFilterRule {
 type WebhookNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -12204,6 +12702,9 @@ func (s WebhookNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s WebhookNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -12260,6 +12761,9 @@ const (
 const (
 	// ActionExecutionStatusInProgress is a ActionExecutionStatus enum value
 	ActionExecutionStatusInProgress = "InProgress"
+
+	// ActionExecutionStatusAbandoned is a ActionExecutionStatus enum value
+	ActionExecutionStatusAbandoned = "Abandoned"
 
 	// ActionExecutionStatusSucceeded is a ActionExecutionStatus enum value
 	ActionExecutionStatusSucceeded = "Succeeded"
@@ -12354,6 +12858,12 @@ const (
 	// PipelineExecutionStatusInProgress is a PipelineExecutionStatus enum value
 	PipelineExecutionStatusInProgress = "InProgress"
 
+	// PipelineExecutionStatusStopped is a PipelineExecutionStatus enum value
+	PipelineExecutionStatusStopped = "Stopped"
+
+	// PipelineExecutionStatusStopping is a PipelineExecutionStatus enum value
+	PipelineExecutionStatusStopping = "Stopping"
+
 	// PipelineExecutionStatusSucceeded is a PipelineExecutionStatus enum value
 	PipelineExecutionStatusSucceeded = "Succeeded"
 
@@ -12370,6 +12880,12 @@ const (
 
 	// StageExecutionStatusFailed is a StageExecutionStatus enum value
 	StageExecutionStatusFailed = "Failed"
+
+	// StageExecutionStatusStopped is a StageExecutionStatus enum value
+	StageExecutionStatusStopped = "Stopped"
+
+	// StageExecutionStatusStopping is a StageExecutionStatus enum value
+	StageExecutionStatusStopping = "Stopping"
 
 	// StageExecutionStatusSucceeded is a StageExecutionStatus enum value
 	StageExecutionStatusSucceeded = "Succeeded"

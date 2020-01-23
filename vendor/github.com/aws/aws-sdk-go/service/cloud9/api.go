@@ -1111,6 +1111,8 @@ func (c *Cloud9) UpdateEnvironmentMembershipWithContext(ctx aws.Context, input *
 type BadRequestException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -1136,6 +1138,9 @@ func (s BadRequestException) Code() string {
 
 // Message returns the exception's message.
 func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -1162,6 +1167,8 @@ func (s BadRequestException) RequestID() string {
 type ConflictException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -1187,6 +1194,9 @@ func (s ConflictException) Code() string {
 
 // Message returns the exception's message.
 func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -2030,6 +2040,8 @@ func (s *EnvironmentMember) SetUserId(v string) *EnvironmentMember {
 type ForbiddenException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2055,6 +2067,9 @@ func (s ForbiddenException) Code() string {
 
 // Message returns the exception's message.
 func (s ForbiddenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -2081,6 +2096,8 @@ func (s ForbiddenException) RequestID() string {
 type InternalServerErrorException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2106,6 +2123,9 @@ func (s InternalServerErrorException) Code() string {
 
 // Message returns the exception's message.
 func (s InternalServerErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -2132,6 +2152,8 @@ func (s InternalServerErrorException) RequestID() string {
 type LimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2157,6 +2179,9 @@ func (s LimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -2255,6 +2280,8 @@ func (s *ListEnvironmentsOutput) SetNextToken(v string) *ListEnvironmentsOutput 
 type NotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2280,6 +2307,9 @@ func (s NotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -2306,6 +2336,8 @@ func (s NotFoundException) RequestID() string {
 type TooManyRequestsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2331,6 +2363,9 @@ func (s TooManyRequestsException) Code() string {
 
 // Message returns the exception's message.
 func (s TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
