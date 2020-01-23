@@ -257,3 +257,28 @@ func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interf
 
 	return nil
 }
+
+func listCloudFormationStackSets(conn *cloudformation.CloudFormation) ([]*cloudformation.StackSetSummary, error) {
+	input := &cloudformation.ListStackSetsInput{
+		Status: aws.String(cloudformation.StackSetStatusActive),
+	}
+	result := make([]*cloudformation.StackSetSummary, 0)
+
+	for {
+		output, err := conn.ListStackSets(input)
+
+		if err != nil {
+			return result, err
+		}
+
+		result = append(result, output.Summaries...)
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return result, nil
+}
