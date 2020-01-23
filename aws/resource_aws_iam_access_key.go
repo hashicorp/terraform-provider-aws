@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/encryption"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/encryption"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIamAccessKey() *schema.Resource {
@@ -38,13 +38,14 @@ func resourceAwsIamAccessKey() *schema.Resource {
 				}, false),
 			},
 			"secret": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Please use a PGP key to encrypt",
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"ses_smtp_password": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"pgp_key": {
 				Type:     schema.TypeString,

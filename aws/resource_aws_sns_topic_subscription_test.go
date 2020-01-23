@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestSuppressEquivalentSnsTopicSubscriptionDeliveryPolicy(t *testing.T) {
@@ -759,7 +759,7 @@ resource "aws_lambda_function" "authorizer" {
   function_name    = "tf-acc-test-authorizer-%d"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "main.authenticate"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs12.x"
 
   environment {
     variables = {

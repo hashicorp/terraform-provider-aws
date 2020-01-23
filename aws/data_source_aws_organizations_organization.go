@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsOrganizationsOrganization() *schema.Resource {
@@ -23,6 +23,10 @@ func dataSourceAwsOrganizationsOrganization() *schema.Resource {
 							Computed: true,
 						},
 						"email": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -79,6 +83,10 @@ func dataSourceAwsOrganizationsOrganization() *schema.Resource {
 							Computed: true,
 						},
 						"email": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func resourceAwsAcmpcaCertificateAuthorityMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {

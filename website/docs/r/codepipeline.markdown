@@ -1,7 +1,7 @@
 ---
+subcategory: "CodePipeline"
 layout: "aws"
 page_title: "AWS: aws_codepipeline"
-sidebar_current: "docs-aws-resource-codepipeline"
 description: |-
   Provides a CodePipeline
 ---

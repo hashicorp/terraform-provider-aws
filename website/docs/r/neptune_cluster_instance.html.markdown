@@ -1,7 +1,7 @@
 ---
+subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_cluster_instance"
-sidebar_current: "docs-aws-resource-neptune-cluster-instance"
 description: |-
   Provides an Neptune Cluster Resource Instance
 ---

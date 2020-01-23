@@ -8,18 +8,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSRedshiftSecurityGroup_importBasic(t *testing.T) {
+func TestAccAWSRedshiftSecurityGroup_basic(t *testing.T) {
+	// This is necessary to prevent "VPC-by-Default customers cannot use cluster security groups" errors
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-	rInt := acctest.RandInt()
 
-	resourceName := "aws_redshift_security_group.bar"
+	var v redshift.ClusterSecurityGroup
+	rInt := acctest.RandInt()
+	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -28,8 +30,10 @@ func TestAccAWSRedshiftSecurityGroup_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -40,8 +44,13 @@ func TestAccAWSRedshiftSecurityGroup_importBasic(t *testing.T) {
 }
 
 func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
+	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -51,24 +60,34 @@ func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
 			{
 				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists("aws_redshift_security_group.bar", &v),
+					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "name", fmt.Sprintf("redshift-sg-terraform-%d", rInt)),
+						resourceName, "name", fmt.Sprintf("redshift-sg-terraform-%d", rInt)),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "description", "Managed by Terraform"),
+						resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "ingress.2735652665.cidr", "10.0.0.1/24"),
+						resourceName, "ingress.2735652665.cidr", "10.0.0.1/24"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "ingress.#", "1"),
+						resourceName, "ingress.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
+	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -78,27 +97,30 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
 			{
 				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists("aws_redshift_security_group.bar", &v),
+					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "ingress.#", "1"),
+						resourceName, "ingress.#", "1"),
 				),
 			},
-
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidrAdd(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists("aws_redshift_security_group.bar", &v),
+					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "ingress.#", "3"),
+						resourceName, "ingress.#", "3"),
 				),
 			},
-
 			{
 				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidrReduce(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists("aws_redshift_security_group.bar", &v),
+					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "ingress.#", "2"),
+						resourceName, "ingress.#", "2"),
 				),
 			},
 		},
@@ -106,8 +128,13 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
 }
 
 func TestAccAWSRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
+	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -117,22 +144,32 @@ func TestAccAWSRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
 			{
 				Config: testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists("aws_redshift_security_group.bar", &v),
+					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "name", fmt.Sprintf("redshift-sg-terraform-%d", rInt)),
+						resourceName, "name", fmt.Sprintf("redshift-sg-terraform-%d", rInt)),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "description", "this is a description"),
+						resourceName, "description", "this is a description"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "ingress.#", "1"),
+						resourceName, "ingress.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccAWSRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
+	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -142,27 +179,30 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
 			{
 				Config: testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists("aws_redshift_security_group.bar", &v),
+					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "ingress.#", "1"),
+						resourceName, "ingress.#", "1"),
 				),
 			},
-
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccAWSRedshiftSecurityGroupConfig_ingressSgIdAdd(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists("aws_redshift_security_group.bar", &v),
+					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "ingress.#", "3"),
+						resourceName, "ingress.#", "3"),
 				),
 			},
-
 			{
 				Config: testAccAWSRedshiftSecurityGroupConfig_ingressSgIdReduce(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftSecurityGroupExists("aws_redshift_security_group.bar", &v),
+					testAccCheckAWSRedshiftSecurityGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_security_group.bar", "ingress.#", "2"),
+						resourceName, "ingress.#", "2"),
 				),
 			},
 		},
@@ -255,7 +295,7 @@ func TestResourceAWSRedshiftSecurityGroupNameValidation(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(256),
+			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -271,11 +311,7 @@ func TestResourceAWSRedshiftSecurityGroupNameValidation(t *testing.T) {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_redshift_security_group" "bar" {
+resource "aws_redshift_security_group" "test" {
   name = "redshift-sg-terraform-%d"
 
   ingress {
@@ -287,11 +323,7 @@ resource "aws_redshift_security_group" "bar" {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidrAdd(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_redshift_security_group" "bar" {
+resource "aws_redshift_security_group" "test" {
   name        = "redshift-sg-terraform-%d"
   description = "this is a description"
 
@@ -312,11 +344,7 @@ resource "aws_redshift_security_group" "bar" {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidrReduce(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_redshift_security_group" "bar" {
+resource "aws_redshift_security_group" "test" {
   name        = "redshift-sg-terraform-%d"
   description = "this is a description"
 
@@ -333,10 +361,6 @@ resource "aws_redshift_security_group" "bar" {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_security_group" "redshift" {
   name        = "terraform_redshift_test_%d"
   description = "Used in the redshift acceptance tests"
@@ -349,7 +373,7 @@ resource "aws_security_group" "redshift" {
   }
 }
 
-resource "aws_redshift_security_group" "bar" {
+resource "aws_redshift_security_group" "test" {
   name        = "redshift-sg-terraform-%d"
   description = "this is a description"
 
@@ -363,10 +387,6 @@ resource "aws_redshift_security_group" "bar" {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdAdd(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_security_group" "redshift" {
   name        = "terraform_redshift_test_%d"
   description = "Used in the redshift acceptance tests"
@@ -403,7 +423,7 @@ resource "aws_security_group" "redshift3" {
   }
 }
 
-resource "aws_redshift_security_group" "bar" {
+resource "aws_redshift_security_group" "test" {
   name        = "redshift-sg-terraform-%d"
   description = "this is a description"
 
@@ -427,10 +447,6 @@ resource "aws_redshift_security_group" "bar" {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdReduce(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_security_group" "redshift" {
   name        = "terraform_redshift_test_%d"
   description = "Used in the redshift acceptance tests"
@@ -455,7 +471,7 @@ resource "aws_security_group" "redshift2" {
   }
 }
 
-resource "aws_redshift_security_group" "bar" {
+resource "aws_redshift_security_group" "test" {
   name        = "redshift-sg-terraform-%d"
   description = "this is a description"
 

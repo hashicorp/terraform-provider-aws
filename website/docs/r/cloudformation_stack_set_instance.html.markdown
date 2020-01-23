@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_stack_set_instance"
-sidebar_current: "docs-aws-resource-cloudformation-stack-set-instance"
 description: |-
   Manages a CloudFormation Stack Set Instance.
 ---

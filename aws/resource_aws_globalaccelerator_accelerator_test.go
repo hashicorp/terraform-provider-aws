@@ -2,13 +2,173 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_globalaccelerator_accelerator", &resource.Sweeper{
+		Name: "aws_globalaccelerator_accelerator",
+		F:    testSweepGlobalAcceleratorAccelerators,
+	})
+}
+
+func testSweepGlobalAcceleratorAccelerators(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).globalacceleratorconn
+
+	input := &globalaccelerator.ListAcceleratorsInput{}
+	var sweeperErrs *multierror.Error
+
+	for {
+		output, err := conn.ListAccelerators(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Global Accelerator Accelerator sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving Global Accelerator Accelerators: %s", err)
+		}
+
+		for _, accelerator := range output.Accelerators {
+			arn := aws.StringValue(accelerator.AcceleratorArn)
+
+			errs := sweepGlobalAcceleratorListeners(conn, accelerator.AcceleratorArn)
+			if errs != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, errs)
+			}
+
+			if aws.BoolValue(accelerator.Enabled) {
+				input := &globalaccelerator.UpdateAcceleratorInput{
+					AcceleratorArn: accelerator.AcceleratorArn,
+					Enabled:        aws.Bool(false),
+				}
+
+				log.Printf("[INFO] Disabling Global Accelerator Accelerator: %s", arn)
+
+				_, err := conn.UpdateAccelerator(input)
+
+				if err != nil {
+					sweeperErr := fmt.Errorf("error disabling Global Accelerator Accelerator (%s): %s", arn, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+					continue
+				}
+			}
+
+			// Global Accelerator accelerators need to be in `DEPLOYED` state before they can be deleted.
+			// Removing listeners or disabling can both set the state to `IN_PROGRESS`.
+			if err := resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, arn); err != nil {
+				sweeperErr := fmt.Errorf("error waiting for Global Accelerator Accelerator (%s): %s", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			input := &globalaccelerator.DeleteAcceleratorInput{
+				AcceleratorArn: accelerator.AcceleratorArn,
+			}
+
+			log.Printf("[INFO] Deleting Global Accelerator Accelerator: %s", arn)
+			_, err := conn.DeleteAccelerator(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Global Accelerator Accelerator (%s): %s", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepGlobalAcceleratorListeners(conn *globalaccelerator.GlobalAccelerator, acceleratorArn *string) *multierror.Error {
+	var sweeperErrs *multierror.Error
+
+	log.Printf("[INFO] deleting Listeners for Accelerator %s", *acceleratorArn)
+	listenersInput := &globalaccelerator.ListListenersInput{
+		AcceleratorArn: acceleratorArn,
+	}
+	listenersOutput, err := conn.ListListeners(listenersInput)
+	if err != nil {
+		sweeperErr := fmt.Errorf("error listing Global Accelerator Listeners for Accelerator (%s): %s", *acceleratorArn, err)
+		log.Printf("[ERROR] %s", sweeperErr)
+		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+	}
+
+	for _, listener := range listenersOutput.Listeners {
+		errs := sweepGlobalAcceleratorEndpointGroups(conn, listener.ListenerArn)
+		if errs != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, errs)
+		}
+
+		input := &globalaccelerator.DeleteListenerInput{
+			ListenerArn: listener.ListenerArn,
+		}
+		_, err := conn.DeleteListener(input)
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting Global Accelerator listener (%s): %s", *listener.ListenerArn, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+	}
+
+	return sweeperErrs
+}
+
+func sweepGlobalAcceleratorEndpointGroups(conn *globalaccelerator.GlobalAccelerator, listenerArn *string) *multierror.Error {
+	var sweeperErrs *multierror.Error
+
+	log.Printf("[INFO] deleting Endpoint Groups for Listener %s", *listenerArn)
+	input := &globalaccelerator.ListEndpointGroupsInput{
+		ListenerArn: listenerArn,
+	}
+	output, err := conn.ListEndpointGroups(input)
+	if err != nil {
+		sweeperErr := fmt.Errorf("error listing Global Accelerator Endpoint Groups for Listener (%s): %s", *listenerArn, err)
+		log.Printf("[ERROR] %s", sweeperErr)
+		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+	}
+
+	for _, endpoint := range output.EndpointGroups {
+		input := &globalaccelerator.DeleteEndpointGroupInput{
+			EndpointGroupArn: endpoint.EndpointGroupArn,
+		}
+		_, err := conn.DeleteEndpointGroup(input)
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting Global Accelerator endpoint group (%s): %s", *endpoint.EndpointGroupArn, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+	}
+
+	return sweeperErrs
+}
 
 func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.example"

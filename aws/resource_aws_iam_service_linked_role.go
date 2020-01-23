@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsIamServiceLinkedRole() *schema.Resource {
@@ -137,7 +137,7 @@ func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{
 
 	d.Set("arn", role.Arn)
 	d.Set("aws_service_name", serviceName)
-	d.Set("create_date", role.CreateDate)
+	d.Set("create_date", aws.TimeValue(role.CreateDate).Format(time.RFC3339))
 	d.Set("custom_suffix", customSuffix)
 	d.Set("description", role.Description)
 	d.Set("name", role.RoleName)

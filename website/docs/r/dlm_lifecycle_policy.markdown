@@ -1,7 +1,7 @@
 ---
+subcategory: "Data Lifecycle Manager (DLM)"
 layout: "aws"
 page_title: "AWS: aws_dlm_lifecycle_policy"
-sidebar_current: "docs-aws-resource-dlm-lifecycle-policy"
 description: |-
   Provides a Data Lifecycle Manager (DLM) lifecycle policy for managing snapshots.
 ---
@@ -106,6 +106,7 @@ The following arguments are supported:
 * `execution_role_arn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
 * `policy_details` - (Required) See the [`policy_details` configuration](#policy-details-arguments) block. Max of 1.
 * `state` - (Optional) Whether the lifecycle policy should be enabled or disabled. `ENABLED` or `DISABLED` are valid values. Defaults to `ENABLED`.
+* `tags` - (Optional) Key-value mapping of resource tags.
 
 #### Policy Details arguments
 
@@ -135,7 +136,10 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-All of the arguments above are exported as attributes.
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - Amazon Resource Name (ARN) of the DLM Lifecycle Policy.
+* `id` - Identifier of the DLM Lifecycle Policy.
 
 ## Import
 

@@ -6,32 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSEmrSecurityConfiguration_importBasic(t *testing.T) {
-	resourceName := "aws_emr_security_configuration.foo"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckEmrSecurityConfigurationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEmrSecurityConfigurationConfig,
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSEmrSecurityConfiguration_basic(t *testing.T) {
+	resourceName := "aws_emr_security_configuration.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -40,8 +21,14 @@ func TestAccAWSEmrSecurityConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccEmrSecurityConfigurationConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmrSecurityConfigurationExists("aws_emr_security_configuration.foo"),
+					testAccCheckEmrSecurityConfigurationExists(resourceName),
+					testAccCheckResourceAttrRfc3339(resourceName, "creation_date"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -109,7 +96,7 @@ func testAccCheckEmrSecurityConfigurationExists(n string) resource.TestCheckFunc
 }
 
 const testAccEmrSecurityConfigurationConfig = `
-resource "aws_emr_security_configuration" "foo" {
+resource "aws_emr_security_configuration" "test" {
 	configuration = <<EOF
 {
   "EncryptionConfiguration": {

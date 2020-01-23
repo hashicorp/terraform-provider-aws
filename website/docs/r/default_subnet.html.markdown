@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_subnet"
-sidebar_current: "docs-aws-resource-default-subnet"
 description: |-
   Manage a default VPC subnet resource.
 ---

@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsGameliftFleet() *schema.Resource {
@@ -22,7 +22,7 @@ func resourceAwsGameliftFleet() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(70 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -49,6 +49,12 @@ func resourceAwsGameliftFleet() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
+			},
+			"instance_role_arn": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+				Optional:     true,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -198,6 +204,11 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("ec2_inbound_permission"); ok {
 		input.EC2InboundPermissions = expandGameliftIpPermissions(v.([]interface{}))
 	}
+
+	if v, ok := d.GetOk("instance_role_arn"); ok {
+		input.InstanceRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("metric_groups"); ok {
 		input.MetricGroups = expandStringList(v.([]interface{}))
 	}
@@ -212,7 +223,18 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[INFO] Creating Gamelift Fleet: %s", input)
-	out, err := conn.CreateFleet(&input)
+	var out *gamelift.CreateFleetOutput
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+		var err error
+		out, err = conn.CreateFleet(&input)
+		if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, "GameLift is not authorized to perform") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -295,6 +317,8 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("metric_groups", flattenStringList(fleet.MetricGroups))
 	d.Set("name", fleet.Name)
 	d.Set("fleet_type", fleet.FleetType)
+	d.Set("instance_role_arn", fleet.InstanceRoleArn)
+  d.Set("fleet_type", fleet.FleetType)
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("operating_system", fleet.OperatingSystem)
 	d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy))
@@ -355,10 +379,11 @@ func resourceAwsGameliftFleetDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] Deleting Gamelift Fleet: %s", d.Id())
 	// It can take ~ 1 hr as Gamelift will keep retrying on errors like
 	// invalid launch path and remain in state when it can't be deleted :/
+	input := &gamelift.DeleteFleetInput{
+		FleetId: aws.String(d.Id()),
+	}
 	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{
-			FleetId: aws.String(d.Id()),
-		})
+		_, err := conn.DeleteFleet(input)
 		if err != nil {
 			msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", d.Id())
 			if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
@@ -368,8 +393,11 @@ func resourceAwsGameliftFleetDelete(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteFleet(input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting Gamelift fleet: %s", err)
 	}
 
 	return waitForGameliftFleetToBeDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))

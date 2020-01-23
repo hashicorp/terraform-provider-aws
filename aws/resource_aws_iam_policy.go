@@ -9,8 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsIamPolicy() *schema.Resource {
@@ -141,7 +141,9 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		getPolicyResponse, err = iamconn.GetPolicy(getPolicyRequest)
+	}
 	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 		log.Printf("[WARN] IAM Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -187,7 +189,9 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		getPolicyVersionResponse, err = iamconn.GetPolicyVersion(getPolicyVersionRequest)
+	}
 	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 		log.Printf("[WARN] IAM Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")

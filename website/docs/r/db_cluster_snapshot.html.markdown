@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_cluster_snapshot"
-sidebar_current: "docs-aws-resource-db-cluster-snapshot"
 description: |-
   Manages a RDS database cluster snapshot.
 ---
@@ -25,6 +25,7 @@ The following arguments are supported:
 
 * `db_cluster_identifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
+* `tags` - (Optional) A mapping of tags to assign to the DB cluster.
 
 ## Attributes Reference
 

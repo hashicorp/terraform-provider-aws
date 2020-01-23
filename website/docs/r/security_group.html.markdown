@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_security_group"
-sidebar_current: "docs-aws-resource-security-group"
 description: |-
   Provides a security group resource.
 ---
@@ -19,6 +19,8 @@ a conflict of rule settings and will overwrite rules.
 
 ~> **NOTE:** Referencing Security Groups across VPC peering has certain restrictions. More information is available in the [VPC Peering User Guide](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html).
 
+~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), security groups associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the [customizable deletion timeout](#timeouts) to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/10329).
+
 ## Example Usage
 
 Basic usage
@@ -33,7 +35,7 @@ resource "aws_security_group" "allow_tls" {
     # TLS (change to whatever ports you need)
     from_port   = 443
     to_port     = 443
-    protocol    = "-1"
+    protocol    = "tcp"
     # Please restrict your ingress to only necessary IPs and ports.
     # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
     cidr_blocks = # add a CIDR block here
@@ -55,6 +57,7 @@ Basic usage with tags:
 resource "aws_security_group" "allow_tls" {
   name        = "allow_tls"
   description = "Allow TLS inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
     # TLS (change to whatever ports you need)
@@ -105,9 +108,9 @@ The `ingress` block supports:
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
 * `prefix_list_ids` - (Optional) List of prefix list IDs.
-* `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp")
+* `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp" or "icmpv6")
 * `protocol` - (Required) The protocol. If you select a protocol of
-"-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0. If not icmp, tcp, udp, or "-1" use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
+"-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0. If not icmp, icmpv6, tcp, udp, or "-1" use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
 * `security_groups` - (Optional) List of security group Group Names if using
     EC2-Classic, or Group IDs if using a VPC.
 * `self` - (Optional) If true, the security group itself will be added as
@@ -185,8 +188,8 @@ In addition to all arguments above, the following attributes are exported:
 `aws_security_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
 configuration options:
 
-- `create` - (Default `10 minutes`) How long to wait for a security group to be created.
-- `delete` - (Default `10 minutes`) How long to wait for a security group to be deleted.
+- `create` - (Default `10m`) How long to wait for a security group to be created.
+- `delete` - (Default `10m`) How long to retry on `DependencyViolation` errors during security group deletion from lingering ENIs left by certain AWS services such as Elastic Load Balancing. NOTE: Lambda ENIs can take up to 45 minutes to delete, which is not affected by changing this customizable timeout (in version 2.31.0 and later of the Terraform AWS Provider) unless it is increased above 45 minutes.
 
 ## Import
 

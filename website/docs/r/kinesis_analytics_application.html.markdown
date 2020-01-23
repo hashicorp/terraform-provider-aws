@@ -1,7 +1,7 @@
 ---
+subcategory: "Kinesis"
 layout: "aws"
 page_title: "AWS: aws_kinesis_analytics_application"
-sidebar_current: "docs-aws-resource-kinesis-analytics-application"
 description: |-
   Provides a AWS Kinesis Analytics Application
 ---

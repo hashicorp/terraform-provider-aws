@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 const testAccGameliftFleetPrefix = "tf_acc_fleet_"
@@ -555,9 +555,10 @@ func testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath string, 
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
-  fleet_type = "ON_DEMAND"
-  name = "%s"
-  description = "%s"
+  name              = "%s"
+  description       = "%s"
+  instance_role_arn = "${aws_iam_role.test.arn}"
+  fleet_type        = "ON_DEMAND"
 
   ec2_inbound_permission {
     from_port = 8080
@@ -602,8 +603,10 @@ resource "aws_gamelift_fleet" "test" {
 
 %s
 
+%s
+
 `, fleetName, desc, launchPath, params,
-		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
+		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn), testAccAWSGameLiftFleetIAMRole(buildName))
 }
 
 func testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
@@ -611,9 +614,11 @@ func testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath s
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
-  fleet_type = "ON_DEMAND"
-  name = "%s"
-  description = "%s"
+  
+  name              = "%s"
+  description       = "%s"
+  instance_role_arn = "${aws_iam_role.test.arn}"
+  fleet_type        = "ON_DEMAND"
 
   ec2_inbound_permission {
     from_port = 8888
@@ -658,8 +663,10 @@ resource "aws_gamelift_fleet" "test" {
 
 %s
 
+%s
+
 `, fleetName, desc, launchPath, params,
-		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
+		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn), testAccAWSGameLiftFleetIAMRole(buildName))
 }
 
 func testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn string) string {
@@ -675,4 +682,58 @@ resource "aws_gamelift_build" "test" {
   }
 }
 `, buildName, bucketName, key, roleArn)
+}
+
+func testAccAWSGameLiftFleetIAMRole(rName string) string {
+	return fmt.Sprintf(`
+	resource "aws_iam_role" "test" {
+		name = "test-role-%[1]s"
+
+		assume_role_policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+	{
+		"Sid": "",
+		"Effect": "Allow",
+		"Principal": {
+			"Service": [
+			"gamelift.amazonaws.com"
+			]
+		},
+		"Action": [
+			"sts:AssumeRole"
+			]
+		}
+	]
+}
+EOF
+	  }
+
+	  resource "aws_iam_policy" "test" {
+		name        = "test-policy-%[1]s"
+		path        = "/"
+		description = "GameLift Fleet PassRole Policy"
+
+		policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [{
+	"Effect": "Allow",
+	"Action": [
+		"iam:PassRole",
+		"sts:AssumeRole"
+		],
+	"Resource": ["*"]
+}]
+}
+EOF
+	  }
+
+	  resource "aws_iam_policy_attachment" "test-attach" {
+		name       = "test-attachment-%[1]s"
+		roles      = ["${aws_iam_role.test.name}"]
+		policy_arn = "${aws_iam_policy.test.arn}"
+	  }
+`, rName)
 }

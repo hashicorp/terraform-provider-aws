@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_subnet_ids"
-sidebar_current: "docs-aws-datasource-subnet-ids"
 description: |-
     Provides a list of subnet Ids for a VPC
 ---
@@ -10,7 +10,7 @@ description: |-
 
 `aws_subnet_ids` provides a list of ids for a vpc_id
 
-This resource can be useful for getting back a list of subnet ids for a vpc.
+This resource can be useful for getting back a set of subnet ids for a vpc.
 
 ## Example Usage
 
@@ -18,16 +18,16 @@ The following shows outputing all cidr blocks for every subnet id in a vpc.
 
 ```hcl
 data "aws_subnet_ids" "example" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 }
 
 data "aws_subnet" "example" {
-  count = "${length(data.aws_subnet_ids.example.ids)}"
-  id    = "${data.aws_subnet_ids.example.ids[count.index]}"
+  for_each = data.aws_subnet_ids.example.ids
+  id       = each.value
 }
 
 output "subnet_cidr_blocks" {
-  value = ["${data.aws_subnet.example.*.cidr_block}"]
+  value = [for s in data.aws_subnet.for-each-example : s.cidr_block]
 }
 ```
 
@@ -37,7 +37,7 @@ can loop through the subnets, putting instances across availability zones.
 
 ```hcl
 data "aws_subnet_ids" "private" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 
   tags = {
     Tier = "Private"
@@ -45,10 +45,10 @@ data "aws_subnet_ids" "private" {
 }
 
 resource "aws_instance" "app" {
-  count         = "3"
-  ami           = "${var.ami}"
+  for_each      = data.aws_subnet_ids.example.ids
+  ami           = var.ami
   instance_type = "t2.micro"
-  subnet_id     = "${element(data.aws_subnet_ids.private.ids, count.index)}"
+  subnet_id     = each.value
 }
 ```
 
@@ -72,7 +72,7 @@ which take the following arguments:
 data "aws_subnet_ids" "selected" {
   filter {
     name   = "tag:Name"
-    values = [""]       # insert values here
+    values = [""] # insert values here
   }
 }
 ```

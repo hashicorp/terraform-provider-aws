@@ -1,7 +1,7 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_patch_group"
-sidebar_current: "docs-aws-resource-ssm-patch-group"
 description: |-
   Provides an SSM Patch Group resource
 ---

@@ -5,13 +5,13 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 )
 
 // OpsWorks has a single concept of "layer" which represents several different
@@ -194,6 +194,12 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 						Type:     schema.TypeString,
 						Optional: true,
 						Default:  "standard",
+					},
+
+					"encrypted": {
+						Type:     schema.TypeBool,
+						Optional: true,
+						Default:  false,
 					},
 				},
 			},
@@ -593,7 +599,9 @@ func (lt *opsworksLayerType) VolumeConfigurations(d *schema.ResourceData) []*ops
 			NumberOfDisks: aws.Int64(int64(volumeData["number_of_disks"].(int))),
 			Size:          aws.Int64(int64(volumeData["size"].(int))),
 			VolumeType:    aws.String(volumeData["type"].(string)),
+			Encrypted:     aws.Bool(volumeData["encrypted"].(bool)),
 		}
+
 		iops := int64(volumeData["iops"].(int))
 		if iops != 0 {
 			result[i].Iops = aws.Int64(iops)
@@ -638,6 +646,9 @@ func (lt *opsworksLayerType) SetVolumeConfigurations(d *schema.ResourceData, v [
 		}
 		if config.VolumeType != nil {
 			data["type"] = *config.VolumeType
+		}
+		if config.Encrypted != nil {
+			data["encrypted"] = *config.Encrypted
 		}
 	}
 

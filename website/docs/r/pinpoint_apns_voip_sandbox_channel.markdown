@@ -1,7 +1,7 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_apns_voip_sandbox_channel"
-sidebar_current: "docs-aws-resource-pinpoint-apns-voip-sandbox-channel"
 description: |-
   Provides a Pinpoint APNs VoIP Sandbox Channel resource.
 ---

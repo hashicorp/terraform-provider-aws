@@ -1,7 +1,7 @@
 ---
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb"
-sidebar_current: "docs-aws-resource-docdb-cluster"
 description: |-
   Manages a DocDB Aurora Cluster
 ---
@@ -53,7 +53,7 @@ The following arguments are supported:
 * `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance.
 * `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
 * `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
-   The following log types are supported: `audit`.
+   The following log types are supported: `audit`, `profiler`.
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage.
 * `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `docdb`. Valid Values: `docdb`
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
@@ -85,7 +85,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The DocDB Cluster Identifier
 * `maintenance_window` - The instance maintenance window
 * `reader_endpoint` - A read-only endpoint for the DocDB cluster, automatically load-balanced across replicas
-* `status` - The DocDB instance status
 
 ## Timeouts
 
