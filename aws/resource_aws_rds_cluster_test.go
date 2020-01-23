@@ -2890,6 +2890,10 @@ resource "aws_rds_cluster" "test" {
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
+
+//   scaling_configuration {
+// 	min_capacity = 2
+//   }
 }
 `, rName, engineMode)
 }
