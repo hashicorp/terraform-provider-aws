@@ -1,5 +1,9 @@
 ## 2.46.0 (Unreleased)
 
+NOTES:
+
+* provider: Terraform AWS Provider version 2.45.0 included AWS Go SDK version 1.28.0, which contained a regression in error handling behavior across many services that either prevented or incorrectly modified error messages from being surfaced by the API. Other than confusing errors in certain cases, this also affected automatic retry logic in a few resources. This release contains an AWS Go SDK update which should resolve these issues.
+
 ENHANCEMENTS:
 
 * data-source/aws_api_gateway_api_key: Add `created_date`, `description`, `enabled`, `last_updated_date`, and `tags` attributes [GH-10821]
@@ -22,6 +26,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
+* provider: Upgrade AWS Go SDK dependency to fix missing/incorrect API error messages and missing retries regression introduced in Terraform AWS Provider version 2.45.0 [GH-11727]
 * resource/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
 * resource_aws_cognito_resource_server: Increase `scope` max limit to match API [GH-10505]
 * resource_aws_cognito_user_pool_client: Increase `allowed_oauth_scopes` max limit to match API [GH-10505]
