@@ -358,9 +358,10 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"auto_accept"},
 			},
 		},
 	})
