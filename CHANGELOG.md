@@ -28,6 +28,7 @@ BUG FIXES:
 * data-source/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
 * provider: Upgrade AWS Go SDK dependency to fix missing/incorrect API error messages and missing retries regression introduced in Terraform AWS Provider version 2.45.0 [GH-11727]
 * resource/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
+* resource/aws_api_gateway_account: Update retryable error message handling for recent API update [GH-11735]
 * resource_aws_cognito_resource_server: Increase `scope` max limit to match API [GH-10505]
 * resource_aws_cognito_user_pool_client: Increase `allowed_oauth_scopes` max limit to match API [GH-10505]
 * resource/aws_dms_certificate: Properly set `certificate_wallet` value into Terraform state [GH-11496]
