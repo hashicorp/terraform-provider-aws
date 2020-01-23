@@ -1,4 +1,4 @@
-## 2.46.0 (Unreleased)
+## 2.46.0 (January 23, 2020)
 
 NOTES:
 
@@ -6,43 +6,43 @@ NOTES:
 
 ENHANCEMENTS:
 
-* data-source/aws_api_gateway_api_key: Add `created_date`, `description`, `enabled`, `last_updated_date`, and `tags` attributes [GH-10821]
-* data-source/aws_cloudwatch_log_group: Add `kms_key_id`, `retention_in_days`, and `tags` attributes [GH-10755]
-* data-source/aws_db_instance: Add `multi_az` attribute [GH-10795]
-* data-source/aws_sqs_queue: Add `tags` attribute [GH-10820]
-* resource/aws_acm_certificate: Support tag-on-create [GH-11073]
-* resource/aws_api_gateway_rest_api: Add `endpoint_configuration` configuration block `vpc_endpoint_ids` argument [GH-10627]
-* resource/aws_cloudfront_distribution: Validate `origin_group` configuration block `member` argument contains max 2 items [GH-10357]
-* resource/aws_cognito_user_pool_client: Support plan-time validation values of `ALLOW_*` variations for `explicit_auth_flows` argument [GH-10976]
-* resource/aws_ecs_task_definition: Add `volume` configuration block `efs_volume_configuration` configuration block (support preview EFS volume configuration) [GH-11707]
-* resource/aws_ecs_task_definition: Add plan-time validation for `execution_role_arn` argument, `placement_constraints` configuration block `type` argument, and `task_role_arn` argument [GH-11707]
-* resource/aws_egress_only_internet_gateway: Support resource import [GH-11071]
-* resource/aws_key_pair: Add `tags` argument and `key_pair_id` attribute [GH-11481]
-* resource/aws_network_interface: Add `mac_address` attribute [GH-10633]
-* resource/aws_organization_organization: Support plan-time validation value of `TAG_POLICY` in `enabled_policy_types` argument [GH-11535]
-* resource/aws_placement_group: Add `tags` argument and `placement_group_id` attribute [GH-11482]
-* resource/aws_rds_cluster_endpoint: Add `tags` argument [GH-11074]
+* data-source/aws_api_gateway_api_key: Add `created_date`, `description`, `enabled`, `last_updated_date`, and `tags` attributes ([#10821](https://github.com/terraform-providers/terraform-provider-aws/issues/10821))
+* data-source/aws_cloudwatch_log_group: Add `kms_key_id`, `retention_in_days`, and `tags` attributes ([#10755](https://github.com/terraform-providers/terraform-provider-aws/issues/10755))
+* data-source/aws_db_instance: Add `multi_az` attribute ([#10795](https://github.com/terraform-providers/terraform-provider-aws/issues/10795))
+* data-source/aws_sqs_queue: Add `tags` attribute ([#10820](https://github.com/terraform-providers/terraform-provider-aws/issues/10820))
+* resource/aws_acm_certificate: Support tag-on-create ([#11073](https://github.com/terraform-providers/terraform-provider-aws/issues/11073))
+* resource/aws_api_gateway_rest_api: Add `endpoint_configuration` configuration block `vpc_endpoint_ids` argument ([#10627](https://github.com/terraform-providers/terraform-provider-aws/issues/10627))
+* resource/aws_cloudfront_distribution: Validate `origin_group` configuration block `member` argument contains max 2 items ([#10357](https://github.com/terraform-providers/terraform-provider-aws/issues/10357))
+* resource/aws_cognito_user_pool_client: Support plan-time validation values of `ALLOW_*` variations for `explicit_auth_flows` argument ([#10976](https://github.com/terraform-providers/terraform-provider-aws/issues/10976))
+* resource/aws_ecs_task_definition: Add `volume` configuration block `efs_volume_configuration` configuration block (support preview EFS volume configuration) ([#11707](https://github.com/terraform-providers/terraform-provider-aws/issues/11707))
+* resource/aws_ecs_task_definition: Add plan-time validation for `execution_role_arn` argument, `placement_constraints` configuration block `type` argument, and `task_role_arn` argument ([#11707](https://github.com/terraform-providers/terraform-provider-aws/issues/11707))
+* resource/aws_egress_only_internet_gateway: Support resource import ([#11071](https://github.com/terraform-providers/terraform-provider-aws/issues/11071))
+* resource/aws_key_pair: Add `tags` argument and `key_pair_id` attribute ([#11481](https://github.com/terraform-providers/terraform-provider-aws/issues/11481))
+* resource/aws_network_interface: Add `mac_address` attribute ([#10633](https://github.com/terraform-providers/terraform-provider-aws/issues/10633))
+* resource/aws_organization_organization: Support plan-time validation value of `TAG_POLICY` in `enabled_policy_types` argument ([#11535](https://github.com/terraform-providers/terraform-provider-aws/issues/11535))
+* resource/aws_placement_group: Add `tags` argument and `placement_group_id` attribute ([#11482](https://github.com/terraform-providers/terraform-provider-aws/issues/11482))
+* resource/aws_rds_cluster_endpoint: Add `tags` argument ([#11074](https://github.com/terraform-providers/terraform-provider-aws/issues/11074))
 
 BUG FIXES:
 
-* data-source/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
-* provider: Upgrade AWS Go SDK dependency to fix missing/incorrect API error messages and missing retries regression introduced in Terraform AWS Provider version 2.45.0 [GH-11727]
-* resource/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
-* resource/aws_api_gateway_account: Update retryable error message handling for recent API update [GH-11735]
-* resource_aws_cognito_resource_server: Increase `scope` max limit to match API [GH-10505]
-* resource_aws_cognito_user_pool_client: Increase `allowed_oauth_scopes` max limit to match API [GH-10505]
-* resource/aws_dms_certificate: Properly set `certificate_wallet` value into Terraform state [GH-11496]
-* resource/aws_ec2_client_vpn_endpoint: Properly set `status` value into Terraform state [GH-11497]
-* resource/aws_ecs_task_definition: Properly refresh `ipc_mode` and `pid_mode` attributes in Terraform state for drift detection [GH-11707]
-* resource/aws_emr_security_configuration: Properly set `creation_date` value into the Terraform state [GH-11491]
-* resource/aws_iam_service_linked_role: Properly set `create_date` value into the Terraform state [GH-11491]
-* resource/aws_iot_topic_rule: Trigger resource recreation on `name` argument updates [GH-10366]
-* resource/aws_lambda_event_source_mapping: Properly set `last_modified` value into the Terraform state [GH-11491]
-* resource/aws_organizations_account: Properly set `joined_timestamp` value into the Terraform state [GH-11491]
-* resource/aws_redshift_cluster: Handle `available, prep-for-resize` pending status during creation and update [GH-10530]
-* resource/aws_ssm_activation: Properly set `expiration_date` value into the Terraform state and perform drift detection when configured [GH-11491]
-* resource/aws_ssm_document: Properly set `created_date` value into the Terraform state [GH-11491]
-* resource/aws_waf_sql_injection_match_set: Properly set `sql_injection_match_tuples` value into Terraform state [GH-11498]
+* data-source/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state ([#11491](https://github.com/terraform-providers/terraform-provider-aws/issues/11491))
+* provider: Upgrade AWS Go SDK dependency to fix missing/incorrect API error messages and missing retries regression introduced in Terraform AWS Provider version 2.45.0 ([#11727](https://github.com/terraform-providers/terraform-provider-aws/issues/11727))
+* resource/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state ([#11491](https://github.com/terraform-providers/terraform-provider-aws/issues/11491))
+* resource/aws_api_gateway_account: Update retryable error message handling for recent API update ([#11735](https://github.com/terraform-providers/terraform-provider-aws/issues/11735))
+* resource_aws_cognito_resource_server: Increase `scope` max limit to match API ([#10505](https://github.com/terraform-providers/terraform-provider-aws/issues/10505))
+* resource_aws_cognito_user_pool_client: Increase `allowed_oauth_scopes` max limit to match API ([#10505](https://github.com/terraform-providers/terraform-provider-aws/issues/10505))
+* resource/aws_dms_certificate: Properly set `certificate_wallet` value into Terraform state ([#11496](https://github.com/terraform-providers/terraform-provider-aws/issues/11496))
+* resource/aws_ec2_client_vpn_endpoint: Properly set `status` value into Terraform state ([#11497](https://github.com/terraform-providers/terraform-provider-aws/issues/11497))
+* resource/aws_ecs_task_definition: Properly refresh `ipc_mode` and `pid_mode` attributes in Terraform state for drift detection ([#11707](https://github.com/terraform-providers/terraform-provider-aws/issues/11707))
+* resource/aws_emr_security_configuration: Properly set `creation_date` value into the Terraform state ([#11491](https://github.com/terraform-providers/terraform-provider-aws/issues/11491))
+* resource/aws_iam_service_linked_role: Properly set `create_date` value into the Terraform state ([#11491](https://github.com/terraform-providers/terraform-provider-aws/issues/11491))
+* resource/aws_iot_topic_rule: Trigger resource recreation on `name` argument updates ([#10366](https://github.com/terraform-providers/terraform-provider-aws/issues/10366))
+* resource/aws_lambda_event_source_mapping: Properly set `last_modified` value into the Terraform state ([#11491](https://github.com/terraform-providers/terraform-provider-aws/issues/11491))
+* resource/aws_organizations_account: Properly set `joined_timestamp` value into the Terraform state ([#11491](https://github.com/terraform-providers/terraform-provider-aws/issues/11491))
+* resource/aws_redshift_cluster: Handle `available, prep-for-resize` pending status during creation and update ([#10530](https://github.com/terraform-providers/terraform-provider-aws/issues/10530))
+* resource/aws_ssm_activation: Properly set `expiration_date` value into the Terraform state and perform drift detection when configured ([#11491](https://github.com/terraform-providers/terraform-provider-aws/issues/11491))
+* resource/aws_ssm_document: Properly set `created_date` value into the Terraform state ([#11491](https://github.com/terraform-providers/terraform-provider-aws/issues/11491))
+* resource/aws_waf_sql_injection_match_set: Properly set `sql_injection_match_tuples` value into Terraform state ([#11498](https://github.com/terraform-providers/terraform-provider-aws/issues/11498))
 
 ## 2.45.0 (January 17, 2020)
 
