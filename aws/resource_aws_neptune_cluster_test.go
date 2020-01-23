@@ -7,13 +7,12 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
 )
 
 func TestAccAWSNeptuneCluster_basic(t *testing.T) {
@@ -30,6 +29,7 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 				Config: testAccAWSNeptuneClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
@@ -38,6 +38,7 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
 				),
 			},
 			{
@@ -401,6 +402,52 @@ func TestAccAWSNeptuneCluster_updateCloudwatchLogsExports(t *testing.T) {
 	})
 }
 
+func TestAccAWSNeptuneCluster_deleteProtection(t *testing.T) {
+	var dbCluster neptune.DBCluster
+	rName := acctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccAWSNeptuneClusterConfigDeleteProtection(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", "true"),
+				),
+			},
+			{
+				Config: testAccAWSNeptuneClusterConfigDeleteProtection(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSNeptuneClusterDestroy(s *terraform.State) error {
 	return testAccCheckAWSNeptuneClusterDestroyWithProvider(s, testAccProvider)
 }
@@ -539,6 +586,19 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot                  = true
 }
 `, rName)
+}
+
+func testAccAWSNeptuneClusterConfigDeleteProtection(rName string, isProtected bool) string {
+	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier                   = %q
+  availability_zones                   = "${slice(data.aws_availability_zones.test.names,0,3)}"
+  engine                               = "neptune"
+  neptune_cluster_parameter_group_name = "default.neptune1"
+  skip_final_snapshot                  = true
+  delete_protection                    = %t
+}
+`, rName, isProtected)
 }
 
 func testAccAWSNeptuneClusterConfig_namePrefix(rName string) string {
@@ -706,7 +766,7 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_iam_role_policy" "neptune_policy" {
+resource "aws_iam_role_policy" "test" {
   name = %[1]q
   role = "${aws_iam_role.test.name}"
 
