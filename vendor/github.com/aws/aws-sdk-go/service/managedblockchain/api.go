@@ -2163,6 +2163,8 @@ func (c *ManagedBlockchain) VoteOnProposalWithContext(ctx aws.Context, input *Vo
 type AccessDeniedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2188,6 +2190,9 @@ func (s AccessDeniedException) Code() string {
 
 // Message returns the exception's message.
 func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -3367,6 +3372,8 @@ func (s IllegalActionException) RequestID() string {
 type InternalServiceErrorException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -3392,6 +3399,9 @@ func (s InternalServiceErrorException) Code() string {
 
 // Message returns the exception's message.
 func (s InternalServiceErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5873,6 +5883,8 @@ func (s ResourceNotReadyException) RequestID() string {
 type ThrottlingException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5898,6 +5910,9 @@ func (s ThrottlingException) Code() string {
 
 // Message returns the exception's message.
 func (s ThrottlingException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

@@ -4358,6 +4358,18 @@ var awscnPartition = partition{
 				"cn-northwest-1": endpoint{},
 			},
 		},
+		"appsync": service{
+
+			Endpoints: endpoints{
+				"cn-north-1": endpoint{},
+			},
+		},
+		"athena": service{
+
+			Endpoints: endpoints{
+				"cn-northwest-1": endpoint{},
+			},
+		},
 		"autoscaling": service{
 			Defaults: endpoint{
 				Protocols: []string{"http", "https"},

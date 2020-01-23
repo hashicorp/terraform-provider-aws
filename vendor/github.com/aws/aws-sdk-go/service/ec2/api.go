@@ -440,8 +440,8 @@ func (c *EC2) AdvertiseByoipCidrRequest(input *AdvertiseByoipCidrInput) (req *re
 
 // AdvertiseByoipCidr API operation for Amazon Elastic Compute Cloud.
 //
-// Advertises an IPv4 address range that is provisioned for use with your AWS
-// resources through bring your own IP addresses (BYOIP).
+// Advertises an IPv4 or IPv6 address range that is provisioned for use with
+// your AWS resources through bring your own IP addresses (BYOIP).
 //
 // You can perform this operation at most once every 10 seconds, even if you
 // specify different address ranges each time.
@@ -1603,8 +1603,10 @@ func (c *EC2) AssociateVpcCidrBlockRequest(input *AssociateVpcCidrBlockInput) (r
 // AssociateVpcCidrBlock API operation for Amazon Elastic Compute Cloud.
 //
 // Associates a CIDR block with your VPC. You can associate a secondary IPv4
-// CIDR block, or you can associate an Amazon-provided IPv6 CIDR block. The
-// IPv6 CIDR block size is fixed at /56.
+// CIDR block, an Amazon-provided IPv6 CIDR block, or an IPv6 CIDR block from
+// an IPv6 address pool that you provisioned through bring your own IP addresses
+// (BYOIP (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-byoip.html)).
+// The IPv6 CIDR block size is fixed at /56.
 //
 // For more information about associating CIDR blocks with your VPC and applicable
 // restrictions, see VPC and Subnet Sizing (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html#VPC_Sizing)
@@ -7169,9 +7171,10 @@ func (c *EC2) CreateVpcRequest(input *CreateVpcInput) (req *request.Request, out
 // make your VPC, see Your VPC and Subnets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
-// You can optionally request an Amazon-provided IPv6 CIDR block for the VPC.
-// The IPv6 CIDR block uses a /56 prefix length, and is allocated from Amazon's
-// pool of IPv6 addresses. You cannot choose the IPv6 range for your VPC.
+// You can optionally request an IPv6 CIDR block for the VPC. You can request
+// an Amazon-provided IPv6 CIDR block from Amazon's pool of IPv6 addresses,
+// or an IPv6 CIDR block from an IPv6 address pool that you provisioned through
+// bring your own IP addresses (BYOIP (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-byoip.html)).
 //
 // By default, each instance you launch in the VPC has the default DHCP options,
 // which include only a default DNS server that we provide (AmazonProvidedDNS).
@@ -12192,7 +12195,7 @@ func (c *EC2) DescribeByoipCidrsRequest(input *DescribeByoipCidrsInput) (req *re
 // Describes the IP address ranges that were specified in calls to ProvisionByoipCidr.
 //
 // To describe the address pools that were created when you provisioned the
-// address ranges, use DescribePublicIpv4Pools.
+// address ranges, use DescribePublicIpv4Pools or DescribeIpv6Pools.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -16696,6 +16699,138 @@ func (c *EC2) DescribeInternetGatewaysPagesWithContext(ctx aws.Context, input *D
 
 	for p.Next() {
 		if !fn(p.Page().(*DescribeInternetGatewaysOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opDescribeIpv6Pools = "DescribeIpv6Pools"
+
+// DescribeIpv6PoolsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeIpv6Pools operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeIpv6Pools for more information on using the DescribeIpv6Pools
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeIpv6PoolsRequest method.
+//    req, resp := client.DescribeIpv6PoolsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeIpv6Pools
+func (c *EC2) DescribeIpv6PoolsRequest(input *DescribeIpv6PoolsInput) (req *request.Request, output *DescribeIpv6PoolsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeIpv6Pools,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeIpv6PoolsInput{}
+	}
+
+	output = &DescribeIpv6PoolsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeIpv6Pools API operation for Amazon Elastic Compute Cloud.
+//
+// Describes your IPv6 address pools.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribeIpv6Pools for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeIpv6Pools
+func (c *EC2) DescribeIpv6Pools(input *DescribeIpv6PoolsInput) (*DescribeIpv6PoolsOutput, error) {
+	req, out := c.DescribeIpv6PoolsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeIpv6PoolsWithContext is the same as DescribeIpv6Pools with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeIpv6Pools for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeIpv6PoolsWithContext(ctx aws.Context, input *DescribeIpv6PoolsInput, opts ...request.Option) (*DescribeIpv6PoolsOutput, error) {
+	req, out := c.DescribeIpv6PoolsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeIpv6PoolsPages iterates over the pages of a DescribeIpv6Pools operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeIpv6Pools method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeIpv6Pools operation.
+//    pageNum := 0
+//    err := client.DescribeIpv6PoolsPages(params,
+//        func(page *ec2.DescribeIpv6PoolsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EC2) DescribeIpv6PoolsPages(input *DescribeIpv6PoolsInput, fn func(*DescribeIpv6PoolsOutput, bool) bool) error {
+	return c.DescribeIpv6PoolsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeIpv6PoolsPagesWithContext same as DescribeIpv6PoolsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeIpv6PoolsPagesWithContext(ctx aws.Context, input *DescribeIpv6PoolsInput, fn func(*DescribeIpv6PoolsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeIpv6PoolsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeIpv6PoolsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeIpv6PoolsOutput), !p.HasNextPage()) {
 			break
 		}
 	}
@@ -26596,6 +26731,139 @@ func (c *EC2) ExportTransitGatewayRoutesWithContext(ctx aws.Context, input *Expo
 	return out, req.Send()
 }
 
+const opGetAssociatedIpv6PoolCidrs = "GetAssociatedIpv6PoolCidrs"
+
+// GetAssociatedIpv6PoolCidrsRequest generates a "aws/request.Request" representing the
+// client's request for the GetAssociatedIpv6PoolCidrs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetAssociatedIpv6PoolCidrs for more information on using the GetAssociatedIpv6PoolCidrs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetAssociatedIpv6PoolCidrsRequest method.
+//    req, resp := client.GetAssociatedIpv6PoolCidrsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetAssociatedIpv6PoolCidrs
+func (c *EC2) GetAssociatedIpv6PoolCidrsRequest(input *GetAssociatedIpv6PoolCidrsInput) (req *request.Request, output *GetAssociatedIpv6PoolCidrsOutput) {
+	op := &request.Operation{
+		Name:       opGetAssociatedIpv6PoolCidrs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &GetAssociatedIpv6PoolCidrsInput{}
+	}
+
+	output = &GetAssociatedIpv6PoolCidrsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetAssociatedIpv6PoolCidrs API operation for Amazon Elastic Compute Cloud.
+//
+// Gets information about the IPv6 CIDR block associations for a specified IPv6
+// address pool.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation GetAssociatedIpv6PoolCidrs for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetAssociatedIpv6PoolCidrs
+func (c *EC2) GetAssociatedIpv6PoolCidrs(input *GetAssociatedIpv6PoolCidrsInput) (*GetAssociatedIpv6PoolCidrsOutput, error) {
+	req, out := c.GetAssociatedIpv6PoolCidrsRequest(input)
+	return out, req.Send()
+}
+
+// GetAssociatedIpv6PoolCidrsWithContext is the same as GetAssociatedIpv6PoolCidrs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetAssociatedIpv6PoolCidrs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) GetAssociatedIpv6PoolCidrsWithContext(ctx aws.Context, input *GetAssociatedIpv6PoolCidrsInput, opts ...request.Option) (*GetAssociatedIpv6PoolCidrsOutput, error) {
+	req, out := c.GetAssociatedIpv6PoolCidrsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// GetAssociatedIpv6PoolCidrsPages iterates over the pages of a GetAssociatedIpv6PoolCidrs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetAssociatedIpv6PoolCidrs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetAssociatedIpv6PoolCidrs operation.
+//    pageNum := 0
+//    err := client.GetAssociatedIpv6PoolCidrsPages(params,
+//        func(page *ec2.GetAssociatedIpv6PoolCidrsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EC2) GetAssociatedIpv6PoolCidrsPages(input *GetAssociatedIpv6PoolCidrsInput, fn func(*GetAssociatedIpv6PoolCidrsOutput, bool) bool) error {
+	return c.GetAssociatedIpv6PoolCidrsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetAssociatedIpv6PoolCidrsPagesWithContext same as GetAssociatedIpv6PoolCidrsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) GetAssociatedIpv6PoolCidrsPagesWithContext(ctx aws.Context, input *GetAssociatedIpv6PoolCidrsInput, fn func(*GetAssociatedIpv6PoolCidrsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetAssociatedIpv6PoolCidrsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetAssociatedIpv6PoolCidrsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*GetAssociatedIpv6PoolCidrsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opGetCapacityReservationUsage = "GetCapacityReservationUsage"
 
 // GetCapacityReservationUsageRequest generates a "aws/request.Request" representing the
@@ -31808,9 +32076,10 @@ func (c *EC2) ProvisionByoipCidrRequest(input *ProvisionByoipCidrInput) (req *re
 
 // ProvisionByoipCidr API operation for Amazon Elastic Compute Cloud.
 //
-// Provisions an address range for use with your AWS resources through bring
-// your own IP addresses (BYOIP) and creates a corresponding address pool. After
-// the address range is provisioned, it is ready to be advertised using AdvertiseByoipCidr.
+// Provisions an IPv4 or IPv6 address range for use with your AWS resources
+// through bring your own IP addresses (BYOIP) and creates a corresponding address
+// pool. After the address range is provisioned, it is ready to be advertised
+// using AdvertiseByoipCidr.
 //
 // AWS verifies that you own the address range and are authorized to advertise
 // it. You must ensure that the address range is registered to you and that
@@ -31823,8 +32092,8 @@ func (c *EC2) ProvisionByoipCidrRequest(input *ProvisionByoipCidrInput) (req *re
 // immediately, but the address range is not ready to use until its status changes
 // from pending-provision to provisioned. To monitor the status of an address
 // range, use DescribeByoipCidrs. To allocate an Elastic IP address from your
-// address pool, use AllocateAddress with either the specific address from the
-// address pool or the ID of the address pool.
+// IPv4 address pool, use AllocateAddress with either the specific address from
+// the address pool or the ID of the address pool.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -35894,8 +36163,7 @@ func (c *EC2) WithdrawByoipCidrRequest(input *WithdrawByoipCidrInput) (req *requ
 
 // WithdrawByoipCidr API operation for Amazon Elastic Compute Cloud.
 //
-// Stops advertising an IPv4 address range that is provisioned as an address
-// pool.
+// Stops advertising an address range that is provisioned as an address pool.
 //
 // You can perform this operation at most once every 10 seconds, even if you
 // specify different address ranges each time.
@@ -36566,8 +36834,8 @@ func (s *Address) SetTags(v []*Tag) *Address {
 type AdvertiseByoipCidrInput struct {
 	_ struct{} `type:"structure"`
 
-	// The IPv4 address range, in CIDR notation. This must be the exact range that
-	// you provisioned. You can't advertise only a portion of the provisioned range.
+	// The address range, in CIDR notation. This must be the exact range that you
+	// provisioned. You can't advertise only a portion of the provisioned range.
 	//
 	// Cidr is a required field
 	Cidr *string `type:"string" required:"true"`
@@ -38051,6 +38319,12 @@ type AssociateVpcCidrBlockInput struct {
 	// An IPv4 CIDR block to associate with the VPC.
 	CidrBlock *string `type:"string"`
 
+	// An IPv6 CIDR block from the IPv6 address pool. You must also specify Ipv6Pool
+	// in the request.
+	//
+	// To let Amazon choose the IPv6 CIDR block for you, omit this parameter.
+	Ipv6CidrBlock *string `type:"string"`
+
 	// The name of the location from which we advertise the IPV6 CIDR block. Use
 	// this parameter to limit the CiDR block to this location.
 	//
@@ -38058,6 +38332,9 @@ type AssociateVpcCidrBlockInput struct {
 	//
 	// You can have one IPv6 CIDR block association per network border group.
 	Ipv6CidrBlockNetworkBorderGroup *string `type:"string"`
+
+	// The ID of an IPv6 address pool from which to allocate the IPv6 CIDR block.
+	Ipv6Pool *string `type:"string"`
 
 	// The ID of the VPC.
 	//
@@ -38100,9 +38377,21 @@ func (s *AssociateVpcCidrBlockInput) SetCidrBlock(v string) *AssociateVpcCidrBlo
 	return s
 }
 
+// SetIpv6CidrBlock sets the Ipv6CidrBlock field's value.
+func (s *AssociateVpcCidrBlockInput) SetIpv6CidrBlock(v string) *AssociateVpcCidrBlockInput {
+	s.Ipv6CidrBlock = &v
+	return s
+}
+
 // SetIpv6CidrBlockNetworkBorderGroup sets the Ipv6CidrBlockNetworkBorderGroup field's value.
 func (s *AssociateVpcCidrBlockInput) SetIpv6CidrBlockNetworkBorderGroup(v string) *AssociateVpcCidrBlockInput {
 	s.Ipv6CidrBlockNetworkBorderGroup = &v
+	return s
+}
+
+// SetIpv6Pool sets the Ipv6Pool field's value.
+func (s *AssociateVpcCidrBlockInput) SetIpv6Pool(v string) *AssociateVpcCidrBlockInput {
+	s.Ipv6Pool = &v
 	return s
 }
 
@@ -39669,7 +39958,7 @@ func (s *BundleTaskError) SetMessage(v string) *BundleTaskError {
 type ByoipCidr struct {
 	_ struct{} `type:"structure"`
 
-	// The public IPv4 address range, in CIDR notation.
+	// The address range, in CIDR notation.
 	Cidr *string `locationName:"cidr" type:"string"`
 
 	// The description of the address range.
@@ -48922,11 +49211,20 @@ type CreateVpcInput struct {
 	// Default: default
 	InstanceTenancy *string `locationName:"instanceTenancy" type:"string" enum:"Tenancy"`
 
+	// The IPv6 CIDR block from the IPv6 address pool. You must also specify Ipv6Pool
+	// in the request.
+	//
+	// To let Amazon choose the IPv6 CIDR block for you, omit this parameter.
+	Ipv6CidrBlock *string `type:"string"`
+
 	// The name of the location from which we advertise the IPV6 CIDR block. Use
 	// this parameter to limit the address to this location.
 	//
 	// You must set AmazonProvidedIpv6CidrBlock to true to use this parameter.
 	Ipv6CidrBlockNetworkBorderGroup *string `type:"string"`
+
+	// The ID of an IPv6 address pool from which to allocate the IPv6 CIDR block.
+	Ipv6Pool *string `type:"string"`
 }
 
 // String returns the string representation
@@ -48976,9 +49274,21 @@ func (s *CreateVpcInput) SetInstanceTenancy(v string) *CreateVpcInput {
 	return s
 }
 
+// SetIpv6CidrBlock sets the Ipv6CidrBlock field's value.
+func (s *CreateVpcInput) SetIpv6CidrBlock(v string) *CreateVpcInput {
+	s.Ipv6CidrBlock = &v
+	return s
+}
+
 // SetIpv6CidrBlockNetworkBorderGroup sets the Ipv6CidrBlockNetworkBorderGroup field's value.
 func (s *CreateVpcInput) SetIpv6CidrBlockNetworkBorderGroup(v string) *CreateVpcInput {
 	s.Ipv6CidrBlockNetworkBorderGroup = &v
+	return s
+}
+
+// SetIpv6Pool sets the Ipv6Pool field's value.
+func (s *CreateVpcInput) SetIpv6Pool(v string) *CreateVpcInput {
+	s.Ipv6Pool = &v
 	return s
 }
 
@@ -53199,8 +53509,8 @@ func (s DeleteVpnGatewayOutput) GoString() string {
 type DeprovisionByoipCidrInput struct {
 	_ struct{} `type:"structure"`
 
-	// The public IPv4 address range, in CIDR notation. The prefix must be the same
-	// prefix that you specified when you provisioned the address range.
+	// The address range, in CIDR notation. The prefix must be the same prefix that
+	// you specified when you provisioned the address range.
 	//
 	// Cidr is a required field
 	Cidr *string `type:"string" required:"true"`
@@ -59098,6 +59408,125 @@ func (s *DescribeInternetGatewaysOutput) SetInternetGateways(v []*InternetGatewa
 
 // SetNextToken sets the NextToken field's value.
 func (s *DescribeInternetGatewaysOutput) SetNextToken(v string) *DescribeInternetGatewaysOutput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeIpv6PoolsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// One or more filters.
+	//
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
+	//
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
+	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `type:"string"`
+
+	// The IDs of the IPv6 address pools.
+	PoolIds []*string `locationName:"PoolId" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeIpv6PoolsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeIpv6PoolsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeIpv6PoolsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeIpv6PoolsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeIpv6PoolsInput) SetDryRun(v bool) *DescribeIpv6PoolsInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeIpv6PoolsInput) SetFilters(v []*Filter) *DescribeIpv6PoolsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeIpv6PoolsInput) SetMaxResults(v int64) *DescribeIpv6PoolsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeIpv6PoolsInput) SetNextToken(v string) *DescribeIpv6PoolsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPoolIds sets the PoolIds field's value.
+func (s *DescribeIpv6PoolsInput) SetPoolIds(v []*string) *DescribeIpv6PoolsInput {
+	s.PoolIds = v
+	return s
+}
+
+type DescribeIpv6PoolsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the IPv6 address pools.
+	Ipv6Pools []*Ipv6Pool `locationName:"ipv6PoolSet" locationNameList:"item" type:"list"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeIpv6PoolsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeIpv6PoolsOutput) GoString() string {
+	return s.String()
+}
+
+// SetIpv6Pools sets the Ipv6Pools field's value.
+func (s *DescribeIpv6PoolsOutput) SetIpv6Pools(v []*Ipv6Pool) *DescribeIpv6PoolsOutput {
+	s.Ipv6Pools = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeIpv6PoolsOutput) SetNextToken(v string) *DescribeIpv6PoolsOutput {
 	s.NextToken = &v
 	return s
 }
@@ -66897,6 +67326,9 @@ type DescribeVpcsInput struct {
 	//    * ipv6-cidr-block-association.ipv6-cidr-block - An IPv6 CIDR block associated
 	//    with the VPC.
 	//
+	//    * ipv6-cidr-block-association.ipv6-pool - The ID of the IPv6 address pool
+	//    from which the IPv6 CIDR block is allocated.
+	//
 	//    * ipv6-cidr-block-association.association-id - The association ID for
 	//    an IPv6 CIDR block associated with the VPC.
 	//
@@ -72775,6 +73207,111 @@ func (s *FpgaInfo) SetFpgas(v []*FpgaDeviceInfo) *FpgaInfo {
 // SetTotalFpgaMemoryInMiB sets the TotalFpgaMemoryInMiB field's value.
 func (s *FpgaInfo) SetTotalFpgaMemoryInMiB(v int64) *FpgaInfo {
 	s.TotalFpgaMemoryInMiB = &v
+	return s
+}
+
+type GetAssociatedIpv6PoolCidrsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `type:"string"`
+
+	// The ID of the IPv6 address pool.
+	//
+	// PoolId is a required field
+	PoolId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetAssociatedIpv6PoolCidrsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetAssociatedIpv6PoolCidrsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetAssociatedIpv6PoolCidrsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetAssociatedIpv6PoolCidrsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.PoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PoolId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *GetAssociatedIpv6PoolCidrsInput) SetDryRun(v bool) *GetAssociatedIpv6PoolCidrsInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetAssociatedIpv6PoolCidrsInput) SetMaxResults(v int64) *GetAssociatedIpv6PoolCidrsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetAssociatedIpv6PoolCidrsInput) SetNextToken(v string) *GetAssociatedIpv6PoolCidrsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *GetAssociatedIpv6PoolCidrsInput) SetPoolId(v string) *GetAssociatedIpv6PoolCidrsInput {
+	s.PoolId = &v
+	return s
+}
+
+type GetAssociatedIpv6PoolCidrsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the IPv6 CIDR block associations.
+	Ipv6CidrAssociations []*Ipv6CidrAssociation `locationName:"ipv6CidrAssociationSet" locationNameList:"item" type:"list"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s GetAssociatedIpv6PoolCidrsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetAssociatedIpv6PoolCidrsOutput) GoString() string {
+	return s.String()
+}
+
+// SetIpv6CidrAssociations sets the Ipv6CidrAssociations field's value.
+func (s *GetAssociatedIpv6PoolCidrsOutput) SetIpv6CidrAssociations(v []*Ipv6CidrAssociation) *GetAssociatedIpv6PoolCidrsOutput {
+	s.Ipv6CidrAssociations = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetAssociatedIpv6PoolCidrsOutput) SetNextToken(v string) *GetAssociatedIpv6PoolCidrsOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -79651,6 +80188,39 @@ func (s *IpRange) SetDescription(v string) *IpRange {
 	return s
 }
 
+// Describes an IPv6 CIDR block association.
+type Ipv6CidrAssociation struct {
+	_ struct{} `type:"structure"`
+
+	// The resource that's associated with the IPv6 CIDR block.
+	AssociatedResource *string `locationName:"associatedResource" type:"string"`
+
+	// The IPv6 CIDR block.
+	Ipv6Cidr *string `locationName:"ipv6Cidr" type:"string"`
+}
+
+// String returns the string representation
+func (s Ipv6CidrAssociation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Ipv6CidrAssociation) GoString() string {
+	return s.String()
+}
+
+// SetAssociatedResource sets the AssociatedResource field's value.
+func (s *Ipv6CidrAssociation) SetAssociatedResource(v string) *Ipv6CidrAssociation {
+	s.AssociatedResource = &v
+	return s
+}
+
+// SetIpv6Cidr sets the Ipv6Cidr field's value.
+func (s *Ipv6CidrAssociation) SetIpv6Cidr(v string) *Ipv6CidrAssociation {
+	s.Ipv6Cidr = &v
+	return s
+}
+
 // Describes an IPv6 CIDR block.
 type Ipv6CidrBlock struct {
 	_ struct{} `type:"structure"`
@@ -79672,6 +80242,57 @@ func (s Ipv6CidrBlock) GoString() string {
 // SetIpv6CidrBlock sets the Ipv6CidrBlock field's value.
 func (s *Ipv6CidrBlock) SetIpv6CidrBlock(v string) *Ipv6CidrBlock {
 	s.Ipv6CidrBlock = &v
+	return s
+}
+
+// Describes an IPv6 address pool.
+type Ipv6Pool struct {
+	_ struct{} `type:"structure"`
+
+	// The description for the address pool.
+	Description *string `locationName:"description" type:"string"`
+
+	// The CIDR blocks for the address pool.
+	PoolCidrBlocks []*PoolCidrBlock `locationName:"poolCidrBlockSet" locationNameList:"item" type:"list"`
+
+	// The ID of the address pool.
+	PoolId *string `locationName:"poolId" type:"string"`
+
+	// Any tags for the address pool.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s Ipv6Pool) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Ipv6Pool) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *Ipv6Pool) SetDescription(v string) *Ipv6Pool {
+	s.Description = &v
+	return s
+}
+
+// SetPoolCidrBlocks sets the PoolCidrBlocks field's value.
+func (s *Ipv6Pool) SetPoolCidrBlocks(v []*PoolCidrBlock) *Ipv6Pool {
+	s.PoolCidrBlocks = v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *Ipv6Pool) SetPoolId(v string) *Ipv6Pool {
+	s.PoolId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Ipv6Pool) SetTags(v []*Tag) *Ipv6Pool {
+	s.Tags = v
 	return s
 }
 
@@ -89281,6 +89902,30 @@ func (s *PlacementResponse) SetGroupName(v string) *PlacementResponse {
 	return s
 }
 
+// Describes a CIDR block for an address pool.
+type PoolCidrBlock struct {
+	_ struct{} `type:"structure"`
+
+	// The CIDR block.
+	Cidr *string `locationName:"poolCidrBlock" type:"string"`
+}
+
+// String returns the string representation
+func (s PoolCidrBlock) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PoolCidrBlock) GoString() string {
+	return s.String()
+}
+
+// SetCidr sets the Cidr field's value.
+func (s *PoolCidrBlock) SetCidr(v string) *PoolCidrBlock {
+	s.Cidr = &v
+	return s
+}
+
 // Describes a range of ports.
 type PortRange struct {
 	_ struct{} `type:"structure"`
@@ -89751,9 +90396,10 @@ func (s *PropagatingVgw) SetGatewayId(v string) *PropagatingVgw {
 type ProvisionByoipCidrInput struct {
 	_ struct{} `type:"structure"`
 
-	// The public IPv4 address range, in CIDR notation. The most specific prefix
-	// that you can specify is /24. The address range cannot overlap with another
-	// address range that you've brought to this or another Region.
+	// The public IPv4 or IPv6 address range, in CIDR notation. The most specific
+	// IPv4 prefix that you can specify is /24. The most specific IPv6 prefix you
+	// can specify is /56. The address range cannot overlap with another address
+	// range that you've brought to this or another Region.
 	//
 	// Cidr is a required field
 	Cidr *string `type:"string" required:"true"`
@@ -89770,6 +90416,12 @@ type ProvisionByoipCidrInput struct {
 	// the required permissions, the error response is DryRunOperation. Otherwise,
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
+
+	// (IPv6 only) Indicate whether the address range will be publicly advertised
+	// to the internet.
+	//
+	// Default: true
+	PubliclyAdvertisable *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -89824,10 +90476,16 @@ func (s *ProvisionByoipCidrInput) SetDryRun(v bool) *ProvisionByoipCidrInput {
 	return s
 }
 
+// SetPubliclyAdvertisable sets the PubliclyAdvertisable field's value.
+func (s *ProvisionByoipCidrInput) SetPubliclyAdvertisable(v bool) *ProvisionByoipCidrInput {
+	s.PubliclyAdvertisable = &v
+	return s
+}
+
 type ProvisionByoipCidrOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the address pool.
+	// Information about the address range.
 	ByoipCidr *ByoipCidr `locationName:"byoipCidr" type:"structure"`
 }
 
@@ -89919,7 +90577,7 @@ func (s *ProvisionedBandwidth) SetStatus(v string) *ProvisionedBandwidth {
 	return s
 }
 
-// Describes an address pool.
+// Describes an IPv4 address pool.
 type PublicIpv4Pool struct {
 	_ struct{} `type:"structure"`
 
@@ -89929,7 +90587,7 @@ type PublicIpv4Pool struct {
 	// The address ranges.
 	PoolAddressRanges []*PublicIpv4PoolRange `locationName:"poolAddressRangeSet" locationNameList:"item" type:"list"`
 
-	// The ID of the IPv4 address pool.
+	// The ID of the address pool.
 	PoolId *string `locationName:"poolId" type:"string"`
 
 	// The total number of addresses.
@@ -105811,6 +106469,9 @@ type VpcIpv6CidrBlockAssociation struct {
 	// Information about the state of the CIDR block.
 	Ipv6CidrBlockState *VpcCidrBlockState `locationName:"ipv6CidrBlockState" type:"structure"`
 
+	// The ID of the IPv6 address pool from which the IPv6 CIDR block is allocated.
+	Ipv6Pool *string `locationName:"ipv6Pool" type:"string"`
+
 	// The name of the location from which we advertise the IPV6 CIDR block.
 	NetworkBorderGroup *string `locationName:"networkBorderGroup" type:"string"`
 }
@@ -105840,6 +106501,12 @@ func (s *VpcIpv6CidrBlockAssociation) SetIpv6CidrBlock(v string) *VpcIpv6CidrBlo
 // SetIpv6CidrBlockState sets the Ipv6CidrBlockState field's value.
 func (s *VpcIpv6CidrBlockAssociation) SetIpv6CidrBlockState(v *VpcCidrBlockState) *VpcIpv6CidrBlockAssociation {
 	s.Ipv6CidrBlockState = v
+	return s
+}
+
+// SetIpv6Pool sets the Ipv6Pool field's value.
+func (s *VpcIpv6CidrBlockAssociation) SetIpv6Pool(v string) *VpcIpv6CidrBlockAssociation {
+	s.Ipv6Pool = &v
 	return s
 }
 
@@ -106641,7 +107308,7 @@ func (s *VpnTunnelOptionsSpecification) SetTunnelInsideCidr(v string) *VpnTunnel
 type WithdrawByoipCidrInput struct {
 	_ struct{} `type:"structure"`
 
-	// The public IPv4 address range, in CIDR notation.
+	// The address range, in CIDR notation.
 	//
 	// Cidr is a required field
 	Cidr *string `type:"string" required:"true"`
@@ -106946,6 +107613,9 @@ const (
 
 	// ByoipCidrStateProvisioned is a ByoipCidrState enum value
 	ByoipCidrStateProvisioned = "provisioned"
+
+	// ByoipCidrStateProvisionedNotPubliclyAdvertisable is a ByoipCidrState enum value
+	ByoipCidrStateProvisionedNotPubliclyAdvertisable = "provisioned-not-publicly-advertisable"
 )
 
 const (

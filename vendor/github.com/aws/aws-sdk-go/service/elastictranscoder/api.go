@@ -1867,6 +1867,8 @@ func (c *ElasticTranscoder) UpdatePipelineStatusWithContext(ctx aws.Context, inp
 type AccessDeniedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -1892,6 +1894,9 @@ func (s AccessDeniedException) Code() string {
 
 // Message returns the exception's message.
 func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4092,6 +4097,8 @@ func (s *HlsContentProtection) SetMethod(v string) *HlsContentProtection {
 type IncompatibleVersionException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4117,6 +4124,9 @@ func (s IncompatibleVersionException) Code() string {
 
 // Message returns the exception's message.
 func (s IncompatibleVersionException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4216,6 +4226,8 @@ func (s *InputCaptions) SetMergePolicy(v string) *InputCaptions {
 type InternalServiceException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4241,6 +4253,9 @@ func (s InternalServiceException) Code() string {
 
 // Message returns the exception's message.
 func (s InternalServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5118,6 +5133,8 @@ func (s *JobWatermark) SetPresetWatermarkId(v string) *JobWatermark {
 type LimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5143,6 +5160,9 @@ func (s LimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6745,6 +6765,8 @@ func (s *ReadPresetOutput) SetPreset(v *Preset) *ReadPresetOutput {
 type ResourceInUseException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6770,6 +6792,9 @@ func (s ResourceInUseException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6798,6 +6823,8 @@ func (s ResourceInUseException) RequestID() string {
 type ResourceNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6823,6 +6850,9 @@ func (s ResourceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7680,6 +7710,8 @@ func (s *UpdatePipelineStatusOutput) SetPipeline(v *Pipeline) *UpdatePipelineSta
 type ValidationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7705,6 +7737,9 @@ func (s ValidationException) Code() string {
 
 // Message returns the exception's message.
 func (s ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

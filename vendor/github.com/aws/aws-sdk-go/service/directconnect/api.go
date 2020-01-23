@@ -8716,6 +8716,8 @@ func (s *DisassociateConnectionFromLagInput) SetLagId(v string) *DisassociateCon
 type DuplicateTagKeysException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -8741,6 +8743,9 @@ func (s DuplicateTagKeysException) Code() string {
 
 // Message returns the exception's message.
 func (s DuplicateTagKeysException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -10717,6 +10722,8 @@ func (s TagResourceOutput) GoString() string {
 type TooManyTagsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -10742,6 +10749,9 @@ func (s TooManyTagsException) Code() string {
 
 // Message returns the exception's message.
 func (s TooManyTagsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

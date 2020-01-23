@@ -10859,6 +10859,8 @@ type ResourceInUseException struct {
 	// exception.
 	ExampleReference *ResourceReference `locationName:"exampleReference" type:"structure"`
 
+	Message_ *string `locationName:"message" type:"string"`
+
 	ReferenceType *string `locationName:"referenceType" type:"string" enum:"ReferenceType"`
 }
 
@@ -10885,6 +10887,9 @@ func (s ResourceInUseException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

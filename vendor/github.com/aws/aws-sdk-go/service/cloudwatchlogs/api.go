@@ -4487,6 +4487,8 @@ type DataAlreadyAcceptedException struct {
 	respMetadata protocol.ResponseMetadata
 
 	ExpectedSequenceToken *string `locationName:"expectedSequenceToken" min:"1" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4512,6 +4514,9 @@ func (s DataAlreadyAcceptedException) Code() string {
 
 // Message returns the exception's message.
 func (s DataAlreadyAcceptedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6835,6 +6840,8 @@ func (s *InputLogEvent) SetTimestamp(v int64) *InputLogEvent {
 type InvalidOperationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6860,6 +6867,9 @@ func (s InvalidOperationException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidOperationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6886,6 +6896,8 @@ func (s InvalidOperationException) RequestID() string {
 type InvalidParameterException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6911,6 +6923,9 @@ func (s InvalidParameterException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6940,6 +6955,8 @@ type InvalidSequenceTokenException struct {
 	respMetadata protocol.ResponseMetadata
 
 	ExpectedSequenceToken *string `locationName:"expectedSequenceToken" min:"1" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6965,6 +6982,9 @@ func (s InvalidSequenceTokenException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidSequenceTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6991,6 +7011,8 @@ func (s InvalidSequenceTokenException) RequestID() string {
 type LimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7016,6 +7038,9 @@ func (s LimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7327,6 +7352,8 @@ type MalformedQueryException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
 
+	Message_ *string `locationName:"message" type:"string"`
+
 	// Reserved.
 	QueryCompileError *QueryCompileError `locationName:"queryCompileError" type:"structure"`
 }
@@ -7354,6 +7381,9 @@ func (s MalformedQueryException) Code() string {
 
 // Message returns the exception's message.
 func (s MalformedQueryException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7567,6 +7597,8 @@ func (s *MetricTransformation) SetMetricValue(v string) *MetricTransformation {
 type OperationAbortedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7592,6 +7624,9 @@ func (s OperationAbortedException) Code() string {
 
 // Message returns the exception's message.
 func (s OperationAbortedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -8589,6 +8624,8 @@ func (s *RejectedLogEventsInfo) SetTooOldLogEventEndIndex(v int64) *RejectedLogE
 type ResourceAlreadyExistsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -8614,6 +8651,9 @@ func (s ResourceAlreadyExistsException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -8640,6 +8680,8 @@ func (s ResourceAlreadyExistsException) RequestID() string {
 type ResourceNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -8665,6 +8707,9 @@ func (s ResourceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -8802,6 +8847,8 @@ func (s *SearchedLogStream) SetSearchedCompletely(v bool) *SearchedLogStream {
 type ServiceUnavailableException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -8827,6 +8874,9 @@ func (s ServiceUnavailableException) Code() string {
 
 // Message returns the exception's message.
 func (s ServiceUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -9285,6 +9335,8 @@ func (s *TestMetricFilterOutput) SetMatches(v []*MetricFilterMatchRecord) *TestM
 type UnrecognizedClientException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -9310,6 +9362,9 @@ func (s UnrecognizedClientException) Code() string {
 
 // Message returns the exception's message.
 func (s UnrecognizedClientException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

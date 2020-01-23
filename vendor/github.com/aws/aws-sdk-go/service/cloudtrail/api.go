@@ -2526,6 +2526,8 @@ func (c *CloudTrail) UpdateTrailWithContext(ctx aws.Context, input *UpdateTrailI
 type ARNInvalidException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2551,6 +2553,9 @@ func (s ARNInvalidException) Code() string {
 
 // Message returns the exception's message.
 func (s ARNInvalidException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -2580,6 +2585,8 @@ func (s ARNInvalidException) RequestID() string {
 type AccessNotEnabledException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2605,6 +2612,9 @@ func (s AccessNotEnabledException) Code() string {
 
 // Message returns the exception's message.
 func (s AccessNotEnabledException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -2708,6 +2718,8 @@ func (s AddTagsOutput) GoString() string {
 type CloudWatchLogsDeliveryUnavailableException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2733,6 +2745,9 @@ func (s CloudWatchLogsDeliveryUnavailableException) Code() string {
 
 // Message returns the exception's message.
 func (s CloudWatchLogsDeliveryUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4013,6 +4028,8 @@ func (s *GetTrailStatusOutput) SetTimeLoggingStopped(v string) *GetTrailStatusOu
 type InsightNotEnabledException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4038,6 +4055,9 @@ func (s InsightNotEnabledException) Code() string {
 
 // Message returns the exception's message.
 func (s InsightNotEnabledException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4093,6 +4113,8 @@ func (s *InsightSelector) SetInsightType(v string) *InsightSelector {
 type InsufficientDependencyServiceAccessPermissionException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4118,6 +4140,9 @@ func (s InsufficientDependencyServiceAccessPermissionException) Code() string {
 
 // Message returns the exception's message.
 func (s InsufficientDependencyServiceAccessPermissionException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4145,6 +4170,8 @@ func (s InsufficientDependencyServiceAccessPermissionException) RequestID() stri
 type InsufficientEncryptionPolicyException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4170,6 +4197,9 @@ func (s InsufficientEncryptionPolicyException) Code() string {
 
 // Message returns the exception's message.
 func (s InsufficientEncryptionPolicyException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4196,6 +4226,8 @@ func (s InsufficientEncryptionPolicyException) RequestID() string {
 type InsufficientS3BucketPolicyException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4221,6 +4253,9 @@ func (s InsufficientS3BucketPolicyException) Code() string {
 
 // Message returns the exception's message.
 func (s InsufficientS3BucketPolicyException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4247,6 +4282,8 @@ func (s InsufficientS3BucketPolicyException) RequestID() string {
 type InsufficientSnsTopicPolicyException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4272,6 +4309,9 @@ func (s InsufficientSnsTopicPolicyException) Code() string {
 
 // Message returns the exception's message.
 func (s InsufficientSnsTopicPolicyException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4298,6 +4338,8 @@ func (s InsufficientSnsTopicPolicyException) RequestID() string {
 type InvalidCloudWatchLogsLogGroupArnException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4323,6 +4365,9 @@ func (s InvalidCloudWatchLogsLogGroupArnException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidCloudWatchLogsLogGroupArnException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4349,6 +4394,8 @@ func (s InvalidCloudWatchLogsLogGroupArnException) RequestID() string {
 type InvalidCloudWatchLogsRoleArnException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4374,6 +4421,9 @@ func (s InvalidCloudWatchLogsRoleArnException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidCloudWatchLogsRoleArnException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4401,6 +4451,8 @@ func (s InvalidCloudWatchLogsRoleArnException) RequestID() string {
 type InvalidEventCategoryException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4426,6 +4478,9 @@ func (s InvalidEventCategoryException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidEventCategoryException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4470,6 +4525,8 @@ func (s InvalidEventCategoryException) RequestID() string {
 type InvalidEventSelectorsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4495,6 +4552,9 @@ func (s InvalidEventSelectorsException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidEventSelectorsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4522,6 +4582,8 @@ func (s InvalidEventSelectorsException) RequestID() string {
 type InvalidHomeRegionException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4547,6 +4609,9 @@ func (s InvalidHomeRegionException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidHomeRegionException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4575,6 +4640,8 @@ func (s InvalidHomeRegionException) RequestID() string {
 type InvalidInsightSelectorsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4600,6 +4667,9 @@ func (s InvalidInsightSelectorsException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidInsightSelectorsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4626,6 +4696,8 @@ func (s InvalidInsightSelectorsException) RequestID() string {
 type InvalidKmsKeyIdException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4651,6 +4723,9 @@ func (s InvalidKmsKeyIdException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidKmsKeyIdException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4677,6 +4752,8 @@ func (s InvalidKmsKeyIdException) RequestID() string {
 type InvalidLookupAttributesException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4702,6 +4779,9 @@ func (s InvalidLookupAttributesException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidLookupAttributesException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4728,6 +4808,8 @@ func (s InvalidLookupAttributesException) RequestID() string {
 type InvalidMaxResultsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4753,6 +4835,9 @@ func (s InvalidMaxResultsException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidMaxResultsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4780,6 +4865,8 @@ func (s InvalidMaxResultsException) RequestID() string {
 type InvalidNextTokenException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4805,6 +4892,9 @@ func (s InvalidNextTokenException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4832,6 +4922,8 @@ func (s InvalidNextTokenException) RequestID() string {
 type InvalidParameterCombinationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4857,6 +4949,9 @@ func (s InvalidParameterCombinationException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidParameterCombinationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4883,6 +4978,8 @@ func (s InvalidParameterCombinationException) RequestID() string {
 type InvalidS3BucketNameException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4908,6 +5005,9 @@ func (s InvalidS3BucketNameException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidS3BucketNameException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4934,6 +5034,8 @@ func (s InvalidS3BucketNameException) RequestID() string {
 type InvalidS3PrefixException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4959,6 +5061,9 @@ func (s InvalidS3PrefixException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidS3PrefixException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4985,6 +5090,8 @@ func (s InvalidS3PrefixException) RequestID() string {
 type InvalidSnsTopicNameException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5010,6 +5117,9 @@ func (s InvalidSnsTopicNameException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidSnsTopicNameException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5037,6 +5147,8 @@ func (s InvalidSnsTopicNameException) RequestID() string {
 type InvalidTagParameterException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5062,6 +5174,9 @@ func (s InvalidTagParameterException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidTagParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5089,6 +5204,8 @@ func (s InvalidTagParameterException) RequestID() string {
 type InvalidTimeRangeException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5114,6 +5231,9 @@ func (s InvalidTimeRangeException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidTimeRangeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5140,6 +5260,8 @@ func (s InvalidTimeRangeException) RequestID() string {
 type InvalidTokenException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5165,6 +5287,9 @@ func (s InvalidTokenException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5204,6 +5329,8 @@ func (s InvalidTokenException) RequestID() string {
 type InvalidTrailNameException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5229,6 +5356,9 @@ func (s InvalidTrailNameException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidTrailNameException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5256,6 +5386,8 @@ func (s InvalidTrailNameException) RequestID() string {
 type KmsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5281,6 +5413,9 @@ func (s KmsException) Code() string {
 
 // Message returns the exception's message.
 func (s KmsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5309,6 +5444,8 @@ func (s KmsException) RequestID() string {
 type KmsKeyDisabledException struct {
 	_            struct{} `deprecated:"true" type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5334,6 +5471,9 @@ func (s KmsKeyDisabledException) Code() string {
 
 // Message returns the exception's message.
 func (s KmsKeyDisabledException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5361,6 +5501,8 @@ func (s KmsKeyDisabledException) RequestID() string {
 type KmsKeyNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5386,6 +5528,9 @@ func (s KmsKeyNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s KmsKeyNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5838,6 +5983,8 @@ func (s *LookupEventsOutput) SetNextToken(v string) *LookupEventsOutput {
 type MaximumNumberOfTrailsExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5863,6 +6010,9 @@ func (s MaximumNumberOfTrailsExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s MaximumNumberOfTrailsExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5892,6 +6042,8 @@ func (s MaximumNumberOfTrailsExceededException) RequestID() string {
 type NotOrganizationMasterAccountException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5917,6 +6069,9 @@ func (s NotOrganizationMasterAccountException) Code() string {
 
 // Message returns the exception's message.
 func (s NotOrganizationMasterAccountException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5943,6 +6098,8 @@ func (s NotOrganizationMasterAccountException) RequestID() string {
 type OperationNotPermittedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5968,6 +6125,9 @@ func (s OperationNotPermittedException) Code() string {
 
 // Message returns the exception's message.
 func (s OperationNotPermittedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5997,6 +6157,8 @@ func (s OperationNotPermittedException) RequestID() string {
 type OrganizationNotInAllFeaturesModeException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6022,6 +6184,9 @@ func (s OrganizationNotInAllFeaturesModeException) Code() string {
 
 // Message returns the exception's message.
 func (s OrganizationNotInAllFeaturesModeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6050,6 +6215,8 @@ func (s OrganizationNotInAllFeaturesModeException) RequestID() string {
 type OrganizationsNotInUseException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6075,6 +6242,9 @@ func (s OrganizationsNotInUseException) Code() string {
 
 // Message returns the exception's message.
 func (s OrganizationsNotInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6464,6 +6634,8 @@ func (s *Resource) SetResourceType(v string) *Resource {
 type ResourceNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6489,6 +6661,9 @@ func (s ResourceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6549,6 +6724,8 @@ func (s *ResourceTag) SetTagsList(v []*Tag) *ResourceTag {
 type ResourceTypeNotSupportedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6574,6 +6751,9 @@ func (s ResourceTypeNotSupportedException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceTypeNotSupportedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6600,6 +6780,8 @@ func (s ResourceTypeNotSupportedException) RequestID() string {
 type S3BucketDoesNotExistException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6625,6 +6807,9 @@ func (s S3BucketDoesNotExistException) Code() string {
 
 // Message returns the exception's message.
 func (s S3BucketDoesNotExistException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6819,6 +7004,8 @@ func (s *Tag) SetValue(v string) *Tag {
 type TagsLimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6844,6 +7031,9 @@ func (s TagsLimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s TagsLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7047,6 +7237,8 @@ func (s *Trail) SetTrailARN(v string) *Trail {
 type TrailAlreadyExistsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7072,6 +7264,9 @@ func (s TrailAlreadyExistsException) Code() string {
 
 // Message returns the exception's message.
 func (s TrailAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7141,6 +7336,8 @@ func (s *TrailInfo) SetTrailARN(v string) *TrailInfo {
 type TrailNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7166,6 +7363,9 @@ func (s TrailNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s TrailNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7192,6 +7392,8 @@ func (s TrailNotFoundException) RequestID() string {
 type TrailNotProvidedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7217,6 +7419,9 @@ func (s TrailNotProvidedException) Code() string {
 
 // Message returns the exception's message.
 func (s TrailNotProvidedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7243,6 +7448,8 @@ func (s TrailNotProvidedException) RequestID() string {
 type UnsupportedOperationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7268,6 +7475,9 @@ func (s UnsupportedOperationException) Code() string {
 
 // Message returns the exception's message.
 func (s UnsupportedOperationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

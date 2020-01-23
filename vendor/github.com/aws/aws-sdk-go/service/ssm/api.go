@@ -12385,6 +12385,8 @@ func (s AlreadyExistsException) RequestID() string {
 type AssociatedInstances struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -12410,6 +12412,9 @@ func (s AssociatedInstances) Code() string {
 
 // Message returns the exception's message.
 func (s AssociatedInstances) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -12542,6 +12547,8 @@ func (s *Association) SetTargets(v []*Target) *Association {
 type AssociationAlreadyExists struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -12567,6 +12574,9 @@ func (s AssociationAlreadyExists) Code() string {
 
 // Message returns the exception's message.
 func (s AssociationAlreadyExists) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -13287,6 +13297,8 @@ func (s *AssociationFilter) SetValue(v string) *AssociationFilter {
 type AssociationLimitExceeded struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -13312,6 +13324,9 @@ func (s AssociationLimitExceeded) Code() string {
 
 // Message returns the exception's message.
 func (s AssociationLimitExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -23482,6 +23497,8 @@ func (s DuplicateDocumentVersionName) RequestID() string {
 type DuplicateInstanceId struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -23507,6 +23524,9 @@ func (s DuplicateInstanceId) Code() string {
 
 // Message returns the exception's message.
 func (s DuplicateInstanceId) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -28466,6 +28486,8 @@ func (s InvalidAutomationStatusUpdateException) RequestID() string {
 type InvalidCommandId struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -28491,6 +28513,9 @@ func (s InvalidCommandId) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidCommandId) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -29031,6 +29056,8 @@ func (s InvalidFilter) RequestID() string {
 type InvalidFilterKey struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -29056,6 +29083,9 @@ func (s InvalidFilterKey) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidFilterKey) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -29771,6 +29801,8 @@ func (s InvalidOptionException) RequestID() string {
 type InvalidOutputFolder struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -29796,6 +29828,9 @@ func (s InvalidOutputFolder) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidOutputFolder) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -29822,6 +29857,8 @@ func (s InvalidOutputFolder) RequestID() string {
 type InvalidOutputLocation struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -29847,6 +29884,9 @@ func (s InvalidOutputLocation) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidOutputLocation) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -29988,6 +30028,8 @@ func (s InvalidPermissionType) RequestID() string {
 type InvalidPluginName struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -30013,6 +30055,9 @@ func (s InvalidPluginName) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidPluginName) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -30153,6 +30198,8 @@ func (s InvalidPolicyTypeException) RequestID() string {
 type InvalidResourceId struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -30178,6 +30225,9 @@ func (s InvalidResourceId) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidResourceId) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -30205,6 +30255,8 @@ func (s InvalidResourceId) RequestID() string {
 type InvalidResourceType struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -30230,6 +30282,9 @@ func (s InvalidResourceType) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidResourceType) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -31300,6 +31355,8 @@ func (s *InventoryResultItem) SetTypeName(v string) *InventoryResultItem {
 type InvocationDoesNotExist struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -31325,6 +31382,9 @@ func (s InvocationDoesNotExist) Code() string {
 
 // Message returns the exception's message.
 func (s InvocationDoesNotExist) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -38726,6 +38786,8 @@ type ResourceDataSyncAlreadyExistsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
 
+	Message_ *string `locationName:"message" type:"string"`
+
 	SyncName *string `min:"1" type:"string"`
 }
 
@@ -38752,6 +38814,9 @@ func (s ResourceDataSyncAlreadyExistsException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceDataSyncAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -41091,6 +41156,8 @@ func (s *StartSessionOutput) SetTokenValue(v string) *StartSessionOutput {
 type StatusUnchanged struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -41116,6 +41183,9 @@ func (s StatusUnchanged) Code() string {
 
 // Message returns the exception's message.
 func (s StatusUnchanged) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -41964,6 +42034,8 @@ func (s *TerminateSessionOutput) SetSessionId(v string) *TerminateSessionOutput 
 type TooManyTagsError struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -41989,6 +42061,9 @@ func (s TooManyTagsError) Code() string {
 
 // Message returns the exception's message.
 func (s TooManyTagsError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

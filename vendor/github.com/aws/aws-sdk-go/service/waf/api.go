@@ -14591,6 +14591,8 @@ func (s InternalErrorException) RequestID() string {
 type InvalidAccountException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -14616,6 +14618,9 @@ func (s InvalidAccountException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidAccountException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -14742,6 +14747,8 @@ type InvalidParameterException struct {
 
 	Field *string `locationName:"field" type:"string" enum:"ParameterExceptionField"`
 
+	Message_ *string `locationName:"message" type:"string"`
+
 	Parameter *string `locationName:"parameter" min:"1" type:"string"`
 
 	Reason *string `locationName:"reason" type:"string" enum:"ParameterExceptionReason"`
@@ -14770,6 +14777,9 @@ func (s InvalidParameterException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

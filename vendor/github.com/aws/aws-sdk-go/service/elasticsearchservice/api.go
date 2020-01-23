@@ -3663,6 +3663,8 @@ func (s *DescribeReservedElasticsearchInstancesOutput) SetReservedElasticsearchI
 type DisabledOperationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -3688,6 +3690,9 @@ func (s DisabledOperationException) Code() string {
 
 // Message returns the exception's message.
 func (s DisabledOperationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4872,6 +4877,8 @@ func (s *InstanceLimits) SetInstanceCountLimits(v *InstanceCountLimits) *Instanc
 type InternalException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4897,6 +4904,9 @@ func (s InternalException) Code() string {
 
 // Message returns the exception's message.
 func (s InternalException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4924,6 +4934,8 @@ func (s InternalException) RequestID() string {
 type InvalidTypeException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4949,6 +4961,9 @@ func (s InvalidTypeException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidTypeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4976,6 +4991,8 @@ func (s InvalidTypeException) RequestID() string {
 type LimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5001,6 +5018,9 @@ func (s LimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6006,6 +6026,8 @@ func (s *ReservedElasticsearchInstanceOffering) SetUsagePrice(v float64) *Reserv
 type ResourceAlreadyExistsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6031,6 +6053,9 @@ func (s ResourceAlreadyExistsException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6058,6 +6083,8 @@ func (s ResourceAlreadyExistsException) RequestID() string {
 type ResourceNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6083,6 +6110,9 @@ func (s ResourceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7007,6 +7037,8 @@ func (s *VPCOptions) SetSubnetIds(v []*string) *VPCOptions {
 type ValidationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7032,6 +7064,9 @@ func (s ValidationException) Code() string {
 
 // Message returns the exception's message.
 func (s ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
