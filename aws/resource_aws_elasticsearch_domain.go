@@ -478,6 +478,9 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 			if isAWSErr(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describe") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, "ValidationException", "The passed role must authorize Amazon Elasticsearch to describe") {
+				return resource.RetryableError(err)
+			}
 
 			return resource.NonRetryableError(err)
 		}
