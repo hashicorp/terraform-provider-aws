@@ -17,15 +17,15 @@ a specific AWS ECS task definition.
 ```hcl
 # Simply specify the family to find the latest ACTIVE revision in that family.
 data "aws_ecs_task_definition" "mongo" {
-  task_definition = "${aws_ecs_task_definition.mongo.family}"
+  task_definition = "${aws_ecs_task_definition.test.family}"
 }
 
-resource "aws_ecs_cluster" "foo" {
-  name = "foo"
+resource "aws_ecs_cluster" "test" {
+  name = "test"
 }
 
-resource "aws_ecs_task_definition" "mongo" {
-  family = "mongodb"
+resource "aws_ecs_task_definition" "test" {
+  family = "test"
 
   container_definitions = <<DEFINITION
 [
@@ -45,13 +45,13 @@ resource "aws_ecs_task_definition" "mongo" {
 DEFINITION
 }
 
-resource "aws_ecs_service" "mongo" {
-  name          = "mongo"
-  cluster       = "${aws_ecs_cluster.foo.id}"
+resource "aws_ecs_service" "test" {
+  name          = "test"
+  cluster       = "${aws_ecs_cluster.test.id}"
   desired_count = 2
 
   # Track the latest ACTIVE revision
-  task_definition = "${aws_ecs_task_definition.mongo.family}:${max("${aws_ecs_task_definition.mongo.revision}", "${data.aws_ecs_task_definition.mongo.revision}")}"
+  task_definition = "${aws_ecs_task_definition.test.family}:${max("${aws_ecs_task_definition.test.revision}", "${data.aws_ecs_task_definition.test.revision}")}"
 }
 ```
 

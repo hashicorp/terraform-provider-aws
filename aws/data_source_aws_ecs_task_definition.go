@@ -97,6 +97,22 @@ func dataSourceAwsEcsTaskDefinition() *schema.Resource {
 								},
 							},
 						},
+						"efs_volume_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"file_system_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"root_directory": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 				Set: resourceAwsEcsTaskDefinitionVolumeHash,
