@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -263,7 +262,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		FileSystemId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "FileSystemNotFound" {
+		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
 			log.Printf("[WARN] EFS file system (%s) could not be found.", d.Id())
 			d.SetId("")
 			return nil
@@ -273,16 +272,6 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 
 	if hasEmptyFileSystems(resp) {
 		return fmt.Errorf("EFS file system %q could not be found.", d.Id())
-	}
-
-	tags, err := keyvaluetags.EfsListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for EFS file system (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error settings tags: %s", err)
 	}
 
 	var fs *efs.FileSystemDescription
@@ -313,6 +302,10 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("performance_mode", fs.PerformanceMode)
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	d.Set("throughput_mode", fs.ThroughputMode)
+
+	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	region := meta.(*AWSClient).region
 	if err := d.Set("dns_name", resourceAwsEfsDnsName(aws.StringValue(fs.FileSystemId), region)); err != nil {
@@ -363,8 +356,7 @@ func waitForDeleteEfsFileSystem(conn *efs.EFS, id string, timeout time.Duration)
 				FileSystemId: aws.String(id),
 			})
 			if err != nil {
-				efsErr, ok := err.(awserr.Error)
-				if ok && efsErr.Code() == "FileSystemNotFound" {
+				if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
 					return nil, "", nil
 				}
 				return nil, "error", err

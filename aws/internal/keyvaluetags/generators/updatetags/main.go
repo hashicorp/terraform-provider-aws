@@ -333,8 +333,6 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "ec2":
 		return "CreateTags"
-	case "efs":
-		return "CreateTags"
 	case "elasticache":
 		return "AddTagsToResource"
 	case "elasticbeanstalk":
@@ -424,7 +422,7 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	case "ec2":
 		return "Resources"
 	case "efs":
-		return "FileSystemId"
+		return "ResourceId"
 	case "elasticache":
 		return "ResourceName"
 	case "elasticsearchservice":
@@ -576,8 +574,6 @@ func ServiceUntagFunction(serviceName string) string {
 	case "docdb":
 		return "RemoveTagsFromResource"
 	case "ec2":
-		return "DeleteTags"
-	case "efs":
 		return "DeleteTags"
 	case "elasticache":
 		return "RemoveTagsFromResource"
