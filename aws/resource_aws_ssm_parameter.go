@@ -214,7 +214,7 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		paramInput.Description = aws.String(n.(string))
 	}
 
-	if keyID, ok := d.GetOk("key_id"); ok {
+	if keyID, ok := d.GetOk("key_id"); d.Get("type") == "SecureString" && ok {
 		log.Printf("[DEBUG] Setting key_id for SSM Parameter %v: %s", d.Get("name"), keyID)
 		paramInput.SetKeyId(keyID.(string))
 	}
