@@ -131,12 +131,8 @@ For more information, see [Specifying a Docker volume in your Task Definition De
 * `driver_opts` - (Optional) A map of Docker driver specific options.
 * `labels` - (Optional) A map of custom metadata to add to your Docker volume.
 
-#### EFS Volume Configuration Arguments
-For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_efs.html)
-* `file_system_id` - (Required) The ID of the EFS File System.
-* `root_directory` - (Optional) The path to mount on the host
-
 ##### Example Usage:
+
 ```hcl
 resource "aws_ecs_task_definition" "service" {
   family                = "service"
@@ -148,6 +144,38 @@ resource "aws_ecs_task_definition" "service" {
     docker_volume_configuration {
       scope         = "shared"
       autoprovision = true
+      driver        = "local"
+
+      driver_opts = {
+        "type"   = "nfs"
+        "device" = "${aws_efs_file_system.fs.dns_name}:/"
+        "o"      = "addr=${aws_efs_file_system.fs.dns_name},nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,nosuid"
+      }
+    }
+  }
+}
+```
+
+#### EFS Volume Configuration Arguments
+
+For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_efs.html)
+
+* `file_system_id` - (Required) The ID of the EFS File System.
+* `root_directory` - (Optional) The path to mount on the host
+
+##### Example Usage:
+
+```hcl
+resource "aws_ecs_task_definition" "service" {
+  family                = "service"
+  container_definitions = "${file("task-definitions/service.json")}"
+
+  volume {
+    name = "service-storage"
+
+    efs_volume_configuration {
+      file_system_id = "${aws_efs_file_system.fs.id}"
+      root_directory = "/opt/data"
     }
   }
 }
