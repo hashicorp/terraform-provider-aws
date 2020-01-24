@@ -126,6 +126,17 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdatedError(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and constant password is {####}. "),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "Foo{####}BaBaz"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and constant password is {####}."),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
 				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
@@ -872,6 +883,25 @@ resource "aws_cognito_user_pool" "test" {
       email_message = "Your username is {username} and temporary password is {####}. "
       email_subject = "FooBar {####}"
       sms_message   = "Your username is {username} and temporary password is {####}."
+    }
+  }
+}
+`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdatedError(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = "terraform-test-pool-%s"
+
+  admin_create_user_config {
+    allow_admin_create_user_only = false
+    unused_account_validity_days = 7
+
+    invite_message_template {
+      email_message = "Your username is {username} and constant password is {####}. "
+      email_subject = "Foo{####}BaBaz"
+      sms_message   = "Your username is {username} and constant password is {####}."
     }
   }
 }
