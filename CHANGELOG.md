@@ -1,5 +1,9 @@
 ## 2.47.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_efs_file_system: Tagging API calls have been refactored to the AWS standardized `TagResource` and `UntagResource` API calls (from `CreateTags` and `DeleteTags` respectively). Restrictive IAM Policies for Terraform execution may require updates. [GH-11654]
+
 ENHANCEMENTS:
 
 * data-source/aws_efs_file_system: Add `lifecycle_policy`, `provisioned_throughput_in_mibps`, and `throughput_mode` attributes [GH-11647]
