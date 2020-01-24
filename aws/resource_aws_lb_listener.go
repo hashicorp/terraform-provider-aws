@@ -82,7 +82,6 @@ func resourceAwsLbListener() *schema.Resource {
 			"default_action": {
 				Type:     schema.TypeList,
 				Required: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -92,6 +91,7 @@ func resourceAwsLbListener() *schema.Resource {
 								elbv2.ActionTypeEnumFixedResponse,
 								elbv2.ActionTypeEnumForward,
 								elbv2.ActionTypeEnumRedirect,
+								elbv2.ActionTypeEnumAuthenticateOidc,
 							}, true),
 						},
 

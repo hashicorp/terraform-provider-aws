@@ -56,6 +56,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 								elbv2.ActionTypeEnumFixedResponse,
 								elbv2.ActionTypeEnumForward,
 								elbv2.ActionTypeEnumRedirect,
+								elbv2.ActionTypeEnumAuthenticateOidc,
 							}, true),
 						},
 
