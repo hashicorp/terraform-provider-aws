@@ -1,4 +1,9 @@
 ## 2.47.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_efs_file_system: Add `lifecycle_policy`, `provisioned_throughput_in_mibps`, and `throughput_mode` attributes [GH-11647]
+
 ## 2.46.0 (January 23, 2020)
 
 NOTES:
