@@ -68,27 +68,26 @@ func testSweepTransferServers(region string) error {
 func TestAccAWSTransferServer_basic(t *testing.T) {
 	var conf transfer.DescribedServer
 	rName := acctest.RandString(5)
+	resourceName := "aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: "aws_transfer_server.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferServerConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists("aws_transfer_server.foo", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_transfer_server.foo", "arn", "transfer", regexp.MustCompile(`server/.+`)),
-					resource.TestMatchResourceAttr(
-						"aws_transfer_server.foo", "endpoint", regexp.MustCompile(fmt.Sprintf("^s-[a-z0-9]+.server.transfer.%s.amazonaws.com$", testAccGetRegion()))),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "identity_provider_type", "SERVICE_MANAGED"),
-					resource.TestCheckResourceAttr("aws_transfer_server.foo", "tags.%", "0"),
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`server/.+`)),
+					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(fmt.Sprintf("^s-[a-z0-9]+.server.transfer.%s.amazonaws.com$", testAccGetRegion()))),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:            "aws_transfer_server.foo",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
@@ -96,15 +95,11 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 			{
 				Config: testAccAWSTransferServerConfig_basicUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists("aws_transfer_server.foo", &conf),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "tags.%", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "tags.NAME", "tf-acc-test-transfer-server"),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "tags.ENV", "test"),
-					resource.TestCheckResourceAttrPair(
-						"aws_transfer_server.foo", "logging_role", "aws_iam_role.foo", "arn"),
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.NAME", "tf-acc-test-transfer-server"),
+					resource.TestCheckResourceAttr(resourceName, "tags.ENV", "test"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_role", "aws_iam_role.test", "arn"),
 				),
 			},
 		},
@@ -114,27 +109,23 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 func TestAccAWSTransferServer_apigateway(t *testing.T) {
 	var conf transfer.DescribedServer
 	rName := acctest.RandString(5)
+	resourceName := "aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: "aws_transfer_server.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferServerConfig_apigateway(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists("aws_transfer_server.foo", &conf),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "identity_provider_type", "API_GATEWAY"),
-					resource.TestCheckResourceAttrSet(
-						"aws_transfer_server.foo", "invocation_role"),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "tags.%", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "tags.NAME", "tf-acc-test-transfer-server"),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "tags.TYPE", "apigateway"),
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttrSet(resourceName, "invocation_role"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.NAME", "tf-acc-test-transfer-server"),
+					resource.TestCheckResourceAttr(resourceName, "tags.TYPE", "apigateway"),
 				),
 			},
 		},
@@ -143,6 +134,7 @@ func TestAccAWSTransferServer_apigateway(t *testing.T) {
 
 func TestAccAWSTransferServer_disappears(t *testing.T) {
 	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
@@ -152,7 +144,7 @@ func TestAccAWSTransferServer_disappears(t *testing.T) {
 			{
 				Config: testAccAWSTransferServerConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists("aws_transfer_server.foo", &conf),
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					testAccCheckAWSTransferServerDisappears(&conf),
 				),
 				ExpectNonEmptyPlan: true,
@@ -165,28 +157,27 @@ func TestAccAWSTransferServer_forcedestroy(t *testing.T) {
 	var conf transfer.DescribedServer
 	var roleConf iam.GetRoleOutput
 	rName := acctest.RandString(5)
+	resourceName := "aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: "aws_transfer_server.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferServerConfig_forcedestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists("aws_transfer_server.foo", &conf),
-					testAccCheckAWSRoleExists("aws_iam_role.foo", &roleConf),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "identity_provider_type", "SERVICE_MANAGED"),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "force_destroy", "true"),
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					testAccCheckAWSRoleExists("aws_iam_role.test", &roleConf),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "true"),
 					testAccCheckAWSTransferCreateUser(&conf, &roleConf, rName),
 					testAccCheckAWSTransferCreateSshKey(&conf, rName),
 				),
 			},
 			{
-				ResourceName:            "aws_transfer_server.foo",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy", "host_key"},
@@ -197,7 +188,7 @@ func TestAccAWSTransferServer_forcedestroy(t *testing.T) {
 
 func TestAccAWSTransferServer_vpcEndpointId(t *testing.T) {
 	var conf transfer.DescribedServer
-	resourceName := "aws_transfer_server.default"
+	resourceName := "aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
@@ -209,8 +200,36 @@ func TestAccAWSTransferServer_vpcEndpointId(t *testing.T) {
 				Config: testAccAWSTransferServerConfig_VpcEndPoint,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "endpoint_type", "VPC_ENDPOINT"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccAWSTransferServer_vpcOnly(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerConfig_vpc,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "2"),
 				),
 			},
 			{
@@ -373,14 +392,14 @@ func testAccPreCheckAWSTransfer(t *testing.T) {
 }
 
 const testAccAWSTransferServerConfig_basic = `
-resource "aws_transfer_server" "foo" {}
+resource "aws_transfer_server" "test" {}
 `
 
 func testAccAWSTransferServerConfig_basicUpdate(rName string) string {
 
 	return fmt.Sprintf(`
-resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-server-iam-role-%s"
+resource "aws_iam_role" "test" {
+  name = "tf-test-transfer-server-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -398,9 +417,9 @@ resource "aws_iam_role" "foo" {
 EOF
 }
 
-resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-server-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
+resource "aws_iam_role_policy" "test" {
+  name = "tf-test-transfer-server-iam-policy-%[1]s"
+  role = "${aws_iam_role.test.id}"
 
   policy = <<POLICY
 {
@@ -419,21 +438,23 @@ resource "aws_iam_role_policy" "foo" {
 POLICY
 }
 
-resource "aws_transfer_server" "foo" {
+resource "aws_transfer_server" "test" {
   identity_provider_type = "SERVICE_MANAGED"
-  logging_role           = "${aws_iam_role.foo.arn}"
+  logging_role           = "${aws_iam_role.test.arn}"
 
   tags = {
     NAME = "tf-acc-test-transfer-server"
     ENV  = "test"
   }
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAWSTransferServerConfig_apigateway(rName string) string {
 
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_api_gateway_rest_api" "test" {
   name = "test"
 }
@@ -480,16 +501,16 @@ resource "aws_api_gateway_deployment" "test" {
 
   rest_api_id       = "${aws_api_gateway_rest_api.test.id}"
   stage_name        = "test"
-  description       = "%s"
-  stage_description = "%s"
+  description       = %[1]q
+  stage_description = %[1]q
 
   variables = {
     "a" = "2"
   }
 }
 
-resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-server-iam-role-for-apigateway-%s"
+resource "aws_iam_role" "test" {
+  name = "tf-test-transfer-server-iam-role-for-apigateway-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -507,9 +528,9 @@ resource "aws_iam_role" "foo" {
 EOF
 }
 
-resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-server-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
+resource "aws_iam_role_policy" "test" {
+  name = "tf-test-transfer-server-iam-policy-%[1]s"
+  role = "${aws_iam_role.test.id}"
 
   policy = <<POLICY
 {
@@ -528,29 +549,29 @@ resource "aws_iam_role_policy" "foo" {
 POLICY
 }
 
-resource "aws_transfer_server" "foo" {
+resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.us-west-2.amazonaws.com${aws_api_gateway_resource.test.path}"
-  invocation_role        = "${aws_iam_role.foo.arn}"
-  logging_role           = "${aws_iam_role.foo.arn}"
+  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.${data.aws_region.current.name}.amazonaws.com${aws_api_gateway_resource.test.path}"
+  invocation_role        = "${aws_iam_role.test.arn}"
+  logging_role           = "${aws_iam_role.test.arn}"
 
   tags = {
     NAME = "tf-acc-test-transfer-server"
     TYPE = "apigateway"
   }
 }
-`, rName, rName, rName, rName)
+`, rName)
 
 }
 
 func testAccAWSTransferServerConfig_forcedestroy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_transfer_server" "foo" {
+resource "aws_transfer_server" "test" {
   force_destroy = true
 }
 
-resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+resource "aws_iam_role" "test" {
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -568,9 +589,9 @@ resource "aws_iam_role" "foo" {
 EOF
 }
 
-resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
+resource "aws_iam_role_policy" "test" {
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
+  role = "${aws_iam_role.test.id}"
 
   policy = <<POLICY
 {
@@ -588,30 +609,44 @@ resource "aws_iam_role_policy" "foo" {
 }
 POLICY
 }
-`, rName, rName)
+`, rName)
 }
 
-const testAccAWSTransferServerConfig_VpcEndPoint = `
-
-data "aws_region" "current" {}
-
+const testAccAWSTransferServerConfigVPCBase = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
 
 	tags = {
-		Name = "terraform-testacc-default-route-table-vpc-endpoint"
+		Name = "terraform-testacc-vpc-endpoint"
 	}
 }
 
-resource "aws_internet_gateway" "igw" {
+resource "aws_internet_gateway" "test" {
 	vpc_id = "${aws_vpc.test.id}"
 
 	tags = {
-		Name = "test"
+		Name = "terraform-testacc-igw-vpc-endpoint"
 	}
 }
 
-resource "aws_security_group" "sg" {
+resource "aws_default_route_table" "test" {
+	default_route_table_id = "${aws_vpc.test.default_route_table_id}"
+
+	tags = {
+		Name = "terraform-testacc-default-route-table-vpc-endpoint"
+	}
+
+	route {
+		cidr_block = "0.0.0.0/0"
+		gateway_id = "${aws_internet_gateway.test.id}"
+	}
+}
+`
+
+const testAccAWSTransferServerConfig_VpcEndPoint = testAccAWSTransferServerConfigVPCBase + `
+data "aws_region" "current" {}
+
+resource "aws_security_group" "test" {
 	name 		= "allow-transfer-server"
 	description = "Allow TLS inbound traffic"
 	vpc_id 		= "${aws_vpc.test.id}"
@@ -623,34 +658,57 @@ resource "aws_security_group" "sg" {
 	}
 }
 
-resource "aws_vpc_endpoint" "transfer" {
+resource "aws_vpc_endpoint" "test" {
 	vpc_id = "${aws_vpc.test.id}"
 	vpc_endpoint_type = "Interface"
 	service_name = "com.amazonaws.${data.aws_region.current.name}.transfer.server"
 
 	security_group_ids = [
-		"${aws_security_group.sg.id}",
+		"${aws_security_group.test.id}",
 	]
 }
 
-resource "aws_default_route_table" "foo" {
-	default_route_table_id = "${aws_vpc.test.default_route_table_id}"
-
-	tags = {
-		Name = "test"
-	}
-
-	route {
-		cidr_block = "0.0.0.0/0"
-		gateway_id = "${aws_internet_gateway.igw.id}"
-	}
-}
-
-
-resource "aws_transfer_server" "default" {
+resource "aws_transfer_server" "test" {
 	endpoint_type = "VPC_ENDPOINT"
 	endpoint_details {
-		vpc_endpoint_id = "${aws_vpc_endpoint.transfer.id}"
+		vpc_endpoint_id = "${aws_vpc_endpoint.test.id}"
+	}
+}
+`
+
+const testAccAWSTransferServerConfig_vpc = testAccAWSTransferServerConfigVPCBase + `
+data "aws_availability_zones" "test" {}
+
+resource "aws_subnet" "a" {
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.0.0/24"
+  availability_zone = "${data.aws_availability_zones.test.names[0]}"
+
+  tags = {
+    Name = "tf-acc-neptune-cluster-instance-name-prefix-a"
+  }
+}
+
+resource "aws_subnet" "b" {
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "${data.aws_availability_zones.test.names[1]}"
+
+  tags = {
+    Name = "tf-acc-neptune-cluster-instance-name-prefix-b"
+  }
+}
+
+resource "aws_eip" "a" {}
+
+resource "aws_eip" "b" {}
+
+resource "aws_transfer_server" "test" {
+	endpoint_type = "VPC"
+	endpoint_details {
+        vpc_id                 = "${aws_vpc.test.id}"
+        subnet_ids             = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
+        address_allocation_ids = ["${aws_eip.a.id}", "${aws_eip.b.id}"]
 	}
 }
 `
