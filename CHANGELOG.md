@@ -11,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * service/efs: Generate proper `dns_name` attribute hostname suffix in AWS China, AWS C2S, and AWS SC2S partitions [GH-11746]
+* resource/aws_ssm_parameter: Prevent `KeyId` error when switching `type` value from `SecureString` to `String` [GH-10819]
 
 ## 2.46.0 (January 23, 2020)
 
