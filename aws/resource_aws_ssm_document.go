@@ -164,6 +164,9 @@ func resourceAwsSsmDocument() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ssm.DocumentPermissionTypeShare,
+							}, false),
 						},
 						"account_ids": {
 							Type:     schema.TypeString,
