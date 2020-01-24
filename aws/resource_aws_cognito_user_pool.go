@@ -65,10 +65,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							},
 						},
 						"unused_account_validity_days": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      7,
-							ValidateFunc: validation.IntBetween(0, 90),
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Deprecated:    "Use password_policy.temporary_password_validity_days instead",
+							ValidateFunc:  validation.IntBetween(0, 90),
+							ConflictsWith: []string{"password_policy.0.temporary_password_validity_days"},
 						},
 					},
 				},
@@ -294,6 +295,12 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"require_uppercase": {
 							Type:     schema.TypeBool,
 							Optional: true,
+						},
+						"temporary_password_validity_days": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntBetween(0, 365),
+							ConflictsWith: []string{"admin_create_user_config.0.unused_account_validity_days"},
 						},
 					},
 				},
@@ -946,6 +953,11 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
+			return resource.RetryableError(err)
+		}
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") {
+			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool without UnusedAccountValidityDays", err)
+			params.AdminCreateUserConfig.UnusedAccountValidityDays = nil
 			return resource.RetryableError(err)
 		}
 

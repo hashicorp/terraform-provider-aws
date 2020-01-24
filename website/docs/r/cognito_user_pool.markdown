@@ -48,7 +48,7 @@ The following arguments are supported:
 
   * `allow_admin_create_user_only` (Optional) - Set to True if only the administrator is allowed to create user profiles. Set to False if users can sign themselves up via an app.
   * `invite_message_template` (Optional) - The [invite message template structure](#invite-message-template).
-  * `unused_account_validity_days` (Optional) - The user account expiration limit, in days, after which the account is no longer usable.
+  * `unused_account_validity_days` (Optional) - **DEPRECATED** Use password_policy.temporary_password_validity_days instead - The user account expiration limit, in days, after which the account is no longer usable.
 
 ##### Invite Message template
 
@@ -87,6 +87,7 @@ The following arguments are supported:
   * `require_numbers` (Optional) - Whether you have required users to use at least one number in their password.
   * `require_symbols` (Optional) - Whether you have required users to use at least one symbol in their password.
   * `require_uppercase` (Optional) - Whether you have required users to use at least one uppercase letter in their password.
+  * `temporary_password_validity_days` (Optional) - In the password policy you have set, refers to the number of days a temporary password is valid. If the user does not sign-in during this time, their password will need to be reset by an administrator.
 
 #### Schema Attributes
 
