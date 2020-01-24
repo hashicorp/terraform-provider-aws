@@ -147,6 +147,7 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	region := meta.(*AWSClient).region
-	err = d.Set("dns_name", resourceAwsEfsDnsName(*fs.FileSystemId, region))
+	dnsSuffix := meta.(*AWSClient).dnsSuffix
+	err = d.Set("dns_name", resourceAwsEfsDnsName(*fs.FileSystemId, region, dnsSuffix))
 	return err
 }

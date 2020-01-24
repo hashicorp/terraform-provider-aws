@@ -221,7 +221,8 @@ func resourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	region := meta.(*AWSClient).region
-	if err := d.Set("dns_name", resourceAwsEfsMountTargetDnsName(aws.StringValue(mt.FileSystemId), region)); err != nil {
+	dnsSuffix := meta.(*AWSClient).dnsSuffix
+	if err := d.Set("dns_name", resourceAwsEfsMountTargetDnsName(aws.StringValue(mt.FileSystemId), region, dnsSuffix)); err != nil {
 		return fmt.Errorf("error setting dns_name: %s", err)
 	}
 
@@ -303,8 +304,8 @@ func waitForDeleteEfsMountTarget(conn *efs.EFS, id string, timeout time.Duration
 	return err
 }
 
-func resourceAwsEfsMountTargetDnsName(fileSystemId, region string) string {
-	return fmt.Sprintf("%s.efs.%s.amazonaws.com", fileSystemId, region)
+func resourceAwsEfsMountTargetDnsName(fileSystemId, region string, dnsSuffix string) string {
+	return fmt.Sprintf("%s.efs.%s.%s", fileSystemId, region, dnsSuffix)
 }
 
 func hasEmptyMountTargets(mto *efs.DescribeMountTargetsOutput) bool {

@@ -308,7 +308,8 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	region := meta.(*AWSClient).region
-	if err := d.Set("dns_name", resourceAwsEfsDnsName(aws.StringValue(fs.FileSystemId), region)); err != nil {
+	dnsSuffix := meta.(*AWSClient).dnsSuffix
+	if err := d.Set("dns_name", resourceAwsEfsDnsName(aws.StringValue(fs.FileSystemId), region, dnsSuffix)); err != nil {
 		return fmt.Errorf("error setting dns_name: %s", err)
 	}
 
@@ -385,8 +386,8 @@ func hasEmptyFileSystems(fs *efs.DescribeFileSystemsOutput) bool {
 	return true
 }
 
-func resourceAwsEfsDnsName(fileSystemId, region string) string {
-	return fmt.Sprintf("%s.efs.%s.amazonaws.com", fileSystemId, region)
+func resourceAwsEfsDnsName(fileSystemId, region string, dnsSuffix string) string {
+	return fmt.Sprintf("%s.efs.%s.%s", fileSystemId, region, dnsSuffix)
 }
 
 func resourceEfsFileSystemCreateUpdateRefreshFunc(id string, conn *efs.EFS) resource.StateRefreshFunc {
