@@ -202,7 +202,7 @@ func TestAccAWSSSMParameter_updateType(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterBasicConfigTypeUpdated(name, "String", "test2"),
+				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
@@ -536,20 +536,6 @@ resource "aws_ssm_parameter" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccAWSSSMParameterBasicConfigTypeUpdated(rName, pType, value string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_parameter" "test" {
-  name  = "%s"
-  type  = "%s"
-  value = "%s"
-
-  tags = {
-    Name = "My Parameter"
-  }
-}
-`, rName, pType, value)
 }
 
 func testAccAWSSSMParameterBasicConfigOverwrite(rName, pType, value string) string {
