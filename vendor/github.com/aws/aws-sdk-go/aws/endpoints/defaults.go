@@ -2207,6 +2207,7 @@ var awsPartition = partition{
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
 				"eu-west-3":      endpoint{},
+				"me-south-1":     endpoint{},
 				"sa-east-1":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
@@ -4518,6 +4519,13 @@ var awscnPartition = partition{
 				"cn-northwest-1": endpoint{},
 			},
 		},
+		"elasticfilesystem": service{
+
+			Endpoints: endpoints{
+				"cn-north-1":     endpoint{},
+				"cn-northwest-1": endpoint{},
+			},
+		},
 		"elasticloadbalancing": service{
 			Defaults: endpoint{
 				Protocols: []string{"https"},
@@ -5007,6 +5015,15 @@ var awsusgovPartition = partition{
 				"us-gov-west-1": endpoint{
 					Protocols: []string{"http", "https"},
 				},
+			},
+		},
+		"autoscaling-plans": service{
+			Defaults: endpoint{
+				Protocols: []string{"http", "https"},
+			},
+			Endpoints: endpoints{
+				"us-gov-east-1": endpoint{},
+				"us-gov-west-1": endpoint{},
 			},
 		},
 		"clouddirectory": service{
