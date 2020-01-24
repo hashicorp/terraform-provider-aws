@@ -30,6 +30,7 @@ The following arguments are supported:
 * `file_system_id` - (Optional) The ID that identifies the file system (e.g. fs-ccfc0d65).
 * `creation_token` - (Optional) Restricts the list to the file system with this creation token.
 
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -40,3 +41,9 @@ In addition to all arguments above, the following attributes are exported:
 * `encrypted` - Whether EFS is encrypted.
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `dns_name` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
+* `lifecycle_policy` - A file system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object.
+* `performance_mode` - The file system performance mode.
+* `provisioned_throughput_in_mibps` - The throughput, measured in MiB/s, that you want to provision for the file system.
+* `tags` -A mapping of tags to assign to the file system.
+* `throughput_mode` - Throughput mode for the file system.
+
