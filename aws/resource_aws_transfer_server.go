@@ -205,7 +205,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 				return err
 			}
 			if err := transferServerWaitForServerOffline(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-				return fmt.Errorf("error waiting for Trasfer Server (%s) stop: %s", d.Id(), err)
+				return fmt.Errorf("error waiting for Trasfer Server (%s) to stop: %s", d.Id(), err)
 			}
 			updateOpts := &transfer.UpdateServerInput{
 				ServerId: aws.String(d.Id()),
@@ -231,7 +231,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 				return err
 			}
 			if err := transferServerWaitForServerOnline(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-				return fmt.Errorf("error waiting for Trasfer Server (%s) creation: %s", d.Id(), err)
+				return fmt.Errorf("error waiting for Trasfer Server (%s) to start: %s", d.Id(), err)
 			}
 		}
 	}
@@ -336,6 +336,9 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			if err := stopTransferServer(d, conn); err != nil {
 				return err
 			}
+			if err := transferServerWaitForServerOffline(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+				return fmt.Errorf("error waiting for Trasfer Server (%s) to stop: %s", d.Id(), err)
+			}
 		}
 		_, err := conn.UpdateServer(updateOpts)
 		if err != nil {
@@ -349,6 +352,9 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		if stopFlag {
 			if err := startTransferServer(d, conn); err != nil {
 				return err
+			}
+			if err := transferServerWaitForServerOnline(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+				return fmt.Errorf("error waiting for Trasfer Server (%s) to start: %s", d.Id(), err)
 			}
 		}
 	}
