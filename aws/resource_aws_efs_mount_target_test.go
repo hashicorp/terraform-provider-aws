@@ -180,6 +180,16 @@ func TestResourceAWSEFSMountTarget_mountTargetDnsName(t *testing.T) {
 	}
 }
 
+func TestResourceAWSEFSMountTarget_mountTargetDnsNameCn(t *testing.T) {
+	actual := resourceAwsEfsMountTargetDnsName("fs-123456ab", "cn-north-1")
+
+	expected := "fs-123456ab.efs.cn-north-1.amazonaws.com.cn"
+	if actual != expected {
+		t.Fatalf("Expected EFS mount target DNS name to be %s, got %s",
+			expected, actual)
+	}
+}
+
 func TestResourceAWSEFSMountTarget_hasEmptyMountTargets(t *testing.T) {
 	mto := &efs.DescribeMountTargetsOutput{
 		MountTargets: []*efs.MountTargetDescription{},

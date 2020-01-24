@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -304,6 +305,9 @@ func waitForDeleteEfsMountTarget(conn *efs.EFS, id string, timeout time.Duration
 }
 
 func resourceAwsEfsMountTargetDnsName(fileSystemId, region string) string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && partition.ID() == endpoints.AwsCnPartitionID {
+		return fmt.Sprintf("%s.efs.%s.amazonaws.com.cn", fileSystemId, region)
+	}
 	return fmt.Sprintf("%s.efs.%s.amazonaws.com", fileSystemId, region)
 }
 
