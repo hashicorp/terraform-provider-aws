@@ -854,7 +854,7 @@ DOC
 
 func testAccAWSSSMDocumentTypePackageConfig(rName, source string, rInt int) string {
 	return fmt.Sprintf(`
-data "aws_ami" "ssm_ami" {
+data "aws_ami" "test" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
 
@@ -864,12 +864,12 @@ data "aws_ami" "ssm_ami" {
   }
 }
 
-resource "aws_iam_instance_profile" "ssm_profile" {
+resource "aws_iam_instance_profile" "test" {
   name = "ssm_profile-%s"
-  role = "${aws_iam_role.ssm_role.name}"
+  role = "${aws_iam_role.test.name}"
 }
 
-resource "aws_iam_role" "ssm_role" {
+resource "aws_iam_role" "test" {
   name = "ssm_role-%s"
   path = "/"
 
@@ -890,23 +890,23 @@ resource "aws_iam_role" "ssm_role" {
 EOF
 }
 
-resource "aws_s3_bucket" "object_bucket" {
-	bucket = "tf-object-test-bucket-%d"
-  }
+resource "aws_s3_bucket" "test" {
+  bucket = "tf-object-test-bucket-%d"
+}
 
-  resource "aws_s3_bucket_object" "object" {
-	bucket = "${aws_s3_bucket.object_bucket.bucket}"
-	key = "test.zip"
-	source       = "%s"
-	content_type = "binary/octet-stream"
-  }
+resource "aws_s3_bucket_object" "test" {
+  bucket       = "${aws_s3_bucket.test.bucket}"
+  key          = "test.zip"
+  source       = %q
+  content_type = "binary/octet-stream"
+}
 
 resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Package"
   attachments_source {
 	key = "SourceUrl"
-	values = ["s3://${aws_s3_bucket.object_bucket.bucket}/test.zip"]
+	values = ["s3://${aws_s3_bucket.test.bucket}/test.zip"]
   }
 
   content = <<DOC
@@ -914,7 +914,7 @@ resource "aws_ssm_document" "test" {
 	   "description": "Systems Manager Package Document Test",
 	   "schemaVersion": "2.0",
 	   "version": "0.1",
-	   "assumeRole": "${aws_iam_role.ssm_role.arn}",
+	   "assumeRole": "${aws_iam_role.test.arn}",
 	   "files": {
 		   "test.zip": {
 			   "checksums": {
