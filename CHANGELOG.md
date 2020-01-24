@@ -7,6 +7,7 @@ NOTES:
 ENHANCEMENTS:
 
 * data-source/aws_efs_file_system: Add `lifecycle_policy`, `provisioned_throughput_in_mibps`, and `throughput_mode` attributes [GH-11647]
+* resource/aws_ssm_maintenance_window: Add `description` argument [GH-11478]
 
 BUG FIXES:
 
