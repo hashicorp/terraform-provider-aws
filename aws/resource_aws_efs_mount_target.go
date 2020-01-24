@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -222,7 +221,8 @@ func resourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	region := meta.(*AWSClient).region
-	if err := d.Set("dns_name", resourceAwsEfsMountTargetDnsName(aws.StringValue(mt.FileSystemId), region)); err != nil {
+	dnsSuffix := meta.(*AWSClient).dnsSuffix
+	if err := d.Set("dns_name", resourceAwsEfsMountTargetDnsName(aws.StringValue(mt.FileSystemId), region, dnsSuffix)); err != nil {
 		return fmt.Errorf("error setting dns_name: %s", err)
 	}
 
@@ -304,11 +304,8 @@ func waitForDeleteEfsMountTarget(conn *efs.EFS, id string, timeout time.Duration
 	return err
 }
 
-func resourceAwsEfsMountTargetDnsName(fileSystemId, region string) string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && partition.ID() == endpoints.AwsCnPartitionID {
-		return fmt.Sprintf("%s.efs.%s.amazonaws.com.cn", fileSystemId, region)
-	}
-	return fmt.Sprintf("%s.efs.%s.amazonaws.com", fileSystemId, region)
+func resourceAwsEfsMountTargetDnsName(fileSystemId, region string, dnsSuffix string) string {
+	return fmt.Sprintf("%s.efs.%s.%s", fileSystemId, region, dnsSuffix)
 }
 
 func hasEmptyMountTargets(mto *efs.DescribeMountTargetsOutput) bool {

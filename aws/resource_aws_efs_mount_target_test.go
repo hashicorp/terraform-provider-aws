@@ -171,19 +171,9 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 }
 
 func TestResourceAWSEFSMountTarget_mountTargetDnsName(t *testing.T) {
-	actual := resourceAwsEfsMountTargetDnsName("fs-123456ab", "non-existent-1")
+	actual := resourceAwsEfsMountTargetDnsName("fs-123456ab", "us-west-2", "amazonaws.com")
 
-	expected := "fs-123456ab.efs.non-existent-1.amazonaws.com"
-	if actual != expected {
-		t.Fatalf("Expected EFS mount target DNS name to be %s, got %s",
-			expected, actual)
-	}
-}
-
-func TestResourceAWSEFSMountTarget_mountTargetDnsNameCn(t *testing.T) {
-	actual := resourceAwsEfsMountTargetDnsName("fs-123456ab", "cn-north-1")
-
-	expected := "fs-123456ab.efs.cn-north-1.amazonaws.com.cn"
+	expected := "fs-123456ab.efs.us-west-2.amazonaws.com"
 	if actual != expected {
 		t.Fatalf("Expected EFS mount target DNS name to be %s, got %s",
 			expected, actual)
