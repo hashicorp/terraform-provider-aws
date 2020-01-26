@@ -93,14 +93,18 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"require_https": {
+						"enforce_https": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
 						"tls_security_policy": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "Policy-Min-TLS-1-2-2019-07",
+							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								elasticsearch.TLSSecurityPolicyPolicyMinTls10201907,
+								elasticsearch.TLSSecurityPolicyPolicyMinTls12201907,
+							}, false),
 						},
 					},
 				},
@@ -463,23 +467,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		options := v.([]interface{})
-
-		if len(options) == 1 {
-			if options[0] == nil {
-				return fmt.Errorf("At least one field is expected inside domain_endpoint_options")
-			}
-
-			s := options[0].(map[string]interface{})
-			domainOptions := elasticsearch.DomainEndpointOptions{}
-			if requireHTTPS, ok := s["require_https"]; ok {
-				domainOptions.EnforceHTTPS = aws.Bool(requireHTTPS.(bool))
-			}
-			if tls, ok := s["tls_security_policy"]; ok {
-				domainOptions.TLSSecurityPolicy = aws.String(tls.(string))
-			}
-			input.SetDomainEndpointOptions(&domainOptions)
-		}
+		input.DomainEndpointOptions = expandESDomainEndpointOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cognito_options"); ok {
@@ -681,11 +669,8 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		d.Set("log_publishing_options", m)
 	}
 
-	if ds.DomainEndpointOptions != nil {
-		m := make(map[string]interface{})
-		m["require_https"] = ds.DomainEndpointOptions.EnforceHTTPS
-		m["tls_security_policy"] = ds.DomainEndpointOptions.TLSSecurityPolicy
-		d.Set("domain_endpoint_options", m)
+	if err := d.Set("domain_endpoint_options", flattenESDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
+		return fmt.Errorf("error setting domain_endpoint_options: %s", err)
 	}
 
 	d.Set("arn", ds.ARN)
@@ -730,26 +715,8 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		input.AdvancedOptions = stringMapToPointers(d.Get("advanced_options").(map[string]interface{}))
 	}
 
-	if d.HasChange("require_https") {
-		input.SetDomainEndpointOptions(&elasticsearch.DomainEndpointOptions{
-			EnforceHTTPS: aws.Bool(d.Get("require_https").(bool)),
-		})
-	}
-
 	if d.HasChange("domain_endpoint_options") {
-		options := d.Get("domain_endpoint_options").([]interface{})
-
-		if len(options) == 1 {
-			s := options[0].(map[string]interface{})
-			domainOptions := elasticsearch.DomainEndpointOptions{}
-			if requireHTTPS, ok := s["require_https"]; ok {
-				domainOptions.EnforceHTTPS = aws.Bool(requireHTTPS.(bool))
-			}
-			if tls, ok := s["tls_security_policy"]; ok {
-				domainOptions.TLSSecurityPolicy = aws.String(tls.(string))
-			}
-			input.SetDomainEndpointOptions(&domainOptions)
-		}
+		input.DomainEndpointOptions = expandESDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
 	}
 
 	if d.HasChange("ebs_options") || d.HasChange("cluster_config") {

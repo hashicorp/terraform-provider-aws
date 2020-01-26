@@ -97,13 +97,23 @@ func TestAccAWSElasticSearchDomain_RequireHTTPS(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_RequireHTTPS(ri),
+				Config: testAccESDomainConfig_DomainEndpointOptions(ri, true, "Policy-Min-TLS-1-0-2019-07"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
+				),
+			},
+			{
+				ResourceName:      "aws_elasticsearch_domain.example",
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccESDomainConfig_DomainEndpointOptions(ri, true, "Policy-Min-TLS-1-2-2019-07"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
 					testAccCheckESDomainEndpointOptions(true, "Policy-Min-TLS-1-2-2019-07", &domain),
-					resource.TestCheckResourceAttr(
-						"aws_elasticsearch_domain.example", "elasticsearch_version", "1.5"),
-					resource.TestMatchResourceAttr("aws_elasticsearch_domain.example", "kibana_endpoint", regexp.MustCompile(".*es.amazonaws.com/_plugin/kibana/")),
 				),
 			},
 		},
@@ -1012,21 +1022,22 @@ resource "aws_elasticsearch_domain" "test" {
 `, randInt)
 }
 
-func testAccESDomainConfig_RequireHTTPS(randInt int) string {
+func testAccESDomainConfig_DomainEndpointOptions(randInt int, enforceHttps bool, tlsSecurityPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
-  domain_name = "tf-test-%d"
-	
-	domain_endpoint_options {
-		require_https = true
-	}	
+  domain_name = "tf-test-%[1]d"
+
+  domain_endpoint_options {
+    enforce_https       = %[2]t
+    tls_security_policy = %[3]q
+  }
 
   ebs_options {
     ebs_enabled = true
     volume_size = 10
   }
 }
-`, randInt)
+`, randInt, enforceHttps, tlsSecurityPolicy)
 }
 
 func testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName string, availabilityZoneCount int) string {

@@ -1313,6 +1313,38 @@ func flattenESCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]inter
 	return []map[string]interface{}{m}
 }
 
+func expandESDomainEndpointOptions(l []interface{}) *elasticsearch.DomainEndpointOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	domainEndpointOptions := &elasticsearch.DomainEndpointOptions{}
+
+	if v, ok := m["enforce_https"].(bool); ok {
+		domainEndpointOptions.EnforceHTTPS = aws.Bool(v)
+	}
+
+	if v, ok := m["tls_security_policy"].(string); ok {
+		domainEndpointOptions.TLSSecurityPolicy = aws.String(v)
+	}
+
+	return domainEndpointOptions
+}
+
+func flattenESDomainEndpointOptions(domainEndpointOptions *elasticsearch.DomainEndpointOptions) []interface{} {
+	if domainEndpointOptions == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"enforce_https":       aws.BoolValue(domainEndpointOptions.EnforceHTTPS),
+		"tls_security_policy": aws.StringValue(domainEndpointOptions.TLSSecurityPolicy),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenESSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []map[string]interface{} {
 	if snapshotOptions == nil {
 		return []map[string]interface{}{}
