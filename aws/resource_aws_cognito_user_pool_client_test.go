@@ -233,6 +233,8 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", clientName),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
 				),
 			},
 			{
@@ -249,10 +251,12 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCognitoUserPoolClientConfigAnalyticsConfig(userPoolName, clientName),
+				Config: testAccAWSCognitoUserPoolClientConfigAnalyticsConfigShareUserData(userPoolName, clientName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", clientName),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "true"),
 				),
 			},
 		},
@@ -411,7 +415,7 @@ resource "aws_cognito_user_pool_client" "test" {
 `, userPoolName, clientName, refreshTokenValidity)
 }
 
-func testAccAWSCognitoUserPoolClientConfigAnalyticsConfig(userPoolName, clientName string) string {
+func testAccAWSCognitoUserPoolClientConfigAnalyticsConfigBase(userPoolName, clientName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -463,16 +467,36 @@ resource "aws_iam_role_policy" "test" {
   }
   EOF
 }
+`, userPoolName, clientName)
+}
 
+func testAccAWSCognitoUserPoolClientConfigAnalyticsConfig(userPoolName, clientName string) string {
+	return testAccAWSCognitoUserPoolClientConfigAnalyticsConfigBase(userPoolName, clientName) + fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
-  name                = "%[2]s"
+  name                = "%[1]s"
   user_pool_id        = "${aws_cognito_user_pool.test.id}"
 
   analytics_configuration {
     application_id = "${aws_pinpoint_app.test.application_id}"
-    external_id    = "%[2]s"
+    external_id    = "%[1]s"
     role_arn       = "${aws_iam_role.test.arn}"
   }
 }
-`, userPoolName, clientName)
+`, clientName)
+}
+
+func testAccAWSCognitoUserPoolClientConfigAnalyticsConfigShareUserData(userPoolName, clientName string) string {
+	return testAccAWSCognitoUserPoolClientConfigAnalyticsConfigBase(userPoolName, clientName) + fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name                = "%[1]s"
+  user_pool_id        = "${aws_cognito_user_pool.test.id}"
+
+  analytics_configuration {
+    application_id   = "${aws_pinpoint_app.test.application_id}"
+    external_id      = "%[1]s"
+    role_arn         = "${aws_iam_role.test.arn}"
+    user_data_shared = true
+  }
+}
+`, clientName)
 }
