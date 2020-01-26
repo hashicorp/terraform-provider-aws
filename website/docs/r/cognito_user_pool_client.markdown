@@ -60,6 +60,13 @@ The following arguments are supported:
 * `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client.
 * `user_pool_id` - (Required) The user pool the client belongs to.
 * `write_attributes` - (Optional) List of user pool attributes the application client can write to.
+* `analytics_configuration` - (Optional) The Amazon Pinpoint analytics configuration for collecting metrics for this user pool.
+
+### Analytics Configuration
+* `application_id` - (Required) The application ID for an Amazon Pinpoint application.
+* `external_id`  - (Required) An ID for the Analytics Configuration.
+* `role_arn` - (Required) The ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics.
+* `user_data_shared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
 
 ## Attribute Reference
 
