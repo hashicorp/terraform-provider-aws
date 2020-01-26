@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -25,7 +26,7 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolClientConfig_basic(userPoolName, clientName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", clientName),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.245201344", "ADMIN_NO_SRP_AUTH"),
@@ -42,6 +43,7 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
@@ -53,7 +55,7 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolClientConfig_RefreshTokenValidity(rName, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "60"),
 				),
 			},
@@ -66,7 +68,7 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolClientConfig_RefreshTokenValidity(rName, 120),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "120"),
 				),
 			},
@@ -75,6 +77,7 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
@@ -86,7 +89,7 @@ func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolClientConfig_Name(rName, "name1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", "name1"),
 				),
 			},
@@ -99,7 +102,7 @@ func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolClientConfig_Name(rName, "name2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", "name2"),
 				),
 			},
@@ -108,6 +111,7 @@ func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -120,7 +124,7 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", clientName),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.1728632605", "CUSTOM_AUTH_FLOW_ONLY"),
@@ -162,6 +166,7 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -177,7 +182,7 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName, 299),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", clientName),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.1728632605", "CUSTOM_AUTH_FLOW_ONLY"),
@@ -219,6 +224,7 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -231,7 +237,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolClientConfigAnalyticsConfig(userPoolName, clientName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", clientName),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
@@ -246,18 +252,41 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolClientConfig_basic(userPoolName, clientName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccAWSCognitoUserPoolClientConfigAnalyticsConfigShareUserData(userPoolName, clientName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", clientName),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "true"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_basic(userPoolName, clientName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					testAccCheckAWSCognitoUserPoolClientDisappears(&client),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -320,7 +349,7 @@ func testAccCheckAWSCognitoUserPoolClientDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSCognitoUserPoolClientExists(name string) resource.TestCheckFunc {
+func testAccCheckAWSCognitoUserPoolClientExists(name string, client *cognitoidentityprovider.UserPoolClientType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -338,7 +367,27 @@ func testAccCheckAWSCognitoUserPoolClientExists(name string) resource.TestCheckF
 			UserPoolId: aws.String(rs.Primary.Attributes["user_pool_id"]),
 		}
 
-		_, err := conn.DescribeUserPoolClient(params)
+		resp, err := conn.DescribeUserPoolClient(params)
+		if err != nil {
+			return err
+		}
+
+		*client = *resp.UserPoolClient
+
+		return nil
+	}
+}
+
+func testAccCheckAWSCognitoUserPoolClientDisappears(client *cognitoidentityprovider.UserPoolClientType) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+
+		params := &cognitoidentityprovider.DeleteUserPoolClientInput{
+			ClientId:   client.ClientId,
+			UserPoolId: client.UserPoolId,
+		}
+
+		_, err := conn.DeleteUserPoolClient(params)
 
 		return err
 	}
