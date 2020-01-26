@@ -147,6 +147,20 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 			}
 		}
 
+		efsConfig, ok := data["efs_volume_configuration"].([]interface{})
+		if ok && len(efsConfig) > 0 {
+			config := efsConfig[0].(map[string]interface{})
+			l.EfsVolumeConfiguration = &ecs.EFSVolumeConfiguration{}
+
+			if v, ok := config["file_system_id"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.FileSystemId = aws.String(v)
+			}
+
+			if v, ok := config["root_directory"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.RootDirectory = aws.String(v)
+			}
+		}
+
 		volumes = append(volumes, l)
 	}
 
@@ -685,6 +699,10 @@ func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
 			l["docker_volume_configuration"] = flattenDockerVolumeConfiguration(volume.DockerVolumeConfiguration)
 		}
 
+		if volume.DockerVolumeConfiguration != nil {
+			l["efs_volume_configuration"] = flattenEFSVolumeConfiguration(volume.EfsVolumeConfiguration)
+		}
+
 		result = append(result, l)
 	}
 	return result
@@ -694,24 +712,41 @@ func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []i
 	var items []interface{}
 	m := make(map[string]interface{})
 
-	if config.Scope != nil {
-		m["scope"] = aws.StringValue(config.Scope)
+	if v := config.Scope; v != nil {
+		m["scope"] = aws.StringValue(v)
 	}
 
-	if config.Autoprovision != nil {
-		m["autoprovision"] = aws.BoolValue(config.Autoprovision)
+	if v := config.Autoprovision; v != nil {
+		m["autoprovision"] = aws.BoolValue(v)
 	}
 
-	if config.Driver != nil {
-		m["driver"] = aws.StringValue(config.Driver)
+	if v := config.Driver; v != nil {
+		m["driver"] = aws.StringValue(v)
 	}
 
 	if config.DriverOpts != nil {
 		m["driver_opts"] = pointersMapToStringList(config.DriverOpts)
 	}
 
-	if config.Labels != nil {
-		m["labels"] = pointersMapToStringList(config.Labels)
+	if v := config.Labels; v != nil {
+		m["labels"] = pointersMapToStringList(v)
+	}
+
+	items = append(items, m)
+	return items
+}
+
+func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interface{} {
+	var items []interface{}
+	m := make(map[string]interface{})
+	if config != nil {
+		if v := config.FileSystemId; v != nil {
+			m["file_system_id"] = aws.StringValue(v)
+		}
+
+		if v := config.RootDirectory; v != nil {
+			m["root_directory"] = aws.StringValue(v)
+		}
 	}
 
 	items = append(items, m)
@@ -2721,6 +2756,10 @@ func expandCognitoUserPoolPasswordPolicy(config map[string]interface{}) *cognito
 		configs.RequireUppercase = aws.Bool(v.(bool))
 	}
 
+	if v, ok := config["temporary_password_validity_days"]; ok {
+		configs.TemporaryPasswordValidityDays = aws.Int64(int64(v.(int)))
+	}
+
 	return configs
 }
 
@@ -2991,6 +3030,10 @@ func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPol
 
 	if s.RequireUppercase != nil {
 		m["require_uppercase"] = *s.RequireUppercase
+	}
+
+	if s.TemporaryPasswordValidityDays != nil {
+		m["temporary_password_validity_days"] = *s.TemporaryPasswordValidityDays
 	}
 
 	if len(m) > 0 {

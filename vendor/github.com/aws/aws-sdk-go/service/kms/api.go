@@ -179,7 +179,9 @@ func (c *KMS) ConnectCustomKeyStoreRequest(input *ConnectCustomKeyStoreInput) (r
 // at least one active HSM. To get the number of active HSMs in a cluster, use
 // the DescribeClusters (https://docs.aws.amazon.com/cloudhsm/latest/APIReference/API_DescribeClusters.html)
 // operation. To add HSMs to the cluster, use the CreateHsm (https://docs.aws.amazon.com/cloudhsm/latest/APIReference/API_CreateHsm.html)
-// operation.
+// operation. Also, the kmsuser crypto user (https://docs.aws.amazon.com/kms/latest/developerguide/key-store-concepts.html#concept-kmsuser)
+// (CU) must not be logged into the cluster. This prevents AWS KMS from using
+// this account to log in.
 //
 // The connection process can take an extended amount of time to complete; up
 // to 20 minutes. This operation starts the connection process, but it does
@@ -192,8 +194,7 @@ func (c *KMS) ConnectCustomKeyStoreRequest(input *ConnectCustomKeyStoreInput) (r
 // During the connection process, AWS KMS finds the AWS CloudHSM cluster that
 // is associated with the custom key store, creates the connection infrastructure,
 // connects to the cluster, logs into the AWS CloudHSM client as the kmsuser
-// crypto user (https://docs.aws.amazon.com/kms/latest/developerguide/key-store-concepts.html#concept-kmsuser)
-// (CU), and rotates its password.
+// CU, and rotates its password.
 //
 // The ConnectCustomKeyStore operation might fail for various reasons. To find
 // the reason, use the DescribeCustomKeyStores operation and see the ConnectionErrorCode
@@ -441,8 +442,8 @@ func (c *KMS) CreateAliasRequest(input *CreateAliasInput) (req *request.Request,
 //   can be retried.
 //
 //   * LimitExceededException
-//   The request was rejected because a limit was exceeded. For more information,
-//   see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
+//   The request was rejected because a quota was exceeded. For more information,
+//   see Quotas (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
 //   in the AWS Key Management Service Developer Guide.
 //
 //   * InvalidStateException
@@ -763,8 +764,8 @@ func (c *KMS) CreateGrantRequest(input *CreateGrantInput) (req *request.Request,
 //   The request was rejected because the specified grant token is not valid.
 //
 //   * LimitExceededException
-//   The request was rejected because a limit was exceeded. For more information,
-//   see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
+//   The request was rejected because a quota was exceeded. For more information,
+//   see Quotas (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
 //   in the AWS Key Management Service Developer Guide.
 //
 //   * InvalidStateException
@@ -851,7 +852,8 @@ func (c *KMS) CreateKeyRequest(input *CreateKeyInput) (req *request.Request, out
 //    KMS unencrypted. To use the CMK, you must call AWS KMS. You can use a
 //    symmetric CMK to encrypt and decrypt small amounts of data, but they are
 //    typically used to generate data keys (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#data-keys)
-//    or data key pairs. For details, see GenerateDataKey and GenerateDataKeyPair.
+//    and data keys pairs (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#data-key-pairs).
+//    For details, see GenerateDataKey and GenerateDataKeyPair.
 //
 //    * Asymmetric CMKs can contain an RSA key pair or an Elliptic Curve (ECC)
 //    key pair. The private key in an asymmetric CMK never leaves AWS KMS unencrypted.
@@ -932,8 +934,8 @@ func (c *KMS) CreateKeyRequest(input *CreateKeyInput) (req *request.Request, out
 //   can be retried.
 //
 //   * LimitExceededException
-//   The request was rejected because a limit was exceeded. For more information,
-//   see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
+//   The request was rejected because a quota was exceeded. For more information,
+//   see Quotas (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
 //   in the AWS Key Management Service Developer Guide.
 //
 //   * TagException
@@ -2225,8 +2227,8 @@ func (c *KMS) EnableKeyRequest(input *EnableKeyInput) (req *request.Request, out
 //   can be retried.
 //
 //   * LimitExceededException
-//   The request was rejected because a limit was exceeded. For more information,
-//   see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
+//   The request was rejected because a quota was exceeded. For more information,
+//   see Quotas (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
 //   in the AWS Key Management Service Developer Guide.
 //
 //   * InvalidStateException
@@ -2612,7 +2614,8 @@ func (c *KMS) GenerateDataKeyRequest(input *GenerateDataKeyInput) (req *request.
 // data key.
 //
 // To generate a data key, specify the symmetric CMK that will be used to encrypt
-// the data key. You cannot use an asymmetric CMK to generate data keys.
+// the data key. You cannot use an asymmetric CMK to generate data keys. To
+// get the type of your CMK, use the DescribeKey operation.
 //
 // You must also specify the length of the data key. Use either the KeySpec
 // or NumberOfBytes parameters (but not both). For 128-bit and 256-bit data
@@ -3107,15 +3110,11 @@ func (c *KMS) GenerateDataKeyWithoutPlaintextRequest(input *GenerateDataKeyWitho
 //
 // To generate a data key, you must specify the symmetric customer master key
 // (CMK) that is used to encrypt the data key. You cannot use an asymmetric
-// CMK to generate a data key. To get the type of your CMK, use the KeySpec
-// field in the DescribeKey response. You must also specify the length of the
-// data key using either the KeySpec or NumberOfBytes field (but not both).
-// For common key lengths (128-bit and 256-bit symmetric keys), use the KeySpec
-// parameter.
+// CMK to generate a data key. To get the type of your CMK, use the DescribeKey
+// operation.
 //
-// If the operation succeeds, you will find the plaintext copy of the data key
-// in the Plaintext field of the response, and the encrypted copy of the data
-// key in the CiphertextBlob field.
+// If the operation succeeds, you will find the encrypted copy of the data key
+// in the CiphertextBlob field.
 //
 // You can use the optional encryption context to add additional security to
 // the encryption operation. If you specify an EncryptionContext, you must specify
@@ -4079,7 +4078,7 @@ func (c *KMS) ListAliasesRequest(input *ListAliasesInput) (req *request.Request,
 // The response might also include aliases that have no TargetKeyId field. These
 // are predefined aliases that AWS has created but has not yet associated with
 // a CMK. Aliases that AWS creates in your account, including predefined aliases,
-// do not count against your AWS KMS aliases limit (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html#aliases-limit).
+// do not count against your AWS KMS aliases quota (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html#aliases-limit).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4934,8 +4933,8 @@ func (c *KMS) PutKeyPolicyRequest(input *PutKeyPolicyInput) (req *request.Reques
 //   can be retried.
 //
 //   * LimitExceededException
-//   The request was rejected because a limit was exceeded. For more information,
-//   see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
+//   The request was rejected because a quota was exceeded. For more information,
+//   see Quotas (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
 //   in the AWS Key Management Service Developer Guide.
 //
 //   * InvalidStateException
@@ -5770,8 +5769,8 @@ func (c *KMS) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 //   in the AWS Key Management Service Developer Guide .
 //
 //   * LimitExceededException
-//   The request was rejected because a limit was exceeded. For more information,
-//   see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
+//   The request was rejected because a quota was exceeded. For more information,
+//   see Quotas (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
 //   in the AWS Key Management Service Developer Guide.
 //
 //   * TagException
@@ -7150,11 +7149,13 @@ type CreateCustomKeyStoreInput struct {
 	// in the specified AWS CloudHSM cluster. AWS KMS logs into the cluster as this
 	// user to manage key material on your behalf.
 	//
+	// The password must be a string of 7 to 32 characters. Its value is case sensitive.
+	//
 	// This parameter tells AWS KMS the kmsuser account password; it does not change
 	// the password in the AWS CloudHSM cluster.
 	//
 	// KeyStorePassword is a required field
-	KeyStorePassword *string `min:"1" type:"string" required:"true" sensitive:"true"`
+	KeyStorePassword *string `min:"7" type:"string" required:"true" sensitive:"true"`
 
 	// Enter the content of the trust anchor certificate for the cluster. This is
 	// the content of the customerCA.crt file that you created when you initialized
@@ -7192,8 +7193,8 @@ func (s *CreateCustomKeyStoreInput) Validate() error {
 	if s.KeyStorePassword == nil {
 		invalidParams.Add(request.NewErrParamRequired("KeyStorePassword"))
 	}
-	if s.KeyStorePassword != nil && len(*s.KeyStorePassword) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("KeyStorePassword", 1))
+	if s.KeyStorePassword != nil && len(*s.KeyStorePassword) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("KeyStorePassword", 7))
 	}
 	if s.TrustAnchorCertificate == nil {
 		invalidParams.Add(request.NewErrParamRequired("TrustAnchorCertificate"))
@@ -7489,19 +7490,26 @@ type CreateKeyInput struct {
 	// of AWS KMS with the isolation and control of a single-tenant key store.
 	CustomKeyStoreId *string `min:"1" type:"string"`
 
-	// Specifies the type of CMK to create. The CustomerMasterKeySpec determines
-	// whether the CMK contains a symmetric key or an asymmetric key pair. It also
-	// determines the encryption algorithms or signing algorithms that the CMK supports.
-	// You can't change the CustomerMasterKeySpec after the CMK is created. To further
-	// restrict the algorithms that can be used with the CMK, use its key policy
-	// or IAM policy.
-	//
-	// For help with choosing a key spec for your CMK, see Selecting a Customer
-	// Master Key Spec (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html#cmk-key-spec)
+	// Specifies the type of CMK to create. The default value, SYMMETRIC_DEFAULT,
+	// creates a CMK with a 256-bit symmetric key for encryption and decryption.
+	// For help choosing a key spec for your CMK, see How to Choose Your CMK Configuration
+	// (https://docs.aws.amazon.com/kms/latest/developerguide/symm-asymm-choose.html)
 	// in the AWS Key Management Service Developer Guide.
 	//
-	// The default value, SYMMETRIC_DEFAULT, creates a CMK with a 256-bit symmetric
-	// key.
+	// The CustomerMasterKeySpec determines whether the CMK contains a symmetric
+	// key or an asymmetric key pair. It also determines the encryption algorithms
+	// or signing algorithms that the CMK supports. You can't change the CustomerMasterKeySpec
+	// after the CMK is created. To further restrict the algorithms that can be
+	// used with the CMK, use a condition key in its key policy or IAM policy. For
+	// more information, see kms:EncryptionAlgorithm (https://docs.aws.amazon.com/kms/latest/developerguide/policy-conditions.html#conditions-kms-encryption-algorithm)
+	// or kms:Signing Algorithm (https://docs.aws.amazon.com/kms/latest/developerguide/policy-conditions.html#conditions-kms-signing-algorithm)
+	// in the AWS Key Management Service Developer Guide.
+	//
+	// AWS services that are integrated with AWS KMS (http://aws.amazon.com/kms/features/#AWS_Service_Integration)
+	// use symmetric CMKs to protect your data. These services do not support asymmetric
+	// CMKs. For help determining whether a CMK is symmetric or asymmetric, see
+	// Identifying Symmetric and Asymmetric CMKs (https://docs.aws.amazon.com/kms/latest/developerguide/find-symm-asymm.html)
+	// in the AWS Key Management Service Developer Guide.
 	//
 	// AWS KMS supports the following key specs for CMKs:
 	//
@@ -7578,7 +7586,7 @@ type CreateKeyInput struct {
 	// to the CMK. For more information, see Default Key Policy (https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default)
 	// in the AWS Key Management Service Developer Guide.
 	//
-	// The key policy size limit is 32 kilobytes (32768 bytes).
+	// The key policy size quota is 32 kilobytes (32768 bytes).
 	Policy *string `min:"1" type:"string"`
 
 	// One or more tags. Each tag consists of a tag key and a tag value. Both the
@@ -7956,7 +7964,12 @@ type CustomKeyStoresListEntry struct {
 	// the custom key store.
 	CloudHsmClusterId *string `min:"19" type:"string"`
 
-	// Describes the connection error. Valid values are:
+	// Describes the connection error. This field appears in the response only when
+	// the ConnectionState is FAILED. For help resolving these errors, see How to
+	// Fix a Connection Failure (https://docs.aws.amazon.com/kms/latest/developerguide/fix-keystore.html#fix-keystore-failed)
+	// in AWS Key Management Service Developer Guide.
+	//
+	// Valid values are:
 	//
 	//    * CLUSTER_NOT_FOUND - AWS KMS cannot find the AWS CloudHSM cluster with
 	//    the specified cluster ID.
@@ -7970,7 +7983,10 @@ type CustomKeyStoresListEntry struct {
 	//    the custom key store before trying to connect again.
 	//
 	//    * INVALID_CREDENTIALS - AWS KMS does not have the correct password for
-	//    the kmsuser crypto user in the AWS CloudHSM cluster.
+	//    the kmsuser crypto user in the AWS CloudHSM cluster. Before you can connect
+	//    your custom key store to its AWS CloudHSM cluster, you must change the
+	//    kmsuser account password and update the key store password value for the
+	//    custom key store.
 	//
 	//    * NETWORK_ERRORS - Network errors are preventing AWS KMS from connecting
 	//    to the custom key store.
@@ -7978,12 +7994,23 @@ type CustomKeyStoresListEntry struct {
 	//    * USER_LOCKED_OUT - The kmsuser CU account is locked out of the associated
 	//    AWS CloudHSM cluster due to too many failed password attempts. Before
 	//    you can connect your custom key store to its AWS CloudHSM cluster, you
-	//    must change the kmsuser account password and update the password value
-	//    for the custom key store.
+	//    must change the kmsuser account password and update the key store password
+	//    value for the custom key store.
 	//
-	// For help with connection failures, see Troubleshooting Custom Key Stores
-	// (https://docs.aws.amazon.com/kms/latest/developerguide/fix-keystore.html)
-	// in the AWS Key Management Service Developer Guide.
+	//    * USER_LOGGED_IN - The kmsuser CU account is logged into the the associated
+	//    AWS CloudHSM cluster. This prevents AWS KMS from rotating the kmsuser
+	//    account password and logging into the cluster. Before you can connect
+	//    your custom key store to its AWS CloudHSM cluster, you must log the kmsuser
+	//    CU out of the cluster. If you changed the kmsuser password to log into
+	//    the cluster, you must also and update the key store password value for
+	//    the custom key store. For help, see How to Log Out and Reconnect (https://docs.aws.amazon.com/kms/latest/developerguide/fix-keystore.html#login-kmsuser-2)
+	//    in the AWS Key Management Service Developer Guide.
+	//
+	//    * USER_NOT_FOUND - AWS KMS cannot find a kmsuser CU account in the associated
+	//    AWS CloudHSM cluster. Before you can connect your custom key store to
+	//    its AWS CloudHSM cluster, you must create a kmsuser CU account in the
+	//    cluster, and then update the key store password value for the custom key
+	//    store.
 	ConnectionErrorCode *string `type:"string" enum:"ConnectionErrorCodeType"`
 
 	// Indicates whether the custom key store is connected to its AWS CloudHSM cluster.
@@ -7998,8 +8025,9 @@ type CustomKeyStoresListEntry struct {
 	// one active HSM.
 	//
 	// A value of FAILED indicates that an attempt to connect was unsuccessful.
-	// For help resolving a connection failure, see Troubleshooting a Custom Key
-	// Store (https://docs.aws.amazon.com/kms/latest/developerguide/fix-keystore.html)
+	// The ConnectionErrorCode field in the response indicates the cause of the
+	// failure. For help resolving a connection failure, see Troubleshooting a Custom
+	// Key Store (https://docs.aws.amazon.com/kms/latest/developerguide/fix-keystore.html)
 	// in the AWS Key Management Service Developer Guide.
 	ConnectionState *string `type:"string" enum:"ConnectionStateType"`
 
@@ -9678,7 +9706,8 @@ type GenerateDataKeyPairWithoutPlaintextInput struct {
 	GrantTokens []*string `type:"list"`
 
 	// Specifies the CMK that encrypts the private key in the data key pair. You
-	// must specify a symmetric CMK. You cannot use an asymmetric CMK.
+	// must specify a symmetric CMK. You cannot use an asymmetric CMK. To get the
+	// type of your CMK, use the DescribeKey operation.
 	//
 	// To specify a CMK, use its key ID, Amazon Resource Name (ARN), alias name,
 	// or alias ARN. When using an alias name, prefix it with "alias/".
@@ -9767,7 +9796,8 @@ type GenerateDataKeyPairWithoutPlaintextOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies the CMK that encrypted the private key in the data key pair. You
-	// must specify a symmetric CMK. You cannot use an asymmetric CMK.
+	// must specify a symmetric CMK. You cannot use an asymmetric CMK. To get the
+	// type of your CMK, use the DescribeKey operation.
 	//
 	// To specify a CMK, use its key ID, Amazon Resource Name (ARN), alias name,
 	// or alias ARN. When using an alias name, prefix it with "alias/".
@@ -11955,8 +11985,8 @@ func (s KeyUnavailableException) RequestID() string {
 	return s.respMetadata.RequestID
 }
 
-// The request was rejected because a limit was exceeded. For more information,
-// see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
+// The request was rejected because a quota was exceeded. For more information,
+// see Quotas (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
 // in the AWS Key Management Service Developer Guide.
 type LimitExceededException struct {
 	_            struct{} `type:"structure"`
@@ -12864,7 +12894,9 @@ type PutKeyPolicyInput struct {
 	//    immediately visible (https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency)
 	//    in the AWS Identity and Access Management User Guide.
 	//
-	// The key policy size limit is 32 kilobytes (32768 bytes).
+	// The key policy cannot exceed 32 kilobytes (32768 bytes). For more information,
+	// see Resource Quotas (https://docs.aws.amazon.com/kms/latest/developerguide/resource-limits.html)
+	// in the AWS Key Management Service Developer Guide.
 	//
 	// Policy is a required field
 	Policy *string `min:"1" type:"string" required:"true"`
@@ -14105,7 +14137,7 @@ type UpdateCustomKeyStoreInput struct {
 	// This parameter tells AWS KMS the current password of the kmsuser crypto user
 	// (CU). It does not set or change the password of any users in the AWS CloudHSM
 	// cluster.
-	KeyStorePassword *string `min:"1" type:"string" sensitive:"true"`
+	KeyStorePassword *string `min:"7" type:"string" sensitive:"true"`
 
 	// Changes the friendly name of the custom key store to the value that you specify.
 	// The custom key store name must be unique in the AWS account.
@@ -14134,8 +14166,8 @@ func (s *UpdateCustomKeyStoreInput) Validate() error {
 	if s.CustomKeyStoreId != nil && len(*s.CustomKeyStoreId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("CustomKeyStoreId", 1))
 	}
-	if s.KeyStorePassword != nil && len(*s.KeyStorePassword) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("KeyStorePassword", 1))
+	if s.KeyStorePassword != nil && len(*s.KeyStorePassword) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("KeyStorePassword", 7))
 	}
 	if s.NewCustomKeyStoreName != nil && len(*s.NewCustomKeyStoreName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("NewCustomKeyStoreName", 1))
@@ -14297,12 +14329,13 @@ type VerifyInput struct {
 	// KeyId is a required field
 	KeyId *string `min:"1" type:"string" required:"true"`
 
-	// Specifies the message that was signed, or a hash digest of that message.
-	// Messages can be 0-4096 bytes. To verify a larger message, provide a hash
-	// digest of the message.
+	// Specifies the message that was signed. You can submit a raw message of up
+	// to 4096 bytes, or a hash digest of the message. If you submit a digest, use
+	// the MessageType parameter with a value of DIGEST.
 	//
-	// If the digest of the message specified here is different from the message
-	// digest that was signed, the signature verification fails.
+	// If the message specified here is different from the message that was signed,
+	// the signature verification fails. A message and its hash digest are considered
+	// to be the same message.
 	//
 	// Message is automatically base64 encoded/decoded by the SDK.
 	//
@@ -14310,8 +14343,12 @@ type VerifyInput struct {
 	Message []byte `min:"1" type:"blob" required:"true" sensitive:"true"`
 
 	// Tells AWS KMS whether the value of the Message parameter is a message or
-	// message digest. To indicate a message, enter RAW. To indicate a message digest,
-	// enter DIGEST.
+	// message digest. The default value, RAW, indicates a message. To indicate
+	// a message digest, enter DIGEST.
+	//
+	// Use the DIGEST value only when the value of the Message parameter is a message
+	// digest. If you use the DIGEST value with a raw message, the security of the
+	// verification operation can be compromised.
 	MessageType *string `type:"string" enum:"MessageType"`
 
 	// The signature that the Sign operation generated.
@@ -14479,6 +14516,12 @@ const (
 
 	// ConnectionErrorCodeTypeUserLockedOut is a ConnectionErrorCodeType enum value
 	ConnectionErrorCodeTypeUserLockedOut = "USER_LOCKED_OUT"
+
+	// ConnectionErrorCodeTypeUserNotFound is a ConnectionErrorCodeType enum value
+	ConnectionErrorCodeTypeUserNotFound = "USER_NOT_FOUND"
+
+	// ConnectionErrorCodeTypeUserLoggedIn is a ConnectionErrorCodeType enum value
+	ConnectionErrorCodeTypeUserLoggedIn = "USER_LOGGED_IN"
 )
 
 const (

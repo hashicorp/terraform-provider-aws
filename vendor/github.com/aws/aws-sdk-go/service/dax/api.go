@@ -2190,6 +2190,8 @@ func (s *Cluster) SetTotalNodes(v int64) *Cluster {
 type ClusterAlreadyExistsFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2215,6 +2217,9 @@ func (s ClusterAlreadyExistsFault) Code() string {
 
 // Message returns the exception's message.
 func (s ClusterAlreadyExistsFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -2241,6 +2246,8 @@ func (s ClusterAlreadyExistsFault) RequestID() string {
 type ClusterNotFoundFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2266,6 +2273,9 @@ func (s ClusterNotFoundFault) Code() string {
 
 // Message returns the exception's message.
 func (s ClusterNotFoundFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -2293,6 +2303,8 @@ func (s ClusterNotFoundFault) RequestID() string {
 type ClusterQuotaForCustomerExceededFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2318,6 +2330,9 @@ func (s ClusterQuotaForCustomerExceededFault) Code() string {
 
 // Message returns the exception's message.
 func (s ClusterQuotaForCustomerExceededFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -3731,6 +3746,8 @@ func (s *IncreaseReplicationFactorOutput) SetCluster(v *Cluster) *IncreaseReplic
 type InsufficientClusterCapacityFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -3756,6 +3773,9 @@ func (s InsufficientClusterCapacityFault) Code() string {
 
 // Message returns the exception's message.
 func (s InsufficientClusterCapacityFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -3782,6 +3802,8 @@ func (s InsufficientClusterCapacityFault) RequestID() string {
 type InvalidARNFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -3807,6 +3829,9 @@ func (s InvalidARNFault) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidARNFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -3833,6 +3858,8 @@ func (s InvalidARNFault) RequestID() string {
 type InvalidClusterStateFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -3858,6 +3885,9 @@ func (s InvalidClusterStateFault) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidClusterStateFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -3940,6 +3970,8 @@ func (s InvalidParameterCombinationException) RequestID() string {
 type InvalidParameterGroupStateFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -3965,6 +3997,9 @@ func (s InvalidParameterGroupStateFault) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidParameterGroupStateFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4047,6 +4082,8 @@ func (s InvalidParameterValueException) RequestID() string {
 type InvalidSubnet struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4072,6 +4109,9 @@ func (s InvalidSubnet) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidSubnet) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4098,6 +4138,8 @@ func (s InvalidSubnet) RequestID() string {
 type InvalidVPCNetworkStateFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4123,6 +4165,9 @@ func (s InvalidVPCNetworkStateFault) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidVPCNetworkStateFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4304,6 +4349,8 @@ func (s *Node) SetParameterGroupStatus(v string) *Node {
 type NodeNotFoundFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4329,6 +4376,9 @@ func (s NodeNotFoundFault) Code() string {
 
 // Message returns the exception's message.
 func (s NodeNotFoundFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4355,6 +4405,8 @@ func (s NodeNotFoundFault) RequestID() string {
 type NodeQuotaForClusterExceededFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4380,6 +4432,9 @@ func (s NodeQuotaForClusterExceededFault) Code() string {
 
 // Message returns the exception's message.
 func (s NodeQuotaForClusterExceededFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4406,6 +4461,8 @@ func (s NodeQuotaForClusterExceededFault) RequestID() string {
 type NodeQuotaForCustomerExceededFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4431,6 +4488,9 @@ func (s NodeQuotaForCustomerExceededFault) Code() string {
 
 // Message returns the exception's message.
 func (s NodeQuotaForCustomerExceededFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4667,6 +4727,8 @@ func (s *ParameterGroup) SetParameterGroupName(v string) *ParameterGroup {
 type ParameterGroupAlreadyExistsFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4692,6 +4754,9 @@ func (s ParameterGroupAlreadyExistsFault) Code() string {
 
 // Message returns the exception's message.
 func (s ParameterGroupAlreadyExistsFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4718,6 +4783,8 @@ func (s ParameterGroupAlreadyExistsFault) RequestID() string {
 type ParameterGroupNotFoundFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4743,6 +4810,9 @@ func (s ParameterGroupNotFoundFault) Code() string {
 
 // Message returns the exception's message.
 func (s ParameterGroupNotFoundFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4769,6 +4839,8 @@ func (s ParameterGroupNotFoundFault) RequestID() string {
 type ParameterGroupQuotaExceededFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4794,6 +4866,9 @@ func (s ParameterGroupQuotaExceededFault) Code() string {
 
 // Message returns the exception's message.
 func (s ParameterGroupQuotaExceededFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5076,6 +5151,8 @@ func (s *SecurityGroupMembership) SetStatus(v string) *SecurityGroupMembership {
 type ServiceLinkedRoleNotFoundFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5101,6 +5178,9 @@ func (s ServiceLinkedRoleNotFoundFault) Code() string {
 
 // Message returns the exception's message.
 func (s ServiceLinkedRoleNotFoundFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5217,6 +5297,8 @@ func (s *SubnetGroup) SetVpcId(v string) *SubnetGroup {
 type SubnetGroupAlreadyExistsFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5242,6 +5324,9 @@ func (s SubnetGroupAlreadyExistsFault) Code() string {
 
 // Message returns the exception's message.
 func (s SubnetGroupAlreadyExistsFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5268,6 +5353,8 @@ func (s SubnetGroupAlreadyExistsFault) RequestID() string {
 type SubnetGroupInUseFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5293,6 +5380,9 @@ func (s SubnetGroupInUseFault) Code() string {
 
 // Message returns the exception's message.
 func (s SubnetGroupInUseFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5319,6 +5409,8 @@ func (s SubnetGroupInUseFault) RequestID() string {
 type SubnetGroupNotFoundFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5344,6 +5436,9 @@ func (s SubnetGroupNotFoundFault) Code() string {
 
 // Message returns the exception's message.
 func (s SubnetGroupNotFoundFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5371,6 +5466,8 @@ func (s SubnetGroupNotFoundFault) RequestID() string {
 type SubnetGroupQuotaExceededFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5396,6 +5493,9 @@ func (s SubnetGroupQuotaExceededFault) Code() string {
 
 // Message returns the exception's message.
 func (s SubnetGroupQuotaExceededFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5422,6 +5522,8 @@ func (s SubnetGroupQuotaExceededFault) RequestID() string {
 type SubnetInUse struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5447,6 +5549,9 @@ func (s SubnetInUse) Code() string {
 
 // Message returns the exception's message.
 func (s SubnetInUse) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5474,6 +5579,8 @@ func (s SubnetInUse) RequestID() string {
 type SubnetQuotaExceededFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5499,6 +5606,9 @@ func (s SubnetQuotaExceededFault) Code() string {
 
 // Message returns the exception's message.
 func (s SubnetQuotaExceededFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5567,6 +5677,8 @@ func (s *Tag) SetValue(v string) *Tag {
 type TagNotFoundFault struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5592,6 +5704,9 @@ func (s TagNotFoundFault) Code() string {
 
 // Message returns the exception's message.
 func (s TagNotFoundFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5618,6 +5733,8 @@ func (s TagNotFoundFault) RequestID() string {
 type TagQuotaPerResourceExceeded struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5643,6 +5760,9 @@ func (s TagQuotaPerResourceExceeded) Code() string {
 
 // Message returns the exception's message.
 func (s TagQuotaPerResourceExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

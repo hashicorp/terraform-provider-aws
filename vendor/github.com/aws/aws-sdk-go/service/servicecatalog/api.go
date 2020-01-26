@@ -12955,6 +12955,8 @@ func (s DisassociateTagOptionFromResourceOutput) GoString() string {
 type DuplicateResourceException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -12980,6 +12982,9 @@ func (s DuplicateResourceException) Code() string {
 
 // Message returns the exception's message.
 func (s DuplicateResourceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -13383,6 +13388,8 @@ func (s *GetAWSOrganizationsAccessStatusOutput) SetAccessStatus(v string) *GetAW
 type InvalidParametersException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -13408,6 +13415,9 @@ func (s InvalidParametersException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidParametersException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -13436,6 +13446,8 @@ func (s InvalidParametersException) RequestID() string {
 type InvalidStateException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -13461,6 +13473,9 @@ func (s InvalidStateException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidStateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -13540,6 +13555,8 @@ func (s *LaunchPathSummary) SetTags(v []*Tag) *LaunchPathSummary {
 type LimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -13565,6 +13582,9 @@ func (s LimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -15557,6 +15577,8 @@ func (s *ListTagOptionsOutput) SetTagOptionDetails(v []*TagOptionDetail) *ListTa
 type OperationNotSupportedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -15582,6 +15604,9 @@ func (s OperationNotSupportedException) Code() string {
 
 // Message returns the exception's message.
 func (s OperationNotSupportedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -17902,6 +17927,8 @@ func (s *ResourceDetail) SetName(v string) *ResourceDetail {
 type ResourceInUseException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -17927,6 +17954,9 @@ func (s ResourceInUseException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -17953,6 +17983,8 @@ func (s ResourceInUseException) RequestID() string {
 type ResourceNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -17978,6 +18010,9 @@ func (s ResourceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -18940,6 +18975,8 @@ func (s *TagOptionDetail) SetValue(v string) *TagOptionDetail {
 type TagOptionNotMigratedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -18965,6 +19002,9 @@ func (s TagOptionNotMigratedException) Code() string {
 
 // Message returns the exception's message.
 func (s TagOptionNotMigratedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

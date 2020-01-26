@@ -3631,7 +3631,6 @@ data "aws_availability_zones" "available" {
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
 }
-}
 
 resource "aws_launch_template" "test" {
   image_id      = data.aws_ami.test.id

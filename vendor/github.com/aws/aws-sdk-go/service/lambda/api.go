@@ -402,6 +402,8 @@ func (c *Lambda) CreateEventSourceMappingRequest(input *CreateEventSourceMapping
 //    * MaximumRetryAttempts - Discard records after the specified number of
 //    retries.
 //
+//    * ParallelizationFactor - Process multiple batches from each shard concurrently.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4604,6 +4606,9 @@ func (c *Lambda) TagResourceRequest(input *TagResourceInput) (req *request.Reque
 //   * TooManyRequestsException
 //   The request throughput limit was exceeded.
 //
+//   * ResourceConflictException
+//   The resource already exists, or another operation is in progress.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/TagResource
 func (c *Lambda) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
 	req, out := c.TagResourceRequest(input)
@@ -4693,6 +4698,9 @@ func (c *Lambda) UntagResourceRequest(input *UntagResourceInput) (req *request.R
 //
 //   * TooManyRequestsException
 //   The request throughput limit was exceeded.
+//
+//   * ResourceConflictException
+//   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UntagResource
 func (c *Lambda) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
@@ -4873,6 +4881,8 @@ func (c *Lambda) UpdateEventSourceMappingRequest(input *UpdateEventSourceMapping
 //
 //    * MaximumRetryAttempts - Discard records after the specified number of
 //    retries.
+//
+//    * ParallelizationFactor - Process multiple batches from each shard concurrently.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7524,7 +7534,8 @@ type FunctionConfiguration struct {
 	// (https://www.w3.org/TR/NOTE-datetime) (YYYY-MM-DDThh:mm:ss.sTZD).
 	LastModified *string `type:"string"`
 
-	// The status of the last update that was performed on the function.
+	// The status of the last update that was performed on the function. This is
+	// first set to Successful after function creation completes.
 	LastUpdateStatus *string `type:"string" enum:"LastUpdateStatus"`
 
 	// The reason for the last update that was performed on the function.
@@ -9519,12 +9530,6 @@ type InvokeOutput struct {
 
 	// If present, indicates that an error occurred during function execution. Details
 	// about the error are included in the response payload.
-	//
-	//    * Handled - The runtime caught an error thrown by the function and formatted
-	//    it into a JSON document.
-	//
-	//    * Unhandled - The runtime didn't handle the error. For example, the function
-	//    ran out of memory or timed out.
 	FunctionError *string `location:"header" locationName:"X-Amz-Function-Error" type:"string"`
 
 	// The last 4 KB of the execution log, which is base64 encoded.
@@ -10429,7 +10434,9 @@ type ListFunctionsInput struct {
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
 
 	// For Lambda@Edge functions, the AWS Region of the master function. For example,
-	// us-east-2 or ALL. If specified, you must set FunctionVersion to ALL.
+	// us-east-1 filters the list of functions to only include Lambda@Edge functions
+	// replicated from a master function in US East (N. Virginia). If specified,
+	// you must set FunctionVersion to ALL.
 	MasterRegion *string `location:"querystring" locationName:"MasterRegion" type:"string"`
 
 	// Specify a value between 1 and 50 to limit the number of functions in the
@@ -12727,7 +12734,8 @@ func (s TooManyRequestsException) RequestID() string {
 	return s.respMetadata.RequestID
 }
 
-// The function's AWS X-Ray tracing configuration.
+// The function's AWS X-Ray tracing configuration. To sample and record incoming
+// requests, set Mode to Active.
 type TracingConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -13795,6 +13803,15 @@ const (
 
 	// LastUpdateStatusReasonCodeInternalError is a LastUpdateStatusReasonCode enum value
 	LastUpdateStatusReasonCodeInternalError = "InternalError"
+
+	// LastUpdateStatusReasonCodeSubnetOutOfIpaddresses is a LastUpdateStatusReasonCode enum value
+	LastUpdateStatusReasonCodeSubnetOutOfIpaddresses = "SubnetOutOfIPAddresses"
+
+	// LastUpdateStatusReasonCodeInvalidSubnet is a LastUpdateStatusReasonCode enum value
+	LastUpdateStatusReasonCodeInvalidSubnet = "InvalidSubnet"
+
+	// LastUpdateStatusReasonCodeInvalidSecurityGroup is a LastUpdateStatusReasonCode enum value
+	LastUpdateStatusReasonCodeInvalidSecurityGroup = "InvalidSecurityGroup"
 )
 
 const (
@@ -13913,6 +13930,12 @@ const (
 
 	// StateReasonCodeSubnetOutOfIpaddresses is a StateReasonCode enum value
 	StateReasonCodeSubnetOutOfIpaddresses = "SubnetOutOfIPAddresses"
+
+	// StateReasonCodeInvalidSubnet is a StateReasonCode enum value
+	StateReasonCodeInvalidSubnet = "InvalidSubnet"
+
+	// StateReasonCodeInvalidSecurityGroup is a StateReasonCode enum value
+	StateReasonCodeInvalidSecurityGroup = "InvalidSecurityGroup"
 )
 
 const (

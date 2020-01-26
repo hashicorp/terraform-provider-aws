@@ -520,6 +520,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 2,
+							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"origin_id": {

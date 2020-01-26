@@ -40,6 +40,7 @@ In addition to all arguments above, the following attributes are exported:
   * `email` - Email of the account
   * `id` - Identifier of the account
   * `name` - Name of the account
+  * `status` - Current status of the account
 * `arn` - ARN of the organization
 * `id` - Identifier of the organization
 * `master_account_arn` - ARN of the master account
@@ -50,6 +51,7 @@ In addition to all arguments above, the following attributes are exported:
   * `email` - Email of the account
   * `id` - Identifier of the account
   * `name` - Name of the account
+  * `status` - Current status of the account
 * `roots` - List of organization roots. All elements have these attributes:
   * `arn` - ARN of the root
   * `id` - Identifier of the root

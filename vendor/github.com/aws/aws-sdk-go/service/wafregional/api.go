@@ -10268,6 +10268,8 @@ func (s WAFInternalErrorException) RequestID() string {
 type WAFInvalidAccountException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -10293,6 +10295,9 @@ func (s WAFInvalidAccountException) Code() string {
 
 // Message returns the exception's message.
 func (s WAFInvalidAccountException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -10419,6 +10424,8 @@ type WAFInvalidParameterException struct {
 
 	Field *string `locationName:"field" type:"string" enum:"ParameterExceptionField"`
 
+	Message_ *string `locationName:"message" type:"string"`
+
 	Parameter *string `locationName:"parameter" min:"1" type:"string"`
 
 	Reason *string `locationName:"reason" type:"string" enum:"ParameterExceptionReason"`
@@ -10447,6 +10454,9 @@ func (s WAFInvalidParameterException) Code() string {
 
 // Message returns the exception's message.
 func (s WAFInvalidParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

@@ -4613,6 +4613,8 @@ type ThrottlingException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
 
+	Message_ *string `locationName:"message" type:"string"`
+
 	RetryAfterSeconds *string `type:"string"`
 }
 
@@ -4639,6 +4641,9 @@ func (s ThrottlingException) Code() string {
 
 // Message returns the exception's message.
 func (s ThrottlingException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

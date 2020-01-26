@@ -21,7 +21,7 @@ github.com/apparentlymart/go-cidr/cidr
 github.com/apparentlymart/go-textseg/textseg
 # github.com/armon/go-radix v1.0.0
 github.com/armon/go-radix
-# github.com/aws/aws-sdk-go v1.28.3
+# github.com/aws/aws-sdk-go v1.28.8
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
@@ -280,7 +280,7 @@ github.com/davecgh/go-spew/spew
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
-# github.com/go-critic/go-critic v0.4.0
+# github.com/go-critic/go-critic v0.4.1
 github.com/go-critic/go-critic/checkers
 github.com/go-critic/go-critic/checkers/internal/lintutil
 # github.com/go-lintpack/lintpack v0.5.2
@@ -345,7 +345,7 @@ github.com/golangci/gocyclo/pkg/gocyclo
 # github.com/golangci/gofmt v0.0.0-20190930125516-244bba706f1a
 github.com/golangci/gofmt/gofmt
 github.com/golangci/gofmt/goimports
-# github.com/golangci/golangci-lint v1.22.2
+# github.com/golangci/golangci-lint v1.23.1
 github.com/golangci/golangci-lint/cmd/golangci-lint
 github.com/golangci/golangci-lint/internal/cache
 github.com/golangci/golangci-lint/internal/errorutil
@@ -450,7 +450,7 @@ github.com/hashicorp/logutils
 github.com/hashicorp/terraform-config-inspect/tfconfig
 # github.com/hashicorp/terraform-json v0.3.1
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-sdk v1.4.1
+# github.com/hashicorp/terraform-plugin-sdk v1.5.0
 github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/customdiff
 github.com/hashicorp/terraform-plugin-sdk/helper/encryption
@@ -515,6 +515,10 @@ github.com/hashicorp/yamux
 github.com/inconshreveable/mousetrap
 # github.com/jen20/awspolicyequivalence v1.1.0
 github.com/jen20/awspolicyequivalence
+# github.com/jingyugao/rowserrcheck v0.0.0-20191204022205-72ab7603b68a
+github.com/jingyugao/rowserrcheck/passes/rowserr
+# github.com/jirfag/go-printf-func-name v0.0.0-20191110105641-45db9963cdd3
+github.com/jirfag/go-printf-func-name/pkg/analyzer
 # github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 github.com/jmespath/go-jmespath
 # github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba
@@ -589,7 +593,7 @@ github.com/posener/complete/match
 github.com/pquerna/otp
 github.com/pquerna/otp/hotp
 github.com/pquerna/otp/totp
-# github.com/securego/gosec v0.0.0-20191002120514-e680875ea14d
+# github.com/securego/gosec v0.0.0-20200103095621-79fbf3af8d83
 github.com/securego/gosec
 github.com/securego/gosec/rules
 # github.com/sirupsen/logrus v1.4.2

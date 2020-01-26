@@ -3245,6 +3245,8 @@ func (s *BatchRetryStrategy) SetAttempts(v int64) *BatchRetryStrategy {
 type ConcurrentModificationException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -3270,6 +3272,9 @@ func (s ConcurrentModificationException) Code() string {
 
 // Message returns the exception's message.
 func (s ConcurrentModificationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4687,6 +4692,8 @@ func (s *InputTransformer) SetInputTemplate(v string) *InputTransformer {
 type InternalException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4712,6 +4719,9 @@ func (s InternalException) Code() string {
 
 // Message returns the exception's message.
 func (s InternalException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4738,6 +4748,8 @@ func (s InternalException) RequestID() string {
 type InvalidEventPatternException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4763,6 +4775,9 @@ func (s InvalidEventPatternException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidEventPatternException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4789,6 +4804,8 @@ func (s InvalidEventPatternException) RequestID() string {
 type InvalidStateException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4814,6 +4831,9 @@ func (s InvalidStateException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidStateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -4884,6 +4904,8 @@ func (s *KinesisParameters) SetPartitionKeyPath(v string) *KinesisParameters {
 type LimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -4909,6 +4931,9 @@ func (s LimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5726,6 +5751,8 @@ func (s *ListTargetsByRuleOutput) SetTargets(v []*Target) *ListTargetsByRuleOutp
 type ManagedRuleException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5751,6 +5778,9 @@ func (s ManagedRuleException) Code() string {
 
 // Message returns the exception's message.
 func (s ManagedRuleException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5909,6 +5939,8 @@ func (s *PartnerEventSourceAccount) SetState(v string) *PartnerEventSourceAccoun
 type PolicyLengthExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5934,6 +5966,9 @@ func (s PolicyLengthExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s PolicyLengthExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7021,6 +7056,8 @@ func (s *RemoveTargetsResultEntry) SetTargetId(v string) *RemoveTargetsResultEnt
 type ResourceAlreadyExistsException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7046,6 +7083,9 @@ func (s ResourceAlreadyExistsException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -7072,6 +7112,8 @@ func (s ResourceAlreadyExistsException) RequestID() string {
 type ResourceNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -7097,6 +7139,9 @@ func (s ResourceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 

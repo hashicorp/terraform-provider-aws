@@ -750,9 +750,14 @@ func (c *ECS) DeleteClusterRequest(input *DeleteClusterInput) (req *request.Requ
 
 // DeleteCluster API operation for Amazon EC2 Container Service.
 //
-// Deletes the specified cluster. You must deregister all container instances
-// from this cluster before you may delete it. You can list the container instances
-// in a cluster with ListContainerInstances and deregister them with DeregisterContainerInstance.
+// Deletes the specified cluster. The cluster will transition to the INACTIVE
+// state. Clusters with an INACTIVE status may remain discoverable in your account
+// for a period of time. However, this behavior is subject to change in the
+// future, so you should not rely on INACTIVE clusters persisting.
+//
+// You must deregister all container instances from this cluster before you
+// may delete it. You can list the container instances in a cluster with ListContainerInstances
+// and deregister them with DeregisterContainerInstance.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2029,6 +2034,12 @@ func (c *ECS) ListAccountSettingsRequest(input *ListAccountSettingsInput) (req *
 		Name:       opListAccountSettings,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2084,6 +2095,58 @@ func (c *ECS) ListAccountSettingsWithContext(ctx aws.Context, input *ListAccount
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListAccountSettingsPages iterates over the pages of a ListAccountSettings operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAccountSettings method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAccountSettings operation.
+//    pageNum := 0
+//    err := client.ListAccountSettingsPages(params,
+//        func(page *ecs.ListAccountSettingsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ECS) ListAccountSettingsPages(input *ListAccountSettingsInput, fn func(*ListAccountSettingsOutput, bool) bool) error {
+	return c.ListAccountSettingsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAccountSettingsPagesWithContext same as ListAccountSettingsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECS) ListAccountSettingsPagesWithContext(ctx aws.Context, input *ListAccountSettingsInput, fn func(*ListAccountSettingsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAccountSettingsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAccountSettingsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAccountSettingsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListAttributes = "ListAttributes"
@@ -5455,6 +5518,8 @@ func (c *ECS) UpdateTaskSetWithContext(ctx aws.Context, input *UpdateTaskSetInpu
 type AccessDeniedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5480,6 +5545,9 @@ func (s AccessDeniedException) Code() string {
 
 // Message returns the exception's message.
 func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5690,6 +5758,8 @@ func (s *Attribute) SetValue(v string) *Attribute {
 type AttributeLimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5715,6 +5785,9 @@ func (s AttributeLimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s AttributeLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -5752,6 +5825,9 @@ type AutoScalingGroupProvider struct {
 	// The managed termination protection setting to use for the Auto Scaling group
 	// capacity provider. This determines whether the Auto Scaling group has managed
 	// termination protection.
+	//
+	// When using managed termination protection, managed scaling must also be used
+	// otherwise managed termination protection will not work.
 	//
 	// When managed termination protection is enabled, Amazon ECS prevents the Amazon
 	// EC2 instances in an Auto Scaling group that contain tasks from being terminated
@@ -5881,6 +5957,8 @@ func (s *AwsVpcConfiguration) SetSubnets(v []*string) *AwsVpcConfiguration {
 type BlockedException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -5906,6 +5984,9 @@ func (s BlockedException) Code() string {
 
 // Message returns the exception's message.
 func (s BlockedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6223,9 +6304,35 @@ type Cluster struct {
 	//    * drainingFargateServiceCount
 	Statistics []*KeyValuePair `locationName:"statistics" type:"list"`
 
-	// The status of the cluster. The valid values are ACTIVE or INACTIVE. ACTIVE
-	// indicates that you can register container instances with the cluster and
-	// the associated instances can accept tasks.
+	// The status of the cluster. The following are the possible states that will
+	// be returned.
+	//
+	// ACTIVE
+	//
+	// The cluster is ready to accept tasks and if applicable you can register container
+	// instances with the cluster.
+	//
+	// PROVISIONING
+	//
+	// The cluster has capacity providers associated with it and the resources needed
+	// for the capacity provider are being created.
+	//
+	// DEPROVISIONING
+	//
+	// The cluster has capacity providers associated with it and the resources needed
+	// for the capacity provider are being deleted.
+	//
+	// FAILED
+	//
+	// The cluster has capacity providers associated with it and the resources needed
+	// for the capacity provider have failed to create.
+	//
+	// INACTIVE
+	//
+	// The cluster has been deleted. Clusters with an INACTIVE status may remain
+	// discoverable in your account for a period of time. However, this behavior
+	// is subject to change in the future, so you should not rely on INACTIVE clusters
+	// persisting.
 	Status *string `locationName:"status" type:"string"`
 
 	// The metadata that you apply to the cluster to help you categorize and organize
@@ -6357,6 +6464,8 @@ func (s *Cluster) SetTags(v []*Tag) *Cluster {
 type ClusterContainsContainerInstancesException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6382,6 +6491,9 @@ func (s ClusterContainsContainerInstancesException) Code() string {
 
 // Message returns the exception's message.
 func (s ClusterContainsContainerInstancesException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6410,6 +6522,8 @@ func (s ClusterContainsContainerInstancesException) RequestID() string {
 type ClusterContainsServicesException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6435,6 +6549,9 @@ func (s ClusterContainsServicesException) Code() string {
 
 // Message returns the exception's message.
 func (s ClusterContainsServicesException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6461,6 +6578,8 @@ func (s ClusterContainsServicesException) RequestID() string {
 type ClusterContainsTasksException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6486,6 +6605,9 @@ func (s ClusterContainsTasksException) Code() string {
 
 // Message returns the exception's message.
 func (s ClusterContainsTasksException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6513,6 +6635,8 @@ func (s ClusterContainsTasksException) RequestID() string {
 type ClusterNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -6538,6 +6662,9 @@ func (s ClusterNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ClusterNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -6792,15 +6919,6 @@ type ContainerDefinition struct {
 	// type by multiplying the vCPUs listed for that instance type on the Amazon
 	// EC2 Instances (http://aws.amazon.com/ec2/instance-types/) detail page by
 	// 1,024.
-	//
-	// For example, if you run a single-container task on a single-core instance
-	// type with 512 CPU units specified for that container, and that is the only
-	// task running on the container instance, that container could use the full
-	// 1,024 CPU unit share at any given time. However, if you launched another
-	// copy of the same task on that container instance, each task would be guaranteed
-	// a minimum of 512 CPU units when needed, and each container could float to
-	// higher CPU usage if the other container was not using it, but if both tasks
-	// were 100% active all of the time, they would be limited to 512 CPU units.
 	//
 	// Linux containers share unallocated CPU units with other containers on the
 	// container instance with the same ratio as their allocated amount. For example,
@@ -7650,8 +7768,8 @@ func (s *ContainerDefinition) SetWorkingDirectory(v string) *ContainerDefinition
 // AMI (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
 // in the Amazon Elastic Container Service Developer Guide.
 //
-// If you are using tasks that use the Fargate launch type, container dependency
-// parameters are not supported.
+// For tasks using the Fargate launch type, this parameter requires that the
+// task or service uses platform version 1.3.0 or later.
 type ContainerDependency struct {
 	_ struct{} `type:"structure"`
 
@@ -10888,6 +11006,63 @@ func (s *DockerVolumeConfiguration) SetScope(v string) *DockerVolumeConfiguratio
 	return s
 }
 
+// This parameter is specified when you are using an Amazon Elastic File System
+// (Amazon EFS) file storage. Amazon EFS file systems are only supported when
+// you are using the EC2 launch type.
+//
+// EFSVolumeConfiguration remains in preview and is a Beta Service as defined
+// by and subject to the Beta Service Participation Service Terms located at
+// https://aws.amazon.com/service-terms (https://aws.amazon.com/service-terms)
+// ("Beta Terms"). These Beta Terms apply to your participation in this preview
+// of EFSVolumeConfiguration.
+type EFSVolumeConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon EFS file system ID to use.
+	//
+	// FileSystemId is a required field
+	FileSystemId *string `locationName:"fileSystemId" type:"string" required:"true"`
+
+	// The directory within the Amazon EFS file system to mount as the root directory
+	// inside the host.
+	RootDirectory *string `locationName:"rootDirectory" type:"string"`
+}
+
+// String returns the string representation
+func (s EFSVolumeConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EFSVolumeConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EFSVolumeConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EFSVolumeConfiguration"}
+	if s.FileSystemId == nil {
+		invalidParams.Add(request.NewErrParamRequired("FileSystemId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFileSystemId sets the FileSystemId field's value.
+func (s *EFSVolumeConfiguration) SetFileSystemId(v string) *EFSVolumeConfiguration {
+	s.FileSystemId = &v
+	return s
+}
+
+// SetRootDirectory sets the RootDirectory field's value.
+func (s *EFSVolumeConfiguration) SetRootDirectory(v string) *EFSVolumeConfiguration {
+	s.RootDirectory = &v
+	return s
+}
+
 // A failed resource.
 type Failure struct {
 	_ struct{} `type:"structure"`
@@ -11286,6 +11461,8 @@ func (s *InferenceAcceleratorOverride) SetDeviceType(v string) *InferenceAcceler
 type InvalidParameterException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -11311,6 +11488,9 @@ func (s InvalidParameterException) Code() string {
 
 // Message returns the exception's message.
 func (s InvalidParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -11440,6 +11620,8 @@ func (s *KeyValuePair) SetValue(v string) *KeyValuePair {
 type LimitExceededException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -11465,6 +11647,9 @@ func (s LimitExceededException) Code() string {
 
 // Message returns the exception's message.
 func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -12953,6 +13138,8 @@ func (s *ManagedScaling) SetTargetCapacity(v int64) *ManagedScaling {
 type MissingVersionException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -12978,6 +13165,9 @@ func (s MissingVersionException) Code() string {
 
 // Message returns the exception's message.
 func (s MissingVersionException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -13189,6 +13379,8 @@ func (s *NetworkInterface) SetPrivateIpv4Address(v string) *NetworkInterface {
 type NoUpdateAvailableException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -13214,6 +13406,9 @@ func (s NoUpdateAvailableException) Code() string {
 
 // Message returns the exception's message.
 func (s NoUpdateAvailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -13387,6 +13582,8 @@ func (s *PlatformDevice) SetType(v string) *PlatformDevice {
 type PlatformTaskDefinitionIncompatibilityException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -13412,6 +13609,9 @@ func (s PlatformTaskDefinitionIncompatibilityException) Code() string {
 
 // Message returns the exception's message.
 func (s PlatformTaskDefinitionIncompatibilityException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -13438,6 +13638,8 @@ func (s PlatformTaskDefinitionIncompatibilityException) RequestID() string {
 type PlatformUnknownException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -13463,6 +13665,9 @@ func (s PlatformUnknownException) Code() string {
 
 // Message returns the exception's message.
 func (s PlatformUnknownException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -14546,6 +14751,16 @@ func (s *RegisterTaskDefinitionInput) Validate() error {
 			}
 		}
 	}
+	if s.Volumes != nil {
+		for i, v := range s.Volumes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Volumes", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14797,6 +15012,8 @@ func (s *Resource) SetType(v string) *Resource {
 type ResourceInUseException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -14822,6 +15039,9 @@ func (s ResourceInUseException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -14848,6 +15068,8 @@ func (s ResourceInUseException) RequestID() string {
 type ResourceNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -14873,6 +15095,9 @@ func (s ResourceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -15845,6 +16070,8 @@ func (s *ServiceEvent) SetMessage(v string) *ServiceEvent {
 type ServiceNotActiveException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -15870,6 +16097,9 @@ func (s ServiceNotActiveException) Code() string {
 
 // Message returns the exception's message.
 func (s ServiceNotActiveException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -15897,6 +16127,8 @@ func (s ServiceNotActiveException) RequestID() string {
 type ServiceNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -15922,6 +16154,9 @@ func (s ServiceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ServiceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -16935,6 +17170,8 @@ func (s TagResourceOutput) GoString() string {
 type TargetNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -16960,6 +17197,9 @@ func (s TargetNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s TargetNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -18159,6 +18399,8 @@ func (s *TaskSet) SetUpdatedAt(v time.Time) *TaskSet {
 type TaskSetNotFoundException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -18184,6 +18426,9 @@ func (s TaskSetNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s TaskSetNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -18346,6 +18591,8 @@ func (s *Ulimit) SetSoftLimit(v int64) *Ulimit {
 type UnsupportedFeatureException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -18371,6 +18618,9 @@ func (s UnsupportedFeatureException) Code() string {
 
 // Message returns the exception's message.
 func (s UnsupportedFeatureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -18723,6 +18973,8 @@ func (s *UpdateContainerInstancesStateOutput) SetFailures(v []*Failure) *UpdateC
 type UpdateInProgressException struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -18748,6 +19000,9 @@ func (s UpdateInProgressException) Code() string {
 
 // Message returns the exception's message.
 func (s UpdateInProgressException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
 	return ""
 }
 
@@ -19213,9 +19468,20 @@ type Volume struct {
 
 	// This parameter is specified when you are using Docker volumes. Docker volumes
 	// are only supported when you are using the EC2 launch type. Windows containers
-	// only support the use of the local driver. To use bind mounts, specify a host
-	// instead.
+	// only support the use of the local driver. To use bind mounts, specify the
+	// host parameter instead.
 	DockerVolumeConfiguration *DockerVolumeConfiguration `locationName:"dockerVolumeConfiguration" type:"structure"`
+
+	// This parameter is specified when you are using an Amazon Elastic File System
+	// (Amazon EFS) file storage. Amazon EFS file systems are only supported when
+	// you are using the EC2 launch type.
+	//
+	// EFSVolumeConfiguration remains in preview and is a Beta Service as defined
+	// by and subject to the Beta Service Participation Service Terms located at
+	// https://aws.amazon.com/service-terms (https://aws.amazon.com/service-terms)
+	// ("Beta Terms"). These Beta Terms apply to your participation in this preview
+	// of EFSVolumeConfiguration.
+	EfsVolumeConfiguration *EFSVolumeConfiguration `locationName:"efsVolumeConfiguration" type:"structure"`
 
 	// This parameter is specified when you are using bind mount host volumes. Bind
 	// mount host volumes are supported when you are using either the EC2 or Fargate
@@ -19247,9 +19513,30 @@ func (s Volume) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Volume) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Volume"}
+	if s.EfsVolumeConfiguration != nil {
+		if err := s.EfsVolumeConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("EfsVolumeConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetDockerVolumeConfiguration sets the DockerVolumeConfiguration field's value.
 func (s *Volume) SetDockerVolumeConfiguration(v *DockerVolumeConfiguration) *Volume {
 	s.DockerVolumeConfiguration = v
+	return s
+}
+
+// SetEfsVolumeConfiguration sets the EfsVolumeConfiguration field's value.
+func (s *Volume) SetEfsVolumeConfiguration(v *EFSVolumeConfiguration) *Volume {
+	s.EfsVolumeConfiguration = v
 	return s
 }
 
