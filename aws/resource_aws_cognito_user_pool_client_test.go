@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -16,7 +15,7 @@ import (
 func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	resourceName := "aws_cognito_user_pool_client.client"
+	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -44,7 +43,7 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cognito_user_pool_client.client"
+	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -111,7 +110,7 @@ func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
 func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	resourceName := "aws_cognito_user_pool_client.client"
+	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -165,7 +164,7 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	resourceName := "aws_cognito_user_pool_client.client"
+	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -219,6 +218,47 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigAnalyticsConfig(userPoolName, clientName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_basic(userPoolName, clientName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigAnalyticsConfig(userPoolName, clientName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 
@@ -266,7 +306,7 @@ func testAccCheckAWSCognitoUserPoolClientDestroy(s *terraform.State) error {
 		_, err := conn.DescribeUserPoolClient(params)
 
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+			if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -302,13 +342,13 @@ func testAccCheckAWSCognitoUserPoolClientExists(name string) resource.TestCheckF
 
 func testAccAWSCognitoUserPoolClientConfig_basic(userPoolName, clientName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "%s"
 }
 
-resource "aws_cognito_user_pool_client" "client" {
+resource "aws_cognito_user_pool_client" "test" {
   name                = "%s"
-  user_pool_id        = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id        = "${aws_cognito_user_pool.test.id}"
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 }
 `, userPoolName, clientName)
@@ -316,14 +356,14 @@ resource "aws_cognito_user_pool_client" "client" {
 
 func testAccAWSCognitoUserPoolClientConfig_RefreshTokenValidity(rName string, refreshTokenValidity int) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "%s"
 }
 
-resource "aws_cognito_user_pool_client" "client" {
+resource "aws_cognito_user_pool_client" "test" {
   name                   = "%s"
   refresh_token_validity = %d
-  user_pool_id           = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id           = "${aws_cognito_user_pool.test.id}"
 }
 `, rName, rName, refreshTokenValidity)
 }
@@ -343,14 +383,14 @@ resource "aws_cognito_user_pool_client" "test" {
 
 func testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName string, refreshTokenValidity int) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "%s"
 }
 
-resource "aws_cognito_user_pool_client" "client" {
+resource "aws_cognito_user_pool_client" "test" {
   name = "%s"
 
-  user_pool_id        = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id        = "${aws_cognito_user_pool.test.id}"
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH", "CUSTOM_AUTH_FLOW_ONLY", "USER_PASSWORD_AUTH"]
 
   generate_secret = "true"
@@ -369,4 +409,70 @@ resource "aws_cognito_user_pool_client" "client" {
   logout_urls          = ["https://www.example.com/login"]
 }
 `, userPoolName, clientName, refreshTokenValidity)
+}
+
+func testAccAWSCognitoUserPoolClientConfigAnalyticsConfig(userPoolName, clientName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_cognito_user_pool" "test" {
+  name = "%[1]s"
+}
+
+resource "aws_pinpoint_app" "test" {
+  name = "%[2]s"
+}
+
+resource "aws_iam_role" "test" {
+  name = "%[2]s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "cognito-idp.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "%[2]s"
+  role = "${aws_iam_role.test.id}"
+
+  policy = <<-EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": [
+          "mobiletargeting:UpdateEndpoint",
+          "mobiletargeting:PutItems"
+        ],
+        "Effect": "Allow",
+        "Resource": "arn:aws:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
+      }
+    ]
+  }
+  EOF
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name                = "%[2]s"
+  user_pool_id        = "${aws_cognito_user_pool.test.id}"
+
+  analytics_configuration {
+    application_id = "${aws_pinpoint_app.test.application_id}"
+    external_id    = "%[2]s"
+    role_arn       = "${aws_iam_role.test.arn}"
+  }
+}
+`, userPoolName, clientName)
 }
