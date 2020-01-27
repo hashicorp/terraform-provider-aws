@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -194,6 +193,38 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 	})
 }
 
+func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParametersCloudWatch(t *testing.T) {
+	var task ssm.MaintenanceWindowTask
+	resourceName := "aws_ssm_maintenance_window_task.test"
+	serviceRoleResourceName := "aws_iam_role.test"
+	cwResourceName := "aws_cloudwatch_log_group.test"
+
+	name := acctest.RandString(10)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.service_role_arn", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_log_group_name", cwResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_output_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationStepFunctionParameters(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
@@ -296,7 +327,7 @@ func testAccCheckAWSSSMMaintenanceWindowTaskDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ssmconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ssm_maintenance_window_target" {
+		if rs.Type != "aws_ssm_maintenance_window_task" {
 			continue
 		}
 
@@ -306,7 +337,7 @@ func testAccCheckAWSSSMMaintenanceWindowTaskDestroy(s *terraform.State) error {
 
 		if err != nil {
 			// Verify the error is what we want
-			if ae, ok := err.(awserr.Error); ok && ae.Code() == "DoesNotExistException" {
+			if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
 				continue
 			}
 			return err
@@ -741,6 +772,43 @@ resource "aws_ssm_maintenance_window_task" "test" {
   }
 }
 `, rName, comment, timeoutSeconds)
+}
+
+func testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchConfig(rName string) string {
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_ssm_maintenance_window_task" "test" {
+  window_id = "${aws_ssm_maintenance_window.test.id}"
+  task_type = "RUN_COMMAND"
+  task_arn = "AWS-RunShellScript"
+  priority = 1
+  service_role_arn = "${aws_iam_role.test.arn}"
+  max_concurrency = "2"
+  max_errors = "1"
+  targets {
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
+  }
+  task_invocation_parameters {
+    run_command_parameters {
+      document_hash       = "${sha256("COMMAND")}"
+      document_hash_type  = "Sha256"
+      service_role_arn    = "${aws_iam_role.test.arn}"
+      parameter {
+        name = "commands"
+        values = ["date"]
+      }
+      cloudwatch_config {
+       cloudwatch_log_group_name = "${aws_cloudwatch_log_group.test.name}"
+       cloudwatch_output_enabled = true
+      }
+    }
+  }
+}
+`, rName)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskStepFunctionConfig(rName string) string {
