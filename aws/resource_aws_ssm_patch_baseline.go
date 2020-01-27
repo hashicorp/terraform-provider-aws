@@ -125,6 +125,21 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
 			},
 			"tags": tagsSchema(),
+			"rejected_patches_action": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ssm.PatchActionAllowAsDependency,
+					ssm.PatchActionBlock,
+				}, false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == ssm.PatchActionAllowAsDependency && new == ""
+				},
+			},
+			"approved_patches_enable_non_security": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -160,6 +175,14 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 
 	if _, ok := d.GetOk("approval_rule"); ok {
 		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
+	}
+
+	if v, ok := d.GetOk("approved_patches_enable_non_security"); ok {
+		params.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("rejected_patches_action"); ok {
+		params.RejectedPatchesAction = aws.String(v.(string))
 	}
 
 	resp, err := ssmconn.CreatePatchBaseline(params)
@@ -206,6 +229,14 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 		params.GlobalFilters = expandAwsSsmPatchFilterGroup(d)
 	}
 
+	if d.HasChange("approved_patches_enable_non_security") {
+		params.ApprovedPatchesEnableNonSecurity = aws.Bool(d.Get("approved_patches_enable_non_security").(bool))
+	}
+
+	if d.HasChange("rejected_patches_action") {
+		params.RejectedPatchesAction = aws.String(d.Get("rejected_patches_action").(string))
+	}
+
 	_, err := ssmconn.UpdatePatchBaseline(params)
 	if err != nil {
 		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
@@ -250,6 +281,8 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("approved_patches_compliance_level", resp.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches", flattenStringList(resp.ApprovedPatches))
 	d.Set("rejected_patches", flattenStringList(resp.RejectedPatches))
+	d.Set("rejected_patches_action", resp.RejectedPatchesAction)
+	d.Set("approved_patches_enable_non_security", resp.ApprovedPatchesEnableNonSecurity)
 
 	if err := d.Set("global_filter", flattenAwsSsmPatchFilterGroup(resp.GlobalFilters)); err != nil {
 		return fmt.Errorf("Error setting global filters error: %#v", err)
