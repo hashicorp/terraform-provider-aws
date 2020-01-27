@@ -2324,10 +2324,9 @@ func testAccAWSCodeDeployDeploymentGroup(rName string, tagGroup bool) string {
 
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
-  
+  service_role_arn      = aws_iam_role.test.arn
   %[2]s
 }
 
@@ -2336,8 +2335,8 @@ resource "aws_codedeploy_app" "test" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf-acc-test-%[1]s"
-  role = "${aws_iam_role.test.id}"
+  name   = "tf-acc-test-%[1]s"
+  role   = aws_iam_role.test.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2361,10 +2360,11 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "test" {
-  name = "tf-acc-test-%[1]s"
+  name               = "tf-acc-test-%[1]s"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2382,6 +2382,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 `, rName, tagGroupOrFilter)
 }
@@ -2408,20 +2409,19 @@ func testAccAWSCodeDeployDeploymentGroupModified(rName string, tagGroup bool) st
 
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-updated-%[1]s"
-  service_role_arn = "${aws_iam_role.test_new.arn}"
-
+  service_role_arn      = aws_iam_role.test_new.arn
   %[2]s
 }
 
 resource "aws_codedeploy_app" "test" {
-	name = "tf-acc-test-%[1]s"
+  name = "tf-acc-test-%[1]s"
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf-acc-test-%[1]s"
-  role = "${aws_iam_role.test_new.id}"
+  name   = "tf-acc-test-%[1]s"
+  role   = aws_iam_role.test_new.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2445,10 +2445,11 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "test_new" {
-  name = "tf-acc-test-updated-%[1]s"
+  name               = "tf-acc-test-updated-%[1]s"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2466,6 +2467,7 @@ resource "aws_iam_role" "test_new" {
   ]
 }
 EOF
+
 }
 `, rName, tagGroupOrFilter)
 }
@@ -2477,8 +2479,8 @@ resource "aws_codedeploy_app" "test" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf-acc-test-%[1]s"
-  role = "${aws_iam_role.test.id}"
+  name   = "tf-acc-test-%[1]s"
+  role   = aws_iam_role.test.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2502,10 +2504,11 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "test" {
-  name = "tf-acc-test-%[1]s"
+  name               = "tf-acc-test-%[1]s"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2523,16 +2526,17 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   on_premises_instance_tag_filter {
-    key = "filterkey"
-    type = "KEY_AND_VALUE"
+    key   = "filterkey"
+    type  = "KEY_AND_VALUE"
     value = "filtervalue"
   }
 }
@@ -2542,12 +2546,12 @@ resource "aws_codedeploy_deployment_group" "test" {
 func baseCodeDeployConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "test" {
-	name = "tf-acc-test-%[1]s"
+  name = "tf-acc-test-%[1]s"
 }
 
 resource "aws_iam_role_policy" "test" {
-	name = "tf-acc-test-%[1]s"
-	role = "${aws_iam_role.test.id}"
+  name   = "tf-acc-test-%[1]s"
+  role   = aws_iam_role.test.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2573,10 +2577,11 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "test" {
-  name = "tf-acc-test-%[1]s"
+  name               = "tf-acc-test-%[1]s"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2592,6 +2597,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_sns_topic" "test" {
@@ -2603,14 +2609,14 @@ resource "aws_sns_topic" "test" {
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_create(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   trigger_configuration {
-    trigger_events = ["DeploymentFailure"]
-    trigger_name = "test-trigger"
-    trigger_target_arn = "${aws_sns_topic.test.arn}"
+    trigger_events     = ["DeploymentFailure"]
+    trigger_name       = "test-trigger"
+    trigger_target_arn = aws_sns_topic.test.arn
   }
 }
 `, rName) + baseCodeDeployConfig(rName)
@@ -2619,14 +2625,14 @@ resource "aws_codedeploy_deployment_group" "test" {
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   trigger_configuration {
-    trigger_events = ["DeploymentSuccess", "DeploymentFailure"]
-    trigger_name = "test-trigger"
-    trigger_target_arn = "${aws_sns_topic.test.arn}"
+    trigger_events     = ["DeploymentSuccess", "DeploymentFailure"]
+    trigger_name       = "test-trigger"
+    trigger_target_arn = aws_sns_topic.test.arn
   }
 }
 `, rName) + baseCodeDeployConfig(rName)
@@ -2635,70 +2641,69 @@ resource "aws_codedeploy_deployment_group" "test" {
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_createMultiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   trigger_configuration {
-    trigger_events = ["DeploymentFailure"]
-    trigger_name = "test-trigger-1"
-    trigger_target_arn = "${aws_sns_topic.test.arn}"
+    trigger_events     = ["DeploymentFailure"]
+    trigger_name       = "test-trigger-1"
+    trigger_target_arn = aws_sns_topic.test.arn
   }
 
   trigger_configuration {
-    trigger_events = ["InstanceFailure"]
-    trigger_name = "test-trigger-2"
-    trigger_target_arn = "${aws_sns_topic.test_2.arn}"
+    trigger_events     = ["InstanceFailure"]
+    trigger_name       = "test-trigger-2"
+    trigger_target_arn = aws_sns_topic.test_2.arn
   }
 }
 
 resource "aws_sns_topic" "test_2" {
   name = "tf-acc-test-2-%[1]s"
-}  
+}
 `, rName) + baseCodeDeployConfig(rName)
 }
 
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_updateMultiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   trigger_configuration {
-    trigger_events = ["DeploymentStart", "DeploymentSuccess", "DeploymentFailure", "DeploymentStop"]
-    trigger_name = "test-trigger-1"
-    trigger_target_arn = "${aws_sns_topic.test.arn}"
+    trigger_events     = ["DeploymentStart", "DeploymentSuccess", "DeploymentFailure", "DeploymentStop"]
+    trigger_name       = "test-trigger-1"
+    trigger_target_arn = aws_sns_topic.test.arn
   }
 
   trigger_configuration {
-    trigger_events = ["InstanceFailure"]
-    trigger_name = "test-trigger-2"
-    trigger_target_arn = "${aws_sns_topic.test_3.arn}"
+    trigger_events     = ["InstanceFailure"]
+    trigger_name       = "test-trigger-2"
+    trigger_target_arn = aws_sns_topic.test_3.arn
   }
 }
 
 resource "aws_sns_topic" "test_2" {
   name = "tf-acc-test-2-%[1]s"
-}  
+}
 
 resource "aws_sns_topic" "test_3" {
   name = "tf-acc-test-3-%[1]s"
 }
-
 `, rName) + baseCodeDeployConfig(rName)
 }
 
 func test_config_auto_rollback_configuration_create(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   auto_rollback_configuration {
     enabled = true
-    events = ["DEPLOYMENT_FAILURE"]
+    events  = ["DEPLOYMENT_FAILURE"]
   }
 }
 `, rName) + baseCodeDeployConfig(rName)
@@ -2707,13 +2712,13 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_auto_rollback_configuration_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   auto_rollback_configuration {
     enabled = true
-    events = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
+    events  = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
   }
 }
 `, rName) + baseCodeDeployConfig(rName)
@@ -2722,9 +2727,9 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_auto_rollback_configuration_none(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 }
 `, rName) + baseCodeDeployConfig(rName)
 }
@@ -2732,13 +2737,13 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_auto_rollback_configuration_disable(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   auto_rollback_configuration {
     enabled = false
-    events = ["DEPLOYMENT_FAILURE"]
+    events  = ["DEPLOYMENT_FAILURE"]
   }
 }
 `, rName) + baseCodeDeployConfig(rName)
@@ -2747,12 +2752,12 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_alarm_configuration_create(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   alarm_configuration {
-    alarms = ["test-alarm"]
+    alarms  = ["test-alarm"]
     enabled = true
   }
 }
@@ -2762,13 +2767,13 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_alarm_configuration_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   alarm_configuration {
-    alarms = ["test-alarm", "test-alarm-2"]
-    enabled = true
+    alarms                    = ["test-alarm", "test-alarm-2"]
+    enabled                   = true
     ignore_poll_alarm_failure = true
   }
 }
@@ -2778,9 +2783,9 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_alarm_configuration_none(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 }
 `, rName) + baseCodeDeployConfig(rName)
 }
@@ -2788,12 +2793,12 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_alarm_configuration_disable(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   alarm_configuration {
-    alarms = ["test-alarm"]
+    alarms  = ["test-alarm"]
     enabled = false
   }
 }
@@ -2803,9 +2808,9 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_deployment_style_default(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 }
 `, rName) + baseCodeDeployConfig(rName)
 }
@@ -2813,13 +2818,13 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_deployment_style_create(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   deployment_style {
     deployment_option = "WITH_TRAFFIC_CONTROL"
-    deployment_type = "BLUE_GREEN"
+    deployment_type   = "BLUE_GREEN"
   }
 
   load_balancer_info {
@@ -2834,13 +2839,13 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_deployment_style_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   deployment_style {
     deployment_option = "WITHOUT_TRAFFIC_CONTROL"
-    deployment_type = "IN_PLACE"
+    deployment_type   = "IN_PLACE"
   }
 }
 `, rName) + baseCodeDeployConfig(rName)
@@ -2849,9 +2854,9 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_load_balancer_info_none(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 }
 `, rName) + baseCodeDeployConfig(rName)
 }
@@ -2859,9 +2864,9 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_load_balancer_info_create(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   load_balancer_info {
     elb_info {
@@ -2875,9 +2880,9 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_load_balancer_info_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   load_balancer_info {
     elb_info {
@@ -2891,9 +2896,9 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_load_balancer_info_target_group_info_create(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   load_balancer_info {
     target_group_info {
@@ -2907,9 +2912,9 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_load_balancer_info_target_group_info_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   load_balancer_info {
     target_group_info {
@@ -2923,9 +2928,9 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_load_balancer_info_target_group_info_delete(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 }
 `, rName) + baseCodeDeployConfig(rName)
 }
@@ -2933,13 +2938,13 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_in_place_deployment_with_traffic_control_create(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   deployment_style {
     deployment_option = "WITH_TRAFFIC_CONTROL"
-    deployment_type = "IN_PLACE"
+    deployment_type   = "IN_PLACE"
   }
 
   load_balancer_info {
@@ -2954,13 +2959,13 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_in_place_deployment_with_traffic_control_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   deployment_style {
     deployment_option = "WITH_TRAFFIC_CONTROL"
-    deployment_type = "BLUE_GREEN"
+    deployment_type   = "BLUE_GREEN"
   }
 
   load_balancer_info {
@@ -2989,9 +2994,9 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_blue_green_deployment_config_delete(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 }
 `, rName) + baseCodeDeployConfig(rName)
 }
@@ -2999,35 +3004,35 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_blue_green_deployment_config_create_with_asg(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   deployment_style {
-	deployment_option = "WITH_TRAFFIC_CONTROL"
-	deployment_type   = "BLUE_GREEN"
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+    deployment_type   = "BLUE_GREEN"
   }
-  
-  autoscaling_groups = ["${aws_autoscaling_group.test.name}"]
+
+  autoscaling_groups = [aws_autoscaling_group.test.name]
 
   load_balancer_info {
     elb_info {
       name = "acc-test-codedeploy-dep-group"
     }
   }
-  
+
   blue_green_deployment_config {
     deployment_ready_option {
-      action_on_timeout = "STOP_DEPLOYMENT"
+      action_on_timeout    = "STOP_DEPLOYMENT"
       wait_time_in_minutes = 60
     }
-    
+
     green_fleet_provisioning_option {
       action = "COPY_AUTO_SCALING_GROUP"
     }
-    
+
     terminate_blue_instances_on_deployment_success {
-      action = "TERMINATE"
+      action                           = "TERMINATE"
       termination_wait_time_in_minutes = 120
     }
   }
@@ -3038,26 +3043,27 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+}
 
 data "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   default_for_az    = "true"
 }
 
 resource "aws_launch_configuration" "test" {
-  image_id = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
-  name_prefix = "tf-acc-test-codedeploy-deployment-group-"
+  name_prefix   = "tf-acc-test-codedeploy-deployment-group-"
 
   lifecycle {
     create_before_destroy = true
@@ -3065,14 +3071,14 @@ resource "aws_launch_configuration" "test" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  name = "tf-acc-test-codedeploy-deployment-group-%[1]s"
-  max_size = 2
-  min_size = 0
+  name             = "tf-acc-test-codedeploy-deployment-group-%[1]s"
+  max_size         = 2
+  min_size         = 0
   desired_capacity = 1
 
-  vpc_zone_identifier = ["${data.aws_subnet.test.id}"]
+  vpc_zone_identifier = [data.aws_subnet.test.id]
 
-  launch_configuration = "${aws_launch_configuration.test.name}"
+  launch_configuration = aws_launch_configuration.test.name
 
   lifecycle {
     create_before_destroy = true
@@ -3084,16 +3090,16 @@ resource "aws_autoscaling_group" "test" {
 func test_config_blue_green_deployment_config_update_with_asg(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   deployment_style {
-	deployment_option = "WITH_TRAFFIC_CONTROL"
-	deployment_type   = "BLUE_GREEN"
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+    deployment_type   = "BLUE_GREEN"
   }
 
-  autoscaling_groups = ["${aws_autoscaling_group.test.name}"]
+  autoscaling_groups = [aws_autoscaling_group.test.name]
 
   load_balancer_info {
     elb_info {
@@ -3103,7 +3109,7 @@ resource "aws_codedeploy_deployment_group" "test" {
 
   blue_green_deployment_config {
     deployment_ready_option {
-      action_on_timeout = "STOP_DEPLOYMENT"
+      action_on_timeout    = "STOP_DEPLOYMENT"
       wait_time_in_minutes = 60
     }
 
@@ -3122,26 +3128,27 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+}
 
 data "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   default_for_az    = "true"
 }
 
 resource "aws_launch_configuration" "test" {
-  image_id = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
-  name_prefix = "tf-acc-test-codedeploy-deployment-group-"
+  name_prefix   = "tf-acc-test-codedeploy-deployment-group-"
 
   lifecycle {
     create_before_destroy = true
@@ -3149,14 +3156,14 @@ resource "aws_launch_configuration" "test" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  name = "tf-acc-test-codedeploy-deployment-group-%[1]s"
-  max_size = 2
-  min_size = 0
+  name             = "tf-acc-test-codedeploy-deployment-group-%[1]s"
+  max_size         = 2
+  min_size         = 0
   desired_capacity = 1
 
-  vpc_zone_identifier = ["${data.aws_subnet.test.id}"]
+  vpc_zone_identifier = [data.aws_subnet.test.id]
 
-  launch_configuration = "${aws_launch_configuration.test.name}"
+  launch_configuration = aws_launch_configuration.test.name
 
   lifecycle {
     create_before_destroy = true
@@ -3168,13 +3175,13 @@ resource "aws_autoscaling_group" "test" {
 func test_config_blue_green_deployment_config_create_no_asg(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   deployment_style {
-	deployment_option = "WITH_TRAFFIC_CONTROL"
-	deployment_type   = "BLUE_GREEN"
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+    deployment_type   = "BLUE_GREEN"
   }
 
   load_balancer_info {
@@ -3185,7 +3192,7 @@ resource "aws_codedeploy_deployment_group" "test" {
 
   blue_green_deployment_config {
     deployment_ready_option {
-      action_on_timeout = "STOP_DEPLOYMENT"
+      action_on_timeout    = "STOP_DEPLOYMENT"
       wait_time_in_minutes = 60
     }
 
@@ -3194,7 +3201,7 @@ resource "aws_codedeploy_deployment_group" "test" {
     }
 
     terminate_blue_instances_on_deployment_success {
-      action = "TERMINATE"
+      action                           = "TERMINATE"
       termination_wait_time_in_minutes = 120
     }
   }
@@ -3205,13 +3212,13 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_blue_green_deployment_config_update_no_asg(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   deployment_style {
-	deployment_option = "WITH_TRAFFIC_CONTROL"
-	deployment_type   = "BLUE_GREEN"
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+    deployment_type   = "BLUE_GREEN"
   }
 
   load_balancer_info {
@@ -3240,13 +3247,13 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_blue_green_deployment_complete(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   deployment_style {
     deployment_option = "WITH_TRAFFIC_CONTROL"
-    deployment_type = "BLUE_GREEN"
+    deployment_type   = "BLUE_GREEN"
   }
 
   load_balancer_info {
@@ -3257,7 +3264,7 @@ resource "aws_codedeploy_deployment_group" "test" {
 
   blue_green_deployment_config {
     deployment_ready_option {
-      action_on_timeout = "STOP_DEPLOYMENT"
+      action_on_timeout    = "STOP_DEPLOYMENT"
       wait_time_in_minutes = 60
     }
 
@@ -3276,13 +3283,13 @@ resource "aws_codedeploy_deployment_group" "test" {
 func test_config_blue_green_deployment_complete_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name = "${aws_codedeploy_app.test.name}"
+  app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn      = aws_iam_role.test.arn
 
   deployment_style {
     deployment_option = "WITH_TRAFFIC_CONTROL"
-    deployment_type = "BLUE_GREEN"
+    deployment_type   = "BLUE_GREEN"
   }
 
   load_balancer_info {
@@ -3310,7 +3317,8 @@ resource "aws_codedeploy_deployment_group" "test" {
 
 func testAccAWSCodeDeployDeploymentGroupConfigEcsBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -3323,9 +3331,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-codedeploy-deployment-group-ecs"
@@ -3334,10 +3342,10 @@ resource "aws_subnet" "test" {
 
 resource "aws_security_group" "test" {
   name   = %[1]q
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   ingress {
-    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    cidr_blocks = [aws_vpc.test.cidr_block]
     from_port   = 80
     protocol    = "6"
     to_port     = 8000
@@ -3349,7 +3357,7 @@ resource "aws_lb_target_group" "blue" {
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 }
 
 resource "aws_lb_target_group" "green" {
@@ -3357,22 +3365,22 @@ resource "aws_lb_target_group" "green" {
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 }
 
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = "${aws_lb.test.arn}"
+  load_balancer_arn = aws_lb.test.arn
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.blue.arn}"
+    target_group_arn = aws_lb_target_group.blue.arn
     type             = "forward"
   }
 }
@@ -3406,14 +3414,15 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
+
 }
 
 resource "aws_ecs_service" "test" {
-  cluster         = "${aws_ecs_cluster.test.id}"
+  cluster         = aws_ecs_cluster.test.id
   desired_count   = 1
   launch_type     = "FARGATE"
   name            = %[1]q
-  task_definition = "${aws_ecs_task_definition.test.arn}"
+  task_definition = aws_ecs_task_definition.test.arn
 
   deployment_controller {
     type = "CODE_DEPLOY"
@@ -3422,13 +3431,13 @@ resource "aws_ecs_service" "test" {
   load_balancer {
     container_name   = "test"
     container_port   = "80"
-    target_group_arn = "${aws_lb_target_group.blue.id}"
+    target_group_arn = aws_lb_target_group.blue.id
   }
 
   network_configuration {
     assign_public_ip = true
-    security_groups  = ["${aws_security_group.test.id}"]
-    subnets          = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    security_groups  = [aws_security_group.test.id]
+    subnets          = [aws_subnet.test[0].id, aws_subnet.test[1].id]
   }
 }
 
@@ -3455,10 +3464,11 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy" "test" {
-  role = "${aws_iam_role.test.name}"
+  role = aws_iam_role.test.name
 
   policy = <<POLICY
 {
@@ -3488,6 +3498,7 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
+
 }
 `, rName)
 }
