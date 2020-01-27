@@ -429,6 +429,7 @@ func testAccAWSSSMPatchBaselineBasicConfigApprovedPatchesNonSec(rName string) st
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                                 = %q
+  operating_system                     = "AMAZON_LINUX"
   description                          = "Baseline containing all updates approved for production systems"
   approved_patches                     = ["KB123456"]
   approved_patches_compliance_level    = "CRITICAL"
