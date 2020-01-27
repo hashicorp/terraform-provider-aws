@@ -69,9 +69,5 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 		return !lastPage
 	})
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
