@@ -90,6 +90,7 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 func TestAccAWSElasticSearchDomain_RequireHTTPS(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
