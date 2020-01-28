@@ -44,6 +44,11 @@ func resourceAwsGameliftFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Default:  gamelift.FleetTypeOnDemand,
+				ValidateFunc: validation.StringInSlice([]string{
+					gamelift.FleetTypeOnDemand,
+					gamelift.FleetTypeSpot,
+				}, false),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -318,7 +323,6 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", fleet.Name)
 	d.Set("fleet_type", fleet.FleetType)
 	d.Set("instance_role_arn", fleet.InstanceRoleArn)
-  d.Set("fleet_type", fleet.FleetType)
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("operating_system", fleet.OperatingSystem)
 	d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy))
