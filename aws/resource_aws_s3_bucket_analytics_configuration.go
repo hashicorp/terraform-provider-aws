@@ -101,7 +101,7 @@ func resourceAwsS3BucketAnalyticsConfigurationCreate(d *schema.ResourceData, met
 func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).s3conn
 
-	bucket, name, err := resourceAwsS3BucketAnalyticsParseID(d.Id())
+	bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func resourceAwsS3BucketAnalyticsConfigurationUpdate(d *schema.ResourceData, met
 func resourceAwsS3BucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).s3conn
 
-	bucket, name, err := resourceAwsS3BucketAnalyticsParseID(d.Id())
+	bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -154,10 +154,10 @@ func resourceAwsS3BucketAnalyticsConfigurationDelete(d *schema.ResourceData, met
 		return fmt.Errorf("Error deleting S3 analytics configuration: %w", err)
 	}
 
-	return nil
+	return waitForDeleteS3BucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
 }
 
-func resourceAwsS3BucketAnalyticsParseID(id string) (string, string, error) {
+func resourceAwsS3BucketAnalyticsConfigurationParseID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("please make sure the ID is in the form BUCKET:NAME (i.e. my-bucket:EntireBucket")
@@ -165,4 +165,28 @@ func resourceAwsS3BucketAnalyticsParseID(id string) (string, string, error) {
 	bucket := idParts[0]
 	name := idParts[1]
 	return bucket, name, nil
+}
+
+func waitForDeleteS3BucketAnalyticsConfiguration(conn *s3.S3, bucket, name string, timeout time.Duration) error {
+	err := resource.Retry(timeout, func() *resource.RetryError {
+		input := &s3.GetBucketAnalyticsConfigurationInput{
+			Bucket: aws.String(bucket),
+			Id:     aws.String(name),
+		}
+		log.Printf("[DEBUG] Reading S3 bucket analytics configuration: %s", input)
+		output, err := conn.GetBucketAnalyticsConfiguration(input)
+		if err != nil {
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
+				return nil
+			}
+			return resource.NonRetryableError(err)
+		}
+		if output.AnalyticsConfiguration != nil {
+			return resource.RetryableError(fmt.Errorf("S3 bucket analytics configuration exists: %v", output))
+		}
+
+		return nil
+	})
+
+	return err
 }

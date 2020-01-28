@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"testing"
 	"time"
 
@@ -71,34 +70,13 @@ func testAccCheckAWSS3BucketAnalyticsConfigurationDestroy(s *terraform.State) er
 			continue
 		}
 
-		bucket, name, err := resourceAwsS3BucketAnalyticsParseID(rs.Primary.ID)
+		bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-			input := &s3.GetBucketAnalyticsConfigurationInput{
-				Bucket: aws.String(bucket),
-				Id:     aws.String(name),
-			}
-			log.Printf("[DEBUG] Reading S3 bucket analytics configuration: %s", input)
-			output, err := conn.GetBucketAnalyticsConfiguration(input)
-			if err != nil {
-				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
-					return nil
-				}
-				return resource.NonRetryableError(err)
-			}
-			if output.AnalyticsConfiguration != nil {
-				return resource.RetryableError(fmt.Errorf("S3 bucket analytics configuration exists: %v", output))
-			}
+		return waitForDeleteS3BucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
 
-			return nil
-		})
-
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -132,27 +110,7 @@ func testAccCheckAWSS3BucketAnalyticsConfigurationExists(n string, ac *s3.Analyt
 func testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(bucket, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			input := &s3.GetBucketAnalyticsConfigurationInput{
-				Bucket: aws.String(bucket),
-				Id:     aws.String(name),
-			}
-			log.Printf("[DEBUG] Reading S3 bucket analytics configuration: %s", input)
-			output, err := conn.GetBucketAnalyticsConfiguration(input)
-			if err != nil {
-				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
-					return nil
-				}
-				return resource.NonRetryableError(err)
-			}
-			if output.AnalyticsConfiguration != nil {
-				return resource.RetryableError(fmt.Errorf("S3 bucket analytics configuration exists: %v", output))
-			}
-
-			return nil
-		})
-
-		return err
+		return waitForDeleteS3BucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
 	}
 }
 
