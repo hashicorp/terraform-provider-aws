@@ -23,7 +23,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfiguration(rName),
+				Config: testAccAWSS3BucketAnalyticsConfiguration(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -47,7 +47,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_removed(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfiguration(rName),
+				Config: testAccAWSS3BucketAnalyticsConfiguration(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
 				),
@@ -56,6 +56,53 @@ func TestAccAWSS3BucketAnalyticsConfiguration_removed(t *testing.T) {
 				Config: testAccAWSS3BucketAnalyticsConfiguration_removed(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(rName, rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
+	var ac s3.AnalyticsConfiguration
+	originalACName := acctest.RandomWithPrefix("tf-acc-test")
+	originalBucketName := acctest.RandomWithPrefix("tf-acc-test")
+	updatedACName := acctest.RandomWithPrefix("tf-acc-test")
+	updatedBucketName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_s3_bucket_analytics_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketAnalyticsConfiguration(originalACName, originalBucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "name", originalACName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketAnalyticsConfiguration(updatedACName, originalBucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketAnalyticsConfigurationUpdateBucket(updatedACName, originalBucketName, updatedBucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test_2", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "0"),
 				),
 			},
 		},
@@ -114,23 +161,40 @@ func testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(bucket, name string) r
 	}
 }
 
-func testAccAWSS3BucketAnalyticsConfiguration(rName string) string {
+func testAccAWSS3BucketAnalyticsConfiguration(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
-  name   = %[1]q
-}
-`, rName) + testAccAWSS3BucketAnalyticsConfiguration_base(rName)
+  name   = %q
 }
 
-func testAccAWSS3BucketAnalyticsConfiguration_removed(rName string) string {
-	return testAccAWSS3BucketAnalyticsConfiguration_base(rName)
+resource "aws_s3_bucket" "test" {
+  bucket = %q
+}
+`, name, bucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfiguration_base(rName string) string {
+func testAccAWSS3BucketAnalyticsConfiguration_removed(bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket = %q
 }
-`, rName)
+`, bucket)
+}
+
+func testAccAWSS3BucketAnalyticsConfigurationUpdateBucket(name, originalBucket, updatedBucket string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_analytics_configuration" "test" {
+  bucket = aws_s3_bucket.test_2.bucket
+  name   = %q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %q
+}
+
+resource "aws_s3_bucket" "test_2" {
+  bucket = %q
+}
+`, name, originalBucket, updatedBucket)
 }
