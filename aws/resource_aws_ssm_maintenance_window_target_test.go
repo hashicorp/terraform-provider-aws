@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
+	var maint ssm.MaintenanceWindowTarget
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -23,7 +24,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 			{
 				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName),
+					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
@@ -41,6 +42,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 }
 
 func TestAccAWSSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
+	var maint ssm.MaintenanceWindowTarget
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,7 +53,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 			{
 				Config: testAccAWSSSMMaintenanceWindowTargetNoNameOrDescriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName),
+					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
@@ -89,6 +91,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_validation(t *testing.T) {
 }
 
 func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
+	var maint ssm.MaintenanceWindowTarget
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -99,7 +102,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 			{
 				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName),
+					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
@@ -114,7 +117,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 			{
 				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName),
+					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "owner_information", "something"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
@@ -131,6 +134,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 }
 
 func TestAccAWSSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
+	var maint ssm.MaintenanceWindowTarget
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -141,7 +145,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 			{
 				Config: testAccAWSSSMMaintenanceWindowTargetBasicResourceGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName),
+					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "resource-groups:ResourceTypeFilters"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "AWS::EC2::INSTANCE"),
@@ -158,7 +162,28 @@ func TestAccAWSSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSSMMaintenanceWindowTargetExists(n string) resource.TestCheckFunc {
+func TestAccAWSSSMMaintenanceWindowTarget_disappears(t *testing.T) {
+	var maint ssm.MaintenanceWindowTarget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_maintenance_window_target.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
+					testAccCheckAWSSSMMaintenanceWindowTargetDisappears(&maint),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSSSMMaintenanceWindowTargetExists(n string, mWindTarget *ssm.MaintenanceWindowTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -186,11 +211,26 @@ func testAccCheckAWSSSMMaintenanceWindowTargetExists(n string) resource.TestChec
 
 		for _, i := range resp.Targets {
 			if *i.WindowTargetId == rs.Primary.ID {
+				*mWindTarget = *resp.Targets[0]
 				return nil
 			}
 		}
 
 		return fmt.Errorf("No AWS SSM Maintenance window target found")
+	}
+}
+
+func testAccCheckAWSSSMMaintenanceWindowTargetDisappears(mWindTarget *ssm.MaintenanceWindowTarget) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+		input := &ssm.DeregisterTargetFromMaintenanceWindowInput{
+			WindowId:       mWindTarget.WindowId,
+			WindowTargetId: mWindTarget.WindowTargetId,
+		}
+
+		_, err := conn.DeregisterTargetFromMaintenanceWindow(input)
+
+		return err
 	}
 }
 
