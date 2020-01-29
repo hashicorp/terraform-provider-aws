@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * data-source/aws_efs_file_system: Add `lifecycle_policy`, `provisioned_throughput_in_mibps`, and `throughput_mode` attributes [GH-11647]
 * resource/aws_elasticsearch_domain: Add `domain_endpoint_options` configuration block (support enforcing HTTPS) [GH-10430]
+* resource/aws_gamelift_fleet: Add `fleet_type` argument (support Spot Fleets) [GH-8234]
 * resource/aws_ssm_maintenance_window: Add `description` argument [GH-11478]
 
 BUG FIXES:
