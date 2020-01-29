@@ -37,10 +37,14 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
 						},
-						"tags": tagsSchema(),
+						"tags": schemaWithAtLeastOneOf(
+							tagsSchema(),
+							[]string{"filter.0.prefix", "filter.0.tags"},
+						),
 					},
 				},
 			},
@@ -56,6 +60,11 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 	}
 }
 
+func schemaWithAtLeastOneOf(schema *schema.Schema, keys []string) *schema.Schema {
+	schema.AtLeastOneOf = keys
+	return schema
+}
+
 func resourceAwsS3BucketAnalyticsConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
 
@@ -67,6 +76,7 @@ func resourceAwsS3BucketAnalyticsConfigurationCreate(d *schema.ResourceData, met
 	storageClassAnalysis := &s3.StorageClassAnalysis{}
 	analyticsConfiguration := &s3.AnalyticsConfiguration{
 		Id:                   aws.String(name),
+		Filter:               expandS3AnalyticsFilter(d.Get("filter").([]interface{})),
 		StorageClassAnalysis: storageClassAnalysis,
 	}
 
@@ -115,13 +125,17 @@ func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Reading S3 bucket analytics configuration: %s", input)
-	_, err = conn.GetBucketAnalyticsConfiguration(input)
+	output, err := conn.GetBucketAnalyticsConfiguration(input)
 	if err != nil {
 		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 			log.Printf("[WARN] %s S3 bucket analytics configuration not found, removing from state.", d.Id())
 			d.SetId("")
 			return nil
 		}
+		return err
+	}
+
+	if err := d.Set("filter", flattenS3AnalyticsFilter(output.AnalyticsConfiguration.Filter)); err != nil {
 		return err
 	}
 
@@ -165,6 +179,71 @@ func resourceAwsS3BucketAnalyticsConfigurationParseID(id string) (string, string
 	bucket := idParts[0]
 	name := idParts[1]
 	return bucket, name, nil
+}
+
+func expandS3AnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	var prefix string
+	if v, ok := m["prefix"]; ok {
+		prefix = v.(string)
+	}
+
+	var tags []*s3.Tag
+	if v, ok := m["tags"]; ok {
+		tags = tagsFromMapS3(v.(map[string]interface{}))
+	}
+
+	if prefix == "" && len(tags) == 0 {
+		return nil
+	}
+	analyticsFilter := &s3.AnalyticsFilter{}
+	if prefix != "" && len(tags) > 0 {
+		analyticsFilter.And = &s3.AnalyticsAndOperator{
+			Prefix: aws.String(prefix),
+			Tags:   tags,
+		}
+	} else if len(tags) > 1 {
+		analyticsFilter.And = &s3.AnalyticsAndOperator{
+			Tags: tags,
+		}
+	} else if len(tags) == 1 {
+		analyticsFilter.Tag = tags[0]
+	} else {
+		analyticsFilter.Prefix = aws.String(prefix)
+	}
+	return analyticsFilter
+}
+
+func flattenS3AnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]interface{} {
+	if analyticsFilter == nil {
+		return nil
+	}
+
+	result := make(map[string]interface{})
+	if analyticsFilter.And != nil {
+		and := *analyticsFilter.And
+		if and.Prefix != nil {
+			result["prefix"] = *and.Prefix
+		}
+		if and.Tags != nil {
+			result["tags"] = tagsToMapS3(and.Tags)
+		}
+	} else if analyticsFilter.Prefix != nil {
+		result["prefix"] = *analyticsFilter.Prefix
+	} else if analyticsFilter.Tag != nil {
+		tags := []*s3.Tag{
+			analyticsFilter.Tag,
+		}
+		result["tags"] = tagsToMapS3(tags)
+	} else {
+		return nil
+	}
+	return []map[string]interface{}{result}
 }
 
 func waitForDeleteS3BucketAnalyticsConfiguration(conn *s3.S3, bucket, name string, timeout time.Duration) error {

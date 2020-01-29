@@ -2,6 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"reflect"
+	"regexp"
+	"sort"
 	"testing"
 	"time"
 
@@ -109,6 +112,22 @@ func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketAnalyticsConfiguration_WithEmptyFilter(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSS3BucketAnalyticsConfigurationWithEmptyFilter(rName, rName),
+				ExpectError: regexp.MustCompile(`config is invalid: 2 problems:`),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSS3BucketAnalyticsConfigurationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).s3conn
 
@@ -197,4 +216,282 @@ resource "aws_s3_bucket" "test_2" {
   bucket = %q
 }
 `, name, originalBucket, updatedBucket)
+}
+
+func testAccAWSS3BucketAnalyticsConfigurationWithEmptyFilter(name, bucket string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_analytics_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  name   = %q
+
+  filter {
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %q
+}
+`, name, bucket)
+}
+
+func TestExpandS3AnalyticsFilter(t *testing.T) {
+	testCases := []struct {
+		Config          []interface{}
+		AnalyticsFilter *s3.AnalyticsFilter
+	}{
+		{
+			Config:          nil,
+			AnalyticsFilter: nil,
+		},
+		{
+			Config:          []interface{}{},
+			AnalyticsFilter: nil,
+		},
+		{
+			Config: []interface{}{
+				map[string]interface{}{
+					"prefix": "prefix/",
+				},
+			},
+			AnalyticsFilter: &s3.AnalyticsFilter{
+				Prefix: aws.String("prefix/"),
+			},
+		},
+		{
+			Config: []interface{}{
+				map[string]interface{}{
+					"prefix": "prefix/",
+					"tags": map[string]interface{}{
+						"tag1key": "tag1value",
+					},
+				},
+			},
+			AnalyticsFilter: &s3.AnalyticsFilter{
+				And: &s3.AnalyticsAndOperator{
+					Prefix: aws.String("prefix/"),
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+					},
+				},
+			},
+		},
+		{
+			Config: []interface{}{map[string]interface{}{
+				"prefix": "prefix/",
+				"tags": map[string]interface{}{
+					"tag1key": "tag1value",
+					"tag2key": "tag2value",
+				},
+			},
+			},
+			AnalyticsFilter: &s3.AnalyticsFilter{
+				And: &s3.AnalyticsAndOperator{
+					Prefix: aws.String("prefix/"),
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+						{
+							Key:   aws.String("tag2key"),
+							Value: aws.String("tag2value"),
+						},
+					},
+				},
+			},
+		},
+		{
+			Config: []interface{}{
+				map[string]interface{}{
+					"tags": map[string]interface{}{
+						"tag1key": "tag1value",
+					},
+				},
+			},
+			AnalyticsFilter: &s3.AnalyticsFilter{
+				Tag: &s3.Tag{
+					Key:   aws.String("tag1key"),
+					Value: aws.String("tag1value"),
+				},
+			},
+		},
+		{
+			Config: []interface{}{
+				map[string]interface{}{
+					"tags": map[string]interface{}{
+						"tag1key": "tag1value",
+						"tag2key": "tag2value",
+					},
+				},
+			},
+			AnalyticsFilter: &s3.AnalyticsFilter{
+				And: &s3.AnalyticsAndOperator{
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+						{
+							Key:   aws.String("tag2key"),
+							Value: aws.String("tag2value"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i, tc := range testCases {
+		value := expandS3AnalyticsFilter(tc.Config)
+
+		if value == nil {
+			if tc.AnalyticsFilter == nil {
+				continue
+			} else {
+				t.Errorf("Case #%d: Got nil\nExpected:\n%v", i, tc.AnalyticsFilter)
+			}
+		}
+
+		if tc.AnalyticsFilter == nil {
+			t.Errorf("Case #%d: Got: %v\nExpected: nil", i, value)
+		}
+
+		// Sort tags by key for consistency
+		if value.And != nil && value.And.Tags != nil {
+			sort.Slice(value.And.Tags, func(i, j int) bool {
+				return *value.And.Tags[i].Key < *value.And.Tags[j].Key
+			})
+		}
+
+		// Convert to strings to avoid dealing with pointers
+		valueS := fmt.Sprintf("%v", value)
+		expectedValueS := fmt.Sprintf("%v", tc.AnalyticsFilter)
+
+		if valueS != expectedValueS {
+			t.Errorf("Case #%d: Given:\n%s\n\nExpected:\n%s", i, valueS, expectedValueS)
+		}
+	}
+}
+
+func TestFlattenS3AnalyticsFilter(t *testing.T) {
+	testCases := []struct {
+		AnalyticsFilter *s3.AnalyticsFilter
+		ExpectedFilter  []map[string]interface{}
+	}{
+		{
+			AnalyticsFilter: nil,
+			ExpectedFilter:  nil,
+		},
+		{
+			AnalyticsFilter: &s3.AnalyticsFilter{},
+			ExpectedFilter:  nil,
+		},
+		{
+			AnalyticsFilter: &s3.AnalyticsFilter{
+				Prefix: aws.String("prefix/"),
+			},
+			ExpectedFilter: []map[string]interface{}{
+				{
+					"prefix": "prefix/",
+				},
+			},
+		},
+		{
+			AnalyticsFilter: &s3.AnalyticsFilter{
+				And: &s3.AnalyticsAndOperator{
+					Prefix: aws.String("prefix/"),
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+					},
+				},
+			},
+			ExpectedFilter: []map[string]interface{}{
+				{
+					"prefix": "prefix/",
+					"tags": map[string]string{
+						"tag1key": "tag1value",
+					},
+				},
+			},
+		},
+		{
+			AnalyticsFilter: &s3.AnalyticsFilter{
+				And: &s3.AnalyticsAndOperator{
+					Prefix: aws.String("prefix/"),
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+						{
+							Key:   aws.String("tag2key"),
+							Value: aws.String("tag2value"),
+						},
+					},
+				},
+			},
+			ExpectedFilter: []map[string]interface{}{
+				{
+					"prefix": "prefix/",
+					"tags": map[string]string{
+						"tag1key": "tag1value",
+						"tag2key": "tag2value",
+					},
+				},
+			},
+		},
+		{
+			AnalyticsFilter: &s3.AnalyticsFilter{
+				Tag: &s3.Tag{
+					Key:   aws.String("tag1key"),
+					Value: aws.String("tag1value"),
+				},
+			},
+			ExpectedFilter: []map[string]interface{}{
+				{
+					"tags": map[string]string{
+						"tag1key": "tag1value",
+					},
+				},
+			},
+		},
+		{
+			AnalyticsFilter: &s3.AnalyticsFilter{
+				And: &s3.AnalyticsAndOperator{
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+						{
+							Key:   aws.String("tag2key"),
+							Value: aws.String("tag2value"),
+						},
+					},
+				},
+			},
+			ExpectedFilter: []map[string]interface{}{
+				{
+					"tags": map[string]string{
+						"tag1key": "tag1value",
+						"tag2key": "tag2value",
+					},
+				},
+			},
+		},
+	}
+
+	for i, tc := range testCases {
+		value := flattenS3AnalyticsFilter(tc.AnalyticsFilter)
+
+		if !reflect.DeepEqual(value, tc.ExpectedFilter) {
+			t.Errorf("Case #%d: Got:\n%v\n\nExpected:\n%v", i, value, tc.ExpectedFilter)
+		}
+	}
 }
