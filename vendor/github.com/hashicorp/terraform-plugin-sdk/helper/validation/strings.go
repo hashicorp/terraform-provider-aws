@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 )
 
-// StringIsNotEmpty is a ValidateFunc that ensures a string is not empty or consisting entirely of whitespace characters
+// StringIsNotEmpty is a ValidateFunc that ensures a string is not empty
 func StringIsNotEmpty(i interface{}, k string) ([]string, []error) {
 	v, ok := i.(string)
 	if !ok {
@@ -18,13 +18,13 @@ func StringIsNotEmpty(i interface{}, k string) ([]string, []error) {
 	}
 
 	if v == "" {
-		return nil, []error{fmt.Errorf("expected %q to not be an empty string", k)}
+		return nil, []error{fmt.Errorf("expected %q to not be an empty string, got %v", k, i)}
 	}
 
 	return nil, nil
 }
 
-// StringIsNotEmpty is a ValidateFunc that ensures a string is not empty or consisting entirely of whitespace characters
+// StringIsNotWhiteSpace is a ValidateFunc that ensures a string is not empty or consisting entirely of whitespace characters
 func StringIsNotWhiteSpace(i interface{}, k string) ([]string, []error) {
 	v, ok := i.(string)
 	if !ok {
@@ -52,7 +52,7 @@ func StringIsEmpty(i interface{}, k string) ([]string, []error) {
 	return nil, nil
 }
 
-// StringIsEmpty is a ValidateFunc that ensures a string is composed of entirely whitespace
+// StringIsWhiteSpace is a ValidateFunc that ensures a string is composed of entirely whitespace
 func StringIsWhiteSpace(i interface{}, k string) ([]string, []error) {
 	v, ok := i.(string)
 	if !ok {
@@ -69,16 +69,18 @@ func StringIsWhiteSpace(i interface{}, k string) ([]string, []error) {
 // StringLenBetween returns a SchemaValidateFunc which tests if the provided value
 // is of type string and has length between min and max (inclusive)
 func StringLenBetween(min, max int) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
+	return func(i interface{}, k string) (warnings []string, errors []error) {
 		v, ok := i.(string)
 		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be string", k))
-			return
+			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+			return warnings, errors
 		}
+
 		if len(v) < min || len(v) > max {
-			es = append(es, fmt.Errorf("expected length of %s to be in the range (%d - %d), got %s", k, min, max, v))
+			errors = append(errors, fmt.Errorf("expected length of %s to be in the range (%d - %d), got %s", k, min, max, v))
 		}
-		return
+
+		return warnings, errors
 	}
 }
 
@@ -97,7 +99,7 @@ func StringMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
 				return nil, []error{fmt.Errorf("invalid value for %s (%s)", k, message)}
 
 			}
-			return nil, []error{fmt.Errorf("expected value of %s to match regular expression %q", k, r)}
+			return nil, []error{fmt.Errorf("expected value of %s to match regular expression %q, got %v", k, r, i)}
 		}
 		return nil, nil
 	}
@@ -118,7 +120,7 @@ func StringDoesNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateF
 				return nil, []error{fmt.Errorf("invalid value for %s (%s)", k, message)}
 
 			}
-			return nil, []error{fmt.Errorf("expected value of %s to not match regular expression %q", k, r)}
+			return nil, []error{fmt.Errorf("expected value of %s to not match regular expression %q, got %v", k, r, i)}
 		}
 		return nil, nil
 	}
@@ -128,40 +130,40 @@ func StringDoesNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateF
 // is of type string and matches the value of an element in the valid slice
 // will test with in lower case if ignoreCase is true
 func StringInSlice(valid []string, ignoreCase bool) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
+	return func(i interface{}, k string) (warnings []string, errors []error) {
 		v, ok := i.(string)
 		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be string", k))
-			return
+			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+			return warnings, errors
 		}
 
 		for _, str := range valid {
 			if v == str || (ignoreCase && strings.ToLower(v) == strings.ToLower(str)) {
-				return
+				return warnings, errors
 			}
 		}
 
-		es = append(es, fmt.Errorf("expected %s to be one of %v, got %s", k, valid, v))
-		return
+		errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, valid, v))
+		return warnings, errors
 	}
 }
 
 // StringDoesNotContainAny returns a SchemaValidateFunc which validates that the
 // provided value does not contain any of the specified Unicode code points in chars.
 func StringDoesNotContainAny(chars string) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
+	return func(i interface{}, k string) (warnings []string, errors []error) {
 		v, ok := i.(string)
 		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be string", k))
-			return
+			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+			return warnings, errors
 		}
 
 		if strings.ContainsAny(v, chars) {
-			es = append(es, fmt.Errorf("expected value of %s to not contain any of %q", k, chars))
-			return
+			errors = append(errors, fmt.Errorf("expected value of %s to not contain any of %q, got %v", k, chars, i))
+			return warnings, errors
 		}
 
-		return
+		return warnings, errors
 	}
 }
 
@@ -174,41 +176,56 @@ func StringIsBase64(i interface{}, k string) (warnings []string, errors []error)
 
 	// NoEmptyStrings checks it is a string
 	v, _ := i.(string)
+
 	if _, err := base64.StdEncoding.DecodeString(v); err != nil {
 		errors = append(errors, fmt.Errorf("expected %q to be a base64 string, got %v", k, v))
 	}
 
-	return
-}
-
-// ValidateListUniqueStrings is a ValidateFunc that ensures a list has no
-// duplicate items in it. It's useful for when a list is needed over a set
-// because order matters, yet the items still need to be unique.
-func ValidateListUniqueStrings(v interface{}, k string) (ws []string, errors []error) {
-	for n1, v1 := range v.([]interface{}) {
-		for n2, v2 := range v.([]interface{}) {
-			if v1.(string) == v2.(string) && n1 != n2 {
-				errors = append(errors, fmt.Errorf("%q: duplicate entry - %s", k, v1.(string)))
-			}
-		}
-	}
-	return
+	return warnings, errors
 }
 
 // ValidateJsonString is a SchemaValidateFunc which tests to make sure the
 // supplied string is valid JSON.
-func ValidateJsonString(v interface{}, k string) (ws []string, errors []error) {
+//
+// Deprecated: use StringIsJSON instead
+func ValidateJsonString(i interface{}, k string) (warnings []string, errors []error) {
+	return StringIsJSON(i, k)
+}
+
+// StringIsJSON is a SchemaValidateFunc which tests to make sure the supplied string is valid JSON.
+func StringIsJSON(i interface{}, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return warnings, errors
+	}
+
 	if _, err := structure.NormalizeJsonString(v); err != nil {
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 	}
-	return
+
+	return warnings, errors
 }
 
 // ValidateRegexp returns a SchemaValidateFunc which tests to make sure the
 // supplied string is a valid regular expression.
-func ValidateRegexp(v interface{}, k string) (ws []string, errors []error) {
-	if _, err := regexp.Compile(v.(string)); err != nil {
+//
+// Deprecated: use StringIsValidRegExp instead
+func ValidateRegexp(i interface{}, k string) (warnings []string, errors []error) {
+	return StringIsValidRegExp(i, k)
+}
+
+// StringIsValidRegExp returns a SchemaValidateFunc which tests to make sure the supplied string is a valid regular expression.
+func StringIsValidRegExp(i interface{}, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return warnings, errors
+	}
+
+	if _, err := regexp.Compile(v); err != nil {
 		errors = append(errors, fmt.Errorf("%q: %s", k, err))
 	}
-	return
+
+	return warnings, errors
 }
