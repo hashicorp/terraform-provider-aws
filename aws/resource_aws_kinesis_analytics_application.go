@@ -143,54 +143,56 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 			"snapshots_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					snapshotsEnabled := strconv.FormatBool(d.Get(k).(bool))
+					if snapshotsEnabled == old {
+						return true
+					}
+					return false
+				},
 			},
-
 			"flink_application_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"sql_application_configuration"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"checkpoint_configuration": {
-							Type:       schema.TypeMap,
-							Optional:   true,
-							ConfigMode: schema.SchemaConfigModeAttr,
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"checkpoint_interval": {
 										Type:     schema.TypeInt,
 										Optional: true,
-										Default:  60000,
 									},
 									"checkpointing_enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										Default:  true,
 									},
 									"configuration_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
 										ValidateFunc: validateKinesisAnalyticsConfigurationType,
 									},
 									"min_pause_between_checkpoints": {
 										Type:     schema.TypeInt,
 										Optional: true,
-										Default:  5000,
 									},
 								},
 							},
 						},
 						"monitoring_configuration": {
-							Type:       schema.TypeMap,
-							Optional:   true,
-							ConfigMode: schema.SchemaConfigModeAttr,
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"configuration_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
 										ValidateFunc: validateKinesisAnalyticsConfigurationType,
 									},
 									"log_level": {
@@ -207,20 +209,18 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 							},
 						},
 						"parallelism_configuration": {
-							Type:       schema.TypeMap,
-							Optional:   true,
-							ConfigMode: schema.SchemaConfigModeAttr,
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"autoscaling_enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										Default:  false,
 									},
 									"configuration_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Default:      kinesisanalyticsv2.ConfigurationTypeDefault,
 										ValidateFunc: validateKinesisAnalyticsConfigurationType,
 									},
 									"parallelism": {
@@ -239,9 +239,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 			},
 
 			"sql_application_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"flink_application_configuration"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"inputs": {

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -702,6 +703,21 @@ func TestAccAWSKinesisAnalyticsApplication_tags(t *testing.T) {
 				ResourceName:      resName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_SQLConflictsWithFlinkConfig(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccKinesisAnalyticsApplicationWithConfigConflict(rInt),
+				ExpectError: regexp.MustCompile("[.]*conflicts with[.]*"),
 			},
 		},
 	})
@@ -1577,4 +1593,36 @@ resource "aws_kinesis_analytics_application" "test" {
   }
 }
 `, rInt, rInt, tag1, tag2, tag3)
+}
+
+func testAccKinesisAnalyticsApplicationWithConfigConflict(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["kinesisanalytics.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "kinesis_analytics_application" {
+  name               = "tf-acc-test-%d-kinesis"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name                   = "testAcc-%d"
+  runtime                = "SQL-1_0"
+  service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
+  code_content_type      = "plain_text"
+  code                   = "testCode\n"
+
+  flink_application_configuration {}
+  sql_application_configuration {}
+}
+`, rInt, rInt)
 }
