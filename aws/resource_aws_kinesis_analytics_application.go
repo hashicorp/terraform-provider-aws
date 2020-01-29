@@ -145,10 +145,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					snapshotsEnabled := strconv.FormatBool(d.Get(k).(bool))
-					if snapshotsEnabled == old {
-						return true
-					}
-					return false
+					return snapshotsEnabled == old
 				},
 			},
 			"flink_application_configuration": {
