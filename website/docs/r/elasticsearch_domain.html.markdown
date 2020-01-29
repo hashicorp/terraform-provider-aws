@@ -224,7 +224,7 @@ The following arguments are supported:
 * `vpc_options` - (Optional) VPC related options, see below. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)).
 * `log_publishing_options` - (Optional) Options for publishing slow logs to CloudWatch Logs.
 * `elasticsearch_version` - (Optional) The version of Elasticsearch to deploy. Defaults to `1.5`
-* `enforce_httpsnt_options` - (Optional) Domain endpoint HTTP(S) related options. See below.
+* `domain_endpoint_options` - (Optional) Domain endpoint HTTP(S) related options. See below.
 * `tags` - (Optional) A mapping of tags to assign to the resource
 
 **ebs_options** supports the following attributes:
@@ -243,7 +243,7 @@ The following arguments are supported:
 
 **domain_endpoint_options** supports the following attributes:
 
-* `require_https` - (Required) Whether or not to require HTTPS
+* `enforce_https` - (Required) Whether or not to require HTTPS
 * `tls_security_policy` - (Optional) The name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07` and `Policy-Min-TLS-1-2-2019-07`. Terraform will only perform drift detection if a configuration value is provided.
 
 **cluster_config** supports the following attributes:
