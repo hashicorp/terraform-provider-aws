@@ -147,7 +147,7 @@ The following arguments are supported:
 
 #### open_monitoring Argument Reference
 
-* `prometheus` - (Optional) Configuration block for Prometheus settings for open monitoring. See below.
+* `prometheus` - (Required) Configuration block for Prometheus settings for open monitoring. See below.
 
 #### open_monitoring prometheus Argument Reference
 

@@ -213,10 +213,9 @@ func resourceAwsMskCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prometheus": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"jmx_exporter": {
