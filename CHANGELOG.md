@@ -6,7 +6,6 @@ NOTES:
 
 ENHANCEMENTS:
 
-* data-source/aws_api_gateway_rest_api: Fixes root_resource_id not being set on correctly when REST API contains more than 25 resources [GH-11705]
 * data-source/aws_dynamodb_table: Add `server_side_encryption` `kms_key_arn` attribute [GH-11081]
 * data-source/aws_efs_file_system: Add `lifecycle_policy`, `provisioned_throughput_in_mibps`, and `throughput_mode` attributes [GH-11647]
 * resource/aws_dynamodb_table: Add `server_side_encryption` configuration block `kms_key_arn` argument (support customer managed CMKs for server-side encryption) [GH-11081]
@@ -18,12 +17,13 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* service/efs: Generate proper `dns_name` attribute hostname suffix in AWS China, AWS C2S, and AWS SC2S partitions [GH-11746]
+* data-source/aws_api_gateway_rest_api: Fixes `root_resource_id` not being set on correctly when REST API contains more than 25 resources [GH-11705]
 * resource/aws_cognito_user_pool: Deprecate `unused_account_validity_days` argument and add support for `temporary_password_validity_days` argument [GH-10890]
 * resource/aws_elasticsearch_domain: Automatically retry resource creation on additional error messages relating to eventual consistency [GH-11663]
 * resource/aws_emr_instance_group: Wait for `RUNNING` status on creation [GH-11688]
 * resource/aws_ssm_activation: Properly trigger resource recreation when deleted outside Terraform [GH-11658]
 * resource/aws_ssm_parameter: Prevent `KeyId` error when switching `type` value from `SecureString` to `String` [GH-10819]
+* service/efs: Generate proper `dns_name` attribute hostname suffix in AWS China, AWS C2S, and AWS SC2S partitions [GH-11746]
 
 ## 2.46.0 (January 23, 2020)
 
