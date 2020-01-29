@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_dynamodb_table: Support in-place updates for `server_side_encryption` configurations [GH-11081]
 * resource/aws_elasticsearch_domain: Add `domain_endpoint_options` configuration block (support enforcing HTTPS) [GH-10430]
 * resource/aws_gamelift_fleet: Add `fleet_type` argument (support Spot Fleets) [GH-8234]
+* resource/aws_sagemaker_notebook_instance: Add `direct_internet_access` argument [GH-8618]
 * resource/aws_ssm_maintenance_window: Add `description` argument [GH-11478]
 
 BUG FIXES:
