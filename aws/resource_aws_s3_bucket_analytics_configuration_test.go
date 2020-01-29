@@ -92,6 +92,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 				Config: testAccAWSS3BucketAnalyticsConfiguration(updatedACName, originalBucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(originalACName, originalBucketName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -102,6 +103,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 				Config: testAccAWSS3BucketAnalyticsConfigurationUpdateBucket(updatedACName, originalBucketName, updatedBucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(updatedACName, originalBucketName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test_2", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -123,6 +125,42 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithEmptyFilter(t *testing.T) {
 			{
 				Config:      testAccAWSS3BucketAnalyticsConfigurationWithEmptyFilter(rName, rName),
 				ExpectError: regexp.MustCompile(`config is invalid: 2 problems:`),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketAnalyticsConfiguration_WithFilterPrefix(t *testing.T) {
+	var ac s3.AnalyticsConfiguration
+	rInt := acctest.RandInt()
+	resourceName := "aws_s3_bucket_analytics_configuration.test"
+
+	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
+	prefix := fmt.Sprintf("prefix-%d/", rInt)
+	prefixUpdate := fmt.Sprintf("prefix-update-%d/", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefixUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
+				),
 			},
 		},
 	})
@@ -173,7 +211,8 @@ func testAccCheckAWSS3BucketAnalyticsConfigurationExists(n string, ac *s3.Analyt
 		return nil
 	}
 }
-func testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(bucket, name string) resource.TestCheckFunc {
+
+func testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(name, bucket string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 		return waitForDeleteS3BucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
@@ -232,6 +271,23 @@ resource "aws_s3_bucket" "test" {
   bucket = %q
 }
 `, name, bucket)
+}
+
+func testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(name, bucket, prefix string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_analytics_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  name   = %q
+
+  filter {
+    prefix = "%s"
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+	bucket = %q
+  }
+  `, name, prefix, bucket)
 }
 
 func TestExpandS3AnalyticsFilter(t *testing.T) {

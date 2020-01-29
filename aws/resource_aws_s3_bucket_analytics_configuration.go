@@ -14,9 +14,9 @@ import (
 
 func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketAnalyticsConfigurationCreate,
+		Create: resourceAwsS3BucketAnalyticsConfigurationPut,
 		Read:   resourceAwsS3BucketAnalyticsConfigurationRead,
-		Update: resourceAwsS3BucketAnalyticsConfigurationUpdate,
+		Update: resourceAwsS3BucketAnalyticsConfigurationPut,
 		Delete: resourceAwsS3BucketAnalyticsConfigurationDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -65,7 +65,7 @@ func schemaWithAtLeastOneOf(schema *schema.Schema, keys []string) *schema.Schema
 	return schema
 }
 
-func resourceAwsS3BucketAnalyticsConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
 
 	bucket := d.Get("bucket").(string)
@@ -139,10 +139,6 @@ func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta 
 		return err
 	}
 
-	return nil
-}
-
-func resourceAwsS3BucketAnalyticsConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
