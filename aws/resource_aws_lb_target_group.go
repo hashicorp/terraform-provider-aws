@@ -124,7 +124,6 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "round_robin",
-				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"round_robin",
 					"least_outstanding_requests",
