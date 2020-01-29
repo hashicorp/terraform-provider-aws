@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_gamelift_fleet: Add `fleet_type` argument (support Spot Fleets) [GH-8234]
 * resource/aws_sagemaker_notebook_instance: Add `direct_internet_access` argument [GH-8618]
 * resource/aws_ssm_maintenance_window: Add `description` argument [GH-11478]
+* resource/aws_storagegateway_gateway: Add `cloudwatch_log_group_arn` argument [GH-10939]
 
 BUG FIXES:
 
