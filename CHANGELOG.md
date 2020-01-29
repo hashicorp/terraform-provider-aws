@@ -6,6 +6,7 @@ NOTES:
 
 ENHANCEMENTS:
 
+* data-source/aws_api_gateway_vpc_link: Add `description`, `status`, `status_message`, `tags`, and `target_arns` attributes [GH-10822]
 * data-source/aws_dynamodb_table: Add `server_side_encryption` `kms_key_arn` attribute [GH-11081]
 * data-source/aws_efs_file_system: Add `lifecycle_policy`, `provisioned_throughput_in_mibps`, and `throughput_mode` attributes [GH-11647]
 * resource/aws_dynamodb_table: Add `server_side_encryption` configuration block `kms_key_arn` argument (support customer managed CMKs for server-side encryption) [GH-11081]
