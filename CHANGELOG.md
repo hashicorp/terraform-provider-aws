@@ -20,6 +20,7 @@ BUG FIXES:
 * service/efs: Generate proper `dns_name` attribute hostname suffix in AWS China, AWS C2S, and AWS SC2S partitions [GH-11746]
 * resource/aws_cognito_user_pool: Deprecate `unused_account_validity_days` argument and add support for `temporary_password_validity_days` argument [GH-10890]
 * resource/aws_elasticsearch_domain: Automatically retry resource creation on additional error messages relating to eventual consistency [GH-11663]
+* resource/aws_emr_instance_group: Wait for `RUNNING` status on creation [GH-11688]
 * resource/aws_ssm_activation: Properly trigger resource recreation when deleted outside Terraform [GH-11658]
 * resource/aws_ssm_parameter: Prevent `KeyId` error when switching `type` value from `SecureString` to `String` [GH-10819]
 
