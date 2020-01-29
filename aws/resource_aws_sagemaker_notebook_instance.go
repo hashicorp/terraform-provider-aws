@@ -78,6 +78,7 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Default:  sagemaker.DirectInternetAccessEnabled,
 				ValidateFunc: validation.StringInSlice([]string{
 					sagemaker.DirectInternetAccessDisabled,
 					sagemaker.DirectInternetAccessEnabled,
@@ -101,11 +102,12 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 		InstanceType:         aws.String(d.Get("instance_type").(string)),
 	}
 
+	if v, ok := d.GetOk("direct_internet_access"); ok {
+		createOpts.DirectInternetAccess = aws.String(v.(string))
+	}
+
 	if s, ok := d.GetOk("subnet_id"); ok {
 		createOpts.SubnetId = aws.String(s.(string))
-		if dia, ok := d.GetOk("direct_internet_access"); ok {
-			createOpts.DirectInternetAccess = aws.String(dia.(string))
-		}
 	}
 
 	if k, ok := d.GetOk("kms_key_id"); ok {
