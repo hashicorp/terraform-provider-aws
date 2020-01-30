@@ -1,4 +1,4 @@
-package main
+package cmdflags
 
 import (
 	"flag"
@@ -9,7 +9,8 @@ import (
 	"github.com/bflad/tfproviderlint/version"
 )
 
-func addVersionFlag() {
+// AddVersionFlag adds -V and -version flags to commands
+func AddVersionFlag() {
 	flag.Var(versionFlag{}, "V", "print version and exit")
 	flag.Var(versionFlag{}, "version", "print version and exit")
 }

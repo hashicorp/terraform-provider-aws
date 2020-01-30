@@ -125,3 +125,14 @@ func astIntValue(e ast.Expr) *int {
 		return nil
 	}
 }
+
+func astStringValue(e ast.Expr) *string {
+	switch v := e.(type) {
+	case *ast.BasicLit:
+		stringValue := strings.Trim(v.Value, `"`)
+
+		return &stringValue
+	default:
+		return nil
+	}
+}
