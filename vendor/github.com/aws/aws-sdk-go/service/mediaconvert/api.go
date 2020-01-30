@@ -68,18 +68,18 @@ func (c *MediaConvert) AssociateCertificateRequest(input *AssociateCertificateIn
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation AssociateCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/AssociateCertificate
 func (c *MediaConvert) AssociateCertificate(input *AssociateCertificateInput) (*AssociateCertificateOutput, error) {
@@ -158,18 +158,18 @@ func (c *MediaConvert) CancelJobRequest(input *CancelJobInput) (req *request.Req
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation CancelJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/CancelJob
 func (c *MediaConvert) CancelJob(input *CancelJobInput) (*CancelJobOutput, error) {
@@ -247,18 +247,18 @@ func (c *MediaConvert) CreateJobRequest(input *CreateJobInput) (req *request.Req
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation CreateJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/CreateJob
 func (c *MediaConvert) CreateJob(input *CreateJobInput) (*CreateJobOutput, error) {
@@ -336,18 +336,18 @@ func (c *MediaConvert) CreateJobTemplateRequest(input *CreateJobTemplateInput) (
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation CreateJobTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/CreateJobTemplate
 func (c *MediaConvert) CreateJobTemplate(input *CreateJobTemplateInput) (*CreateJobTemplateOutput, error) {
@@ -425,18 +425,18 @@ func (c *MediaConvert) CreatePresetRequest(input *CreatePresetInput) (req *reque
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation CreatePreset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/CreatePreset
 func (c *MediaConvert) CreatePreset(input *CreatePresetInput) (*CreatePresetOutput, error) {
@@ -514,18 +514,18 @@ func (c *MediaConvert) CreateQueueRequest(input *CreateQueueInput) (req *request
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation CreateQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/CreateQueue
 func (c *MediaConvert) CreateQueue(input *CreateQueueInput) (*CreateQueueOutput, error) {
@@ -603,18 +603,18 @@ func (c *MediaConvert) DeleteJobTemplateRequest(input *DeleteJobTemplateInput) (
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation DeleteJobTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/DeleteJobTemplate
 func (c *MediaConvert) DeleteJobTemplate(input *DeleteJobTemplateInput) (*DeleteJobTemplateOutput, error) {
@@ -692,18 +692,18 @@ func (c *MediaConvert) DeletePresetRequest(input *DeletePresetInput) (req *reque
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation DeletePreset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/DeletePreset
 func (c *MediaConvert) DeletePreset(input *DeletePresetInput) (*DeletePresetOutput, error) {
@@ -781,18 +781,18 @@ func (c *MediaConvert) DeleteQueueRequest(input *DeleteQueueInput) (req *request
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation DeleteQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/DeleteQueue
 func (c *MediaConvert) DeleteQueue(input *DeleteQueueInput) (*DeleteQueueOutput, error) {
@@ -876,18 +876,18 @@ func (c *MediaConvert) DescribeEndpointsRequest(input *DescribeEndpointsInput) (
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation DescribeEndpoints for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/DescribeEndpoints
 func (c *MediaConvert) DescribeEndpoints(input *DescribeEndpointsInput) (*DescribeEndpointsOutput, error) {
@@ -1018,18 +1018,18 @@ func (c *MediaConvert) DisassociateCertificateRequest(input *DisassociateCertifi
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation DisassociateCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/DisassociateCertificate
 func (c *MediaConvert) DisassociateCertificate(input *DisassociateCertificateInput) (*DisassociateCertificateOutput, error) {
@@ -1106,18 +1106,18 @@ func (c *MediaConvert) GetJobRequest(input *GetJobInput) (req *request.Request, 
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation GetJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/GetJob
 func (c *MediaConvert) GetJob(input *GetJobInput) (*GetJobOutput, error) {
@@ -1194,18 +1194,18 @@ func (c *MediaConvert) GetJobTemplateRequest(input *GetJobTemplateInput) (req *r
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation GetJobTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/GetJobTemplate
 func (c *MediaConvert) GetJobTemplate(input *GetJobTemplateInput) (*GetJobTemplateOutput, error) {
@@ -1282,18 +1282,18 @@ func (c *MediaConvert) GetPresetRequest(input *GetPresetInput) (req *request.Req
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation GetPreset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/GetPreset
 func (c *MediaConvert) GetPreset(input *GetPresetInput) (*GetPresetOutput, error) {
@@ -1370,18 +1370,18 @@ func (c *MediaConvert) GetQueueRequest(input *GetQueueInput) (req *request.Reque
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation GetQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/GetQueue
 func (c *MediaConvert) GetQueue(input *GetQueueInput) (*GetQueueOutput, error) {
@@ -1466,18 +1466,18 @@ func (c *MediaConvert) ListJobTemplatesRequest(input *ListJobTemplatesInput) (re
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation ListJobTemplates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/ListJobTemplates
 func (c *MediaConvert) ListJobTemplates(input *ListJobTemplatesInput) (*ListJobTemplatesOutput, error) {
@@ -1615,18 +1615,18 @@ func (c *MediaConvert) ListJobsRequest(input *ListJobsInput) (req *request.Reque
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation ListJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/ListJobs
 func (c *MediaConvert) ListJobs(input *ListJobsInput) (*ListJobsOutput, error) {
@@ -1763,18 +1763,18 @@ func (c *MediaConvert) ListPresetsRequest(input *ListPresetsInput) (req *request
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation ListPresets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/ListPresets
 func (c *MediaConvert) ListPresets(input *ListPresetsInput) (*ListPresetsOutput, error) {
@@ -1911,18 +1911,18 @@ func (c *MediaConvert) ListQueuesRequest(input *ListQueuesInput) (req *request.R
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation ListQueues for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/ListQueues
 func (c *MediaConvert) ListQueues(input *ListQueuesInput) (*ListQueuesOutput, error) {
@@ -2051,18 +2051,18 @@ func (c *MediaConvert) ListTagsForResourceRequest(input *ListTagsForResourceInpu
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/ListTagsForResource
 func (c *MediaConvert) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
@@ -2141,18 +2141,18 @@ func (c *MediaConvert) TagResourceRequest(input *TagResourceInput) (req *request
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/TagResource
 func (c *MediaConvert) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
@@ -2231,18 +2231,18 @@ func (c *MediaConvert) UntagResourceRequest(input *UntagResourceInput) (req *req
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/UntagResource
 func (c *MediaConvert) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
@@ -2319,18 +2319,18 @@ func (c *MediaConvert) UpdateJobTemplateRequest(input *UpdateJobTemplateInput) (
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation UpdateJobTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/UpdateJobTemplate
 func (c *MediaConvert) UpdateJobTemplate(input *UpdateJobTemplateInput) (*UpdateJobTemplateOutput, error) {
@@ -2407,18 +2407,18 @@ func (c *MediaConvert) UpdatePresetRequest(input *UpdatePresetInput) (req *reque
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation UpdatePreset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/UpdatePreset
 func (c *MediaConvert) UpdatePreset(input *UpdatePresetInput) (*UpdatePresetOutput, error) {
@@ -2495,18 +2495,18 @@ func (c *MediaConvert) UpdateQueueRequest(input *UpdateQueueInput) (req *request
 // See the AWS API reference guide for AWS Elemental MediaConvert's
 // API operation UpdateQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediaconvert-2017-08-29/UpdateQueue
 func (c *MediaConvert) UpdateQueue(input *UpdateQueueInput) (*UpdateQueueOutput, error) {
@@ -3015,8 +3015,8 @@ func (s AssociateCertificateOutput) GoString() string {
 // depending on the value that you choose for Audio codec (Codec). For each
 // codec enum that you choose, define the corresponding settings object. The
 // following lists the codec enum, settings object pairs. * AAC, AacSettings
-// * MP2, Mp2Settings * WAV, WavSettings * AIFF, AiffSettings * AC3, Ac3Settings
-// * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings
+// * MP2, Mp2Settings * MP3, Mp3Settings * WAV, WavSettings * AIFF, AiffSettings
+// * AC3, Ac3Settings * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings
 type AudioCodecSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -3051,6 +3051,10 @@ type AudioCodecSettings struct {
 	// Required when you set (Codec) under (AudioDescriptions)>(CodecSettings) to
 	// the value MP2.
 	Mp2Settings *Mp2Settings `locationName:"mp2Settings" type:"structure"`
+
+	// Required when you set Codec, under AudioDescriptions>CodecSettings, to the
+	// value MP3.
+	Mp3Settings *Mp3Settings `locationName:"mp3Settings" type:"structure"`
 
 	// Required when you set (Codec) under (AudioDescriptions)>(CodecSettings) to
 	// the value WAV.
@@ -3098,6 +3102,11 @@ func (s *AudioCodecSettings) Validate() error {
 	if s.Mp2Settings != nil {
 		if err := s.Mp2Settings.Validate(); err != nil {
 			invalidParams.AddNested("Mp2Settings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Mp3Settings != nil {
+		if err := s.Mp3Settings.Validate(); err != nil {
+			invalidParams.AddNested("Mp3Settings", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.WavSettings != nil {
@@ -3154,6 +3163,12 @@ func (s *AudioCodecSettings) SetMp2Settings(v *Mp2Settings) *AudioCodecSettings 
 	return s
 }
 
+// SetMp3Settings sets the Mp3Settings field's value.
+func (s *AudioCodecSettings) SetMp3Settings(v *Mp3Settings) *AudioCodecSettings {
+	s.Mp3Settings = v
+	return s
+}
+
 // SetWavSettings sets the WavSettings field's value.
 func (s *AudioCodecSettings) SetWavSettings(v *WavSettings) *AudioCodecSettings {
 	s.WavSettings = v
@@ -3198,8 +3213,8 @@ type AudioDescription struct {
 	// depending on the value that you choose for Audio codec (Codec). For each
 	// codec enum that you choose, define the corresponding settings object. The
 	// following lists the codec enum, settings object pairs. * AAC, AacSettings
-	// * MP2, Mp2Settings * WAV, WavSettings * AIFF, AiffSettings * AC3, Ac3Settings
-	// * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings
+	// * MP2, Mp2Settings * MP3, Mp3Settings * WAV, WavSettings * AIFF, AiffSettings
+	// * AC3, Ac3Settings * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings
 	CodecSettings *AudioCodecSettings `locationName:"codecSettings" type:"structure"`
 
 	// Specify the language for this audio output track. The service puts this language
@@ -3641,6 +3656,61 @@ func (s *AvailBlanking) Validate() error {
 func (s *AvailBlanking) SetAvailBlankingImage(v string) *AvailBlanking {
 	s.AvailBlankingImage = &v
 	return s
+}
+
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Burn-In Destination Settings.
@@ -4717,6 +4787,14 @@ type CmafGroupSettings struct {
 
 	// When set to ENABLED, an Apple HLS manifest will be generated for this output.
 	WriteHlsManifest *string `locationName:"writeHlsManifest" type:"string" enum:"CmafWriteHLSManifest"`
+
+	// When you enable Precise segment duration in DASH manifests (writeSegmentTimelineInRepresentation),
+	// your DASH manifest shows precise segment durations. The segment duration
+	// information appears inside the SegmentTimeline element, inside SegmentTemplate
+	// at the Representation level. When this feature isn't enabled, the segment
+	// durations in your DASH manifest are approximate. The segment duration information
+	// appears in the duration attribute of the SegmentTemplate element.
+	WriteSegmentTimelineInRepresentation *string `locationName:"writeSegmentTimelineInRepresentation" type:"string" enum:"CmafWriteSegmentTimelineInRepresentation"`
 }
 
 // String returns the string representation
@@ -4868,6 +4946,51 @@ func (s *CmafGroupSettings) SetWriteHlsManifest(v string) *CmafGroupSettings {
 	return s
 }
 
+// SetWriteSegmentTimelineInRepresentation sets the WriteSegmentTimelineInRepresentation field's value.
+func (s *CmafGroupSettings) SetWriteSegmentTimelineInRepresentation(v string) *CmafGroupSettings {
+	s.WriteSegmentTimelineInRepresentation = &v
+	return s
+}
+
+// Settings for MP4 segments in CMAF
+type CmfcSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Use this setting only when you specify SCTE-35 markers from ESAM. Choose
+	// INSERT to put SCTE-35 markers in this output at the insertion points that
+	// you specify in an ESAM XML document. Provide the document in the setting
+	// SCC XML (sccXml).
+	Scte35Esam *string `locationName:"scte35Esam" type:"string" enum:"CmfcScte35Esam"`
+
+	// Ignore this setting unless you have SCTE-35 markers in your input video file.
+	// Choose Passthrough (PASSTHROUGH) if you want SCTE-35 markers that appear
+	// in your input to also appear in this output. Choose None (NONE) if you don't
+	// want those SCTE-35 markers in this output.
+	Scte35Source *string `locationName:"scte35Source" type:"string" enum:"CmfcScte35Source"`
+}
+
+// String returns the string representation
+func (s CmfcSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CmfcSettings) GoString() string {
+	return s.String()
+}
+
+// SetScte35Esam sets the Scte35Esam field's value.
+func (s *CmfcSettings) SetScte35Esam(v string) *CmfcSettings {
+	s.Scte35Esam = &v
+	return s
+}
+
+// SetScte35Source sets the Scte35Source field's value.
+func (s *CmfcSettings) SetScte35Source(v string) *CmfcSettings {
+	s.Scte35Source = &v
+	return s
+}
+
 // Settings for color correction.
 type ColorCorrector struct {
 	_ struct{} `type:"structure"`
@@ -4974,9 +5097,67 @@ func (s *ColorCorrector) SetSaturation(v int64) *ColorCorrector {
 	return s
 }
 
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Container specific settings.
 type ContainerSettings struct {
 	_ struct{} `type:"structure"`
+
+	// Settings for MP4 segments in CMAF
+	CmfcSettings *CmfcSettings `locationName:"cmfcSettings" type:"structure"`
 
 	// Container for this output. Some containers require a container settings object.
 	// If not specified, the default object will be created.
@@ -5039,6 +5220,12 @@ func (s *ContainerSettings) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCmfcSettings sets the CmfcSettings field's value.
+func (s *ContainerSettings) SetCmfcSettings(v *CmfcSettings) *ContainerSettings {
+	s.CmfcSettings = v
+	return s
 }
 
 // SetContainer sets the Container field's value.
@@ -7776,6 +7963,61 @@ func (s *FileSourceSettings) SetSourceFile(v string) *FileSourceSettings {
 func (s *FileSourceSettings) SetTimeDelta(v int64) *FileSourceSettings {
 	s.TimeDelta = &v
 	return s
+}
+
+type ForbiddenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ForbiddenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForbiddenException) GoString() string {
+	return s.String()
+}
+
+func newErrorForbiddenException(v protocol.ResponseMetadata) error {
+	return &ForbiddenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ForbiddenException) Code() string {
+	return "ForbiddenException"
+}
+
+// Message returns the exception's message.
+func (s ForbiddenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ForbiddenException) OrigErr() error {
+	return nil
+}
+
+func (s ForbiddenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ForbiddenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ForbiddenException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Required when you set (Codec) under (VideoDescription)>(CodecSettings) to
@@ -10993,6 +11235,61 @@ func (s *InsertableImage) SetWidth(v int64) *InsertableImage {
 	return s
 }
 
+type InternalServerErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
+	return &InternalServerErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerErrorException) Code() string {
+	return "InternalServerErrorException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerErrorException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Each job converts an input file into an output file or files. For more information,
 // see the User Guide at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html
 type Job struct {
@@ -13325,6 +13622,91 @@ func (s *Mp2Settings) SetSampleRate(v int64) *Mp2Settings {
 	return s
 }
 
+// Required when you set Codec, under AudioDescriptions>CodecSettings, to the
+// value MP3.
+type Mp3Settings struct {
+	_ struct{} `type:"structure"`
+
+	// Specify the average bitrate in bits per second.
+	Bitrate *int64 `locationName:"bitrate" min:"16000" type:"integer"`
+
+	// Specify the number of channels in this output audio track. Choosing Mono
+	// on the console gives you 1 output channel; choosing Stereo gives you 2. In
+	// the API, valid values are 1 and 2.
+	Channels *int64 `locationName:"channels" min:"1" type:"integer"`
+
+	// Specify whether the service encodes this MP3 audio output with a constant
+	// bitrate (CBR) or a variable bitrate (VBR).
+	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"Mp3RateControlMode"`
+
+	// Sample rate in hz.
+	SampleRate *int64 `locationName:"sampleRate" min:"22050" type:"integer"`
+
+	// Required when you set Bitrate control mode (rateControlMode) to VBR. Specify
+	// the audio quality of this MP3 output from 0 (highest quality) to 9 (lowest
+	// quality).
+	VbrQuality *int64 `locationName:"vbrQuality" type:"integer"`
+}
+
+// String returns the string representation
+func (s Mp3Settings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Mp3Settings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Mp3Settings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Mp3Settings"}
+	if s.Bitrate != nil && *s.Bitrate < 16000 {
+		invalidParams.Add(request.NewErrParamMinValue("Bitrate", 16000))
+	}
+	if s.Channels != nil && *s.Channels < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Channels", 1))
+	}
+	if s.SampleRate != nil && *s.SampleRate < 22050 {
+		invalidParams.Add(request.NewErrParamMinValue("SampleRate", 22050))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBitrate sets the Bitrate field's value.
+func (s *Mp3Settings) SetBitrate(v int64) *Mp3Settings {
+	s.Bitrate = &v
+	return s
+}
+
+// SetChannels sets the Channels field's value.
+func (s *Mp3Settings) SetChannels(v int64) *Mp3Settings {
+	s.Channels = &v
+	return s
+}
+
+// SetRateControlMode sets the RateControlMode field's value.
+func (s *Mp3Settings) SetRateControlMode(v string) *Mp3Settings {
+	s.RateControlMode = &v
+	return s
+}
+
+// SetSampleRate sets the SampleRate field's value.
+func (s *Mp3Settings) SetSampleRate(v int64) *Mp3Settings {
+	s.SampleRate = &v
+	return s
+}
+
+// SetVbrQuality sets the VbrQuality field's value.
+func (s *Mp3Settings) SetVbrQuality(v int64) *Mp3Settings {
+	s.VbrQuality = &v
+	return s
+}
+
 // Settings for MP4 container. You can create audio-only AAC outputs with this
 // container.
 type Mp4Settings struct {
@@ -13335,6 +13717,14 @@ type Mp4Settings struct {
 	// and a 'cslg' (composition shift least greatest) box will be included per
 	// 14496-1 amendment 1. This improves compatibility with Apple players and tools.
 	CslgAtom *string `locationName:"cslgAtom" type:"string" enum:"Mp4CslgAtom"`
+
+	// Ignore this setting unless compliance to the CTTS box version specification
+	// matters in your workflow. Specify a value of 1 to set your CTTS box version
+	// to 1 and make your output compliant with the specification. When you specify
+	// a value of 1, you must also set CSLG atom (cslgAtom) to the value INCLUDE.
+	// Keep the default value 0 to set your CTTS box version to 0. This can provide
+	// backward compatibility for some players and packagers.
+	CttsVersion *int64 `locationName:"cttsVersion" type:"integer"`
 
 	// Inserts a free-space box immediately after the moov box.
 	FreeSpaceBox *string `locationName:"freeSpaceBox" type:"string" enum:"Mp4FreeSpaceBox"`
@@ -13362,6 +13752,12 @@ func (s Mp4Settings) GoString() string {
 // SetCslgAtom sets the CslgAtom field's value.
 func (s *Mp4Settings) SetCslgAtom(v string) *Mp4Settings {
 	s.CslgAtom = &v
+	return s
+}
+
+// SetCttsVersion sets the CttsVersion field's value.
+func (s *Mp4Settings) SetCttsVersion(v int64) *Mp4Settings {
+	s.CttsVersion = &v
 	return s
 }
 
@@ -14274,6 +14670,61 @@ func (s *NoiseReducerTemporalFilterSettings) SetSpeed(v int64) *NoiseReducerTemp
 func (s *NoiseReducerTemporalFilterSettings) SetStrength(v int64) *NoiseReducerTemporalFilterSettings {
 	s.Strength = &v
 	return s
+}
+
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // An output object describes the settings for a single output file or stream
@@ -16231,6 +16682,61 @@ func (s *Timing) SetSubmitTime(v time.Time) *Timing {
 	return s
 }
 
+type TooManyRequestsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyRequestsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyRequestsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Settings specific to caption sources that are specified by track number.
 // Currently, this is only IMSC captions in an IMF package. If your caption
 // source is IMSC 1.1 in a separate xml file, use FileSourceSettings instead
@@ -16742,9 +17248,9 @@ func (s *UpdateQueueOutput) SetQueue(v *Queue) *UpdateQueueOutput {
 // the group of settings related to video encoding. The settings in this group
 // vary depending on the value that you choose for Video codec (Codec). For
 // each codec enum that you choose, define the corresponding settings object.
-// The following lists the codec enum, settings object pairs. * H_264, H264Settings
-// * H_265, H265Settings * MPEG2, Mpeg2Settings * PRORES, ProresSettings * FRAME_CAPTURE,
-// FrameCaptureSettings
+// The following lists the codec enum, settings object pairs. * FRAME_CAPTURE,
+// FrameCaptureSettings * H_264, H264Settings * H_265, H265Settings * MPEG2,
+// Mpeg2Settings * PRORES, ProresSettings
 type VideoCodecSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -16874,9 +17380,9 @@ type VideoDescription struct {
 	// the group of settings related to video encoding. The settings in this group
 	// vary depending on the value that you choose for Video codec (Codec). For
 	// each codec enum that you choose, define the corresponding settings object.
-	// The following lists the codec enum, settings object pairs. * H_264, H264Settings
-	// * H_265, H265Settings * MPEG2, Mpeg2Settings * PRORES, ProresSettings * FRAME_CAPTURE,
-	// FrameCaptureSettings
+	// The following lists the codec enum, settings object pairs. * FRAME_CAPTURE,
+	// FrameCaptureSettings * H_264, H264Settings * H_265, H265Settings * MPEG2,
+	// Mpeg2Settings * PRORES, ProresSettings
 	CodecSettings *VideoCodecSettings `locationName:"codecSettings" type:"structure"`
 
 	// Choose Insert (INSERT) for this setting to include color metadata in this
@@ -17240,11 +17746,12 @@ func (s *VideoPreprocessor) SetTimecodeBurnin(v *TimecodeBurnin) *VideoPreproces
 type VideoSelector struct {
 	_ struct{} `type:"structure"`
 
-	// Ignore this setting unless this input is a QuickTime animation. Specify which
-	// part of this input MediaConvert uses for your outputs. Leave this setting
-	// set to DISCARD in order to delete the alpha channel and preserve the video.
-	// Use REMAP_TO_LUMA for this setting to delete the video and map the alpha
-	// channel to the luma channel of your outputs.
+	// Ignore this setting unless this input is a QuickTime animation with an alpha
+	// channel. Use this setting to create separate Key and Fill outputs. In each
+	// output, specify which part of the input MediaConvert uses. Leave this setting
+	// at the default value DISCARD to delete the alpha channel and preserve the
+	// video. Set it to REMAP_TO_LUMA to delete the video and map the alpha channel
+	// to the luma channel of your outputs.
 	AlphaBehavior *string `locationName:"alphaBehavior" type:"string" enum:"AlphaBehavior"`
 
 	// If your input video has accurate color space metadata, or if you don't know
@@ -17677,11 +18184,12 @@ const (
 	AfdSignalingFixed = "FIXED"
 )
 
-// Ignore this setting unless this input is a QuickTime animation. Specify which
-// part of this input MediaConvert uses for your outputs. Leave this setting
-// set to DISCARD in order to delete the alpha channel and preserve the video.
-// Use REMAP_TO_LUMA for this setting to delete the video and map the alpha
-// channel to the luma channel of your outputs.
+// Ignore this setting unless this input is a QuickTime animation with an alpha
+// channel. Use this setting to create separate Key and Fill outputs. In each
+// output, specify which part of the input MediaConvert uses. Leave this setting
+// at the default value DISCARD to delete the alpha channel and preserve the
+// video. Set it to REMAP_TO_LUMA to delete the video and map the alpha channel
+// to the luma channel of your outputs.
 const (
 	// AlphaBehaviorDiscard is a AlphaBehavior enum value
 	AlphaBehaviorDiscard = "DISCARD"
@@ -17732,6 +18240,9 @@ const (
 
 	// AudioCodecMp2 is a AudioCodec enum value
 	AudioCodecMp2 = "MP2"
+
+	// AudioCodecMp3 is a AudioCodec enum value
+	AudioCodecMp3 = "MP3"
 
 	// AudioCodecWav is a AudioCodec enum value
 	AudioCodecWav = "WAV"
@@ -18181,6 +18692,44 @@ const (
 
 	// CmafWriteHLSManifestEnabled is a CmafWriteHLSManifest enum value
 	CmafWriteHLSManifestEnabled = "ENABLED"
+)
+
+// When you enable Precise segment duration in DASH manifests (writeSegmentTimelineInRepresentation),
+// your DASH manifest shows precise segment durations. The segment duration
+// information appears inside the SegmentTimeline element, inside SegmentTemplate
+// at the Representation level. When this feature isn't enabled, the segment
+// durations in your DASH manifest are approximate. The segment duration information
+// appears in the duration attribute of the SegmentTemplate element.
+const (
+	// CmafWriteSegmentTimelineInRepresentationEnabled is a CmafWriteSegmentTimelineInRepresentation enum value
+	CmafWriteSegmentTimelineInRepresentationEnabled = "ENABLED"
+
+	// CmafWriteSegmentTimelineInRepresentationDisabled is a CmafWriteSegmentTimelineInRepresentation enum value
+	CmafWriteSegmentTimelineInRepresentationDisabled = "DISABLED"
+)
+
+// Use this setting only when you specify SCTE-35 markers from ESAM. Choose
+// INSERT to put SCTE-35 markers in this output at the insertion points that
+// you specify in an ESAM XML document. Provide the document in the setting
+// SCC XML (sccXml).
+const (
+	// CmfcScte35EsamInsert is a CmfcScte35Esam enum value
+	CmfcScte35EsamInsert = "INSERT"
+
+	// CmfcScte35EsamNone is a CmfcScte35Esam enum value
+	CmfcScte35EsamNone = "NONE"
+)
+
+// Ignore this setting unless you have SCTE-35 markers in your input video file.
+// Choose Passthrough (PASSTHROUGH) if you want SCTE-35 markers that appear
+// in your input to also appear in this output. Choose None (NONE) if you don't
+// want those SCTE-35 markers in this output.
+const (
+	// CmfcScte35SourcePassthrough is a CmfcScte35Source enum value
+	CmfcScte35SourcePassthrough = "PASSTHROUGH"
+
+	// CmfcScte35SourceNone is a CmfcScte35Source enum value
+	CmfcScte35SourceNone = "NONE"
 )
 
 // Choose Insert (INSERT) for this setting to include color metadata in this
@@ -20877,6 +21426,16 @@ const (
 
 	// MovReferenceExternal is a MovReference enum value
 	MovReferenceExternal = "EXTERNAL"
+)
+
+// Specify whether the service encodes this MP3 audio output with a constant
+// bitrate (CBR) or a variable bitrate (VBR).
+const (
+	// Mp3RateControlModeCbr is a Mp3RateControlMode enum value
+	Mp3RateControlModeCbr = "CBR"
+
+	// Mp3RateControlModeVbr is a Mp3RateControlMode enum value
+	Mp3RateControlModeVbr = "VBR"
 )
 
 // When enabled, file composition times will start at zero, composition times

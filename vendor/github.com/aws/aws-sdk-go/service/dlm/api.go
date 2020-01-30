@@ -67,14 +67,14 @@ func (c *DLM) CreateLifecyclePolicyRequest(input *CreateLifecyclePolicyInput) (r
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation CreateLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request failed because a limit was exceeded.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/CreateLifecyclePolicy
@@ -154,14 +154,14 @@ func (c *DLM) DeleteLifecyclePolicyRequest(input *DeleteLifecyclePolicyInput) (r
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation DeleteLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request failed because a limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/DeleteLifecyclePolicy
@@ -241,17 +241,17 @@ func (c *DLM) GetLifecyclePoliciesRequest(input *GetLifecyclePoliciesInput) (req
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation GetLifecyclePolicies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request failed because a limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/GetLifecyclePolicies
@@ -329,14 +329,14 @@ func (c *DLM) GetLifecyclePolicyRequest(input *GetLifecyclePolicyInput) (req *re
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation GetLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request failed because a limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/GetLifecyclePolicy
@@ -414,14 +414,14 @@ func (c *DLM) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/ListTagsForResource
@@ -500,14 +500,14 @@ func (c *DLM) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/TagResource
@@ -586,14 +586,14 @@ func (c *DLM) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/UntagResource
@@ -672,17 +672,17 @@ func (c *DLM) UpdateLifecyclePolicyRequest(input *UpdateLifecyclePolicyInput) (r
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation UpdateLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request failed because a limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/UpdateLifecyclePolicy
@@ -894,6 +894,143 @@ func (s *CreateRule) SetIntervalUnit(v string) *CreateRule {
 // SetTimes sets the Times field's value.
 func (s *CreateRule) SetTimes(v []*string) *CreateRule {
 	s.Times = v
+	return s
+}
+
+// Specifies the retention rule for cross-Region snapshot copies.
+type CrossRegionCopyRetainRule struct {
+	_ struct{} `type:"structure"`
+
+	// The amount of time to retain each snapshot. The maximum is 100 years. This
+	// is equivalent to 1200 months, 5200 weeks, or 36500 days.
+	Interval *int64 `min:"1" type:"integer"`
+
+	// The unit of time for time-based retention.
+	IntervalUnit *string `type:"string" enum:"RetentionIntervalUnitValues"`
+}
+
+// String returns the string representation
+func (s CrossRegionCopyRetainRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CrossRegionCopyRetainRule) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CrossRegionCopyRetainRule) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CrossRegionCopyRetainRule"}
+	if s.Interval != nil && *s.Interval < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Interval", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInterval sets the Interval field's value.
+func (s *CrossRegionCopyRetainRule) SetInterval(v int64) *CrossRegionCopyRetainRule {
+	s.Interval = &v
+	return s
+}
+
+// SetIntervalUnit sets the IntervalUnit field's value.
+func (s *CrossRegionCopyRetainRule) SetIntervalUnit(v string) *CrossRegionCopyRetainRule {
+	s.IntervalUnit = &v
+	return s
+}
+
+// Specifies a rule for cross-Region snapshot copies.
+type CrossRegionCopyRule struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the AWS KMS customer master key (CMK) to
+	// use for EBS encryption. If this parameter is not specified, your AWS managed
+	// CMK for EBS is used.
+	CmkArn *string `type:"string"`
+
+	// Copy all user-defined tags from the source snapshot to the copied snapshot.
+	CopyTags *bool `type:"boolean"`
+
+	// To encrypt a copy of an unencrypted snapshot if encryption by default is
+	// not enabled, enable encryption using this parameter. Copies of encrypted
+	// snapshots are encrypted, even if this parameter is false or if encryption
+	// by default is not enabled.
+	//
+	// Encrypted is a required field
+	Encrypted *bool `type:"boolean" required:"true"`
+
+	// The retention rule.
+	RetainRule *CrossRegionCopyRetainRule `type:"structure"`
+
+	// The target Region.
+	//
+	// TargetRegion is a required field
+	TargetRegion *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CrossRegionCopyRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CrossRegionCopyRule) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CrossRegionCopyRule) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CrossRegionCopyRule"}
+	if s.Encrypted == nil {
+		invalidParams.Add(request.NewErrParamRequired("Encrypted"))
+	}
+	if s.TargetRegion == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetRegion"))
+	}
+	if s.RetainRule != nil {
+		if err := s.RetainRule.Validate(); err != nil {
+			invalidParams.AddNested("RetainRule", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCmkArn sets the CmkArn field's value.
+func (s *CrossRegionCopyRule) SetCmkArn(v string) *CrossRegionCopyRule {
+	s.CmkArn = &v
+	return s
+}
+
+// SetCopyTags sets the CopyTags field's value.
+func (s *CrossRegionCopyRule) SetCopyTags(v bool) *CrossRegionCopyRule {
+	s.CopyTags = &v
+	return s
+}
+
+// SetEncrypted sets the Encrypted field's value.
+func (s *CrossRegionCopyRule) SetEncrypted(v bool) *CrossRegionCopyRule {
+	s.Encrypted = &v
+	return s
+}
+
+// SetRetainRule sets the RetainRule field's value.
+func (s *CrossRegionCopyRule) SetRetainRule(v *CrossRegionCopyRetainRule) *CrossRegionCopyRule {
+	s.RetainRule = v
+	return s
+}
+
+// SetTargetRegion sets the TargetRegion field's value.
+func (s *CrossRegionCopyRule) SetTargetRegion(v string) *CrossRegionCopyRule {
+	s.TargetRegion = &v
 	return s
 }
 
@@ -1198,6 +1335,128 @@ func (s *GetLifecyclePolicyOutput) SetPolicy(v *LifecyclePolicy) *GetLifecyclePo
 	return s
 }
 
+// The service failed in an unexpected way.
+type InternalServerException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Code_ *string `locationName:"Code" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerException(v protocol.ResponseMetadata) error {
+	return &InternalServerException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerException) Code() string {
+	return "InternalServerException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Bad request. The request is missing required parameters or has invalid parameters.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Code_ *string `locationName:"Code" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The request included parameters that cannot be provided together.
+	MutuallyExclusiveParameters []*string `type:"list"`
+
+	// The request omitted one or more required parameters.
+	RequiredParameters []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Detailed information about a lifecycle policy.
 type LifecyclePolicy struct {
 	_ struct{} `type:"structure"`
@@ -1353,6 +1612,67 @@ func (s *LifecyclePolicySummary) SetState(v string) *LifecyclePolicySummary {
 func (s *LifecyclePolicySummary) SetTags(v map[string]*string) *LifecyclePolicySummary {
 	s.Tags = v
 	return s
+}
+
+// The request failed because a limit was exceeded.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Code_ *string `locationName:"Code" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// Value is the type of resource for which a limit was exceeded.
+	ResourceType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListTagsForResourceInput struct {
@@ -1546,6 +1866,70 @@ func (s *PolicyDetails) SetTargetTags(v []*Tag) *PolicyDetails {
 	return s
 }
 
+// A requested resource was not found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Code_ *string `locationName:"Code" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// Value is a list of resource IDs that were not found.
+	ResourceIds []*string `type:"list"`
+
+	// Value is the type of resource that was not found.
+	ResourceType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Specifies the retention rule for a lifecycle policy. You can retain snapshots
 // based on either a count or a time interval.
 type RetainRule struct {
@@ -1614,10 +1998,13 @@ type Schedule struct {
 	// created by this policy.
 	CopyTags *bool `type:"boolean"`
 
-	// The create rule.
+	// The creation rule.
 	CreateRule *CreateRule `type:"structure"`
 
-	// Enable fast snapshot restore.
+	// The rule for cross-Region snapshot copies.
+	CrossRegionCopyRules []*CrossRegionCopyRule `type:"list"`
+
+	// The rule for enabling fast snapshot restore.
 	FastRestoreRule *FastRestoreRule `type:"structure"`
 
 	// The name of the schedule.
@@ -1653,6 +2040,16 @@ func (s *Schedule) Validate() error {
 	if s.CreateRule != nil {
 		if err := s.CreateRule.Validate(); err != nil {
 			invalidParams.AddNested("CreateRule", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.CrossRegionCopyRules != nil {
+		for i, v := range s.CrossRegionCopyRules {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "CrossRegionCopyRules", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 	if s.FastRestoreRule != nil {
@@ -1701,6 +2098,12 @@ func (s *Schedule) SetCopyTags(v bool) *Schedule {
 // SetCreateRule sets the CreateRule field's value.
 func (s *Schedule) SetCreateRule(v *CreateRule) *Schedule {
 	s.CreateRule = v
+	return s
+}
+
+// SetCrossRegionCopyRules sets the CrossRegionCopyRules field's value.
+func (s *Schedule) SetCrossRegionCopyRules(v []*CrossRegionCopyRule) *Schedule {
+	s.CrossRegionCopyRules = v
 	return s
 }
 
