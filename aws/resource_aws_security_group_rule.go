@@ -759,7 +759,19 @@ func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPe
 		s := rule.UserIdGroupPairs[0]
 
 		if isVPC {
-			d.Set("source_security_group_id", *s.GroupId)
+			if existingSourceSgId, ok := d.GetOk("source_security_group_id"); ok {
+				sgIdComponents := strings.Split(existingSourceSgId.(string), "/")
+				hasAccountIdPrefix := len(sgIdComponents) == 2
+
+				if hasAccountIdPrefix {
+					// then ensure on refresh that we prefix the account id
+					d.Set("source_security_group_id", *s.UserId+"/"+*s.GroupId)
+				} else {
+					d.Set("source_security_group_id", *s.GroupId)
+				}
+			} else {
+				d.Set("source_security_group_id", *s.GroupId)
+			}
 		} else {
 			d.Set("source_security_group_id", *s.GroupName)
 		}
