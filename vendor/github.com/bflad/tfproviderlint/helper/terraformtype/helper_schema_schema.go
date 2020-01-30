@@ -78,6 +78,10 @@ func NewHelperSchemaSchemaInfo(cl *ast.CompositeLit, info *types.Info) *HelperSc
 		result.Schema.Default = func() (interface{}, error) { return nil, nil }
 	}
 
+	if kvExpr := result.Fields[SchemaFieldDescription]; kvExpr != nil && astStringValue(kvExpr.Value) != nil {
+		result.Schema.Description = *astStringValue(kvExpr.Value)
+	}
+
 	if kvExpr := result.Fields[SchemaFieldDiffSuppressFunc]; kvExpr != nil && astExprValue(kvExpr.Value) != nil {
 		result.Schema.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool { return false }
 	}

@@ -7,12 +7,13 @@
 package main
 
 import (
+	"github.com/bflad/tfproviderlint/helper/cmdflags"
 	"github.com/bflad/tfproviderlint/passes"
 	"golang.org/x/tools/go/analysis/multichecker"
 )
 
 func main() {
-	addVersionFlag()
+	cmdflags.AddVersionFlag()
 
 	multichecker.Main(passes.AllChecks...)
 }
