@@ -290,6 +290,36 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testin
 	})
 }
 
+func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Remove(t *testing.T) {
+	var ac s3.AnalyticsConfiguration
+	rInt := acctest.RandInt()
+	resourceName := "aws_s3_bucket_analytics_configuration.test"
+
+	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
+	prefix := fmt.Sprintf("prefix-%d/", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketAnalyticsConfiguration(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSS3BucketAnalyticsConfigurationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).s3conn
 
