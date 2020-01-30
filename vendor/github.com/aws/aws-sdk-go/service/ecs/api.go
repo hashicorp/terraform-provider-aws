@@ -9111,6 +9111,34 @@ type CreateTaskSetInput struct {
 	// For more information, see Service Discovery (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html).
 	ServiceRegistries []*ServiceRegistry `locationName:"serviceRegistries" type:"list"`
 
+	// The metadata that you apply to the task set to help you categorize and organize
+	// them. Each tag consists of a key and an optional value, both of which you
+	// define. When a service is deleted, the tags are deleted as well.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// The task definition for the tasks in the task set to use.
 	//
 	// TaskDefinition is a required field
@@ -9152,6 +9180,16 @@ func (s *CreateTaskSetInput) Validate() error {
 	if s.NetworkConfiguration != nil {
 		if err := s.NetworkConfiguration.Validate(); err != nil {
 			invalidParams.AddNested("NetworkConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 
@@ -9224,6 +9262,12 @@ func (s *CreateTaskSetInput) SetService(v string) *CreateTaskSetInput {
 // SetServiceRegistries sets the ServiceRegistries field's value.
 func (s *CreateTaskSetInput) SetServiceRegistries(v []*ServiceRegistry) *CreateTaskSetInput {
 	s.ServiceRegistries = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateTaskSetInput) SetTags(v []*Tag) *CreateTaskSetInput {
+	s.Tags = v
 	return s
 }
 
@@ -10618,6 +10662,11 @@ type DescribeTaskSetsInput struct {
 	// Cluster is a required field
 	Cluster *string `locationName:"cluster" type:"string" required:"true"`
 
+	// Specifies whether to see the resource tags for the task set. If TAGS is specified,
+	// the tags are included in the response. If this field is omitted, tags are
+	// not included in the response.
+	Include []*string `locationName:"include" type:"list"`
+
 	// The short name or full Amazon Resource Name (ARN) of the service that the
 	// task sets exist in.
 	//
@@ -10657,6 +10706,12 @@ func (s *DescribeTaskSetsInput) Validate() error {
 // SetCluster sets the Cluster field's value.
 func (s *DescribeTaskSetsInput) SetCluster(v string) *DescribeTaskSetsInput {
 	s.Cluster = &v
+	return s
+}
+
+// SetInclude sets the Include field's value.
+func (s *DescribeTaskSetsInput) SetInclude(v []*string) *DescribeTaskSetsInput {
+	s.Include = v
 	return s
 }
 
@@ -17687,10 +17742,14 @@ type TaskDefinition struct {
 	// that are specified in this role.
 	ExecutionRoleArn *string `locationName:"executionRoleArn" type:"string"`
 
-	// The name of a family that this task definition is registered to. A family
-	// groups multiple versions of a task definition. Amazon ECS gives the first
-	// task definition that you registered to a family a revision number of 1. Amazon
-	// ECS gives sequential revision numbers to each task definition that you add.
+	// The name of a family that this task definition is registered to. Up to 255
+	// letters (uppercase and lowercase), numbers, hyphens, and underscores are
+	// allowed.
+	//
+	// A family groups multiple versions of a task definition. Amazon ECS gives
+	// the first task definition that you registered to a family a revision number
+	// of 1. Amazon ECS gives sequential revision numbers to each task definition
+	// that you add.
 	Family *string `locationName:"family" type:"string"`
 
 	// The Elastic Inference accelerator associated with the task.
@@ -18241,6 +18300,34 @@ type TaskSet struct {
 	// are being deregistered from their target group.
 	Status *string `locationName:"status" type:"string"`
 
+	// The metadata that you apply to the task set to help you categorize and organize
+	// them. Each tag consists of a key and an optional value, both of which you
+	// define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// The task definition the task set is using.
 	TaskDefinition *string `locationName:"taskDefinition" type:"string"`
 
@@ -18372,6 +18459,12 @@ func (s *TaskSet) SetStartedBy(v string) *TaskSet {
 // SetStatus sets the Status field's value.
 func (s *TaskSet) SetStatus(v string) *TaskSet {
 	s.Status = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TaskSet) SetTags(v []*Tag) *TaskSet {
+	s.Tags = v
 	return s
 }
 
@@ -19973,6 +20066,11 @@ const (
 const (
 	// TaskFieldTags is a TaskField enum value
 	TaskFieldTags = "TAGS"
+)
+
+const (
+	// TaskSetFieldTags is a TaskSetField enum value
+	TaskSetFieldTags = "TAGS"
 )
 
 const (
