@@ -114,7 +114,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithEmptyFilter(t *testing.T) {
+func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Empty(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,7 +130,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithEmptyFilter(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithFilterPrefix(t *testing.T) {
+func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Prefix(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	rInt := acctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -160,6 +160,130 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilterPrefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_SingleTag(t *testing.T) {
+	var ac s3.AnalyticsConfiguration
+	rInt := acctest.RandInt()
+	resourceName := "aws_s3_bucket_analytics_configuration.test"
+
+	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
+	tag1 := fmt.Sprintf("tag-%d", rInt)
+	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterSingleTag(rName, rName, tag1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterSingleTag(rName, rName, tag1Update),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_MultipleTags(t *testing.T) {
+	var ac s3.AnalyticsConfiguration
+	rInt := acctest.RandInt()
+	resourceName := "aws_s3_bucket_analytics_configuration.test"
+
+	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
+	tag1 := fmt.Sprintf("tag1-%d", rInt)
+	tag1Update := fmt.Sprintf("tag1-update-%d", rInt)
+	tag2 := fmt.Sprintf("tag2-%d", rInt)
+	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterMultipleTags(rName, rName, tag1, tag2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterMultipleTags(rName, rName, tag1Update, tag2Update),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2Update),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testing.T) {
+	var ac s3.AnalyticsConfiguration
+	rInt := acctest.RandInt()
+	resourceName := "aws_s3_bucket_analytics_configuration.test"
+
+	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
+	prefix := fmt.Sprintf("prefix-%d/", rInt)
+	prefixUpdate := fmt.Sprintf("prefix-update-%d/", rInt)
+	tag1 := fmt.Sprintf("tag1-%d", rInt)
+	tag1Update := fmt.Sprintf("tag1-update-%d", rInt)
+	tag2 := fmt.Sprintf("tag2-%d", rInt)
+	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefixAndTags(rName, rName, prefix, tag1, tag2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefixAndTags(rName, rName, prefixUpdate, tag1Update, tag2Update),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2Update),
 				),
 			},
 		},
@@ -223,11 +347,11 @@ func testAccAWSS3BucketAnalyticsConfiguration(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
-  name   = %q
+  name   = "%s"
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %q
+  bucket = "%s"
 }
 `, name, bucket)
 }
@@ -235,7 +359,7 @@ resource "aws_s3_bucket" "test" {
 func testAccAWSS3BucketAnalyticsConfiguration_removed(bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %q
+  bucket = "%s"
 }
 `, bucket)
 }
@@ -244,15 +368,15 @@ func testAccAWSS3BucketAnalyticsConfigurationUpdateBucket(name, originalBucket, 
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test_2.bucket
-  name   = %q
+  name   = "%s"
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %q
+  bucket = "%s"
 }
 
 resource "aws_s3_bucket" "test_2" {
-  bucket = %q
+  bucket = "%s"
 }
 `, name, originalBucket, updatedBucket)
 }
@@ -261,14 +385,14 @@ func testAccAWSS3BucketAnalyticsConfigurationWithEmptyFilter(name, bucket string
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
-  name   = %q
+  name   = "%s"
 
   filter {
   }
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %q
+  bucket = "%s"
 }
 `, name, bucket)
 }
@@ -277,7 +401,7 @@ func testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(name, bucket, pref
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
-  name   = %q
+  name   = "%s"
 
   filter {
     prefix = "%s"
@@ -285,9 +409,70 @@ resource "aws_s3_bucket_analytics_configuration" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-	bucket = %q
+  bucket = "%s"
+}
+`, name, prefix, bucket)
+}
+
+func testAccAWSS3BucketAnalyticsConfigurationWithFilterSingleTag(name, bucket, tag string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_analytics_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  name   = "%s"
+
+  filter {
+    tags = {
+      "tag1" = "%s"
+    }
   }
-  `, name, prefix, bucket)
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "%s"
+}
+`, name, tag, bucket)
+}
+
+func testAccAWSS3BucketAnalyticsConfigurationWithFilterMultipleTags(name, bucket, tag1, tag2 string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_analytics_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  name   = "%s"
+
+  filter {
+    tags = {
+      "tag1" = "%s"
+      "tag2" = "%s"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "%s"
+}
+`, name, tag1, tag2, bucket)
+}
+
+func testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefixAndTags(name, bucket, prefix, tag1, tag2 string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_analytics_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  name   = "%s"
+
+  filter {
+    prefix = "%s"
+
+    tags = {
+      "tag1" = "%s"
+      "tag2" = "%s"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "%s"
+}
+`, name, prefix, tag1, tag2, bucket)
 }
 
 func TestExpandS3AnalyticsFilter(t *testing.T) {

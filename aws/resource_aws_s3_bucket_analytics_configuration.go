@@ -39,11 +39,11 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 						"prefix": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
+							AtLeastOneOf: filterAtLeastOneOfKeys,
 						},
 						"tags": schemaWithAtLeastOneOf(
 							tagsSchema(),
-							[]string{"filter.0.prefix", "filter.0.tags"},
+							filterAtLeastOneOfKeys,
 						),
 					},
 				},
@@ -59,6 +59,8 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 		},
 	}
 }
+
+var filterAtLeastOneOfKeys = []string{"filter.0.prefix", "filter.0.tags"}
 
 func schemaWithAtLeastOneOf(schema *schema.Schema, keys []string) *schema.Schema {
 	schema.AtLeastOneOf = keys
