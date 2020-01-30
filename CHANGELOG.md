@@ -24,6 +24,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_api_gateway_rest_api: Fixes `root_resource_id` not being set on correctly when REST API contains more than 25 resources [GH-11705]
+* resource/aws_cloudwatch_log_subscription_filter: Perform eventual consistency retries on update [GH-11739]
 * resource/aws_cognito_user_pool: Deprecate `unused_account_validity_days` argument and add support for `temporary_password_validity_days` argument [GH-10890]
 * resource/aws_elasticsearch_domain: Automatically retry resource creation on additional error messages relating to eventual consistency [GH-11663]
 * resource/aws_emr_instance_group: Wait for `RUNNING` status on creation [GH-11688]
