@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_gamelift_fleet: Add `fleet_type` argument (support Spot Fleets) [GH-8234]
 * resource/aws_kms_key: Add `customer_master_key_spec` argument and plan-time validation support for `key_usage` value `SIGN_VERIFY` (support asymmetric keys) [GH-11062]
 * resource/aws_sagemaker_notebook_instance: Add `direct_internet_access` argument [GH-8618]
+* resource/aws_ssm_document: Add `target_type` argument [GH-11479]
 * resource/aws_ssm_maintenance_window: Add `description` argument [GH-11478]
 * resource/aws_storagegateway_gateway: Add `cloudwatch_log_group_arn` argument [GH-10939]
 
