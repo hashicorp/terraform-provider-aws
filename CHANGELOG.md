@@ -27,6 +27,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_log_subscription_filter: Perform eventual consistency retries on update [GH-11739]
 * resource/aws_cognito_user_pool: Deprecate `unused_account_validity_days` argument and add support for `temporary_password_validity_days` argument [GH-10890]
 * resource/aws_elasticsearch_domain: Automatically retry resource creation on additional error messages relating to eventual consistency [GH-11663]
+* resource/aws_elasticsearch_domain: Ensure in-place version upgrade is fully successful before returning [GH-11793]
 * resource/aws_emr_instance_group: Wait for `RUNNING` status on creation [GH-11688]
 * resource/aws_ssm_activation: Properly trigger resource recreation when deleted outside Terraform [GH-11658]
 * resource/aws_ssm_parameter: Prevent `KeyId` error when switching `type` value from `SecureString` to `String` [GH-10819]
