@@ -1,3 +1,4 @@
+## 2.48.0 (Unreleased)
 ## 2.47.0 (January 30, 2020)
 
 NOTES:
