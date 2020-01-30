@@ -834,6 +834,13 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 					return nil, "", err
 				}
 
+				// Elasticsearch upgrades consist of multiple steps:
+				// https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-version-migration.html
+				// Prevent false positive completion where the UpgradeStep is not the final UPGRADE step.
+				if aws.StringValue(out.StepStatus) == elasticsearch.UpgradeStatusSucceeded && aws.StringValue(out.UpgradeStep) != elasticsearch.UpgradeStepUpgrade {
+					return out, elasticsearch.UpgradeStatusInProgress, nil
+				}
+
 				return out, aws.StringValue(out.StepStatus), nil
 			},
 			Timeout:    60 * time.Minute, // TODO: Make this configurable. Large ES domains may take a very long time to upgrade
