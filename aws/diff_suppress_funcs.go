@@ -132,3 +132,10 @@ func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.Resour
 	}
 	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
 }
+
+func suppressMetadataOptionsHttpEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
+	// Suppress diff if http_endpoint is disabled
+	i := strings.LastIndexByte(k, '.')
+	state := d.Get(k[:i+1] + "http_endpoint").(string)
+	return state == "disabled"
+}

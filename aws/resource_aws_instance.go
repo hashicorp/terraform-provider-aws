@@ -538,27 +538,18 @@ func resourceAwsInstance() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{ec2.InstanceMetadataEndpointStateEnabled, ec2.InstanceMetadataEndpointStateDisabled}, false),
 						},
 						"http_tokens": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      ec2.HttpTokensStateOptional,
-							ValidateFunc: validation.StringInSlice([]string{ec2.HttpTokensStateOptional, ec2.HttpTokensStateRequired}, false),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// Suppress diff if http_endpoint is not enabled
-								i := strings.LastIndexByte(k, '.')
-								state := d.Get(k[:i+1] + "http_endpoint").(string)
-								return state != ec2.InstanceMetadataEndpointStateEnabled
-							},
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          ec2.HttpTokensStateOptional,
+							ValidateFunc:     validation.StringInSlice([]string{ec2.HttpTokensStateOptional, ec2.HttpTokensStateRequired}, false),
+							DiffSuppressFunc: suppressMetadataOptionsHttpEndpointDisabled,
 						},
 						"http_put_response_hop_limit": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  1,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// Suppress diff if http_endpoint is not enabled
-								i := strings.LastIndexByte(k, '.')
-								state := d.Get(k[:i+1] + "http_endpoint").(string)
-								return state != ec2.InstanceMetadataEndpointStateEnabled
-							},
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Default:          1,
+							ValidateFunc:     validation.IntBetween(1, 64),
+							DiffSuppressFunc: suppressMetadataOptionsHttpEndpointDisabled,
 						},
 					},
 				},
