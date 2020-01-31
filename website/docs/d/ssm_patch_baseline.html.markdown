@@ -13,6 +13,7 @@ Provides an SSM Patch Baseline data source. Useful if you wish to reuse the defa
 ## Example Usage
 
 To retrieve a baseline provided by AWS:
+
 ```hcl
 data "aws_ssm_patch_baseline" "centos" {
   owner            = "AWS"
@@ -22,6 +23,7 @@ data "aws_ssm_patch_baseline" "centos" {
 ```
 
 To retrieve a baseline on your account:
+
 ```hcl
 data "aws_ssm_patch_baseline" "default_custom" {
   owner            = "Self"
@@ -42,6 +44,8 @@ The following arguments are supported:
 * `default_baseline` - (Optional) Filters the results against the baselines default_baseline field.
 
 * `operating_system` - (Optional) The specified OS for the baseline.
+
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

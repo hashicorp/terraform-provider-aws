@@ -17,25 +17,21 @@ func dataSourceAwsSsmPatchBaseline() *schema.Resource {
 			"owner": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"name_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"default_baseline": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 			},
 			"operating_system": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: validation.StringInSlice(ssmPatchOSs, false),
 			},
 			// Computed values
 			"description": {
@@ -93,14 +89,12 @@ func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("default_baseline"); ok {
-		var ln int
 		for _, baseline := range filteredBaselines {
-			if v.(bool) == *baseline.DefaultBaseline {
-				filteredBaselines[ln] = baseline
-				ln++
+			if v.(bool) == aws.BoolValue(baseline.DefaultBaseline) {
+				filteredBaselines = []*ssm.PatchBaselineIdentity{baseline}
+				break
 			}
 		}
-		filteredBaselines = filteredBaselines[:ln]
 	}
 
 	if len(filteredBaselines) < 1 {

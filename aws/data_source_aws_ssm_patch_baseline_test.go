@@ -31,8 +31,9 @@ func TestAccAWSSsmPatchBaselineDataSource_newBaseline(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-bl-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsSsmPatchBaselineDataSourceConfig_newBaseline(rName),
