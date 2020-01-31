@@ -366,7 +366,7 @@ func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
 	var param ssm.Parameter
 	randString := acctest.RandString(10)
 	name := fmt.Sprintf("%s_%s", t.Name(), randString)
-	resourceName := "aws_ssm_parameter.secret_test"
+	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
