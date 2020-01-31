@@ -177,7 +177,7 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
 	}
 
-	if v, ok := d.GetOk("approved_patches_enable_non_security"); ok && aws.StringValue(params.OperatingSystem) != ssm.OperatingSystemWindows {
+	if v, ok := d.GetOk("approved_patches_enable_non_security"); ok {
 		params.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
 	}
 
