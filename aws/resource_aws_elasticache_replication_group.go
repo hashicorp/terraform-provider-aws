@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsElasticacheReplicationGroup() *schema.Resource {
@@ -255,7 +256,7 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	tags := tagsFromMapEC(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElasticacheTags()
 	params := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId:          aws.String(d.Get("replication_group_id").(string)),
 		ReplicationGroupDescription: aws.String(d.Get("replication_group_description").(string)),

@@ -1,4 +1,5 @@
 ---
+subcategory: "CodeBuild"
 layout: "aws"
 page_title: "AWS: aws_codebuild_source_credential"
 description: |-

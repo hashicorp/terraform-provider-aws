@@ -1,4 +1,5 @@
 ---
+subcategory: "Cloud9"
 layout: "aws"
 page_title: "AWS: aws_cloud9_environment_ec2"
 description: |-

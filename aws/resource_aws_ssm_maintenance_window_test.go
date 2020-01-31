@@ -46,6 +46,41 @@ func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMMaintenanceWindow_description(t *testing.T) {
+	var winId ssm.MaintenanceWindowIdentity
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_maintenance_window.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigDescription(rName, "foo"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "foo"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigDescription(rName, "bar"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "bar"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -57,11 +92,11 @@ func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowConfigTags(rName),
+				Config: testAccAWSSSMMaintenanceWindowConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "My Maintenance Window"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -70,10 +105,20 @@ func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSSMMaintenanceWindowConfig(rName),
+				Config: testAccAWSSSMMaintenanceWindowConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -82,7 +127,7 @@ func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_disappears(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
-	name := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -91,7 +136,7 @@ func TestAccAWSSSMMaintenanceWindow_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowConfig(name),
+				Config: testAccAWSSSMMaintenanceWindowConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
 					testAccCheckAWSSSMMaintenanceWindowDisappears(&winId),
@@ -454,24 +499,22 @@ func testAccCheckAWSSSMMaintenanceWindowDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.DescribeMaintenanceWindows(&ssm.DescribeMaintenanceWindowsInput{
-			Filters: []*ssm.MaintenanceWindowFilter{
-				{
-					Key:    aws.String("Name"),
-					Values: []*string{aws.String(rs.Primary.Attributes["name"])},
-				},
-			},
+		out, err := conn.GetMaintenanceWindow(&ssm.GetMaintenanceWindowInput{
+			WindowId: aws.String(rs.Primary.ID),
 		})
 
-		if err != nil {
-			return err
+		if err == nil {
+			if *out.WindowId == rs.Primary.ID {
+				return fmt.Errorf("SSM Maintenance Window %s still exists", rs.Primary.ID)
+			}
 		}
 
-		if len(out.WindowIdentities) > 0 {
-			return fmt.Errorf("Expected AWS SSM Maintenance Document to be gone, but was still found")
+		// Return nil if the SSM Maintenance Window is already destroyed
+		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+			continue
 		}
 
-		return nil
+		return err
 	}
 
 	return nil
@@ -488,19 +531,47 @@ resource "aws_ssm_maintenance_window" "test" {
 `, rName)
 }
 
-func testAccAWSSSMMaintenanceWindowConfigTags(rName string) string {
+func testAccAWSSSMMaintenanceWindowConfigDescription(rName, desc string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "test" {
+  cutoff      = 1
+  duration    = 3
+  name        = %[1]q
+  description = %[2]q
+  schedule    = "cron(0 16 ? * TUE *)"
+}
+`, rName, desc)
+}
+
+func testAccAWSSSMMaintenanceWindowConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 1
   duration = 3
-  name     = %q
+  name     = %[1]q
   schedule = "cron(0 16 ? * TUE *)"
 
   tags = {
-    Name = "My Maintenance Window"
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSSSMMaintenanceWindowConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "test" {
+  cutoff   = 1
+  duration = 3
+  name     = %[1]q
+  schedule = "cron(0 16 ? * TUE *)"
+
+  tags = {
+    %[2]q = %[3]q
+	%[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSSSMMaintenanceWindowConfigCutoff(rName string, cutoff int) string {

@@ -1,4 +1,5 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "Terraform AWS Provider Custom Service Endpoint Configuration"
 description: |-
@@ -46,6 +47,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 
 <div style="column-width: 14em;">
 
+- `accessanalyzer`
 - `acm`
 - `acmpca`
 - `amplify`
@@ -78,6 +80,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `cognitoidp`
 - `configservice`
 - `cur`
+- `dataexchange`
 - `datapipeline`
 - `datasync`
 - `dax`
@@ -108,7 +111,9 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `globalaccelerator`
 - `glue`
 - `guardduty`
+- `greengrass`
 - `iam`
+- `imagebuilder`
 - `inspector`
 - `iot`
 - `iotanalytics`
@@ -126,6 +131,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `lightsail`
 - `macie`
 - `managedblockchain`
+- `marketplacecatalog`
 - `mediaconnect`
 - `mediaconvert`
 - `medialive`
@@ -170,6 +176,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `transfer`
 - `waf`
 - `wafregional`
+- `wafv2`
 - `worklink`
 - `workspaces`
 - `xray`

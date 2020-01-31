@@ -5,10 +5,10 @@ package R004
 import (
 	"go/ast"
 	"go/types"
-	"strings"
 
 	"golang.org/x/tools/go/analysis"
 
+	"github.com/bflad/tfproviderlint/helper/terraformtype"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/resourcedataset"
 )
@@ -59,9 +59,7 @@ func isAllowedType(t types.Type) bool {
 	default:
 		return false
 	case *types.Basic:
-		if !isAllowedBasicType(t) {
-			return false
-		}
+		return isAllowedBasicType(t)
 	case *types.Interface:
 		return true
 	case *types.Map:
@@ -76,20 +74,12 @@ func isAllowedType(t types.Type) bool {
 			return isAllowedType(t.Elem().Underlying())
 		}
 	case *types.Named:
-		if t.Obj().Name() != "Set" {
-			return false
-		}
-		// HasSuffix here due to vendoring
-		if !strings.HasSuffix(t.Obj().Pkg().Path(), "github.com/hashicorp/terraform-plugin-sdk/helper/schema") {
-			return false
-		}
+		return terraformtype.IsHelperSchemaNamedType(t, terraformtype.TypeNameSet)
 	case *types.Pointer:
 		return isAllowedType(t.Elem())
 	case *types.Slice:
 		return isAllowedType(t.Elem().Underlying())
 	}
-
-	return true
 }
 
 var allowedBasicKindTypes = []types.BasicKind{

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCodeBuildProject() *schema.Resource {
@@ -171,6 +172,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.ComputeTypeBuildGeneral1Small,
 								codebuild.ComputeTypeBuildGeneral1Medium,
 								codebuild.ComputeTypeBuildGeneral1Large,
+								codebuild.ComputeTypeBuildGeneral12xlarge,
 							}, false),
 						},
 						"environment_variable": {
@@ -208,7 +210,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								codebuild.EnvironmentTypeLinuxContainer,
+								codebuild.EnvironmentTypeLinuxGpuContainer,
 								codebuild.EnvironmentTypeWindowsContainer,
+								codebuild.EnvironmentTypeArmContainer,
 							}, false),
 						},
 						"image_pull_credentials_type": {
@@ -527,6 +531,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Default:      "60",
 				ValidateFunc: validation.IntBetween(5, 480),
 			},
+			"queued_timeout": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      "480",
+				ValidateFunc: validation.IntBetween(5, 480),
+			},
 			"badge_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -610,6 +620,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		SecondaryArtifacts: projectSecondaryArtifacts,
 		SecondarySources:   projectSecondarySources,
 		LogsConfig:         projectLogsConfig,
+		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodebuildTags(),
 	}
 
 	if v, ok := d.GetOk("cache"); ok {
@@ -632,16 +643,16 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		params.TimeoutInMinutes = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("queued_timeout"); ok {
+		params.QueuedTimeoutInMinutes = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("vpc_config"); ok {
 		params.VpcConfig = expandCodeBuildVpcConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("badge_enabled"); ok {
 		params.BadgeEnabled = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		params.Tags = tagsFromMapCodeBuild(v.(map[string]interface{}))
 	}
 
 	var resp *codebuild.CreateProjectOutput
@@ -653,7 +664,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			// InvalidInputException: CodeBuild is not authorized to perform
 			// InvalidInputException: Not authorized to perform DescribeSecurityGroups
-			if isAWSErr(err, "InvalidInputException", "ot authorized to perform") {
+			if isAWSErr(err, codebuild.ErrCodeInvalidInputException, "ot authorized to perform") {
 				return resource.RetryableError(err)
 			}
 
@@ -1065,6 +1076,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("name", project.Name)
 	d.Set("service_role", project.ServiceRole)
 	d.Set("build_timeout", project.TimeoutInMinutes)
+	d.Set("queued_timeout", project.QueuedTimeoutInMinutes)
 	if project.Badge != nil {
 		d.Set("badge_enabled", project.Badge.BadgeEnabled)
 		d.Set("badge_url", project.Badge.BadgeRequestUrl)
@@ -1073,7 +1085,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("badge_url", "")
 	}
 
-	if err := d.Set("tags", tagsToMapCodeBuild(project.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.CodebuildKeyValueTags(project.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -1147,13 +1159,17 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 		params.TimeoutInMinutes = aws.Int64(int64(d.Get("build_timeout").(int)))
 	}
 
+	if d.HasChange("queued_timeout") {
+		params.QueuedTimeoutInMinutes = aws.Int64(int64(d.Get("queued_timeout").(int)))
+	}
+
 	if d.HasChange("badge_enabled") {
 		params.BadgeEnabled = aws.Bool(d.Get("badge_enabled").(bool))
 	}
 
 	// The documentation clearly says "The replacement set of tags for this build project."
 	// But its a slice of pointers so if not set for every update, they get removed.
-	params.Tags = tagsFromMapCodeBuild(d.Get("tags").(map[string]interface{}))
+	params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodebuildTags()
 
 	// Handle IAM eventual consistency
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
@@ -1163,7 +1179,7 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			// InvalidInputException: CodeBuild is not authorized to perform
 			// InvalidInputException: Not authorized to perform DescribeSecurityGroups
-			if isAWSErr(err, "InvalidInputException", "ot authorized to perform") {
+			if isAWSErr(err, codebuild.ErrCodeInvalidInputException, "ot authorized to perform") {
 				return resource.RetryableError(err)
 			}
 

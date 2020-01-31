@@ -70,8 +70,8 @@ func (c *DatabaseMigrationService) AddTagsToResourceRequest(input *AddTagsToReso
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation AddTagsToResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/AddTagsToResource
@@ -150,8 +150,8 @@ func (c *DatabaseMigrationService) ApplyPendingMaintenanceActionRequest(input *A
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation ApplyPendingMaintenanceAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ApplyPendingMaintenanceAction
@@ -229,24 +229,24 @@ func (c *DatabaseMigrationService) CreateEndpointRequest(input *CreateEndpointIn
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation CreateEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
+// Returned Error Types:
+//   * KMSKeyNotAccessibleFault
 //   AWS DMS cannot access the AWS KMS key.
 //
-//   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
+//   * ResourceAlreadyExistsFault
 //   The resource you are attempting to create already exists.
 //
-//   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
+//   * ResourceQuotaExceededFault
 //   The quota for this resource quota has been exceeded.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+//   * AccessDeniedFault
 //   AWS DMS was denied access to the endpoint. Check that the role is correctly
 //   configured.
 //
@@ -341,36 +341,36 @@ func (c *DatabaseMigrationService) CreateEventSubscriptionRequest(input *CreateE
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation CreateEventSubscription for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
+// Returned Error Types:
+//   * ResourceQuotaExceededFault
 //   The quota for this resource quota has been exceeded.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
+//   * ResourceAlreadyExistsFault
 //   The resource you are attempting to create already exists.
 //
-//   * ErrCodeSNSInvalidTopicFault "SNSInvalidTopicFault"
+//   * SNSInvalidTopicFault
 //   The SNS topic is invalid.
 //
-//   * ErrCodeSNSNoAuthorizationFault "SNSNoAuthorizationFault"
+//   * SNSNoAuthorizationFault
 //   You are not authorized for the SNS subscription.
 //
-//   * ErrCodeKMSAccessDeniedFault "KMSAccessDeniedFault"
+//   * KMSAccessDeniedFault
 //   The ciphertext references a key that doesn't exist or that the DMS account
 //   doesn't have access to.
 //
-//   * ErrCodeKMSDisabledFault "KMSDisabledFault"
+//   * KMSDisabledFault
 //   The specified master key (CMK) isn't enabled.
 //
-//   * ErrCodeKMSInvalidStateFault "KMSInvalidStateFault"
+//   * KMSInvalidStateFault
 //   The state of the specified AWS KMS resource isn't valid for this request.
 //
-//   * ErrCodeKMSNotFoundFault "KMSNotFoundFault"
+//   * KMSNotFoundFault
 //   The specified AWS KMS entity or resource can't be found.
 //
-//   * ErrCodeKMSThrottlingFault "KMSThrottlingFault"
+//   * KMSThrottlingFault
 //   This request triggered AWS KMS request throttling.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateEventSubscription
@@ -441,6 +441,13 @@ func (c *DatabaseMigrationService) CreateReplicationInstanceRequest(input *Creat
 //
 // Creates the replication instance using the specified parameters.
 //
+// AWS DMS requires that your account have certain roles with appropriate permissions
+// before you can create a replication instance. For information on the required
+// roles, see Creating the IAM Roles to Use With the AWS CLI and AWS DMS API
+// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.APIRole.html).
+// For information on the required permissions, see IAM Permissions Needed to
+// Use AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -448,38 +455,38 @@ func (c *DatabaseMigrationService) CreateReplicationInstanceRequest(input *Creat
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation CreateReplicationInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+// Returned Error Types:
+//   * AccessDeniedFault
 //   AWS DMS was denied access to the endpoint. Check that the role is correctly
 //   configured.
 //
-//   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
+//   * ResourceAlreadyExistsFault
 //   The resource you are attempting to create already exists.
 //
-//   * ErrCodeInsufficientResourceCapacityFault "InsufficientResourceCapacityFault"
+//   * InsufficientResourceCapacityFault
 //   There are not enough resources allocated to the database migration.
 //
-//   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
+//   * ResourceQuotaExceededFault
 //   The quota for this resource quota has been exceeded.
 //
-//   * ErrCodeStorageQuotaExceededFault "StorageQuotaExceededFault"
+//   * StorageQuotaExceededFault
 //   The storage quota has been exceeded.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeReplicationSubnetGroupDoesNotCoverEnoughAZs "ReplicationSubnetGroupDoesNotCoverEnoughAZs"
+//   * ReplicationSubnetGroupDoesNotCoverEnoughAZs
 //   The replication subnet group does not cover enough Availability Zones (AZs).
 //   Edit the replication subnet group and add more AZs.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeInvalidSubnet "InvalidSubnet"
+//   * InvalidSubnet
 //   The subnet provided is invalid.
 //
-//   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
+//   * KMSKeyNotAccessibleFault
 //   AWS DMS cannot access the AWS KMS key.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateReplicationInstance
@@ -557,25 +564,25 @@ func (c *DatabaseMigrationService) CreateReplicationSubnetGroupRequest(input *Cr
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation CreateReplicationSubnetGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+// Returned Error Types:
+//   * AccessDeniedFault
 //   AWS DMS was denied access to the endpoint. Check that the role is correctly
 //   configured.
 //
-//   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
+//   * ResourceAlreadyExistsFault
 //   The resource you are attempting to create already exists.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
+//   * ResourceQuotaExceededFault
 //   The quota for this resource quota has been exceeded.
 //
-//   * ErrCodeReplicationSubnetGroupDoesNotCoverEnoughAZs "ReplicationSubnetGroupDoesNotCoverEnoughAZs"
+//   * ReplicationSubnetGroupDoesNotCoverEnoughAZs
 //   The replication subnet group does not cover enough Availability Zones (AZs).
 //   Edit the replication subnet group and add more AZs.
 //
-//   * ErrCodeInvalidSubnet "InvalidSubnet"
+//   * InvalidSubnet
 //   The subnet provided is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateReplicationSubnetGroup
@@ -653,25 +660,25 @@ func (c *DatabaseMigrationService) CreateReplicationTaskRequest(input *CreateRep
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation CreateReplicationTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+// Returned Error Types:
+//   * AccessDeniedFault
 //   AWS DMS was denied access to the endpoint. Check that the role is correctly
 //   configured.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
+//   * ResourceAlreadyExistsFault
 //   The resource you are attempting to create already exists.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
+//   * KMSKeyNotAccessibleFault
 //   AWS DMS cannot access the AWS KMS key.
 //
-//   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
+//   * ResourceQuotaExceededFault
 //   The quota for this resource quota has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateReplicationTask
@@ -749,11 +756,11 @@ func (c *DatabaseMigrationService) DeleteCertificateRequest(input *DeleteCertifi
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DeleteCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
@@ -832,15 +839,15 @@ func (c *DatabaseMigrationService) DeleteConnectionRequest(input *DeleteConnecti
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DeleteConnection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+// Returned Error Types:
+//   * AccessDeniedFault
 //   AWS DMS was denied access to the endpoint. Check that the role is correctly
 //   configured.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
@@ -922,11 +929,11 @@ func (c *DatabaseMigrationService) DeleteEndpointRequest(input *DeleteEndpointIn
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DeleteEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
@@ -1005,11 +1012,11 @@ func (c *DatabaseMigrationService) DeleteEventSubscriptionRequest(input *DeleteE
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DeleteEventSubscription for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
@@ -1091,12 +1098,12 @@ func (c *DatabaseMigrationService) DeleteReplicationInstanceRequest(input *Delet
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DeleteReplicationInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+// Returned Error Types:
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteReplicationInstance
@@ -1175,12 +1182,12 @@ func (c *DatabaseMigrationService) DeleteReplicationSubnetGroupRequest(input *De
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DeleteReplicationSubnetGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+// Returned Error Types:
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteReplicationSubnetGroup
@@ -1258,11 +1265,11 @@ func (c *DatabaseMigrationService) DeleteReplicationTaskRequest(input *DeleteRep
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DeleteReplicationTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
@@ -1429,8 +1436,8 @@ func (c *DatabaseMigrationService) DescribeCertificatesRequest(input *DescribeCe
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeCertificates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeCertificates
@@ -1498,10 +1505,12 @@ func (c *DatabaseMigrationService) DescribeCertificatesPagesWithContext(ctx aws.
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCertificatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCertificatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1565,8 +1574,8 @@ func (c *DatabaseMigrationService) DescribeConnectionsRequest(input *DescribeCon
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeConnections for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeConnections
@@ -1634,10 +1643,12 @@ func (c *DatabaseMigrationService) DescribeConnectionsPagesWithContext(ctx aws.C
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeConnectionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeConnectionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1764,10 +1775,12 @@ func (c *DatabaseMigrationService) DescribeEndpointTypesPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEndpointTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEndpointTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1830,8 +1843,8 @@ func (c *DatabaseMigrationService) DescribeEndpointsRequest(input *DescribeEndpo
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeEndpoints for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEndpoints
@@ -1899,10 +1912,12 @@ func (c *DatabaseMigrationService) DescribeEndpointsPagesWithContext(ctx aws.Con
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2047,8 +2062,8 @@ func (c *DatabaseMigrationService) DescribeEventSubscriptionsRequest(input *Desc
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeEventSubscriptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeEventSubscriptions
@@ -2116,10 +2131,12 @@ func (c *DatabaseMigrationService) DescribeEventSubscriptionsPagesWithContext(ct
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEventSubscriptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEventSubscriptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2249,10 +2266,12 @@ func (c *DatabaseMigrationService) DescribeEventsPagesWithContext(ctx aws.Contex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2380,10 +2399,12 @@ func (c *DatabaseMigrationService) DescribeOrderableReplicationInstancesPagesWit
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeOrderableReplicationInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeOrderableReplicationInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2446,8 +2467,8 @@ func (c *DatabaseMigrationService) DescribePendingMaintenanceActionsRequest(inpu
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribePendingMaintenanceActions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribePendingMaintenanceActions
@@ -2515,10 +2536,12 @@ func (c *DatabaseMigrationService) DescribePendingMaintenanceActionsPagesWithCon
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribePendingMaintenanceActionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribePendingMaintenanceActionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2575,12 +2598,12 @@ func (c *DatabaseMigrationService) DescribeRefreshSchemasStatusRequest(input *De
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeRefreshSchemasStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+// Returned Error Types:
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeRefreshSchemasStatus
@@ -2664,11 +2687,11 @@ func (c *DatabaseMigrationService) DescribeReplicationInstanceTaskLogsRequest(in
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeReplicationInstanceTaskLogs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
@@ -2737,10 +2760,12 @@ func (c *DatabaseMigrationService) DescribeReplicationInstanceTaskLogsPagesWithC
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationInstanceTaskLogsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationInstanceTaskLogsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2804,8 +2829,8 @@ func (c *DatabaseMigrationService) DescribeReplicationInstancesRequest(input *De
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeReplicationInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationInstances
@@ -2873,10 +2898,12 @@ func (c *DatabaseMigrationService) DescribeReplicationInstancesPagesWithContext(
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2939,8 +2966,8 @@ func (c *DatabaseMigrationService) DescribeReplicationSubnetGroupsRequest(input 
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeReplicationSubnetGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationSubnetGroups
@@ -3008,10 +3035,12 @@ func (c *DatabaseMigrationService) DescribeReplicationSubnetGroupsPagesWithConte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationSubnetGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationSubnetGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3075,8 +3104,8 @@ func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResultsReque
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeReplicationTaskAssessmentResults for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskAssessmentResults
@@ -3144,10 +3173,12 @@ func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResultsPages
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationTaskAssessmentResultsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationTaskAssessmentResultsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3211,8 +3242,8 @@ func (c *DatabaseMigrationService) DescribeReplicationTasksRequest(input *Descri
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeReplicationTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTasks
@@ -3280,10 +3311,12 @@ func (c *DatabaseMigrationService) DescribeReplicationTasksPagesWithContext(ctx 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationTasksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationTasksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3346,12 +3379,12 @@ func (c *DatabaseMigrationService) DescribeSchemasRequest(input *DescribeSchemas
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeSchemas for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+// Returned Error Types:
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeSchemas
@@ -3419,10 +3452,12 @@ func (c *DatabaseMigrationService) DescribeSchemasPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSchemasOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSchemasOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3490,11 +3525,11 @@ func (c *DatabaseMigrationService) DescribeTableStatisticsRequest(input *Describ
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation DescribeTableStatistics for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
@@ -3563,10 +3598,12 @@ func (c *DatabaseMigrationService) DescribeTableStatisticsPagesWithContext(ctx a
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTableStatisticsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTableStatisticsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3623,14 +3660,14 @@ func (c *DatabaseMigrationService) ImportCertificateRequest(input *ImportCertifi
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation ImportCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
+// Returned Error Types:
+//   * ResourceAlreadyExistsFault
 //   The resource you are attempting to create already exists.
 //
-//   * ErrCodeInvalidCertificateFault "InvalidCertificateFault"
+//   * InvalidCertificateFault
 //   The certificate was not valid.
 //
-//   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
+//   * ResourceQuotaExceededFault
 //   The quota for this resource quota has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ImportCertificate
@@ -3708,8 +3745,8 @@ func (c *DatabaseMigrationService) ListTagsForResourceRequest(input *ListTagsFor
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ListTagsForResource
@@ -3787,21 +3824,21 @@ func (c *DatabaseMigrationService) ModifyEndpointRequest(input *ModifyEndpointIn
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation ModifyEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+// Returned Error Types:
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
+//   * ResourceAlreadyExistsFault
 //   The resource you are attempting to create already exists.
 //
-//   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
+//   * KMSKeyNotAccessibleFault
 //   AWS DMS cannot access the AWS KMS key.
 //
-//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+//   * AccessDeniedFault
 //   AWS DMS was denied access to the endpoint. Check that the role is correctly
 //   configured.
 //
@@ -3880,33 +3917,33 @@ func (c *DatabaseMigrationService) ModifyEventSubscriptionRequest(input *ModifyE
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation ModifyEventSubscription for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
+// Returned Error Types:
+//   * ResourceQuotaExceededFault
 //   The quota for this resource quota has been exceeded.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeSNSInvalidTopicFault "SNSInvalidTopicFault"
+//   * SNSInvalidTopicFault
 //   The SNS topic is invalid.
 //
-//   * ErrCodeSNSNoAuthorizationFault "SNSNoAuthorizationFault"
+//   * SNSNoAuthorizationFault
 //   You are not authorized for the SNS subscription.
 //
-//   * ErrCodeKMSAccessDeniedFault "KMSAccessDeniedFault"
+//   * KMSAccessDeniedFault
 //   The ciphertext references a key that doesn't exist or that the DMS account
 //   doesn't have access to.
 //
-//   * ErrCodeKMSDisabledFault "KMSDisabledFault"
+//   * KMSDisabledFault
 //   The specified master key (CMK) isn't enabled.
 //
-//   * ErrCodeKMSInvalidStateFault "KMSInvalidStateFault"
+//   * KMSInvalidStateFault
 //   The state of the specified AWS KMS resource isn't valid for this request.
 //
-//   * ErrCodeKMSNotFoundFault "KMSNotFoundFault"
+//   * KMSNotFoundFault
 //   The specified AWS KMS entity or resource can't be found.
 //
-//   * ErrCodeKMSThrottlingFault "KMSThrottlingFault"
+//   * KMSThrottlingFault
 //   This request triggered AWS KMS request throttling.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyEventSubscription
@@ -3988,28 +4025,28 @@ func (c *DatabaseMigrationService) ModifyReplicationInstanceRequest(input *Modif
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation ModifyReplicationInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+// Returned Error Types:
+//   * AccessDeniedFault
 //   AWS DMS was denied access to the endpoint. Check that the role is correctly
 //   configured.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
+//   * ResourceAlreadyExistsFault
 //   The resource you are attempting to create already exists.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInsufficientResourceCapacityFault "InsufficientResourceCapacityFault"
+//   * InsufficientResourceCapacityFault
 //   There are not enough resources allocated to the database migration.
 //
-//   * ErrCodeStorageQuotaExceededFault "StorageQuotaExceededFault"
+//   * StorageQuotaExceededFault
 //   The storage quota has been exceeded.
 //
-//   * ErrCodeUpgradeDependencyFailureFault "UpgradeDependencyFailureFault"
+//   * UpgradeDependencyFailureFault
 //   An upgrade dependency is preventing the database migration.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyReplicationInstance
@@ -4087,25 +4124,25 @@ func (c *DatabaseMigrationService) ModifyReplicationSubnetGroupRequest(input *Mo
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation ModifyReplicationSubnetGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+// Returned Error Types:
+//   * AccessDeniedFault
 //   AWS DMS was denied access to the endpoint. Check that the role is correctly
 //   configured.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
+//   * ResourceQuotaExceededFault
 //   The quota for this resource quota has been exceeded.
 //
-//   * ErrCodeSubnetAlreadyInUse "SubnetAlreadyInUse"
+//   * SubnetAlreadyInUse
 //   The specified subnet is already in use.
 //
-//   * ErrCodeReplicationSubnetGroupDoesNotCoverEnoughAZs "ReplicationSubnetGroupDoesNotCoverEnoughAZs"
+//   * ReplicationSubnetGroupDoesNotCoverEnoughAZs
 //   The replication subnet group does not cover enough Availability Zones (AZs).
 //   Edit the replication subnet group and add more AZs.
 //
-//   * ErrCodeInvalidSubnet "InvalidSubnet"
+//   * InvalidSubnet
 //   The subnet provided is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyReplicationSubnetGroup
@@ -4190,18 +4227,18 @@ func (c *DatabaseMigrationService) ModifyReplicationTaskRequest(input *ModifyRep
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation ModifyReplicationTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+// Returned Error Types:
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
+//   * ResourceAlreadyExistsFault
 //   The resource you are attempting to create already exists.
 //
-//   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
+//   * KMSKeyNotAccessibleFault
 //   AWS DMS cannot access the AWS KMS key.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyReplicationTask
@@ -4280,11 +4317,11 @@ func (c *DatabaseMigrationService) RebootReplicationInstanceRequest(input *Reboo
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation RebootReplicationInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
@@ -4365,18 +4402,18 @@ func (c *DatabaseMigrationService) RefreshSchemasRequest(input *RefreshSchemasIn
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation RefreshSchemas for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+// Returned Error Types:
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
+//   * KMSKeyNotAccessibleFault
 //   AWS DMS cannot access the AWS KMS key.
 //
-//   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
+//   * ResourceQuotaExceededFault
 //   The quota for this resource quota has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/RefreshSchemas
@@ -4454,11 +4491,11 @@ func (c *DatabaseMigrationService) ReloadTablesRequest(input *ReloadTablesInput)
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation ReloadTables for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
@@ -4538,8 +4575,8 @@ func (c *DatabaseMigrationService) RemoveTagsFromResourceRequest(input *RemoveTa
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation RemoveTagsFromResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/RemoveTagsFromResource
@@ -4621,15 +4658,15 @@ func (c *DatabaseMigrationService) StartReplicationTaskRequest(input *StartRepli
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation StartReplicationTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+//   * AccessDeniedFault
 //   AWS DMS was denied access to the endpoint. Check that the role is correctly
 //   configured.
 //
@@ -4709,12 +4746,12 @@ func (c *DatabaseMigrationService) StartReplicationTaskAssessmentRequest(input *
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation StartReplicationTaskAssessment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+// Returned Error Types:
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskAssessment
@@ -4792,11 +4829,11 @@ func (c *DatabaseMigrationService) StopReplicationTaskRequest(input *StopReplica
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation StopReplicationTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
@@ -4875,18 +4912,18 @@ func (c *DatabaseMigrationService) TestConnectionRequest(input *TestConnectionIn
 // See the AWS API reference guide for AWS Database Migration Service's
 // API operation TestConnection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+// Returned Error Types:
+//   * ResourceNotFoundFault
 //   The resource could not be found.
 //
-//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   * InvalidResourceStateFault
 //   The resource is in a state that prevents it from being used for database
 //   migration.
 //
-//   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
+//   * KMSKeyNotAccessibleFault
 //   AWS DMS cannot access the AWS KMS key.
 //
-//   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
+//   * ResourceQuotaExceededFault
 //   The quota for this resource quota has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/TestConnection
@@ -4909,6 +4946,63 @@ func (c *DatabaseMigrationService) TestConnectionWithContext(ctx aws.Context, in
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// AWS DMS was denied access to the endpoint. Check that the role is correctly
+// configured.
+type AccessDeniedFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedFault(v protocol.ResponseMetadata) error {
+	return &AccessDeniedFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedFault) Code() string {
+	return "AccessDeniedFault"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedFault) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedFault) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes a quota for an AWS account, for example, the number of replication
@@ -6131,6 +6225,12 @@ type CreateReplicationTaskInput struct {
 	// Checkpoint Example: --cdc-start-position "checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93"
 	//
 	// LSN Example: --cdc-start-position “mysql-bin-changelog.000024:373”
+	//
+	// When you use this task setting with a source PostgreSQL database, a logical
+	// replication slot should already be created and associated with the source
+	// endpoint. You can verify this by setting the slotName extra connection attribute
+	// to the name of this logical replication slot. For more information, see Extra
+	// Connection Attributes When Using PostgreSQL as a Source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
 	CdcStartPosition *string `type:"string"`
 
 	// Indicates the start time for a change data capture (CDC) operation. Use either
@@ -9333,6 +9433,568 @@ func (s *ImportCertificateOutput) SetCertificate(v *Certificate) *ImportCertific
 	return s
 }
 
+// There are not enough resources allocated to the database migration.
+type InsufficientResourceCapacityFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InsufficientResourceCapacityFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InsufficientResourceCapacityFault) GoString() string {
+	return s.String()
+}
+
+func newErrorInsufficientResourceCapacityFault(v protocol.ResponseMetadata) error {
+	return &InsufficientResourceCapacityFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InsufficientResourceCapacityFault) Code() string {
+	return "InsufficientResourceCapacityFault"
+}
+
+// Message returns the exception's message.
+func (s InsufficientResourceCapacityFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InsufficientResourceCapacityFault) OrigErr() error {
+	return nil
+}
+
+func (s InsufficientResourceCapacityFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InsufficientResourceCapacityFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InsufficientResourceCapacityFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The certificate was not valid.
+type InvalidCertificateFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidCertificateFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidCertificateFault) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidCertificateFault(v protocol.ResponseMetadata) error {
+	return &InvalidCertificateFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidCertificateFault) Code() string {
+	return "InvalidCertificateFault"
+}
+
+// Message returns the exception's message.
+func (s InvalidCertificateFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidCertificateFault) OrigErr() error {
+	return nil
+}
+
+func (s InvalidCertificateFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidCertificateFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidCertificateFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource is in a state that prevents it from being used for database
+// migration.
+type InvalidResourceStateFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidResourceStateFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidResourceStateFault) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidResourceStateFault(v protocol.ResponseMetadata) error {
+	return &InvalidResourceStateFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidResourceStateFault) Code() string {
+	return "InvalidResourceStateFault"
+}
+
+// Message returns the exception's message.
+func (s InvalidResourceStateFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidResourceStateFault) OrigErr() error {
+	return nil
+}
+
+func (s InvalidResourceStateFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidResourceStateFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidResourceStateFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The subnet provided is invalid.
+type InvalidSubnet struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidSubnet) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidSubnet) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidSubnet(v protocol.ResponseMetadata) error {
+	return &InvalidSubnet{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidSubnet) Code() string {
+	return "InvalidSubnet"
+}
+
+// Message returns the exception's message.
+func (s InvalidSubnet) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidSubnet) OrigErr() error {
+	return nil
+}
+
+func (s InvalidSubnet) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidSubnet) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidSubnet) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The ciphertext references a key that doesn't exist or that the DMS account
+// doesn't have access to.
+type KMSAccessDeniedFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s KMSAccessDeniedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSAccessDeniedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSAccessDeniedFault(v protocol.ResponseMetadata) error {
+	return &KMSAccessDeniedFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s KMSAccessDeniedFault) Code() string {
+	return "KMSAccessDeniedFault"
+}
+
+// Message returns the exception's message.
+func (s KMSAccessDeniedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s KMSAccessDeniedFault) OrigErr() error {
+	return nil
+}
+
+func (s KMSAccessDeniedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSAccessDeniedFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSAccessDeniedFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified master key (CMK) isn't enabled.
+type KMSDisabledFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s KMSDisabledFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSDisabledFault) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSDisabledFault(v protocol.ResponseMetadata) error {
+	return &KMSDisabledFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s KMSDisabledFault) Code() string {
+	return "KMSDisabledFault"
+}
+
+// Message returns the exception's message.
+func (s KMSDisabledFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s KMSDisabledFault) OrigErr() error {
+	return nil
+}
+
+func (s KMSDisabledFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSDisabledFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSDisabledFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The state of the specified AWS KMS resource isn't valid for this request.
+type KMSInvalidStateFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s KMSInvalidStateFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSInvalidStateFault) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSInvalidStateFault(v protocol.ResponseMetadata) error {
+	return &KMSInvalidStateFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s KMSInvalidStateFault) Code() string {
+	return "KMSInvalidStateFault"
+}
+
+// Message returns the exception's message.
+func (s KMSInvalidStateFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s KMSInvalidStateFault) OrigErr() error {
+	return nil
+}
+
+func (s KMSInvalidStateFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSInvalidStateFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSInvalidStateFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS DMS cannot access the AWS KMS key.
+type KMSKeyNotAccessibleFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s KMSKeyNotAccessibleFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSKeyNotAccessibleFault) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSKeyNotAccessibleFault(v protocol.ResponseMetadata) error {
+	return &KMSKeyNotAccessibleFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s KMSKeyNotAccessibleFault) Code() string {
+	return "KMSKeyNotAccessibleFault"
+}
+
+// Message returns the exception's message.
+func (s KMSKeyNotAccessibleFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s KMSKeyNotAccessibleFault) OrigErr() error {
+	return nil
+}
+
+func (s KMSKeyNotAccessibleFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSKeyNotAccessibleFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSKeyNotAccessibleFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified AWS KMS entity or resource can't be found.
+type KMSNotFoundFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s KMSNotFoundFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSNotFoundFault) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSNotFoundFault(v protocol.ResponseMetadata) error {
+	return &KMSNotFoundFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s KMSNotFoundFault) Code() string {
+	return "KMSNotFoundFault"
+}
+
+// Message returns the exception's message.
+func (s KMSNotFoundFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s KMSNotFoundFault) OrigErr() error {
+	return nil
+}
+
+func (s KMSNotFoundFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSNotFoundFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSNotFoundFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// This request triggered AWS KMS request throttling.
+type KMSThrottlingFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s KMSThrottlingFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSThrottlingFault) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSThrottlingFault(v protocol.ResponseMetadata) error {
+	return &KMSThrottlingFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s KMSThrottlingFault) Code() string {
+	return "KMSThrottlingFault"
+}
+
+// Message returns the exception's message.
+func (s KMSThrottlingFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s KMSThrottlingFault) OrigErr() error {
+	return nil
+}
+
+func (s KMSThrottlingFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSThrottlingFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSThrottlingFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type KinesisSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -10114,6 +10776,12 @@ type ModifyReplicationTaskInput struct {
 	// Checkpoint Example: --cdc-start-position "checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93"
 	//
 	// LSN Example: --cdc-start-position “mysql-bin-changelog.000024:373”
+	//
+	// When you use this task setting with a source PostgreSQL database, a logical
+	// replication slot should already be created and associated with the source
+	// endpoint. You can verify this by setting the slotName extra connection attribute
+	// to the name of this logical replication slot. For more information, see Extra
+	// Connection Attributes When Using PostgreSQL as a Source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
 	CdcStartPosition *string `type:"string"`
 
 	// Indicates the start time for a change data capture (CDC) operation. Use either
@@ -11646,6 +12314,63 @@ func (s *ReplicationSubnetGroup) SetVpcId(v string) *ReplicationSubnetGroup {
 	return s
 }
 
+// The replication subnet group does not cover enough Availability Zones (AZs).
+// Edit the replication subnet group and add more AZs.
+type ReplicationSubnetGroupDoesNotCoverEnoughAZs struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) GoString() string {
+	return s.String()
+}
+
+func newErrorReplicationSubnetGroupDoesNotCoverEnoughAZs(v protocol.ResponseMetadata) error {
+	return &ReplicationSubnetGroupDoesNotCoverEnoughAZs{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) Code() string {
+	return "ReplicationSubnetGroupDoesNotCoverEnoughAZs"
+}
+
+// Message returns the exception's message.
+func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) OrigErr() error {
+	return nil
+}
+
+func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ReplicationTask struct {
 	_ struct{} `type:"structure"`
 
@@ -11925,8 +12650,25 @@ type ReplicationTaskStats struct {
 	// The elapsed time of the task, in milliseconds.
 	ElapsedTimeMillis *int64 `type:"long"`
 
+	// The date the replication task was started either with a fresh start or a
+	// target reload.
+	FreshStartDate *time.Time `type:"timestamp"`
+
+	// The date the replication task full load was completed.
+	FullLoadFinishDate *time.Time `type:"timestamp"`
+
 	// The percent complete for the full load migration task.
 	FullLoadProgressPercent *int64 `type:"integer"`
+
+	// The date the the replication task full load was started.
+	FullLoadStartDate *time.Time `type:"timestamp"`
+
+	// The date the replication task was started either with a fresh start or a
+	// resume. For more information, see StartReplicationTaskType (https://docs.aws.amazon.com/dms/latest/APIReference/API_StartReplicationTask.html#DMS-StartReplicationTask-request-StartReplicationTaskType).
+	StartDate *time.Time `type:"timestamp"`
+
+	// The date the replication task was stopped.
+	StopDate *time.Time `type:"timestamp"`
 
 	// The number of errors that have occurred during this task.
 	TablesErrored *int64 `type:"integer"`
@@ -11957,9 +12699,39 @@ func (s *ReplicationTaskStats) SetElapsedTimeMillis(v int64) *ReplicationTaskSta
 	return s
 }
 
+// SetFreshStartDate sets the FreshStartDate field's value.
+func (s *ReplicationTaskStats) SetFreshStartDate(v time.Time) *ReplicationTaskStats {
+	s.FreshStartDate = &v
+	return s
+}
+
+// SetFullLoadFinishDate sets the FullLoadFinishDate field's value.
+func (s *ReplicationTaskStats) SetFullLoadFinishDate(v time.Time) *ReplicationTaskStats {
+	s.FullLoadFinishDate = &v
+	return s
+}
+
 // SetFullLoadProgressPercent sets the FullLoadProgressPercent field's value.
 func (s *ReplicationTaskStats) SetFullLoadProgressPercent(v int64) *ReplicationTaskStats {
 	s.FullLoadProgressPercent = &v
+	return s
+}
+
+// SetFullLoadStartDate sets the FullLoadStartDate field's value.
+func (s *ReplicationTaskStats) SetFullLoadStartDate(v time.Time) *ReplicationTaskStats {
+	s.FullLoadStartDate = &v
+	return s
+}
+
+// SetStartDate sets the StartDate field's value.
+func (s *ReplicationTaskStats) SetStartDate(v time.Time) *ReplicationTaskStats {
+	s.StartDate = &v
+	return s
+}
+
+// SetStopDate sets the StopDate field's value.
+func (s *ReplicationTaskStats) SetStopDate(v time.Time) *ReplicationTaskStats {
+	s.StopDate = &v
 	return s
 }
 
@@ -11985,6 +12757,120 @@ func (s *ReplicationTaskStats) SetTablesLoading(v int64) *ReplicationTaskStats {
 func (s *ReplicationTaskStats) SetTablesQueued(v int64) *ReplicationTaskStats {
 	s.TablesQueued = &v
 	return s
+}
+
+// The resource you are attempting to create already exists.
+type ResourceAlreadyExistsFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	ResourceArn *string `locationName:"resourceArn" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceAlreadyExistsFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceAlreadyExistsFault) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceAlreadyExistsFault(v protocol.ResponseMetadata) error {
+	return &ResourceAlreadyExistsFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceAlreadyExistsFault) Code() string {
+	return "ResourceAlreadyExistsFault"
+}
+
+// Message returns the exception's message.
+func (s ResourceAlreadyExistsFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceAlreadyExistsFault) OrigErr() error {
+	return nil
+}
+
+func (s ResourceAlreadyExistsFault) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceAlreadyExistsFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceAlreadyExistsFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource could not be found.
+type ResourceNotFoundFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundFault) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundFault(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundFault) Code() string {
+	return "ResourceNotFoundFault"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundFault) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundFault) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ResourcePendingMaintenanceActions struct {
@@ -12020,6 +12906,62 @@ func (s *ResourcePendingMaintenanceActions) SetPendingMaintenanceActionDetails(v
 func (s *ResourcePendingMaintenanceActions) SetResourceIdentifier(v string) *ResourcePendingMaintenanceActions {
 	s.ResourceIdentifier = &v
 	return s
+}
+
+// The quota for this resource quota has been exceeded.
+type ResourceQuotaExceededFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceQuotaExceededFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceQuotaExceededFault) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceQuotaExceededFault(v protocol.ResponseMetadata) error {
+	return &ResourceQuotaExceededFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceQuotaExceededFault) Code() string {
+	return "ResourceQuotaExceededFault"
+}
+
+// Message returns the exception's message.
+func (s ResourceQuotaExceededFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceQuotaExceededFault) OrigErr() error {
+	return nil
+}
+
+func (s ResourceQuotaExceededFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceQuotaExceededFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceQuotaExceededFault) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Settings for exporting data to Amazon S3.
@@ -12360,6 +13302,118 @@ func (s *S3Settings) SetTimestampColumnName(v string) *S3Settings {
 	return s
 }
 
+// The SNS topic is invalid.
+type SNSInvalidTopicFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s SNSInvalidTopicFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SNSInvalidTopicFault) GoString() string {
+	return s.String()
+}
+
+func newErrorSNSInvalidTopicFault(v protocol.ResponseMetadata) error {
+	return &SNSInvalidTopicFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SNSInvalidTopicFault) Code() string {
+	return "SNSInvalidTopicFault"
+}
+
+// Message returns the exception's message.
+func (s SNSInvalidTopicFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SNSInvalidTopicFault) OrigErr() error {
+	return nil
+}
+
+func (s SNSInvalidTopicFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SNSInvalidTopicFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SNSInvalidTopicFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You are not authorized for the SNS subscription.
+type SNSNoAuthorizationFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s SNSNoAuthorizationFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SNSNoAuthorizationFault) GoString() string {
+	return s.String()
+}
+
+func newErrorSNSNoAuthorizationFault(v protocol.ResponseMetadata) error {
+	return &SNSNoAuthorizationFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SNSNoAuthorizationFault) Code() string {
+	return "SNSNoAuthorizationFault"
+}
+
+// Message returns the exception's message.
+func (s SNSNoAuthorizationFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SNSNoAuthorizationFault) OrigErr() error {
+	return nil
+}
+
+func (s SNSNoAuthorizationFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SNSNoAuthorizationFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SNSNoAuthorizationFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type StartReplicationTaskAssessmentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12435,6 +13489,12 @@ type StartReplicationTaskInput struct {
 	// Checkpoint Example: --cdc-start-position "checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93"
 	//
 	// LSN Example: --cdc-start-position “mysql-bin-changelog.000024:373”
+	//
+	// When you use this task setting with a source PostgreSQL database, a logical
+	// replication slot should already be created and associated with the source
+	// endpoint. You can verify this by setting the slotName extra connection attribute
+	// to the name of this logical replication slot. For more information, see Extra
+	// Connection Attributes When Using PostgreSQL as a Source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
 	CdcStartPosition *string `type:"string"`
 
 	// Indicates the start time for a change data capture (CDC) operation. Use either
@@ -12604,6 +13664,62 @@ func (s *StopReplicationTaskOutput) SetReplicationTask(v *ReplicationTask) *Stop
 	return s
 }
 
+// The storage quota has been exceeded.
+type StorageQuotaExceededFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s StorageQuotaExceededFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StorageQuotaExceededFault) GoString() string {
+	return s.String()
+}
+
+func newErrorStorageQuotaExceededFault(v protocol.ResponseMetadata) error {
+	return &StorageQuotaExceededFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s StorageQuotaExceededFault) Code() string {
+	return "StorageQuotaExceededFault"
+}
+
+// Message returns the exception's message.
+func (s StorageQuotaExceededFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s StorageQuotaExceededFault) OrigErr() error {
+	return nil
+}
+
+func (s StorageQuotaExceededFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s StorageQuotaExceededFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s StorageQuotaExceededFault) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type Subnet struct {
 	_ struct{} `type:"structure"`
 
@@ -12643,6 +13759,62 @@ func (s *Subnet) SetSubnetIdentifier(v string) *Subnet {
 func (s *Subnet) SetSubnetStatus(v string) *Subnet {
 	s.SubnetStatus = &v
 	return s
+}
+
+// The specified subnet is already in use.
+type SubnetAlreadyInUse struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s SubnetAlreadyInUse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SubnetAlreadyInUse) GoString() string {
+	return s.String()
+}
+
+func newErrorSubnetAlreadyInUse(v protocol.ResponseMetadata) error {
+	return &SubnetAlreadyInUse{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SubnetAlreadyInUse) Code() string {
+	return "SubnetAlreadyInUse"
+}
+
+// Message returns the exception's message.
+func (s SubnetAlreadyInUse) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SubnetAlreadyInUse) OrigErr() error {
+	return nil
+}
+
+func (s SubnetAlreadyInUse) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SubnetAlreadyInUse) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SubnetAlreadyInUse) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type SupportedEndpointType struct {
@@ -13029,6 +14201,62 @@ func (s TestConnectionOutput) GoString() string {
 func (s *TestConnectionOutput) SetConnection(v *Connection) *TestConnectionOutput {
 	s.Connection = v
 	return s
+}
+
+// An upgrade dependency is preventing the database migration.
+type UpgradeDependencyFailureFault struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UpgradeDependencyFailureFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpgradeDependencyFailureFault) GoString() string {
+	return s.String()
+}
+
+func newErrorUpgradeDependencyFailureFault(v protocol.ResponseMetadata) error {
+	return &UpgradeDependencyFailureFault{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UpgradeDependencyFailureFault) Code() string {
+	return "UpgradeDependencyFailureFault"
+}
+
+// Message returns the exception's message.
+func (s UpgradeDependencyFailureFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UpgradeDependencyFailureFault) OrigErr() error {
+	return nil
+}
+
+func (s UpgradeDependencyFailureFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UpgradeDependencyFailureFault) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UpgradeDependencyFailureFault) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type VpcSecurityGroupMembership struct {

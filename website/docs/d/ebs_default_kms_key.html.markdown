@@ -1,4 +1,5 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_default_kms_key"
 description: |-
@@ -16,7 +17,7 @@ resource "aws_ebs_volume" "example" {
   availability_zone = "us-west-2a"
   
   encrypted         = true
-  kms_key_id        = "${data.aws_ebs_default_kms_key.current.key_id}"
+  kms_key_id        = "${data.aws_ebs_default_kms_key.current.key_arn}"
 
 }
 ```

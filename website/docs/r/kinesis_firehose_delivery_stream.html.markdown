@@ -1,4 +1,5 @@
 ---
+subcategory: "Kinesis Firehose"
 layout: "aws"
 page_title: "AWS: aws_kinesis_firehose_delivery_stream"
 description: |-
@@ -261,6 +262,7 @@ is redshift). More details are given below.
 * `redshift_configuration` - (Optional) Configuration options if redshift is the destination.
 Using `redshift_configuration` requires the user to also specify a
 `s3_configuration` block. More details are given below.
+* `elasticsearch_configuration` - (Optional) Configuration options if elasticsearch is the destination. More details are given below.
 
 The `kinesis_source_configuration` object supports the following:
 

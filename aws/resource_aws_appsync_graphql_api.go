@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 var validAppsyncAuthTypes = []string{
@@ -227,7 +228,7 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().AppsyncTags()
 	}
 
 	resp, err := conn.CreateGraphqlApi(input)
@@ -287,7 +288,7 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting uris: %s", err)
 	}
 
-	if err := d.Set("tags", tagsToMapGeneric(resp.GraphqlApi.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.AppsyncKeyValueTags(resp.GraphqlApi.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -297,9 +298,12 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appsyncconn
 
-	arn := d.Get("arn").(string)
-	if tagErr := setTagsAppsync(conn, d, arn); tagErr != nil {
-		return tagErr
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.AppsyncUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating AppSync GraphQL API (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
 
 	input := &appsync.UpdateGraphqlApiInput{

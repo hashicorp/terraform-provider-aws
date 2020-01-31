@@ -1,4 +1,5 @@
 ---
+subcategory: "Pricing"
 layout: "aws"
 page_title: "AWS: aws_pricing_product"
 description: |-

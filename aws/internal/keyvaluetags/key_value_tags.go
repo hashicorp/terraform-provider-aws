@@ -1,5 +1,5 @@
-//go:generate go run generators/listtags/main.go
 //go:generate go run generators/servicetags/main.go
+//go:generate go run generators/listtags/main.go
 //go:generate go run generators/updatetags/main.go
 
 package keyvaluetags
@@ -48,6 +48,30 @@ func (tags KeyValueTags) IgnoreElasticbeanstalk() KeyValueTags {
 		}
 
 		if k == NameTagKey {
+			continue
+		}
+
+		result[k] = v
+	}
+
+	return result
+}
+
+// IgnorePrefixes returns non-matching tag key prefixes.
+func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		var ignore bool
+
+		for ignoreTagPrefix := range ignoreTagPrefixes {
+			if strings.HasPrefix(k, ignoreTagPrefix) {
+				ignore = true
+				break
+			}
+		}
+
+		if ignore {
 			continue
 		}
 
@@ -154,6 +178,26 @@ func (tags KeyValueTags) Updated(newTags KeyValueTags) KeyValueTags {
 	return result
 }
 
+// Chunks returns a slice of KeyValueTags, each of the specified size.
+func (tags KeyValueTags) Chunks(size int) []KeyValueTags {
+	result := []KeyValueTags{}
+
+	i := 0
+	var chunk KeyValueTags
+	for k, v := range tags {
+		if i%size == 0 {
+			chunk = make(KeyValueTags)
+			result = append(result, chunk)
+		}
+
+		chunk[k] = v
+
+		i++
+	}
+
+	return result
+}
+
 // New creates KeyValueTags from common Terraform Provider SDK types.
 // Supports map[string]string, map[string]*string, map[string]interface{}, and []interface{}.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
@@ -176,6 +220,14 @@ func New(i interface{}) KeyValueTags {
 		for k, v := range value {
 			str := v.(string)
 			kvtm[k] = &str
+		}
+
+		return kvtm
+	case []string:
+		kvtm := make(KeyValueTags, len(value))
+
+		for _, v := range value {
+			kvtm[v] = nil
 		}
 
 		return kvtm

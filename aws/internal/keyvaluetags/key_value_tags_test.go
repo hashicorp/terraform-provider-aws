@@ -118,6 +118,93 @@ func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
+	testCases := []struct {
+		name              string
+		tags              KeyValueTags
+		ignoreTagPrefixes KeyValueTags
+		want              map[string]string
+	}{
+		{
+			name: "empty",
+			tags: New(map[string]string{}),
+			ignoreTagPrefixes: New([]string{
+				"key1",
+				"key2",
+				"key3",
+			}),
+			want: map[string]string{},
+		},
+		{
+			name: "all_exact",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreTagPrefixes: New([]string{
+				"key1",
+				"key2",
+				"key3",
+			}),
+			want: map[string]string{},
+		},
+		{
+			name: "all_prefix",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreTagPrefixes: New([]string{
+				"key",
+			}),
+			want: map[string]string{},
+		},
+		{
+			name: "mixed",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreTagPrefixes: New([]string{
+				"key1",
+			}),
+			want: map[string]string{
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+		{
+			name: "none",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreTagPrefixes: New([]string{
+				"key4",
+				"key5",
+				"key6",
+			}),
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.IgnorePrefixes(testCase.ignoreTagPrefixes)
+
+			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
+		})
+	}
+}
+
 func TestKeyValueTagsIgnoreRds(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -256,16 +343,88 @@ func TestKeyValueTagsKeys(t *testing.T) {
 		want []string
 	}{
 		{
-			name: "empty",
+			name: "empty_map_string_interface",
+			tags: New(map[string]interface{}{}),
+			want: []string{},
+		},
+		{
+			name: "empty_map_string_stringPointer",
+			tags: New(map[string]*string{}),
+			want: []string{},
+		},
+		{
+			name: "empty_map_string_string",
 			tags: New(map[string]string{}),
 			want: []string{},
 		},
 		{
-			name: "non_empty",
+			name: "empty_slice_interface",
+			tags: New(map[string]interface{}{}),
+			want: []string{},
+		},
+		{
+			name: "empty_slice_string",
+			tags: New(map[string]string{}),
+			want: []string{},
+		},
+		{
+			name: "non_empty_map_string_interface",
+			tags: New(map[string]interface{}{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			want: []string{
+				"key1",
+				"key2",
+				"key3",
+			},
+		},
+		{
+			name: "non_empty_map_string_string",
 			tags: New(map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
+			}),
+			want: []string{
+				"key1",
+				"key2",
+				"key3",
+			},
+		},
+		{
+			name: "non_empty_map_string_stringPointer",
+			tags: New(map[string]*string{
+				"key1": testStringPtr("value1"),
+				"key2": testStringPtr("value2"),
+				"key3": testStringPtr("value3"),
+			}),
+			want: []string{
+				"key1",
+				"key2",
+				"key3",
+			},
+		},
+		{
+			name: "non_empty_slice_interface",
+			tags: New([]interface{}{
+				"key1",
+				"key2",
+				"key3",
+			}),
+			want: []string{
+				"key1",
+				"key2",
+				"key3",
+			},
+		},
+		{
+			name: "non_empty_slice_string",
+			tags: New([]string{
+				"key1",
+				"key2",
+				"key3",
 			}),
 			want: []string{
 				"key1",
@@ -575,6 +734,93 @@ func TestKeyValueTagsUpdated(t *testing.T) {
 			got := testCase.oldTags.Updated(testCase.newTags)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
+		})
+	}
+}
+
+func TestKeyValueTagsChunks(t *testing.T) {
+	testCases := []struct {
+		name string
+		tags KeyValueTags
+		size int
+		want []int
+	}{
+		{
+			name: "empty",
+			tags: New(map[string]string{}),
+			size: 10,
+			want: []int{},
+		},
+		{
+			name: "chunk_1",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			size: 1,
+			want: []int{1, 1, 1, 1},
+		},
+		{
+			name: "chunk_2",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			size: 2,
+			want: []int{2, 2},
+		},
+		{
+			name: "chunk_3",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			size: 3,
+			want: []int{3, 1},
+		},
+		{
+			name: "chunk_4",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			size: 4,
+			want: []int{4},
+		},
+		{
+			name: "chunk_5",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			size: 5,
+			want: []int{4},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.Chunks(testCase.size)
+
+			if len(got) != len(testCase.want) {
+				t.Errorf("unexpected number of chunks: %d", len(got))
+			}
+
+			for i, n := range testCase.want {
+				if len(got[i]) != n {
+					t.Errorf("chunk (%d) length %d; want length %d", i, len(got[i]), n)
+				}
+			}
 		})
 	}
 }

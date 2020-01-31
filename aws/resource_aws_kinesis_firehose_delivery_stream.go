@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const (
@@ -2136,7 +2137,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createInput.Tags = tagsFromMapKinesisFirehose(v.(map[string]interface{}))
+		createInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().FirehoseTags()
 	}
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
@@ -2307,10 +2308,12 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 			sn, err)
 	}
 
-	if err := setTagsKinesisFirehose(conn, d, sn); err != nil {
-		return fmt.Errorf(
-			"Error Updating Kinesis Firehose Delivery Stream tags: \"%s\"\n%s",
-			sn, err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.FirehoseUpdateTags(conn, sn, o, n); err != nil {
+			return fmt.Errorf("error updating Kinesis Firehose Delivery Stream (%s) tags: %s", sn, err)
+		}
 	}
 
 	if d.HasChange("server_side_encryption") {
@@ -2366,8 +2369,14 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 		return err
 	}
 
-	if err := getTagsKinesisFirehose(conn, d, sn); err != nil {
-		return err
+	tags, err := keyvaluetags.FirehoseListTags(conn, sn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %s", sn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
