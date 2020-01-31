@@ -42,7 +42,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 				Config: testAccMqConfigurationConfig_descriptionUpdated(configurationName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration Updated"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
@@ -67,7 +67,7 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 				Config: testAccMqConfigurationWithDataConfig(configurationName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
