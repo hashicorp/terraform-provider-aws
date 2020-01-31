@@ -1,4 +1,9 @@
 ## 2.48.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_appautoscaling_target: Prevent state removal of resource immediately after creation due to eventual consistency [GH-11819]
+
 ## 2.47.0 (January 30, 2020)
 
 NOTES:
