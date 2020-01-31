@@ -1250,10 +1250,10 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					HttpEndpoint: aws.String(mo["http_endpoint"].(string)),
 				}
 				if mo["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
-					// This parameter is not allowed unless HttpEndpoint is enabled
+					// These parameters are not allowed unless HttpEndpoint is enabled
 					input.HttpTokens = aws.String(mo["http_tokens"].(string))
+					input.HttpPutResponseHopLimit = aws.Int64(int64(mo["http_put_response_hop_limit"].(int)))
 				}
-				input.HttpPutResponseHopLimit = aws.Int64(int64(mo["http_put_response_hop_limit"].(int)))
 				_, err := conn.ModifyInstanceMetadataOptions(input)
 				if err != nil {
 					return fmt.Errorf("Error updating metadata options: %s", err)
@@ -1907,7 +1907,7 @@ func buildAwsInstanceOpts(
 				HttpEndpoint: aws.String(mo["http_endpoint"].(string)),
 			}
 			if mo["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
-				// This parameter is not allowed unless HttpEndpoint is enabled
+				// These parameters are not allowed unless HttpEndpoint is enabled
 				opts.MetadataOptions.HttpTokens = aws.String(mo["http_tokens"].(string))
 				opts.MetadataOptions.HttpPutResponseHopLimit = aws.Int64(int64(mo["http_put_response_hop_limit"].(int)))
 			}
