@@ -1,5 +1,9 @@
 ## 2.48.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_codebuild_project: Add `source` and `secondary_source` configuration block `git_submodules_config` configuration block [GH-10952]
+
 BUG FIXES:
 
 * resource/aws_appautoscaling_target: Prevent state removal of resource immediately after creation due to eventual consistency [GH-11819]
