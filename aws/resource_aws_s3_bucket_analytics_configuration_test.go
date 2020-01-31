@@ -124,7 +124,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Empty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSS3BucketAnalyticsConfigurationWithEmptyFilter(rName, rName),
-				ExpectError: regexp.MustCompile(`config is invalid: 2 problems:`),
+				ExpectError: regexp.MustCompile(`config is invalid:`),
 			},
 		},
 	})
@@ -320,6 +320,22 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Remove(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Empty(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSS3BucketAnalyticsConfigurationWithEmptyStorageClassAnalysis(rName, rName),
+				ExpectError: regexp.MustCompile(`config is invalid:`),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSS3BucketAnalyticsConfigurationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).s3conn
 
@@ -505,6 +521,22 @@ resource "aws_s3_bucket" "test" {
 `, name, prefix, tag1, tag2, bucket)
 }
 
+func testAccAWSS3BucketAnalyticsConfigurationWithEmptyStorageClassAnalysis(name, bucket string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_analytics_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  name   = "%s"
+
+  storage_class_analysis {
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "%s"
+}
+`, name, bucket)
+}
+
 func TestExpandS3AnalyticsFilter(t *testing.T) {
 	testCases := []struct {
 		Config          []interface{}
@@ -647,6 +679,30 @@ func TestExpandS3AnalyticsFilter(t *testing.T) {
 	}
 }
 
+func TestExpandS3StorageClassAnalysis(t *testing.T) {
+	testCases := []struct {
+		Config               []interface{}
+		StorageClassAnalysis *s3.StorageClassAnalysis
+	}{
+		{
+			Config:               nil,
+			StorageClassAnalysis: &s3.StorageClassAnalysis{},
+		},
+		{
+			Config:               []interface{}{},
+			StorageClassAnalysis: &s3.StorageClassAnalysis{},
+		},
+	}
+
+	for i, tc := range testCases {
+		value := expandS3StorageClassAnalysis(tc.Config)
+
+		if !reflect.DeepEqual(value, tc.StorageClassAnalysis) {
+			t.Errorf("Case #%d: Got:\n%v\n\nExpected:\n%v", i, value, tc.StorageClassAnalysis)
+		}
+	}
+}
+
 func TestFlattenS3AnalyticsFilter(t *testing.T) {
 	testCases := []struct {
 		AnalyticsFilter *s3.AnalyticsFilter
@@ -763,6 +819,29 @@ func TestFlattenS3AnalyticsFilter(t *testing.T) {
 
 		if !reflect.DeepEqual(value, tc.ExpectedFilter) {
 			t.Errorf("Case #%d: Got:\n%v\n\nExpected:\n%v", i, value, tc.ExpectedFilter)
+		}
+	}
+}
+func TestFlattenS3StorageClassAnalysis(t *testing.T) {
+	testCases := []struct {
+		StorageClassAnalysis *s3.StorageClassAnalysis
+		Expected             []map[string]interface{}
+	}{
+		{
+			StorageClassAnalysis: nil,
+			Expected:             []map[string]interface{}{},
+		},
+		{
+			StorageClassAnalysis: &s3.StorageClassAnalysis{},
+			Expected:             []map[string]interface{}{},
+		},
+	}
+
+	for i, tc := range testCases {
+		value := flattenS3StorageClassAnalysis(tc.StorageClassAnalysis)
+
+		if !reflect.DeepEqual(value, tc.Expected) {
+			t.Errorf("Case #%d: Got:\n%v\n\nExpected:\n%v", i, value, tc.Expected)
 		}
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
@@ -52,8 +53,62 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data_export": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"output_schema_version": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      s3.StorageClassAnalysisSchemaVersionV1,
+										ValidateFunc: validation.StringInSlice([]string{s3.StorageClassAnalysisSchemaVersionV1}, false),
+									},
+									"destination": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_bucket_destination": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_arn": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validateArn,
+															},
+															"bucket_account_id": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validateAwsAccountId,
+															},
+															"format": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																Default:      s3.AnalyticsS3ExportFileFormatCsv,
+																ValidateFunc: validation.StringInSlice([]string{s3.AnalyticsS3ExportFileFormatCsv}, false),
+															},
+															"prefix": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -75,11 +130,10 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] S3 bucket %q, add analytics configuration %q", bucket, name)
 
-	storageClassAnalysis := &s3.StorageClassAnalysis{}
 	analyticsConfiguration := &s3.AnalyticsConfiguration{
 		Id:                   aws.String(name),
 		Filter:               expandS3AnalyticsFilter(d.Get("filter").([]interface{})),
-		StorageClassAnalysis: storageClassAnalysis,
+		StorageClassAnalysis: expandS3StorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
 	}
 
 	input := &s3.PutBucketAnalyticsConfigurationInput{
@@ -138,6 +192,10 @@ func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta 
 	}
 
 	if err := d.Set("filter", flattenS3AnalyticsFilter(output.AnalyticsConfiguration.Filter)); err != nil {
+		return err
+	}
+
+	if err = d.Set("storage_class_analysis", flattenS3StorageClassAnalysis(output.AnalyticsConfiguration.StorageClassAnalysis)); err != nil {
 		return err
 	}
 
@@ -217,6 +275,10 @@ func expandS3AnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
 	return analyticsFilter
 }
 
+func expandS3StorageClassAnalysis(l []interface{}) *s3.StorageClassAnalysis {
+	return &s3.StorageClassAnalysis{}
+}
+
 func flattenS3AnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]interface{} {
 	if analyticsFilter == nil {
 		return nil
@@ -242,6 +304,10 @@ func flattenS3AnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]
 		return nil
 	}
 	return []map[string]interface{}{result}
+}
+
+func flattenS3StorageClassAnalysis(storageClassAnalysis *s3.StorageClassAnalysis) []map[string]interface{} {
+	return []map[string]interface{}{}
 }
 
 func waitForDeleteS3BucketAnalyticsConfiguration(conn *s3.S3, bucket, name string, timeout time.Duration) error {
