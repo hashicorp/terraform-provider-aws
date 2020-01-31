@@ -45,19 +45,19 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 				Computed: true,
 			},
 			"service": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"service_name"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"service", "service_name"},
 			},
 			"service_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"service_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"service"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"service", "service_name"},
 			},
 			"service_type": {
 				Type:     schema.TypeString,
@@ -76,13 +76,14 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).ec2conn
 
 	var serviceName string
-	if v, ok := d.GetOk("service_name"); ok {
-		serviceName = v.(string)
-	} else if v, ok := d.GetOk("service"); ok {
-		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*AWSClient).region, v.(string))
-	} else {
-		return fmt.Errorf(
-			"One of ['service', 'service_name'] must be set to query VPC Endpoint Services")
+	if v := d.Get("service_name").(string); v != "" {
+		serviceName = v
+	} else if v := d.Get("service"); v != "" {
+		if v == "sagemaker.notebook" {
+			serviceName = fmt.Sprintf("aws.sagemaker.%s.notebook", meta.(*AWSClient).region)
+		} else {
+			serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*AWSClient).region, v)
+		}
 	}
 
 	req := &ec2.DescribeVpcEndpointServicesInput{
