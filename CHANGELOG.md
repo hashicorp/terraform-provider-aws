@@ -7,6 +7,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_appautoscaling_target: Prevent state removal of resource immediately after creation due to eventual consistency [GH-11819]
+* resource/aws_placement_group: Additional handling for creation and deletion eventual consistency [GH-11671]
 
 ## 2.47.0 (January 30, 2020)
 
