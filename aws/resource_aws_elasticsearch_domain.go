@@ -87,6 +87,29 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"domain_endpoint_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enforce_https": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"tls_security_policy": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								elasticsearch.TLSSecurityPolicyPolicyMinTls10201907,
+								elasticsearch.TLSSecurityPolicyPolicyMinTls12201907,
+							}, false),
+						},
+					},
+				},
+			},
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -444,6 +467,10 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if v, ok := d.GetOk("domain_endpoint_options"); ok {
+		input.DomainEndpointOptions = expandESDomainEndpointOptions(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("cognito_options"); ok {
 		input.CognitoOptions = expandESCognitoOptions(v.([]interface{}))
 	}
@@ -648,6 +675,10 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		d.Set("log_publishing_options", m)
 	}
 
+	if err := d.Set("domain_endpoint_options", flattenESDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
+		return fmt.Errorf("error setting domain_endpoint_options: %s", err)
+	}
+
 	d.Set("arn", ds.ARN)
 
 	tags, err := keyvaluetags.ElasticsearchserviceListTags(conn, d.Id())
@@ -684,6 +715,10 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("advanced_options") {
 		input.AdvancedOptions = stringMapToPointers(d.Get("advanced_options").(map[string]interface{}))
+	}
+
+	if d.HasChange("domain_endpoint_options") {
+		input.DomainEndpointOptions = expandESDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
 	}
 
 	if d.HasChange("ebs_options") || d.HasChange("cluster_config") {
@@ -797,6 +832,13 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 				})
 				if err != nil {
 					return nil, "", err
+				}
+
+				// Elasticsearch upgrades consist of multiple steps:
+				// https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-version-migration.html
+				// Prevent false positive completion where the UpgradeStep is not the final UPGRADE step.
+				if aws.StringValue(out.StepStatus) == elasticsearch.UpgradeStatusSucceeded && aws.StringValue(out.UpgradeStep) != elasticsearch.UpgradeStepUpgrade {
+					return out, elasticsearch.UpgradeStatusInProgress, nil
 				}
 
 				return out, aws.StringValue(out.StepStatus), nil

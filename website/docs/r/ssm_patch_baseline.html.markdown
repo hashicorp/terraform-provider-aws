@@ -81,6 +81,7 @@ resource "aws_ssm_patch_baseline" "production" {
 ```
 
 Advanced usage, specifying Microsoft application and Windows patch rules
+
 ```hcl
 resource "aws_ssm_patch_baseline" "windows_os_apps" {
   name             = "WindowsOSAndMicrosoftApps"

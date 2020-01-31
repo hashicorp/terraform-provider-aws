@@ -74,6 +74,11 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 			})
 
 			if err != nil {
+				// Fix timing issue where describe is called prior to
+				// create being effectively processed by AWS
+				if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+					return out, "pending", nil
+				}
 				return out, "", err
 			}
 
@@ -168,7 +173,7 @@ func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	wait := resource.StateChangeConf{
-		Pending:    []string{ec2.PlacementGroupStateDeleting},
+		Pending:    []string{ec2.PlacementGroupStateAvailable, ec2.PlacementGroupStateDeleting},
 		Target:     []string{ec2.PlacementGroupStateDeleted},
 		Timeout:    5 * time.Minute,
 		MinTimeout: 1 * time.Second,
@@ -190,6 +195,9 @@ func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) e
 			}
 
 			pg := out.PlacementGroups[0]
+			if *pg.State == "available" {
+				log.Printf("[DEBUG] Accepted status when deleting EC2 Placement group: %q %v", d.Id(), *pg.State)
+			}
 
 			return out, *pg.State, nil
 		},

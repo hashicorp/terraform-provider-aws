@@ -357,6 +357,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_gamelift_fleet.test", "build_id"),
 					resource.TestMatchResourceAttr("aws_gamelift_fleet.test", "arn", regexp.MustCompile(`^arn:[^:]+:gamelift:[^:]+:[^:]+:.+$`)),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "fleet_type", "ON_DEMAND"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", fleetName),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "description", desc),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.#", "3"),
@@ -396,6 +397,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_gamelift_fleet.test", "build_id"),
 					resource.TestMatchResourceAttr("aws_gamelift_fleet.test", "arn", regexp.MustCompile(`^arn:[^:]+:gamelift:[^:]+:[^:]+:.+$`)),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "fleet_type", "ON_DEMAND"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", fleetName),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "description", desc),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.#", "3"),
@@ -556,6 +558,7 @@ resource "aws_gamelift_fleet" "test" {
   name              = "%s"
   description       = "%s"
   instance_role_arn = "${aws_iam_role.test.arn}"
+  fleet_type        = "ON_DEMAND"
 
   ec2_inbound_permission {
     from_port = 8080
@@ -611,9 +614,11 @@ func testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath s
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
+  
   name              = "%s"
   description       = "%s"
   instance_role_arn = "${aws_iam_role.test.arn}"
+  fleet_type        = "ON_DEMAND"
 
   ec2_inbound_permission {
     from_port = 8888
