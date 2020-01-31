@@ -1,9 +1,8 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ssm_patch_baseline"
-sidebar_current: "docs-aws-datasource-ssm-patchbaseline"
 description: |-
-  Provides a SSM Patch Baseline datasource
+  Provides an SSM Patch Baseline data source
 ---
 
 # Data Source: aws_ssm_patch_baseline
