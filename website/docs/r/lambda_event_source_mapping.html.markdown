@@ -57,15 +57,6 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `maximum_retry_attempts`: - (Optional) The maximum number of times to retry when the function returns an error. Only available for stream sources (DynamoDB and Kinesis). Minimum of 0, maximum and default of 10000.
 * `maximum_record_age_in_seconds`: - (Optional) The maximum age of a record that Lambda sends to a function for processing. Only available for stream sources (DynamoDB and Kinesis). Minimum of 60, maximum and default of 604800.
 * `bisect_batch_on_function_error`: - (Optional) If the function returns an error, split the batch in two and retry. Only available for stream sources (DynamoDB and Kinesis). Defaults to `false`.
-* `destination_config`: - (Optional) An Amazon SQS queue or Amazon SNS topic destination for failed records. Only available for stream sources (DynamoDB and Kinesis). Detailed below.
-
-### destination_config
-
-* `on_failure` - (Optional) The destination configuration for failed invocations. Detailed below.
-
-### on_failure
-
-* `destination_arn` - (Required) The Amazon Resource Name (ARN) of the destination resource.
 
 ## Attributes Reference
 
