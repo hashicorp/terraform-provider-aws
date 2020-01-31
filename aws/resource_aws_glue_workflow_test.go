@@ -20,6 +20,11 @@ func init() {
 }
 
 func testSweepGlueWorkflow(region string) error {
+	if testAccGetPartition() == "aws-us-gov" {
+		log.Printf("[INFO] AWS Glue workflows are not supported in GovCloud partition")
+		return nil
+	}
+
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -48,6 +53,10 @@ func testSweepGlueWorkflow(region string) error {
 func TestAccAWSGlueWorkflow_Basic(t *testing.T) {
 	var workflow glue.Workflow
 
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("AWS Glue workflows are not supported in GovCloud partition")
+	}
+
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_workflow.test"
 
@@ -74,6 +83,10 @@ func TestAccAWSGlueWorkflow_Basic(t *testing.T) {
 
 func TestAccAWSGlueWorkflow_DefaultRunProperties(t *testing.T) {
 	var workflow glue.Workflow
+
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("AWS Glue workflows are not supported in GovCloud partition")
+	}
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_workflow.test"
@@ -103,6 +116,10 @@ func TestAccAWSGlueWorkflow_DefaultRunProperties(t *testing.T) {
 
 func TestAccAWSGlueWorkflow_Description(t *testing.T) {
 	var workflow glue.Workflow
+
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("AWS Glue workflows are not supported in GovCloud partition")
+	}
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_workflow.test"
