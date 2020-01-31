@@ -1,5 +1,9 @@
 ## 2.48.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_ssm_patch_baseline` [GH-9486]
+
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Add `source` and `secondary_source` configuration block `git_submodules_config` configuration block [GH-10952]
