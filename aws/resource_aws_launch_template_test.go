@@ -309,6 +309,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "instance_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "kernel_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_name"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
@@ -1102,6 +1103,12 @@ resource "aws_launch_template" "test" {
   kernel_id = "aki-a12bc3de"
 
   key_name = "test"
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens = "optional"
+    http_put_response_hop_limit = 10
+  }
 
   monitoring {
     enabled = true
