@@ -1087,11 +1087,11 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_NumCacheNodesWithPreferredAvailabilityZones(rName string, numCacheNodes int) string {
 	preferredAvailabilityZones := make([]string, numCacheNodes)
 	for i := range preferredAvailabilityZones {
-		preferredAvailabilityZones[i] = `"${data.aws_availability_zones.test.names[0]}"`
+		preferredAvailabilityZones[i] = `"${data.aws_availability_zones.available.names[0]}"`
 	}
 
 	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "available" {}
 
 resource "aws_elasticache_cluster" "test" {
   apply_immediately            = true
@@ -1105,7 +1105,7 @@ resource "aws_elasticache_cluster" "test" {
 }
 
 var testAccAWSElasticacheClusterInVPCConfig = fmt.Sprintf(`
-data "aws_availability_zones" "test" {
+data "aws_availability_zones" "available" {
     # InsufficientCacheClusterCapacity: cache.m1.small (VPC) is not currently supported in the availability zone us-east-1b
     blacklisted_zone_ids = ["use1-az1"]
     state                = "available"
@@ -1121,7 +1121,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
     vpc_id            = "${aws_vpc.test.id}"
     cidr_block        = "192.168.0.0/20"
-    availability_zone = "${data.aws_availability_zones.test.names[0]}"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
     tags = {
         Name = "tf-acc-elasticache-cluster-in-vpc"
     }
@@ -1159,7 +1159,7 @@ resource "aws_elasticache_cluster" "test" {
     security_group_ids     = ["${aws_security_group.test.id}"]
     parameter_group_name   = "default.redis2.8"
     notification_topic_arn = "${aws_sns_topic.test.arn}"
-    availability_zone      = "${data.aws_availability_zones.test.names[0]}"
+    availability_zone      = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_sns_topic" "test" {
@@ -1168,7 +1168,7 @@ resource "aws_sns_topic" "test" {
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
 var testAccAWSElasticacheClusterMultiAZInVPCConfig = fmt.Sprintf(`
-data "aws_availability_zones" "test" {
+data "aws_availability_zones" "available" {
     # InsufficientCacheClusterCapacity: cache.m1.small (VPC) is not currently supported in the availability zone us-east-1b
     blacklisted_zone_ids = ["use1-az1"]
     state                = "available"
@@ -1184,7 +1184,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test1" {
     vpc_id            = "${aws_vpc.test.id}"
     cidr_block        = "192.168.0.0/20"
-    availability_zone = "${data.aws_availability_zones.test.names[0]}"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
     tags = {
         Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-foo"
     }
@@ -1193,7 +1193,7 @@ resource "aws_subnet" "test1" {
 resource "aws_subnet" "test2" {
     vpc_id            = "${aws_vpc.test.id}"
     cidr_block        = "192.168.16.0/20"
-    availability_zone = "${data.aws_availability_zones.test.names[1]}"
+    availability_zone = "${data.aws_availability_zones.available.names[1]}"
     tags = {
         Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-bar"
     }
@@ -1230,8 +1230,8 @@ resource "aws_elasticache_cluster" "test" {
     security_group_ids = ["${aws_security_group.test.id}"]
     az_mode            = "cross-az"
     preferred_availability_zones = [
-        "${data.aws_availability_zones.test.names[0]}",
-        "${data.aws_availability_zones.test.names[1]}"
+        "${data.aws_availability_zones.available.names[0]}",
+        "${data.aws_availability_zones.available.names[1]}"
     ]
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
@@ -1368,7 +1368,7 @@ resource "aws_elasticache_cluster" "test" {
 
 func testAccAWSElasticacheClusterConfig_ReplicationGroupID_AvailabilityZone_Ec2Classic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "available" {}
 
 resource "aws_elasticache_replication_group" "test" {
     replication_group_description = "Terraform Acceptance Testing"
@@ -1383,7 +1383,7 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 resource "aws_elasticache_cluster" "test" {
-    availability_zone    = "${data.aws_availability_zones.test.names[0]}"
+    availability_zone    = "${data.aws_availability_zones.available.names[0]}"
     cluster_id           = "%[1]s1"
     replication_group_id = "${aws_elasticache_replication_group.test.id}"
 }
