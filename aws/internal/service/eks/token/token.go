@@ -8,7 +8,7 @@ With the following modifications:
  - Removal of other unused code
  - Use *sts.STS instead of stsiface.STSAPI in Generator interface and GetWithSTS implementation
  - Hard copy and use local Canonicalize implementation instead of "sigs.k8s.io/aws-iam-authenticator/pkg/arn"
- - Fix two staticcheck errors
+ - Fix staticcheck reports
 */
 
 /*
@@ -71,7 +71,7 @@ type Identity struct {
 	SessionName string
 
 	// The AWS Access Key ID used to authenticate the request.  This can be used
-	// in conjuction with CloudTrail to determine the identity of the individual
+	// in conjunction with CloudTrail to determine the identity of the individual
 	// if the individual assumed an IAM role before making the request.
 	AccessKeyID string
 }

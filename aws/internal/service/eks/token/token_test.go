@@ -2,7 +2,9 @@
 This file is a hard copy of:
 https://github.com/kubernetes-sigs/aws-iam-authenticator/blob/7547c74e660f8d34d9980f2c69aa008eed1f48d0/pkg/token/token_test.go
 
-With no modifications.
+With the following modifications:
+
+ - Fix staticcheck reports
 */
 
 package token
@@ -141,7 +143,7 @@ func TestSTSEndpoints(t *testing.T) {
 }
 
 func TestVerifyTokenPreSTSValidations(t *testing.T) {
-	b := make([]byte, maxTokenLenBytes+1, maxTokenLenBytes+1)
+	b := make([]byte, maxTokenLenBytes+1)
 	s := string(b)
 	validationErrorTest(t, s, "token is too large")
 	validationErrorTest(t, "k8s-aws-v2.asdfasdfa", "token is missing expected \"k8s-aws-v1.\" prefix")
