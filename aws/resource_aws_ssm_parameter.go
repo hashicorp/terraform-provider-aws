@@ -95,6 +95,11 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
+			"policies": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsJSON,
+			},
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -184,6 +189,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("allowed_pattern", detail.AllowedPattern)
 	d.Set("data_type", detail.DataType)
+	d.Set("policies", detail.Policies)
 
 	tags, err := keyvaluetags.SsmListTags(ssmconn, name, ssm.ResourceTypeForTaggingParameter)
 
@@ -236,6 +242,15 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("description") {
 		_, n := d.GetChange("description")
 		paramInput.Description = aws.String(n.(string))
+	}
+
+	if d.HasChange("policies") {
+		_, n := d.GetChange("policies")
+		if n != "" {
+			paramInput.Policies = aws.String(n.(string))
+		} else {
+			paramInput.Policies = aws.String("[]")
+		}
 	}
 
 	if keyID, ok := d.GetOk("key_id"); ok && d.Get("type").(string) == ssm.ParameterTypeSecureString {

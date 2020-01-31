@@ -396,7 +396,7 @@ func TestAccAWSSSMParameter_secure_keyUpdate(t *testing.T) {
 	var param ssm.Parameter
 	randString := acctest.RandString(10)
 	name := fmt.Sprintf("%s_%s", t.Name(), randString)
-	resourceName := "aws_ssm_parameter.secret_test"
+	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -425,6 +425,47 @@ func TestAccAWSSSMParameter_secure_keyUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value", "secret"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/"+randString),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMParameter_policies(t *testing.T) {
+	var param ssm.Parameter
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterPoliciesSingleConfig(name, "String", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttrSet(resourceName, "policies"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite", "policies"},
+			},
+			{
+				Config: testAccAWSSSMParameterPoliciesMultiConfig(name, "String", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttrSet(resourceName, "policies"),
+				),
+			},
+			{
+				Config: testAccAWSSSMParameterConfigTier(name, "Advanced"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "policies", ""),
 				),
 			},
 		},
@@ -615,25 +656,77 @@ resource "aws_ssm_parameter" "secret_test" {
 
 func testAccAWSSSMParameterSecureConfigWithKey(rName string, value string, keyAlias string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_parameter" "secret_test" {
+resource "aws_ssm_parameter" "test" {
   name        = "test_secure_parameter-%[1]s"
   description = "description for parameter %[1]s"
   type        = "SecureString"
   value       = "%[2]s"
   key_id      = "alias/%[3]s"
-  depends_on  = [aws_kms_alias.test_alias]
+  depends_on  = ["aws_kms_alias.test"]
 }
 
-resource "aws_kms_key" "test_key" {
+resource "aws_kms_key" "test" {
   description             = "KMS key 1"
   deletion_window_in_days = 7
 }
 
-resource "aws_kms_alias" "test_alias" {
+resource "aws_kms_alias" "test" {
   name          = "alias/%[3]s"
   target_key_id = aws_kms_key.test_key.id
 }
 `, rName, value, keyAlias)
+}
+
+func testAccAWSSSMParameterPoliciesSingleConfig(rName, pType, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  type  = %[2]q
+  value = %[3]q
+  tier  = "Advanced"
+
+  policies = <<EOF
+[{
+   "Type":"Expiration",
+   "Version":"1.0",
+   "Attributes":{
+      "Timestamp":"2050-12-02T21:34:33.000Z"
+   }
+}]
+EOF
+
+}
+`, rName, pType, value)
+}
+
+func testAccAWSSSMParameterPoliciesMultiConfig(rName, pType, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  type  = %[2]q
+  value = %[3]q
+  tier  = "Advanced"
+
+  policies = <<EOF
+[{
+   "Type":"Expiration",
+   "Version":"1.0",
+   "Attributes":{
+      "Timestamp":"2050-12-02T21:34:33.000Z"
+   }
+},
+{
+   "Type":"ExpirationNotification",
+   "Version":"1.0",
+   "Attributes":{
+      "Before":"30",
+      "Unit":"Days"
+   }
+}]
+EOF
+
+}
+`, rName, pType, value)
 }
 
 func TestAWSSSMParameterShouldUpdate(t *testing.T) {
