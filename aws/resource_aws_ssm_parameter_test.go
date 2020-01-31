@@ -645,7 +645,7 @@ resource "aws_ssm_parameter" "test" {
 
 func testAccAWSSSMParameterSecureConfig(rName string, value string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_parameter" "secret_test" {
+resource "aws_ssm_parameter" "test" {
   name        = "test_secure_parameter-%[1]s"
   description = "description for parameter %[1]s"
   type        = "SecureString"
