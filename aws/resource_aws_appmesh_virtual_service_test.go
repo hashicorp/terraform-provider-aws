@@ -2,81 +2,81 @@ package aws
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	appmesh "github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appmesh_virtual_service", &resource.Sweeper{
-		Name: "aws_appmesh_virtual_service",
-		F:    testSweepAppmeshVirtualServices,
-	})
-}
+// func init() {
+// 	resource.AddTestSweepers("aws_appmesh_virtual_service", &resource.Sweeper{
+// 		Name: "aws_appmesh_virtual_service",
+// 		F:    testSweepAppmeshVirtualServices,
+// 	})
+// }
 
-func testSweepAppmeshVirtualServices(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*AWSClient).appmeshconn
+// func testSweepAppmeshVirtualServices(region string) error {
+// 	client, err := sharedClientForRegion(region)
+// 	if err != nil {
+// 		return fmt.Errorf("error getting client: %s", err)
+// 	}
+// 	conn := client.(*AWSClient).appmeshconn
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
-		if page == nil {
-			return !isLast
-		}
+// 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
+// 		if page == nil {
+// 			return !isLast
+// 		}
 
-		for _, mesh := range page.Meshes {
-			listVirtualServicesInput := &appmesh.ListVirtualServicesInput{
-				MeshName: mesh.MeshName,
-			}
-			meshName := aws.StringValue(mesh.MeshName)
+// 		for _, mesh := range page.Meshes {
+// 			listVirtualServicesInput := &appmesh.ListVirtualServicesInput{
+// 				MeshName: mesh.MeshName,
+// 			}
+// 			meshName := aws.StringValue(mesh.MeshName)
 
-			err := conn.ListVirtualServicesPages(listVirtualServicesInput, func(page *appmesh.ListVirtualServicesOutput, isLast bool) bool {
-				if page == nil {
-					return !isLast
-				}
+// 			err := conn.ListVirtualServicesPages(listVirtualServicesInput, func(page *appmesh.ListVirtualServicesOutput, isLast bool) bool {
+// 				if page == nil {
+// 					return !isLast
+// 				}
 
-				for _, virtualService := range page.VirtualServices {
-					input := &appmesh.DeleteVirtualServiceInput{
-						MeshName:           mesh.MeshName,
-						VirtualServiceName: virtualService.VirtualServiceName,
-					}
-					virtualServiceName := aws.StringValue(virtualService.VirtualServiceName)
+// 				for _, virtualService := range page.VirtualServices {
+// 					input := &appmesh.DeleteVirtualServiceInput{
+// 						MeshName:           mesh.MeshName,
+// 						VirtualServiceName: virtualService.VirtualServiceName,
+// 					}
+// 					virtualServiceName := aws.StringValue(virtualService.VirtualServiceName)
 
-					log.Printf("[INFO] Deleting Appmesh Mesh (%s) Virtual Service: %s", meshName, virtualServiceName)
-					_, err := conn.DeleteVirtualService(input)
+// 					log.Printf("[INFO] Deleting Appmesh Mesh (%s) Virtual Service: %s", meshName, virtualServiceName)
+// 					_, err := conn.DeleteVirtualService(input)
 
-					if err != nil {
-						log.Printf("[ERROR] Error deleting Appmesh Mesh (%s) Virtual Service (%s): %s", meshName, virtualServiceName, err)
-					}
-				}
+// 					if err != nil {
+// 						log.Printf("[ERROR] Error deleting Appmesh Mesh (%s) Virtual Service (%s): %s", meshName, virtualServiceName, err)
+// 					}
+// 				}
 
-				return !isLast
-			})
+// 				return !isLast
+// 			})
 
-			if err != nil {
-				log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Services: %s", meshName, err)
-			}
-		}
+// 			if err != nil {
+// 				log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Services: %s", meshName, err)
+// 			}
+// 		}
 
-		return !isLast
-	})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Appmesh Virtual Service sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving Appmesh Virtual Services: %s", err)
-	}
+// 		return !isLast
+// 	})
+// 	if err != nil {
+// 		if testSweepSkipSweepError(err) {
+// 			log.Printf("[WARN] Skipping Appmesh Virtual Service sweep for %s: %s", region, err)
+// 			return nil
+// 		}
+// 		return fmt.Errorf("error retrieving Appmesh Virtual Services: %s", err)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func testAccAwsAppmeshVirtualService_virtualNode(t *testing.T) {
 	var vs appmesh.VirtualServiceData
@@ -103,7 +103,7 @@ func testAccAwsAppmeshVirtualService_virtualNode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.0.virtual_node_name", vnName1),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName)),
 				),
 			},
 			{
@@ -153,7 +153,7 @@ func testAccAwsAppmeshVirtualService_virtualRouter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.0.virtual_router_name", vrName1),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName))),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName))),
 			},
 			{
 				Config: testAccAppmeshVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.bar"),

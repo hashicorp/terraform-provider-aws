@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	appmesh "github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	// "github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsAppmeshMesh() *schema.Resource {
@@ -76,7 +76,7 @@ func resourceAwsAppmeshMesh() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			// "tags": tagsSchema(),
 		},
 	}
 }
@@ -88,7 +88,7 @@ func resourceAwsAppmeshMeshCreate(d *schema.ResourceData, meta interface{}) erro
 	req := &appmesh.CreateMeshInput{
 		MeshName: aws.String(meshName),
 		Spec:     expandAppmeshMeshSpec(d.Get("spec").([]interface{})),
-		Tags:     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppmeshTags(),
+		// Tags:     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppmeshTags(),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh service mesh: %#v", req)
@@ -132,15 +132,15 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	tags, err := keyvaluetags.AppmeshListTags(conn, arn)
+	// tags, err := keyvaluetags.AppmeshListTags(conn, arn)
 
-	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh service mesh (%s): %s", arn, err)
-	}
+	// if err != nil {
+	// 	return fmt.Errorf("error listing tags for App Mesh service mesh (%s): %s", arn, err)
+	// }
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
+	// if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	// 	return fmt.Errorf("error setting tags: %s", err)
+	// }
 
 	return nil
 }
@@ -162,14 +162,14 @@ func resourceAwsAppmeshMeshUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	// arn := d.Get("arn").(string)
+	// if d.HasChange("tags") {
+	// 	o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh service mesh (%s) tags: %s", arn, err)
-		}
-	}
+	// 	if err := keyvaluetags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+	// 		return fmt.Errorf("error updating App Mesh service mesh (%s) tags: %s", arn, err)
+	// 	}
+	// }
 
 	return resourceAwsAppmeshMeshRead(d, meta)
 }
