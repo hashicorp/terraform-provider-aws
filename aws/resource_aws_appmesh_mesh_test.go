@@ -2,68 +2,68 @@ package aws
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	appmesh "github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appmesh_mesh", &resource.Sweeper{
-		Name: "aws_appmesh_mesh",
-		F:    testSweepAppmeshMeshes,
-		Dependencies: []string{
-			"aws_appmesh_virtual_service",
-			"aws_appmesh_virtual_router",
-			"aws_appmesh_virtual_node",
-		},
-	})
-}
+// func init() {
+// 	resource.AddTestSweepers("aws_appmesh_mesh", &resource.Sweeper{
+// 		Name: "aws_appmesh_mesh",
+// 		F:    testSweepAppmeshMeshes,
+// 		Dependencies: []string{
+// 			"aws_appmesh_virtual_service",
+// 			"aws_appmesh_virtual_router",
+// 			"aws_appmesh_virtual_node",
+// 		},
+// 	})
+// }
 
-func testSweepAppmeshMeshes(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*AWSClient).appmeshconn
+// func testSweepAppmeshMeshes(region string) error {
+// 	client, err := sharedClientForRegion(region)
+// 	if err != nil {
+// 		return fmt.Errorf("error getting client: %s", err)
+// 	}
+// 	conn := client.(*AWSClient).appmeshconn
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
-		if page == nil {
-			return !isLast
-		}
+// 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
+// 		if page == nil {
+// 			return !isLast
+// 		}
 
-		for _, mesh := range page.Meshes {
-			name := aws.StringValue(mesh.MeshName)
+// 		for _, mesh := range page.Meshes {
+// 			name := aws.StringValue(mesh.MeshName)
 
-			input := &appmesh.DeleteMeshInput{
-				MeshName: aws.String(name),
-			}
+// 			input := &appmesh.DeleteMeshInput{
+// 				MeshName: aws.String(name),
+// 			}
 
-			log.Printf("[INFO] Deleting Appmesh Mesh: %s", name)
-			_, err := conn.DeleteMesh(input)
+// 			log.Printf("[INFO] Deleting Appmesh Mesh: %s", name)
+// 			_, err := conn.DeleteMesh(input)
 
-			if err != nil {
-				log.Printf("[ERROR] Error deleting Appmesh Mesh (%s): %s", name, err)
-			}
-		}
+// 			if err != nil {
+// 				log.Printf("[ERROR] Error deleting Appmesh Mesh (%s): %s", name, err)
+// 			}
+// 		}
 
-		return !isLast
-	})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Appmesh Mesh sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving Appmesh Meshes: %s", err)
-	}
+// 		return !isLast
+// 	})
+// 	if err != nil {
+// 		if testSweepSkipSweepError(err) {
+// 			log.Printf("[WARN] Skipping Appmesh Mesh sweep for %s: %s", region, err)
+// 			return nil
+// 		}
+// 		return fmt.Errorf("error retrieving Appmesh Meshes: %s", err)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func testAccAwsAppmeshMesh_basic(t *testing.T) {
 	var mesh appmesh.MeshData
@@ -82,7 +82,7 @@ func testAccAwsAppmeshMesh_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appmesh", regexp.MustCompile(`mesh/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", regexp.MustCompile(`mesh/.+`)),
 				),
 			},
 			{

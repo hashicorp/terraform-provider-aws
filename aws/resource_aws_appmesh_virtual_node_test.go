@@ -2,81 +2,81 @@ package aws
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	appmesh "github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appmesh_virtual_node", &resource.Sweeper{
-		Name: "aws_appmesh_virtual_node",
-		F:    testSweepAppmeshVirtualNodes,
-	})
-}
+// func init() {
+// 	resource.AddTestSweepers("aws_appmesh_virtual_node", &resource.Sweeper{
+// 		Name: "aws_appmesh_virtual_node",
+// 		F:    testSweepAppmeshVirtualNodes,
+// 	})
+// }
 
-func testSweepAppmeshVirtualNodes(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*AWSClient).appmeshconn
+// func testSweepAppmeshVirtualNodes(region string) error {
+// 	client, err := sharedClientForRegion(region)
+// 	if err != nil {
+// 		return fmt.Errorf("error getting client: %s", err)
+// 	}
+// 	conn := client.(*AWSClient).appmeshconn
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
-		if page == nil {
-			return !isLast
-		}
+// 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
+// 		if page == nil {
+// 			return !isLast
+// 		}
 
-		for _, mesh := range page.Meshes {
-			listVirtualNodesInput := &appmesh.ListVirtualNodesInput{
-				MeshName: mesh.MeshName,
-			}
-			meshName := aws.StringValue(mesh.MeshName)
+// 		for _, mesh := range page.Meshes {
+// 			listVirtualNodesInput := &appmesh.ListVirtualNodesInput{
+// 				MeshName: mesh.MeshName,
+// 			}
+// 			meshName := aws.StringValue(mesh.MeshName)
 
-			err := conn.ListVirtualNodesPages(listVirtualNodesInput, func(page *appmesh.ListVirtualNodesOutput, isLast bool) bool {
-				if page == nil {
-					return !isLast
-				}
+// 			err := conn.ListVirtualNodesPages(listVirtualNodesInput, func(page *appmesh.ListVirtualNodesOutput, isLast bool) bool {
+// 				if page == nil {
+// 					return !isLast
+// 				}
 
-				for _, virtualNode := range page.VirtualNodes {
-					input := &appmesh.DeleteVirtualNodeInput{
-						MeshName:        mesh.MeshName,
-						VirtualNodeName: virtualNode.VirtualNodeName,
-					}
-					virtualNodeName := aws.StringValue(virtualNode.VirtualNodeName)
+// 				for _, virtualNode := range page.VirtualNodes {
+// 					input := &appmesh.DeleteVirtualNodeInput{
+// 						MeshName:        mesh.MeshName,
+// 						VirtualNodeName: virtualNode.VirtualNodeName,
+// 					}
+// 					virtualNodeName := aws.StringValue(virtualNode.VirtualNodeName)
 
-					log.Printf("[INFO] Deleting Appmesh Mesh (%s) Virtual Node: %s", meshName, virtualNodeName)
-					_, err := conn.DeleteVirtualNode(input)
+// 					log.Printf("[INFO] Deleting Appmesh Mesh (%s) Virtual Node: %s", meshName, virtualNodeName)
+// 					_, err := conn.DeleteVirtualNode(input)
 
-					if err != nil {
-						log.Printf("[ERROR] Error deleting Appmesh Mesh (%s) Virtual Node (%s): %s", meshName, virtualNodeName, err)
-					}
-				}
+// 					if err != nil {
+// 						log.Printf("[ERROR] Error deleting Appmesh Mesh (%s) Virtual Node (%s): %s", meshName, virtualNodeName, err)
+// 					}
+// 				}
 
-				return !isLast
-			})
+// 				return !isLast
+// 			})
 
-			if err != nil {
-				log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Nodes: %s", meshName, err)
-			}
-		}
+// 			if err != nil {
+// 				log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Nodes: %s", meshName, err)
+// 			}
+// 		}
 
-		return !isLast
-	})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Appmesh Virtual Node sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving Appmesh Virtual Nodes: %s", err)
-	}
+// 		return !isLast
+// 	})
+// 	if err != nil {
+// 		if testSweepSkipSweepError(err) {
+// 			log.Printf("[WARN] Skipping Appmesh Virtual Node sweep for %s: %s", region, err)
+// 			return nil
+// 		}
+// 		return fmt.Errorf("error retrieving Appmesh Virtual Nodes: %s", err)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
 	var vn appmesh.VirtualNodeData
@@ -102,7 +102,7 @@ func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -208,7 +208,7 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -240,7 +240,7 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb1.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
