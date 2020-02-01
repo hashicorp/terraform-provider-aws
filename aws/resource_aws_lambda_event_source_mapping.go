@@ -250,7 +250,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 		UUID: aws.String(d.Id()),
 	}
 
-	e, err := conn.GetEventSourceMapping(params)
+	eventSourceMappingConfiguration, err := conn.GetEventSourceMapping(params)
 	if err != nil {
 		if isAWSErr(err, "ResourceNotFoundException", "") {
 			log.Printf("[DEBUG] Lambda event source mapping (%s) not found", d.Id())
@@ -261,27 +261,27 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	esArn, err := arn.Parse(*e.EventSourceArn)
+	esArn, err := arn.Parse(*eventSourceMappingConfiguration.EventSourceArn)
 	if err != nil {
 		return fmt.Errorf("Error reading event source mapping from state: %s", err)
 	}
 
-	d.Set("batch_size", e.BatchSize)
-	d.Set("maximum_batching_window_in_seconds", e.MaximumBatchingWindowInSeconds)
-	d.Set("event_source_arn", e.EventSourceArn)
-	d.Set("function_arn", e.FunctionArn)
-	d.Set("last_modified", e.LastModified)
-	d.Set("last_processing_result", e.LastProcessingResult)
-	d.Set("state", e.State)
-	d.Set("state_transition_reason", e.StateTransitionReason)
-	d.Set("uuid", e.UUID)
-	d.Set("function_name", e.FunctionArn)
+	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
+	d.Set("maximum_batching_window_in_seconds", eventSourceMappingConfiguration.MaximumBatchingWindowInSeconds)
+	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
+	d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
+	d.Set("last_modified", aws.TimeValue(eventSourceMappingConfiguration.LastModified).Format(time.RFC3339))
+	d.Set("last_processing_result", eventSourceMappingConfiguration.LastProcessingResult)
+	d.Set("state", eventSourceMappingConfiguration.State)
+	d.Set("state_transition_reason", eventSourceMappingConfiguration.StateTransitionReason)
+	d.Set("uuid", eventSourceMappingConfiguration.UUID)
+	d.Set("function_name", eventSourceMappingConfiguration.FunctionArn)
 
 	if esArn.Service != "sqs" {
-		d.Set("parallelization_factor", e.ParallelizationFactor)
-		d.Set("maximum_retry_attempts", e.MaximumRetryAttempts)
-		d.Set("maximum_record_age_in_seconds", e.MaximumRecordAgeInSeconds)
-		d.Set("bisect_batch_on_function_error", e.BisectBatchOnFunctionError)
+		d.Set("parallelization_factor", eventSourceMappingConfiguration.ParallelizationFactor)
+		d.Set("maximum_retry_attempts", eventSourceMappingConfiguration.MaximumRetryAttempts)
+		d.Set("maximum_record_age_in_seconds", eventSourceMappingConfiguration.MaximumRecordAgeInSeconds)
+		d.Set("bisect_batch_on_function_error", eventSourceMappingConfiguration.BisectBatchOnFunctionError)
 	} else {
 		d.Set("parallelization_factor", 1)
 		d.Set("maximum_retry_attempts", 10000)
@@ -289,7 +289,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 		d.Set("bisect_batch_on_function_error", false)
 	}
 
-	state := aws.StringValue(e.State)
+	state := aws.StringValue(eventSourceMappingConfiguration.State)
 
 	switch state {
 	case "Enabled", "Enabling":
@@ -297,7 +297,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	case "Disabled", "Disabling":
 		d.Set("enabled", false)
 	default:
-		log.Printf("[DEBUG] Lambda event source mapping is neither enabled nor disabled but %s", *e.State)
+		log.Printf("[DEBUG] Lambda event source mapping is neither enabled nor disabled but %s", *eventSourceMappingConfiguration.State)
 	}
 
 	return nil
