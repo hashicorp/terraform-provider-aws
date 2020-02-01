@@ -265,7 +265,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	if err != nil {
 		return fmt.Errorf("Error reading event source mapping from state: %s", err)
 	}
-	
+
 	d.Set("batch_size", e.BatchSize)
 	d.Set("maximum_batching_window_in_seconds", e.MaximumBatchingWindowInSeconds)
 	d.Set("event_source_arn", e.EventSourceArn)
