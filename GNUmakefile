@@ -8,21 +8,21 @@ TEST_COUNT?=1
 default: build
 
 build: fmtcheck
-	go install
+	GO111MODULE=off go install
 
 gen:
 	rm -f aws/internal/keyvaluetags/*_gen.go
-	go generate ./...
+	GO111MODULE=off go generate ./...
 
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	go test $(TEST) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
+	GO111MODULE=off go test $(TEST) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
 test: fmtcheck
-	go test $(TEST) $(TESTARGS) -timeout=120s -parallel=4
+	GO111MODULE=off go test $(TEST) $(TESTARGS) -timeout=120s -parallel=4
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v -count $(TEST_COUNT) -parallel 20 $(TESTARGS) -timeout 120m
+	GO111MODULE=off TF_ACC=1 go test $(TEST) -v -count $(TEST_COUNT) -parallel 20 $(TESTARGS) -timeout 120m
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
