@@ -101,6 +101,7 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 						resourceName, "name", vrName),
 					resource.TestCheckResourceAttr(
 						resourceName, "mesh_name", meshName),
+					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -115,6 +116,7 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 						resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "last_updated_date"),
+					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
 					testAccCheckResourceAttrRegionalARN(
 						resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
 				),
@@ -128,6 +130,7 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 						resourceName, "name", vrName),
 					resource.TestCheckResourceAttr(
 						resourceName, "mesh_name", meshName),
+					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(
