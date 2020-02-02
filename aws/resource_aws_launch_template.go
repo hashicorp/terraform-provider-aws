@@ -357,8 +357,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"associate_public_ip_address": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+							ValidateFunc:     validateTypeStringNullableBoolean,
 						},
 						"delete_on_termination": {
 							Type:     schema.TypeBool,
@@ -921,15 +923,17 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		var ipv4Addresses []string
 
 		networkInterface := map[string]interface{}{
-			"associate_public_ip_address": aws.BoolValue(v.AssociatePublicIpAddress),
-			"delete_on_termination":       aws.BoolValue(v.DeleteOnTermination),
-			"description":                 aws.StringValue(v.Description),
-			"device_index":                aws.Int64Value(v.DeviceIndex),
-			"ipv4_address_count":          aws.Int64Value(v.SecondaryPrivateIpAddressCount),
-			"ipv6_address_count":          aws.Int64Value(v.Ipv6AddressCount),
-			"network_interface_id":        aws.StringValue(v.NetworkInterfaceId),
-			"private_ip_address":          aws.StringValue(v.PrivateIpAddress),
-			"subnet_id":                   aws.StringValue(v.SubnetId),
+			"delete_on_termination": aws.BoolValue(v.DeleteOnTermination),
+			"description":           aws.StringValue(v.Description),
+			"device_index":          aws.Int64Value(v.DeviceIndex),
+			"ipv4_address_count":    aws.Int64Value(v.SecondaryPrivateIpAddressCount),
+			"ipv6_address_count":    aws.Int64Value(v.Ipv6AddressCount),
+			"network_interface_id":  aws.StringValue(v.NetworkInterfaceId),
+			"private_ip_address":    aws.StringValue(v.PrivateIpAddress),
+			"subnet_id":             aws.StringValue(v.SubnetId),
+		}
+		if v.AssociatePublicIpAddress != nil {
+			networkInterface["associate_public_ip_address"] = strconv.FormatBool(aws.BoolValue(v.AssociatePublicIpAddress))
 		}
 
 		if len(v.Ipv6Addresses) > 0 {
@@ -1149,7 +1153,10 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 				continue
 			}
 			niData := ni.(map[string]interface{})
-			networkInterface := readNetworkInterfacesFromConfig(niData)
+			networkInterface, err := readNetworkInterfacesFromConfig(niData)
+			if err != nil {
+				return nil, err
+			}
 			networkInterfaces = append(networkInterfaces, networkInterface)
 		}
 		opts.NetworkInterfaces = networkInterfaces
@@ -1256,7 +1263,7 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) (*ec2.LaunchTempla
 	return ebsDevice, nil
 }
 
-func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
+func readNetworkInterfacesFromConfig(ni map[string]interface{}) (*ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest, error) {
 	var ipv4Addresses []*ec2.PrivateIpAddressSpecification
 	var ipv6Addresses []*ec2.InstanceIpv6AddressRequest
 	var privateIpAddress string
@@ -1276,8 +1283,14 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
 		networkInterface.NetworkInterfaceId = aws.String(v)
-	} else if v, ok := ni["associate_public_ip_address"]; ok {
-		networkInterface.AssociatePublicIpAddress = aws.Bool(v.(bool))
+	}
+
+	if v, ok := ni["associate_public_ip_address"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting associate_public_ip_address %q from string to boolean: %s", v.(string), err)
+		}
+		networkInterface.AssociatePublicIpAddress = aws.Bool(vBool)
 	}
 
 	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
@@ -1320,7 +1333,7 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.PrivateIpAddresses = ipv4Addresses
 	}
 
-	return networkInterface
+	return networkInterface, nil
 }
 
 func readIamInstanceProfileFromConfig(iip map[string]interface{}) *ec2.LaunchTemplateIamInstanceProfileSpecificationRequest {

@@ -2,16 +2,80 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_eks_fargate_node_group", &resource.Sweeper{
+		Name: "aws_eks_fargate_node_group",
+		F:    testSweepEksFargateNodegroups,
+	})
+}
+
+func testSweepEksFargateNodegroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).eksconn
+
+	var errors error
+	input := &eks.ListClustersInput{}
+	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		for _, cluster := range page.Clusters {
+			clusterName := aws.StringValue(cluster)
+			input := &eks.ListNodegroupsInput{
+				ClusterName: cluster,
+			}
+			err := conn.ListNodegroupsPages(input, func(page *eks.ListNodegroupsOutput, lastPage bool) bool {
+				for _, nodegroup := range page.Nodegroups {
+					nodegroupName := aws.StringValue(nodegroup)
+					log.Printf("[INFO] Deleting EKS Node Group %q", nodegroupName)
+					input := &eks.DeleteNodegroupInput{
+						ClusterName:   cluster,
+						NodegroupName: nodegroup,
+					}
+					_, err := conn.DeleteNodegroup(input)
+
+					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+						errors = multierror.Append(errors, fmt.Errorf("error deleting EKS Node Group %q: %w", nodegroupName, err))
+						continue
+					}
+
+					if err := waitForEksNodeGroupDeletion(conn, clusterName, nodegroupName, 10*time.Minute); err != nil {
+						errors = multierror.Append(errors, fmt.Errorf("error waiting for EKS Node Group %q deletion: %w", nodegroupName, err))
+						continue
+					}
+				}
+				return true
+			})
+			if err != nil {
+				errors = multierror.Append(errors, fmt.Errorf("error listing Node Groups for EKS Cluster %s: %w", clusterName, err))
+			}
+		}
+
+		return true
+	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+		return errors // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		errors = multierror.Append(errors, fmt.Errorf("error retrieving EKS Clusters: %w", err))
+	}
+
+	return errors
+}
 
 func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 	var nodeGroup eks.Nodegroup
@@ -754,6 +818,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName, amiType)
 }
@@ -772,6 +842,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName, diskSize)
 }
@@ -790,6 +866,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName, instanceType1)
 }
@@ -811,6 +893,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName, labelKey1, labelValue1)
 }
@@ -833,6 +921,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName, labelKey1, labelValue1, labelKey2, labelValue2)
 }
@@ -851,6 +945,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName, releaseVersion)
 }
@@ -877,6 +977,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName)
 }
@@ -904,6 +1010,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName)
 }
@@ -921,6 +1033,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = %[3]d
     min_size     = %[4]d
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName, desiredSize, maxSize, minSize)
 }
@@ -942,6 +1060,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -964,6 +1088,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -982,6 +1112,12 @@ resource "aws_eks_node_group" "test" {
     max_size     = 1
     min_size     = 1
   }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
 }
 `, rName, version)
 }

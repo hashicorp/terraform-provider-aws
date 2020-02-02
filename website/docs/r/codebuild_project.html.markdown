@@ -150,6 +150,10 @@ resource "aws_codebuild_project" "example" {
     type            = "GITHUB"
     location        = "https://github.com/mitchellh/packer.git"
     git_clone_depth = 1
+
+    git_submodules_config {
+        fetch_submodules = true
+    }
   }
 
   vpc_config {
@@ -172,9 +176,11 @@ resource "aws_codebuild_project" "example" {
 }
 
 resource "aws_codebuild_project" "project-with-cache" {
-  name          = "test-project-cache"
-  description   = "test_codebuild_project_cache"
-  build_timeout = "5"
+  name           = "test-project-cache"
+  description    = "test_codebuild_project_cache"
+  build_timeout  = "5"
+  queued_timeout = "5"
+  
   service_role  = "${aws_iam_role.example.arn}"
 
   artifacts {
@@ -220,6 +226,7 @@ The following arguments are supported:
 * `source` - (Required) Information about the project's input source code. Source blocks are documented below.
 * `badge_enabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as `badge_url` attribute when enabled.
 * `build_timeout` - (Optional) How long in minutes, from 5 to 480 (8 hours), for AWS CodeBuild to wait until timing out any related build that does not get marked as completed. The default is 60 minutes.
+* `queued_timeout` - (Optional) How long in minutes, from 5 to 480 (8 hours), a build is allowed to be queued before it times out. The default is 8 hours.
 * `cache` - (Optional) Information about the cache storage for the project. Cache blocks are documented below.
 * `description` - (Optional) A short description of the project.
 * `encryption_key` - (Optional) The AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
@@ -250,9 +257,9 @@ The following arguments are supported:
 
 `environment` supports the following:
 
-* `compute_type` - (Required) Information about the compute resources the build project will use. Available values for this parameter are: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM` or `BUILD_GENERAL1_LARGE`. `BUILD_GENERAL1_SMALL` is only valid if `type` is set to `LINUX_CONTAINER`
+* `compute_type` - (Required) Information about the compute resources the build project will use. Available values for this parameter are: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE` or `BUILD_GENERAL1_2XLARGE`. `BUILD_GENERAL1_SMALL` is only valid if `type` is set to `LINUX_CONTAINER`. When `type` is set to `LINUX_GPU_CONTAINER`, `compute_type` need to be `BUILD_GENERAL1_LARGE`.
 * `image` - (Required) The Docker image to use for this build project. Valid values include [Docker images provided by CodeBuild](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html) (e.g `aws/codebuild/standard:2.0`), [Docker Hub images](https://hub.docker.com/) (e.g. `hashicorp/terraform:latest`), and full Docker repository URIs such as those for ECR (e.g. `137112412989.dkr.ecr.us-west-2.amazonaws.com/amazonlinux:latest`).
-* `type` - (Required) The type of build environment to use for related builds. Available values are: `LINUX_CONTAINER` or `WINDOWS_CONTAINER`.
+* `type` - (Required) The type of build environment to use for related builds. Available values are: `LINUX_CONTAINER`, `LINUX_GPU_CONTAINER`, `WINDOWS_CONTAINER` or `ARM_CONTAINER`.
 * `image_pull_credentials_type` - (Optional) The type of credentials AWS CodeBuild uses to pull images in your build. Available values for this parameter are `CODEBUILD` or `SERVICE_ROLE`. When you use a cross-account or private registry image, you must use SERVICE_ROLE credentials. When you use an AWS CodeBuild curated image, you must use CODEBUILD credentials. Default to `CODEBUILD`
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
 * `privileged_mode` - (Optional) If set to true, enables running the Docker daemon inside a Docker container. Defaults to `false`.
@@ -288,6 +295,7 @@ The following arguments are supported:
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds. This must be set when `type` is `NO_SOURCE`.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
+* `git_submodules_config` - (Optional) Information about the Git submodules configuration for an AWS CodeBuild build project. Git submodules config blocks are documented below. This option is only valid when the `type` is `CODECOMMIT`.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
 * `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when the `type` is `BITBUCKET` or `GITHUB`.
@@ -296,6 +304,10 @@ The following arguments are supported:
 
 * `type` - (Required) The authorization type to use. The only valid value is `OAUTH`
 * `resource` - (Optional) The resource value that applies to the specified authorization type.
+
+`git_submodules_config` supports the following:
+
+* `fetch_submodules` - (Required) If set to true, fetches Git submodules for the AWS CodeBuild build project.
 
 `vpc_config` supports the following:
 
@@ -327,6 +339,7 @@ The following arguments are supported:
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
+* `git_submodules_config` - (Optional) Information about the Git submodules configuration for an AWS CodeBuild build project. Git submodules config blocks are documented below. This option is only valid when the `type` is `CODECOMMIT`.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
 * `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is `GITHUB`, `BITBUCKET`, or `GITHUB_ENTERPRISE`.

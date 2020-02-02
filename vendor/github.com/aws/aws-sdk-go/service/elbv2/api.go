@@ -3370,11 +3370,12 @@ func (c *ELBV2) SetSubnetsRequest(input *SetSubnetsInput) (req *request.Request,
 
 // SetSubnets API operation for Elastic Load Balancing.
 //
-// Enables the Availability Zone for the specified public subnets for the specified
-// Application Load Balancer. The specified subnets replace the previously enabled
-// subnets.
+// Enables the Availability Zones for the specified public subnets for the specified
+// load balancer. The specified subnets replace the previously enabled subnets.
 //
-// You can't change the subnets for a Network Load Balancer.
+// When you specify subnets for a Network Load Balancer, you must include all
+// subnets that were enabled previously, with their existing configurations,
+// plus any additional subnets.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4031,7 +4032,8 @@ type AvailabilityZone struct {
 
 	// [Network Load Balancers] If you need static IP addresses for your load balancer,
 	// you can specify one Elastic IP address per Availability Zone when you create
-	// the load balancer.
+	// an internal-facing load balancer. For internal load balancers, you can specify
+	// a private IP address from the IPv4 range of the subnet.
 	LoadBalancerAddresses []*LoadBalancerAddress `type:"list"`
 
 	// The ID of the subnet. You can specify one subnet per Availability Zone.
@@ -4341,7 +4343,9 @@ type CreateLoadBalancerInput struct {
 	//
 	// [Network Load Balancers] You can specify subnets from one or more Availability
 	// Zones. You can specify one Elastic IP address per subnet if you need static
-	// IP addresses for your load balancer.
+	// IP addresses for your internet-facing load balancer. For internal load balancers,
+	// you can specify one private IP address per subnet from the IPv4 range of
+	// the subnet.
 	SubnetMappings []*SubnetMapping `type:"list"`
 
 	// The IDs of the public subnets. You can specify only one subnet per Availability
@@ -6546,11 +6550,15 @@ func (s *LoadBalancer) SetVpcId(v string) *LoadBalancer {
 type LoadBalancerAddress struct {
 	_ struct{} `type:"structure"`
 
-	// [Network Load Balancers] The allocation ID of the Elastic IP address.
+	// [Network Load Balancers] The allocation ID of the Elastic IP address for
+	// an internal-facing load balancer.
 	AllocationId *string `type:"string"`
 
 	// The static IP address.
 	IpAddress *string `type:"string"`
+
+	// [Network Load Balancers] The private IPv4 address for an internal load balancer.
+	PrivateIPv4Address *string `type:"string"`
 }
 
 // String returns the string representation
@@ -6572,6 +6580,12 @@ func (s *LoadBalancerAddress) SetAllocationId(v string) *LoadBalancerAddress {
 // SetIpAddress sets the IpAddress field's value.
 func (s *LoadBalancerAddress) SetIpAddress(v string) *LoadBalancerAddress {
 	s.IpAddress = &v
+	return s
+}
+
+// SetPrivateIPv4Address sets the PrivateIPv4Address field's value.
+func (s *LoadBalancerAddress) SetPrivateIPv4Address(v string) *LoadBalancerAddress {
+	s.PrivateIPv4Address = &v
 	return s
 }
 
@@ -8208,11 +8222,17 @@ type SetSubnetsInput struct {
 	// LoadBalancerArn is a required field
 	LoadBalancerArn *string `type:"string" required:"true"`
 
-	// The IDs of the public subnets. You must specify subnets from at least two
-	// Availability Zones. You can specify only one subnet per Availability Zone.
-	// You must specify either subnets or subnet mappings.
+	// The IDs of the public subnets. You can specify only one subnet per Availability
+	// Zone. You must specify either subnets or subnet mappings.
 	//
-	// You cannot specify Elastic IP addresses for your subnets.
+	// [Application Load Balancers] You must specify subnets from at least two Availability
+	// Zones. You cannot specify Elastic IP addresses for your subnets.
+	//
+	// [Network Load Balancers] You can specify subnets from one or more Availability
+	// Zones. If you need static IP addresses for your internet-facing load balancer,
+	// you can specify one Elastic IP address per subnet. For internal load balancers,
+	// you can specify one private IP address per subnet from the IPv4 range of
+	// the subnet.
 	SubnetMappings []*SubnetMapping `type:"list"`
 
 	// The IDs of the public subnets. You must specify subnets from at least two
@@ -8365,8 +8385,12 @@ func (s *SslPolicy) SetSslProtocols(v []*string) *SslPolicy {
 type SubnetMapping struct {
 	_ struct{} `type:"structure"`
 
-	// [Network Load Balancers] The allocation ID of the Elastic IP address.
+	// [Network Load Balancers] The allocation ID of the Elastic IP address for
+	// an internet-facing load balancer.
 	AllocationId *string `type:"string"`
+
+	// [Network Load Balancers] The private IPv4 address for an internal load balancer.
+	PrivateIPv4Address *string `type:"string"`
 
 	// The ID of the subnet.
 	SubnetId *string `type:"string"`
@@ -8385,6 +8409,12 @@ func (s SubnetMapping) GoString() string {
 // SetAllocationId sets the AllocationId field's value.
 func (s *SubnetMapping) SetAllocationId(v string) *SubnetMapping {
 	s.AllocationId = &v
+	return s
+}
+
+// SetPrivateIPv4Address sets the PrivateIPv4Address field's value.
+func (s *SubnetMapping) SetPrivateIPv4Address(v string) *SubnetMapping {
+	s.PrivateIPv4Address = &v
 	return s
 }
 
@@ -8741,6 +8771,10 @@ type TargetGroupAttribute struct {
 	//
 	// The following attributes are supported by Application Load Balancers if the
 	// target is not a Lambda function:
+	//
+	//    * load_balancing.algorithm.type - The load balancing algorithm determines
+	//    how the load balancer selects targets when routing requests. The value
+	//    is round_robin or least_outstanding_requests. The default is round_robin.
 	//
 	//    * slow_start.duration_seconds - The time period, in seconds, during which
 	//    a newly registered target receives a linearly increasing share of the

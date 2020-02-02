@@ -80,20 +80,14 @@ func TestAccAWSELB_basic(t *testing.T) {
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributes(&conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(
-						resourceName, "availability_zones.#", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "subnets.#", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.lb_protocol", "http"),
-					resource.TestCheckResourceAttr(
-						resourceName, "cross_zone_load_balancing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "cross_zone_load_balancing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -141,8 +135,7 @@ func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 				Config: fmt.Sprintf(testAccAWSELBFullRangeOfCharacters, lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", lbName),
+					resource.TestCheckResourceAttr(resourceName, "name", lbName),
 				),
 			},
 		},
@@ -171,14 +164,10 @@ func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 				Config: testAccAWSELBAccessLogsOn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.bucket", rName),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.interval", "5"),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "true"),
 				),
 			},
 
@@ -186,8 +175,7 @@ func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 				Config: testAccAWSELBAccessLogs,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
 				),
 			},
 		},
@@ -216,14 +204,10 @@ func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
 				Config: testAccAWSELBAccessLogsDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.bucket", rName),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.interval", "5"),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
 				),
 			},
 
@@ -254,8 +238,7 @@ func TestAccAWSELB_namePrefix(t *testing.T) {
 				Config: testAccAWSELB_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestMatchResourceAttr(
-						resourceName, "name", nameRegex),
+					resource.TestMatchResourceAttr(resourceName, "name", nameRegex),
 				),
 			},
 		},
@@ -277,8 +260,7 @@ func TestAccAWSELB_generatedName(t *testing.T) {
 				Config: testAccAWSELBGeneratedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestMatchResourceAttr(
-						resourceName, "name", generatedNameRegexp),
+					resource.TestMatchResourceAttr(resourceName, "name", generatedNameRegexp),
 				),
 			},
 		},
@@ -300,8 +282,7 @@ func TestAccAWSELB_generatesNameForZeroValue(t *testing.T) {
 				Config: testAccAWSELB_zeroValueName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestMatchResourceAttr(
-						resourceName, "name", generatedNameRegexp),
+					resource.TestMatchResourceAttr(resourceName, "name", generatedNameRegexp),
 				),
 			},
 		},
@@ -322,8 +303,7 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 				Config: testAccAWSELBConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "availability_zones.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 				),
 			},
 
@@ -331,8 +311,7 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 				Config: testAccAWSELBConfig_AvailabilityZonesUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "2"),
 				),
 			},
 		},
@@ -341,7 +320,6 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 
 func TestAccAWSELB_tags(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	var td elb.TagDescription
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -351,23 +329,36 @@ func TestAccAWSELB_tags(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSELBConfig,
+				Config: testAccAWSELBConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributes(&conf),
-					testAccLoadTags(&conf, &td),
-					testAccCheckELBTags(&td.Tags, "test", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
-
 			{
-				Config: testAccAWSELBConfig_TagUpdate,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSELBConfigTags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributes(&conf),
-					testAccLoadTags(&conf, &td),
-					testAccCheckELBTags(&td.Tags, "test", "test"),
-					testAccCheckELBTags(&td.Tags, "new", "type"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSELBConfigTags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSELBExists(resourceName, &conf),
+					testAccCheckAWSELBAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -428,8 +419,7 @@ func TestAccAWSELB_swap_subnets(t *testing.T) {
 				Config: testAccAWSELBConfig_subnets,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
 			},
 
@@ -437,8 +427,7 @@ func TestAccAWSELB_swap_subnets(t *testing.T) {
 				Config: testAccAWSELBConfig_subnet_swap,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists("aws_elb.test", &conf),
-					resource.TestCheckResourceAttr(
-						"aws_elb.test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", "2"),
 				),
 			},
 		},
@@ -611,16 +600,11 @@ func TestAccAWSELB_HealthCheck(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributesHealthCheck(&conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.healthy_threshold", "5"),
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.unhealthy_threshold", "5"),
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.target", "HTTP:8000/"),
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.timeout", "30"),
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.interval", "60"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.target", "HTTP:8000/"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 				),
 			},
 		},
@@ -646,8 +630,7 @@ func TestAccAWSELBUpdate_HealthCheck(t *testing.T) {
 			{
 				Config: testAccAWSELBConfigHealthCheck_update,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.healthy_threshold", "10"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "10"),
 				),
 			},
 		},
@@ -668,9 +651,7 @@ func TestAccAWSELB_Timeout(t *testing.T) {
 				Config: testAccAWSELBConfigIdleTimeout,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "idle_timeout", "200",
-					),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "200"),
 				),
 			},
 		},
@@ -689,17 +670,13 @@ func TestAccAWSELBUpdate_Timeout(t *testing.T) {
 			{
 				Config: testAccAWSELBConfigIdleTimeout,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "idle_timeout", "200",
-					),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "200"),
 				),
 			},
 			{
 				Config: testAccAWSELBConfigIdleTimeout_update,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "idle_timeout", "400",
-					),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "400"),
 				),
 			},
 		},
@@ -721,9 +698,7 @@ func TestAccAWSELB_ConnectionDraining(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "connection_draining", "true",
 					),
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining_timeout", "400",
-					),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "400"),
 				),
 			},
 		},
@@ -742,31 +717,21 @@ func TestAccAWSELBUpdate_ConnectionDraining(t *testing.T) {
 			{
 				Config: testAccAWSELBConfigConnectionDraining,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining", "true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining_timeout", "400",
-					),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "400"),
 				),
 			},
 			{
 				Config: testAccAWSELBConfigConnectionDraining_update_timeout,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining", "true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining_timeout", "600",
-					),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "600"),
 				),
 			},
 			{
 				Config: testAccAWSELBConfigConnectionDraining_update_disable,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining", "false",
-					),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining", "false"),
 				),
 			},
 		},
@@ -786,40 +751,18 @@ func TestAccAWSELB_SecurityGroups(t *testing.T) {
 				Config: testAccAWSELBConfig,
 				Check: resource.ComposeTestCheckFunc(
 					// ELBs get a default security group
-					resource.TestCheckResourceAttr(
-						resourceName, "security_groups.#", "1",
-					),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 			},
 			{
 				Config: testAccAWSELBConfigSecurityGroups,
 				Check: resource.ComposeTestCheckFunc(
 					// Count should still be one as we swap in a custom security group
-					resource.TestCheckResourceAttr(
-						resourceName, "security_groups.#", "1",
-					),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 			},
 		},
 	})
-}
-
-func testAccLoadTags(conf *elb.LoadBalancerDescription, td *elb.TagDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).elbconn
-
-		describe, err := conn.DescribeTags(&elb.DescribeTagsInput{
-			LoadBalancerNames: []*string{conf.LoadBalancerName},
-		})
-
-		if err != nil {
-			return err
-		}
-		if len(describe.TagDescriptions) > 0 {
-			*td = *describe.TagDescriptions[0]
-		}
-		return nil
-	}
 }
 
 // Unit test for listeners hash
@@ -1052,7 +995,7 @@ func testAccCheckAWSELBDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if providerErr.Code() != "LoadBalancerNotFound" {
+		if providerErr.Code() != elb.ErrCodeAccessPointNotFoundException {
 			return fmt.Errorf("Unexpected error: %s", err)
 		}
 	}
@@ -1178,13 +1121,60 @@ resource "aws_elb" "test" {
     lb_protocol = "http"
   }
 
-	tags = {
-		test = "test2"
-	}
-
   cross_zone_load_balancing = true
 }
 `
+
+func testAccAWSELBConfigTags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_elb" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+
+  listener {
+    instance_port = 8000
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  tags = {
+    %[1]q = %[2]q
+  }
+
+  cross_zone_load_balancing = true
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccAWSELBConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_elb" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+
+  listener {
+    instance_port = 8000
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+
+  cross_zone_load_balancing = true
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 const testAccAWSELBFullRangeOfCharacters = `
 data "aws_availability_zones" "available" {
@@ -1398,30 +1388,6 @@ resource "aws_elb" "test" {
     lb_port = 80
     lb_protocol = "http"
   }
-}
-`
-
-const testAccAWSELBConfig_TagUpdate = `
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-
-  listener {
-    instance_port = 8000
-    instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
-  }
-
-	tags = {
-		test = "test"
-		new = "type"
-	}
-
-  cross_zone_load_balancing = true
 }
 `
 

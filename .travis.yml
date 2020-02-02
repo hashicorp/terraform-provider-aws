@@ -19,6 +19,9 @@ matrix:
       name: "Code UnitTest"
       script: make test
     - go: "1.13.x"
+      name: "Dependencies"
+      script: make depscheck
+    - go: "1.13.x"
       name: "Website"
       script:
         - make docscheck

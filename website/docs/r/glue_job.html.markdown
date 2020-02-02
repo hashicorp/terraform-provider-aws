@@ -10,6 +10,8 @@ description: |-
 
 Provides a Glue Job resource.
 
+-> Glue functionality, such as monitoring and logging of jobs, is typically managed with the `default_arguments` argument. See the [Special Parameters Used by AWS Glue](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html) topic in the Glue developer guide for additional information.
+
 ## Example Usage
 
 ### Python Job
@@ -38,6 +40,27 @@ resource "aws_glue_job" "example" {
 
   default_arguments = {
     "--job-language" = "scala"
+  }
+}
+```
+
+### Enabling CloudWatch Logs and Metrics
+
+```hcl
+resource "aws_cloudwatch_log_group" "example" {
+  name              = "example"
+  retention_in_days = 14
+}
+
+resource "aws_glue_job" "example" {
+  # ... other configuration ...
+
+  default_arguments = {
+    # ... potentially other arguments ...
+    "--continuous-log-logGroup"          = "${aws_cloudwatch_log_group.example.name}"
+    "--enable-continuous-cloudwatch-log" = "true"
+    "--enable-continuous-log-filter"     = "true"
+    "--enable-metrics"                   = ""
   }
 }
 ```

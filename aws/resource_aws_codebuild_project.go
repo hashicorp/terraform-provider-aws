@@ -172,6 +172,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.ComputeTypeBuildGeneral1Small,
 								codebuild.ComputeTypeBuildGeneral1Medium,
 								codebuild.ComputeTypeBuildGeneral1Large,
+								codebuild.ComputeTypeBuildGeneral12xlarge,
 							}, false),
 						},
 						"environment_variable": {
@@ -209,7 +210,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								codebuild.EnvironmentTypeLinuxContainer,
+								codebuild.EnvironmentTypeLinuxGpuContainer,
 								codebuild.EnvironmentTypeWindowsContainer,
+								codebuild.EnvironmentTypeArmContainer,
 							}, false),
 						},
 						"image_pull_credentials_type": {
@@ -438,6 +441,19 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(0),
 						},
+						"git_submodules_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"fetch_submodules": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
 						"insecure_ssl": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -508,6 +524,19 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(0),
 						},
+						"git_submodules_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"fetch_submodules": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
 						"insecure_ssl": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -526,6 +555,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      "60",
+				ValidateFunc: validation.IntBetween(5, 480),
+			},
+			"queued_timeout": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      "480",
 				ValidateFunc: validation.IntBetween(5, 480),
 			},
 			"badge_enabled": {
@@ -632,6 +667,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("build_timeout"); ok {
 		params.TimeoutInMinutes = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("queued_timeout"); ok {
+		params.QueuedTimeoutInMinutes = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
@@ -1000,6 +1039,21 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 		}
 	}
 
+	// Only valid for CODECOMMIT source types.
+	if sourceType == codebuild.SourceTypeCodecommit {
+		if v, ok := data["git_submodules_config"]; ok && len(v.([]interface{})) > 0 {
+			config := v.([]interface{})[0].(map[string]interface{})
+
+			gitSubmodulesConfig := &codebuild.GitSubmodulesConfig{}
+
+			if v, ok := config["fetch_submodules"]; ok {
+				gitSubmodulesConfig.FetchSubmodules = aws.Bool(v.(bool))
+			}
+
+			projectSource.GitSubmodulesConfig = gitSubmodulesConfig
+		}
+	}
+
 	return projectSource
 }
 
@@ -1063,6 +1117,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("name", project.Name)
 	d.Set("service_role", project.ServiceRole)
 	d.Set("build_timeout", project.TimeoutInMinutes)
+	d.Set("queued_timeout", project.QueuedTimeoutInMinutes)
 	if project.Badge != nil {
 		d.Set("badge_enabled", project.Badge.BadgeEnabled)
 		d.Set("badge_url", project.Badge.BadgeRequestUrl)
@@ -1143,6 +1198,10 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("build_timeout") {
 		params.TimeoutInMinutes = aws.Int64(int64(d.Get("build_timeout").(int)))
+	}
+
+	if d.HasChange("queued_timeout") {
+		params.QueuedTimeoutInMinutes = aws.Int64(int64(d.Get("queued_timeout").(int)))
 	}
 
 	if d.HasChange("badge_enabled") {
@@ -1366,15 +1425,28 @@ func flattenAwsCodeBuildProjectSourceData(source *codebuild.ProjectSource) inter
 		"type":                aws.StringValue(source.Type),
 	}
 
+	m["git_submodules_config"] = flattenAwsCodebuildProjectGitSubmodulesConfig(source.GitSubmodulesConfig)
+
 	if source.Auth != nil {
 		m["auth"] = schema.NewSet(resourceAwsCodeBuildProjectSourceAuthHash, []interface{}{sourceAuthToMap(source.Auth)})
 	}
-
 	if source.SourceIdentifier != nil {
 		m["source_identifier"] = aws.StringValue(source.SourceIdentifier)
 	}
 
 	return m
+}
+
+func flattenAwsCodebuildProjectGitSubmodulesConfig(config *codebuild.GitSubmodulesConfig) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{
+		"fetch_submodules": aws.BoolValue(config.FetchSubmodules),
+	}
+
+	return []interface{}{values}
 }
 
 func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} {
@@ -1489,6 +1561,13 @@ func resourceAwsCodeBuildProjectSourceHash(v interface{}) int {
 	}
 	if v, ok := m["git_clone_depth"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", strconv.Itoa(v.(int))))
+	}
+	if v, ok := m["git_submodules_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		m := v.([]interface{})[0].(map[string]interface{})
+
+		if v, ok := m["fetch_submodules"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
+		}
 	}
 	if v, ok := m["insecure_ssl"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
