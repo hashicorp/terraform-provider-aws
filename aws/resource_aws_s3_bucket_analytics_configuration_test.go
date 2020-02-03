@@ -35,6 +35,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -110,6 +115,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -162,6 +172,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Prefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -199,6 +214,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_SingleTag(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -241,6 +261,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_MultipleTags(t *testing
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2Update),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -286,6 +311,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testin
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2Update),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -315,6 +345,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Remove(t *testing.T) {
 					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -360,6 +395,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Default(t
 					resource.TestCheckResourceAttrPair(resourceName, "storage_class_analysis.0.data_export.0.destination.0.s3_bucket_destination.0.bucket_arn", "aws_s3_bucket.destination", "arn"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -390,6 +430,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Full(t *t
 					resource.TestCheckResourceAttrPair(resourceName, "storage_class_analysis.0.data_export.0.destination.0.s3_bucket_destination.0.bucket_arn", "aws_s3_bucket.destination", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.0.destination.0.s3_bucket_destination.0.prefix", prefix),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

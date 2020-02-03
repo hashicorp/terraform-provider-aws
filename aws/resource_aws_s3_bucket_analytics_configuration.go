@@ -19,6 +19,9 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 		Read:   resourceAwsS3BucketAnalyticsConfigurationRead,
 		Update: resourceAwsS3BucketAnalyticsConfigurationPut,
 		Delete: resourceAwsS3BucketAnalyticsConfigurationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
