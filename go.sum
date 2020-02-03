@@ -43,8 +43,8 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/bflad/tfproviderdocs v0.4.1 h1:QkMoSHhoX9JKDgoF9IL4SumGzcUKnEI6zk11rUJuP0k=
 github.com/bflad/tfproviderdocs v0.4.1/go.mod h1:RNStY03htmnwr+FAKe9Zqq8EoqufbUv8nzJ31aBQq0c=
-github.com/bflad/tfproviderlint v0.8.0 h1:1emITjGU+wme5GFzwX28TsT7eXVyJWR+5/T34tQtVZg=
-github.com/bflad/tfproviderlint v0.8.0/go.mod h1:ZoPnBcWKemqSxIuySpHISeV63HYZTTpCblloeSSPG1Y=
+github.com/bflad/tfproviderlint v0.9.0 h1:qGHOKx02pCqiNNUs5zd15yPq6voT5uXEk16zWkP6AnQ=
+github.com/bflad/tfproviderlint v0.9.0/go.mod h1:Qeuhi1Jv3nf8/X8OFsHlpGPUf+n2r+Bn4WjaKhxRG3Y=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d h1:xDfNPAt8lFiC1UJrqV3uuy861HCTo708pDMbjHHdCas=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d/go.mod h1:6QX/PXZ00z/TKoufEY6K/a0k6AhaJrQKdFe6OfVXsa4=
 github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQkY=
@@ -245,8 +245,6 @@ github.com/hashicorp/terraform-config-inspect v0.0.0-20191115094559-17f92b0546e8
 github.com/hashicorp/terraform-config-inspect v0.0.0-20191115094559-17f92b0546e8/go.mod h1:p+ivJws3dpqbp1iP84+npOyAmTTOLMgCzrXd3GSdn/A=
 github.com/hashicorp/terraform-json v0.3.1 h1:vRiOLck4YX4UqzljVhdQKsVLixX4L+Pgnm/q+xu6QvE=
 github.com/hashicorp/terraform-json v0.3.1/go.mod h1:MdwQStcJb00ht55L/2YH0ypAO9RNtczJ1MaUlf+gJcg=
-github.com/hashicorp/terraform-plugin-sdk v1.4.1 h1:REgN6WbySD6aIYdF6Uob3ic4eQkfh4NXSWU/casmgb4=
-github.com/hashicorp/terraform-plugin-sdk v1.4.1/go.mod h1:H5QLx/uhwfxBZ59Bc5SqT19M4i+fYt7LZjHTpbLZiAg=
 github.com/hashicorp/terraform-plugin-sdk v1.6.0 h1:Um5hsAL7kKsfTHtan8lybY/d03F2bHu4fjRB1H6Ag4U=
 github.com/hashicorp/terraform-plugin-sdk v1.6.0/go.mod h1:H5QLx/uhwfxBZ59Bc5SqT19M4i+fYt7LZjHTpbLZiAg=
 github.com/hashicorp/terraform-svchost v0.0.0-20191011084731-65d371908596 h1:hjyO2JsNZUKT1ym+FAdlBEkGPevazYsmVgIMw7dVELg=
