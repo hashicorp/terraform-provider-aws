@@ -36,6 +36,7 @@ func resourceAwsDataSyncLocationSmb() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
+				ForceNew: true,
 			},
 			"mount_options": {
 				Type:             schema.TypeList,
@@ -63,10 +64,12 @@ func resourceAwsDataSyncLocationSmb() *schema.Resource {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
+				ForceNew:  true,
 			},
 			"server_hostname": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"subdirectory": {
 				Type:     schema.TypeString,
@@ -92,6 +95,7 @@ func resourceAwsDataSyncLocationSmb() *schema.Resource {
 			"user": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
