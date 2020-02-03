@@ -276,7 +276,59 @@ func expandS3AnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
 }
 
 func expandS3StorageClassAnalysis(l []interface{}) *s3.StorageClassAnalysis {
-	return &s3.StorageClassAnalysis{}
+	result := &s3.StorageClassAnalysis{}
+
+	if len(l) == 0 || l[0] == nil {
+		return result
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["data_export"]; ok {
+		dataExport := &s3.StorageClassAnalysisDataExport{}
+		result.DataExport = dataExport
+
+		foo := v.([]interface{})
+		if len(foo) != 0 && foo[0] != nil {
+			bar := foo[0].(map[string]interface{})
+			if v, ok := bar["output_schema_version"]; ok {
+				dataExport.OutputSchemaVersion = aws.String(v.(string))
+			}
+
+			dataExport.Destination = expandS3AnalyticsExportDestination(bar["destination"].([]interface{}))
+		}
+	}
+
+	return result
+}
+
+func expandS3AnalyticsExportDestination(edl []interface{}) *s3.AnalyticsExportDestination {
+	result := &s3.AnalyticsExportDestination{}
+
+	if len(edl) != 0 && edl[0] != nil {
+		edm := edl[0].(map[string]interface{})
+		result.S3BucketDestination = expandS3AnalyticsS3BucketDestination(edm["s3_bucket_destination"].([]interface{}))
+	}
+	return result
+}
+
+func expandS3AnalyticsS3BucketDestination(bdl []interface{}) *s3.AnalyticsS3BucketDestination {
+	result := &s3.AnalyticsS3BucketDestination{}
+
+	if len(bdl) != 0 && bdl[0] != nil {
+		bdm := bdl[0].(map[string]interface{})
+		result.Bucket = aws.String(bdm["bucket_arn"].(string))
+		result.Format = aws.String(bdm["format"].(string))
+
+		if v, ok := bdm["bucket_account_id"]; ok && v != "" {
+			result.BucketAccountId = aws.String(v.(string))
+		}
+
+		if v, ok := bdm["prefix"]; ok && v != "" {
+			result.Prefix = aws.String(v.(string))
+		}
+	}
+
+	return result
 }
 
 func flattenS3AnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]interface{} {
@@ -307,7 +359,54 @@ func flattenS3AnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]
 }
 
 func flattenS3StorageClassAnalysis(storageClassAnalysis *s3.StorageClassAnalysis) []map[string]interface{} {
-	return []map[string]interface{}{}
+	if storageClassAnalysis == nil || storageClassAnalysis.DataExport == nil {
+		return []map[string]interface{}{}
+	}
+
+	dataExport := storageClassAnalysis.DataExport
+	de := make(map[string]interface{})
+	if dataExport.OutputSchemaVersion != nil {
+		de["output_schema_version"] = aws.StringValue(dataExport.OutputSchemaVersion)
+	}
+	if dataExport.Destination != nil {
+		de["destination"] = flattenS3AnalyticsExportDestination(dataExport.Destination)
+	}
+	result := map[string]interface{}{
+		"data_export": []interface{}{de},
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func flattenS3AnalyticsExportDestination(destination *s3.AnalyticsExportDestination) []interface{} {
+	if destination == nil || destination.S3BucketDestination == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"s3_bucket_destination": flattenS3AnalyticsS3BucketDestination(destination.S3BucketDestination),
+		},
+	}
+}
+
+func flattenS3AnalyticsS3BucketDestination(bucketDestination *s3.AnalyticsS3BucketDestination) []interface{} {
+	if bucketDestination == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"bucket_arn": aws.StringValue(bucketDestination.Bucket),
+		"format":     aws.StringValue(bucketDestination.Format),
+	}
+	if bucketDestination.BucketAccountId != nil {
+		result["bucket_account_id"] = aws.StringValue(bucketDestination.BucketAccountId)
+	}
+	if bucketDestination.Prefix != nil {
+		result["prefix"] = aws.StringValue(bucketDestination.Prefix)
+	}
+
+	return []interface{}{result}
 }
 
 func waitForDeleteS3BucketAnalyticsConfiguration(conn *s3.S3, bucket, name string, timeout time.Duration) error {
