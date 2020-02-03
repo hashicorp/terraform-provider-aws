@@ -99,6 +99,7 @@ endif
 website-lint:
 	@echo "==> Checking website against linters..."
 	@misspell -error -source=text website/
+	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli website/docs/
 
 website-test:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
