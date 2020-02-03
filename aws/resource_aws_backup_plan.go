@@ -69,6 +69,35 @@ func resourceAwsBackupPlan() *schema.Resource {
 								},
 							},
 						},
+						"copy_actions": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lifecycle": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cold_storage_after": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"delete_after": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"destination_vault_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 						"recovery_point_tags": tagsSchema(),
 					},
 				},
@@ -235,10 +264,42 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 			rule.Lifecycle = lifecycle
 		}
 
+		if vCopyActions := expandBackupPlanCopyActions(mRule["copy_action"].(*schema.Set).List()); len(vCopyActions) > 0 {
+			rule.CopyActions = vCopyActions
+		}
+
 		rules = append(rules, rule)
 	}
 
 	return rules
+}
+
+func expandBackupPlanCopyActions(actionList []interface{}) []*backup.CopyAction {
+	actions := []*backup.CopyAction{}
+
+	for _, i := range actionList {
+		item := i.(map[string]interface{})
+		action := &backup.CopyAction{}
+
+		action.DestinationBackupVaultArn = aws.String(item["destination_vault_arn"].(string))
+		action.Lifecycle = expandBackupPlanLifecycle(item["lifecycle"].(*schema.Set))
+
+		actions = append(actions, action)
+	}
+
+	return actions
+}
+
+func expandBackupPlanLifecycle(l *schema.Set) *backup.Lifecycle {
+	var lifecycle *backup.Lifecycle
+
+	for _, i := range l.List() {
+		lc := i.(map[string]interface{})
+		lifecycle.DeleteAfterDays = aws.Int64(int64(lc["delete_after"].(int)))
+		lifecycle.MoveToColdStorageAfterDays = aws.Int64(int64(lc["cold_storage_after"].(int)))
+	}
+
+	return lifecycle
 }
 
 func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
@@ -263,10 +324,34 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 			}
 		}
 
+		if actions := rule.CopyActions; actions != nil {
+			for _, action := range actions {
+				mRule["copy_action"] = []interface{}{
+					map[string]interface{}{
+						"lifecycle":             flattenBackupPlanCopyActionLifecycle(action.Lifecycle),
+						"destination_vault_arn": aws.StringValue(action.DestinationBackupVaultArn),
+					},
+				}
+			}
+		}
+
 		vRules = append(vRules, mRule)
 	}
 
 	return schema.NewSet(backupBackupPlanHash, vRules)
+}
+
+func flattenBackupPlanCopyActionLifecycle(copyActionLifecycle *backup.Lifecycle) []interface{} {
+	if copyActionLifecycle == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"delete_after":       aws.Int64Value(copyActionLifecycle.DeleteAfterDays),
+		"cold_storage_after": aws.Int64Value(copyActionLifecycle.MoveToColdStorageAfterDays),
+	}
+
+	return []interface{}{m}
 }
 
 func backupBackupPlanHash(vRule interface{}) int {
@@ -303,6 +388,35 @@ func backupBackupPlanHash(vRule interface{}) int {
 		if v, ok := mLifecycle["cold_storage_after"].(int); ok {
 			buf.WriteString(fmt.Sprintf("%d-", v))
 		}
+	}
+
+	if v, ok := mRule["copy_action"]; ok {
+		vCopyActions := v.([]map[string]interface{})
+		if len(vCopyActions) > 1 {
+			for _, action := range vCopyActions {
+				if v, ok := action["lifecycle"].([]interface{}); ok {
+					buf.WriteString(fmt.Sprintf("%d-", backupBackupPlanCopyActionLifecycleHash(v)))
+				}
+
+				if v, ok := action["destination_vault_arn"].(string); ok {
+					buf.WriteString(fmt.Sprintf("%s-", v))
+				}
+			}
+		}
+	}
+
+	return hashcode.String(buf.String())
+}
+
+func backupBackupPlanCopyActionLifecycleHash(vLifecycle interface{}) int {
+	var buf bytes.Buffer
+	mLifecycle := vLifecycle.(map[string]interface{})
+
+	if v, ok := mLifecycle["delete_after"].(int); ok {
+		buf.WriteString(fmt.Sprintf("%d-", v))
+	}
+	if v, ok := mLifecycle["cold_storage_after"].(int); ok {
+		buf.WriteString(fmt.Sprintf("%d-", v))
 	}
 
 	return hashcode.String(buf.String())
