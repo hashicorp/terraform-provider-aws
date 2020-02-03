@@ -6,6 +6,7 @@
     - [Pull Request Review Process](#pull-request-review-process)
         - [Dependency Updates](#dependency-updates)
             - [AWS Go SDK Updates](#aws-go-sdk-updates)
+            - [golangci-lint Updates](#golangci-lint-updates)
             - [Terraform Plugin SDK Updates](#terraform-plugin-sdk-updates)
             - [tfproviderdocs Updates](#tfproviderdocs-updates)
             - [tfproviderlint Updates](#tfproviderlint-updates)
@@ -243,6 +244,10 @@ ENHANCEMENTS:
 
 * backend/s3: Support automatic region validation for `XX-XXXXX-#` [GH-####]
 ```
+
+##### golangci-lint Updates
+
+Merge if CI passes.
 
 ##### Terraform Plugin SDK Updates
 
