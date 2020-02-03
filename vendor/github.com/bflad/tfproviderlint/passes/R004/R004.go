@@ -8,9 +8,9 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
-	"github.com/bflad/tfproviderlint/helper/terraformtype"
+	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/schema"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
-	"github.com/bflad/tfproviderlint/passes/resourcedataset"
+	"github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetcallexpr"
 )
 
 const Doc = `check for ResourceData.Set() calls using incompatible value types
@@ -25,7 +25,7 @@ var Analyzer = &analysis.Analyzer{
 	Name: analyzerName,
 	Doc:  Doc,
 	Requires: []*analysis.Analyzer{
-		resourcedataset.Analyzer,
+		resourcedatasetcallexpr.Analyzer,
 		commentignore.Analyzer,
 	},
 	Run: run,
@@ -33,7 +33,7 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
-	sets := pass.ResultOf[resourcedataset.Analyzer].([]*ast.CallExpr)
+	sets := pass.ResultOf[resourcedatasetcallexpr.Analyzer].([]*ast.CallExpr)
 	for _, set := range sets {
 		if ignorer.ShouldIgnore(analyzerName, set) {
 			continue
@@ -74,7 +74,7 @@ func isAllowedType(t types.Type) bool {
 			return isAllowedType(t.Elem().Underlying())
 		}
 	case *types.Named:
-		return terraformtype.IsHelperSchemaNamedType(t, terraformtype.TypeNameSet)
+		return schema.IsNamedType(t, schema.TypeNameSet)
 	case *types.Pointer:
 		return isAllowedType(t.Elem())
 	case *types.Slice:

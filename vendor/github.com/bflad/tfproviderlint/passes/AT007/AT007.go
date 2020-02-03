@@ -5,8 +5,8 @@ package AT007
 import (
 	"go/ast"
 
-	"github.com/bflad/tfproviderlint/helper/terraformtype"
-	"github.com/bflad/tfproviderlint/passes/acctestfunc"
+	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/resource"
+	"github.com/bflad/tfproviderlint/passes/testaccfuncdecl"
 	"golang.org/x/tools/go/analysis"
 )
 
@@ -22,13 +22,13 @@ var Analyzer = &analysis.Analyzer{
 	Name: analyzerName,
 	Doc:  Doc,
 	Requires: []*analysis.Analyzer{
-		acctestfunc.Analyzer,
+		testaccfuncdecl.Analyzer,
 	},
 	Run: run,
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	testFuncs := pass.ResultOf[acctestfunc.Analyzer].([]*ast.FuncDecl)
+	testFuncs := pass.ResultOf[testaccfuncdecl.Analyzer].([]*ast.FuncDecl)
 
 	for _, testFunc := range testFuncs {
 		var resourceParallelTestInvocations int
@@ -40,7 +40,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				return true
 			}
 
-			if terraformtype.IsHelperResourceFunc(callExpr.Fun, pass.TypesInfo, terraformtype.FuncNameParallelTest) {
+			if resource.IsFunc(callExpr.Fun, pass.TypesInfo, resource.FuncNameParallelTest) {
 				resourceParallelTestInvocations += 1
 			}
 
