@@ -150,7 +150,7 @@ resource "aws_codebuild_project" "example" {
     type            = "GITHUB"
     location        = "https://github.com/mitchellh/packer.git"
     git_clone_depth = 1
-    source_version = 'master'
+    source_version  = "master"
   }
 
   vpc_config {
