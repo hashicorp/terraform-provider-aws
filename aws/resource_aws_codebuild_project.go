@@ -551,6 +551,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				MaxItems: 1,
 				Set:      resourceAwsCodeBuildProjectSourceHash,
 			},
+			"source_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"build_timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -663,6 +667,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("service_role"); ok {
 		params.ServiceRole = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("source_version"); ok {
+		params.SourceVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("build_timeout"); ok {
@@ -1116,6 +1124,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("encryption_key", project.EncryptionKey)
 	d.Set("name", project.Name)
 	d.Set("service_role", project.ServiceRole)
+	d.Set("source_version", project.SourceVersion)
 	d.Set("build_timeout", project.TimeoutInMinutes)
 	d.Set("queued_timeout", project.QueuedTimeoutInMinutes)
 	if project.Badge != nil {
@@ -1194,6 +1203,10 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("service_role") {
 		params.ServiceRole = aws.String(d.Get("service_role").(string))
+	}
+
+	if d.HasChange("source_version") {
+		params.SourceVersion = aws.String(d.Get("source_version").(string))
 	}
 
 	if d.HasChange("build_timeout") {
