@@ -1,7 +1,7 @@
 ---
+subcategory: "ECR"
 layout: "aws"
 page_title: "AWS: aws_ecr_image"
-sidebar_current: "docs-aws-datasource-ecr-image"
 description: |-
     Provides details about an ECR Image
 ---

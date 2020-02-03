@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataSourceAWSS3BucketObjects_basic(t *testing.T) {
@@ -209,7 +209,7 @@ func testAccCheckAwsS3ObjectsDataSourceExists(addr string) resource.TestCheckFun
 func testAccAWSDataSourceS3ObjectsConfigResources(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "objects_bucket" {
-  bucket = "tf-objects-test-bucket-%d"
+  bucket = "tf-acc-objects-test-bucket-%d"
 }
 
 resource "aws_s3_bucket_object" "object1" {

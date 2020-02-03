@@ -46,8 +46,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/beevik/etree"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/mitchellh/copystructure"
 	"gopkg.in/yaml.v2"
 )
@@ -144,6 +144,20 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 
 			if v, ok := config["labels"].(map[string]interface{}); ok && len(v) > 0 {
 				l.DockerVolumeConfiguration.Labels = stringMapToPointers(v)
+			}
+		}
+
+		efsConfig, ok := data["efs_volume_configuration"].([]interface{})
+		if ok && len(efsConfig) > 0 {
+			config := efsConfig[0].(map[string]interface{})
+			l.EfsVolumeConfiguration = &ecs.EFSVolumeConfiguration{}
+
+			if v, ok := config["file_system_id"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.FileSystemId = aws.String(v)
+			}
+
+			if v, ok := config["root_directory"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.RootDirectory = aws.String(v)
 			}
 		}
 
@@ -685,6 +699,10 @@ func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
 			l["docker_volume_configuration"] = flattenDockerVolumeConfiguration(volume.DockerVolumeConfiguration)
 		}
 
+		if volume.DockerVolumeConfiguration != nil {
+			l["efs_volume_configuration"] = flattenEFSVolumeConfiguration(volume.EfsVolumeConfiguration)
+		}
+
 		result = append(result, l)
 	}
 	return result
@@ -694,24 +712,41 @@ func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []i
 	var items []interface{}
 	m := make(map[string]interface{})
 
-	if config.Scope != nil {
-		m["scope"] = aws.StringValue(config.Scope)
+	if v := config.Scope; v != nil {
+		m["scope"] = aws.StringValue(v)
 	}
 
-	if config.Autoprovision != nil {
-		m["autoprovision"] = aws.BoolValue(config.Autoprovision)
+	if v := config.Autoprovision; v != nil {
+		m["autoprovision"] = aws.BoolValue(v)
 	}
 
-	if config.Driver != nil {
-		m["driver"] = aws.StringValue(config.Driver)
+	if v := config.Driver; v != nil {
+		m["driver"] = aws.StringValue(v)
 	}
 
 	if config.DriverOpts != nil {
 		m["driver_opts"] = pointersMapToStringList(config.DriverOpts)
 	}
 
-	if config.Labels != nil {
-		m["labels"] = pointersMapToStringList(config.Labels)
+	if v := config.Labels; v != nil {
+		m["labels"] = pointersMapToStringList(v)
+	}
+
+	items = append(items, m)
+	return items
+}
+
+func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interface{} {
+	var items []interface{}
+	m := make(map[string]interface{})
+	if config != nil {
+		if v := config.FileSystemId; v != nil {
+			m["file_system_id"] = aws.StringValue(v)
+		}
+
+		if v := config.RootDirectory; v != nil {
+			m["root_directory"] = aws.StringValue(v)
+		}
 	}
 
 	items = append(items, m)
@@ -1313,6 +1348,38 @@ func flattenESCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]inter
 	return []map[string]interface{}{m}
 }
 
+func expandESDomainEndpointOptions(l []interface{}) *elasticsearch.DomainEndpointOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	domainEndpointOptions := &elasticsearch.DomainEndpointOptions{}
+
+	if v, ok := m["enforce_https"].(bool); ok {
+		domainEndpointOptions.EnforceHTTPS = aws.Bool(v)
+	}
+
+	if v, ok := m["tls_security_policy"].(string); ok {
+		domainEndpointOptions.TLSSecurityPolicy = aws.String(v)
+	}
+
+	return domainEndpointOptions
+}
+
+func flattenESDomainEndpointOptions(domainEndpointOptions *elasticsearch.DomainEndpointOptions) []interface{} {
+	if domainEndpointOptions == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"enforce_https":       aws.BoolValue(domainEndpointOptions.EnforceHTTPS),
+		"tls_security_policy": aws.StringValue(domainEndpointOptions.TLSSecurityPolicy),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenESSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []map[string]interface{} {
 	if snapshotOptions == nil {
 		return []map[string]interface{}{}
@@ -1620,25 +1687,6 @@ func flattenAllCloudFormationParameters(cfParams []*cloudformation.Parameter) ma
 		params[*p.ParameterKey] = *p.ParameterValue
 	}
 	return params
-}
-
-func expandCloudFormationTags(tags map[string]interface{}) []*cloudformation.Tag {
-	var cfTags []*cloudformation.Tag
-	for k, v := range tags {
-		cfTags = append(cfTags, &cloudformation.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v.(string)),
-		})
-	}
-	return cfTags
-}
-
-func flattenCloudFormationTags(cfTags []*cloudformation.Tag) map[string]string {
-	tags := make(map[string]string, len(cfTags))
-	for _, t := range cfTags {
-		tags[*t.Key] = *t.Value
-	}
-	return tags
 }
 
 func flattenCloudFormationOutputs(cfOutputs []*cloudformation.Output) map[string]string {
@@ -2740,6 +2788,10 @@ func expandCognitoUserPoolPasswordPolicy(config map[string]interface{}) *cognito
 		configs.RequireUppercase = aws.Bool(v.(bool))
 	}
 
+	if v, ok := config["temporary_password_validity_days"]; ok {
+		configs.TemporaryPasswordValidityDays = aws.Int64(int64(v.(int)))
+	}
+
 	return configs
 }
 
@@ -3010,6 +3062,10 @@ func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPol
 
 	if s.RequireUppercase != nil {
 		m["require_uppercase"] = *s.RequireUppercase
+	}
+
+	if s.TemporaryPasswordValidityDays != nil {
+		m["temporary_password_validity_days"] = *s.TemporaryPasswordValidityDays
 	}
 
 	if len(m) > 0 {
@@ -4370,10 +4426,11 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 	}
 
 	sseOptions := []map[string]interface{}{}
-	if table.SSEDescription != nil {
-		m := map[string]interface{}{}
-		m["enabled"] = aws.StringValue(table.SSEDescription.Status) == dynamodb.SSEStatusEnabled
-		sseOptions = []map[string]interface{}{m}
+	if sseDescription := table.SSEDescription; sseDescription != nil {
+		sseOptions = []map[string]interface{}{{
+			"enabled":     aws.StringValue(sseDescription.Status) == dynamodb.SSEStatusEnabled,
+			"kms_key_arn": aws.StringValue(sseDescription.KMSMasterKeyArn),
+		}}
 	}
 	err = d.Set("server_side_encryption", sseOptions)
 	if err != nil {
@@ -4497,14 +4554,24 @@ func expandDynamoDbKeySchema(data map[string]interface{}) []*dynamodb.KeySchemaE
 	return keySchema
 }
 
-func expandDynamoDbEncryptAtRestOptions(m map[string]interface{}) *dynamodb.SSESpecification {
-	options := dynamodb.SSESpecification{}
+func expandDynamoDbEncryptAtRestOptions(vOptions []interface{}) *dynamodb.SSESpecification {
+	options := &dynamodb.SSESpecification{}
 
-	if v, ok := m["enabled"]; ok {
-		options.Enabled = aws.Bool(v.(bool))
+	enabled := false
+	if len(vOptions) > 0 {
+		mOptions := vOptions[0].(map[string]interface{})
+
+		enabled = mOptions["enabled"].(bool)
+		if enabled {
+			if vKmsKeyArn, ok := mOptions["kms_key_arn"].(string); ok && vKmsKeyArn != "" {
+				options.KMSMasterKeyId = aws.String(vKmsKeyArn)
+				options.SSEType = aws.String(dynamodb.SSETypeKms)
+			}
+		}
 	}
+	options.Enabled = aws.Bool(enabled)
 
-	return &options
+	return options
 }
 
 func expandDynamoDbTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
@@ -4637,37 +4704,40 @@ func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecificat
 	return result
 }
 
-func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []map[string]interface{} {
-	m := map[string]interface{}{}
-
-	if options.AllowDnsResolutionFromRemoteVpc != nil {
-		m["allow_remote_vpc_dns_resolution"] = *options.AllowDnsResolutionFromRemoteVpc
+func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []interface{} {
+	// When the VPC Peering Connection is pending acceptance,
+	// the details about accepter and/or requester peering
+	// options would not be included in the response.
+	if options == nil {
+		return []interface{}{}
 	}
 
-	if options.AllowEgressFromLocalClassicLinkToRemoteVpc != nil {
-		m["allow_classic_link_to_remote_vpc"] = *options.AllowEgressFromLocalClassicLinkToRemoteVpc
-	}
-
-	if options.AllowEgressFromLocalVpcToRemoteClassicLink != nil {
-		m["allow_vpc_to_remote_classic_link"] = *options.AllowEgressFromLocalVpcToRemoteClassicLink
-	}
-
-	return []map[string]interface{}{m}
+	return []interface{}{map[string]interface{}{
+		"allow_remote_vpc_dns_resolution":  aws.BoolValue(options.AllowDnsResolutionFromRemoteVpc),
+		"allow_classic_link_to_remote_vpc": aws.BoolValue(options.AllowEgressFromLocalClassicLinkToRemoteVpc),
+		"allow_vpc_to_remote_classic_link": aws.BoolValue(options.AllowEgressFromLocalVpcToRemoteClassicLink),
+	}}
 }
 
-func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringConnectionOptionsRequest {
+func expandVpcPeeringConnectionOptions(vOptions []interface{}, crossRegionPeering bool) *ec2.PeeringConnectionOptionsRequest {
+	if len(vOptions) == 0 || vOptions[0] == nil {
+		return nil
+	}
+
+	mOptions := vOptions[0].(map[string]interface{})
+
 	options := &ec2.PeeringConnectionOptionsRequest{}
 
-	if v, ok := m["allow_remote_vpc_dns_resolution"]; ok {
-		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v.(bool))
+	if v, ok := mOptions["allow_remote_vpc_dns_resolution"].(bool); ok {
+		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v)
 	}
-
-	if v, ok := m["allow_classic_link_to_remote_vpc"]; ok {
-		options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v.(bool))
-	}
-
-	if v, ok := m["allow_vpc_to_remote_classic_link"]; ok {
-		options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v.(bool))
+	if !crossRegionPeering {
+		if v, ok := mOptions["allow_classic_link_to_remote_vpc"].(bool); ok {
+			options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v)
+		}
+		if v, ok := mOptions["allow_vpc_to_remote_classic_link"].(bool); ok {
+			options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v)
+		}
 	}
 
 	return options
@@ -4791,9 +4861,17 @@ func flattenDaxEncryptAtRestOptions(options *dax.SSEDescription) []map[string]in
 	return []map[string]interface{}{m}
 }
 
-func expandRdsScalingConfiguration(l []interface{}) *rds.ScalingConfiguration {
+func expandRdsClusterScalingConfiguration(l []interface{}, engineMode string) *rds.ScalingConfiguration {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		// Our default value for MinCapacity is different from AWS's.
+		// We need to override it here to avoid a non-empty plan with an empty ScalingConfiguration.
+		if engineMode == "serverless" {
+			return &rds.ScalingConfiguration{
+				MinCapacity: aws.Int64(int64(rdsClusterScalingConfiguration_DefaultMinCapacity)),
+			}
+		} else {
+			return nil
+		}
 	}
 
 	m := l[0].(map[string]interface{})

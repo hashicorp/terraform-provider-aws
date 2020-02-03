@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -162,6 +162,7 @@ func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
 	})
 }
 
+// lintignore: AT002
 func TestAccAWSFsxLustreFileSystem_ImportPath(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -197,6 +198,7 @@ func TestAccAWSFsxLustreFileSystem_ImportPath(t *testing.T) {
 	})
 }
 
+// lintignore: AT002
 func TestAccAWSFsxLustreFileSystem_ImportedFileChunkSize(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"

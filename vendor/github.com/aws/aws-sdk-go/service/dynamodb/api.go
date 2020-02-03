@@ -143,8 +143,8 @@ func (c *DynamoDB) BatchGetItemRequest(input *BatchGetItemInput) (req *request.R
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation BatchGetItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+// Returned Error Types:
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -152,16 +152,16 @@ func (c *DynamoDB) BatchGetItemRequest(input *BatchGetItemInput) (req *request.R
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/BatchGetItem
@@ -229,10 +229,12 @@ func (c *DynamoDB) BatchGetItemPagesWithContext(ctx aws.Context, input *BatchGet
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*BatchGetItemOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*BatchGetItemOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -379,8 +381,8 @@ func (c *DynamoDB) BatchWriteItemRequest(input *BatchWriteItemInput) (req *reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation BatchWriteItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+// Returned Error Types:
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -388,20 +390,20 @@ func (c *DynamoDB) BatchWriteItemRequest(input *BatchWriteItemInput) (req *reque
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeItemCollectionSizeLimitExceededException "ItemCollectionSizeLimitExceededException"
+//   * ItemCollectionSizeLimitExceededException
 //   An item collection is too large. This exception is only returned for tables
 //   that have one or more local secondary indexes.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/BatchWriteItem
@@ -528,22 +530,22 @@ func (c *DynamoDB) CreateBackupRequest(input *CreateBackupInput) (req *request.R
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation CreateBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+// Returned Error Types:
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
-//   * ErrCodeTableInUseException "TableInUseException"
+//   * TableInUseException
 //   A target table with the specified name is either being created or deleted.
 //
-//   * ErrCodeContinuousBackupsUnavailableException "ContinuousBackupsUnavailableException"
+//   * ContinuousBackupsUnavailableException
 //   Backups have not yet been enabled for this table.
 //
-//   * ErrCodeBackupInUseException "BackupInUseException"
+//   * BackupInUseException
 //   There is another ongoing conflicting backup control plane operation on the
 //   table. The backup is either being created, deleted or restored to a table.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -557,7 +559,7 @@ func (c *DynamoDB) CreateBackupRequest(input *CreateBackupInput) (req *request.R
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/CreateBackup
@@ -651,6 +653,9 @@ func (c *DynamoDB) CreateGlobalTableRequest(input *CreateGlobalTableInput) (req 
 // relationship between two or more DynamoDB tables with the same table name
 // in the provided Regions.
 //
+// This method only applies to Version 2017.11.29 (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V1.html)
+// of global tables.
+//
 // If you want to add a new replica table to a global table, each of the following
 // conditions must be true:
 //
@@ -688,8 +693,8 @@ func (c *DynamoDB) CreateGlobalTableRequest(input *CreateGlobalTableInput) (req 
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation CreateGlobalTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -703,13 +708,13 @@ func (c *DynamoDB) CreateGlobalTableRequest(input *CreateGlobalTableInput) (req 
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
-//   * ErrCodeGlobalTableAlreadyExistsException "GlobalTableAlreadyExistsException"
+//   * GlobalTableAlreadyExistsException
 //   The specified global table already exists.
 //
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
@@ -823,13 +828,13 @@ func (c *DynamoDB) CreateTableRequest(input *CreateTableInput) (req *request.Req
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation CreateTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -843,7 +848,7 @@ func (c *DynamoDB) CreateTableRequest(input *CreateTableInput) (req *request.Req
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/CreateTable
@@ -944,15 +949,15 @@ func (c *DynamoDB) DeleteBackupRequest(input *DeleteBackupInput) (req *request.R
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DeleteBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBackupNotFoundException "BackupNotFoundException"
+// Returned Error Types:
+//   * BackupNotFoundException
 //   Backup not found for the given BackupARN.
 //
-//   * ErrCodeBackupInUseException "BackupInUseException"
+//   * BackupInUseException
 //   There is another ongoing conflicting backup control plane operation on the
 //   table. The backup is either being created, deleted or restored to a table.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -966,7 +971,7 @@ func (c *DynamoDB) DeleteBackupRequest(input *DeleteBackupInput) (req *request.R
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DeleteBackup
@@ -1078,11 +1083,11 @@ func (c *DynamoDB) DeleteItemRequest(input *DeleteItemInput) (req *request.Reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DeleteItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConditionalCheckFailedException "ConditionalCheckFailedException"
+// Returned Error Types:
+//   * ConditionalCheckFailedException
 //   A condition specified in the operation could not be evaluated.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -1090,23 +1095,23 @@ func (c *DynamoDB) DeleteItemRequest(input *DeleteItemInput) (req *request.Reque
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeItemCollectionSizeLimitExceededException "ItemCollectionSizeLimitExceededException"
+//   * ItemCollectionSizeLimitExceededException
 //   An item collection is too large. This exception is only returned for tables
 //   that have one or more local secondary indexes.
 //
-//   * ErrCodeTransactionConflictException "TransactionConflictException"
+//   * TransactionConflictException
 //   Operation was rejected because there is an ongoing transaction for the item.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DeleteItem
@@ -1222,17 +1227,17 @@ func (c *DynamoDB) DeleteTableRequest(input *DeleteTableInput) (req *request.Req
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DeleteTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -1246,7 +1251,7 @@ func (c *DynamoDB) DeleteTableRequest(input *DeleteTableInput) (req *request.Req
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DeleteTable
@@ -1347,11 +1352,11 @@ func (c *DynamoDB) DescribeBackupRequest(input *DescribeBackupInput) (req *reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBackupNotFoundException "BackupNotFoundException"
+// Returned Error Types:
+//   * BackupNotFoundException
 //   Backup not found for the given BackupARN.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeBackup
@@ -1462,12 +1467,12 @@ func (c *DynamoDB) DescribeContinuousBackupsRequest(input *DescribeContinuousBac
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeContinuousBackups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+// Returned Error Types:
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeContinuousBackups
@@ -1487,6 +1492,90 @@ func (c *DynamoDB) DescribeContinuousBackups(input *DescribeContinuousBackupsInp
 // for more information on using Contexts.
 func (c *DynamoDB) DescribeContinuousBackupsWithContext(ctx aws.Context, input *DescribeContinuousBackupsInput, opts ...request.Option) (*DescribeContinuousBackupsOutput, error) {
 	req, out := c.DescribeContinuousBackupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeContributorInsights = "DescribeContributorInsights"
+
+// DescribeContributorInsightsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeContributorInsights operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeContributorInsights for more information on using the DescribeContributorInsights
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeContributorInsightsRequest method.
+//    req, resp := client.DescribeContributorInsightsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeContributorInsights
+func (c *DynamoDB) DescribeContributorInsightsRequest(input *DescribeContributorInsightsInput) (req *request.Request, output *DescribeContributorInsightsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeContributorInsights,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeContributorInsightsInput{}
+	}
+
+	output = &DescribeContributorInsightsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeContributorInsights API operation for Amazon DynamoDB.
+//
+// Returns information about contributor insights, for a given table or global
+// secondary index.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation DescribeContributorInsights for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The operation tried to access a nonexistent table or index. The resource
+//   might not be specified correctly, or its status might not be ACTIVE.
+//
+//   * InternalServerError
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeContributorInsights
+func (c *DynamoDB) DescribeContributorInsights(input *DescribeContributorInsightsInput) (*DescribeContributorInsightsOutput, error) {
+	req, out := c.DescribeContributorInsightsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeContributorInsightsWithContext is the same as DescribeContributorInsights with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeContributorInsights for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) DescribeContributorInsightsWithContext(ctx aws.Context, input *DescribeContributorInsightsInput, opts ...request.Option) (*DescribeContributorInsightsOutput, error) {
+	req, out := c.DescribeContributorInsightsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1692,6 +1781,9 @@ func (c *DynamoDB) DescribeGlobalTableRequest(input *DescribeGlobalTableInput) (
 //
 // Returns information about the specified global table.
 //
+// This method only applies to Version 2017.11.29 (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V1.html)
+// of global tables.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1699,11 +1791,11 @@ func (c *DynamoDB) DescribeGlobalTableRequest(input *DescribeGlobalTableInput) (
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeGlobalTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
-//   * ErrCodeGlobalTableNotFoundException "GlobalTableNotFoundException"
+//   * GlobalTableNotFoundException
 //   The specified global table does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeGlobalTable
@@ -1795,6 +1887,9 @@ func (c *DynamoDB) DescribeGlobalTableSettingsRequest(input *DescribeGlobalTable
 //
 // Describes Region-specific settings for a global table.
 //
+// This method only applies to Version 2017.11.29 (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V1.html)
+// of global tables.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1802,11 +1897,11 @@ func (c *DynamoDB) DescribeGlobalTableSettingsRequest(input *DescribeGlobalTable
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeGlobalTableSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeGlobalTableNotFoundException "GlobalTableNotFoundException"
+// Returned Error Types:
+//   * GlobalTableNotFoundException
 //   The specified global table does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeGlobalTableSettings
@@ -1962,8 +2057,8 @@ func (c *DynamoDB) DescribeLimitsRequest(input *DescribeLimitsInput) (req *reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeLimits for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeLimits
@@ -2070,12 +2165,12 @@ func (c *DynamoDB) DescribeTableRequest(input *DescribeTableInput) (req *request
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeTable
@@ -2095,6 +2190,92 @@ func (c *DynamoDB) DescribeTable(input *DescribeTableInput) (*DescribeTableOutpu
 // for more information on using Contexts.
 func (c *DynamoDB) DescribeTableWithContext(ctx aws.Context, input *DescribeTableInput, opts ...request.Option) (*DescribeTableOutput, error) {
 	req, out := c.DescribeTableRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeTableReplicaAutoScaling = "DescribeTableReplicaAutoScaling"
+
+// DescribeTableReplicaAutoScalingRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeTableReplicaAutoScaling operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeTableReplicaAutoScaling for more information on using the DescribeTableReplicaAutoScaling
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeTableReplicaAutoScalingRequest method.
+//    req, resp := client.DescribeTableReplicaAutoScalingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeTableReplicaAutoScaling
+func (c *DynamoDB) DescribeTableReplicaAutoScalingRequest(input *DescribeTableReplicaAutoScalingInput) (req *request.Request, output *DescribeTableReplicaAutoScalingOutput) {
+	op := &request.Operation{
+		Name:       opDescribeTableReplicaAutoScaling,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeTableReplicaAutoScalingInput{}
+	}
+
+	output = &DescribeTableReplicaAutoScalingOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeTableReplicaAutoScaling API operation for Amazon DynamoDB.
+//
+// Describes auto scaling settings across replicas of the global table at once.
+//
+// This method only applies to Version 2019.11.21 (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html)
+// of global tables.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation DescribeTableReplicaAutoScaling for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The operation tried to access a nonexistent table or index. The resource
+//   might not be specified correctly, or its status might not be ACTIVE.
+//
+//   * InternalServerError
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeTableReplicaAutoScaling
+func (c *DynamoDB) DescribeTableReplicaAutoScaling(input *DescribeTableReplicaAutoScalingInput) (*DescribeTableReplicaAutoScalingOutput, error) {
+	req, out := c.DescribeTableReplicaAutoScalingRequest(input)
+	return out, req.Send()
+}
+
+// DescribeTableReplicaAutoScalingWithContext is the same as DescribeTableReplicaAutoScaling with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeTableReplicaAutoScaling for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) DescribeTableReplicaAutoScalingWithContext(ctx aws.Context, input *DescribeTableReplicaAutoScalingInput, opts ...request.Option) (*DescribeTableReplicaAutoScalingOutput, error) {
+	req, out := c.DescribeTableReplicaAutoScalingRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2174,12 +2355,12 @@ func (c *DynamoDB) DescribeTimeToLiveRequest(input *DescribeTimeToLiveInput) (re
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeTimeToLive for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeTimeToLive
@@ -2285,8 +2466,8 @@ func (c *DynamoDB) GetItemRequest(input *GetItemInput) (req *request.Request, ou
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation GetItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+// Returned Error Types:
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -2294,16 +2475,16 @@ func (c *DynamoDB) GetItemRequest(input *GetItemInput) (req *request.Request, ou
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/GetItem
@@ -2410,8 +2591,8 @@ func (c *DynamoDB) ListBackupsRequest(input *ListBackupsInput) (req *request.Req
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation ListBackups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListBackups
@@ -2434,6 +2615,148 @@ func (c *DynamoDB) ListBackupsWithContext(ctx aws.Context, input *ListBackupsInp
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opListContributorInsights = "ListContributorInsights"
+
+// ListContributorInsightsRequest generates a "aws/request.Request" representing the
+// client's request for the ListContributorInsights operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListContributorInsights for more information on using the ListContributorInsights
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListContributorInsightsRequest method.
+//    req, resp := client.ListContributorInsightsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListContributorInsights
+func (c *DynamoDB) ListContributorInsightsRequest(input *ListContributorInsightsInput) (req *request.Request, output *ListContributorInsightsOutput) {
+	op := &request.Operation{
+		Name:       opListContributorInsights,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListContributorInsightsInput{}
+	}
+
+	output = &ListContributorInsightsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListContributorInsights API operation for Amazon DynamoDB.
+//
+// Returns a list of ContributorInsightsSummary for a table and all its global
+// secondary indexes.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation ListContributorInsights for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The operation tried to access a nonexistent table or index. The resource
+//   might not be specified correctly, or its status might not be ACTIVE.
+//
+//   * InternalServerError
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListContributorInsights
+func (c *DynamoDB) ListContributorInsights(input *ListContributorInsightsInput) (*ListContributorInsightsOutput, error) {
+	req, out := c.ListContributorInsightsRequest(input)
+	return out, req.Send()
+}
+
+// ListContributorInsightsWithContext is the same as ListContributorInsights with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListContributorInsights for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) ListContributorInsightsWithContext(ctx aws.Context, input *ListContributorInsightsInput, opts ...request.Option) (*ListContributorInsightsOutput, error) {
+	req, out := c.ListContributorInsightsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListContributorInsightsPages iterates over the pages of a ListContributorInsights operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListContributorInsights method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListContributorInsights operation.
+//    pageNum := 0
+//    err := client.ListContributorInsightsPages(params,
+//        func(page *dynamodb.ListContributorInsightsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DynamoDB) ListContributorInsightsPages(input *ListContributorInsightsInput, fn func(*ListContributorInsightsOutput, bool) bool) error {
+	return c.ListContributorInsightsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListContributorInsightsPagesWithContext same as ListContributorInsightsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) ListContributorInsightsPagesWithContext(ctx aws.Context, input *ListContributorInsightsInput, fn func(*ListContributorInsightsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListContributorInsightsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListContributorInsightsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListContributorInsightsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListGlobalTables = "ListGlobalTables"
@@ -2503,6 +2826,9 @@ func (c *DynamoDB) ListGlobalTablesRequest(input *ListGlobalTablesInput) (req *r
 //
 // Lists all global tables that have a replica in the specified Region.
 //
+// This method only applies to Version 2017.11.29 (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V1.html)
+// of global tables.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2510,8 +2836,8 @@ func (c *DynamoDB) ListGlobalTablesRequest(input *ListGlobalTablesInput) (req *r
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation ListGlobalTables for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListGlobalTables
@@ -2618,8 +2944,8 @@ func (c *DynamoDB) ListTablesRequest(input *ListTablesInput) (req *request.Reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation ListTables for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListTables
@@ -2687,10 +3013,12 @@ func (c *DynamoDB) ListTablesPagesWithContext(ctx aws.Context, input *ListTables
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTablesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTablesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2772,12 +3100,12 @@ func (c *DynamoDB) ListTagsOfResourceRequest(input *ListTagsOfResourceInput) (re
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation ListTagsOfResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListTagsOfResource
@@ -2919,11 +3247,11 @@ func (c *DynamoDB) PutItemRequest(input *PutItemInput) (req *request.Request, ou
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation PutItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConditionalCheckFailedException "ConditionalCheckFailedException"
+// Returned Error Types:
+//   * ConditionalCheckFailedException
 //   A condition specified in the operation could not be evaluated.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -2931,23 +3259,23 @@ func (c *DynamoDB) PutItemRequest(input *PutItemInput) (req *request.Request, ou
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeItemCollectionSizeLimitExceededException "ItemCollectionSizeLimitExceededException"
+//   * ItemCollectionSizeLimitExceededException
 //   An item collection is too large. This exception is only returned for tables
 //   that have one or more local secondary indexes.
 //
-//   * ErrCodeTransactionConflictException "TransactionConflictException"
+//   * TransactionConflictException
 //   Operation was rejected because there is an ongoing transaction for the item.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/PutItem
@@ -3099,8 +3427,8 @@ func (c *DynamoDB) QueryRequest(input *QueryInput) (req *request.Request, output
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation Query for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+// Returned Error Types:
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -3108,16 +3436,16 @@ func (c *DynamoDB) QueryRequest(input *QueryInput) (req *request.Request, output
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/Query
@@ -3185,10 +3513,12 @@ func (c *DynamoDB) QueryPagesWithContext(ctx aws.Context, input *QueryInput, fn 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*QueryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*QueryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3283,21 +3613,21 @@ func (c *DynamoDB) RestoreTableFromBackupRequest(input *RestoreTableFromBackupIn
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation RestoreTableFromBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTableAlreadyExistsException "TableAlreadyExistsException"
+// Returned Error Types:
+//   * TableAlreadyExistsException
 //   A target table with the specified name already exists.
 //
-//   * ErrCodeTableInUseException "TableInUseException"
+//   * TableInUseException
 //   A target table with the specified name is either being created or deleted.
 //
-//   * ErrCodeBackupNotFoundException "BackupNotFoundException"
+//   * BackupNotFoundException
 //   Backup not found for the given BackupARN.
 //
-//   * ErrCodeBackupInUseException "BackupInUseException"
+//   * BackupInUseException
 //   There is another ongoing conflicting backup control plane operation on the
 //   table. The backup is either being created, deleted or restored to a table.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -3311,7 +3641,7 @@ func (c *DynamoDB) RestoreTableFromBackupRequest(input *RestoreTableFromBackupIn
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/RestoreTableFromBackup
@@ -3445,18 +3775,18 @@ func (c *DynamoDB) RestoreTableToPointInTimeRequest(input *RestoreTableToPointIn
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation RestoreTableToPointInTime for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTableAlreadyExistsException "TableAlreadyExistsException"
+// Returned Error Types:
+//   * TableAlreadyExistsException
 //   A target table with the specified name already exists.
 //
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
-//   * ErrCodeTableInUseException "TableInUseException"
+//   * TableInUseException
 //   A target table with the specified name is either being created or deleted.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -3470,14 +3800,14 @@ func (c *DynamoDB) RestoreTableToPointInTimeRequest(input *RestoreTableToPointIn
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInvalidRestoreTimeException "InvalidRestoreTimeException"
+//   * InvalidRestoreTimeException
 //   An invalid restore time was specified. RestoreDateTime must be between EarliestRestorableDateTime
 //   and LatestRestorableDateTime.
 //
-//   * ErrCodePointInTimeRecoveryUnavailableException "PointInTimeRecoveryUnavailableException"
+//   * PointInTimeRecoveryUnavailableException
 //   Point in time recovery has not yet been enabled for this source table.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/RestoreTableToPointInTime
@@ -3609,8 +3939,8 @@ func (c *DynamoDB) ScanRequest(input *ScanInput) (req *request.Request, output *
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation Scan for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+// Returned Error Types:
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -3618,16 +3948,16 @@ func (c *DynamoDB) ScanRequest(input *ScanInput) (req *request.Request, output *
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/Scan
@@ -3695,10 +4025,12 @@ func (c *DynamoDB) ScanPagesWithContext(ctx aws.Context, input *ScanInput, fn fu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ScanOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ScanOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3783,8 +4115,8 @@ func (c *DynamoDB) TagResourceRequest(input *TagResourceInput) (req *request.Req
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -3798,14 +4130,14 @@ func (c *DynamoDB) TagResourceRequest(input *TagResourceInput) (req *request.Req
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
@@ -3905,16 +4237,6 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 // cannot retrieve items from tables in more than one AWS account or Region.
 // The aggregate size of the items in the transaction cannot exceed 4 MB.
 //
-// All AWS Regions and AWS GovCloud (US) support up to 25 items per transaction
-// with up to 4 MB of data, except the following AWS Regions:
-//
-//    * China (Beijing)
-//
-//    * China (Ningxia)
-//
-// The China (Beijing) and China (Ningxia) Regions support up to 10 items per
-// transaction with up to 4 MB of data.
-//
 // DynamoDB rejects the entire TransactGetItems request if any of the following
 // is true:
 //
@@ -3935,12 +4257,12 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation TransactGetItems for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeTransactionCanceledException "TransactionCanceledException"
+//   * TransactionCanceledException
 //   The entire transaction request was canceled.
 //
 //   DynamoDB cancels a TransactWriteItems request under the following circumstances:
@@ -3960,8 +4282,6 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 //      index (LSI) becomes too large, or a similar validation error occurs because
 //      of changes made by the transaction.
 //
-//      * The aggregate size of the items in the transaction exceeds 4 MBs.
-//
 //      * There is a user error, such as an invalid data format.
 //
 //   DynamoDB cancels a TransactGetItems request under the following circumstances:
@@ -3975,8 +4295,6 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 //
 //      * There is insufficient provisioned capacity for the transaction to be
 //      completed.
-//
-//      * The aggregate size of the items in the transaction exceeds 4 MBs.
 //
 //      * There is a user error, such as an invalid data format.
 //
@@ -4031,7 +4349,7 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 //      The provided expression refers to an attribute that does not exist in
 //      the item.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -4039,7 +4357,12 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * RequestLimitExceeded
+//   Throughput exceeds the current throughput limit for your account. Please
+//   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
+//   a limit increase.
+//
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/TransactGetItems
@@ -4136,16 +4459,6 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 // item. The aggregate size of the items in the transaction cannot exceed 4
 // MB.
 //
-// All AWS Regions and AWS GovCloud (US) support up to 25 items per transaction
-// with up to 4 MB of data, except the following AWS Regions:
-//
-//    * China (Beijing)
-//
-//    * China (Ningxia)
-//
-// The China (Beijing) and China (Ningxia) Regions support up to 10 items per
-// transaction with up to 4 MB of data.
-//
 // The actions are completed atomically so that either all of them succeed,
 // or all of them fail. They are defined by the following objects:
 //
@@ -4201,12 +4514,12 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation TransactWriteItems for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeTransactionCanceledException "TransactionCanceledException"
+//   * TransactionCanceledException
 //   The entire transaction request was canceled.
 //
 //   DynamoDB cancels a TransactWriteItems request under the following circumstances:
@@ -4226,8 +4539,6 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 //      index (LSI) becomes too large, or a similar validation error occurs because
 //      of changes made by the transaction.
 //
-//      * The aggregate size of the items in the transaction exceeds 4 MBs.
-//
 //      * There is a user error, such as an invalid data format.
 //
 //   DynamoDB cancels a TransactGetItems request under the following circumstances:
@@ -4241,8 +4552,6 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 //
 //      * There is insufficient provisioned capacity for the transaction to be
 //      completed.
-//
-//      * The aggregate size of the items in the transaction exceeds 4 MBs.
 //
 //      * There is a user error, such as an invalid data format.
 //
@@ -4297,14 +4606,14 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 //      The provided expression refers to an attribute that does not exist in
 //      the item.
 //
-//   * ErrCodeTransactionInProgressException "TransactionInProgressException"
+//   * TransactionInProgressException
 //   The transaction with the given request token is already in progress.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   DynamoDB rejected the request because you retried a request with a different
 //   payload but with an idempotent token that was already used.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -4312,7 +4621,12 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * RequestLimitExceeded
+//   Throughput exceeds the current throughput limit for your account. Please
+//   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
+//   a limit increase.
+//
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/TransactWriteItems
@@ -4416,8 +4730,8 @@ func (c *DynamoDB) UntagResourceRequest(input *UntagResourceInput) (req *request
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -4431,14 +4745,14 @@ func (c *DynamoDB) UntagResourceRequest(input *UntagResourceInput) (req *request
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
@@ -4549,15 +4863,15 @@ func (c *DynamoDB) UpdateContinuousBackupsRequest(input *UpdateContinuousBackups
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateContinuousBackups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+// Returned Error Types:
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
-//   * ErrCodeContinuousBackupsUnavailableException "ContinuousBackupsUnavailableException"
+//   * ContinuousBackupsUnavailableException
 //   Backups have not yet been enabled for this table.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateContinuousBackups
@@ -4577,6 +4891,89 @@ func (c *DynamoDB) UpdateContinuousBackups(input *UpdateContinuousBackupsInput) 
 // for more information on using Contexts.
 func (c *DynamoDB) UpdateContinuousBackupsWithContext(ctx aws.Context, input *UpdateContinuousBackupsInput, opts ...request.Option) (*UpdateContinuousBackupsOutput, error) {
 	req, out := c.UpdateContinuousBackupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateContributorInsights = "UpdateContributorInsights"
+
+// UpdateContributorInsightsRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateContributorInsights operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateContributorInsights for more information on using the UpdateContributorInsights
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateContributorInsightsRequest method.
+//    req, resp := client.UpdateContributorInsightsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateContributorInsights
+func (c *DynamoDB) UpdateContributorInsightsRequest(input *UpdateContributorInsightsInput) (req *request.Request, output *UpdateContributorInsightsOutput) {
+	op := &request.Operation{
+		Name:       opUpdateContributorInsights,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateContributorInsightsInput{}
+	}
+
+	output = &UpdateContributorInsightsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateContributorInsights API operation for Amazon DynamoDB.
+//
+// Updates the status for contributor insights for a specific table or index.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation UpdateContributorInsights for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The operation tried to access a nonexistent table or index. The resource
+//   might not be specified correctly, or its status might not be ACTIVE.
+//
+//   * InternalServerError
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateContributorInsights
+func (c *DynamoDB) UpdateContributorInsights(input *UpdateContributorInsightsInput) (*UpdateContributorInsightsOutput, error) {
+	req, out := c.UpdateContributorInsightsRequest(input)
+	return out, req.Send()
+}
+
+// UpdateContributorInsightsWithContext is the same as UpdateContributorInsights with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateContributorInsights for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) UpdateContributorInsightsWithContext(ctx aws.Context, input *UpdateContributorInsightsInput, opts ...request.Option) (*UpdateContributorInsightsOutput, error) {
+	req, out := c.UpdateContributorInsightsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4675,20 +5072,20 @@ func (c *DynamoDB) UpdateGlobalTableRequest(input *UpdateGlobalTableInput) (req 
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateGlobalTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
-//   * ErrCodeGlobalTableNotFoundException "GlobalTableNotFoundException"
+//   * GlobalTableNotFoundException
 //   The specified global table does not exist.
 //
-//   * ErrCodeReplicaAlreadyExistsException "ReplicaAlreadyExistsException"
+//   * ReplicaAlreadyExistsException
 //   The specified replica is already part of the global table.
 //
-//   * ErrCodeReplicaNotFoundException "ReplicaNotFoundException"
+//   * ReplicaNotFoundException
 //   The specified replica is no longer part of the global table.
 //
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
@@ -4788,17 +5185,17 @@ func (c *DynamoDB) UpdateGlobalTableSettingsRequest(input *UpdateGlobalTableSett
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateGlobalTableSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeGlobalTableNotFoundException "GlobalTableNotFoundException"
+// Returned Error Types:
+//   * GlobalTableNotFoundException
 //   The specified global table does not exist.
 //
-//   * ErrCodeReplicaNotFoundException "ReplicaNotFoundException"
+//   * ReplicaNotFoundException
 //   The specified replica is no longer part of the global table.
 //
-//   * ErrCodeIndexNotFoundException "IndexNotFoundException"
+//   * IndexNotFoundException
 //   The operation tried to access a nonexistent index.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -4812,12 +5209,12 @@ func (c *DynamoDB) UpdateGlobalTableSettingsRequest(input *UpdateGlobalTableSett
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateGlobalTableSettings
@@ -4923,11 +5320,11 @@ func (c *DynamoDB) UpdateItemRequest(input *UpdateItemInput) (req *request.Reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConditionalCheckFailedException "ConditionalCheckFailedException"
+// Returned Error Types:
+//   * ConditionalCheckFailedException
 //   A condition specified in the operation could not be evaluated.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -4935,23 +5332,23 @@ func (c *DynamoDB) UpdateItemRequest(input *UpdateItemInput) (req *request.Reque
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeItemCollectionSizeLimitExceededException "ItemCollectionSizeLimitExceededException"
+//   * ItemCollectionSizeLimitExceededException
 //   An item collection is too large. This exception is only returned for tables
 //   that have one or more local secondary indexes.
 //
-//   * ErrCodeTransactionConflictException "TransactionConflictException"
+//   * TransactionConflictException
 //   Operation was rejected because there is an ongoing transaction for the item.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateItem
@@ -5067,17 +5464,17 @@ func (c *DynamoDB) UpdateTableRequest(input *UpdateTableInput) (req *request.Req
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -5091,7 +5488,7 @@ func (c *DynamoDB) UpdateTableRequest(input *UpdateTableInput) (req *request.Req
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateTable
@@ -5111,6 +5508,111 @@ func (c *DynamoDB) UpdateTable(input *UpdateTableInput) (*UpdateTableOutput, err
 // for more information on using Contexts.
 func (c *DynamoDB) UpdateTableWithContext(ctx aws.Context, input *UpdateTableInput, opts ...request.Option) (*UpdateTableOutput, error) {
 	req, out := c.UpdateTableRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateTableReplicaAutoScaling = "UpdateTableReplicaAutoScaling"
+
+// UpdateTableReplicaAutoScalingRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateTableReplicaAutoScaling operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateTableReplicaAutoScaling for more information on using the UpdateTableReplicaAutoScaling
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateTableReplicaAutoScalingRequest method.
+//    req, resp := client.UpdateTableReplicaAutoScalingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateTableReplicaAutoScaling
+func (c *DynamoDB) UpdateTableReplicaAutoScalingRequest(input *UpdateTableReplicaAutoScalingInput) (req *request.Request, output *UpdateTableReplicaAutoScalingOutput) {
+	op := &request.Operation{
+		Name:       opUpdateTableReplicaAutoScaling,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateTableReplicaAutoScalingInput{}
+	}
+
+	output = &UpdateTableReplicaAutoScalingOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateTableReplicaAutoScaling API operation for Amazon DynamoDB.
+//
+// Updates auto scaling settings on your global tables at once.
+//
+// This method only applies to Version 2019.11.21 (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html)
+// of global tables.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation UpdateTableReplicaAutoScaling for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The operation tried to access a nonexistent table or index. The resource
+//   might not be specified correctly, or its status might not be ACTIVE.
+//
+//   * ResourceInUseException
+//   The operation conflicts with the resource's availability. For example, you
+//   attempted to recreate an existing table, or tried to delete a table currently
+//   in the CREATING state.
+//
+//   * LimitExceededException
+//   There is no limit to the number of daily on-demand backups that can be taken.
+//
+//   Up to 50 simultaneous table operations are allowed per account. These operations
+//   include CreateTable, UpdateTable, DeleteTable,UpdateTimeToLive, RestoreTableFromBackup,
+//   and RestoreTableToPointInTime.
+//
+//   The only exception is when you are creating a table with one or more secondary
+//   indexes. You can have up to 25 such requests running at a time; however,
+//   if the table or index specifications are complex, DynamoDB might temporarily
+//   reduce the number of concurrent operations.
+//
+//   There is a soft account limit of 256 tables.
+//
+//   * InternalServerError
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateTableReplicaAutoScaling
+func (c *DynamoDB) UpdateTableReplicaAutoScaling(input *UpdateTableReplicaAutoScalingInput) (*UpdateTableReplicaAutoScalingOutput, error) {
+	req, out := c.UpdateTableReplicaAutoScalingRequest(input)
+	return out, req.Send()
+}
+
+// UpdateTableReplicaAutoScalingWithContext is the same as UpdateTableReplicaAutoScaling with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateTableReplicaAutoScaling for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) UpdateTableReplicaAutoScalingWithContext(ctx aws.Context, input *UpdateTableReplicaAutoScalingInput, opts ...request.Option) (*UpdateTableReplicaAutoScalingOutput, error) {
+	req, out := c.UpdateTableReplicaAutoScalingRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5217,17 +5719,17 @@ func (c *DynamoDB) UpdateTimeToLiveRequest(input *UpdateTimeToLiveInput) (req *r
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateTimeToLive for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -5241,7 +5743,7 @@ func (c *DynamoDB) UpdateTimeToLiveRequest(input *UpdateTimeToLiveInput) (req *r
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateTimeToLive
@@ -5264,6 +5766,56 @@ func (c *DynamoDB) UpdateTimeToLiveWithContext(ctx aws.Context, input *UpdateTim
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Contains details of a table archival operation.
+type ArchivalSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the backup the table was archived to, when
+	// applicable in the archival reason. If you wish to restore this backup to
+	// the same table name, you will need to delete the original table.
+	ArchivalBackupArn *string `min:"37" type:"string"`
+
+	// The date and time when table archival was initiated by DynamoDB, in UNIX
+	// epoch time format.
+	ArchivalDateTime *time.Time `type:"timestamp"`
+
+	// The reason DynamoDB archived the table. Currently, the only possible value
+	// is:
+	//
+	//    * INACCESSIBLE_ENCRYPTION_CREDENTIALS - The table was archived due to
+	//    the table's AWS KMS key being inaccessible for more than seven days. An
+	//    On-Demand backup was created at the archival time.
+	ArchivalReason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ArchivalSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ArchivalSummary) GoString() string {
+	return s.String()
+}
+
+// SetArchivalBackupArn sets the ArchivalBackupArn field's value.
+func (s *ArchivalSummary) SetArchivalBackupArn(v string) *ArchivalSummary {
+	s.ArchivalBackupArn = &v
+	return s
+}
+
+// SetArchivalDateTime sets the ArchivalDateTime field's value.
+func (s *ArchivalSummary) SetArchivalDateTime(v time.Time) *ArchivalSummary {
+	s.ArchivalDateTime = &v
+	return s
+}
+
+// SetArchivalReason sets the ArchivalReason field's value.
+func (s *ArchivalSummary) SetArchivalReason(v string) *ArchivalSummary {
+	s.ArchivalReason = &v
+	return s
 }
 
 // Represents an attribute for describing the key schema for the table and indexes.
@@ -5603,7 +6155,7 @@ func (s *AutoScalingPolicyDescription) SetTargetTrackingScalingPolicyConfigurati
 	return s
 }
 
-// Represents the autoscaling policy to be modified.
+// Represents the auto scaling policy to be modified.
 type AutoScalingPolicyUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -5659,15 +6211,15 @@ func (s *AutoScalingPolicyUpdate) SetTargetTrackingScalingPolicyConfiguration(v 
 	return s
 }
 
-// Represents the autoscaling settings for a global table or global secondary
+// Represents the auto scaling settings for a global table or global secondary
 // index.
 type AutoScalingSettingsDescription struct {
 	_ struct{} `type:"structure"`
 
-	// Disabled autoscaling for this global table or global secondary index.
+	// Disabled auto scaling for this global table or global secondary index.
 	AutoScalingDisabled *bool `type:"boolean"`
 
-	// Role ARN used for configuring autoScaling policy.
+	// Role ARN used for configuring the auto scaling policy.
 	AutoScalingRoleArn *string `type:"string"`
 
 	// The maximum capacity units that a global table or global secondary index
@@ -5722,15 +6274,15 @@ func (s *AutoScalingSettingsDescription) SetScalingPolicies(v []*AutoScalingPoli
 	return s
 }
 
-// Represents the autoscaling settings to be modified for a global table or
+// Represents the auto scaling settings to be modified for a global table or
 // global secondary index.
 type AutoScalingSettingsUpdate struct {
 	_ struct{} `type:"structure"`
 
-	// Disabled autoscaling for this global table or global secondary index.
+	// Disabled auto scaling for this global table or global secondary index.
 	AutoScalingDisabled *bool `type:"boolean"`
 
-	// Role ARN used for configuring autoscaling policy.
+	// Role ARN used for configuring auto scaling policy.
 	AutoScalingRoleArn *string `min:"1" type:"string"`
 
 	// The maximum capacity units that a global table or global secondary index
@@ -5826,7 +6378,7 @@ type AutoScalingTargetTrackingScalingPolicyConfigurationDescription struct {
 	// subsequent scale in requests until it has expired. You should scale in conservatively
 	// to protect your application's availability. However, if another alarm triggers
 	// a scale out policy during the cooldown period after a scale-in, application
-	// autoscaling scales out your scalable target immediately.
+	// auto scaling scales out your scalable target immediately.
 	ScaleInCooldown *int64 `type:"integer"`
 
 	// The amount of time, in seconds, after a scale out activity completes before
@@ -5894,7 +6446,7 @@ type AutoScalingTargetTrackingScalingPolicyConfigurationUpdate struct {
 	// subsequent scale in requests until it has expired. You should scale in conservatively
 	// to protect your application's availability. However, if another alarm triggers
 	// a scale out policy during the cooldown period after a scale-in, application
-	// autoscaling scales out your scalable target immediately.
+	// auto scaling scales out your scalable target immediately.
 	ScaleInCooldown *int64 `type:"integer"`
 
 	// The amount of time, in seconds, after a scale out activity completes before
@@ -6097,6 +6649,119 @@ func (s *BackupDetails) SetBackupStatus(v string) *BackupDetails {
 func (s *BackupDetails) SetBackupType(v string) *BackupDetails {
 	s.BackupType = &v
 	return s
+}
+
+// There is another ongoing conflicting backup control plane operation on the
+// table. The backup is either being created, deleted or restored to a table.
+type BackupInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BackupInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BackupInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorBackupInUseException(v protocol.ResponseMetadata) error {
+	return &BackupInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BackupInUseException) Code() string {
+	return "BackupInUseException"
+}
+
+// Message returns the exception's message.
+func (s BackupInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BackupInUseException) OrigErr() error {
+	return nil
+}
+
+func (s BackupInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BackupInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BackupInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Backup not found for the given BackupARN.
+type BackupNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BackupNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BackupNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorBackupNotFoundException(v protocol.ResponseMetadata) error {
+	return &BackupNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BackupNotFoundException) Code() string {
+	return "BackupNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s BackupNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BackupNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s BackupNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BackupNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BackupNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains details for the backup.
@@ -6897,7 +7562,7 @@ func (s *Condition) SetComparisonOperator(v string) *Condition {
 }
 
 // Represents a request to perform a check that an item exists or to check the
-// condition of specific attributes of the item..
+// condition of specific attributes of the item.
 type ConditionCheck struct {
 	_ struct{} `type:"structure"`
 
@@ -6995,6 +7660,63 @@ func (s *ConditionCheck) SetReturnValuesOnConditionCheckFailure(v string) *Condi
 func (s *ConditionCheck) SetTableName(v string) *ConditionCheck {
 	s.TableName = &v
 	return s
+}
+
+// A condition specified in the operation could not be evaluated.
+type ConditionalCheckFailedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The conditional request failed.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConditionalCheckFailedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConditionalCheckFailedException) GoString() string {
+	return s.String()
+}
+
+func newErrorConditionalCheckFailedException(v protocol.ResponseMetadata) error {
+	return &ConditionalCheckFailedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConditionalCheckFailedException) Code() string {
+	return "ConditionalCheckFailedException"
+}
+
+// Message returns the exception's message.
+func (s ConditionalCheckFailedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConditionalCheckFailedException) OrigErr() error {
+	return nil
+}
+
+func (s ConditionalCheckFailedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConditionalCheckFailedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConditionalCheckFailedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The capacity units consumed by an operation. The data returned includes the
@@ -7113,6 +7835,105 @@ func (s *ContinuousBackupsDescription) SetContinuousBackupsStatus(v string) *Con
 // SetPointInTimeRecoveryDescription sets the PointInTimeRecoveryDescription field's value.
 func (s *ContinuousBackupsDescription) SetPointInTimeRecoveryDescription(v *PointInTimeRecoveryDescription) *ContinuousBackupsDescription {
 	s.PointInTimeRecoveryDescription = v
+	return s
+}
+
+// Backups have not yet been enabled for this table.
+type ContinuousBackupsUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ContinuousBackupsUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContinuousBackupsUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorContinuousBackupsUnavailableException(v protocol.ResponseMetadata) error {
+	return &ContinuousBackupsUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ContinuousBackupsUnavailableException) Code() string {
+	return "ContinuousBackupsUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s ContinuousBackupsUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ContinuousBackupsUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s ContinuousBackupsUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ContinuousBackupsUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ContinuousBackupsUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Represents a Contributor Insights summary entry..
+type ContributorInsightsSummary struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the current status for contributor insights for the given table
+	// and index, if applicable.
+	ContributorInsightsStatus *string `type:"string" enum:"ContributorInsightsStatus"`
+
+	// Name of the index associated with the summary, if any.
+	IndexName *string `min:"3" type:"string"`
+
+	// Name of the table associated with the summary.
+	TableName *string `min:"3" type:"string"`
+}
+
+// String returns the string representation
+func (s ContributorInsightsSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContributorInsightsSummary) GoString() string {
+	return s.String()
+}
+
+// SetContributorInsightsStatus sets the ContributorInsightsStatus field's value.
+func (s *ContributorInsightsSummary) SetContributorInsightsStatus(v string) *ContributorInsightsSummary {
+	s.ContributorInsightsStatus = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *ContributorInsightsSummary) SetIndexName(v string) *ContributorInsightsSummary {
+	s.IndexName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *ContributorInsightsSummary) SetTableName(v string) *ContributorInsightsSummary {
+	s.TableName = &v
 	return s
 }
 
@@ -7388,7 +8209,7 @@ func (s *CreateGlobalTableOutput) SetGlobalTableDescription(v *GlobalTableDescri
 type CreateReplicaAction struct {
 	_ struct{} `type:"structure"`
 
-	// The region of the replica to be added.
+	// The Region of the replica to be added.
 	//
 	// RegionName is a required field
 	RegionName *string `type:"string" required:"true"`
@@ -7423,6 +8244,94 @@ func (s *CreateReplicaAction) SetRegionName(v string) *CreateReplicaAction {
 	return s
 }
 
+// Represents a replica to be created.
+type CreateReplicationGroupMemberAction struct {
+	_ struct{} `type:"structure"`
+
+	// Replica-specific global secondary index settings.
+	GlobalSecondaryIndexes []*ReplicaGlobalSecondaryIndex `min:"1" type:"list"`
+
+	// The AWS KMS customer master key (CMK) that should be used for AWS KMS encryption
+	// in the new replica. To specify a CMK, use its key ID, Amazon Resource Name
+	// (ARN), alias name, or alias ARN. Note that you should only provide this parameter
+	// if the key is different from the default DynamoDB KMS master key alias/aws/dynamodb.
+	KMSMasterKeyId *string `type:"string"`
+
+	// Replica-specific provisioned throughput. If not specified, uses the source
+	// table's provisioned throughput settings.
+	ProvisionedThroughputOverride *ProvisionedThroughputOverride `type:"structure"`
+
+	// The Region where the new replica will be created.
+	//
+	// RegionName is a required field
+	RegionName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateReplicationGroupMemberAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateReplicationGroupMemberAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateReplicationGroupMemberAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateReplicationGroupMemberAction"}
+	if s.GlobalSecondaryIndexes != nil && len(s.GlobalSecondaryIndexes) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlobalSecondaryIndexes", 1))
+	}
+	if s.RegionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RegionName"))
+	}
+	if s.GlobalSecondaryIndexes != nil {
+		for i, v := range s.GlobalSecondaryIndexes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "GlobalSecondaryIndexes", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.ProvisionedThroughputOverride != nil {
+		if err := s.ProvisionedThroughputOverride.Validate(); err != nil {
+			invalidParams.AddNested("ProvisionedThroughputOverride", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGlobalSecondaryIndexes sets the GlobalSecondaryIndexes field's value.
+func (s *CreateReplicationGroupMemberAction) SetGlobalSecondaryIndexes(v []*ReplicaGlobalSecondaryIndex) *CreateReplicationGroupMemberAction {
+	s.GlobalSecondaryIndexes = v
+	return s
+}
+
+// SetKMSMasterKeyId sets the KMSMasterKeyId field's value.
+func (s *CreateReplicationGroupMemberAction) SetKMSMasterKeyId(v string) *CreateReplicationGroupMemberAction {
+	s.KMSMasterKeyId = &v
+	return s
+}
+
+// SetProvisionedThroughputOverride sets the ProvisionedThroughputOverride field's value.
+func (s *CreateReplicationGroupMemberAction) SetProvisionedThroughputOverride(v *ProvisionedThroughputOverride) *CreateReplicationGroupMemberAction {
+	s.ProvisionedThroughputOverride = v
+	return s
+}
+
+// SetRegionName sets the RegionName field's value.
+func (s *CreateReplicationGroupMemberAction) SetRegionName(v string) *CreateReplicationGroupMemberAction {
+	s.RegionName = &v
+	return s
+}
+
 // Represents the input of a CreateTable operation.
 type CreateTableInput struct {
 	_ struct{} `type:"structure"`
@@ -7435,11 +8344,11 @@ type CreateTableInput struct {
 	// Controls how you are charged for read and write throughput and how you manage
 	// capacity. This setting can be changed later.
 	//
-	//    * PROVISIONED - Sets the billing mode to PROVISIONED. We recommend using
-	//    PROVISIONED for predictable workloads.
+	//    * PROVISIONED - We recommend using PROVISIONED for predictable workloads.
+	//    PROVISIONED sets the billing mode to Provisioned Mode (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.ReadWriteCapacityMode.html#HowItWorks.ProvisionedThroughput.Manual).
 	//
-	//    * PAY_PER_REQUEST - Sets the billing mode to PAY_PER_REQUEST. We recommend
-	//    using PAY_PER_REQUEST for unpredictable workloads.
+	//    * PAY_PER_REQUEST - We recommend using PAY_PER_REQUEST for unpredictable
+	//    workloads. PAY_PER_REQUEST sets the billing mode to On-Demand Mode (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.ReadWriteCapacityMode.html#HowItWorks.OnDemand).
 	BillingMode *string `type:"string" enum:"BillingMode"`
 
 	// One or more global secondary indexes (the maximum is 20) to be created on
@@ -7640,6 +8549,11 @@ func (s *CreateTableInput) Validate() error {
 	if s.ProvisionedThroughput != nil {
 		if err := s.ProvisionedThroughput.Validate(); err != nil {
 			invalidParams.AddNested("ProvisionedThroughput", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.StreamSpecification != nil {
+		if err := s.StreamSpecification.Validate(); err != nil {
+			invalidParams.AddNested("StreamSpecification", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Tags != nil {
@@ -8243,7 +9157,7 @@ func (s *DeleteItemOutput) SetItemCollectionMetrics(v *ItemCollectionMetrics) *D
 type DeleteReplicaAction struct {
 	_ struct{} `type:"structure"`
 
-	// The region of the replica to be removed.
+	// The Region of the replica to be removed.
 	//
 	// RegionName is a required field
 	RegionName *string `type:"string" required:"true"`
@@ -8274,6 +9188,45 @@ func (s *DeleteReplicaAction) Validate() error {
 
 // SetRegionName sets the RegionName field's value.
 func (s *DeleteReplicaAction) SetRegionName(v string) *DeleteReplicaAction {
+	s.RegionName = &v
+	return s
+}
+
+// Represents a replica to be deleted.
+type DeleteReplicationGroupMemberAction struct {
+	_ struct{} `type:"structure"`
+
+	// The Region where the replica exists.
+	//
+	// RegionName is a required field
+	RegionName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteReplicationGroupMemberAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteReplicationGroupMemberAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteReplicationGroupMemberAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteReplicationGroupMemberAction"}
+	if s.RegionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RegionName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRegionName sets the RegionName field's value.
+func (s *DeleteReplicationGroupMemberAction) SetRegionName(v string) *DeleteReplicationGroupMemberAction {
 	s.RegionName = &v
 	return s
 }
@@ -8499,6 +9452,142 @@ func (s DescribeContinuousBackupsOutput) GoString() string {
 // SetContinuousBackupsDescription sets the ContinuousBackupsDescription field's value.
 func (s *DescribeContinuousBackupsOutput) SetContinuousBackupsDescription(v *ContinuousBackupsDescription) *DescribeContinuousBackupsOutput {
 	s.ContinuousBackupsDescription = v
+	return s
+}
+
+type DescribeContributorInsightsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global secondary index to describe, if applicable.
+	IndexName *string `min:"3" type:"string"`
+
+	// The name of the table to describe.
+	//
+	// TableName is a required field
+	TableName *string `min:"3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeContributorInsightsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeContributorInsightsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeContributorInsightsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeContributorInsightsInput"}
+	if s.IndexName != nil && len(*s.IndexName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 3))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *DescribeContributorInsightsInput) SetIndexName(v string) *DescribeContributorInsightsInput {
+	s.IndexName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DescribeContributorInsightsInput) SetTableName(v string) *DescribeContributorInsightsInput {
+	s.TableName = &v
+	return s
+}
+
+type DescribeContributorInsightsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of names of the associated Alpine rules.
+	ContributorInsightsRuleList []*string `type:"list"`
+
+	// Current Status contributor insights.
+	ContributorInsightsStatus *string `type:"string" enum:"ContributorInsightsStatus"`
+
+	// Returns information about the last failure that encountered.
+	//
+	// The most common exceptions for a FAILED status are:
+	//
+	//    * LimitExceededException - Per-account Amazon CloudWatch Contributor Insights
+	//    rule limit reached. Please disable Contributor Insights for other tables/indexes
+	//    OR disable Contributor Insights rules before retrying.
+	//
+	//    * AccessDeniedException - Amazon CloudWatch Contributor Insights rules
+	//    cannot be modified due to insufficient permissions.
+	//
+	//    * AccessDeniedException - Failed to create service-linked role for Contributor
+	//    Insights due to insufficient permissions.
+	//
+	//    * InternalServerError - Failed to create Amazon CloudWatch Contributor
+	//    Insights rules. Please retry request.
+	FailureException *FailureException `type:"structure"`
+
+	// The name of the global secondary index being described.
+	IndexName *string `min:"3" type:"string"`
+
+	// Timestamp of the last time the status was changed.
+	LastUpdateDateTime *time.Time `type:"timestamp"`
+
+	// The name of the table being described.
+	TableName *string `min:"3" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeContributorInsightsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeContributorInsightsOutput) GoString() string {
+	return s.String()
+}
+
+// SetContributorInsightsRuleList sets the ContributorInsightsRuleList field's value.
+func (s *DescribeContributorInsightsOutput) SetContributorInsightsRuleList(v []*string) *DescribeContributorInsightsOutput {
+	s.ContributorInsightsRuleList = v
+	return s
+}
+
+// SetContributorInsightsStatus sets the ContributorInsightsStatus field's value.
+func (s *DescribeContributorInsightsOutput) SetContributorInsightsStatus(v string) *DescribeContributorInsightsOutput {
+	s.ContributorInsightsStatus = &v
+	return s
+}
+
+// SetFailureException sets the FailureException field's value.
+func (s *DescribeContributorInsightsOutput) SetFailureException(v *FailureException) *DescribeContributorInsightsOutput {
+	s.FailureException = v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *DescribeContributorInsightsOutput) SetIndexName(v string) *DescribeContributorInsightsOutput {
+	s.IndexName = &v
+	return s
+}
+
+// SetLastUpdateDateTime sets the LastUpdateDateTime field's value.
+func (s *DescribeContributorInsightsOutput) SetLastUpdateDateTime(v time.Time) *DescribeContributorInsightsOutput {
+	s.LastUpdateDateTime = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DescribeContributorInsightsOutput) SetTableName(v string) *DescribeContributorInsightsOutput {
+	s.TableName = &v
 	return s
 }
 
@@ -8816,6 +9905,70 @@ func (s *DescribeTableOutput) SetTable(v *TableDescription) *DescribeTableOutput
 	return s
 }
 
+type DescribeTableReplicaAutoScalingInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the table.
+	//
+	// TableName is a required field
+	TableName *string `min:"3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeTableReplicaAutoScalingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTableReplicaAutoScalingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeTableReplicaAutoScalingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeTableReplicaAutoScalingInput"}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DescribeTableReplicaAutoScalingInput) SetTableName(v string) *DescribeTableReplicaAutoScalingInput {
+	s.TableName = &v
+	return s
+}
+
+type DescribeTableReplicaAutoScalingOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Represents the auto scaling properties of the table.
+	TableAutoScalingDescription *TableAutoScalingDescription `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeTableReplicaAutoScalingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTableReplicaAutoScalingOutput) GoString() string {
+	return s.String()
+}
+
+// SetTableAutoScalingDescription sets the TableAutoScalingDescription field's value.
+func (s *DescribeTableReplicaAutoScalingOutput) SetTableAutoScalingDescription(v *TableAutoScalingDescription) *DescribeTableReplicaAutoScalingOutput {
+	s.TableAutoScalingDescription = v
+	return s
+}
+
 type DescribeTimeToLiveInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8918,7 +10071,7 @@ func (s *Endpoint) SetCachePeriodInMinutes(v int64) *Endpoint {
 }
 
 // Represents a condition to be compared with an attribute value. This condition
-// can be used with DeleteItem, PutItem or UpdateItem operations; if the comparison
+// can be used with DeleteItem, PutItem, or UpdateItem operations; if the comparison
 // evaluates to true, the operation succeeds; if not, the operation fails. You
 // can use ExpectedAttributeValue in one of two different ways:
 //
@@ -9134,6 +10287,39 @@ func (s *ExpectedAttributeValue) SetExists(v bool) *ExpectedAttributeValue {
 // SetValue sets the Value field's value.
 func (s *ExpectedAttributeValue) SetValue(v *AttributeValue) *ExpectedAttributeValue {
 	s.Value = v
+	return s
+}
+
+// Represents a failure a contributor insights operation.
+type FailureException struct {
+	_ struct{} `type:"structure"`
+
+	// Description of the failure.
+	ExceptionDescription *string `type:"string"`
+
+	// Exception name.
+	ExceptionName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s FailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailureException) GoString() string {
+	return s.String()
+}
+
+// SetExceptionDescription sets the ExceptionDescription field's value.
+func (s *FailureException) SetExceptionDescription(v string) *FailureException {
+	s.ExceptionDescription = &v
+	return s
+}
+
+// SetExceptionName sets the ExceptionName field's value.
+func (s *FailureException) SetExceptionName(v string) *FailureException {
+	s.ExceptionName = &v
 	return s
 }
 
@@ -9443,7 +10629,7 @@ type GlobalSecondaryIndex struct {
 	//    * RANGE - sort key
 	//
 	// The partition key of an item is also known as its hash attribute. The term
-	// "hash attribute" derives from DynamoDB' usage of an internal hash function
+	// "hash attribute" derives from DynamoDB's usage of an internal hash function
 	// to evenly distribute data items across partitions, based on their partition
 	// key values.
 	//
@@ -9549,6 +10735,59 @@ func (s *GlobalSecondaryIndex) SetProvisionedThroughput(v *ProvisionedThroughput
 	return s
 }
 
+// Represents the auto scaling settings of a global secondary index for a global
+// table that will be modified.
+type GlobalSecondaryIndexAutoScalingUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global secondary index.
+	IndexName *string `min:"3" type:"string"`
+
+	// Represents the auto scaling settings to be modified for a global table or
+	// global secondary index.
+	ProvisionedWriteCapacityAutoScalingUpdate *AutoScalingSettingsUpdate `type:"structure"`
+}
+
+// String returns the string representation
+func (s GlobalSecondaryIndexAutoScalingUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalSecondaryIndexAutoScalingUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GlobalSecondaryIndexAutoScalingUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GlobalSecondaryIndexAutoScalingUpdate"}
+	if s.IndexName != nil && len(*s.IndexName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 3))
+	}
+	if s.ProvisionedWriteCapacityAutoScalingUpdate != nil {
+		if err := s.ProvisionedWriteCapacityAutoScalingUpdate.Validate(); err != nil {
+			invalidParams.AddNested("ProvisionedWriteCapacityAutoScalingUpdate", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *GlobalSecondaryIndexAutoScalingUpdate) SetIndexName(v string) *GlobalSecondaryIndexAutoScalingUpdate {
+	s.IndexName = &v
+	return s
+}
+
+// SetProvisionedWriteCapacityAutoScalingUpdate sets the ProvisionedWriteCapacityAutoScalingUpdate field's value.
+func (s *GlobalSecondaryIndexAutoScalingUpdate) SetProvisionedWriteCapacityAutoScalingUpdate(v *AutoScalingSettingsUpdate) *GlobalSecondaryIndexAutoScalingUpdate {
+	s.ProvisionedWriteCapacityAutoScalingUpdate = v
+	return s
+}
+
 // Represents the properties of a global secondary index.
 type GlobalSecondaryIndexDescription struct {
 	_ struct{} `type:"structure"`
@@ -9559,6 +10798,11 @@ type GlobalSecondaryIndexDescription struct {
 	// key cannot have any duplicate values.) If an item can be added to the index,
 	// DynamoDB will do so. After all items have been processed, the backfilling
 	// operation is complete and Backfilling is false.
+	//
+	// You can delete an index that is being created during the Backfilling phase
+	// when IndexStatus is set to CREATING and Backfilling is true. You can't delete
+	// the index that is being created when IndexStatus is set to CREATING and Backfilling
+	// is false.
 	//
 	// For indexes that were created during a CreateTable operation, the Backfilling
 	// attribute does not appear in the DescribeTable output.
@@ -9598,7 +10842,7 @@ type GlobalSecondaryIndexDescription struct {
 	//    * RANGE - sort key
 	//
 	// The partition key of an item is also known as its hash attribute. The term
-	// "hash attribute" derives from DynamoDB' usage of an internal hash function
+	// "hash attribute" derives from DynamoDB's usage of an internal hash function
 	// to evenly distribute data items across partitions, based on their partition
 	// key values.
 	//
@@ -9701,7 +10945,7 @@ type GlobalSecondaryIndexInfo struct {
 	//    * RANGE - sort key
 	//
 	// The partition key of an item is also known as its hash attribute. The term
-	// "hash attribute" derives from DynamoDB' usage of an internal hash function
+	// "hash attribute" derives from DynamoDB's usage of an internal hash function
 	// to evenly distribute data items across partitions, based on their partition
 	// key values.
 	//
@@ -9847,7 +11091,7 @@ type GlobalTable struct {
 	// The global table name.
 	GlobalTableName *string `min:"3" type:"string"`
 
-	// The regions where the global table has replicas.
+	// The Regions where the global table has replicas.
 	ReplicationGroup []*Replica `type:"list"`
 }
 
@@ -9871,6 +11115,62 @@ func (s *GlobalTable) SetGlobalTableName(v string) *GlobalTable {
 func (s *GlobalTable) SetReplicationGroup(v []*Replica) *GlobalTable {
 	s.ReplicationGroup = v
 	return s
+}
+
+// The specified global table already exists.
+type GlobalTableAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s GlobalTableAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalTableAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorGlobalTableAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &GlobalTableAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s GlobalTableAlreadyExistsException) Code() string {
+	return "GlobalTableAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s GlobalTableAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s GlobalTableAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s GlobalTableAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s GlobalTableAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s GlobalTableAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains details about the global table.
@@ -9897,7 +11197,7 @@ type GlobalTableDescription struct {
 	//    * ACTIVE - The global table is ready for use.
 	GlobalTableStatus *string `type:"string" enum:"GlobalTableStatus"`
 
-	// The regions where the global table has replicas.
+	// The Regions where the global table has replicas.
 	ReplicationGroup []*ReplicaDescription `type:"list"`
 }
 
@@ -9952,7 +11252,7 @@ type GlobalTableGlobalSecondaryIndexSettingsUpdate struct {
 	// IndexName is a required field
 	IndexName *string `min:"3" type:"string" required:"true"`
 
-	// AutoScaling settings for managing a global secondary index's write capacity
+	// Auto scaling settings for managing a global secondary index's write capacity
 	// units.
 	ProvisionedWriteCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
 
@@ -10013,6 +11313,289 @@ func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) SetProvisionedWriteCapac
 	return s
 }
 
+// The specified global table does not exist.
+type GlobalTableNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s GlobalTableNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalTableNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorGlobalTableNotFoundException(v protocol.ResponseMetadata) error {
+	return &GlobalTableNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s GlobalTableNotFoundException) Code() string {
+	return "GlobalTableNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s GlobalTableNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s GlobalTableNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s GlobalTableNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s GlobalTableNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s GlobalTableNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// DynamoDB rejected the request because you retried a request with a different
+// payload but with an idempotent token that was already used.
+type IdempotentParameterMismatchException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s IdempotentParameterMismatchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IdempotentParameterMismatchException) GoString() string {
+	return s.String()
+}
+
+func newErrorIdempotentParameterMismatchException(v protocol.ResponseMetadata) error {
+	return &IdempotentParameterMismatchException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IdempotentParameterMismatchException) Code() string {
+	return "IdempotentParameterMismatchException"
+}
+
+// Message returns the exception's message.
+func (s IdempotentParameterMismatchException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IdempotentParameterMismatchException) OrigErr() error {
+	return nil
+}
+
+func (s IdempotentParameterMismatchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IdempotentParameterMismatchException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IdempotentParameterMismatchException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The operation tried to access a nonexistent index.
+type IndexNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s IndexNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IndexNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorIndexNotFoundException(v protocol.ResponseMetadata) error {
+	return &IndexNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IndexNotFoundException) Code() string {
+	return "IndexNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s IndexNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IndexNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s IndexNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IndexNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IndexNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An error occurred on the server side.
+type InternalServerError struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The server encountered an internal error trying to fulfill the request.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerError) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerError(v protocol.ResponseMetadata) error {
+	return &InternalServerError{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerError) Code() string {
+	return "InternalServerError"
+}
+
+// Message returns the exception's message.
+func (s InternalServerError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerError) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerError) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerError) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerError) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An invalid restore time was specified. RestoreDateTime must be between EarliestRestorableDateTime
+// and LatestRestorableDateTime.
+type InvalidRestoreTimeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRestoreTimeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRestoreTimeException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRestoreTimeException(v protocol.ResponseMetadata) error {
+	return &InvalidRestoreTimeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRestoreTimeException) Code() string {
+	return "InvalidRestoreTimeException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRestoreTimeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRestoreTimeException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRestoreTimeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRestoreTimeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRestoreTimeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information about item collections, if any, that were affected by the operation.
 // ItemCollectionMetrics is only returned if the request asked for it. If the
 // table does not have any local secondary indexes, this information is not
@@ -10056,6 +11639,65 @@ func (s *ItemCollectionMetrics) SetItemCollectionKey(v map[string]*AttributeValu
 func (s *ItemCollectionMetrics) SetSizeEstimateRangeGB(v []*float64) *ItemCollectionMetrics {
 	s.SizeEstimateRangeGB = v
 	return s
+}
+
+// An item collection is too large. This exception is only returned for tables
+// that have one or more local secondary indexes.
+type ItemCollectionSizeLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The total size of an item collection has exceeded the maximum limit of 10
+	// gigabytes.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ItemCollectionSizeLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ItemCollectionSizeLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorItemCollectionSizeLimitExceededException(v protocol.ResponseMetadata) error {
+	return &ItemCollectionSizeLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ItemCollectionSizeLimitExceededException) Code() string {
+	return "ItemCollectionSizeLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s ItemCollectionSizeLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ItemCollectionSizeLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ItemCollectionSizeLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ItemCollectionSizeLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ItemCollectionSizeLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Details for the requested item.
@@ -10108,7 +11750,7 @@ type KeySchemaElement struct {
 	//    * RANGE - sort key
 	//
 	// The partition key of an item is also known as its hash attribute. The term
-	// "hash attribute" derives from DynamoDB' usage of an internal hash function
+	// "hash attribute" derives from DynamoDB's usage of an internal hash function
 	// to evenly distribute data items across partitions, based on their partition
 	// key values.
 	//
@@ -10295,6 +11937,74 @@ func (s *KeysAndAttributes) SetProjectionExpression(v string) *KeysAndAttributes
 	return s
 }
 
+// There is no limit to the number of daily on-demand backups that can be taken.
+//
+// Up to 50 simultaneous table operations are allowed per account. These operations
+// include CreateTable, UpdateTable, DeleteTable,UpdateTimeToLive, RestoreTableFromBackup,
+// and RestoreTableToPointInTime.
+//
+// The only exception is when you are creating a table with one or more secondary
+// indexes. You can have up to 25 such requests running at a time; however,
+// if the table or index specifications are complex, DynamoDB might temporarily
+// reduce the number of concurrent operations.
+//
+// There is a soft account limit of 256 tables.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// Too many operations for a given subscriber.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ListBackupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10433,6 +12143,92 @@ func (s *ListBackupsOutput) SetBackupSummaries(v []*BackupSummary) *ListBackupsO
 // SetLastEvaluatedBackupArn sets the LastEvaluatedBackupArn field's value.
 func (s *ListBackupsOutput) SetLastEvaluatedBackupArn(v string) *ListBackupsOutput {
 	s.LastEvaluatedBackupArn = &v
+	return s
+}
+
+type ListContributorInsightsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum number of results to return per page.
+	MaxResults *int64 `type:"integer"`
+
+	// A token to for the desired page, if there is one.
+	NextToken *string `type:"string"`
+
+	// The name of the table.
+	TableName *string `min:"3" type:"string"`
+}
+
+// String returns the string representation
+func (s ListContributorInsightsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListContributorInsightsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListContributorInsightsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListContributorInsightsInput"}
+	if s.TableName != nil && len(*s.TableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListContributorInsightsInput) SetMaxResults(v int64) *ListContributorInsightsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListContributorInsightsInput) SetNextToken(v string) *ListContributorInsightsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *ListContributorInsightsInput) SetTableName(v string) *ListContributorInsightsInput {
+	s.TableName = &v
+	return s
+}
+
+type ListContributorInsightsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of ContributorInsightsSummary.
+	ContributorInsightsSummaries []*ContributorInsightsSummary `type:"list"`
+
+	// A token to go to the next page if there is one.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListContributorInsightsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListContributorInsightsOutput) GoString() string {
+	return s.String()
+}
+
+// SetContributorInsightsSummaries sets the ContributorInsightsSummaries field's value.
+func (s *ListContributorInsightsOutput) SetContributorInsightsSummaries(v []*ContributorInsightsSummary) *ListContributorInsightsOutput {
+	s.ContributorInsightsSummaries = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListContributorInsightsOutput) SetNextToken(v string) *ListContributorInsightsOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -10725,7 +12521,7 @@ type LocalSecondaryIndex struct {
 	//    * RANGE - sort key
 	//
 	// The partition key of an item is also known as its hash attribute. The term
-	// "hash attribute" derives from DynamoDB' usage of an internal hash function
+	// "hash attribute" derives from DynamoDB's usage of an internal hash function
 	// to evenly distribute data items across partitions, based on their partition
 	// key values.
 	//
@@ -10839,7 +12635,7 @@ type LocalSecondaryIndexDescription struct {
 	//    * RANGE - sort key
 	//
 	// The partition key of an item is also known as its hash attribute. The term
-	// "hash attribute" derives from DynamoDB' usage of an internal hash function
+	// "hash attribute" derives from DynamoDB's usage of an internal hash function
 	// to evenly distribute data items across partitions, based on their partition
 	// key values.
 	//
@@ -10916,7 +12712,7 @@ type LocalSecondaryIndexInfo struct {
 	//    * RANGE - sort key
 	//
 	// The partition key of an item is also known as its hash attribute. The term
-	// "hash attribute" derives from DynamoDB' usage of an internal hash function
+	// "hash attribute" derives from DynamoDB's usage of an internal hash function
 	// to evenly distribute data items across partitions, based on their partition
 	// key values.
 	//
@@ -10963,8 +12759,8 @@ func (s *LocalSecondaryIndexInfo) SetProjection(v *Projection) *LocalSecondaryIn
 type PointInTimeRecoveryDescription struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the earliest point in time you can restore your table to. It You
-	// can restore your table to any point in time during the last 35 days.
+	// Specifies the earliest point in time you can restore your table to. You can
+	// restore your table to any point in time during the last 35 days.
 	EarliestRestorableDateTime *time.Time `type:"timestamp"`
 
 	// LatestRestorableDateTime is typically 5 minutes before the current time.
@@ -11048,6 +12844,62 @@ func (s *PointInTimeRecoverySpecification) SetPointInTimeRecoveryEnabled(v bool)
 	return s
 }
 
+// Point in time recovery has not yet been enabled for this source table.
+type PointInTimeRecoveryUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s PointInTimeRecoveryUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PointInTimeRecoveryUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorPointInTimeRecoveryUnavailableException(v protocol.ResponseMetadata) error {
+	return &PointInTimeRecoveryUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PointInTimeRecoveryUnavailableException) Code() string {
+	return "PointInTimeRecoveryUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s PointInTimeRecoveryUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PointInTimeRecoveryUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s PointInTimeRecoveryUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PointInTimeRecoveryUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PointInTimeRecoveryUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Represents attributes that are copied (projected) from the table into an
 // index. These are in addition to the primary key attributes and index key
 // attributes, which are automatically projected.
@@ -11067,7 +12919,7 @@ type Projection struct {
 	//    * KEYS_ONLY - Only the index and primary keys are projected into the index.
 	//
 	//    * INCLUDE - Only the specified table attributes are projected into the
-	//    index. The list of projected attributes are in NonKeyAttributes.
+	//    index. The list of projected attributes is in NonKeyAttributes.
 	//
 	//    * ALL - All of the table attributes are projected into the index.
 	ProjectionType *string `type:"string" enum:"ProjectionType"`
@@ -11247,6 +13099,107 @@ func (s *ProvisionedThroughputDescription) SetReadCapacityUnits(v int64) *Provis
 // SetWriteCapacityUnits sets the WriteCapacityUnits field's value.
 func (s *ProvisionedThroughputDescription) SetWriteCapacityUnits(v int64) *ProvisionedThroughputDescription {
 	s.WriteCapacityUnits = &v
+	return s
+}
+
+// Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
+// requests that receive this exception. Your request is eventually successful,
+// unless your retry queue is too large to finish. Reduce the frequency of requests
+// and use exponential backoff. For more information, go to Error Retries and
+// Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
+// in the Amazon DynamoDB Developer Guide.
+type ProvisionedThroughputExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// You exceeded your maximum allowed provisioned throughput.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisionedThroughputExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionedThroughputExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorProvisionedThroughputExceededException(v protocol.ResponseMetadata) error {
+	return &ProvisionedThroughputExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ProvisionedThroughputExceededException) Code() string {
+	return "ProvisionedThroughputExceededException"
+}
+
+// Message returns the exception's message.
+func (s ProvisionedThroughputExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ProvisionedThroughputExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ProvisionedThroughputExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ProvisionedThroughputExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ProvisionedThroughputExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Replica-specific provisioned throughput settings. If not specified, uses
+// the source table's provisioned throughput settings.
+type ProvisionedThroughputOverride struct {
+	_ struct{} `type:"structure"`
+
+	// Replica-specific read capacity units. If not specified, uses the source table's
+	// read capacity settings.
+	ReadCapacityUnits *int64 `min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s ProvisionedThroughputOverride) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionedThroughputOverride) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ProvisionedThroughputOverride) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ProvisionedThroughputOverride"}
+	if s.ReadCapacityUnits != nil && *s.ReadCapacityUnits < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ReadCapacityUnits", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetReadCapacityUnits sets the ReadCapacityUnits field's value.
+func (s *ProvisionedThroughputOverride) SetReadCapacityUnits(v int64) *ProvisionedThroughputOverride {
+	s.ReadCapacityUnits = &v
 	return s
 }
 
@@ -11662,7 +13615,7 @@ type PutRequest struct {
 	// A map of attribute name to attribute values, representing the primary key
 	// of an item to be processed by PutItem. All of the table's primary key attributes
 	// must be specified, and their data types must match those of the table's key
-	// schema. If any attributes are present in the item which are part of an index
+	// schema. If any attributes are present in the item that are part of an index
 	// key schema for the table, their types must match the index key schema.
 	//
 	// Item is a required field
@@ -12225,7 +14178,7 @@ func (s *QueryOutput) SetScannedCount(v int64) *QueryOutput {
 type Replica struct {
 	_ struct{} `type:"structure"`
 
-	// The region where the replica needs to be created.
+	// The Region where the replica needs to be created.
 	RegionName *string `type:"string"`
 }
 
@@ -12245,12 +14198,241 @@ func (s *Replica) SetRegionName(v string) *Replica {
 	return s
 }
 
+// The specified replica is already part of the global table.
+type ReplicaAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ReplicaAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorReplicaAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ReplicaAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ReplicaAlreadyExistsException) Code() string {
+	return "ReplicaAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ReplicaAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ReplicaAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ReplicaAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ReplicaAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ReplicaAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Represents the auto scaling settings of the replica.
+type ReplicaAutoScalingDescription struct {
+	_ struct{} `type:"structure"`
+
+	// Replica-specific global secondary index auto scaling settings.
+	GlobalSecondaryIndexes []*ReplicaGlobalSecondaryIndexAutoScalingDescription `type:"list"`
+
+	// The Region where the replica exists.
+	RegionName *string `type:"string"`
+
+	// Represents the auto scaling settings for a global table or global secondary
+	// index.
+	ReplicaProvisionedReadCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
+
+	// Represents the auto scaling settings for a global table or global secondary
+	// index.
+	ReplicaProvisionedWriteCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
+
+	// The current state of the replica:
+	//
+	//    * CREATING - The replica is being created.
+	//
+	//    * UPDATING - The replica is being updated.
+	//
+	//    * DELETING - The replica is being deleted.
+	//
+	//    * ACTIVE - The replica is ready for use.
+	ReplicaStatus *string `type:"string" enum:"ReplicaStatus"`
+}
+
+// String returns the string representation
+func (s ReplicaAutoScalingDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaAutoScalingDescription) GoString() string {
+	return s.String()
+}
+
+// SetGlobalSecondaryIndexes sets the GlobalSecondaryIndexes field's value.
+func (s *ReplicaAutoScalingDescription) SetGlobalSecondaryIndexes(v []*ReplicaGlobalSecondaryIndexAutoScalingDescription) *ReplicaAutoScalingDescription {
+	s.GlobalSecondaryIndexes = v
+	return s
+}
+
+// SetRegionName sets the RegionName field's value.
+func (s *ReplicaAutoScalingDescription) SetRegionName(v string) *ReplicaAutoScalingDescription {
+	s.RegionName = &v
+	return s
+}
+
+// SetReplicaProvisionedReadCapacityAutoScalingSettings sets the ReplicaProvisionedReadCapacityAutoScalingSettings field's value.
+func (s *ReplicaAutoScalingDescription) SetReplicaProvisionedReadCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaAutoScalingDescription {
+	s.ReplicaProvisionedReadCapacityAutoScalingSettings = v
+	return s
+}
+
+// SetReplicaProvisionedWriteCapacityAutoScalingSettings sets the ReplicaProvisionedWriteCapacityAutoScalingSettings field's value.
+func (s *ReplicaAutoScalingDescription) SetReplicaProvisionedWriteCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaAutoScalingDescription {
+	s.ReplicaProvisionedWriteCapacityAutoScalingSettings = v
+	return s
+}
+
+// SetReplicaStatus sets the ReplicaStatus field's value.
+func (s *ReplicaAutoScalingDescription) SetReplicaStatus(v string) *ReplicaAutoScalingDescription {
+	s.ReplicaStatus = &v
+	return s
+}
+
+// Represents the auto scaling settings of a replica that will be modified.
+type ReplicaAutoScalingUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// The Region where the replica exists.
+	//
+	// RegionName is a required field
+	RegionName *string `type:"string" required:"true"`
+
+	// Represents the auto scaling settings of global secondary indexes that will
+	// be modified.
+	ReplicaGlobalSecondaryIndexUpdates []*ReplicaGlobalSecondaryIndexAutoScalingUpdate `type:"list"`
+
+	// Represents the auto scaling settings to be modified for a global table or
+	// global secondary index.
+	ReplicaProvisionedReadCapacityAutoScalingUpdate *AutoScalingSettingsUpdate `type:"structure"`
+}
+
+// String returns the string representation
+func (s ReplicaAutoScalingUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaAutoScalingUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ReplicaAutoScalingUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ReplicaAutoScalingUpdate"}
+	if s.RegionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RegionName"))
+	}
+	if s.ReplicaGlobalSecondaryIndexUpdates != nil {
+		for i, v := range s.ReplicaGlobalSecondaryIndexUpdates {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ReplicaGlobalSecondaryIndexUpdates", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.ReplicaProvisionedReadCapacityAutoScalingUpdate != nil {
+		if err := s.ReplicaProvisionedReadCapacityAutoScalingUpdate.Validate(); err != nil {
+			invalidParams.AddNested("ReplicaProvisionedReadCapacityAutoScalingUpdate", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRegionName sets the RegionName field's value.
+func (s *ReplicaAutoScalingUpdate) SetRegionName(v string) *ReplicaAutoScalingUpdate {
+	s.RegionName = &v
+	return s
+}
+
+// SetReplicaGlobalSecondaryIndexUpdates sets the ReplicaGlobalSecondaryIndexUpdates field's value.
+func (s *ReplicaAutoScalingUpdate) SetReplicaGlobalSecondaryIndexUpdates(v []*ReplicaGlobalSecondaryIndexAutoScalingUpdate) *ReplicaAutoScalingUpdate {
+	s.ReplicaGlobalSecondaryIndexUpdates = v
+	return s
+}
+
+// SetReplicaProvisionedReadCapacityAutoScalingUpdate sets the ReplicaProvisionedReadCapacityAutoScalingUpdate field's value.
+func (s *ReplicaAutoScalingUpdate) SetReplicaProvisionedReadCapacityAutoScalingUpdate(v *AutoScalingSettingsUpdate) *ReplicaAutoScalingUpdate {
+	s.ReplicaProvisionedReadCapacityAutoScalingUpdate = v
+	return s
+}
+
 // Contains the details of the replica.
 type ReplicaDescription struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the region.
+	// Replica-specific global secondary index settings.
+	GlobalSecondaryIndexes []*ReplicaGlobalSecondaryIndexDescription `type:"list"`
+
+	// The AWS KMS customer master key (CMK) of the replica that will be used for
+	// AWS KMS encryption.
+	KMSMasterKeyId *string `type:"string"`
+
+	// Replica-specific provisioned throughput. If not described, uses the source
+	// table's provisioned throughput settings.
+	ProvisionedThroughputOverride *ProvisionedThroughputOverride `type:"structure"`
+
+	// The name of the Region.
 	RegionName *string `type:"string"`
+
+	// The current state of the replica:
+	//
+	//    * CREATING - The replica is being created.
+	//
+	//    * UPDATING - The replica is being updated.
+	//
+	//    * DELETING - The replica is being deleted.
+	//
+	//    * ACTIVE - The replica is ready for use.
+	ReplicaStatus *string `type:"string" enum:"ReplicaStatus"`
+
+	// Detailed information about the replica status.
+	ReplicaStatusDescription *string `type:"string"`
+
+	// Specifies the progress of a Create, Update, or Delete action on the replica
+	// as a percentage.
+	ReplicaStatusPercentProgress *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12263,9 +14445,250 @@ func (s ReplicaDescription) GoString() string {
 	return s.String()
 }
 
+// SetGlobalSecondaryIndexes sets the GlobalSecondaryIndexes field's value.
+func (s *ReplicaDescription) SetGlobalSecondaryIndexes(v []*ReplicaGlobalSecondaryIndexDescription) *ReplicaDescription {
+	s.GlobalSecondaryIndexes = v
+	return s
+}
+
+// SetKMSMasterKeyId sets the KMSMasterKeyId field's value.
+func (s *ReplicaDescription) SetKMSMasterKeyId(v string) *ReplicaDescription {
+	s.KMSMasterKeyId = &v
+	return s
+}
+
+// SetProvisionedThroughputOverride sets the ProvisionedThroughputOverride field's value.
+func (s *ReplicaDescription) SetProvisionedThroughputOverride(v *ProvisionedThroughputOverride) *ReplicaDescription {
+	s.ProvisionedThroughputOverride = v
+	return s
+}
+
 // SetRegionName sets the RegionName field's value.
 func (s *ReplicaDescription) SetRegionName(v string) *ReplicaDescription {
 	s.RegionName = &v
+	return s
+}
+
+// SetReplicaStatus sets the ReplicaStatus field's value.
+func (s *ReplicaDescription) SetReplicaStatus(v string) *ReplicaDescription {
+	s.ReplicaStatus = &v
+	return s
+}
+
+// SetReplicaStatusDescription sets the ReplicaStatusDescription field's value.
+func (s *ReplicaDescription) SetReplicaStatusDescription(v string) *ReplicaDescription {
+	s.ReplicaStatusDescription = &v
+	return s
+}
+
+// SetReplicaStatusPercentProgress sets the ReplicaStatusPercentProgress field's value.
+func (s *ReplicaDescription) SetReplicaStatusPercentProgress(v string) *ReplicaDescription {
+	s.ReplicaStatusPercentProgress = &v
+	return s
+}
+
+// Represents the properties of a replica global secondary index.
+type ReplicaGlobalSecondaryIndex struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global secondary index.
+	//
+	// IndexName is a required field
+	IndexName *string `min:"3" type:"string" required:"true"`
+
+	// Replica table GSI-specific provisioned throughput. If not specified, uses
+	// the source table GSI's read capacity settings.
+	ProvisionedThroughputOverride *ProvisionedThroughputOverride `type:"structure"`
+}
+
+// String returns the string representation
+func (s ReplicaGlobalSecondaryIndex) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaGlobalSecondaryIndex) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ReplicaGlobalSecondaryIndex) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ReplicaGlobalSecondaryIndex"}
+	if s.IndexName == nil {
+		invalidParams.Add(request.NewErrParamRequired("IndexName"))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 3))
+	}
+	if s.ProvisionedThroughputOverride != nil {
+		if err := s.ProvisionedThroughputOverride.Validate(); err != nil {
+			invalidParams.AddNested("ProvisionedThroughputOverride", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *ReplicaGlobalSecondaryIndex) SetIndexName(v string) *ReplicaGlobalSecondaryIndex {
+	s.IndexName = &v
+	return s
+}
+
+// SetProvisionedThroughputOverride sets the ProvisionedThroughputOverride field's value.
+func (s *ReplicaGlobalSecondaryIndex) SetProvisionedThroughputOverride(v *ProvisionedThroughputOverride) *ReplicaGlobalSecondaryIndex {
+	s.ProvisionedThroughputOverride = v
+	return s
+}
+
+// Represents the auto scaling configuration for a replica global secondary
+// index.
+type ReplicaGlobalSecondaryIndexAutoScalingDescription struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global secondary index.
+	IndexName *string `min:"3" type:"string"`
+
+	// The current state of the replica global secondary index:
+	//
+	//    * CREATING - The index is being created.
+	//
+	//    * UPDATING - The index is being updated.
+	//
+	//    * DELETING - The index is being deleted.
+	//
+	//    * ACTIVE - The index is ready for use.
+	IndexStatus *string `type:"string" enum:"IndexStatus"`
+
+	// Represents the auto scaling settings for a global table or global secondary
+	// index.
+	ProvisionedReadCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
+
+	// Represents the auto scaling settings for a global table or global secondary
+	// index.
+	ProvisionedWriteCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
+}
+
+// String returns the string representation
+func (s ReplicaGlobalSecondaryIndexAutoScalingDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaGlobalSecondaryIndexAutoScalingDescription) GoString() string {
+	return s.String()
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *ReplicaGlobalSecondaryIndexAutoScalingDescription) SetIndexName(v string) *ReplicaGlobalSecondaryIndexAutoScalingDescription {
+	s.IndexName = &v
+	return s
+}
+
+// SetIndexStatus sets the IndexStatus field's value.
+func (s *ReplicaGlobalSecondaryIndexAutoScalingDescription) SetIndexStatus(v string) *ReplicaGlobalSecondaryIndexAutoScalingDescription {
+	s.IndexStatus = &v
+	return s
+}
+
+// SetProvisionedReadCapacityAutoScalingSettings sets the ProvisionedReadCapacityAutoScalingSettings field's value.
+func (s *ReplicaGlobalSecondaryIndexAutoScalingDescription) SetProvisionedReadCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaGlobalSecondaryIndexAutoScalingDescription {
+	s.ProvisionedReadCapacityAutoScalingSettings = v
+	return s
+}
+
+// SetProvisionedWriteCapacityAutoScalingSettings sets the ProvisionedWriteCapacityAutoScalingSettings field's value.
+func (s *ReplicaGlobalSecondaryIndexAutoScalingDescription) SetProvisionedWriteCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaGlobalSecondaryIndexAutoScalingDescription {
+	s.ProvisionedWriteCapacityAutoScalingSettings = v
+	return s
+}
+
+// Represents the auto scaling settings of a global secondary index for a replica
+// that will be modified.
+type ReplicaGlobalSecondaryIndexAutoScalingUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global secondary index.
+	IndexName *string `min:"3" type:"string"`
+
+	// Represents the auto scaling settings to be modified for a global table or
+	// global secondary index.
+	ProvisionedReadCapacityAutoScalingUpdate *AutoScalingSettingsUpdate `type:"structure"`
+}
+
+// String returns the string representation
+func (s ReplicaGlobalSecondaryIndexAutoScalingUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaGlobalSecondaryIndexAutoScalingUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ReplicaGlobalSecondaryIndexAutoScalingUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ReplicaGlobalSecondaryIndexAutoScalingUpdate"}
+	if s.IndexName != nil && len(*s.IndexName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 3))
+	}
+	if s.ProvisionedReadCapacityAutoScalingUpdate != nil {
+		if err := s.ProvisionedReadCapacityAutoScalingUpdate.Validate(); err != nil {
+			invalidParams.AddNested("ProvisionedReadCapacityAutoScalingUpdate", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *ReplicaGlobalSecondaryIndexAutoScalingUpdate) SetIndexName(v string) *ReplicaGlobalSecondaryIndexAutoScalingUpdate {
+	s.IndexName = &v
+	return s
+}
+
+// SetProvisionedReadCapacityAutoScalingUpdate sets the ProvisionedReadCapacityAutoScalingUpdate field's value.
+func (s *ReplicaGlobalSecondaryIndexAutoScalingUpdate) SetProvisionedReadCapacityAutoScalingUpdate(v *AutoScalingSettingsUpdate) *ReplicaGlobalSecondaryIndexAutoScalingUpdate {
+	s.ProvisionedReadCapacityAutoScalingUpdate = v
+	return s
+}
+
+// Represents the properties of a replica global secondary index.
+type ReplicaGlobalSecondaryIndexDescription struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global secondary index.
+	IndexName *string `min:"3" type:"string"`
+
+	// If not described, uses the source table GSI's read capacity settings.
+	ProvisionedThroughputOverride *ProvisionedThroughputOverride `type:"structure"`
+}
+
+// String returns the string representation
+func (s ReplicaGlobalSecondaryIndexDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaGlobalSecondaryIndexDescription) GoString() string {
+	return s.String()
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *ReplicaGlobalSecondaryIndexDescription) SetIndexName(v string) *ReplicaGlobalSecondaryIndexDescription {
+	s.IndexName = &v
+	return s
+}
+
+// SetProvisionedThroughputOverride sets the ProvisionedThroughputOverride field's value.
+func (s *ReplicaGlobalSecondaryIndexDescription) SetProvisionedThroughputOverride(v *ProvisionedThroughputOverride) *ReplicaGlobalSecondaryIndexDescription {
+	s.ProvisionedThroughputOverride = v
 	return s
 }
 
@@ -12290,7 +14713,7 @@ type ReplicaGlobalSecondaryIndexSettingsDescription struct {
 	//    * ACTIVE - The global secondary index is ready for use.
 	IndexStatus *string `type:"string" enum:"IndexStatus"`
 
-	// Autoscaling settings for a global secondary index replica's read capacity
+	// Auto scaling settings for a global secondary index replica's read capacity
 	// units.
 	ProvisionedReadCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
 
@@ -12298,7 +14721,7 @@ type ReplicaGlobalSecondaryIndexSettingsDescription struct {
 	// DynamoDB returns a ThrottlingException.
 	ProvisionedReadCapacityUnits *int64 `min:"1" type:"long"`
 
-	// AutoScaling settings for a global secondary index replica's write capacity
+	// Auto scaling settings for a global secondary index replica's write capacity
 	// units.
 	ProvisionedWriteCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
 
@@ -12364,7 +14787,7 @@ type ReplicaGlobalSecondaryIndexSettingsUpdate struct {
 	// IndexName is a required field
 	IndexName *string `min:"3" type:"string" required:"true"`
 
-	// Autoscaling settings for managing a global secondary index replica's read
+	// Auto scaling settings for managing a global secondary index replica's read
 	// capacity units.
 	ProvisionedReadCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
 
@@ -12425,11 +14848,67 @@ func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) SetProvisionedReadCapacityUn
 	return s
 }
 
+// The specified replica is no longer part of the global table.
+type ReplicaNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ReplicaNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorReplicaNotFoundException(v protocol.ResponseMetadata) error {
+	return &ReplicaNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ReplicaNotFoundException) Code() string {
+	return "ReplicaNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ReplicaNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ReplicaNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ReplicaNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ReplicaNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ReplicaNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Represents the properties of a replica.
 type ReplicaSettingsDescription struct {
 	_ struct{} `type:"structure"`
 
-	// The region name of the replica.
+	// The Region name of the replica.
 	//
 	// RegionName is a required field
 	RegionName *string `type:"string" required:"true"`
@@ -12440,7 +14919,7 @@ type ReplicaSettingsDescription struct {
 	// Replica global secondary index settings for the global table.
 	ReplicaGlobalSecondaryIndexSettings []*ReplicaGlobalSecondaryIndexSettingsDescription `type:"list"`
 
-	// Autoscaling settings for a global table replica's read capacity units.
+	// Auto scaling settings for a global table replica's read capacity units.
 	ReplicaProvisionedReadCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
 
 	// The maximum number of strongly consistent reads consumed per second before
@@ -12449,7 +14928,7 @@ type ReplicaSettingsDescription struct {
 	// in the Amazon DynamoDB Developer Guide.
 	ReplicaProvisionedReadCapacityUnits *int64 `type:"long"`
 
-	// AutoScaling settings for a global table replica's write capacity units.
+	// Auto scaling settings for a global table replica's write capacity units.
 	ReplicaProvisionedWriteCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
 
 	// The maximum number of writes consumed per second before DynamoDB returns
@@ -12458,15 +14937,15 @@ type ReplicaSettingsDescription struct {
 	// in the Amazon DynamoDB Developer Guide.
 	ReplicaProvisionedWriteCapacityUnits *int64 `type:"long"`
 
-	// The current state of the region:
+	// The current state of the Region:
 	//
-	//    * CREATING - The region is being created.
+	//    * CREATING - The Region is being created.
 	//
-	//    * UPDATING - The region is being updated.
+	//    * UPDATING - The Region is being updated.
 	//
-	//    * DELETING - The region is being deleted.
+	//    * DELETING - The Region is being deleted.
 	//
-	//    * ACTIVE - The region is ready for use.
+	//    * ACTIVE - The Region is ready for use.
 	ReplicaStatus *string `type:"string" enum:"ReplicaStatus"`
 }
 
@@ -12528,11 +15007,11 @@ func (s *ReplicaSettingsDescription) SetReplicaStatus(v string) *ReplicaSettings
 	return s
 }
 
-// Represents the settings for a global table in a region that will be modified.
+// Represents the settings for a global table in a Region that will be modified.
 type ReplicaSettingsUpdate struct {
 	_ struct{} `type:"structure"`
 
-	// The region of the replica to be added.
+	// The Region of the replica to be added.
 	//
 	// RegionName is a required field
 	RegionName *string `type:"string" required:"true"`
@@ -12541,7 +15020,7 @@ type ReplicaSettingsUpdate struct {
 	// will be modified.
 	ReplicaGlobalSecondaryIndexSettingsUpdate []*ReplicaGlobalSecondaryIndexSettingsUpdate `min:"1" type:"list"`
 
-	// Autoscaling settings for managing a global table replica's read capacity
+	// Auto scaling settings for managing a global table replica's read capacity
 	// units.
 	ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
 
@@ -12679,6 +15158,259 @@ func (s *ReplicaUpdate) SetDelete(v *DeleteReplicaAction) *ReplicaUpdate {
 	return s
 }
 
+// Represents one of the following:
+//
+//    * A new replica to be added to an existing regional table or global table.
+//    This request invokes the CreateTableReplica action in the destination
+//    Region.
+//
+//    * New parameters for an existing replica. This request invokes the UpdateTable
+//    action in the destination Region.
+//
+//    * An existing replica to be deleted. The request invokes the DeleteTableReplica
+//    action in the destination Region, deleting the replica and all if its
+//    items in the destination Region.
+type ReplicationGroupUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// The parameters required for creating a replica for the table.
+	Create *CreateReplicationGroupMemberAction `type:"structure"`
+
+	// The parameters required for deleting a replica for the table.
+	Delete *DeleteReplicationGroupMemberAction `type:"structure"`
+
+	// The parameters required for updating a replica for the table.
+	Update *UpdateReplicationGroupMemberAction `type:"structure"`
+}
+
+// String returns the string representation
+func (s ReplicationGroupUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicationGroupUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ReplicationGroupUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ReplicationGroupUpdate"}
+	if s.Create != nil {
+		if err := s.Create.Validate(); err != nil {
+			invalidParams.AddNested("Create", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Delete != nil {
+		if err := s.Delete.Validate(); err != nil {
+			invalidParams.AddNested("Delete", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Update != nil {
+		if err := s.Update.Validate(); err != nil {
+			invalidParams.AddNested("Update", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCreate sets the Create field's value.
+func (s *ReplicationGroupUpdate) SetCreate(v *CreateReplicationGroupMemberAction) *ReplicationGroupUpdate {
+	s.Create = v
+	return s
+}
+
+// SetDelete sets the Delete field's value.
+func (s *ReplicationGroupUpdate) SetDelete(v *DeleteReplicationGroupMemberAction) *ReplicationGroupUpdate {
+	s.Delete = v
+	return s
+}
+
+// SetUpdate sets the Update field's value.
+func (s *ReplicationGroupUpdate) SetUpdate(v *UpdateReplicationGroupMemberAction) *ReplicationGroupUpdate {
+	s.Update = v
+	return s
+}
+
+// Throughput exceeds the current throughput limit for your account. Please
+// contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
+// a limit increase.
+type RequestLimitExceeded struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s RequestLimitExceeded) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RequestLimitExceeded) GoString() string {
+	return s.String()
+}
+
+func newErrorRequestLimitExceeded(v protocol.ResponseMetadata) error {
+	return &RequestLimitExceeded{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RequestLimitExceeded) Code() string {
+	return "RequestLimitExceeded"
+}
+
+// Message returns the exception's message.
+func (s RequestLimitExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RequestLimitExceeded) OrigErr() error {
+	return nil
+}
+
+func (s RequestLimitExceeded) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RequestLimitExceeded) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RequestLimitExceeded) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The operation conflicts with the resource's availability. For example, you
+// attempted to recreate an existing table, or tried to delete a table currently
+// in the CREATING state.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The resource which is being attempted to be changed is in use.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The operation tried to access a nonexistent table or index. The resource
+// might not be specified correctly, or its status might not be ACTIVE.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The resource which is being requested does not exist.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains details for the restore.
 type RestoreSummary struct {
 	_ struct{} `type:"structure"`
@@ -12693,10 +15425,10 @@ type RestoreSummary struct {
 	// RestoreInProgress is a required field
 	RestoreInProgress *bool `type:"boolean" required:"true"`
 
-	// ARN of the backup from which the table was restored.
+	// The Amazon Resource Name (ARN) of the backup from which the table was restored.
 	SourceBackupArn *string `min:"37" type:"string"`
 
-	// ARN of the source table of the backup that is being restored.
+	// The ARN of the source table of the backup that is being restored.
 	SourceTableArn *string `type:"string"`
 }
 
@@ -12742,6 +15474,22 @@ type RestoreTableFromBackupInput struct {
 	// BackupArn is a required field
 	BackupArn *string `min:"37" type:"string" required:"true"`
 
+	// The billing mode of the restored table.
+	BillingModeOverride *string `type:"string" enum:"BillingMode"`
+
+	// List of global secondary indexes for the restored table. The indexes provided
+	// should match existing secondary indexes. You can choose to exclude some or
+	// all of the indexes at the time of restore.
+	GlobalSecondaryIndexOverride []*GlobalSecondaryIndex `type:"list"`
+
+	// List of local secondary indexes for the restored table. The indexes provided
+	// should match existing secondary indexes. You can choose to exclude some or
+	// all of the indexes at the time of restore.
+	LocalSecondaryIndexOverride []*LocalSecondaryIndex `type:"list"`
+
+	// Provisioned throughput settings for the restored table.
+	ProvisionedThroughputOverride *ProvisionedThroughput `type:"structure"`
+
 	// The name of the new table to which the backup must be restored.
 	//
 	// TargetTableName is a required field
@@ -12773,6 +15521,31 @@ func (s *RestoreTableFromBackupInput) Validate() error {
 	if s.TargetTableName != nil && len(*s.TargetTableName) < 3 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetTableName", 3))
 	}
+	if s.GlobalSecondaryIndexOverride != nil {
+		for i, v := range s.GlobalSecondaryIndexOverride {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "GlobalSecondaryIndexOverride", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.LocalSecondaryIndexOverride != nil {
+		for i, v := range s.LocalSecondaryIndexOverride {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "LocalSecondaryIndexOverride", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.ProvisionedThroughputOverride != nil {
+		if err := s.ProvisionedThroughputOverride.Validate(); err != nil {
+			invalidParams.AddNested("ProvisionedThroughputOverride", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -12783,6 +15556,30 @@ func (s *RestoreTableFromBackupInput) Validate() error {
 // SetBackupArn sets the BackupArn field's value.
 func (s *RestoreTableFromBackupInput) SetBackupArn(v string) *RestoreTableFromBackupInput {
 	s.BackupArn = &v
+	return s
+}
+
+// SetBillingModeOverride sets the BillingModeOverride field's value.
+func (s *RestoreTableFromBackupInput) SetBillingModeOverride(v string) *RestoreTableFromBackupInput {
+	s.BillingModeOverride = &v
+	return s
+}
+
+// SetGlobalSecondaryIndexOverride sets the GlobalSecondaryIndexOverride field's value.
+func (s *RestoreTableFromBackupInput) SetGlobalSecondaryIndexOverride(v []*GlobalSecondaryIndex) *RestoreTableFromBackupInput {
+	s.GlobalSecondaryIndexOverride = v
+	return s
+}
+
+// SetLocalSecondaryIndexOverride sets the LocalSecondaryIndexOverride field's value.
+func (s *RestoreTableFromBackupInput) SetLocalSecondaryIndexOverride(v []*LocalSecondaryIndex) *RestoreTableFromBackupInput {
+	s.LocalSecondaryIndexOverride = v
+	return s
+}
+
+// SetProvisionedThroughputOverride sets the ProvisionedThroughputOverride field's value.
+func (s *RestoreTableFromBackupInput) SetProvisionedThroughputOverride(v *ProvisionedThroughput) *RestoreTableFromBackupInput {
+	s.ProvisionedThroughputOverride = v
 	return s
 }
 
@@ -12817,6 +15614,22 @@ func (s *RestoreTableFromBackupOutput) SetTableDescription(v *TableDescription) 
 
 type RestoreTableToPointInTimeInput struct {
 	_ struct{} `type:"structure"`
+
+	// The billing mode of the restored table.
+	BillingModeOverride *string `type:"string" enum:"BillingMode"`
+
+	// List of global secondary indexes for the restored table. The indexes provided
+	// should match existing secondary indexes. You can choose to exclude some or
+	// all of the indexes at the time of restore.
+	GlobalSecondaryIndexOverride []*GlobalSecondaryIndex `type:"list"`
+
+	// List of local secondary indexes for the restored table. The indexes provided
+	// should match existing secondary indexes. You can choose to exclude some or
+	// all of the indexes at the time of restore.
+	LocalSecondaryIndexOverride []*LocalSecondaryIndex `type:"list"`
+
+	// Provisioned throughput settings for the restored table.
+	ProvisionedThroughputOverride *ProvisionedThroughput `type:"structure"`
 
 	// Time in the past to restore the table to.
 	RestoreDateTime *time.Time `type:"timestamp"`
@@ -12861,11 +15674,60 @@ func (s *RestoreTableToPointInTimeInput) Validate() error {
 	if s.TargetTableName != nil && len(*s.TargetTableName) < 3 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetTableName", 3))
 	}
+	if s.GlobalSecondaryIndexOverride != nil {
+		for i, v := range s.GlobalSecondaryIndexOverride {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "GlobalSecondaryIndexOverride", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.LocalSecondaryIndexOverride != nil {
+		for i, v := range s.LocalSecondaryIndexOverride {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "LocalSecondaryIndexOverride", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.ProvisionedThroughputOverride != nil {
+		if err := s.ProvisionedThroughputOverride.Validate(); err != nil {
+			invalidParams.AddNested("ProvisionedThroughputOverride", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetBillingModeOverride sets the BillingModeOverride field's value.
+func (s *RestoreTableToPointInTimeInput) SetBillingModeOverride(v string) *RestoreTableToPointInTimeInput {
+	s.BillingModeOverride = &v
+	return s
+}
+
+// SetGlobalSecondaryIndexOverride sets the GlobalSecondaryIndexOverride field's value.
+func (s *RestoreTableToPointInTimeInput) SetGlobalSecondaryIndexOverride(v []*GlobalSecondaryIndex) *RestoreTableToPointInTimeInput {
+	s.GlobalSecondaryIndexOverride = v
+	return s
+}
+
+// SetLocalSecondaryIndexOverride sets the LocalSecondaryIndexOverride field's value.
+func (s *RestoreTableToPointInTimeInput) SetLocalSecondaryIndexOverride(v []*LocalSecondaryIndex) *RestoreTableToPointInTimeInput {
+	s.LocalSecondaryIndexOverride = v
+	return s
+}
+
+// SetProvisionedThroughputOverride sets the ProvisionedThroughputOverride field's value.
+func (s *RestoreTableToPointInTimeInput) SetProvisionedThroughputOverride(v *ProvisionedThroughput) *RestoreTableToPointInTimeInput {
+	s.ProvisionedThroughputOverride = v
+	return s
 }
 
 // SetRestoreDateTime sets the RestoreDateTime field's value.
@@ -12919,13 +15781,21 @@ func (s *RestoreTableToPointInTimeOutput) SetTableDescription(v *TableDescriptio
 type SSEDescription struct {
 	_ struct{} `type:"structure"`
 
-	// The KMS customer master key (CMK) ARN used for the KMS encryption.
+	// Indicates the time, in UNIX epoch date format, when DynamoDB detected that
+	// the table's AWS KMS key was inaccessible. This attribute will automatically
+	// be cleared when DynamoDB detects that the table's AWS KMS key is accessible
+	// again. DynamoDB will initiate the table archival process when table's AWS
+	// KMS key remains inaccessible for more than seven days from this date.
+	InaccessibleEncryptionDateTime *time.Time `type:"timestamp"`
+
+	// The AWS KMS customer master key (CMK) ARN used for the AWS KMS encryption.
 	KMSMasterKeyArn *string `type:"string"`
 
 	// Server-side encryption type. The only supported value is:
 	//
-	//    * KMS - Server-side encryption which uses AWS Key Management Service.
-	//    Key is stored in your account and is managed by AWS KMS (KMS charges apply).
+	//    * KMS - Server-side encryption that uses AWS Key Management Service. The
+	//    key is stored in your account and is managed by AWS KMS (AWS KMS charges
+	//    apply).
 	SSEType *string `type:"string" enum:"SSEType"`
 
 	// Represents the current state of server-side encryption. The only supported
@@ -12945,6 +15815,12 @@ func (s SSEDescription) String() string {
 // GoString returns the string representation
 func (s SSEDescription) GoString() string {
 	return s.String()
+}
+
+// SetInaccessibleEncryptionDateTime sets the InaccessibleEncryptionDateTime field's value.
+func (s *SSEDescription) SetInaccessibleEncryptionDateTime(v time.Time) *SSEDescription {
+	s.InaccessibleEncryptionDateTime = &v
+	return s
 }
 
 // SetKMSMasterKeyArn sets the KMSMasterKeyArn field's value.
@@ -12975,16 +15851,17 @@ type SSESpecification struct {
 	// (false) or not specified, server-side encryption is set to AWS owned CMK.
 	Enabled *bool `type:"boolean"`
 
-	// The KMS Customer Master Key (CMK) which should be used for the KMS encryption.
-	// To specify a CMK, use its key ID, Amazon Resource Name (ARN), alias name,
-	// or alias ARN. Note that you should only provide this parameter if the key
-	// is different from the default DynamoDB Customer Master Key alias/aws/dynamodb.
+	// The AWS KMS customer master key (CMK) that should be used for the AWS KMS
+	// encryption. To specify a CMK, use its key ID, Amazon Resource Name (ARN),
+	// alias name, or alias ARN. Note that you should only provide this parameter
+	// if the key is different from the default DynamoDB customer master key alias/aws/dynamodb.
 	KMSMasterKeyId *string `type:"string"`
 
 	// Server-side encryption type. The only supported value is:
 	//
-	//    * KMS - Server-side encryption which uses AWS Key Management Service.
-	//    Key is stored in your account and is managed by AWS KMS (KMS charges apply).
+	//    * KMS - Server-side encryption that uses AWS Key Management Service. The
+	//    key is stored in your account and is managed by AWS KMS (AWS KMS charges
+	//    apply).
 	SSEType *string `type:"string" enum:"SSEType"`
 }
 
@@ -13502,7 +16379,7 @@ type SourceTableDetails struct {
 	//    We recommend using PAY_PER_REQUEST for unpredictable workloads.
 	BillingMode *string `type:"string" enum:"BillingMode"`
 
-	// Number of items in the table. Please note this is an approximate value.
+	// Number of items in the table. Note that this is an approximate value.
 	ItemCount *int64 `type:"long"`
 
 	// Schema of the table.
@@ -13533,7 +16410,7 @@ type SourceTableDetails struct {
 	// TableName is a required field
 	TableName *string `min:"3" type:"string" required:"true"`
 
-	// Size of the table in bytes. Please note this is an approximate value.
+	// Size of the table in bytes. Note that this is an approximate value.
 	TableSizeBytes *int64 `type:"long"`
 }
 
@@ -13607,7 +16484,7 @@ type SourceTableFeatureDetails struct {
 	_ struct{} `type:"structure"`
 
 	// Represents the GSI properties for the table when the backup was created.
-	// It includes the IndexName, KeySchema, Projection and ProvisionedThroughput
+	// It includes the IndexName, KeySchema, Projection, and ProvisionedThroughput
 	// for the GSIs on the table at the time of backup.
 	GlobalSecondaryIndexes []*GlobalSecondaryIndexInfo `type:"list"`
 
@@ -13673,7 +16550,9 @@ type StreamSpecification struct {
 
 	// Indicates whether DynamoDB Streams is enabled (true) or disabled (false)
 	// on the table.
-	StreamEnabled *bool `type:"boolean"`
+	//
+	// StreamEnabled is a required field
+	StreamEnabled *bool `type:"boolean" required:"true"`
 
 	// When an item in the table is modified, StreamViewType determines what information
 	// is written to the stream for this table. Valid values for StreamViewType
@@ -13703,6 +16582,19 @@ func (s StreamSpecification) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StreamSpecification) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StreamSpecification"}
+	if s.StreamEnabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("StreamEnabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetStreamEnabled sets the StreamEnabled field's value.
 func (s *StreamSpecification) SetStreamEnabled(v bool) *StreamSpecification {
 	s.StreamEnabled = &v
@@ -13715,9 +16607,118 @@ func (s *StreamSpecification) SetStreamViewType(v string) *StreamSpecification {
 	return s
 }
 
+// A target table with the specified name already exists.
+type TableAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TableAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TableAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTableAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &TableAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TableAlreadyExistsException) Code() string {
+	return "TableAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s TableAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TableAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s TableAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TableAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TableAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Represents the auto scaling configuration for a global table.
+type TableAutoScalingDescription struct {
+	_ struct{} `type:"structure"`
+
+	// Represents replicas of the global table.
+	Replicas []*ReplicaAutoScalingDescription `type:"list"`
+
+	// The name of the table.
+	TableName *string `min:"3" type:"string"`
+
+	// The current state of the table:
+	//
+	//    * CREATING - The table is being created.
+	//
+	//    * UPDATING - The table is being updated.
+	//
+	//    * DELETING - The table is being deleted.
+	//
+	//    * ACTIVE - The table is ready for use.
+	TableStatus *string `type:"string" enum:"TableStatus"`
+}
+
+// String returns the string representation
+func (s TableAutoScalingDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TableAutoScalingDescription) GoString() string {
+	return s.String()
+}
+
+// SetReplicas sets the Replicas field's value.
+func (s *TableAutoScalingDescription) SetReplicas(v []*ReplicaAutoScalingDescription) *TableAutoScalingDescription {
+	s.Replicas = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *TableAutoScalingDescription) SetTableName(v string) *TableAutoScalingDescription {
+	s.TableName = &v
+	return s
+}
+
+// SetTableStatus sets the TableStatus field's value.
+func (s *TableAutoScalingDescription) SetTableStatus(v string) *TableAutoScalingDescription {
+	s.TableStatus = &v
+	return s
+}
+
 // Represents the properties of a table.
 type TableDescription struct {
 	_ struct{} `type:"structure"`
+
+	// Contains information about the table archive.
+	ArchivalSummary *ArchivalSummary `type:"structure"`
 
 	// An array of AttributeDefinition objects. Each of these objects describes
 	// one attribute in the table and index key schema.
@@ -13741,9 +16742,14 @@ type TableDescription struct {
 	//
 	//    * Backfilling - If true, then the index is currently in the backfilling
 	//    phase. Backfilling occurs only when a new global secondary index is added
-	//    to the table; it is the process by which DynamoDB populates the new index
+	//    to the table. It is the process by which DynamoDB populates the new index
 	//    with data from the table. (This attribute does not appear for indexes
-	//    that were created during a CreateTable operation.)
+	//    that were created during a CreateTable operation.) You can delete an index
+	//    that is being created during the Backfilling phase when IndexStatus is
+	//    set to CREATING and Backfilling is true. You can't delete the index that
+	//    is being created when IndexStatus is set to CREATING and Backfilling is
+	//    false. (This attribute does not appear for indexes that were created during
+	//    a CreateTable operation.)
 	//
 	//    * IndexName - The name of the global secondary index.
 	//
@@ -13769,7 +16775,7 @@ type TableDescription struct {
 	//    specification is composed of: ProjectionType - One of the following: KEYS_ONLY
 	//    - Only the index and primary keys are projected into the index. INCLUDE
 	//    - Only the specified table attributes are projected into the index. The
-	//    list of projected attributes are in NonKeyAttributes. ALL - All of the
+	//    list of projected attributes is in NonKeyAttributes. ALL - All of the
 	//    table attributes are projected into the index. NonKeyAttributes - A list
 	//    of one or more non-key attribute names that are projected into the secondary
 	//    index. The total count of attributes provided in NonKeyAttributes, summed
@@ -13784,6 +16790,10 @@ type TableDescription struct {
 	// If the table is in the DELETING state, no information about indexes will
 	// be returned.
 	GlobalSecondaryIndexes []*GlobalSecondaryIndexDescription `type:"list"`
+
+	// Represents the version of global tables (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html)
+	// in use, if the table is replicated across AWS Regions.
+	GlobalTableVersion *string `type:"string"`
 
 	// The number of items in the specified table. DynamoDB updates this value approximately
 	// every six hours. Recent changes might not be reflected in this value.
@@ -13817,11 +16827,11 @@ type TableDescription struct {
 	// However, the combination of the following three elements is guaranteed to
 	// be unique:
 	//
-	//    * the AWS customer ID.
+	//    * AWS customer ID
 	//
-	//    * the table name.
+	//    * Table name
 	//
-	//    * the StreamLabel.
+	//    * StreamLabel
 	LatestStreamLabel *string `type:"string"`
 
 	// Represents one or more local secondary indexes on the table. Each index is
@@ -13842,7 +16852,7 @@ type TableDescription struct {
 	//    specification is composed of: ProjectionType - One of the following: KEYS_ONLY
 	//    - Only the index and primary keys are projected into the index. INCLUDE
 	//    - Only the specified table attributes are projected into the index. The
-	//    list of projected attributes are in NonKeyAttributes. ALL - All of the
+	//    list of projected attributes is in NonKeyAttributes. ALL - All of the
 	//    table attributes are projected into the index. NonKeyAttributes - A list
 	//    of one or more non-key attribute names that are projected into the secondary
 	//    index. The total count of attributes provided in NonKeyAttributes, summed
@@ -13865,6 +16875,9 @@ type TableDescription struct {
 	// The provisioned throughput settings for the table, consisting of read and
 	// write capacity units, along with data about increases and decreases.
 	ProvisionedThroughput *ProvisionedThroughputDescription `type:"structure"`
+
+	// Represents replicas of the table.
+	Replicas []*ReplicaDescription `type:"list"`
 
 	// Contains details for the restore.
 	RestoreSummary *RestoreSummary `type:"structure"`
@@ -13898,6 +16911,17 @@ type TableDescription struct {
 	//    * DELETING - The table is being deleted.
 	//
 	//    * ACTIVE - The table is ready for use.
+	//
+	//    * INACCESSIBLE_ENCRYPTION_CREDENTIALS - The AWS KMS key used to encrypt
+	//    the table in inaccessible. Table operations may fail due to failure to
+	//    use the AWS KMS key. DynamoDB will initiate the table archival process
+	//    when a table's AWS KMS key remains inaccessible for more than seven days.
+	//
+	//    * ARCHIVING - The table is being archived. Operations are not allowed
+	//    until archival is complete.
+	//
+	//    * ARCHIVED - The table has been archived. See the ArchivalReason for more
+	//    information.
 	TableStatus *string `type:"string" enum:"TableStatus"`
 }
 
@@ -13909,6 +16933,12 @@ func (s TableDescription) String() string {
 // GoString returns the string representation
 func (s TableDescription) GoString() string {
 	return s.String()
+}
+
+// SetArchivalSummary sets the ArchivalSummary field's value.
+func (s *TableDescription) SetArchivalSummary(v *ArchivalSummary) *TableDescription {
+	s.ArchivalSummary = v
+	return s
 }
 
 // SetAttributeDefinitions sets the AttributeDefinitions field's value.
@@ -13932,6 +16962,12 @@ func (s *TableDescription) SetCreationDateTime(v time.Time) *TableDescription {
 // SetGlobalSecondaryIndexes sets the GlobalSecondaryIndexes field's value.
 func (s *TableDescription) SetGlobalSecondaryIndexes(v []*GlobalSecondaryIndexDescription) *TableDescription {
 	s.GlobalSecondaryIndexes = v
+	return s
+}
+
+// SetGlobalTableVersion sets the GlobalTableVersion field's value.
+func (s *TableDescription) SetGlobalTableVersion(v string) *TableDescription {
+	s.GlobalTableVersion = &v
 	return s
 }
 
@@ -13968,6 +17004,12 @@ func (s *TableDescription) SetLocalSecondaryIndexes(v []*LocalSecondaryIndexDesc
 // SetProvisionedThroughput sets the ProvisionedThroughput field's value.
 func (s *TableDescription) SetProvisionedThroughput(v *ProvisionedThroughputDescription) *TableDescription {
 	s.ProvisionedThroughput = v
+	return s
+}
+
+// SetReplicas sets the Replicas field's value.
+func (s *TableDescription) SetReplicas(v []*ReplicaDescription) *TableDescription {
+	s.Replicas = v
 	return s
 }
 
@@ -14017,6 +17059,119 @@ func (s *TableDescription) SetTableSizeBytes(v int64) *TableDescription {
 func (s *TableDescription) SetTableStatus(v string) *TableDescription {
 	s.TableStatus = &v
 	return s
+}
+
+// A target table with the specified name is either being created or deleted.
+type TableInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TableInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TableInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorTableInUseException(v protocol.ResponseMetadata) error {
+	return &TableInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TableInUseException) Code() string {
+	return "TableInUseException"
+}
+
+// Message returns the exception's message.
+func (s TableInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TableInUseException) OrigErr() error {
+	return nil
+}
+
+func (s TableInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TableInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TableInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A source table with the name TableName does not currently exist within the
+// subscriber's account.
+type TableNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TableNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TableNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorTableNotFoundException(v protocol.ResponseMetadata) error {
+	return &TableNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TableNotFoundException) Code() string {
+	return "TableNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s TableNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TableNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s TableNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TableNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TableNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes a tag. A tag is a key-value pair. You can add up to 50 tags to
@@ -14646,6 +17801,261 @@ func (s *TransactWriteItemsOutput) SetItemCollectionMetrics(v map[string][]*Item
 	return s
 }
 
+// The entire transaction request was canceled.
+//
+// DynamoDB cancels a TransactWriteItems request under the following circumstances:
+//
+//    * A condition in one of the condition expressions is not met.
+//
+//    * A table in the TransactWriteItems request is in a different account
+//    or region.
+//
+//    * More than one action in the TransactWriteItems operation targets the
+//    same item.
+//
+//    * There is insufficient provisioned capacity for the transaction to be
+//    completed.
+//
+//    * An item size becomes too large (larger than 400 KB), or a local secondary
+//    index (LSI) becomes too large, or a similar validation error occurs because
+//    of changes made by the transaction.
+//
+//    * There is a user error, such as an invalid data format.
+//
+// DynamoDB cancels a TransactGetItems request under the following circumstances:
+//
+//    * There is an ongoing TransactGetItems operation that conflicts with a
+//    concurrent PutItem, UpdateItem, DeleteItem or TransactWriteItems request.
+//    In this case the TransactGetItems operation fails with a TransactionCanceledException.
+//
+//    * A table in the TransactGetItems request is in a different account or
+//    region.
+//
+//    * There is insufficient provisioned capacity for the transaction to be
+//    completed.
+//
+//    * There is a user error, such as an invalid data format.
+//
+// If using Java, DynamoDB lists the cancellation reasons on the CancellationReasons
+// property. This property is not set for other languages. Transaction cancellation
+// reasons are ordered in the order of requested items, if an item has no error
+// it will have NONE code and Null message.
+//
+// Cancellation reason codes and possible error messages:
+//
+//    * No Errors: Code: NONE Message: null
+//
+//    * Conditional Check Failed: Code: ConditionalCheckFailed Message: The
+//    conditional request failed.
+//
+//    * Item Collection Size Limit Exceeded: Code: ItemCollectionSizeLimitExceeded
+//    Message: Collection size exceeded.
+//
+//    * Transaction Conflict: Code: TransactionConflict Message: Transaction
+//    is ongoing for the item.
+//
+//    * Provisioned Throughput Exceeded: Code: ProvisionedThroughputExceeded
+//    Messages: The level of configured provisioned throughput for the table
+//    was exceeded. Consider increasing your provisioning level with the UpdateTable
+//    API. This Message is received when provisioned throughput is exceeded
+//    is on a provisioned DynamoDB table. The level of configured provisioned
+//    throughput for one or more global secondary indexes of the table was exceeded.
+//    Consider increasing your provisioning level for the under-provisioned
+//    global secondary indexes with the UpdateTable API. This message is returned
+//    when provisioned throughput is exceeded is on a provisioned GSI.
+//
+//    * Throttling Error: Code: ThrottlingError Messages: Throughput exceeds
+//    the current capacity of your table or index. DynamoDB is automatically
+//    scaling your table or index so please try again shortly. If exceptions
+//    persist, check if you have a hot key: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-partition-key-design.html.
+//    This message is returned when writes get throttled on an On-Demand table
+//    as DynamoDB is automatically scaling the table. Throughput exceeds the
+//    current capacity for one or more global secondary indexes. DynamoDB is
+//    automatically scaling your index so please try again shortly. This message
+//    is returned when when writes get throttled on an On-Demand GSI as DynamoDB
+//    is automatically scaling the GSI.
+//
+//    * Validation Error: Code: ValidationError Messages: One or more parameter
+//    values were invalid. The update expression attempted to update the secondary
+//    index key beyond allowed size limits. The update expression attempted
+//    to update the secondary index key to unsupported type. An operand in the
+//    update expression has an incorrect data type. Item size to update has
+//    exceeded the maximum allowed size. Number overflow. Attempting to store
+//    a number with magnitude larger than supported range. Type mismatch for
+//    attribute to update. Nesting Levels have exceeded supported limits. The
+//    document path provided in the update expression is invalid for update.
+//    The provided expression refers to an attribute that does not exist in
+//    the item.
+type TransactionCanceledException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A list of cancellation reasons.
+	CancellationReasons []*CancellationReason `min:"1" type:"list"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s TransactionCanceledException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransactionCanceledException) GoString() string {
+	return s.String()
+}
+
+func newErrorTransactionCanceledException(v protocol.ResponseMetadata) error {
+	return &TransactionCanceledException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TransactionCanceledException) Code() string {
+	return "TransactionCanceledException"
+}
+
+// Message returns the exception's message.
+func (s TransactionCanceledException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TransactionCanceledException) OrigErr() error {
+	return nil
+}
+
+func (s TransactionCanceledException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TransactionCanceledException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TransactionCanceledException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Operation was rejected because there is an ongoing transaction for the item.
+type TransactionConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TransactionConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransactionConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorTransactionConflictException(v protocol.ResponseMetadata) error {
+	return &TransactionConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TransactionConflictException) Code() string {
+	return "TransactionConflictException"
+}
+
+// Message returns the exception's message.
+func (s TransactionConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TransactionConflictException) OrigErr() error {
+	return nil
+}
+
+func (s TransactionConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TransactionConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TransactionConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The transaction with the given request token is already in progress.
+type TransactionInProgressException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s TransactionInProgressException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransactionInProgressException) GoString() string {
+	return s.String()
+}
+
+func newErrorTransactionInProgressException(v protocol.ResponseMetadata) error {
+	return &TransactionInProgressException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TransactionInProgressException) Code() string {
+	return "TransactionInProgressException"
+}
+
+// Message returns the exception's message.
+func (s TransactionInProgressException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TransactionInProgressException) OrigErr() error {
+	return nil
+}
+
+func (s TransactionInProgressException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TransactionInProgressException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TransactionInProgressException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14911,6 +18321,114 @@ func (s *UpdateContinuousBackupsOutput) SetContinuousBackupsDescription(v *Conti
 	return s
 }
 
+type UpdateContributorInsightsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Represents the contributor insights action.
+	//
+	// ContributorInsightsAction is a required field
+	ContributorInsightsAction *string `type:"string" required:"true" enum:"ContributorInsightsAction"`
+
+	// The global secondary index name, if applicable.
+	IndexName *string `min:"3" type:"string"`
+
+	// The name of the table.
+	//
+	// TableName is a required field
+	TableName *string `min:"3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateContributorInsightsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateContributorInsightsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateContributorInsightsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateContributorInsightsInput"}
+	if s.ContributorInsightsAction == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContributorInsightsAction"))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 3))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContributorInsightsAction sets the ContributorInsightsAction field's value.
+func (s *UpdateContributorInsightsInput) SetContributorInsightsAction(v string) *UpdateContributorInsightsInput {
+	s.ContributorInsightsAction = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *UpdateContributorInsightsInput) SetIndexName(v string) *UpdateContributorInsightsInput {
+	s.IndexName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *UpdateContributorInsightsInput) SetTableName(v string) *UpdateContributorInsightsInput {
+	s.TableName = &v
+	return s
+}
+
+type UpdateContributorInsightsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The status of contributor insights
+	ContributorInsightsStatus *string `type:"string" enum:"ContributorInsightsStatus"`
+
+	// The name of the global secondary index, if applicable.
+	IndexName *string `min:"3" type:"string"`
+
+	// The name of the table.
+	TableName *string `min:"3" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateContributorInsightsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateContributorInsightsOutput) GoString() string {
+	return s.String()
+}
+
+// SetContributorInsightsStatus sets the ContributorInsightsStatus field's value.
+func (s *UpdateContributorInsightsOutput) SetContributorInsightsStatus(v string) *UpdateContributorInsightsOutput {
+	s.ContributorInsightsStatus = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *UpdateContributorInsightsOutput) SetIndexName(v string) *UpdateContributorInsightsOutput {
+	s.IndexName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *UpdateContributorInsightsOutput) SetTableName(v string) *UpdateContributorInsightsOutput {
+	s.TableName = &v
+	return s
+}
+
 // Represents the new provisioned throughput settings to be applied to a global
 // secondary index.
 type UpdateGlobalSecondaryIndexAction struct {
@@ -15071,6 +18589,12 @@ type UpdateGlobalTableSettingsInput struct {
 
 	// The billing mode of the global table. If GlobalTableBillingMode is not specified,
 	// the global table defaults to PROVISIONED capacity billing mode.
+	//
+	//    * PROVISIONED - We recommend using PROVISIONED for predictable workloads.
+	//    PROVISIONED sets the billing mode to Provisioned Mode (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.ReadWriteCapacityMode.html#HowItWorks.ProvisionedThroughput.Manual).
+	//
+	//    * PAY_PER_REQUEST - We recommend using PAY_PER_REQUEST for unpredictable
+	//    workloads. PAY_PER_REQUEST sets the billing mode to On-Demand Mode (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.ReadWriteCapacityMode.html#HowItWorks.OnDemand).
 	GlobalTableBillingMode *string `type:"string" enum:"BillingMode"`
 
 	// Represents the settings of a global secondary index for a global table that
@@ -15607,6 +19131,95 @@ func (s *UpdateItemOutput) SetItemCollectionMetrics(v *ItemCollectionMetrics) *U
 	return s
 }
 
+// Represents a replica to be modified.
+type UpdateReplicationGroupMemberAction struct {
+	_ struct{} `type:"structure"`
+
+	// Replica-specific global secondary index settings.
+	GlobalSecondaryIndexes []*ReplicaGlobalSecondaryIndex `min:"1" type:"list"`
+
+	// The AWS KMS customer master key (CMK) of the replica that should be used
+	// for AWS KMS encryption. To specify a CMK, use its key ID, Amazon Resource
+	// Name (ARN), alias name, or alias ARN. Note that you should only provide this
+	// parameter if the key is different from the default DynamoDB KMS master key
+	// alias/aws/dynamodb.
+	KMSMasterKeyId *string `type:"string"`
+
+	// Replica-specific provisioned throughput. If not specified, uses the source
+	// table's provisioned throughput settings.
+	ProvisionedThroughputOverride *ProvisionedThroughputOverride `type:"structure"`
+
+	// The Region where the replica exists.
+	//
+	// RegionName is a required field
+	RegionName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateReplicationGroupMemberAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateReplicationGroupMemberAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateReplicationGroupMemberAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateReplicationGroupMemberAction"}
+	if s.GlobalSecondaryIndexes != nil && len(s.GlobalSecondaryIndexes) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlobalSecondaryIndexes", 1))
+	}
+	if s.RegionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RegionName"))
+	}
+	if s.GlobalSecondaryIndexes != nil {
+		for i, v := range s.GlobalSecondaryIndexes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "GlobalSecondaryIndexes", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.ProvisionedThroughputOverride != nil {
+		if err := s.ProvisionedThroughputOverride.Validate(); err != nil {
+			invalidParams.AddNested("ProvisionedThroughputOverride", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGlobalSecondaryIndexes sets the GlobalSecondaryIndexes field's value.
+func (s *UpdateReplicationGroupMemberAction) SetGlobalSecondaryIndexes(v []*ReplicaGlobalSecondaryIndex) *UpdateReplicationGroupMemberAction {
+	s.GlobalSecondaryIndexes = v
+	return s
+}
+
+// SetKMSMasterKeyId sets the KMSMasterKeyId field's value.
+func (s *UpdateReplicationGroupMemberAction) SetKMSMasterKeyId(v string) *UpdateReplicationGroupMemberAction {
+	s.KMSMasterKeyId = &v
+	return s
+}
+
+// SetProvisionedThroughputOverride sets the ProvisionedThroughputOverride field's value.
+func (s *UpdateReplicationGroupMemberAction) SetProvisionedThroughputOverride(v *ProvisionedThroughputOverride) *UpdateReplicationGroupMemberAction {
+	s.ProvisionedThroughputOverride = v
+	return s
+}
+
+// SetRegionName sets the RegionName field's value.
+func (s *UpdateReplicationGroupMemberAction) SetRegionName(v string) *UpdateReplicationGroupMemberAction {
+	s.RegionName = &v
+	return s
+}
+
 // Represents the input of an UpdateTable operation.
 type UpdateTableInput struct {
 	_ struct{} `type:"structure"`
@@ -15622,11 +19235,11 @@ type UpdateTableInput struct {
 	// values are estimated based on the consumed read and write capacity of your
 	// table and global secondary indexes over the past 30 minutes.
 	//
-	//    * PROVISIONED - Sets the billing mode to PROVISIONED. We recommend using
-	//    PROVISIONED for predictable workloads.
+	//    * PROVISIONED - We recommend using PROVISIONED for predictable workloads.
+	//    PROVISIONED sets the billing mode to Provisioned Mode (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.ReadWriteCapacityMode.html#HowItWorks.ProvisionedThroughput.Manual).
 	//
-	//    * PAY_PER_REQUEST - Sets the billing mode to PAY_PER_REQUEST. We recommend
-	//    using PAY_PER_REQUEST for unpredictable workloads.
+	//    * PAY_PER_REQUEST - We recommend using PAY_PER_REQUEST for unpredictable
+	//    workloads. PAY_PER_REQUEST sets the billing mode to On-Demand Mode (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.ReadWriteCapacityMode.html#HowItWorks.OnDemand).
 	BillingMode *string `type:"string" enum:"BillingMode"`
 
 	// An array of one or more global secondary indexes for the table. For each
@@ -15639,12 +19252,21 @@ type UpdateTableInput struct {
 	//
 	//    * Delete - remove a global secondary index from the table.
 	//
+	// You can create or delete only one global secondary index per UpdateTable
+	// operation.
+	//
 	// For more information, see Managing Global Secondary Indexes (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.OnlineOps.html)
 	// in the Amazon DynamoDB Developer Guide.
 	GlobalSecondaryIndexUpdates []*GlobalSecondaryIndexUpdate `type:"list"`
 
 	// The new provisioned throughput settings for the specified table or index.
 	ProvisionedThroughput *ProvisionedThroughput `type:"structure"`
+
+	// A list of replica update actions (create, delete, or update) for the table.
+	//
+	// This property only applies to Version 2019.11.21 (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html)
+	// of global tables.
+	ReplicaUpdates []*ReplicationGroupUpdate `min:"1" type:"list"`
 
 	// The new server-side encryption settings for the specified table.
 	SSESpecification *SSESpecification `type:"structure"`
@@ -15675,6 +19297,9 @@ func (s UpdateTableInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateTableInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateTableInput"}
+	if s.ReplicaUpdates != nil && len(s.ReplicaUpdates) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ReplicaUpdates", 1))
+	}
 	if s.TableName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TableName"))
 	}
@@ -15706,6 +19331,21 @@ func (s *UpdateTableInput) Validate() error {
 			invalidParams.AddNested("ProvisionedThroughput", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.ReplicaUpdates != nil {
+		for i, v := range s.ReplicaUpdates {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ReplicaUpdates", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.StreamSpecification != nil {
+		if err := s.StreamSpecification.Validate(); err != nil {
+			invalidParams.AddNested("StreamSpecification", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -15734,6 +19374,12 @@ func (s *UpdateTableInput) SetGlobalSecondaryIndexUpdates(v []*GlobalSecondaryIn
 // SetProvisionedThroughput sets the ProvisionedThroughput field's value.
 func (s *UpdateTableInput) SetProvisionedThroughput(v *ProvisionedThroughput) *UpdateTableInput {
 	s.ProvisionedThroughput = v
+	return s
+}
+
+// SetReplicaUpdates sets the ReplicaUpdates field's value.
+func (s *UpdateTableInput) SetReplicaUpdates(v []*ReplicationGroupUpdate) *UpdateTableInput {
+	s.ReplicaUpdates = v
 	return s
 }
 
@@ -15776,6 +19422,131 @@ func (s UpdateTableOutput) GoString() string {
 // SetTableDescription sets the TableDescription field's value.
 func (s *UpdateTableOutput) SetTableDescription(v *TableDescription) *UpdateTableOutput {
 	s.TableDescription = v
+	return s
+}
+
+type UpdateTableReplicaAutoScalingInput struct {
+	_ struct{} `type:"structure"`
+
+	// Represents the auto scaling settings of the global secondary indexes of the
+	// replica to be updated.
+	GlobalSecondaryIndexUpdates []*GlobalSecondaryIndexAutoScalingUpdate `min:"1" type:"list"`
+
+	// Represents the auto scaling settings to be modified for a global table or
+	// global secondary index.
+	ProvisionedWriteCapacityAutoScalingUpdate *AutoScalingSettingsUpdate `type:"structure"`
+
+	// Represents the auto scaling settings of replicas of the table that will be
+	// modified.
+	ReplicaUpdates []*ReplicaAutoScalingUpdate `min:"1" type:"list"`
+
+	// The name of the global table to be updated.
+	//
+	// TableName is a required field
+	TableName *string `min:"3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateTableReplicaAutoScalingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateTableReplicaAutoScalingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateTableReplicaAutoScalingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateTableReplicaAutoScalingInput"}
+	if s.GlobalSecondaryIndexUpdates != nil && len(s.GlobalSecondaryIndexUpdates) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlobalSecondaryIndexUpdates", 1))
+	}
+	if s.ReplicaUpdates != nil && len(s.ReplicaUpdates) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ReplicaUpdates", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 3))
+	}
+	if s.GlobalSecondaryIndexUpdates != nil {
+		for i, v := range s.GlobalSecondaryIndexUpdates {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "GlobalSecondaryIndexUpdates", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.ProvisionedWriteCapacityAutoScalingUpdate != nil {
+		if err := s.ProvisionedWriteCapacityAutoScalingUpdate.Validate(); err != nil {
+			invalidParams.AddNested("ProvisionedWriteCapacityAutoScalingUpdate", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.ReplicaUpdates != nil {
+		for i, v := range s.ReplicaUpdates {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ReplicaUpdates", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGlobalSecondaryIndexUpdates sets the GlobalSecondaryIndexUpdates field's value.
+func (s *UpdateTableReplicaAutoScalingInput) SetGlobalSecondaryIndexUpdates(v []*GlobalSecondaryIndexAutoScalingUpdate) *UpdateTableReplicaAutoScalingInput {
+	s.GlobalSecondaryIndexUpdates = v
+	return s
+}
+
+// SetProvisionedWriteCapacityAutoScalingUpdate sets the ProvisionedWriteCapacityAutoScalingUpdate field's value.
+func (s *UpdateTableReplicaAutoScalingInput) SetProvisionedWriteCapacityAutoScalingUpdate(v *AutoScalingSettingsUpdate) *UpdateTableReplicaAutoScalingInput {
+	s.ProvisionedWriteCapacityAutoScalingUpdate = v
+	return s
+}
+
+// SetReplicaUpdates sets the ReplicaUpdates field's value.
+func (s *UpdateTableReplicaAutoScalingInput) SetReplicaUpdates(v []*ReplicaAutoScalingUpdate) *UpdateTableReplicaAutoScalingInput {
+	s.ReplicaUpdates = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *UpdateTableReplicaAutoScalingInput) SetTableName(v string) *UpdateTableReplicaAutoScalingInput {
+	s.TableName = &v
+	return s
+}
+
+type UpdateTableReplicaAutoScalingOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returns information about the auto scaling settings of a table with replicas.
+	TableAutoScalingDescription *TableAutoScalingDescription `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateTableReplicaAutoScalingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateTableReplicaAutoScalingOutput) GoString() string {
+	return s.String()
+}
+
+// SetTableAutoScalingDescription sets the TableAutoScalingDescription field's value.
+func (s *UpdateTableReplicaAutoScalingOutput) SetTableAutoScalingDescription(v *TableAutoScalingDescription) *UpdateTableReplicaAutoScalingOutput {
+	s.TableAutoScalingDescription = v
 	return s
 }
 
@@ -15866,8 +19637,8 @@ func (s *UpdateTimeToLiveOutput) SetTimeToLiveSpecification(v *TimeToLiveSpecifi
 
 // Represents an operation to perform - either DeleteItem or PutItem. You can
 // only request one of these operations, not both, in a single WriteRequest.
-// If you do need to perform both of these operations, you will need to provide
-// two separate WriteRequest objects.
+// If you do need to perform both of these operations, you need to provide two
+// separate WriteRequest objects.
 type WriteRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -16013,6 +19784,31 @@ const (
 )
 
 const (
+	// ContributorInsightsActionEnable is a ContributorInsightsAction enum value
+	ContributorInsightsActionEnable = "ENABLE"
+
+	// ContributorInsightsActionDisable is a ContributorInsightsAction enum value
+	ContributorInsightsActionDisable = "DISABLE"
+)
+
+const (
+	// ContributorInsightsStatusEnabling is a ContributorInsightsStatus enum value
+	ContributorInsightsStatusEnabling = "ENABLING"
+
+	// ContributorInsightsStatusEnabled is a ContributorInsightsStatus enum value
+	ContributorInsightsStatusEnabled = "ENABLED"
+
+	// ContributorInsightsStatusDisabling is a ContributorInsightsStatus enum value
+	ContributorInsightsStatusDisabling = "DISABLING"
+
+	// ContributorInsightsStatusDisabled is a ContributorInsightsStatus enum value
+	ContributorInsightsStatusDisabled = "DISABLED"
+
+	// ContributorInsightsStatusFailed is a ContributorInsightsStatus enum value
+	ContributorInsightsStatusFailed = "FAILED"
+)
+
+const (
 	// GlobalTableStatusCreating is a GlobalTableStatus enum value
 	GlobalTableStatusCreating = "CREATING"
 
@@ -16070,6 +19866,9 @@ const (
 const (
 	// ReplicaStatusCreating is a ReplicaStatus enum value
 	ReplicaStatusCreating = "CREATING"
+
+	// ReplicaStatusCreationFailed is a ReplicaStatus enum value
+	ReplicaStatusCreationFailed = "CREATION_FAILED"
 
 	// ReplicaStatusUpdating is a ReplicaStatus enum value
 	ReplicaStatusUpdating = "UPDATING"
@@ -16214,6 +20013,15 @@ const (
 
 	// TableStatusActive is a TableStatus enum value
 	TableStatusActive = "ACTIVE"
+
+	// TableStatusInaccessibleEncryptionCredentials is a TableStatus enum value
+	TableStatusInaccessibleEncryptionCredentials = "INACCESSIBLE_ENCRYPTION_CREDENTIALS"
+
+	// TableStatusArchiving is a TableStatus enum value
+	TableStatusArchiving = "ARCHIVING"
+
+	// TableStatusArchived is a TableStatus enum value
+	TableStatusArchived = "ARCHIVED"
 )
 
 const (

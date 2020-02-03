@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLambdaEventSourceMapping_kinesis_basic(t *testing.T) {
@@ -39,7 +39,14 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
 					testAccCheckAWSLambdaEventSourceMappingAttributes(&conf),
+					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"enabled", "starting_position"},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
@@ -85,6 +92,12 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_removeBatchSize(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"enabled", "starting_position"},
+			},
+			{
 				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis_removeBatchSize(roleName, policyName, attName, streamName, funcName, uFuncName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
@@ -121,9 +134,16 @@ func TestAccAWSLambdaEventSourceMapping_sqs_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
 					testAccCheckAWSLambdaEventSourceMappingAttributes(&conf),
+					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckNoResourceAttr(resourceName,
 						"starting_position"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"enabled", "starting_position"},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_sqs(roleName, policyName, attName, streamName, funcName, uFuncName),
@@ -167,30 +187,6 @@ func TestAccAWSLambdaEventSourceMapping_sqs_withFunctionName(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "starting_position"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSLambdaEventSourceMapping_kinesis_import(t *testing.T) {
-	resourceName := "aws_lambda_event_source_mapping.lambda_event_source_mapping_test"
-
-	rString := acctest.RandString(8)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_esm_import_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_esm_import_%s", rString)
-	attName := fmt.Sprintf("tf_acc_att_lambda_esm_import_%s", rString)
-	streamName := fmt.Sprintf("tf_acc_stream_lambda_esm_import_%s", rString)
-	funcName := fmt.Sprintf("tf_acc_lambda_esm_import_%s", rString)
-	uFuncName := fmt.Sprintf("tf_acc_lambda_esm_import_updated_%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
-			},
-
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
@@ -312,6 +308,45 @@ func TestAccAWSLambdaEventSourceMapping_StartingPositionTimestamp(t *testing.T) 
 					"starting_position",
 					"starting_position_timestamp",
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_BatchWindow(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_event_source_mapping.test"
+	batchWindow := int64(5)
+	batchWindowUpdate := int64(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisBatchWindow(rName, batchWindow),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "maximum_batching_window_in_seconds", strconv.Itoa(int(batchWindow))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"starting_position",
+					"starting_position_timestamp",
+				},
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisBatchWindow(rName, batchWindowUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "maximum_batching_window_in_seconds", strconv.Itoa(int(batchWindowUpdate))),
+				),
 			},
 		},
 	})
@@ -542,7 +577,7 @@ resource "aws_lambda_function" "test" {
   function_name = %q
   handler       = "exports.example"
   role          = "${aws_iam_role.test.arn}"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 `, rName, rName, rName)
 }
@@ -558,6 +593,19 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position_timestamp = %q
 }
 `, startingPositionTimestamp)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigKinesisBatchWindow(rName string, batchWindow int64) string {
+	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size                          = 100
+  maximum_batching_window_in_seconds  = %v
+  enabled                             = true
+  event_source_arn                    = "${aws_kinesis_stream.test.arn}"
+  function_name                       = "${aws_lambda_function.test.arn}"
+  starting_position                   = "TRIM_HORIZON"
+}
+`, batchWindow)
 }
 
 func testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName,
@@ -629,7 +677,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_function" "lambda_function_test_update" {
@@ -637,7 +685,7 @@ resource "aws_lambda_function" "lambda_function_test_update" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
@@ -720,7 +768,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_function" "lambda_function_test_update" {
@@ -728,7 +776,7 @@ resource "aws_lambda_function" "lambda_function_test_update" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
@@ -811,7 +859,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_function" "lambda_function_test_update" {
@@ -819,7 +867,7 @@ resource "aws_lambda_function" "lambda_function_test_update" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
@@ -892,7 +940,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_function" "lambda_function_test_update" {
@@ -900,7 +948,7 @@ resource "aws_lambda_function" "lambda_function_test_update" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
@@ -973,7 +1021,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_function" "lambda_function_test_update" {
@@ -981,7 +1029,7 @@ resource "aws_lambda_function" "lambda_function_test_update" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
@@ -1052,7 +1100,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   function_name = "%[5]s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {

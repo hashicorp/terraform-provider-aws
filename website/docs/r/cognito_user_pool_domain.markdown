@@ -1,7 +1,7 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool_domain"
-sidebar_current: "docs-aws-resource-cognito-user-pool-domain"
 description: |-
   Provides a Cognito User Pool Domain resource.
 ---

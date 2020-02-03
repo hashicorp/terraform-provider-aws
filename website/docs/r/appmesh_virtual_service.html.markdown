@@ -1,7 +1,7 @@
 ---
+subcategory: "AppMesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_virtual_service"
-sidebar_current: "docs-aws-resource-appmesh-virtual-service"
 description: |-
   Provides an AWS App Mesh virtual service resource.
 ---

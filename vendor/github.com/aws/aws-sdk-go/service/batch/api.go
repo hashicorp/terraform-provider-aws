@@ -70,13 +70,13 @@ func (c *Batch) CancelJobRequest(input *CancelJobInput) (req *request.Request, o
 // See the AWS API reference guide for AWS Batch's
 // API operation CancelJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/CancelJob
@@ -193,13 +193,13 @@ func (c *Batch) CreateComputeEnvironmentRequest(input *CreateComputeEnvironmentI
 // See the AWS API reference guide for AWS Batch's
 // API operation CreateComputeEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/CreateComputeEnvironment
@@ -285,13 +285,13 @@ func (c *Batch) CreateJobQueueRequest(input *CreateJobQueueInput) (req *request.
 // See the AWS API reference guide for AWS Batch's
 // API operation CreateJobQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/CreateJobQueue
@@ -374,13 +374,13 @@ func (c *Batch) DeleteComputeEnvironmentRequest(input *DeleteComputeEnvironmentI
 // See the AWS API reference guide for AWS Batch's
 // API operation DeleteComputeEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DeleteComputeEnvironment
@@ -464,13 +464,13 @@ func (c *Batch) DeleteJobQueueRequest(input *DeleteJobQueueInput) (req *request.
 // See the AWS API reference guide for AWS Batch's
 // API operation DeleteJobQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DeleteJobQueue
@@ -540,7 +540,8 @@ func (c *Batch) DeregisterJobDefinitionRequest(input *DeregisterJobDefinitionInp
 
 // DeregisterJobDefinition API operation for AWS Batch.
 //
-// Deregisters an AWS Batch job definition.
+// Deregisters an AWS Batch job definition. Job definitions will be permanently
+// deleted after 180 days.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -549,13 +550,13 @@ func (c *Batch) DeregisterJobDefinitionRequest(input *DeregisterJobDefinitionInp
 // See the AWS API reference guide for AWS Batch's
 // API operation DeregisterJobDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DeregisterJobDefinition
@@ -643,13 +644,13 @@ func (c *Batch) DescribeComputeEnvironmentsRequest(input *DescribeComputeEnviron
 // See the AWS API reference guide for AWS Batch's
 // API operation DescribeComputeEnvironments for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DescribeComputeEnvironments
@@ -717,10 +718,12 @@ func (c *Batch) DescribeComputeEnvironmentsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeComputeEnvironmentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeComputeEnvironmentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -784,13 +787,13 @@ func (c *Batch) DescribeJobDefinitionsRequest(input *DescribeJobDefinitionsInput
 // See the AWS API reference guide for AWS Batch's
 // API operation DescribeJobDefinitions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DescribeJobDefinitions
@@ -858,10 +861,12 @@ func (c *Batch) DescribeJobDefinitionsPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeJobDefinitionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeJobDefinitionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -924,13 +929,13 @@ func (c *Batch) DescribeJobQueuesRequest(input *DescribeJobQueuesInput) (req *re
 // See the AWS API reference guide for AWS Batch's
 // API operation DescribeJobQueues for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DescribeJobQueues
@@ -998,10 +1003,12 @@ func (c *Batch) DescribeJobQueuesPagesWithContext(ctx aws.Context, input *Descri
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeJobQueuesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeJobQueuesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1058,13 +1065,13 @@ func (c *Batch) DescribeJobsRequest(input *DescribeJobsInput) (req *request.Requ
 // See the AWS API reference guide for AWS Batch's
 // API operation DescribeJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DescribeJobs
@@ -1159,13 +1166,13 @@ func (c *Batch) ListJobsRequest(input *ListJobsInput) (req *request.Request, out
 // See the AWS API reference guide for AWS Batch's
 // API operation ListJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/ListJobs
@@ -1233,10 +1240,12 @@ func (c *Batch) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput, 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1293,13 +1302,13 @@ func (c *Batch) RegisterJobDefinitionRequest(input *RegisterJobDefinitionInput) 
 // See the AWS API reference guide for AWS Batch's
 // API operation RegisterJobDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/RegisterJobDefinition
@@ -1378,13 +1387,13 @@ func (c *Batch) SubmitJobRequest(input *SubmitJobInput) (req *request.Request, o
 // See the AWS API reference guide for AWS Batch's
 // API operation SubmitJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/SubmitJob
@@ -1465,13 +1474,13 @@ func (c *Batch) TerminateJobRequest(input *TerminateJobInput) (req *request.Requ
 // See the AWS API reference guide for AWS Batch's
 // API operation TerminateJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/TerminateJob
@@ -1549,13 +1558,13 @@ func (c *Batch) UpdateComputeEnvironmentRequest(input *UpdateComputeEnvironmentI
 // See the AWS API reference guide for AWS Batch's
 // API operation UpdateComputeEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/UpdateComputeEnvironment
@@ -1633,13 +1642,13 @@ func (c *Batch) UpdateJobQueueRequest(input *UpdateJobQueueInput) (req *request.
 // See the AWS API reference guide for AWS Batch's
 // API operation UpdateJobQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/UpdateJobQueue
@@ -1965,6 +1974,64 @@ func (s CancelJobOutput) GoString() string {
 	return s.String()
 }
 
+// These errors are usually caused by a client action, such as using an action
+// or resource on behalf of a user that doesn't have permissions to use the
+// action or resource, or specifying an identifier that is not valid.
+type ClientException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ClientException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientException) GoString() string {
+	return s.String()
+}
+
+func newErrorClientException(v protocol.ResponseMetadata) error {
+	return &ClientException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClientException) Code() string {
+	return "ClientException"
+}
+
+// Message returns the exception's message.
+func (s ClientException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClientException) OrigErr() error {
+	return nil
+}
+
+func (s ClientException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClientException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClientException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // An object representing an AWS Batch compute environment.
 type ComputeEnvironmentDetail struct {
 	_ struct{} `type:"structure"`
@@ -2141,19 +2208,38 @@ func (s *ComputeEnvironmentOrder) SetOrder(v int64) *ComputeEnvironmentOrder {
 type ComputeResource struct {
 	_ struct{} `type:"structure"`
 
+	// The allocation strategy to use for the compute resource in case not enough
+	// instances of the best fitting instance type can be allocated. This could
+	// be due to availability of the instance type in the region or Amazon EC2 service
+	// limits (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html).
+	// If this is not specified, the default is BEST_FIT, which will use only the
+	// best fitting instance type, waiting for additional capacity if it's not available.
+	// This allocation strategy keeps costs lower but can limit scaling. If you
+	// are using Spot Fleets with BEST_FIT then the Spot Fleet IAM Role must be
+	// specified. BEST_FIT_PROGRESSIVE will select additional instance types that
+	// are large enough to meet the requirements of the jobs in the queue, with
+	// a preference for instance types with a lower cost per vCPU. SPOT_CAPACITY_OPTIMIZED
+	// is only available for Spot Instance compute resources and will select additional
+	// instance types that are large enough to meet the requirements of the jobs
+	// in the queue, with a preference for instance types that are less likely to
+	// be interrupted. For more information, see Allocation Strategies (https://docs.aws.amazon.com/batch/latest/userguide/allocation-strategies.html)
+	// in the AWS Batch User Guide.
+	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"CRAllocationStrategy"`
+
 	// The maximum percentage that a Spot Instance price can be when compared with
 	// the On-Demand price for that instance type before instances are launched.
 	// For example, if your maximum percentage is 20%, then the Spot price must
-	// be below 20% of the current On-Demand price for that EC2 instance. You always
-	// pay the lowest (market) price and never more than your maximum percentage.
-	// If you leave this field empty, the default value is 100% of the On-Demand
-	// price.
+	// be below 20% of the current On-Demand price for that Amazon EC2 instance.
+	// You always pay the lowest (market) price and never more than your maximum
+	// percentage. If you leave this field empty, the default value is 100% of the
+	// On-Demand price.
 	BidPercentage *int64 `locationName:"bidPercentage" type:"integer"`
 
-	// The desired number of EC2 vCPUS in the compute environment.
+	// The desired number of Amazon EC2 vCPUS in the compute environment.
 	DesiredvCpus *int64 `locationName:"desiredvCpus" type:"integer"`
 
-	// The EC2 key pair that is used for instances launched in the compute environment.
+	// The Amazon EC2 key pair that is used for instances launched in the compute
+	// environment.
 	Ec2KeyPair *string `locationName:"ec2KeyPair" type:"string"`
 
 	// The Amazon Machine Image (AMI) ID used for instances launched in the compute
@@ -2170,8 +2256,8 @@ type ComputeResource struct {
 	InstanceRole *string `locationName:"instanceRole" type:"string" required:"true"`
 
 	// The instances types that may be launched. You can specify instance families
-	// to launch any instance type within those families (for example, c4 or p3),
-	// or you can specify specific sizes within a family (such as c4.8xlarge). You
+	// to launch any instance type within those families (for example, c5 or p3),
+	// or you can specify specific sizes within a family (such as c5.8xlarge). You
 	// can also choose optimal to pick instance types (from the C, M, and R instance
 	// families) on the fly that match the demand of your job queues.
 	//
@@ -2186,13 +2272,13 @@ type ComputeResource struct {
 	// in the AWS Batch User Guide.
 	LaunchTemplate *LaunchTemplateSpecification `locationName:"launchTemplate" type:"structure"`
 
-	// The maximum number of EC2 vCPUs that an environment can reach.
+	// The maximum number of Amazon EC2 vCPUs that an environment can reach.
 	//
 	// MaxvCpus is a required field
 	MaxvCpus *int64 `locationName:"maxvCpus" type:"integer" required:"true"`
 
-	// The minimum number of EC2 vCPUs that an environment should maintain (even
-	// if the compute environment is DISABLED).
+	// The minimum number of Amazon EC2 vCPUs that an environment should maintain
+	// (even if the compute environment is DISABLED).
 	//
 	// MinvCpus is a required field
 	MinvCpus *int64 `locationName:"minvCpus" type:"integer" required:"true"`
@@ -2206,13 +2292,17 @@ type ComputeResource struct {
 	// in the Amazon EC2 User Guide for Linux Instances.
 	PlacementGroup *string `locationName:"placementGroup" type:"string"`
 
-	// The EC2 security group that is associated with instances launched in the
-	// compute environment.
+	// The Amazon EC2 security groups associated with instances launched in the
+	// compute environment. One or more security groups must be specified, either
+	// in securityGroupIds or using a launch template referenced in launchTemplate.
+	// If security groups are specified using both securityGroupIds and launchTemplate,
+	// the values in securityGroupIds will be used.
 	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon EC2 Spot Fleet IAM role applied
-	// to a SPOT compute environment. For more information, see Amazon EC2 Spot
-	// Fleet Role (https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html)
+	// to a SPOT compute environment. This role is required if the allocation strategy
+	// set to BEST_FIT or if the allocation strategy is not specified. For more
+	// information, see Amazon EC2 Spot Fleet Role (https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html)
 	// in the AWS Batch User Guide.
 	SpotIamFleetRole *string `locationName:"spotIamFleetRole" type:"string"`
 
@@ -2271,6 +2361,12 @@ func (s *ComputeResource) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *ComputeResource) SetAllocationStrategy(v string) *ComputeResource {
+	s.AllocationStrategy = &v
+	return s
 }
 
 // SetBidPercentage sets the BidPercentage field's value.
@@ -2368,13 +2464,13 @@ func (s *ComputeResource) SetType(v string) *ComputeResource {
 type ComputeResourceUpdate struct {
 	_ struct{} `type:"structure"`
 
-	// The desired number of EC2 vCPUS in the compute environment.
+	// The desired number of Amazon EC2 vCPUS in the compute environment.
 	DesiredvCpus *int64 `locationName:"desiredvCpus" type:"integer"`
 
-	// The maximum number of EC2 vCPUs that an environment can reach.
+	// The maximum number of Amazon EC2 vCPUs that an environment can reach.
 	MaxvCpus *int64 `locationName:"maxvCpus" type:"integer"`
 
-	// The minimum number of EC2 vCPUs that an environment should maintain.
+	// The minimum number of Amazon EC2 vCPUs that an environment should maintain.
 	MinvCpus *int64 `locationName:"minvCpus" type:"integer"`
 }
 
@@ -4058,7 +4154,7 @@ type JobDetail struct {
 	// state.
 	CreatedAt *int64 `locationName:"createdAt" type:"long"`
 
-	// A list of job names or IDs on which this job depends.
+	// A list of job IDs on which this job depends.
 	DependsOn []*JobDependency `locationName:"dependsOn" type:"list"`
 
 	// The job definition that is used by this job.
@@ -5412,6 +5508,62 @@ func (s *RetryStrategy) SetAttempts(v int64) *RetryStrategy {
 	return s
 }
 
+// These errors are usually caused by a server issue.
+type ServerException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorServerException(v protocol.ResponseMetadata) error {
+	return &ServerException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServerException) Code() string {
+	return "ServerException"
+}
+
+// Message returns the exception's message.
+func (s ServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServerException) OrigErr() error {
+	return nil
+}
+
+func (s ServerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServerException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServerException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type SubmitJobInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5440,8 +5592,9 @@ type SubmitJobInput struct {
 	// begin.
 	DependsOn []*JobDependency `locationName:"dependsOn" type:"list"`
 
-	// The job definition used by this job. This value can be either a name:revision
-	// or the Amazon Resource Name (ARN) for the job definition.
+	// The job definition used by this job. This value can be one of name, name:revision,
+	// or the Amazon Resource Name (ARN) for the job definition. If name is specified
+	// without a revision then the latest active revision is used.
 	//
 	// JobDefinition is a required field
 	JobDefinition *string `locationName:"jobDefinition" type:"string" required:"true"`
@@ -6061,6 +6214,17 @@ const (
 
 	// CETypeUnmanaged is a CEType enum value
 	CETypeUnmanaged = "UNMANAGED"
+)
+
+const (
+	// CRAllocationStrategyBestFit is a CRAllocationStrategy enum value
+	CRAllocationStrategyBestFit = "BEST_FIT"
+
+	// CRAllocationStrategyBestFitProgressive is a CRAllocationStrategy enum value
+	CRAllocationStrategyBestFitProgressive = "BEST_FIT_PROGRESSIVE"
+
+	// CRAllocationStrategySpotCapacityOptimized is a CRAllocationStrategy enum value
+	CRAllocationStrategySpotCapacityOptimized = "SPOT_CAPACITY_OPTIMIZED"
 )
 
 const (

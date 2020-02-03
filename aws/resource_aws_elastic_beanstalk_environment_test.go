@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // initialize sweeper
@@ -193,6 +194,7 @@ func TestAccAWSBeanstalkEnv_outputs(t *testing.T) {
 	beanstalkElbNameRegexp := regexp.MustCompile("awseb.+?EBLoa[^,]+")
 	beanstalkInstancesNameRegexp := regexp.MustCompile("i-([0-9a-fA-F]{8}|[0-9a-fA-F]{17})")
 	beanstalkLcNameRegexp := regexp.MustCompile("awseb.+?AutoScalingLaunch[^,]+")
+	beanstalkEndpointUrl := regexp.MustCompile("awseb.+?EBLoa[^,].+?elb.amazonaws.com")
 
 	rString := acctest.RandString(8)
 	appName := fmt.Sprintf("tf_acc_app_env_outputs_%s", rString)
@@ -215,6 +217,8 @@ func TestAccAWSBeanstalkEnv_outputs(t *testing.T) {
 						"aws_elastic_beanstalk_environment.tfenvtest", "instances.0", beanstalkInstancesNameRegexp),
 					resource.TestMatchResourceAttr(
 						"aws_elastic_beanstalk_environment.tfenvtest", "launch_configurations.0", beanstalkLcNameRegexp),
+					resource.TestMatchResourceAttr(
+						"aws_elastic_beanstalk_environment.tfenvtest", "endpoint_url", beanstalkEndpointUrl),
 				),
 			},
 		},
@@ -743,7 +747,7 @@ func testAccCheckBeanstalkEnvTagsMatch(env *elasticbeanstalk.EnvironmentDescript
 			return err
 		}
 
-		foundTags := tagsToMapBeanstalk(tags.ResourceTags)
+		foundTags := keyvaluetags.ElasticbeanstalkKeyValueTags(tags.ResourceTags).IgnoreElasticbeanstalk().Map()
 
 		if !reflect.DeepEqual(foundTags, expectedValue) {
 			return fmt.Errorf("Tag value: %s.  Expected %s", foundTags, expectedValue)

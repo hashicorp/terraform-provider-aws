@@ -1,7 +1,7 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_config_rule"
-sidebar_current: "docs-aws-resource-config-config-rule"
 description: |-
   Provides an AWS Config Rule.
 ---

@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -102,11 +102,28 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{}) error {
+	var t *applicationautoscaling.ScalableTarget
+
 	conn := meta.(*AWSClient).appautoscalingconn
 
 	namespace := d.Get("service_namespace").(string)
 	dimension := d.Get("scalable_dimension").(string)
-	t, err := getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
+
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		t, err = getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		if d.IsNewResource() && t == nil {
+			return resource.RetryableError(&resource.NotFoundError{})
+		}
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		t, err = getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
+	}
+
 	if err != nil {
 		return err
 	}

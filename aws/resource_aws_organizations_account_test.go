@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func testAccAwsOrganizationsAccount_basic(t *testing.T) {
@@ -37,7 +37,7 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 					testAccCheckAwsOrganizationsAccountExists("aws_organizations_account.test", &account),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "arn"),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "joined_method"),
-					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "joined_timestamp"),
+					testAccCheckResourceAttrRfc3339("aws_organizations_account.test", "joined_timestamp"),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "parent_id"),
 					resource.TestCheckResourceAttr("aws_organizations_account.test", "name", name),
 					resource.TestCheckResourceAttr("aws_organizations_account.test", "email", email),

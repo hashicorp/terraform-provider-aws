@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_instance"
-sidebar_current: "docs-aws-datasource-instance"
 description: |-
   Get information on an Amazon EC2 Instance.
 ---

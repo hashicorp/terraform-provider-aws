@@ -1,7 +1,7 @@
 ---
+subcategory: "RAM"
 layout: "aws"
 page_title: "AWS: aws_ram_principal_association"
-sidebar_current: "docs-aws-resource-ram-principal-association"
 description: |-
   Provides a Resource Access Manager (RAM) principal association.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_event_subscription"
-sidebar_current: "docs-aws-resource-neptune-event-subscription"
 description: |-
   Provides a Neptune event subscription resource.
 ---

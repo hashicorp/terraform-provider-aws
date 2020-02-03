@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCognitoUserPool() *schema.Resource {
@@ -64,10 +65,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							},
 						},
 						"unused_account_validity_days": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      7,
-							ValidateFunc: validation.IntBetween(0, 90),
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Deprecated:    "Use password_policy.temporary_password_validity_days instead",
+							ValidateFunc:  validation.IntBetween(0, 90),
+							ConflictsWith: []string{"password_policy.0.temporary_password_validity_days"},
 						},
 					},
 				},
@@ -294,6 +296,12 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"temporary_password_validity_days": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntBetween(0, 365),
+							ConflictsWith: []string{"admin_create_user_config.0.unused_account_validity_days"},
+						},
 					},
 				},
 			},
@@ -410,6 +418,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"sms_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ValidateFunc:  validateCognitoUserPoolSmsVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.sms_message"},
 			},
@@ -652,7 +661,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		params.UserPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
+		params.UserPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityproviderTags()
 	}
 	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
 
@@ -662,11 +671,11 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateUserPool(params)
-		if isAWSErr(err, "InvalidSmsRoleTrustRelationshipException", "Role does not have a trust relationship allowing Cognito to assume the role") {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, "InvalidSmsRoleAccessPolicyException", "Role does not have permission to publish with SNS") {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
 			return resource.RetryableError(err)
 		}
@@ -697,7 +706,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	resp, err := conn.DescribeUserPool(params)
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == cognitoidentityprovider.ErrCodeResourceNotFoundException {
 			log.Printf("[WARN] Cognito User Pool %s is already gone", d.Id())
 			d.SetId("")
 			return nil
@@ -784,7 +793,9 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("creation_date", resp.UserPool.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", resp.UserPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", resp.UserPool.Name)
-	d.Set("tags", tagsToMapGeneric(resp.UserPool.UserPoolTags))
+	if err := d.Set("tags", keyvaluetags.CognitoidentityKeyValueTags(resp.UserPool.UserPoolTags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -926,7 +937,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		params.UserPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
+		params.UserPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityproviderTags()
 	}
 
 	log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
@@ -936,12 +947,17 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		_, err = conn.UpdateUserPool(params)
-		if isAWSErr(err, "InvalidSmsRoleTrustRelationshipException", "Role does not have a trust relationship allowing Cognito to assume the role") {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, "InvalidSmsRoleAccessPolicyException", "Role does not have permission to publish with SNS") {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
+			return resource.RetryableError(err)
+		}
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") {
+			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool without UnusedAccountValidityDays", err)
+			params.AdminCreateUserConfig.UnusedAccountValidityDays = nil
 			return resource.RetryableError(err)
 		}
 

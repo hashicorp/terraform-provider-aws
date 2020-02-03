@@ -1,7 +1,7 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool"
-sidebar_current: "docs-aws-resource-cognito-user-pool"
 description: |-
   Provides a Cognito User Pool resource.
 ---
@@ -35,7 +35,7 @@ The following arguments are supported:
 * `lambda_config` (Optional) - A container for the AWS [Lambda triggers](#lambda-configuration) associated with the user pool.
 * `mfa_configuration` - (Optional, Default: OFF) Set to enable multi-factor authentication. Must be one of the following values (ON, OFF, OPTIONAL)
 * `password_policy` (Optional) - A container for information about the [user pool password policy](#password-policy).
-* `schema` (Optional) - A container with the [schema attributes](#schema-attributes) of a user pool. Maximum of 50 attributes.
+* `schema` (Optional) - A container with the [schema attributes](#schema-attributes) of a user pool. Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Maximum of 50 attributes.
 * `sms_authentication_message` - (Optional) A string representing the SMS authentication message.
 * `sms_configuration` (Optional) - The [SMS Configuration](#sms-configuration).
 * `sms_verification_message` - (Optional) A string representing the SMS verification message. Conflicts with `verification_message_template` configuration block `sms_message` argument.
@@ -48,7 +48,7 @@ The following arguments are supported:
 
   * `allow_admin_create_user_only` (Optional) - Set to True if only the administrator is allowed to create user profiles. Set to False if users can sign themselves up via an app.
   * `invite_message_template` (Optional) - The [invite message template structure](#invite-message-template).
-  * `unused_account_validity_days` (Optional) - The user account expiration limit, in days, after which the account is no longer usable.
+  * `unused_account_validity_days` (Optional) - **DEPRECATED** Use password_policy.temporary_password_validity_days instead - The user account expiration limit, in days, after which the account is no longer usable.
 
 ##### Invite Message template
 
@@ -87,6 +87,7 @@ The following arguments are supported:
   * `require_numbers` (Optional) - Whether you have required users to use at least one number in their password.
   * `require_symbols` (Optional) - Whether you have required users to use at least one symbol in their password.
   * `require_uppercase` (Optional) - Whether you have required users to use at least one uppercase letter in their password.
+  * `temporary_password_validity_days` (Optional) - In the password policy you have set, refers to the number of days a temporary password is valid. If the user does not sign-in during this time, their password will need to be reset by an administrator.
 
 #### Schema Attributes
 
@@ -99,6 +100,24 @@ The following arguments are supported:
   * `number_attribute_constraints` (Optional) - Specifies the [constraints for an attribute of the number type](#number-attribute-constraints).
   * `required` (Optional) - Specifies whether a user pool attribute is required. If the attribute is required and the user does not provide a value, registration or sign-in will fail.
   * `string_attribute_constraints` (Optional) -Specifies the [constraints for an attribute of the string type](#string-attribute-constraints).
+
+##### Defaults for Standard Attributes
+
+The [standard attributes](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) have the following defaults. Note that attributes which match the default values are not stored in Terraform state when importing.
+
+```hcl
+schema {
+  name                     = <name>
+  attribute                = <appropriate type>
+  developer_only_attribute = false
+  mutable                  = true  // false for "sub"
+  required                 = false // true for "sub"
+  string_attribute_constraints { // if it's a string
+    min_length = 0    // 10 for "birthdate"
+    max_length = 2048 // 10 for "birthdate"
+  }
+}
+```
 
 ##### Number Attribute Constraints
 

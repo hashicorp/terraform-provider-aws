@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot_copy"
-sidebar_current: "docs-aws-resource-ebs-snapshot-copy"
 description: |-
   Duplicates an existing Amazon snapshot
 ---

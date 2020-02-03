@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_security_group"
-sidebar_current: "docs-aws-resource-default-security-group"
 description: |-
   Manage the default Security Group resource.
 ---

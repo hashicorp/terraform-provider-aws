@@ -3,10 +3,9 @@
 package R003
 
 import (
-	"go/ast"
-
 	"golang.org/x/tools/go/analysis"
 
+	"github.com/bflad/tfproviderlint/helper/terraformtype"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/schemaresource"
 )
@@ -31,23 +30,19 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
-	resources := pass.ResultOf[schemaresource.Analyzer].([]*ast.CompositeLit)
+	resources := pass.ResultOf[schemaresource.Analyzer].([]*terraformtype.HelperSchemaResourceInfo)
 	for _, resource := range resources {
-		if ignorer.ShouldIgnore(analyzerName, resource) {
+		if ignorer.ShouldIgnore(analyzerName, resource.AstCompositeLit) {
 			continue
 		}
 
-		for _, elt := range resource.Elts {
-			switch v := elt.(type) {
-			default:
-				continue
-			case *ast.KeyValueExpr:
-				if v.Key.(*ast.Ident).Name == "Exists" {
-					pass.Reportf(v.Key.Pos(), "%s: resource should not include Exists function", analyzerName)
-					break
-				}
-			}
+		kvExpr := resource.Fields[terraformtype.ResourceFieldExists]
+
+		if kvExpr == nil {
+			continue
 		}
+
+		pass.Reportf(kvExpr.Key.Pos(), "%s: resource should not include Exists function", analyzerName)
 	}
 
 	return nil, nil

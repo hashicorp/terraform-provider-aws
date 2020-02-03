@@ -14,9 +14,10 @@ import (
 
 	"errors"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const awsMutexLambdaKey = `aws_lambda_function`
@@ -28,15 +29,18 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimeDotnetcore21,
 	lambda.RuntimeGo1X,
 	lambda.RuntimeJava8,
+	lambda.RuntimeJava11,
 	lambda.RuntimeNodejs43,
 	lambda.RuntimeNodejs43Edge,
 	lambda.RuntimeNodejs610,
 	lambda.RuntimeNodejs810,
 	lambda.RuntimeNodejs10X,
+	lambda.RuntimeNodejs12X,
 	lambda.RuntimeProvided,
 	lambda.RuntimePython27,
 	lambda.RuntimePython36,
 	lambda.RuntimePython37,
+	lambda.RuntimePython38,
 	lambda.RuntimeRuby25,
 }
 
@@ -239,9 +243,12 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"mode": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Active", "PassThrough"}, true),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								lambda.TracingModeActive,
+								lambda.TracingModePassThrough},
+								true),
 						},
 					},
 				},
@@ -385,7 +392,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, exists := d.GetOk("tags"); exists {
-		params.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
+		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().LambdaTags()
 	}
 
 	// IAM changes can take 1 minute to propagate in AWS
@@ -444,6 +451,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(d.Get("function_name").(string))
 
+	if err := waitForLambdaFunctionCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Lambda Function (%s) creation: %s", d.Id(), err)
+	}
+
 	if reservedConcurrentExecutions >= 0 {
 
 		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
@@ -494,7 +505,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 
 	getFunctionOutput, err := conn.GetFunction(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" && !d.IsNewResource() {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == lambda.ErrCodeResourceNotFoundException && !d.IsNewResource() {
 			d.SetId("")
 			return nil
 		}
@@ -510,7 +521,9 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// Tagging operations are permitted on Lambda functions only.
 	// Tags on aliases and versions are not supported.
 	if !qualifierExistance {
-		d.Set("tags", tagsToMapGeneric(getFunctionOutput.Tags))
+		if err := d.Set("tags", keyvaluetags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().Map()); err != nil {
+			return fmt.Errorf("error setting tags: %s", err)
+		}
 	}
 
 	// getFunctionOutput.Code.Location is a pre-signed URL pointing at the zip
@@ -659,10 +672,13 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	d.Partial(true)
 
 	arn := d.Get("arn").(string)
-	if tagErr := setTagsLambda(conn, d, arn); tagErr != nil {
-		return tagErr
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.LambdaUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Lambda Function (%s) tags: %s", arn, err)
+		}
 	}
-	d.SetPartial("tags")
 
 	configReq := &lambda.UpdateFunctionConfigurationInput{
 		FunctionName: aws.String(d.Id()),
@@ -816,6 +832,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 
+		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Lambda Function (%s) update: %s", d.Id(), err)
+		}
+
 		d.SetPartial("description")
 		d.SetPartial("handler")
 		d.SetPartial("memory_size")
@@ -929,4 +949,84 @@ func lambdaFunctionInvokeArn(functionArn string, meta interface{}) string {
 		AccountID: "lambda",
 		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionArn),
 	}.String()
+}
+
+func refreshLambdaFunctionLastUpdateStatus(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &lambda.GetFunctionInput{
+			FunctionName: aws.String(functionName),
+		}
+
+		output, err := conn.GetFunction(input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.Configuration == nil {
+			return nil, "", nil
+		}
+
+		lastUpdateStatus := aws.StringValue(output.Configuration.LastUpdateStatus)
+
+		if lastUpdateStatus == lambda.LastUpdateStatusFailed {
+			return output.Configuration, lastUpdateStatus, fmt.Errorf("%s: %s", aws.StringValue(output.Configuration.LastUpdateStatusReasonCode), aws.StringValue(output.Configuration.LastUpdateStatusReason))
+		}
+
+		return output.Configuration, lastUpdateStatus, nil
+	}
+}
+
+func refreshLambdaFunctionState(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &lambda.GetFunctionInput{
+			FunctionName: aws.String(functionName),
+		}
+
+		output, err := conn.GetFunction(input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.Configuration == nil {
+			return nil, "", nil
+		}
+
+		state := aws.StringValue(output.Configuration.State)
+
+		if state == lambda.StateFailed {
+			return output.Configuration, state, fmt.Errorf("%s: %s", aws.StringValue(output.Configuration.StateReasonCode), aws.StringValue(output.Configuration.StateReason))
+		}
+
+		return output.Configuration, state, nil
+	}
+}
+
+func waitForLambdaFunctionCreation(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{lambda.StatePending},
+		Target:  []string{lambda.StateActive},
+		Refresh: refreshLambdaFunctionState(conn, functionName),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForLambdaFunctionUpdate(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{lambda.LastUpdateStatusInProgress},
+		Target:  []string{lambda.LastUpdateStatusSuccessful},
+		Refresh: refreshLambdaFunctionLastUpdateStatus(conn, functionName),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

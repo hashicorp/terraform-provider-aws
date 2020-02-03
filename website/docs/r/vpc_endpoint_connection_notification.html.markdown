@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_connection_notification"
-sidebar_current: "docs-aws-resource-vpc-endpoint-connection-notification"
 description: |-
   Provides a VPC Endpoint connection notification resource.
 ---

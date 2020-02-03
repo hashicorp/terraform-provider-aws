@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_nat_gateway"
-sidebar_current: "docs-aws-datasource-nat_gateway"
 description: |-
     Provides details about a specific Nat Gateway
 ---

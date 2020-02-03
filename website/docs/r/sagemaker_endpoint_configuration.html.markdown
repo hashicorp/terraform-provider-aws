@@ -1,7 +1,7 @@
 ---
+subcategory: "Sagemaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_endpoint_configuration"
-sidebar_current: "docs-aws-resource-sagemaker-endpoint-configuration"
 description: |-
   Provides a SageMaker Endpoint Configuration resource.
 ---
