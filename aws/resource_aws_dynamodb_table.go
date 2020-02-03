@@ -694,13 +694,12 @@ func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		}
 		return nil
 	})
+
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteTable(input)
 	}
-	if err != nil {
-		return fmt.Errorf("Error deleting DynamoDB table: %s", err)
-	}
-	return nil
+
+	return err
 }
 
 func waitForDynamodbTableDeletion(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) error {
