@@ -270,7 +270,7 @@ The following arguments are supported:
 
 * `name` - (Required) The environment variable's name or key.
 * `value` - (Required) The environment variable's value.
-* `type` - (Optional) The type of environment variable. Valid values: `PARAMETER_STORE`, `PLAINTEXT`.
+* `type` - (Optional) The type of environment variable. Valid values: `SECRETS_MANAGER`, `PARAMETER_STORE`, `PLAINTEXT`.
 
 `logs_config` supports the following:
 
