@@ -33,6 +33,7 @@ resource "aws_api_gateway_method" "MyDemoMethod" {
 ```
 
 ## Usage with Cognito User Pool Authorizer
+
 ```hcl
 variable "cognito_user_pool_name" {}
 

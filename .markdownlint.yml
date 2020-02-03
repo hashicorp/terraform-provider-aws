@@ -8,8 +8,6 @@ default: true
 
 # Breaking rules (higher priority to fix)
 
-# Example: https://www.terraform.io/docs/providers/aws/r/ssm_patch_baseline.html
-MD031: false
 # Example: https://www.terraform.io/docs/providers/aws/d/ebs_default_kms_key.html
 MD032: false
 
