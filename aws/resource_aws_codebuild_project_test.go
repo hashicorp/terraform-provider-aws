@@ -2045,7 +2045,7 @@ resource "aws_codebuild_project" "test" {
     location = "https://github.com/hashicorp/packer.git"
   }
 }
-`, sourceVersion, rName)
+`, rName, sourceVersion)
 }
 
 func testAccAWSCodeBuildProjectConfig_EncryptionKey(rName string) string {
