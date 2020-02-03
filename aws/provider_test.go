@@ -109,6 +109,19 @@ func testAccCheckResourceAttrRegionalARN(resourceName, attributeName, arnService
 	}
 }
 
+// testAccCheckResourceAttrRegionalARNNoAccount ensures the Terraform state exactly matches a formatted ARN with region but without account ID
+func testAccCheckResourceAttrRegionalARNNoAccount(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
+			Partition: testAccGetPartition(),
+			Region:    testAccGetRegion(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
 // testAccMatchResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region
 func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
