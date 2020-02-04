@@ -155,6 +155,10 @@ func resourceAwsCodePipeline() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
+									"namespace": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 								},
 							},
 						},
@@ -319,6 +323,10 @@ func expandAwsCodePipelineActions(s []interface{}) []*codepipeline.ActionDeclara
 		if ro > 0 {
 			action.RunOrder = aws.Int64(int64(ro))
 		}
+		ns := data["namespace"].(string)
+		if len(ns) > 0 {
+			action.Namespace = aws.String(ns)
+		}
 		actions = append(actions, &action)
 	}
 	return actions
@@ -358,6 +366,10 @@ func flattenAwsCodePipelineStageActions(actions []*codepipeline.ActionDeclaratio
 
 		if action.RunOrder != nil {
 			values["run_order"] = int(*action.RunOrder)
+		}
+
+		if action.Namespace != nil {
+			values["namespace"] = *action.Namespace
 		}
 
 		actionsList = append(actionsList, values)

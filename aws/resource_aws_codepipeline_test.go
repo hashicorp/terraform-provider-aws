@@ -182,6 +182,40 @@ func TestAccAWSCodePipeline_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodePipelineWithNamespace(t *testing.T) {
+	if os.Getenv("GITHUB_TOKEN") == "" {
+		t.Skip("Environment variable GITHUB_TOKEN is not set")
+	}
+
+	name := acctest.RandString(10)
+	resourceName := "aws_codepipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodePipelineConfigWithNamespace(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "arn",
+						regexp.MustCompile(fmt.Sprintf("^arn:aws:codepipeline:[^:]+:[0-9]{12}:test-pipeline-%s", name))),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.id", "1234"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.type", "KMS"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.namespace", "SourceVariables"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCodePipelineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -875,4 +909,117 @@ resource "aws_codepipeline" "test" {
   }
 }
 `, rName, tag1, tag2)
+}
+
+func testAccAWSCodePipelineConfigWithNamespace(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "foo" {
+  bucket = "tf-test-pipeline-%s"
+  acl    = "private"
+}
+
+resource "aws_iam_role" "codepipeline_role" {
+  name = "codepipeline-role-%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codepipeline.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "codepipeline_policy" {
+  name = "codepipeline_policy"
+  role = "${aws_iam_role.codepipeline_role.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect":"Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:GetBucketVersioning"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.foo.arn}",
+        "${aws_s3_bucket.foo.arn}/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%s"
+  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+
+  artifact_store {
+    location = "${aws_s3_bucket.foo.bucket}"
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "ThirdParty"
+      provider         = "GitHub"
+      version          = "1"
+      output_artifacts = ["test"]
+      namespace        = "SourceVariables"
+
+      configuration = {
+        Owner  = "lifesum-terraform"
+        Repo   = "test"
+        Branch = "master"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+}
+`, rName, rName, rName)
 }
