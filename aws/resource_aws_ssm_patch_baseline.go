@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -143,6 +144,38 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Default:      ssm.PatchComplianceLevelUnspecified,
 				ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
 			},
+
+			"patch_source": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 20,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,50}$`), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchSource.html"),
+						},
+
+						"configuration": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+
+						"products": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 20,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+						},
+					},
+				},
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -179,6 +212,10 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 
 	if _, ok := d.GetOk("approval_rule"); ok {
 		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
+	}
+
+	if _, ok := d.GetOk("patch_source"); ok {
+		params.Sources = expandAwsSsmPatchSource(d)
 	}
 
 	resp, err := ssmconn.CreatePatchBaseline(params)
@@ -223,6 +260,10 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("global_filter") {
 		params.GlobalFilters = expandAwsSsmPatchFilterGroup(d)
+	}
+
+	if d.HasChange("patch_source") {
+		params.Sources = expandAwsSsmPatchSource(d)
 	}
 
 	_, err := ssmconn.UpdatePatchBaseline(params)
@@ -275,6 +316,10 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("approval_rule", flattenAwsSsmPatchRuleGroup(resp.ApprovalRules)); err != nil {
 		return fmt.Errorf("Error setting approval rules error: %#v", err)
+	}
+
+	if err := d.Set("patch_source", flattenAwsSsmPatchSource(resp.Sources)); err != nil {
+		return fmt.Errorf("Error setting patch sources error: %#v", err)
 	}
 
 	tags, err := keyvaluetags.SsmListTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
@@ -401,6 +446,44 @@ func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interfa
 		r["enable_non_security"] = *rule.EnableNonSecurity
 		r["patch_filter"] = flattenAwsSsmPatchFilterGroup(rule.PatchFilterGroup)
 		result = append(result, r)
+	}
+
+	return result
+}
+
+func expandAwsSsmPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
+	var sources []*ssm.PatchSource
+
+	sourceConfigs := d.Get("patch_source").([]interface{})
+
+	for _, sConfig := range sourceConfigs {
+		config := sConfig.(map[string]interface{})
+
+		source := &ssm.PatchSource{
+			Name:          aws.String(config["name"].(string)),
+			Configuration: aws.String(config["configuration"].(string)),
+			Products:      expandStringList(config["products"].([]interface{})),
+		}
+
+		sources = append(sources, source)
+	}
+
+	return sources
+}
+
+func flattenAwsSsmPatchSource(sources []*ssm.PatchSource) []map[string]interface{} {
+	if len(sources) == 0 {
+		return nil
+	}
+
+	result := make([]map[string]interface{}, 0, len(sources))
+
+	for _, source := range sources {
+		s := make(map[string]interface{})
+		s["name"] = *source.Name
+		s["configuration"] = *source.Configuration
+		s["products"] = flattenStringList(source.Products)
+		result = append(result, s)
 	}
 
 	return result

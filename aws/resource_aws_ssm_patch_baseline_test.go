@@ -167,6 +167,56 @@ func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMPatchBaseline_PatchSources(t *testing.T) {
+	var before, after ssm.PatchBaselineIdentity
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.foo"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMPatchBaselineConfigWithPatchSource(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMPatchBaselineExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.0.name", "My-AL2017.09"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.0.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.0.products.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.0.products.0", "AmazonLinux2017.09"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMPatchBaselineConfigWithPatchSourceUpdated(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMPatchBaselineExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.0.name", "My-AL2017.09"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.0.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.0.products.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.0.products.0", "AmazonLinux2017.09"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.1.name", "My-AL2018.03"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.1.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.1.products.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "patch_source.1.products.0", "AmazonLinux2018.03"),
+					func(*terraform.State) error {
+						if *before.BaselineId != *after.BaselineId {
+							t.Fatal("Baseline IDs changed unexpectedly")
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsSsmPatchBaselineRecreated(t *testing.T,
 	before, after *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -369,6 +419,48 @@ resource "aws_ssm_patch_baseline" "foo" {
       key    = "MSRC_SEVERITY"
       values = ["Critical", "Important"]
     }
+  }
+}
+`, rName)
+}
+
+func testAccAWSSSMPatchBaselineConfigWithPatchSource(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "foo" {
+  name                              = %[1]q
+  description                       = "Baseline containing all updates approved for production systems"
+  approved_patches_compliance_level = "CRITICAL"
+  approved_patches                  = ["test123"]
+  operating_system                  = "AMAZON_LINUX"
+
+  patch_source {
+	name          = "My-AL2017.09"
+	configuration = "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
+    products      = ["AmazonLinux2017.09"]
+  }
+}
+`, rName)
+}
+
+func testAccAWSSSMPatchBaselineConfigWithPatchSourceUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "foo" {
+  name                              = %[1]q
+  description                       = "Baseline containing all updates approved for production systems"
+  approved_patches_compliance_level = "CRITICAL"
+  approved_patches                  = ["test123"]
+  operating_system                  = "AMAZON_LINUX"
+
+  patch_source {
+	name          = "My-AL2017.09"
+	configuration = "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
+    products      = ["AmazonLinux2017.09"]
+  }
+
+  patch_source {
+	name          = "My-AL2018.03"
+	configuration = "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
+    products      = ["AmazonLinux2018.03"]
   }
 }
 `, rName)

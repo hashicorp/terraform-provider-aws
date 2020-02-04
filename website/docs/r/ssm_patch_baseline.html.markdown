@@ -119,6 +119,25 @@ resource "aws_ssm_patch_baseline" "windows_os_apps" {
 }
 ```
 
+Advanced usage, specifying alternate patch source repository
+
+```hcl
+resource "aws_ssm_patch_baseline" "al_2017_09" {
+  name             = "Amazon-Linux-2017.09"
+  description      = "My patch repository for Amazon Linux 2017.09"
+  operating_system = "AMAZON_LINUX"
+
+  approval_rule {
+    ...
+  }
+
+  patch_source {
+    name          = "My-AL2017.09"
+    configuration = "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
+    products      = ["AmazonLinux2017.09"]
+  }
+}
+```
 
 ## Argument Reference
 
@@ -132,6 +151,7 @@ The following arguments are supported:
 * `rejected_patches` - (Optional) A list of rejected patches.
 * `global_filter` - (Optional) A set of global filters used to exclude patches from the baseline. Up to 4 global filters can be specified using Key/Value pairs. Valid Keys are `PRODUCT | CLASSIFICATION | MSRC_SEVERITY | PATCH_ID`.
 * `approval_rule` - (Optional) A set of rules used to include patches in the baseline. up to 10 approval rules can be specified. Each approval_rule block requires the fields documented below.
+* `patch_source` - (Optional) A list of alternate source repositories to retrieve patches from. Each patch_source block requires the fields documented below. Applies to Linux instances only.
 
 The `approval_rule` block supports:
 
@@ -141,6 +161,12 @@ The `approval_rule` block supports:
 * `compliance_level` - (Optional) Defines the compliance level for patches approved by this rule. Valid compliance levels include the following: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `enable_non_security` - (Optional) Boolean enabling the application of non-security updates. The default value is 'false'. Valid for Linux instances only.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
+
+The `patch_source` block supports:
+
+* `name` - (Required) The name specified to identify the patch source.
+* `configuration` - (Required) The value of the yum repo configuration.
+* `products` - (Required) The specific operating system versions a patch repository applies to, such as `"Ubuntu16.04"`, `"AmazonLinux2016.09"`, `"RedhatEnterpriseLinux7.2"` or `"Suse12.7"`. For lists of supported product values, see [PatchFilter](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchFilter.html).
 
 ## Attributes Reference
 
