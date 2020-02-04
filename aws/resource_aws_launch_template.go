@@ -379,17 +379,17 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"security_group_names": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"vpc_security_group_ids"},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				// ConflictsWith: []string{"vpc_security_group_ids"},  // See: RM-3123
 			},
 
 			"vpc_security_group_ids": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"security_group_names"},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				// ConflictsWith: []string{"security_group_names"},  // See: RM-3123
 			},
 
 			"tag_specifications": {
@@ -861,6 +861,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	}
 
 	if v, ok := d.GetOk("vpc_security_group_ids"); ok {
+		opts.SecurityGroups = nil  // See: RM-3123
 		opts.SecurityGroupIds = expandStringList(v.(*schema.Set).List())
 	}
 
