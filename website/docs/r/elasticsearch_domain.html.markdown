@@ -110,6 +110,7 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 ```
+
 ### VPC based ES
 
 ```hcl

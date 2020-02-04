@@ -10,6 +10,7 @@ description: |-
 Use this data source to get the default EBS encryption KMS key in the current region.
 
 ## Example Usage
+
 ```hcl
 data "aws_ebs_default_kms_key" "current" { }
 
