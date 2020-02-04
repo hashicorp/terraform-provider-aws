@@ -27,10 +27,6 @@ func dataSourceAwsApiGatewayRestApi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -116,7 +112,6 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 		Resource:  fmt.Sprintf("/restapis/%s", d.Id()),
 	}.String()
 	d.Set("arn", restApiArn)
-	d.Set("version", match.Version)
 	d.Set("description", match.Description)
 	d.Set("policy", match.Policy)
 	d.Set("api_key_source", match.ApiKeySource)

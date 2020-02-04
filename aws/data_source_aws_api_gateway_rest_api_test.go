@@ -23,7 +23,6 @@ func TestAccDataSourceAwsApiGatewayRestApi(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "root_resource_id", resourceName, "root_resource_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policy", resourceName, "policy"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "api_key_source", resourceName, "api_key_source"),
