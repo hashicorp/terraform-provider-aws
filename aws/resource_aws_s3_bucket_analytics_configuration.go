@@ -191,15 +191,15 @@ func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error getting S3 Bucket Analytics Configuration %q: %w", d.Id(), err)
 	}
 
 	if err := d.Set("filter", flattenS3AnalyticsFilter(output.AnalyticsConfiguration.Filter)); err != nil {
-		return err
+		return fmt.Errorf("error setting filter: %w", err)
 	}
 
 	if err = d.Set("storage_class_analysis", flattenS3StorageClassAnalysis(output.AnalyticsConfiguration.StorageClassAnalysis)); err != nil {
-		return err
+		return fmt.Errorf("error setting storage class anyalytics: %w", err)
 	}
 
 	return nil
@@ -433,5 +433,8 @@ func waitForDeleteS3BucketAnalyticsConfiguration(conn *s3.S3, bucket, name strin
 		return nil
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("error deleting S3 Bucket Analytics Configuration \"%s:%s\": %w", bucket, name, err)
+	}
+	return nil
 }

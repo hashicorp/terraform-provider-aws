@@ -130,7 +130,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Empty(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSS3BucketAnalyticsConfigurationWithEmptyFilter(rName, rName),
@@ -152,7 +152,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Prefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefix),
@@ -193,7 +193,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_SingleTag(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterSingleTag(rName, rName, tag1),
@@ -238,7 +238,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_MultipleTags(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterMultipleTags(rName, rName, tag1, tag2),
@@ -287,7 +287,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefixAndTags(rName, rName, prefix, tag1, tag2),
@@ -331,7 +331,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Remove(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefix),
@@ -361,7 +361,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Empty(t *
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSS3BucketAnalyticsConfigurationWithEmptyStorageClassAnalysis(rName, rName),
@@ -380,7 +380,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Default(t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketAnalyticsConfigurationWithDefaultStorageClassAnalysis(rName, rName),
@@ -415,7 +415,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Full(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketAnalyticsConfigurationWithFullStorageClassAnalysis(rName, rName, prefix),
@@ -659,13 +659,13 @@ resource "aws_s3_bucket_analytics_configuration" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "%s"
+  bucket = "%[2]s"
 }
 
 resource "aws_s3_bucket" "destination" {
-  bucket = "%s-destination"
+  bucket = "%[2]s-destination"
 }
-`, name, bucket, bucket)
+`, name, bucket)
 }
 
 func testAccAWSS3BucketAnalyticsConfigurationWithFullStorageClassAnalysis(name, bucket, prefix string) string {
@@ -689,13 +689,13 @@ resource "aws_s3_bucket_analytics_configuration" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "%s"
+  bucket = "%[3]s"
 }
 
 resource "aws_s3_bucket" "destination" {
-  bucket = "%s-destination"
+  bucket = "%[3]s-destination"
 }
-`, name, prefix, bucket, bucket)
+`, name, prefix, bucket)
 }
 
 func TestExpandS3AnalyticsFilter(t *testing.T) {
