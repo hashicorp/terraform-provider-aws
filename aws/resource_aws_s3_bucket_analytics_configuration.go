@@ -45,10 +45,11 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 							Optional:     true,
 							AtLeastOneOf: filterAtLeastOneOfKeys,
 						},
-						"tags": schemaWithAtLeastOneOf(
-							tagsSchema(),
-							filterAtLeastOneOfKeys,
-						),
+						"tags": {
+							Type:         schema.TypeMap,
+							Optional:     true,
+							AtLeastOneOf: filterAtLeastOneOfKeys,
+						},
 					},
 				},
 			},
@@ -119,11 +120,6 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 }
 
 var filterAtLeastOneOfKeys = []string{"filter.0.prefix", "filter.0.tags"}
-
-func schemaWithAtLeastOneOf(schema *schema.Schema, keys []string) *schema.Schema {
-	schema.AtLeastOneOf = keys
-	return schema
-}
 
 func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
