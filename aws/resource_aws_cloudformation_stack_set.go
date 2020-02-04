@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -22,6 +23,10 @@ func resourceAwsCloudFormationStackSet() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -228,10 +233,14 @@ func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Updating CloudFormation Stack Set: %s", input)
-	_, err := conn.UpdateStackSet(input)
+	output, err := conn.UpdateStackSet(input)
 
 	if err != nil {
 		return fmt.Errorf("error updating CloudFormation Stack Set (%s): %s", d.Id(), err)
+	}
+
+	if err := waitForCloudFormationStackSetOperation(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return fmt.Errorf("error waiting for CloudFormation Stack Set (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceAwsCloudFormationStackSetRead(d, meta)
