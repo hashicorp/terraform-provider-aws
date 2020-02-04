@@ -14,6 +14,7 @@ BUG FIXES:
 
 * resource/aws_appautoscaling_target: Prevent state removal of resource immediately after creation due to eventual consistency [GH-11819]
 * resource/aws_appautoscaling_target: Automatically retry creation on `ValidationException: ECS service doesn't exist` for ECS eventual consistency [GH-11693]
+* resource/aws_cloudformation_stack_set: Wait for update operation completion (default timeout of 30 minutes) and report any errors [GH-11726]
 * resource/aws_dynamodb_table: Skip `ResourceNotFoundException` error during deletion [GH-11692]
 * resource/aws_ecs_cluster: Delay check of ECS Cluster status during creation for ECS eventual consistency [GH-11701]
 * resource/aws_placement_group: Additional handling for creation and deletion eventual consistency [GH-11671]
