@@ -514,6 +514,77 @@ func TestKeyValueTagsMap(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsRawMap(t *testing.T) {
+	testCases := []struct {
+		name string
+		tags KeyValueTags
+		want map[string]string
+	}{
+		{
+			name: "empty_map_string_interface",
+			tags: New(map[string]interface{}{}),
+			want: map[string]string{},
+		},
+		{
+			name: "empty_map_string_string",
+			tags: New(map[string]string{}),
+			want: map[string]string{},
+		},
+		{
+			name: "empty_map_string_stringPointer",
+			tags: New(map[string]*string{}),
+			want: map[string]string{},
+		},
+		{
+			name: "non_empty_map_string_interface",
+			tags: New(map[string]interface{}{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+		{
+			name: "non_empty_map_string_string",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+		{
+			name: "non_empty_map_string_stringPointer",
+			tags: New(map[string]*string{
+				"key1": testStringPtr("value1"),
+				"key2": testStringPtr("value2"),
+				"key3": testStringPtr("value3"),
+			}),
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.RawMap()
+
+			testKeyValueTagsVerifyRawMap(t, got, testCase.want)
+		})
+	}
+}
+
 func TestKeyValueTagsMerge(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -864,6 +935,33 @@ func testKeyValueTagsVerifyMap(t *testing.T, got map[string]string, want map[str
 		if !ok {
 			t.Errorf("want missing key: %s", k)
 			continue
+		}
+
+		if gotV != wantV {
+			t.Errorf("got key (%s) value %s; want value %s", k, gotV, wantV)
+		}
+	}
+
+	for k := range got {
+		if _, ok := want[k]; !ok {
+			t.Errorf("got extra key: %s", k)
+		}
+	}
+}
+
+func testKeyValueTagsVerifyRawMap(t *testing.T, got map[string]interface{}, want map[string]string) {
+	for k, wantV := range want {
+		gotRaw, ok := got[k]
+
+		if !ok {
+			t.Errorf("want missing key: %s", k)
+			continue
+		}
+
+		gotV, ok := gotRaw.(string)
+
+		if !ok {
+			t.Errorf("got key (%s) value %v of type %T; want string", k, gotRaw, gotRaw)
 		}
 
 		if gotV != wantV {

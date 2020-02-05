@@ -137,6 +137,17 @@ func (tags KeyValueTags) Map() map[string]string {
 	return result
 }
 
+// RawMap returns tag keys mapped to their "raw" values.
+func (tags KeyValueTags) RawMap() map[string]interface{} {
+	result := make(map[string]interface{}, len(tags))
+
+	for k, v := range tags {
+		result[k] = *v
+	}
+
+	return result
+}
+
 // Merge adds missing and updates existing tags.
 func (tags KeyValueTags) Merge(mergeTags KeyValueTags) KeyValueTags {
 	result := make(KeyValueTags)

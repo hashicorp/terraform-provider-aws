@@ -198,16 +198,6 @@ func tagsMapToHash(tags map[string]interface{}) int {
 	return total
 }
 
-// tagsMapToRaw converts a tags map to its "raw" type.
-func tagsMapToRaw(m map[string]string) map[string]interface{} {
-	raw := make(map[string]interface{})
-	for k, v := range m {
-		raw[k] = v
-	}
-
-	return raw
-}
-
 // ec2TagsFromTagDescriptions returns the tags from the given tag descriptions.
 // No attempt is made to remove duplicates.
 func ec2TagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
