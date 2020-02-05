@@ -60,6 +60,7 @@ var serviceNames = []string{
 	"firehose",
 	"fsx",
 	"gamelift",
+	"glacier",
 	"glue",
 	"guardduty",
 	"greengrass",
@@ -231,6 +232,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "DescribeTags"
 	case "firehose":
 		return "ListTagsForDeliveryStream"
+	case "glacier":
+		return "ListTagsForVault"
 	case "glue":
 		return "GetTags"
 	case "kinesis":
@@ -305,6 +308,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "gamelift":
 		return "ResourceARN"
+	case "glacier":
+		return "VaultName"
 	case "kinesis":
 		return "StreamName"
 	case "kinesisanalytics":

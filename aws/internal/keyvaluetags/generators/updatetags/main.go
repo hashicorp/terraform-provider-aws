@@ -65,6 +65,7 @@ var serviceNames = []string{
 	"firehose",
 	"fsx",
 	"gamelift",
+	"glacier",
 	"glue",
 	"guardduty",
 	"greengrass",
@@ -347,6 +348,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTags"
 	case "firehose":
 		return "TagDeliveryStream"
+	case "glacier":
+		return "AddTagsToVault"
 	case "kinesis":
 		return "AddTagsToStream"
 	case "medialive":
@@ -439,6 +442,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "gamelift":
 		return "ResourceARN"
+	case "glacier":
+		return "VaultName"
 	case "kinesis":
 		return "StreamName"
 	case "kinesisanalytics":
@@ -589,6 +594,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTags"
 	case "firehose":
 		return "UntagDeliveryStream"
+	case "glacier":
+		return "RemoveTagsFromVault"
 	case "kinesis":
 		return "RemoveTagsFromStream"
 	case "medialive":
