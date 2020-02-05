@@ -431,6 +431,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_datasync_location_efs":                               resourceAwsDataSyncLocationEfs(),
 			"aws_datasync_location_nfs":                               resourceAwsDataSyncLocationNfs(),
 			"aws_datasync_location_s3":                                resourceAwsDataSyncLocationS3(),
+			"aws_datasync_location_smb":                               resourceAwsDataSyncLocationSmb(),
 			"aws_datasync_task":                                       resourceAwsDataSyncTask(),
 			"aws_dax_cluster":                                         resourceAwsDaxCluster(),
 			"aws_dax_parameter_group":                                 resourceAwsDaxParameterGroup(),
