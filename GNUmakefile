@@ -31,6 +31,12 @@ fmt:
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
+gencheck:
+	@echo "==> Checking generated source code..."
+	@$(MAKE) gen
+	@git diff --compact-summary --exit-code || \
+		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
+
 websitefmtcheck:
 	@sh -c "'$(CURDIR)/scripts/websitefmtcheck.sh'"
 
