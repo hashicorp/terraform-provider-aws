@@ -54,6 +54,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -1820,6 +1821,42 @@ func GameliftUpdateTags(conn *gamelift.GameLift, identifier string, oldTagsMap i
 		}
 
 		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// GlacierUpdateTags updates glacier service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GlacierUpdateTags(conn *glacier.Glacier, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &glacier.RemoveTagsFromVaultInput{
+			VaultName: aws.String(identifier),
+			TagKeys:   aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.RemoveTagsFromVault(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &glacier.AddTagsToVaultInput{
+			VaultName: aws.String(identifier),
+			Tags:      updatedTags.IgnoreAws().GlacierTags(),
+		}
+
+		_, err := conn.AddTagsToVault(input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
