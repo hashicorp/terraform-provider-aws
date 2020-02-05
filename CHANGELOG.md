@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_ssm_patch_baseline` [GH-9486]
+* **New Resource:** `aws_datasync_location_smb` [GH-10381]
 
 ENHANCEMENTS:
 
