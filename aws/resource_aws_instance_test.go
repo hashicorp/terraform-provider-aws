@@ -6353,7 +6353,7 @@ data "aws_ami" "debian_jessie_latest" {
 }
 
 resource "aws_instance" "foo" {
-  ami                         = "${data.aws_ami.debian_jessie_latest.id}"
+  ami                         = data.aws_ami.debian_jessie_latest.id
   associate_public_ip_address = true
   instance_type               = "t2.medium"
 
@@ -6398,16 +6398,16 @@ data "aws_ami" "debian_jessie_latest" {
 
 resource "aws_launch_template" "foobar" {
   name_prefix   = "foobar"
-  image_id      = "${data.aws_ami.debian_jessie_latest.id}"
+  image_id      = data.aws_ami.debian_jessie_latest.id
   instance_type = "t2.micro"
 }
 
 resource "aws_instance" "foo" {
-  ami                         = "${data.aws_ami.debian_jessie_latest.id}"
+  ami                         = data.aws_ami.debian_jessie_latest.id
   associate_public_ip_address = true
 
   launch_template {
-    id = "${aws_launch_template.foobar.id}"
+    id = aws_launch_template.foobar.id
   }
 
   root_block_device {
@@ -6451,7 +6451,7 @@ data "aws_ami" "debian_jessie_latest" {
 
 resource "aws_launch_template" "foobar" {
   name_prefix   = "foobar"
-  image_id      = "${data.aws_ami.debian_jessie_latest.id}"
+  image_id      = data.aws_ami.debian_jessie_latest.id
   instance_type = "t2.nano"
 }
 
@@ -6459,7 +6459,7 @@ resource "aws_instance" "foo" {
   associate_public_ip_address = true
 
   launch_template {
-    id = "${aws_launch_template.foobar.id}"
+    id = aws_launch_template.foobar.id
   }
 
   root_block_device {
@@ -6503,7 +6503,7 @@ data "aws_ami" "debian_jessie_latest" {
 
 resource "aws_launch_template" "foobar" {
   name_prefix   = "foobar"
-  image_id      = "${data.aws_ami.debian_jessie_latest.id}"
+  image_id      = data.aws_ami.debian_jessie_latest.id
   instance_type = "t2.nano"
 }
 
@@ -6511,7 +6511,7 @@ resource "aws_instance" "foo" {
   associate_public_ip_address = true
 
   launch_template {
-    id      = "${aws_launch_template.foobar.id}"
+    id      = aws_launch_template.foobar.id
     version = "1"
   }
 
@@ -6556,17 +6556,17 @@ data "aws_ami" "debian_jessie_latest" {
 
 resource "aws_launch_template" "foobar" {
   name_prefix   = "foobar"
-  image_id      = "${data.aws_ami.debian_jessie_latest.id}"
+  image_id      = data.aws_ami.debian_jessie_latest.id
   instance_type = "t2.nano"
 }
 
 resource "aws_instance" "foo" {
-  ami                         = "${data.aws_ami.debian_jessie_latest.id}"
+  ami                         = data.aws_ami.debian_jessie_latest.id
   associate_public_ip_address = true
 
   launch_template {
-    id      = "${aws_launch_template.foobar.id}"
-    version = "${aws_launch_template.foobar.latest_version}"
+    id      = aws_launch_template.foobar.id
+    version = aws_launch_template.foobar.latest_version
   }
 
   root_block_device {

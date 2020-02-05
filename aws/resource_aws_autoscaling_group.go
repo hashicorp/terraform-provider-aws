@@ -687,11 +687,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("launch_template"); ok {
-		var err error
-		createOpts.LaunchTemplate, err = expandLaunchTemplateSpecification(v.([]interface{}))
-		if err != nil {
-			return err
-		}
+		createOpts.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{}))
 	}
 
 	// Availability Zones are optional if VPC Zone Identifier(s) are specified
@@ -1055,7 +1051,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("launch_template") {
 		if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 {
-			opts.LaunchTemplate, _ = expandLaunchTemplateSpecification(v.([]interface{}))
+			opts.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{}))
 		}
 		shouldRefreshInstances = true
 	}
