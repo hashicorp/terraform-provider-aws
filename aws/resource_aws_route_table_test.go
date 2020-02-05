@@ -597,6 +597,21 @@ resource "aws_route_table" "foo" {
 `
 
 const testAccRouteTableConfigInstance = `
+data "aws_ami" "amzn-ami-minimal-hvm" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -613,10 +628,9 @@ resource "aws_subnet" "foo" {
 }
 
 resource "aws_instance" "foo" {
-	# us-west-2
-	ami = "ami-4fccb37f"
-	instance_type = "m1.small"
-	subnet_id = "${aws_subnet.foo.id}"
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.foo.id}"
 }
 
 resource "aws_route_table" "foo" {
