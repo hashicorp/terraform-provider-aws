@@ -1,11 +1,10 @@
-package custom
+package keyvaluetags
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // Custom IAM tag service update functions using the same format as generated code.
@@ -13,8 +12,8 @@ import (
 // IamRoleUpdateTags updates IAM role tags.
 // The identifier is the role name.
 func IamRoleUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := keyvaluetags.New(oldTagsMap)
-	newTags := keyvaluetags.New(newTagsMap)
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagRoleInput{
@@ -48,8 +47,8 @@ func IamRoleUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{},
 // IamUserUpdateTags updates IAM user tags.
 // The identifier is the user name.
 func IamUserUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := keyvaluetags.New(oldTagsMap)
-	newTags := keyvaluetags.New(newTagsMap)
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iam.UntagUserInput{

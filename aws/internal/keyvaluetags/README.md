@@ -16,7 +16,6 @@ Some AWS Go SDK services that have common tagging update functionality (such as 
 
 ```text
 aws/internal/keyvaluetags
-├── custom (any service-specific functions that cannot be generated)
 ├── generators
 │   ├── listtags (generates list_tags_gen.go)
 │   ├── servicetags (generates service_tags_gen.go)

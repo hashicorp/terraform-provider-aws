@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	keyvaluetagscustom "github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags/custom"
 )
 
 func resourceAwsIamUser() *schema.Resource {
@@ -188,7 +187,7 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetagscustom.IamUserUpdateTags(iamconn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.IamUserUpdateTags(iamconn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating IAM User (%s) tags: %s", d.Id(), err)
 		}
 	}

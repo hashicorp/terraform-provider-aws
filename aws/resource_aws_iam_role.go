@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	keyvaluetagscustom "github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags/custom"
 )
 
 func resourceAwsIamRole() *schema.Resource {
@@ -314,7 +313,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetagscustom.IamRoleUpdateTags(iamconn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.IamRoleUpdateTags(iamconn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating IAM Role (%s) tags: %s", d.Id(), err)
 		}
 	}
