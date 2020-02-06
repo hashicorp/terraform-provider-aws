@@ -19,6 +19,7 @@ BUG FIXES:
 * resource/aws_cloudformation_stack_set: Wait for update operation completion (default timeout of 30 minutes) and report any errors [GH-11726]
 * resource/aws_codedeploy_deployment_group: Fixes unexpected behaviour when removing block attributes [GH-11648]
 * resource/aws_dynamodb_table: Skip `ResourceNotFoundException` error during deletion [GH-11692]
+* resource/aws_ec2_client_vpn_endpoint: Ensure `dns_servers` attribute is refreshed in Terraform state [GH-11889]
 * resource/aws_ecs_cluster: Delay check of ECS Cluster status during creation for ECS eventual consistency [GH-11701]
 * resource/aws_placement_group: Additional handling for creation and deletion eventual consistency [GH-11671]
 * resource/aws_s3_bucket: Retry read after creation for 404 status code and prevent 2 minute delay for triggering recreation on existing resources deleted outside Terraform [GH-11894]
