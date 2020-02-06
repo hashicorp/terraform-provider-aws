@@ -326,14 +326,12 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 			}
 		}
 
-		if actions := rule.CopyActions; actions != nil {
-			for _, action := range actions {
-				mRule["copy_action"] = []interface{}{
-					map[string]interface{}{
-						"lifecycle":             flattenBackupPlanCopyActionLifecycle(action.Lifecycle),
-						"destination_vault_arn": aws.StringValue(action.DestinationBackupVaultArn),
-					},
-				}
+		for _, action := range rule.CopyActions {
+			mRule["copy_action"] = []interface{}{
+				map[string]interface{}{
+					"lifecycle":             flattenBackupPlanCopyActionLifecycle(action.Lifecycle),
+					"destination_vault_arn": aws.StringValue(action.DestinationBackupVaultArn),
+				},
 			}
 		}
 
