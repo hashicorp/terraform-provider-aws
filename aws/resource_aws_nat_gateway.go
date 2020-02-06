@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsNatGateway() *schema.Resource {
@@ -89,8 +90,13 @@ func resourceAwsNatGatewayCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error waiting for NAT Gateway (%s) to become available: %s", d.Id(), err)
 	}
 
-	// Update our attributes and return
-	return resourceAwsNatGatewayUpdate(d, meta)
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding EC2 NAT Gateway (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsNatGatewayRead(d, meta)
 }
 
 func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
@@ -125,8 +131,9 @@ func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("private_ip", address.PrivateIp)
 	d.Set("public_ip", address.PublicIp)
 
-	// Tags
-	d.Set("tags", tagsToMap(ng.Tags))
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(ng.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -134,15 +141,14 @@ func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsNatGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	// Turn on partial mode
-	d.Partial(true)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	if err := setTags(conn, d); err != nil {
-		return err
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 NAT Gateway (%s) tags: %s", d.Id(), err)
+		}
 	}
-	d.SetPartial("tags")
 
-	d.Partial(false)
 	return resourceAwsNatGatewayRead(d, meta)
 }
 
