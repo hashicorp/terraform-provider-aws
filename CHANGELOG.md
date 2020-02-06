@@ -1,5 +1,9 @@
 ## 2.48.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_organizations_policy_attachment: The underlying API calls have switched from `ListPoliciesForTarget` to `ListTargetsForPolicy`. Restrictive IAM Policies for Terraform execution may require updates. [GH-11612]
+
 FEATURES:
 
 * **New Data Source:** `aws_ssm_patch_baseline` [GH-9486]
@@ -11,6 +15,8 @@ ENHANCEMENTS:
 * resource/aws_codebuild_project: Add `source` configuration block `source_version` argument [GH-9877]
 * resource/aws_elasticache_cluster: Add `computed` flag for `port` property and set to true [GH-10017]
 * resource/aws_fsx_lustre_file_system: Lower minimum `storage_capacity` argument validation to 1200 to match API updates [GH-11847]
+* resource/aws_organizations_policy: Support `type` argument `TAG_POLICY` value in plan-time validation [GH-11612]
+* resource/aws_organizations_policy_attachment: Support tag policies [GH-11612]
 
 BUG FIXES:
 
