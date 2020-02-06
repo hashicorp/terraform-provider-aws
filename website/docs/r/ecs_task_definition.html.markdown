@@ -256,16 +256,19 @@ In addition to all arguments above, the following attributes are exported:
 ECS Task Definitions can be imported via their task Family (optionally with a specific Revision) or Amazon Resource Name (ARN):
 
 ### Example Import By Family
+
 ```
 $ terraform import aws_ecs_task_definition.example mytaskfamily
 ```
 
 ### Example Import By Family And Revision
+
 ```
 $ terraform import aws_ecs_task_definition.example mytaskfamily:123
 ```
 
 ### Example Import By Amazon Resource Name (ARN)
+
 ```
 $ terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
 ```
