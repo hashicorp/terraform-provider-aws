@@ -11,6 +11,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_batch_job_definition: Support resource import [GH-11407]
 * resource/aws_codebuild_project: Add `source` and `secondary_source` configuration block `git_submodules_config` configuration block [GH-10952]
 * resource/aws_codebuild_project: Add `source` configuration block `source_version` argument [GH-9877]
 * resource/aws_elasticache_cluster: Add `computed` flag for `port` property and set to true [GH-10017]
