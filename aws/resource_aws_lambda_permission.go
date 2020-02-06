@@ -233,7 +233,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 					d.SetId("")
 					return nil
 				}
-                        }
+			}
 
 			if psErr != nil {
 				return psErr
@@ -394,7 +394,7 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Lambda permission with ID %q removed", d.Id())
 
 	return nil
-} 
+}
 func getLambdaPolicyStatement(out *lambda.GetPolicyOutput, statemendId string) (statement *LambdaPolicyStatement, err error) {
 	policyInBytes := []byte(*out.Policy)
 	policy := LambdaPolicy{}
