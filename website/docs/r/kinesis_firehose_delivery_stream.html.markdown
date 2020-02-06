@@ -94,7 +94,7 @@ resource "aws_lambda_function" "lambda_processor" {
 }
 ```
 
-### S3 Destination
+### S3 Destination (deprecated)
 
 ```hcl
 resource "aws_s3_bucket" "bucket" {
@@ -273,7 +273,7 @@ The `server_side_encryption` object supports the following:
 
 * `enabled` - (Optional) Whether to enable encryption at rest. Default is `false`.
 
-The `s3_configuration` object supports the following:
+The (DEPRECATED) `s3_configuration`  object supports the following:
 
 * `role_arn` - (Required) The ARN of the AWS credentials.
 * `bucket_arn` - (Required) The ARN of the S3 bucket
