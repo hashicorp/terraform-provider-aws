@@ -3,6 +3,7 @@ ACM PCA
 ACM
 API Gateway
 Access Analyzer
+Amplify
 AppMesh
 AppSync
 Application Autoscaling
