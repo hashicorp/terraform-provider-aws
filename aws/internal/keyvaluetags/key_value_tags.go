@@ -1,6 +1,6 @@
-//go:generate go run generators/servicetags/main.go
-//go:generate go run generators/listtags/main.go
-//go:generate go run generators/updatetags/main.go
+//go:generate go run -tags generate generators/servicetags/main.go
+//go:generate go run -tags generate generators/listtags/main.go
+//go:generate go run -tags generate generators/updatetags/main.go
 
 package keyvaluetags
 
@@ -173,6 +173,26 @@ func (tags KeyValueTags) Updated(newTags KeyValueTags) KeyValueTags {
 		if oldV, ok := tags[k]; !ok || *oldV != *newV {
 			result[k] = newV
 		}
+	}
+
+	return result
+}
+
+// Chunks returns a slice of KeyValueTags, each of the specified size.
+func (tags KeyValueTags) Chunks(size int) []KeyValueTags {
+	result := []KeyValueTags{}
+
+	i := 0
+	var chunk KeyValueTags
+	for k, v := range tags {
+		if i%size == 0 {
+			chunk = make(KeyValueTags)
+			result = append(result, chunk)
+		}
+
+		chunk[k] = v
+
+		i++
 	}
 
 	return result

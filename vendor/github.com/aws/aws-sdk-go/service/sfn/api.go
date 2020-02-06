@@ -81,15 +81,15 @@ func (c *SFN) CreateActivityRequest(input *CreateActivityInput) (req *request.Re
 // See the AWS API reference guide for AWS Step Functions's
 // API operation CreateActivity for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeActivityLimitExceeded "ActivityLimitExceeded"
+// Returned Error Types:
+//   * ActivityLimitExceeded
 //   The maximum number of activities has been reached. Existing activities must
 //   be deleted before a new activity can be created.
 //
-//   * ErrCodeInvalidName "InvalidName"
+//   * InvalidName
 //   The provided name is invalid.
 //
-//   * ErrCodeTooManyTags "TooManyTags"
+//   * TooManyTags
 //   You've exceeded the number of tags allowed for a resource. See the Limits
 //   Topic (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html)
 //   in the AWS Step Functions Developer Guide.
@@ -182,32 +182,32 @@ func (c *SFN) CreateStateMachineRequest(input *CreateStateMachineInput) (req *re
 // See the AWS API reference guide for AWS Step Functions's
 // API operation CreateStateMachine for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArn "InvalidArn"
+// Returned Error Types:
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
-//   * ErrCodeInvalidDefinition "InvalidDefinition"
+//   * InvalidDefinition
 //   The provided Amazon States Language definition is invalid.
 //
-//   * ErrCodeInvalidName "InvalidName"
+//   * InvalidName
 //   The provided name is invalid.
 //
-//   * ErrCodeInvalidLoggingConfiguration "InvalidLoggingConfiguration"
+//   * InvalidLoggingConfiguration
 //
-//   * ErrCodeStateMachineAlreadyExists "StateMachineAlreadyExists"
+//   * StateMachineAlreadyExists
 //   A state machine with the same name but a different definition or role ARN
 //   already exists.
 //
-//   * ErrCodeStateMachineDeleting "StateMachineDeleting"
+//   * StateMachineDeleting
 //   The specified state machine is being deleted.
 //
-//   * ErrCodeStateMachineLimitExceeded "StateMachineLimitExceeded"
+//   * StateMachineLimitExceeded
 //   The maximum number of state machines has been reached. Existing state machines
 //   must be deleted before a new state machine can be created.
 //
-//   * ErrCodeStateMachineTypeNotSupported "StateMachineTypeNotSupported"
+//   * StateMachineTypeNotSupported
 //
-//   * ErrCodeTooManyTags "TooManyTags"
+//   * TooManyTags
 //   You've exceeded the number of tags allowed for a resource. See the Limits
 //   Topic (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html)
 //   in the AWS Step Functions Developer Guide.
@@ -288,8 +288,8 @@ func (c *SFN) DeleteActivityRequest(input *DeleteActivityInput) (req *request.Re
 // See the AWS API reference guide for AWS Step Functions's
 // API operation DeleteActivity for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArn "InvalidArn"
+// Returned Error Types:
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DeleteActivity
@@ -373,8 +373,8 @@ func (c *SFN) DeleteStateMachineRequest(input *DeleteStateMachineInput) (req *re
 // See the AWS API reference guide for AWS Step Functions's
 // API operation DeleteStateMachine for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArn "InvalidArn"
+// Returned Error Types:
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DeleteStateMachine
@@ -455,11 +455,11 @@ func (c *SFN) DescribeActivityRequest(input *DescribeActivityInput) (req *reques
 // See the AWS API reference guide for AWS Step Functions's
 // API operation DescribeActivity for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeActivityDoesNotExist "ActivityDoesNotExist"
+// Returned Error Types:
+//   * ActivityDoesNotExist
 //   The specified activity does not exist.
 //
-//   * ErrCodeInvalidArn "InvalidArn"
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeActivity
@@ -540,11 +540,11 @@ func (c *SFN) DescribeExecutionRequest(input *DescribeExecutionInput) (req *requ
 // See the AWS API reference guide for AWS Step Functions's
 // API operation DescribeExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeExecutionDoesNotExist "ExecutionDoesNotExist"
+// Returned Error Types:
+//   * ExecutionDoesNotExist
 //   The specified execution does not exist.
 //
-//   * ErrCodeInvalidArn "InvalidArn"
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeExecution
@@ -625,11 +625,11 @@ func (c *SFN) DescribeStateMachineRequest(input *DescribeStateMachineInput) (req
 // See the AWS API reference guide for AWS Step Functions's
 // API operation DescribeStateMachine for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArn "InvalidArn"
+// Returned Error Types:
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
-//   * ErrCodeStateMachineDoesNotExist "StateMachineDoesNotExist"
+//   * StateMachineDoesNotExist
 //   The specified state machine does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeStateMachine
@@ -710,11 +710,11 @@ func (c *SFN) DescribeStateMachineForExecutionRequest(input *DescribeStateMachin
 // See the AWS API reference guide for AWS Step Functions's
 // API operation DescribeStateMachineForExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeExecutionDoesNotExist "ExecutionDoesNotExist"
+// Returned Error Types:
+//   * ExecutionDoesNotExist
 //   The specified execution does not exist.
 //
-//   * ErrCodeInvalidArn "InvalidArn"
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/DescribeStateMachineForExecution
@@ -805,15 +805,15 @@ func (c *SFN) GetActivityTaskRequest(input *GetActivityTaskInput) (req *request.
 // See the AWS API reference guide for AWS Step Functions's
 // API operation GetActivityTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeActivityDoesNotExist "ActivityDoesNotExist"
+// Returned Error Types:
+//   * ActivityDoesNotExist
 //   The specified activity does not exist.
 //
-//   * ErrCodeActivityWorkerLimitExceeded "ActivityWorkerLimitExceeded"
+//   * ActivityWorkerLimitExceeded
 //   The maximum number of workers concurrently polling for activity tasks has
 //   been reached.
 //
-//   * ErrCodeInvalidArn "InvalidArn"
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/GetActivityTask
@@ -905,14 +905,14 @@ func (c *SFN) GetExecutionHistoryRequest(input *GetExecutionHistoryInput) (req *
 // See the AWS API reference guide for AWS Step Functions's
 // API operation GetExecutionHistory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeExecutionDoesNotExist "ExecutionDoesNotExist"
+// Returned Error Types:
+//   * ExecutionDoesNotExist
 //   The specified execution does not exist.
 //
-//   * ErrCodeInvalidArn "InvalidArn"
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
-//   * ErrCodeInvalidToken "InvalidToken"
+//   * InvalidToken
 //   The provided token is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/GetExecutionHistory
@@ -1057,8 +1057,8 @@ func (c *SFN) ListActivitiesRequest(input *ListActivitiesInput) (req *request.Re
 // See the AWS API reference guide for AWS Step Functions's
 // API operation ListActivities for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidToken "InvalidToken"
+// Returned Error Types:
+//   * InvalidToken
 //   The provided token is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListActivities
@@ -1204,17 +1204,17 @@ func (c *SFN) ListExecutionsRequest(input *ListExecutionsInput) (req *request.Re
 // See the AWS API reference guide for AWS Step Functions's
 // API operation ListExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArn "InvalidArn"
+// Returned Error Types:
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
-//   * ErrCodeInvalidToken "InvalidToken"
+//   * InvalidToken
 //   The provided token is invalid.
 //
-//   * ErrCodeStateMachineDoesNotExist "StateMachineDoesNotExist"
+//   * StateMachineDoesNotExist
 //   The specified state machine does not exist.
 //
-//   * ErrCodeStateMachineTypeNotSupported "StateMachineTypeNotSupported"
+//   * StateMachineTypeNotSupported
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListExecutions
 func (c *SFN) ListExecutions(input *ListExecutionsInput) (*ListExecutionsOutput, error) {
@@ -1358,8 +1358,8 @@ func (c *SFN) ListStateMachinesRequest(input *ListStateMachinesInput) (req *requ
 // See the AWS API reference guide for AWS Step Functions's
 // API operation ListStateMachines for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidToken "InvalidToken"
+// Returned Error Types:
+//   * InvalidToken
 //   The provided token is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListStateMachines
@@ -1492,11 +1492,11 @@ func (c *SFN) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // See the AWS API reference guide for AWS Step Functions's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArn "InvalidArn"
+// Returned Error Types:
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Could not find the referenced resource. Only state machine and activity ARNs
 //   are supported.
 //
@@ -1577,13 +1577,13 @@ func (c *SFN) SendTaskFailureRequest(input *SendTaskFailureInput) (req *request.
 // See the AWS API reference guide for AWS Step Functions's
 // API operation SendTaskFailure for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTaskDoesNotExist "TaskDoesNotExist"
+// Returned Error Types:
+//   * TaskDoesNotExist
 //
-//   * ErrCodeInvalidToken "InvalidToken"
+//   * InvalidToken
 //   The provided token is invalid.
 //
-//   * ErrCodeTaskTimedOut "TaskTimedOut"
+//   * TaskTimedOut
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/SendTaskFailure
 func (c *SFN) SendTaskFailure(input *SendTaskFailureInput) (*SendTaskFailureOutput, error) {
@@ -1675,13 +1675,13 @@ func (c *SFN) SendTaskHeartbeatRequest(input *SendTaskHeartbeatInput) (req *requ
 // See the AWS API reference guide for AWS Step Functions's
 // API operation SendTaskHeartbeat for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTaskDoesNotExist "TaskDoesNotExist"
+// Returned Error Types:
+//   * TaskDoesNotExist
 //
-//   * ErrCodeInvalidToken "InvalidToken"
+//   * InvalidToken
 //   The provided token is invalid.
 //
-//   * ErrCodeTaskTimedOut "TaskTimedOut"
+//   * TaskTimedOut
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/SendTaskHeartbeat
 func (c *SFN) SendTaskHeartbeat(input *SendTaskHeartbeatInput) (*SendTaskHeartbeatOutput, error) {
@@ -1760,16 +1760,16 @@ func (c *SFN) SendTaskSuccessRequest(input *SendTaskSuccessInput) (req *request.
 // See the AWS API reference guide for AWS Step Functions's
 // API operation SendTaskSuccess for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTaskDoesNotExist "TaskDoesNotExist"
+// Returned Error Types:
+//   * TaskDoesNotExist
 //
-//   * ErrCodeInvalidOutput "InvalidOutput"
+//   * InvalidOutput
 //   The provided JSON output data is invalid.
 //
-//   * ErrCodeInvalidToken "InvalidToken"
+//   * InvalidToken
 //   The provided token is invalid.
 //
-//   * ErrCodeTaskTimedOut "TaskTimedOut"
+//   * TaskTimedOut
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/SendTaskSuccess
 func (c *SFN) SendTaskSuccess(input *SendTaskSuccessInput) (*SendTaskSuccessOutput, error) {
@@ -1852,29 +1852,29 @@ func (c *SFN) StartExecutionRequest(input *StartExecutionInput) (req *request.Re
 // See the AWS API reference guide for AWS Step Functions's
 // API operation StartExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeExecutionLimitExceeded "ExecutionLimitExceeded"
+// Returned Error Types:
+//   * ExecutionLimitExceeded
 //   The maximum number of running executions has been reached. Running executions
 //   must end or be stopped before a new execution can be started.
 //
-//   * ErrCodeExecutionAlreadyExists "ExecutionAlreadyExists"
+//   * ExecutionAlreadyExists
 //   The execution has the same name as another execution (but a different input).
 //
 //   Executions with the same name and input are considered idempotent.
 //
-//   * ErrCodeInvalidArn "InvalidArn"
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
-//   * ErrCodeInvalidExecutionInput "InvalidExecutionInput"
+//   * InvalidExecutionInput
 //   The provided JSON input data is invalid.
 //
-//   * ErrCodeInvalidName "InvalidName"
+//   * InvalidName
 //   The provided name is invalid.
 //
-//   * ErrCodeStateMachineDoesNotExist "StateMachineDoesNotExist"
+//   * StateMachineDoesNotExist
 //   The specified state machine does not exist.
 //
-//   * ErrCodeStateMachineDeleting "StateMachineDeleting"
+//   * StateMachineDeleting
 //   The specified state machine is being deleted.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/StartExecution
@@ -1952,11 +1952,11 @@ func (c *SFN) StopExecutionRequest(input *StopExecutionInput) (req *request.Requ
 // See the AWS API reference guide for AWS Step Functions's
 // API operation StopExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeExecutionDoesNotExist "ExecutionDoesNotExist"
+// Returned Error Types:
+//   * ExecutionDoesNotExist
 //   The specified execution does not exist.
 //
-//   * ErrCodeInvalidArn "InvalidArn"
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/StopExecution
@@ -2043,15 +2043,15 @@ func (c *SFN) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 // See the AWS API reference guide for AWS Step Functions's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArn "InvalidArn"
+// Returned Error Types:
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Could not find the referenced resource. Only state machine and activity ARNs
 //   are supported.
 //
-//   * ErrCodeTooManyTags "TooManyTags"
+//   * TooManyTags
 //   You've exceeded the number of tags allowed for a resource. See the Limits
 //   Topic (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html)
 //   in the AWS Step Functions Developer Guide.
@@ -2132,11 +2132,11 @@ func (c *SFN) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 // See the AWS API reference guide for AWS Step Functions's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArn "InvalidArn"
+// Returned Error Types:
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Could not find the referenced resource. Only state machine and activity ARNs
 //   are supported.
 //
@@ -2222,23 +2222,23 @@ func (c *SFN) UpdateStateMachineRequest(input *UpdateStateMachineInput) (req *re
 // See the AWS API reference guide for AWS Step Functions's
 // API operation UpdateStateMachine for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArn "InvalidArn"
+// Returned Error Types:
+//   * InvalidArn
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
-//   * ErrCodeInvalidDefinition "InvalidDefinition"
+//   * InvalidDefinition
 //   The provided Amazon States Language definition is invalid.
 //
-//   * ErrCodeInvalidLoggingConfiguration "InvalidLoggingConfiguration"
+//   * InvalidLoggingConfiguration
 //
-//   * ErrCodeMissingRequiredParameter "MissingRequiredParameter"
+//   * MissingRequiredParameter
 //   Request is missing a required parameter. This error occurs if both definition
 //   and roleArn are not specified.
 //
-//   * ErrCodeStateMachineDeleting "StateMachineDeleting"
+//   * StateMachineDeleting
 //   The specified state machine is being deleted.
 //
-//   * ErrCodeStateMachineDoesNotExist "StateMachineDoesNotExist"
+//   * StateMachineDoesNotExist
 //   The specified state machine does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/UpdateStateMachine
@@ -2261,6 +2261,62 @@ func (c *SFN) UpdateStateMachineWithContext(ctx aws.Context, input *UpdateStateM
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// The specified activity does not exist.
+type ActivityDoesNotExist struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ActivityDoesNotExist) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ActivityDoesNotExist) GoString() string {
+	return s.String()
+}
+
+func newErrorActivityDoesNotExist(v protocol.ResponseMetadata) error {
+	return &ActivityDoesNotExist{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ActivityDoesNotExist) Code() string {
+	return "ActivityDoesNotExist"
+}
+
+// Message returns the exception's message.
+func (s ActivityDoesNotExist) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ActivityDoesNotExist) OrigErr() error {
+	return nil
+}
+
+func (s ActivityDoesNotExist) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ActivityDoesNotExist) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ActivityDoesNotExist) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains details about an activity that failed during an execution.
@@ -2294,6 +2350,63 @@ func (s *ActivityFailedEventDetails) SetCause(v string) *ActivityFailedEventDeta
 func (s *ActivityFailedEventDetails) SetError(v string) *ActivityFailedEventDetails {
 	s.Error = &v
 	return s
+}
+
+// The maximum number of activities has been reached. Existing activities must
+// be deleted before a new activity can be created.
+type ActivityLimitExceeded struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ActivityLimitExceeded) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ActivityLimitExceeded) GoString() string {
+	return s.String()
+}
+
+func newErrorActivityLimitExceeded(v protocol.ResponseMetadata) error {
+	return &ActivityLimitExceeded{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ActivityLimitExceeded) Code() string {
+	return "ActivityLimitExceeded"
+}
+
+// Message returns the exception's message.
+func (s ActivityLimitExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ActivityLimitExceeded) OrigErr() error {
+	return nil
+}
+
+func (s ActivityLimitExceeded) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ActivityLimitExceeded) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ActivityLimitExceeded) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains details about an activity.
@@ -2524,6 +2637,63 @@ func (s *ActivityTimedOutEventDetails) SetCause(v string) *ActivityTimedOutEvent
 func (s *ActivityTimedOutEventDetails) SetError(v string) *ActivityTimedOutEventDetails {
 	s.Error = &v
 	return s
+}
+
+// The maximum number of workers concurrently polling for activity tasks has
+// been reached.
+type ActivityWorkerLimitExceeded struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ActivityWorkerLimitExceeded) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ActivityWorkerLimitExceeded) GoString() string {
+	return s.String()
+}
+
+func newErrorActivityWorkerLimitExceeded(v protocol.ResponseMetadata) error {
+	return &ActivityWorkerLimitExceeded{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ActivityWorkerLimitExceeded) Code() string {
+	return "ActivityWorkerLimitExceeded"
+}
+
+// Message returns the exception's message.
+func (s ActivityWorkerLimitExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ActivityWorkerLimitExceeded) OrigErr() error {
+	return nil
+}
+
+func (s ActivityWorkerLimitExceeded) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ActivityWorkerLimitExceeded) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ActivityWorkerLimitExceeded) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type CloudWatchLogsLogGroup struct {
@@ -3517,6 +3687,120 @@ func (s *ExecutionAbortedEventDetails) SetError(v string) *ExecutionAbortedEvent
 	return s
 }
 
+// The execution has the same name as another execution (but a different input).
+//
+// Executions with the same name and input are considered idempotent.
+type ExecutionAlreadyExists struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ExecutionAlreadyExists) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecutionAlreadyExists) GoString() string {
+	return s.String()
+}
+
+func newErrorExecutionAlreadyExists(v protocol.ResponseMetadata) error {
+	return &ExecutionAlreadyExists{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ExecutionAlreadyExists) Code() string {
+	return "ExecutionAlreadyExists"
+}
+
+// Message returns the exception's message.
+func (s ExecutionAlreadyExists) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ExecutionAlreadyExists) OrigErr() error {
+	return nil
+}
+
+func (s ExecutionAlreadyExists) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ExecutionAlreadyExists) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ExecutionAlreadyExists) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified execution does not exist.
+type ExecutionDoesNotExist struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ExecutionDoesNotExist) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecutionDoesNotExist) GoString() string {
+	return s.String()
+}
+
+func newErrorExecutionDoesNotExist(v protocol.ResponseMetadata) error {
+	return &ExecutionDoesNotExist{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ExecutionDoesNotExist) Code() string {
+	return "ExecutionDoesNotExist"
+}
+
+// Message returns the exception's message.
+func (s ExecutionDoesNotExist) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ExecutionDoesNotExist) OrigErr() error {
+	return nil
+}
+
+func (s ExecutionDoesNotExist) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ExecutionDoesNotExist) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ExecutionDoesNotExist) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains details about an execution failure event.
 type ExecutionFailedEventDetails struct {
 	_ struct{} `type:"structure"`
@@ -3548,6 +3832,63 @@ func (s *ExecutionFailedEventDetails) SetCause(v string) *ExecutionFailedEventDe
 func (s *ExecutionFailedEventDetails) SetError(v string) *ExecutionFailedEventDetails {
 	s.Error = &v
 	return s
+}
+
+// The maximum number of running executions has been reached. Running executions
+// must end or be stopped before a new execution can be started.
+type ExecutionLimitExceeded struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ExecutionLimitExceeded) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecutionLimitExceeded) GoString() string {
+	return s.String()
+}
+
+func newErrorExecutionLimitExceeded(v protocol.ResponseMetadata) error {
+	return &ExecutionLimitExceeded{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ExecutionLimitExceeded) Code() string {
+	return "ExecutionLimitExceeded"
+}
+
+// Message returns the exception's message.
+func (s ExecutionLimitExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ExecutionLimitExceeded) OrigErr() error {
+	return nil
+}
+
+func (s ExecutionLimitExceeded) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ExecutionLimitExceeded) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ExecutionLimitExceeded) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains details about an execution.
@@ -4289,6 +4630,397 @@ func (s *HistoryEvent) SetType(v string) *HistoryEvent {
 	return s
 }
 
+// The provided Amazon Resource Name (ARN) is invalid.
+type InvalidArn struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidArn) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidArn) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidArn(v protocol.ResponseMetadata) error {
+	return &InvalidArn{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidArn) Code() string {
+	return "InvalidArn"
+}
+
+// Message returns the exception's message.
+func (s InvalidArn) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidArn) OrigErr() error {
+	return nil
+}
+
+func (s InvalidArn) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidArn) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidArn) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The provided Amazon States Language definition is invalid.
+type InvalidDefinition struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidDefinition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidDefinition) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidDefinition(v protocol.ResponseMetadata) error {
+	return &InvalidDefinition{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidDefinition) Code() string {
+	return "InvalidDefinition"
+}
+
+// Message returns the exception's message.
+func (s InvalidDefinition) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidDefinition) OrigErr() error {
+	return nil
+}
+
+func (s InvalidDefinition) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidDefinition) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidDefinition) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The provided JSON input data is invalid.
+type InvalidExecutionInput struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidExecutionInput) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidExecutionInput(v protocol.ResponseMetadata) error {
+	return &InvalidExecutionInput{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidExecutionInput) Code() string {
+	return "InvalidExecutionInput"
+}
+
+// Message returns the exception's message.
+func (s InvalidExecutionInput) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidExecutionInput) OrigErr() error {
+	return nil
+}
+
+func (s InvalidExecutionInput) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidExecutionInput) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidExecutionInput) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+type InvalidLoggingConfiguration struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidLoggingConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidLoggingConfiguration) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidLoggingConfiguration(v protocol.ResponseMetadata) error {
+	return &InvalidLoggingConfiguration{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidLoggingConfiguration) Code() string {
+	return "InvalidLoggingConfiguration"
+}
+
+// Message returns the exception's message.
+func (s InvalidLoggingConfiguration) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidLoggingConfiguration) OrigErr() error {
+	return nil
+}
+
+func (s InvalidLoggingConfiguration) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidLoggingConfiguration) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidLoggingConfiguration) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The provided name is invalid.
+type InvalidName struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidName) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidName) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidName(v protocol.ResponseMetadata) error {
+	return &InvalidName{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidName) Code() string {
+	return "InvalidName"
+}
+
+// Message returns the exception's message.
+func (s InvalidName) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidName) OrigErr() error {
+	return nil
+}
+
+func (s InvalidName) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidName) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidName) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The provided JSON output data is invalid.
+type InvalidOutput struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidOutput) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidOutput(v protocol.ResponseMetadata) error {
+	return &InvalidOutput{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidOutput) Code() string {
+	return "InvalidOutput"
+}
+
+// Message returns the exception's message.
+func (s InvalidOutput) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidOutput) OrigErr() error {
+	return nil
+}
+
+func (s InvalidOutput) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidOutput) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidOutput) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The provided token is invalid.
+type InvalidToken struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidToken) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidToken) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidToken(v protocol.ResponseMetadata) error {
+	return &InvalidToken{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidToken) Code() string {
+	return "InvalidToken"
+}
+
+// Message returns the exception's message.
+func (s InvalidToken) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidToken) OrigErr() error {
+	return nil
+}
+
+func (s InvalidToken) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidToken) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidToken) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains details about a lambda function that failed during an execution.
 type LambdaFunctionFailedEventDetails struct {
 	_ struct{} `type:"structure"`
@@ -5017,6 +5749,122 @@ func (s *MapStateStartedEventDetails) SetLength(v int64) *MapStateStartedEventDe
 	return s
 }
 
+// Request is missing a required parameter. This error occurs if both definition
+// and roleArn are not specified.
+type MissingRequiredParameter struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s MissingRequiredParameter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MissingRequiredParameter) GoString() string {
+	return s.String()
+}
+
+func newErrorMissingRequiredParameter(v protocol.ResponseMetadata) error {
+	return &MissingRequiredParameter{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MissingRequiredParameter) Code() string {
+	return "MissingRequiredParameter"
+}
+
+// Message returns the exception's message.
+func (s MissingRequiredParameter) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MissingRequiredParameter) OrigErr() error {
+	return nil
+}
+
+func (s MissingRequiredParameter) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MissingRequiredParameter) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MissingRequiredParameter) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Could not find the referenced resource. Only state machine and activity ARNs
+// are supported.
+type ResourceNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	ResourceName *string `locationName:"resourceName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFound(v protocol.ResponseMetadata) error {
+	return &ResourceNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFound) Code() string {
+	return "ResourceNotFound"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFound) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFound) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFound) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type SendTaskFailureInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5420,6 +6268,232 @@ func (s *StateExitedEventDetails) SetOutput(v string) *StateExitedEventDetails {
 	return s
 }
 
+// A state machine with the same name but a different definition or role ARN
+// already exists.
+type StateMachineAlreadyExists struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s StateMachineAlreadyExists) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StateMachineAlreadyExists) GoString() string {
+	return s.String()
+}
+
+func newErrorStateMachineAlreadyExists(v protocol.ResponseMetadata) error {
+	return &StateMachineAlreadyExists{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s StateMachineAlreadyExists) Code() string {
+	return "StateMachineAlreadyExists"
+}
+
+// Message returns the exception's message.
+func (s StateMachineAlreadyExists) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s StateMachineAlreadyExists) OrigErr() error {
+	return nil
+}
+
+func (s StateMachineAlreadyExists) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s StateMachineAlreadyExists) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s StateMachineAlreadyExists) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified state machine is being deleted.
+type StateMachineDeleting struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s StateMachineDeleting) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StateMachineDeleting) GoString() string {
+	return s.String()
+}
+
+func newErrorStateMachineDeleting(v protocol.ResponseMetadata) error {
+	return &StateMachineDeleting{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s StateMachineDeleting) Code() string {
+	return "StateMachineDeleting"
+}
+
+// Message returns the exception's message.
+func (s StateMachineDeleting) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s StateMachineDeleting) OrigErr() error {
+	return nil
+}
+
+func (s StateMachineDeleting) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s StateMachineDeleting) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s StateMachineDeleting) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified state machine does not exist.
+type StateMachineDoesNotExist struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s StateMachineDoesNotExist) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StateMachineDoesNotExist) GoString() string {
+	return s.String()
+}
+
+func newErrorStateMachineDoesNotExist(v protocol.ResponseMetadata) error {
+	return &StateMachineDoesNotExist{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s StateMachineDoesNotExist) Code() string {
+	return "StateMachineDoesNotExist"
+}
+
+// Message returns the exception's message.
+func (s StateMachineDoesNotExist) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s StateMachineDoesNotExist) OrigErr() error {
+	return nil
+}
+
+func (s StateMachineDoesNotExist) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s StateMachineDoesNotExist) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s StateMachineDoesNotExist) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The maximum number of state machines has been reached. Existing state machines
+// must be deleted before a new state machine can be created.
+type StateMachineLimitExceeded struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s StateMachineLimitExceeded) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StateMachineLimitExceeded) GoString() string {
+	return s.String()
+}
+
+func newErrorStateMachineLimitExceeded(v protocol.ResponseMetadata) error {
+	return &StateMachineLimitExceeded{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s StateMachineLimitExceeded) Code() string {
+	return "StateMachineLimitExceeded"
+}
+
+// Message returns the exception's message.
+func (s StateMachineLimitExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s StateMachineLimitExceeded) OrigErr() error {
+	return nil
+}
+
+func (s StateMachineLimitExceeded) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s StateMachineLimitExceeded) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s StateMachineLimitExceeded) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains details about the state machine.
 type StateMachineListItem struct {
 	_ struct{} `type:"structure"`
@@ -5487,6 +6561,61 @@ func (s *StateMachineListItem) SetStateMachineArn(v string) *StateMachineListIte
 func (s *StateMachineListItem) SetType(v string) *StateMachineListItem {
 	s.Type = &v
 	return s
+}
+
+type StateMachineTypeNotSupported struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s StateMachineTypeNotSupported) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StateMachineTypeNotSupported) GoString() string {
+	return s.String()
+}
+
+func newErrorStateMachineTypeNotSupported(v protocol.ResponseMetadata) error {
+	return &StateMachineTypeNotSupported{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s StateMachineTypeNotSupported) Code() string {
+	return "StateMachineTypeNotSupported"
+}
+
+// Message returns the exception's message.
+func (s StateMachineTypeNotSupported) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s StateMachineTypeNotSupported) OrigErr() error {
+	return nil
+}
+
+func (s StateMachineTypeNotSupported) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s StateMachineTypeNotSupported) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s StateMachineTypeNotSupported) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type StopExecutionInput struct {
@@ -5708,6 +6837,61 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+type TaskDoesNotExist struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TaskDoesNotExist) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskDoesNotExist) GoString() string {
+	return s.String()
+}
+
+func newErrorTaskDoesNotExist(v protocol.ResponseMetadata) error {
+	return &TaskDoesNotExist{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TaskDoesNotExist) Code() string {
+	return "TaskDoesNotExist"
+}
+
+// Message returns the exception's message.
+func (s TaskDoesNotExist) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TaskDoesNotExist) OrigErr() error {
+	return nil
+}
+
+func (s TaskDoesNotExist) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TaskDoesNotExist) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TaskDoesNotExist) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains details about a task failure event.
@@ -6073,6 +7257,61 @@ func (s *TaskSucceededEventDetails) SetResourceType(v string) *TaskSucceededEven
 	return s
 }
 
+type TaskTimedOut struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TaskTimedOut) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskTimedOut) GoString() string {
+	return s.String()
+}
+
+func newErrorTaskTimedOut(v protocol.ResponseMetadata) error {
+	return &TaskTimedOut{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TaskTimedOut) Code() string {
+	return "TaskTimedOut"
+}
+
+// Message returns the exception's message.
+func (s TaskTimedOut) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TaskTimedOut) OrigErr() error {
+	return nil
+}
+
+func (s TaskTimedOut) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TaskTimedOut) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TaskTimedOut) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains details about a resource timeout that occurred during an execution.
 type TaskTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
@@ -6126,6 +7365,66 @@ func (s *TaskTimedOutEventDetails) SetResource(v string) *TaskTimedOutEventDetai
 func (s *TaskTimedOutEventDetails) SetResourceType(v string) *TaskTimedOutEventDetails {
 	s.ResourceType = &v
 	return s
+}
+
+// You've exceeded the number of tags allowed for a resource. See the Limits
+// Topic (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html)
+// in the AWS Step Functions Developer Guide.
+type TooManyTags struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	ResourceName *string `locationName:"resourceName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyTags) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyTags) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyTags(v protocol.ResponseMetadata) error {
+	return &TooManyTags{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyTags) Code() string {
+	return "TooManyTags"
+}
+
+// Message returns the exception's message.
+func (s TooManyTags) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyTags) OrigErr() error {
+	return nil
+}
+
+func (s TooManyTags) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyTags) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyTags) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {

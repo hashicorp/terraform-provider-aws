@@ -1238,6 +1238,7 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName2 := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	testCheckInstanceProfile := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1268,6 +1269,19 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfigWithInstanceProfile(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					testCheckInstanceProfile(),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithInstanceProfile(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStopInstance(&v), // GH-8262
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithInstanceProfile(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testCheckInstanceProfile(),
@@ -2577,6 +2591,21 @@ func testAccCheckInstanceDisappears(conf *ec2.Instance) resource.TestCheckFunc {
 		}
 
 		return waitForInstanceDeletion(conn, *conf.InstanceId, 10*time.Minute)
+	}
+}
+
+func testAccCheckStopInstance(conf *ec2.Instance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		params := &ec2.StopInstancesInput{
+			InstanceIds: []*string{conf.InstanceId},
+		}
+		if _, err := conn.StopInstances(params); err != nil {
+			return err
+		}
+
+		return waitForInstanceStopping(conn, *conf.InstanceId, 10*time.Minute)
 	}
 }
 

@@ -102,13 +102,6 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 					},
 				},
 			},
-			"alarms": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
 			"adjustment_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -330,7 +323,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 	d.Set("resource_id", p.ResourceId)
 	d.Set("scalable_dimension", p.ScalableDimension)
 	d.Set("service_namespace", p.ServiceNamespace)
-	d.Set("alarms", p.Alarms)
+
 	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration)); err != nil {
 		return fmt.Errorf("error setting step_scaling_policy_configuration: %s", err)
 	}

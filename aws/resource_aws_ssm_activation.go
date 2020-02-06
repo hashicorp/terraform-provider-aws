@@ -37,6 +37,7 @@ func resourceAwsSsmActivation() *schema.Resource {
 			"expiration_date": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.ValidateRFC3339TimeString,
 			},
@@ -150,13 +151,15 @@ func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error reading SSM activation: %s", err)
 	}
 	if resp.ActivationList == nil || len(resp.ActivationList) == 0 {
-		return fmt.Errorf("ActivationList was nil or empty")
+		log.Printf("[WARN] SSM Activation (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	activation := resp.ActivationList[0] // Only 1 result as MaxResults is 1 above
 	d.Set("name", activation.DefaultInstanceName)
 	d.Set("description", activation.Description)
-	d.Set("expiration_date", activation.ExpirationDate)
+	d.Set("expiration_date", aws.TimeValue(activation.ExpirationDate).Format(time.RFC3339))
 	d.Set("expired", activation.Expired)
 	d.Set("iam_role", activation.IamRole)
 	d.Set("registration_limit", activation.RegistrationLimit)

@@ -37,16 +37,17 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 			MountPoints: []*batch.MountPoint{
 				{ContainerPath: aws.String("/tmp"), ReadOnly: aws.Bool(false), SourceVolume: aws.String("tmp")},
 			},
+			ResourceRequirements: []*batch.ResourceRequirement{},
 			Ulimits: []*batch.Ulimit{
 				{HardLimit: aws.Int64(int64(1024)), Name: aws.String("nofile"), SoftLimit: aws.Int64(int64(1024))},
 			},
+			Vcpus: aws.Int64(int64(1)),
 			Volumes: []*batch.Volume{
 				{
 					Host: &batch.Host{SourcePath: aws.String("/tmp")},
 					Name: aws.String("tmp"),
 				},
 			},
-			Vcpus: aws.Int64(int64(1)),
 		},
 	}
 	ri := acctest.RandInt()

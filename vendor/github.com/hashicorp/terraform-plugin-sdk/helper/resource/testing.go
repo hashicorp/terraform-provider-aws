@@ -195,7 +195,7 @@ func filterSweeperWithDependencies(name string, source map[string]*Sweeper) map[
 
 	currentSweeper, ok := source[name]
 	if !ok {
-		log.Printf("[DEBUG] Sweeper has dependency (%s), but that sweeper was not found", name)
+		log.Printf("[WARN] Sweeper has dependency (%s), but that sweeper was not found", name)
 		return result
 	}
 
@@ -229,7 +229,7 @@ func runSweeperWithRegion(region string, s *Sweeper, sweepers map[string]*Sweepe
 				return err
 			}
 		} else {
-			log.Printf("[DEBUG] Sweeper (%s) has dependency (%s), but that sweeper was not found", s.Name, dep)
+			log.Printf("[WARN] Sweeper (%s) has dependency (%s), but that sweeper was not found", s.Name, dep)
 		}
 	}
 

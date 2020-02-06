@@ -322,11 +322,6 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-rc-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-rc-%s", rString)
 
-	originalRegexp := regexp.MustCompile(
-		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + clusterName + "$")
-	modifiedRegexp := regexp.MustCompile(
-		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + uClusterName + "$")
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -336,8 +331,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 				Config: testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
-					resource.TestMatchResourceAttr(
-						"aws_ecs_service.ghost", "cluster", originalRegexp),
+					resource.TestCheckResourceAttrPair("aws_ecs_service.ghost", "cluster", "aws_ecs_cluster.default", "arn"),
 				),
 			},
 
@@ -345,8 +339,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 				Config: testAccAWSEcsServiceWithRenamedCluster(uClusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
-					resource.TestMatchResourceAttr(
-						"aws_ecs_service.ghost", "cluster", modifiedRegexp),
+					resource.TestCheckResourceAttrPair("aws_ecs_service.ghost", "cluster", "aws_ecs_cluster.default", "arn"),
 				),
 			},
 		},
@@ -2687,6 +2680,10 @@ data "aws_availability_zones" "test" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -2694,6 +2691,10 @@ resource "aws_subnet" "test" {
   cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
   vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_security_group" "test" {
@@ -2773,6 +2774,10 @@ data "aws_availability_zones" "test" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg-cont"
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -2780,6 +2785,10 @@ resource "aws_subnet" "test" {
   cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
   vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_security_group" "test" {

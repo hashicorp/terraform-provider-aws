@@ -288,7 +288,36 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 					return fmt.Errorf("Error modifying DB Parameter Group: %s", err)
 				}
 			}
-			d.SetPartial("parameter")
+		}
+
+		// Reset parameters that have been removed
+		resetParameters, err := expandParameters(os.Difference(ns).List())
+		if err != nil {
+			return err
+		}
+		if len(resetParameters) > 0 {
+			maxParams := 20
+			for resetParameters != nil {
+				var paramsToReset []*rds.Parameter
+				if len(resetParameters) <= maxParams {
+					paramsToReset, resetParameters = resetParameters[:], nil
+				} else {
+					paramsToReset, resetParameters = resetParameters[:maxParams], resetParameters[maxParams:]
+				}
+
+				parameterGroupName := d.Get("name").(string)
+				resetOpts := rds.ResetDBParameterGroupInput{
+					DBParameterGroupName: aws.String(parameterGroupName),
+					Parameters:           paramsToReset,
+					ResetAllParameters:   aws.Bool(false),
+				}
+
+				log.Printf("[DEBUG] Reset DB Parameter Group: %s", resetOpts)
+				_, err = rdsconn.ResetDBParameterGroup(&resetOpts)
+				if err != nil {
+					return fmt.Errorf("Error resetting DB Parameter Group: %s", err)
+				}
+			}
 		}
 	}
 

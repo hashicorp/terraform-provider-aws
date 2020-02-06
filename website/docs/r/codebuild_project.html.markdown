@@ -150,6 +150,12 @@ resource "aws_codebuild_project" "example" {
     type            = "GITHUB"
     location        = "https://github.com/mitchellh/packer.git"
     git_clone_depth = 1
+    source_version  = "master"
+
+    git_submodules_config {
+        fetch_submodules = true
+    }
+
   }
 
   vpc_config {
@@ -228,6 +234,7 @@ The following arguments are supported:
 * `encryption_key` - (Optional) The AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration for the builds to store log data to CloudWatch or S3.
 * `service_role` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
+* `source_version` - (Optional) A version of the build input to be built for this project. If not specified, the latest version is used.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `vpc_config` - (Optional) Configuration for the builds to run inside a VPC. VPC config blocks are documented below.
 * `secondary_artifacts` - (Optional) A set of secondary artifacts to be used inside the build. Secondary artifacts blocks are documented below.
@@ -291,14 +298,20 @@ The following arguments are supported:
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds. This must be set when `type` is `NO_SOURCE`.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
+* `git_submodules_config` - (Optional) Information about the Git submodules configuration for an AWS CodeBuild build project. Git submodules config blocks are documented below. This option is only valid when the `type` is `CODECOMMIT`.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
 * `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when the `type` is `BITBUCKET` or `GITHUB`.
+
 
 `auth` supports the following:
 
 * `type` - (Required) The authorization type to use. The only valid value is `OAUTH`
 * `resource` - (Optional) The resource value that applies to the specified authorization type.
+
+`git_submodules_config` supports the following:
+
+* `fetch_submodules` - (Required) If set to true, fetches Git submodules for the AWS CodeBuild build project.
 
 `vpc_config` supports the following:
 
@@ -330,6 +343,7 @@ The following arguments are supported:
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
+* `git_submodules_config` - (Optional) Information about the Git submodules configuration for an AWS CodeBuild build project. Git submodules config blocks are documented below. This option is only valid when the `type` is `CODECOMMIT`.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
 * `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is `GITHUB`, `BITBUCKET`, or `GITHUB_ENTERPRISE`.

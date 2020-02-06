@@ -612,8 +612,10 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 	opts := rds.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
 
 	log.Printf("[DEBUG] RDS Cluster Instance destroy configuration: %s", opts)
-	if _, err := conn.DeleteDBInstance(&opts); err != nil {
-		return err
+	_, err := conn.DeleteDBInstance(&opts)
+
+	if err != nil && !isAWSErr(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
+		return fmt.Errorf("error deleting Database Instance %q: %s", d.Id(), err)
 	}
 
 	// re-uses db_instance refresh func
@@ -627,7 +629,7 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err = stateConf.WaitForState()
 	return err
 
 }

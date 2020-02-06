@@ -91,15 +91,15 @@ func (c *ForecastService) CreateDatasetRequest(input *CreateDatasetInput) (req *
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation CreateDataset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   There is already a resource with this name. Try again with a different name.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of resources per account has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateDataset
@@ -188,22 +188,22 @@ func (c *ForecastService) CreateDatasetGroupRequest(input *CreateDatasetGroupInp
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation CreateDatasetGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   There is already a resource with this name. Try again with a different name.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of resources per account has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateDatasetGroup
@@ -297,22 +297,22 @@ func (c *ForecastService) CreateDatasetImportJobRequest(input *CreateDatasetImpo
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation CreateDatasetImportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   There is already a resource with this name. Try again with a different name.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of resources per account has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateDatasetImportJob
@@ -409,22 +409,22 @@ func (c *ForecastService) CreateForecastRequest(input *CreateForecastInput) (req
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation CreateForecast for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   There is already a resource with this name. Try again with a different name.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of resources per account has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateForecast
@@ -521,22 +521,22 @@ func (c *ForecastService) CreateForecastExportJobRequest(input *CreateForecastEx
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation CreateForecastExportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   There is already a resource with this name. Try again with a different name.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of resources per account has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateForecastExportJob
@@ -659,22 +659,22 @@ func (c *ForecastService) CreatePredictorRequest(input *CreatePredictorInput) (r
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation CreatePredictor for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   There is already a resource with this name. Try again with a different name.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of resources per account has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreatePredictor
@@ -755,16 +755,16 @@ func (c *ForecastService) DeleteDatasetRequest(input *DeleteDatasetInput) (req *
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DeleteDataset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteDataset
@@ -847,16 +847,16 @@ func (c *ForecastService) DeleteDatasetGroupRequest(input *DeleteDatasetGroupInp
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DeleteDatasetGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteDatasetGroup
@@ -937,16 +937,16 @@ func (c *ForecastService) DeleteDatasetImportJobRequest(input *DeleteDatasetImpo
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DeleteDatasetImportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteDatasetImportJob
@@ -1030,16 +1030,16 @@ func (c *ForecastService) DeleteForecastRequest(input *DeleteForecastInput) (req
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DeleteForecast for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteForecast
@@ -1120,16 +1120,16 @@ func (c *ForecastService) DeleteForecastExportJobRequest(input *DeleteForecastEx
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DeleteForecastExportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteForecastExportJob
@@ -1210,16 +1210,16 @@ func (c *ForecastService) DeletePredictorRequest(input *DeletePredictorInput) (r
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DeletePredictor for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeletePredictor
@@ -1306,12 +1306,12 @@ func (c *ForecastService) DescribeDatasetRequest(input *DescribeDatasetInput) (r
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DescribeDataset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
@@ -1401,12 +1401,12 @@ func (c *ForecastService) DescribeDatasetGroupRequest(input *DescribeDatasetGrou
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DescribeDatasetGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
@@ -1500,12 +1500,12 @@ func (c *ForecastService) DescribeDatasetImportJobRequest(input *DescribeDataset
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DescribeDatasetImportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
@@ -1597,12 +1597,12 @@ func (c *ForecastService) DescribeForecastRequest(input *DescribeForecastInput) 
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DescribeForecast for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
@@ -1693,12 +1693,12 @@ func (c *ForecastService) DescribeForecastExportJobRequest(input *DescribeForeca
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DescribeForecastExportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
@@ -1794,12 +1794,12 @@ func (c *ForecastService) DescribePredictorRequest(input *DescribePredictorInput
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation DescribePredictor for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
@@ -1896,16 +1896,16 @@ func (c *ForecastService) GetAccuracyMetricsRequest(input *GetAccuracyMetricsInp
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation GetAccuracyMetrics for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/GetAccuracyMetrics
@@ -1993,8 +1993,8 @@ func (c *ForecastService) ListDatasetGroupsRequest(input *ListDatasetGroupsInput
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation ListDatasetGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The token is not valid. Tokens expire after 24 hours.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ListDatasetGroups
@@ -2134,11 +2134,11 @@ func (c *ForecastService) ListDatasetImportJobsRequest(input *ListDatasetImportJ
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation ListDatasetImportJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The token is not valid. Tokens expire after 24 hours.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
@@ -2278,8 +2278,8 @@ func (c *ForecastService) ListDatasetsRequest(input *ListDatasetsInput) (req *re
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation ListDatasets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The token is not valid. Tokens expire after 24 hours.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ListDatasets
@@ -2419,11 +2419,11 @@ func (c *ForecastService) ListForecastExportJobsRequest(input *ListForecastExpor
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation ListForecastExportJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The token is not valid. Tokens expire after 24 hours.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
@@ -2564,11 +2564,11 @@ func (c *ForecastService) ListForecastsRequest(input *ListForecastsInput) (req *
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation ListForecasts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The token is not valid. Tokens expire after 24 hours.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
@@ -2709,11 +2709,11 @@ func (c *ForecastService) ListPredictorsRequest(input *ListPredictorsInput) (req
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation ListPredictors for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The token is not valid. Tokens expire after 24 hours.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
@@ -2849,16 +2849,16 @@ func (c *ForecastService) UpdateDatasetGroupRequest(input *UpdateDatasetGroupInp
 // See the AWS API reference guide for Amazon Forecast Service's
 // API operation UpdateDatasetGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   We can't process the request because it includes an invalid value or a value
 //   that exceeds the valid range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   We can't find a resource with that Amazon Resource Name (ARN). Check the
 //   ARN and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/UpdateDatasetGroup
@@ -6466,6 +6466,175 @@ func (s *IntegerParameterRange) SetScalingType(v string) *IntegerParameterRange 
 	return s
 }
 
+// We can't process the request because it includes an invalid value or a value
+// that exceeds the valid range.
+type InvalidInputException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidInputException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidInputException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidInputException(v protocol.ResponseMetadata) error {
+	return &InvalidInputException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidInputException) Code() string {
+	return "InvalidInputException"
+}
+
+// Message returns the exception's message.
+func (s InvalidInputException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidInputException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidInputException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidInputException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidInputException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The token is not valid. Tokens expire after 24 hours.
+type InvalidNextTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidNextTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidNextTokenException) Code() string {
+	return "InvalidNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidNextTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidNextTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The limit on the number of resources per account has been exceeded.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ListDatasetGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7402,6 +7571,175 @@ func (s *PredictorSummary) SetPredictorName(v string) *PredictorSummary {
 func (s *PredictorSummary) SetStatus(v string) *PredictorSummary {
 	s.Status = &v
 	return s
+}
+
+// There is already a resource with this name. Try again with a different name.
+type ResourceAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ResourceAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceAlreadyExistsException) Code() string {
+	return "ResourceAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified resource is in use.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// We can't find a resource with that Amazon Resource Name (ARN). Check the
+// ARN and try again.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The path to the file(s) in an Amazon Simple Storage Service (Amazon S3) bucket,

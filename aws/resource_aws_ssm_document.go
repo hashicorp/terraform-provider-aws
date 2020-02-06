@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -39,6 +40,33 @@ func resourceAwsSsmDocument() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateAwsSSMName,
 			},
+			"attachments_source": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ssm.AttachmentsSourceKeyAttachmentReference,
+								ssm.AttachmentsSourceKeySourceUrl,
+								ssm.AttachmentsSourceKeyS3fileUrl,
+							}, false),
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							MinItems: 1,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"content": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -60,6 +88,7 @@ func resourceAwsSsmDocument() *schema.Resource {
 					ssm.DocumentTypePolicy,
 					ssm.DocumentTypeAutomation,
 					ssm.DocumentTypeSession,
+					ssm.DocumentTypePackage,
 				}, false),
 			},
 			"schema_version": {
@@ -135,6 +164,9 @@ func resourceAwsSsmDocument() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ssm.DocumentPermissionTypeShare,
+							}, false),
 						},
 						"account_ids": {
 							Type:     schema.TypeString,
@@ -144,6 +176,10 @@ func resourceAwsSsmDocument() *schema.Resource {
 				},
 			},
 			"tags": tagsSchema(),
+			"target_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -162,6 +198,14 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("tags"); ok {
 		docInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
+	}
+
+	if v, ok := d.GetOk("attachments_source"); ok {
+		docInput.Attachments = expandSsmAttachmentsSources(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("target_type"); ok {
+		docInput.TargetType = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be created", d.Get("name").(string))
@@ -240,7 +284,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	doc := describeDocumentOutput.Document
 
 	d.Set("content", getDocumentOutput.Content)
-	d.Set("created_date", doc.CreatedDate)
+	d.Set("created_date", aws.TimeValue(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set("description", doc.Description)
 	d.Set("schema_version", doc.SchemaVersion)
@@ -303,6 +347,10 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
+	if err := d.Set("target_type", doc.TargetType); err != nil {
+		return fmt.Errorf("error setting target type: %s", err)
+	}
+
 	return nil
 }
 
@@ -325,7 +373,10 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 		log.Printf("[DEBUG] Not setting document permissions on %q", d.Id())
 	}
 
-	if !d.HasChange("content") {
+	// update for schema version 1.x is not allowed
+	isSchemaVersion1, _ := regexp.MatchString("^1[.][0-9]$", d.Get("schema_version").(string))
+
+	if !d.HasChange("content") && isSchemaVersion1 {
 		return nil
 	}
 
@@ -382,6 +433,31 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error waiting for SSM Document (%s) deletion: %s", d.Id(), err)
 	}
 	return nil
+}
+
+func expandSsmAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
+	if len(a) == 0 {
+		return nil
+	}
+
+	results := make([]*ssm.AttachmentsSource, 0)
+	for _, raw := range a {
+		at := raw.(map[string]interface{})
+		s := &ssm.AttachmentsSource{}
+		if val, ok := at["key"]; ok {
+			s.Key = aws.String(val.(string))
+		}
+		if val, ok := at["name"]; ok && val != "" {
+			s.Name = aws.String(val.(string))
+		}
+		if val, ok := at["values"]; ok {
+			s.Values = expandStringList(val.([]interface{}))
+		}
+
+		results = append(results, s)
+	}
+	return results
+
 }
 
 func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
@@ -572,12 +648,20 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 		DocumentVersion: aws.String(d.Get("default_version").(string)),
 	}
 
+	if v, ok := d.GetOk("target_type"); ok {
+		updateDocInput.TargetType = aws.String(v.(string))
+	}
+
+	if d.HasChange("attachments_source") {
+		updateDocInput.Attachments = expandSsmAttachmentsSources(d.Get("attachments_source").([]interface{}))
+	}
+
 	newDefaultVersion := d.Get("default_version").(string)
 
 	ssmconn := meta.(*AWSClient).ssmconn
 	updated, err := ssmconn.UpdateDocument(updateDocInput)
 
-	if isAWSErr(err, "DuplicateDocumentContent", "") {
+	if isAWSErr(err, ssm.ErrCodeDuplicateDocumentContent, "") {
 		log.Printf("[DEBUG] Content is a duplicate of the latest version so update is not necessary: %s", d.Id())
 		log.Printf("[INFO] Updating the default version to the latest version %s: %s", newDefaultVersion, d.Id())
 

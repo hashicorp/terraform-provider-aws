@@ -59,6 +59,7 @@ resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
   }
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:

@@ -66,32 +66,32 @@ func (c *Imagebuilder) CancelImageCreationRequest(input *CancelImageCreationInpu
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation CancelImageCreation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
@@ -171,39 +171,39 @@ func (c *Imagebuilder) CreateComponentRequest(input *CreateComponentInput) (req 
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation CreateComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeInvalidVersionNumberException "InvalidVersionNumberException"
+//   * InvalidVersionNumberException
 //   Your version number is out of bounds or does not follow the required syntax.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
-//   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombinationException"
+//   * InvalidParameterCombinationException
 //   You have specified two or more mutually exclusive parameters. Review the
 //   error message for details.
 //
@@ -283,39 +283,39 @@ func (c *Imagebuilder) CreateDistributionConfigurationRequest(input *CreateDistr
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation CreateDistributionConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource that you are trying to create already exists.
 //
-//   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombinationException"
+//   * InvalidParameterCombinationException
 //   You have specified two or more mutually exclusive parameters. Review the
 //   error message for details.
 //
@@ -395,32 +395,32 @@ func (c *Imagebuilder) CreateImageRequest(input *CreateImageInput) (req *request
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation CreateImage for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
@@ -500,36 +500,36 @@ func (c *Imagebuilder) CreateImagePipelineRequest(input *CreateImagePipelineInpu
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation CreateImagePipeline for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource that you are trying to create already exists.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/CreateImagePipeline
@@ -608,39 +608,39 @@ func (c *Imagebuilder) CreateImageRecipeRequest(input *CreateImageRecipeInput) (
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation CreateImageRecipe for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeInvalidVersionNumberException "InvalidVersionNumberException"
+//   * InvalidVersionNumberException
 //   Your version number is out of bounds or does not follow the required syntax.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource that you are trying to create already exists.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/CreateImageRecipe
@@ -719,36 +719,36 @@ func (c *Imagebuilder) CreateInfrastructureConfigurationRequest(input *CreateInf
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation CreateInfrastructureConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource that you are trying to create already exists.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/CreateInfrastructureConfiguration
@@ -826,28 +826,28 @@ func (c *Imagebuilder) DeleteComponentRequest(input *DeleteComponentInput) (req 
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation DeleteComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceDependencyException "ResourceDependencyException"
+//   * ResourceDependencyException
 //   You have attempted to mutate or delete a resource with a dependency that
 //   is prohibitting this action. See the error message for more details.
 //
@@ -926,28 +926,28 @@ func (c *Imagebuilder) DeleteDistributionConfigurationRequest(input *DeleteDistr
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation DeleteDistributionConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceDependencyException "ResourceDependencyException"
+//   * ResourceDependencyException
 //   You have attempted to mutate or delete a resource with a dependency that
 //   is prohibitting this action. See the error message for more details.
 //
@@ -1026,28 +1026,28 @@ func (c *Imagebuilder) DeleteImageRequest(input *DeleteImageInput) (req *request
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation DeleteImage for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceDependencyException "ResourceDependencyException"
+//   * ResourceDependencyException
 //   You have attempted to mutate or delete a resource with a dependency that
 //   is prohibitting this action. See the error message for more details.
 //
@@ -1126,28 +1126,28 @@ func (c *Imagebuilder) DeleteImagePipelineRequest(input *DeleteImagePipelineInpu
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation DeleteImagePipeline for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceDependencyException "ResourceDependencyException"
+//   * ResourceDependencyException
 //   You have attempted to mutate or delete a resource with a dependency that
 //   is prohibitting this action. See the error message for more details.
 //
@@ -1226,28 +1226,28 @@ func (c *Imagebuilder) DeleteImageRecipeRequest(input *DeleteImageRecipeInput) (
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation DeleteImageRecipe for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceDependencyException "ResourceDependencyException"
+//   * ResourceDependencyException
 //   You have attempted to mutate or delete a resource with a dependency that
 //   is prohibitting this action. See the error message for more details.
 //
@@ -1326,28 +1326,28 @@ func (c *Imagebuilder) DeleteInfrastructureConfigurationRequest(input *DeleteInf
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation DeleteInfrastructureConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceDependencyException "ResourceDependencyException"
+//   * ResourceDependencyException
 //   You have attempted to mutate or delete a resource with a dependency that
 //   is prohibitting this action. See the error message for more details.
 //
@@ -1426,25 +1426,25 @@ func (c *Imagebuilder) GetComponentRequest(input *GetComponentInput) (req *reque
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation GetComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetComponent
@@ -1522,23 +1522,23 @@ func (c *Imagebuilder) GetComponentPolicyRequest(input *GetComponentPolicyInput)
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation GetComponentPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetComponentPolicy
@@ -1616,25 +1616,25 @@ func (c *Imagebuilder) GetDistributionConfigurationRequest(input *GetDistributio
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation GetDistributionConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetDistributionConfiguration
@@ -1712,25 +1712,25 @@ func (c *Imagebuilder) GetImageRequest(input *GetImageInput) (req *request.Reque
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation GetImage for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetImage
@@ -1808,25 +1808,25 @@ func (c *Imagebuilder) GetImagePipelineRequest(input *GetImagePipelineInput) (re
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation GetImagePipeline for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetImagePipeline
@@ -1904,23 +1904,23 @@ func (c *Imagebuilder) GetImagePolicyRequest(input *GetImagePolicyInput) (req *r
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation GetImagePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetImagePolicy
@@ -1998,25 +1998,25 @@ func (c *Imagebuilder) GetImageRecipeRequest(input *GetImageRecipeInput) (req *r
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation GetImageRecipe for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetImageRecipe
@@ -2094,23 +2094,23 @@ func (c *Imagebuilder) GetImageRecipePolicyRequest(input *GetImageRecipePolicyIn
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation GetImageRecipePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetImageRecipePolicy
@@ -2188,25 +2188,25 @@ func (c *Imagebuilder) GetInfrastructureConfigurationRequest(input *GetInfrastru
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation GetInfrastructureConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetInfrastructureConfiguration
@@ -2284,39 +2284,39 @@ func (c *Imagebuilder) ImportComponentRequest(input *ImportComponentInput) (req 
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ImportComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeInvalidVersionNumberException "InvalidVersionNumberException"
+//   * InvalidVersionNumberException
 //   Your version number is out of bounds or does not follow the required syntax.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
-//   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombinationException"
+//   * InvalidParameterCombinationException
 //   You have specified two or more mutually exclusive parameters. Review the
 //   error message for details.
 //
@@ -2401,28 +2401,28 @@ func (c *Imagebuilder) ListComponentBuildVersionsRequest(input *ListComponentBui
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ListComponentBuildVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidPaginationTokenException "InvalidPaginationTokenException"
+//   * InvalidPaginationTokenException
 //   You have provided an invalid pagination token in your request.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListComponentBuildVersions
@@ -2558,28 +2558,28 @@ func (c *Imagebuilder) ListComponentsRequest(input *ListComponentsInput) (req *r
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ListComponents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidPaginationTokenException "InvalidPaginationTokenException"
+//   * InvalidPaginationTokenException
 //   You have provided an invalid pagination token in your request.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListComponents
@@ -2715,28 +2715,28 @@ func (c *Imagebuilder) ListDistributionConfigurationsRequest(input *ListDistribu
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ListDistributionConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidPaginationTokenException "InvalidPaginationTokenException"
+//   * InvalidPaginationTokenException
 //   You have provided an invalid pagination token in your request.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListDistributionConfigurations
@@ -2872,28 +2872,28 @@ func (c *Imagebuilder) ListImageBuildVersionsRequest(input *ListImageBuildVersio
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ListImageBuildVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidPaginationTokenException "InvalidPaginationTokenException"
+//   * InvalidPaginationTokenException
 //   You have provided an invalid pagination token in your request.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImageBuildVersions
@@ -3029,31 +3029,31 @@ func (c *Imagebuilder) ListImagePipelineImagesRequest(input *ListImagePipelineIm
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ListImagePipelineImages for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidPaginationTokenException "InvalidPaginationTokenException"
+//   * InvalidPaginationTokenException
 //   You have provided an invalid pagination token in your request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImagePipelineImages
@@ -3189,28 +3189,28 @@ func (c *Imagebuilder) ListImagePipelinesRequest(input *ListImagePipelinesInput)
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ListImagePipelines for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidPaginationTokenException "InvalidPaginationTokenException"
+//   * InvalidPaginationTokenException
 //   You have provided an invalid pagination token in your request.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImagePipelines
@@ -3346,28 +3346,28 @@ func (c *Imagebuilder) ListImageRecipesRequest(input *ListImageRecipesInput) (re
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ListImageRecipes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidPaginationTokenException "InvalidPaginationTokenException"
+//   * InvalidPaginationTokenException
 //   You have provided an invalid pagination token in your request.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImageRecipes
@@ -3503,28 +3503,28 @@ func (c *Imagebuilder) ListImagesRequest(input *ListImagesInput) (req *request.R
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ListImages for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidPaginationTokenException "InvalidPaginationTokenException"
+//   * InvalidPaginationTokenException
 //   You have provided an invalid pagination token in your request.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImages
@@ -3660,28 +3660,28 @@ func (c *Imagebuilder) ListInfrastructureConfigurationsRequest(input *ListInfras
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ListInfrastructureConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidPaginationTokenException "InvalidPaginationTokenException"
+//   * InvalidPaginationTokenException
 //   You have provided an invalid pagination token in your request.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListInfrastructureConfigurations
@@ -3811,15 +3811,15 @@ func (c *Imagebuilder) ListTagsForResourceRequest(input *ListTagsForResourceInpu
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListTagsForResource
@@ -3897,31 +3897,31 @@ func (c *Imagebuilder) PutComponentPolicyRequest(input *PutComponentPolicyInput)
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation PutComponentPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   The value that you provided for the specified parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/PutComponentPolicy
@@ -3999,31 +3999,31 @@ func (c *Imagebuilder) PutImagePolicyRequest(input *PutImagePolicyInput) (req *r
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation PutImagePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   The value that you provided for the specified parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/PutImagePolicy
@@ -4101,31 +4101,31 @@ func (c *Imagebuilder) PutImageRecipePolicyRequest(input *PutImageRecipePolicyIn
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation PutImageRecipePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   The value that you provided for the specified parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/PutImageRecipePolicy
@@ -4203,35 +4203,35 @@ func (c *Imagebuilder) StartImagePipelineExecutionRequest(input *StartImagePipel
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation StartImagePipelineExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
@@ -4311,15 +4311,15 @@ func (c *Imagebuilder) TagResourceRequest(input *TagResourceInput) (req *request
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/TagResource
@@ -4398,15 +4398,15 @@ func (c *Imagebuilder) UntagResourceRequest(input *UntagResourceInput) (req *req
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   At least one of the resources referenced by your request does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/UntagResource
@@ -4485,36 +4485,36 @@ func (c *Imagebuilder) UpdateDistributionConfigurationRequest(input *UpdateDistr
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation UpdateDistributionConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
-//   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombinationException"
+//   * InvalidParameterCombinationException
 //   You have specified two or more mutually exclusive parameters. Review the
 //   error message for details.
 //
@@ -4594,32 +4594,32 @@ func (c *Imagebuilder) UpdateImagePipelineRequest(input *UpdateImagePipelineInpu
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation UpdateImagePipeline for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
@@ -4699,32 +4699,32 @@ func (c *Imagebuilder) UpdateInfrastructureConfigurationRequest(input *UpdateInf
 // See the AWS API reference guide for EC2 Image Builder's
 // API operation UpdateInfrastructureConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceException "ServiceException"
+// Returned Error Types:
+//   * ServiceException
 //   This exception is thrown when the service encounters an unrecoverable exception.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an invalid resource identifier.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unable to process your request at this time.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   You have made a request for an action that is not supported by the service.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   You have specified an client token for an operation using parameter values
 //   that differ from a previous request that used the same client token.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   You are not authorized to perform the requested operation.
 //
-//   * ErrCodeCallRateLimitExceededException "CallRateLimitExceededException"
+//   * CallRateLimitExceededException
 //   You have exceeded the permitted request rate for the specific operation.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource that you are trying to operate on is currently in use. Review
 //   the message details, and retry later.
 //
@@ -4881,6 +4881,62 @@ func (s *AmiDistributionConfiguration) SetName(v string) *AmiDistributionConfigu
 	return s
 }
 
+// You have exceeded the permitted request rate for the specific operation.
+type CallRateLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s CallRateLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CallRateLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorCallRateLimitExceededException(v protocol.ResponseMetadata) error {
+	return &CallRateLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CallRateLimitExceededException) Code() string {
+	return "CallRateLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s CallRateLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CallRateLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s CallRateLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CallRateLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CallRateLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type CancelImageCreationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4975,6 +5031,64 @@ func (s *CancelImageCreationOutput) SetImageBuildVersionArn(v string) *CancelIma
 func (s *CancelImageCreationOutput) SetRequestId(v string) *CancelImageCreationOutput {
 	s.RequestId = &v
 	return s
+}
+
+// These errors are usually caused by a client action, such as using an action
+// or resource on behalf of a user that doesn't have permissions to use the
+// action or resource, or specifying an invalid resource identifier.
+type ClientException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ClientException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientException) GoString() string {
+	return s.String()
+}
+
+func newErrorClientException(v protocol.ResponseMetadata) error {
+	return &ClientException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClientException) Code() string {
+	return "ClientException"
+}
+
+// Message returns the exception's message.
+func (s ClientException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClientException) OrigErr() error {
+	return nil
+}
+
+func (s ClientException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClientException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClientException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A detailed view of a component.
@@ -7207,6 +7321,62 @@ func (s *Filter) SetValues(v []*string) *Filter {
 	return s
 }
 
+// You are not authorized to perform the requested operation.
+type ForbiddenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ForbiddenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForbiddenException) GoString() string {
+	return s.String()
+}
+
+func newErrorForbiddenException(v protocol.ResponseMetadata) error {
+	return &ForbiddenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ForbiddenException) Code() string {
+	return "ForbiddenException"
+}
+
+// Message returns the exception's message.
+func (s ForbiddenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ForbiddenException) OrigErr() error {
+	return nil
+}
+
+func (s ForbiddenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ForbiddenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ForbiddenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type GetComponentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7841,6 +8011,63 @@ func (s *GetInfrastructureConfigurationOutput) SetInfrastructureConfiguration(v 
 func (s *GetInfrastructureConfigurationOutput) SetRequestId(v string) *GetInfrastructureConfigurationOutput {
 	s.RequestId = &v
 	return s
+}
+
+// You have specified an client token for an operation using parameter values
+// that differ from a previous request that used the same client token.
+type IdempotentParameterMismatchException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s IdempotentParameterMismatchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IdempotentParameterMismatchException) GoString() string {
+	return s.String()
+}
+
+func newErrorIdempotentParameterMismatchException(v protocol.ResponseMetadata) error {
+	return &IdempotentParameterMismatchException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IdempotentParameterMismatchException) Code() string {
+	return "IdempotentParameterMismatchException"
+}
+
+// Message returns the exception's message.
+func (s IdempotentParameterMismatchException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IdempotentParameterMismatchException) OrigErr() error {
+	return nil
+}
+
+func (s IdempotentParameterMismatchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IdempotentParameterMismatchException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IdempotentParameterMismatchException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // An image build version.
@@ -9077,6 +9304,344 @@ func (s *InstanceBlockDeviceMapping) SetNoDevice(v string) *InstanceBlockDeviceM
 func (s *InstanceBlockDeviceMapping) SetVirtualName(v string) *InstanceBlockDeviceMapping {
 	s.VirtualName = &v
 	return s
+}
+
+// You have provided an invalid pagination token in your request.
+type InvalidPaginationTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidPaginationTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPaginationTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPaginationTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidPaginationTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidPaginationTokenException) Code() string {
+	return "InvalidPaginationTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidPaginationTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidPaginationTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidPaginationTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidPaginationTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidPaginationTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have specified two or more mutually exclusive parameters. Review the
+// error message for details.
+type InvalidParameterCombinationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidParameterCombinationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterCombinationException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterCombinationException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterCombinationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParameterCombinationException) Code() string {
+	return "InvalidParameterCombinationException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParameterCombinationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParameterCombinationException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParameterCombinationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParameterCombinationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParameterCombinationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified parameter is invalid. Review the available parameters for the
+// API request.
+type InvalidParameterException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidParameterException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParameterException) Code() string {
+	return "InvalidParameterException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParameterException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParameterException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParameterException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParameterException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The value that you provided for the specified parameter is invalid.
+type InvalidParameterValueException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidParameterValueException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterValueException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterValueException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterValueException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParameterValueException) Code() string {
+	return "InvalidParameterValueException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParameterValueException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParameterValueException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParameterValueException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParameterValueException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParameterValueException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have made a request for an action that is not supported by the service.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Your version number is out of bounds or does not follow the required syntax.
+type InvalidVersionNumberException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidVersionNumberException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidVersionNumberException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidVersionNumberException(v protocol.ResponseMetadata) error {
+	return &InvalidVersionNumberException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidVersionNumberException) Code() string {
+	return "InvalidVersionNumberException"
+}
+
+// Message returns the exception's message.
+func (s InvalidVersionNumberException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidVersionNumberException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidVersionNumberException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidVersionNumberException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidVersionNumberException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type LaunchPermissionConfiguration struct {
@@ -10574,6 +11139,232 @@ func (s *PutImageRecipePolicyOutput) SetRequestId(v string) *PutImageRecipePolic
 	return s
 }
 
+// The resource that you are trying to create already exists.
+type ResourceAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ResourceAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceAlreadyExistsException) Code() string {
+	return "ResourceAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have attempted to mutate or delete a resource with a dependency that
+// is prohibitting this action. See the error message for more details.
+type ResourceDependencyException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceDependencyException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDependencyException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceDependencyException(v protocol.ResponseMetadata) error {
+	return &ResourceDependencyException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceDependencyException) Code() string {
+	return "ResourceDependencyException"
+}
+
+// Message returns the exception's message.
+func (s ResourceDependencyException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceDependencyException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceDependencyException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceDependencyException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceDependencyException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource that you are trying to operate on is currently in use. Review
+// the message details, and retry later.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// At least one of the resources referenced by your request does not exist.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // S3 Logging configuration.
 type S3Logs struct {
 	_ struct{} `type:"structure"`
@@ -10669,6 +11460,118 @@ func (s *Schedule) SetPipelineExecutionStartCondition(v string) *Schedule {
 func (s *Schedule) SetScheduleExpression(v string) *Schedule {
 	s.ScheduleExpression = &v
 	return s
+}
+
+// This exception is thrown when the service encounters an unrecoverable exception.
+type ServiceException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceException(v protocol.ResponseMetadata) error {
+	return &ServiceException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceException) Code() string {
+	return "ServiceException"
+}
+
+// Message returns the exception's message.
+func (s ServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The service is unable to process your request at this time.
+type ServiceUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
+	return &ServiceUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceUnavailableException) Code() string {
+	return "ServiceUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s ServiceUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type StartImagePipelineExecutionInput struct {

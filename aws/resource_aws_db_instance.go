@@ -642,6 +642,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
 		}
 
+		if attr, ok := d.GetOk("ca_cert_identifier"); ok {
+			modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
+			requiresModifyDbInstance = true
+		}
+
 		log.Printf("[DEBUG] DB Instance Replica create configuration: %#v", opts)
 		_, err := conn.CreateDBInstanceReadReplica(&opts)
 		if err != nil {

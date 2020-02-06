@@ -190,7 +190,7 @@ The following arguments are supported:
   [Lifecycle Hooks](http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html)
   to attach to the autoscaling group **before** instances are launched. The
   syntax is exactly the same as the separate
-  [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hooks.html)
+  [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
   resource, without the `autoscaling_group_name` attribute. Please note that this will only work when creating
   a new autoscaling group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
 * `health_check_grace_period` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
@@ -214,7 +214,7 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
 * `tags` (Optional) A list of tag blocks (maps). Tags documented below.
 * `placement_group` (Optional) The name of the placement group into which you'll launch your instances, if any.
 * `metrics_granularity` - (Optional) The granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
-* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are `GroupMinSize`, `GroupMaxSize`, `GroupDesiredCapacity`, `GroupInServiceInstances`, `GroupPendingInstances`, `GroupStandbyInstances`, `GroupTerminatingInstances`, `GroupTotalInstances`.
+* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are `GroupDesiredCapacity`, `GroupInServiceCapacity`, `GroupPendingCapacity`, `GroupMinSize`, `GroupMaxSize`, `GroupInServiceInstances`, `GroupPendingInstances`, `GroupStandbyInstances`, `GroupStandbyCapacity`, `GroupTerminatingCapacity`, `GroupTerminatingInstances`, `GroupTotalCapacity`, `GroupTotalInstances`.
 * `wait_for_capacity_timeout` (Default: "10m") A maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for ASG instances to be healthy before timing out.  (See also [Waiting
@@ -326,7 +326,7 @@ AutoScaling Group
 
 ~> **NOTE:** Terraform has two types of ways you can add lifecycle hooks - via
 the `initial_lifecycle_hook` attribute from this resource, or via the separate
-[`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hooks.html)
+[`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
 resource. `initial_lifecycle_hook` exists here because any lifecycle hooks
 added with `aws_autoscaling_lifecycle_hook` will not be added until the
 autoscaling group has been created, and depending on your

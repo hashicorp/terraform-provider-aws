@@ -143,8 +143,8 @@ func (c *DynamoDB) BatchGetItemRequest(input *BatchGetItemInput) (req *request.R
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation BatchGetItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+// Returned Error Types:
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -152,16 +152,16 @@ func (c *DynamoDB) BatchGetItemRequest(input *BatchGetItemInput) (req *request.R
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/BatchGetItem
@@ -381,8 +381,8 @@ func (c *DynamoDB) BatchWriteItemRequest(input *BatchWriteItemInput) (req *reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation BatchWriteItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+// Returned Error Types:
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -390,20 +390,20 @@ func (c *DynamoDB) BatchWriteItemRequest(input *BatchWriteItemInput) (req *reque
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeItemCollectionSizeLimitExceededException "ItemCollectionSizeLimitExceededException"
+//   * ItemCollectionSizeLimitExceededException
 //   An item collection is too large. This exception is only returned for tables
 //   that have one or more local secondary indexes.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/BatchWriteItem
@@ -530,22 +530,22 @@ func (c *DynamoDB) CreateBackupRequest(input *CreateBackupInput) (req *request.R
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation CreateBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+// Returned Error Types:
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
-//   * ErrCodeTableInUseException "TableInUseException"
+//   * TableInUseException
 //   A target table with the specified name is either being created or deleted.
 //
-//   * ErrCodeContinuousBackupsUnavailableException "ContinuousBackupsUnavailableException"
+//   * ContinuousBackupsUnavailableException
 //   Backups have not yet been enabled for this table.
 //
-//   * ErrCodeBackupInUseException "BackupInUseException"
+//   * BackupInUseException
 //   There is another ongoing conflicting backup control plane operation on the
 //   table. The backup is either being created, deleted or restored to a table.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -559,7 +559,7 @@ func (c *DynamoDB) CreateBackupRequest(input *CreateBackupInput) (req *request.R
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/CreateBackup
@@ -693,8 +693,8 @@ func (c *DynamoDB) CreateGlobalTableRequest(input *CreateGlobalTableInput) (req 
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation CreateGlobalTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -708,13 +708,13 @@ func (c *DynamoDB) CreateGlobalTableRequest(input *CreateGlobalTableInput) (req 
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
-//   * ErrCodeGlobalTableAlreadyExistsException "GlobalTableAlreadyExistsException"
+//   * GlobalTableAlreadyExistsException
 //   The specified global table already exists.
 //
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
@@ -828,13 +828,13 @@ func (c *DynamoDB) CreateTableRequest(input *CreateTableInput) (req *request.Req
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation CreateTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -848,7 +848,7 @@ func (c *DynamoDB) CreateTableRequest(input *CreateTableInput) (req *request.Req
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/CreateTable
@@ -949,15 +949,15 @@ func (c *DynamoDB) DeleteBackupRequest(input *DeleteBackupInput) (req *request.R
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DeleteBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBackupNotFoundException "BackupNotFoundException"
+// Returned Error Types:
+//   * BackupNotFoundException
 //   Backup not found for the given BackupARN.
 //
-//   * ErrCodeBackupInUseException "BackupInUseException"
+//   * BackupInUseException
 //   There is another ongoing conflicting backup control plane operation on the
 //   table. The backup is either being created, deleted or restored to a table.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -971,7 +971,7 @@ func (c *DynamoDB) DeleteBackupRequest(input *DeleteBackupInput) (req *request.R
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DeleteBackup
@@ -1083,11 +1083,11 @@ func (c *DynamoDB) DeleteItemRequest(input *DeleteItemInput) (req *request.Reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DeleteItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConditionalCheckFailedException "ConditionalCheckFailedException"
+// Returned Error Types:
+//   * ConditionalCheckFailedException
 //   A condition specified in the operation could not be evaluated.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -1095,23 +1095,23 @@ func (c *DynamoDB) DeleteItemRequest(input *DeleteItemInput) (req *request.Reque
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeItemCollectionSizeLimitExceededException "ItemCollectionSizeLimitExceededException"
+//   * ItemCollectionSizeLimitExceededException
 //   An item collection is too large. This exception is only returned for tables
 //   that have one or more local secondary indexes.
 //
-//   * ErrCodeTransactionConflictException "TransactionConflictException"
+//   * TransactionConflictException
 //   Operation was rejected because there is an ongoing transaction for the item.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DeleteItem
@@ -1227,17 +1227,17 @@ func (c *DynamoDB) DeleteTableRequest(input *DeleteTableInput) (req *request.Req
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DeleteTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -1251,7 +1251,7 @@ func (c *DynamoDB) DeleteTableRequest(input *DeleteTableInput) (req *request.Req
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DeleteTable
@@ -1352,11 +1352,11 @@ func (c *DynamoDB) DescribeBackupRequest(input *DescribeBackupInput) (req *reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBackupNotFoundException "BackupNotFoundException"
+// Returned Error Types:
+//   * BackupNotFoundException
 //   Backup not found for the given BackupARN.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeBackup
@@ -1467,12 +1467,12 @@ func (c *DynamoDB) DescribeContinuousBackupsRequest(input *DescribeContinuousBac
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeContinuousBackups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+// Returned Error Types:
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeContinuousBackups
@@ -1551,12 +1551,12 @@ func (c *DynamoDB) DescribeContributorInsightsRequest(input *DescribeContributor
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeContributorInsights for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeContributorInsights
@@ -1791,11 +1791,11 @@ func (c *DynamoDB) DescribeGlobalTableRequest(input *DescribeGlobalTableInput) (
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeGlobalTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
-//   * ErrCodeGlobalTableNotFoundException "GlobalTableNotFoundException"
+//   * GlobalTableNotFoundException
 //   The specified global table does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeGlobalTable
@@ -1897,11 +1897,11 @@ func (c *DynamoDB) DescribeGlobalTableSettingsRequest(input *DescribeGlobalTable
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeGlobalTableSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeGlobalTableNotFoundException "GlobalTableNotFoundException"
+// Returned Error Types:
+//   * GlobalTableNotFoundException
 //   The specified global table does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeGlobalTableSettings
@@ -2057,8 +2057,8 @@ func (c *DynamoDB) DescribeLimitsRequest(input *DescribeLimitsInput) (req *reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeLimits for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeLimits
@@ -2165,12 +2165,12 @@ func (c *DynamoDB) DescribeTableRequest(input *DescribeTableInput) (req *request
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeTable
@@ -2251,12 +2251,12 @@ func (c *DynamoDB) DescribeTableReplicaAutoScalingRequest(input *DescribeTableRe
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeTableReplicaAutoScaling for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeTableReplicaAutoScaling
@@ -2355,12 +2355,12 @@ func (c *DynamoDB) DescribeTimeToLiveRequest(input *DescribeTimeToLiveInput) (re
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation DescribeTimeToLive for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeTimeToLive
@@ -2466,8 +2466,8 @@ func (c *DynamoDB) GetItemRequest(input *GetItemInput) (req *request.Request, ou
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation GetItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+// Returned Error Types:
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -2475,16 +2475,16 @@ func (c *DynamoDB) GetItemRequest(input *GetItemInput) (req *request.Request, ou
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/GetItem
@@ -2591,8 +2591,8 @@ func (c *DynamoDB) ListBackupsRequest(input *ListBackupsInput) (req *request.Req
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation ListBackups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListBackups
@@ -2677,12 +2677,12 @@ func (c *DynamoDB) ListContributorInsightsRequest(input *ListContributorInsights
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation ListContributorInsights for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListContributorInsights
@@ -2836,8 +2836,8 @@ func (c *DynamoDB) ListGlobalTablesRequest(input *ListGlobalTablesInput) (req *r
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation ListGlobalTables for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListGlobalTables
@@ -2944,8 +2944,8 @@ func (c *DynamoDB) ListTablesRequest(input *ListTablesInput) (req *request.Reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation ListTables for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListTables
@@ -3100,12 +3100,12 @@ func (c *DynamoDB) ListTagsOfResourceRequest(input *ListTagsOfResourceInput) (re
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation ListTagsOfResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListTagsOfResource
@@ -3247,11 +3247,11 @@ func (c *DynamoDB) PutItemRequest(input *PutItemInput) (req *request.Request, ou
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation PutItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConditionalCheckFailedException "ConditionalCheckFailedException"
+// Returned Error Types:
+//   * ConditionalCheckFailedException
 //   A condition specified in the operation could not be evaluated.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -3259,23 +3259,23 @@ func (c *DynamoDB) PutItemRequest(input *PutItemInput) (req *request.Request, ou
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeItemCollectionSizeLimitExceededException "ItemCollectionSizeLimitExceededException"
+//   * ItemCollectionSizeLimitExceededException
 //   An item collection is too large. This exception is only returned for tables
 //   that have one or more local secondary indexes.
 //
-//   * ErrCodeTransactionConflictException "TransactionConflictException"
+//   * TransactionConflictException
 //   Operation was rejected because there is an ongoing transaction for the item.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/PutItem
@@ -3427,8 +3427,8 @@ func (c *DynamoDB) QueryRequest(input *QueryInput) (req *request.Request, output
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation Query for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+// Returned Error Types:
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -3436,16 +3436,16 @@ func (c *DynamoDB) QueryRequest(input *QueryInput) (req *request.Request, output
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/Query
@@ -3613,21 +3613,21 @@ func (c *DynamoDB) RestoreTableFromBackupRequest(input *RestoreTableFromBackupIn
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation RestoreTableFromBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTableAlreadyExistsException "TableAlreadyExistsException"
+// Returned Error Types:
+//   * TableAlreadyExistsException
 //   A target table with the specified name already exists.
 //
-//   * ErrCodeTableInUseException "TableInUseException"
+//   * TableInUseException
 //   A target table with the specified name is either being created or deleted.
 //
-//   * ErrCodeBackupNotFoundException "BackupNotFoundException"
+//   * BackupNotFoundException
 //   Backup not found for the given BackupARN.
 //
-//   * ErrCodeBackupInUseException "BackupInUseException"
+//   * BackupInUseException
 //   There is another ongoing conflicting backup control plane operation on the
 //   table. The backup is either being created, deleted or restored to a table.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -3641,7 +3641,7 @@ func (c *DynamoDB) RestoreTableFromBackupRequest(input *RestoreTableFromBackupIn
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/RestoreTableFromBackup
@@ -3775,18 +3775,18 @@ func (c *DynamoDB) RestoreTableToPointInTimeRequest(input *RestoreTableToPointIn
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation RestoreTableToPointInTime for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTableAlreadyExistsException "TableAlreadyExistsException"
+// Returned Error Types:
+//   * TableAlreadyExistsException
 //   A target table with the specified name already exists.
 //
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
-//   * ErrCodeTableInUseException "TableInUseException"
+//   * TableInUseException
 //   A target table with the specified name is either being created or deleted.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -3800,14 +3800,14 @@ func (c *DynamoDB) RestoreTableToPointInTimeRequest(input *RestoreTableToPointIn
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInvalidRestoreTimeException "InvalidRestoreTimeException"
+//   * InvalidRestoreTimeException
 //   An invalid restore time was specified. RestoreDateTime must be between EarliestRestorableDateTime
 //   and LatestRestorableDateTime.
 //
-//   * ErrCodePointInTimeRecoveryUnavailableException "PointInTimeRecoveryUnavailableException"
+//   * PointInTimeRecoveryUnavailableException
 //   Point in time recovery has not yet been enabled for this source table.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/RestoreTableToPointInTime
@@ -3939,8 +3939,8 @@ func (c *DynamoDB) ScanRequest(input *ScanInput) (req *request.Request, output *
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation Scan for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+// Returned Error Types:
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -3948,16 +3948,16 @@ func (c *DynamoDB) ScanRequest(input *ScanInput) (req *request.Request, output *
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/Scan
@@ -4115,8 +4115,8 @@ func (c *DynamoDB) TagResourceRequest(input *TagResourceInput) (req *request.Req
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -4130,14 +4130,14 @@ func (c *DynamoDB) TagResourceRequest(input *TagResourceInput) (req *request.Req
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
@@ -4257,12 +4257,12 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation TransactGetItems for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeTransactionCanceledException "TransactionCanceledException"
+//   * TransactionCanceledException
 //   The entire transaction request was canceled.
 //
 //   DynamoDB cancels a TransactWriteItems request under the following circumstances:
@@ -4349,7 +4349,7 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 //      The provided expression refers to an attribute that does not exist in
 //      the item.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -4357,12 +4357,12 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/TransactGetItems
@@ -4514,12 +4514,12 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation TransactWriteItems for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeTransactionCanceledException "TransactionCanceledException"
+//   * TransactionCanceledException
 //   The entire transaction request was canceled.
 //
 //   DynamoDB cancels a TransactWriteItems request under the following circumstances:
@@ -4606,14 +4606,14 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 //      The provided expression refers to an attribute that does not exist in
 //      the item.
 //
-//   * ErrCodeTransactionInProgressException "TransactionInProgressException"
+//   * TransactionInProgressException
 //   The transaction with the given request token is already in progress.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   DynamoDB rejected the request because you retried a request with a different
 //   payload but with an idempotent token that was already used.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -4621,12 +4621,12 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/TransactWriteItems
@@ -4730,8 +4730,8 @@ func (c *DynamoDB) UntagResourceRequest(input *UntagResourceInput) (req *request
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -4745,14 +4745,14 @@ func (c *DynamoDB) UntagResourceRequest(input *UntagResourceInput) (req *request
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
@@ -4863,15 +4863,15 @@ func (c *DynamoDB) UpdateContinuousBackupsRequest(input *UpdateContinuousBackups
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateContinuousBackups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+// Returned Error Types:
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
-//   * ErrCodeContinuousBackupsUnavailableException "ContinuousBackupsUnavailableException"
+//   * ContinuousBackupsUnavailableException
 //   Backups have not yet been enabled for this table.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateContinuousBackups
@@ -4949,12 +4949,12 @@ func (c *DynamoDB) UpdateContributorInsightsRequest(input *UpdateContributorInsi
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateContributorInsights for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateContributorInsights
@@ -5072,20 +5072,20 @@ func (c *DynamoDB) UpdateGlobalTableRequest(input *UpdateGlobalTableInput) (req 
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateGlobalTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   An error occurred on the server side.
 //
-//   * ErrCodeGlobalTableNotFoundException "GlobalTableNotFoundException"
+//   * GlobalTableNotFoundException
 //   The specified global table does not exist.
 //
-//   * ErrCodeReplicaAlreadyExistsException "ReplicaAlreadyExistsException"
+//   * ReplicaAlreadyExistsException
 //   The specified replica is already part of the global table.
 //
-//   * ErrCodeReplicaNotFoundException "ReplicaNotFoundException"
+//   * ReplicaNotFoundException
 //   The specified replica is no longer part of the global table.
 //
-//   * ErrCodeTableNotFoundException "TableNotFoundException"
+//   * TableNotFoundException
 //   A source table with the name TableName does not currently exist within the
 //   subscriber's account.
 //
@@ -5185,17 +5185,17 @@ func (c *DynamoDB) UpdateGlobalTableSettingsRequest(input *UpdateGlobalTableSett
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateGlobalTableSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeGlobalTableNotFoundException "GlobalTableNotFoundException"
+// Returned Error Types:
+//   * GlobalTableNotFoundException
 //   The specified global table does not exist.
 //
-//   * ErrCodeReplicaNotFoundException "ReplicaNotFoundException"
+//   * ReplicaNotFoundException
 //   The specified replica is no longer part of the global table.
 //
-//   * ErrCodeIndexNotFoundException "IndexNotFoundException"
+//   * IndexNotFoundException
 //   The operation tried to access a nonexistent index.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -5209,12 +5209,12 @@ func (c *DynamoDB) UpdateGlobalTableSettingsRequest(input *UpdateGlobalTableSett
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateGlobalTableSettings
@@ -5320,11 +5320,11 @@ func (c *DynamoDB) UpdateItemRequest(input *UpdateItemInput) (req *request.Reque
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateItem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConditionalCheckFailedException "ConditionalCheckFailedException"
+// Returned Error Types:
+//   * ConditionalCheckFailedException
 //   A condition specified in the operation could not be evaluated.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
 //   requests that receive this exception. Your request is eventually successful,
 //   unless your retry queue is too large to finish. Reduce the frequency of requests
@@ -5332,23 +5332,23 @@ func (c *DynamoDB) UpdateItemRequest(input *UpdateItemInput) (req *request.Reque
 //   Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 //   in the Amazon DynamoDB Developer Guide.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeItemCollectionSizeLimitExceededException "ItemCollectionSizeLimitExceededException"
+//   * ItemCollectionSizeLimitExceededException
 //   An item collection is too large. This exception is only returned for tables
 //   that have one or more local secondary indexes.
 //
-//   * ErrCodeTransactionConflictException "TransactionConflictException"
+//   * TransactionConflictException
 //   Operation was rejected because there is an ongoing transaction for the item.
 //
-//   * ErrCodeRequestLimitExceeded "RequestLimitExceeded"
+//   * RequestLimitExceeded
 //   Throughput exceeds the current throughput limit for your account. Please
 //   contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 //   a limit increase.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateItem
@@ -5464,17 +5464,17 @@ func (c *DynamoDB) UpdateTableRequest(input *UpdateTableInput) (req *request.Req
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -5488,7 +5488,7 @@ func (c *DynamoDB) UpdateTableRequest(input *UpdateTableInput) (req *request.Req
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateTable
@@ -5569,17 +5569,17 @@ func (c *DynamoDB) UpdateTableReplicaAutoScalingRequest(input *UpdateTableReplic
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateTableReplicaAutoScaling for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -5593,7 +5593,7 @@ func (c *DynamoDB) UpdateTableReplicaAutoScalingRequest(input *UpdateTableReplic
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateTableReplicaAutoScaling
@@ -5719,17 +5719,17 @@ func (c *DynamoDB) UpdateTimeToLiveRequest(input *UpdateTimeToLiveInput) (req *r
 // See the AWS API reference guide for Amazon DynamoDB's
 // API operation UpdateTimeToLive for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The operation conflicts with the resource's availability. For example, you
 //   attempted to recreate an existing table, or tried to delete a table currently
 //   in the CREATING state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The operation tried to access a nonexistent table or index. The resource
 //   might not be specified correctly, or its status might not be ACTIVE.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   There is no limit to the number of daily on-demand backups that can be taken.
 //
 //   Up to 50 simultaneous table operations are allowed per account. These operations
@@ -5743,7 +5743,7 @@ func (c *DynamoDB) UpdateTimeToLiveRequest(input *UpdateTimeToLiveInput) (req *r
 //
 //   There is a soft account limit of 256 tables.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An error occurred on the server side.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateTimeToLive
@@ -6651,6 +6651,119 @@ func (s *BackupDetails) SetBackupType(v string) *BackupDetails {
 	return s
 }
 
+// There is another ongoing conflicting backup control plane operation on the
+// table. The backup is either being created, deleted or restored to a table.
+type BackupInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BackupInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BackupInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorBackupInUseException(v protocol.ResponseMetadata) error {
+	return &BackupInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BackupInUseException) Code() string {
+	return "BackupInUseException"
+}
+
+// Message returns the exception's message.
+func (s BackupInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BackupInUseException) OrigErr() error {
+	return nil
+}
+
+func (s BackupInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BackupInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BackupInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Backup not found for the given BackupARN.
+type BackupNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BackupNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BackupNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorBackupNotFoundException(v protocol.ResponseMetadata) error {
+	return &BackupNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BackupNotFoundException) Code() string {
+	return "BackupNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s BackupNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BackupNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s BackupNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BackupNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BackupNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains details for the backup.
 type BackupSummary struct {
 	_ struct{} `type:"structure"`
@@ -7549,6 +7662,63 @@ func (s *ConditionCheck) SetTableName(v string) *ConditionCheck {
 	return s
 }
 
+// A condition specified in the operation could not be evaluated.
+type ConditionalCheckFailedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The conditional request failed.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConditionalCheckFailedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConditionalCheckFailedException) GoString() string {
+	return s.String()
+}
+
+func newErrorConditionalCheckFailedException(v protocol.ResponseMetadata) error {
+	return &ConditionalCheckFailedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConditionalCheckFailedException) Code() string {
+	return "ConditionalCheckFailedException"
+}
+
+// Message returns the exception's message.
+func (s ConditionalCheckFailedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConditionalCheckFailedException) OrigErr() error {
+	return nil
+}
+
+func (s ConditionalCheckFailedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConditionalCheckFailedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConditionalCheckFailedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The capacity units consumed by an operation. The data returned includes the
 // total provisioned throughput consumed, along with statistics for the table
 // and any indexes involved in the operation. ConsumedCapacity is only returned
@@ -7666,6 +7836,62 @@ func (s *ContinuousBackupsDescription) SetContinuousBackupsStatus(v string) *Con
 func (s *ContinuousBackupsDescription) SetPointInTimeRecoveryDescription(v *PointInTimeRecoveryDescription) *ContinuousBackupsDescription {
 	s.PointInTimeRecoveryDescription = v
 	return s
+}
+
+// Backups have not yet been enabled for this table.
+type ContinuousBackupsUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ContinuousBackupsUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContinuousBackupsUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorContinuousBackupsUnavailableException(v protocol.ResponseMetadata) error {
+	return &ContinuousBackupsUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ContinuousBackupsUnavailableException) Code() string {
+	return "ContinuousBackupsUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s ContinuousBackupsUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ContinuousBackupsUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s ContinuousBackupsUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ContinuousBackupsUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ContinuousBackupsUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Represents a Contributor Insights summary entry..
@@ -10891,6 +11117,62 @@ func (s *GlobalTable) SetReplicationGroup(v []*Replica) *GlobalTable {
 	return s
 }
 
+// The specified global table already exists.
+type GlobalTableAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s GlobalTableAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalTableAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorGlobalTableAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &GlobalTableAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s GlobalTableAlreadyExistsException) Code() string {
+	return "GlobalTableAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s GlobalTableAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s GlobalTableAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s GlobalTableAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s GlobalTableAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s GlobalTableAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains details about the global table.
 type GlobalTableDescription struct {
 	_ struct{} `type:"structure"`
@@ -11031,6 +11313,289 @@ func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) SetProvisionedWriteCapac
 	return s
 }
 
+// The specified global table does not exist.
+type GlobalTableNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s GlobalTableNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalTableNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorGlobalTableNotFoundException(v protocol.ResponseMetadata) error {
+	return &GlobalTableNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s GlobalTableNotFoundException) Code() string {
+	return "GlobalTableNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s GlobalTableNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s GlobalTableNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s GlobalTableNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s GlobalTableNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s GlobalTableNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// DynamoDB rejected the request because you retried a request with a different
+// payload but with an idempotent token that was already used.
+type IdempotentParameterMismatchException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s IdempotentParameterMismatchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IdempotentParameterMismatchException) GoString() string {
+	return s.String()
+}
+
+func newErrorIdempotentParameterMismatchException(v protocol.ResponseMetadata) error {
+	return &IdempotentParameterMismatchException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IdempotentParameterMismatchException) Code() string {
+	return "IdempotentParameterMismatchException"
+}
+
+// Message returns the exception's message.
+func (s IdempotentParameterMismatchException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IdempotentParameterMismatchException) OrigErr() error {
+	return nil
+}
+
+func (s IdempotentParameterMismatchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IdempotentParameterMismatchException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IdempotentParameterMismatchException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The operation tried to access a nonexistent index.
+type IndexNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s IndexNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IndexNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorIndexNotFoundException(v protocol.ResponseMetadata) error {
+	return &IndexNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IndexNotFoundException) Code() string {
+	return "IndexNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s IndexNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IndexNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s IndexNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IndexNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IndexNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An error occurred on the server side.
+type InternalServerError struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The server encountered an internal error trying to fulfill the request.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerError) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerError(v protocol.ResponseMetadata) error {
+	return &InternalServerError{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerError) Code() string {
+	return "InternalServerError"
+}
+
+// Message returns the exception's message.
+func (s InternalServerError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerError) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerError) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerError) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerError) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An invalid restore time was specified. RestoreDateTime must be between EarliestRestorableDateTime
+// and LatestRestorableDateTime.
+type InvalidRestoreTimeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRestoreTimeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRestoreTimeException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRestoreTimeException(v protocol.ResponseMetadata) error {
+	return &InvalidRestoreTimeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRestoreTimeException) Code() string {
+	return "InvalidRestoreTimeException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRestoreTimeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRestoreTimeException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRestoreTimeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRestoreTimeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRestoreTimeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information about item collections, if any, that were affected by the operation.
 // ItemCollectionMetrics is only returned if the request asked for it. If the
 // table does not have any local secondary indexes, this information is not
@@ -11074,6 +11639,65 @@ func (s *ItemCollectionMetrics) SetItemCollectionKey(v map[string]*AttributeValu
 func (s *ItemCollectionMetrics) SetSizeEstimateRangeGB(v []*float64) *ItemCollectionMetrics {
 	s.SizeEstimateRangeGB = v
 	return s
+}
+
+// An item collection is too large. This exception is only returned for tables
+// that have one or more local secondary indexes.
+type ItemCollectionSizeLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The total size of an item collection has exceeded the maximum limit of 10
+	// gigabytes.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ItemCollectionSizeLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ItemCollectionSizeLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorItemCollectionSizeLimitExceededException(v protocol.ResponseMetadata) error {
+	return &ItemCollectionSizeLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ItemCollectionSizeLimitExceededException) Code() string {
+	return "ItemCollectionSizeLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s ItemCollectionSizeLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ItemCollectionSizeLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ItemCollectionSizeLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ItemCollectionSizeLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ItemCollectionSizeLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Details for the requested item.
@@ -11311,6 +11935,74 @@ func (s *KeysAndAttributes) SetKeys(v []map[string]*AttributeValue) *KeysAndAttr
 func (s *KeysAndAttributes) SetProjectionExpression(v string) *KeysAndAttributes {
 	s.ProjectionExpression = &v
 	return s
+}
+
+// There is no limit to the number of daily on-demand backups that can be taken.
+//
+// Up to 50 simultaneous table operations are allowed per account. These operations
+// include CreateTable, UpdateTable, DeleteTable,UpdateTimeToLive, RestoreTableFromBackup,
+// and RestoreTableToPointInTime.
+//
+// The only exception is when you are creating a table with one or more secondary
+// indexes. You can have up to 25 such requests running at a time; however,
+// if the table or index specifications are complex, DynamoDB might temporarily
+// reduce the number of concurrent operations.
+//
+// There is a soft account limit of 256 tables.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// Too many operations for a given subscriber.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListBackupsInput struct {
@@ -12152,6 +12844,62 @@ func (s *PointInTimeRecoverySpecification) SetPointInTimeRecoveryEnabled(v bool)
 	return s
 }
 
+// Point in time recovery has not yet been enabled for this source table.
+type PointInTimeRecoveryUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s PointInTimeRecoveryUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PointInTimeRecoveryUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorPointInTimeRecoveryUnavailableException(v protocol.ResponseMetadata) error {
+	return &PointInTimeRecoveryUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PointInTimeRecoveryUnavailableException) Code() string {
+	return "PointInTimeRecoveryUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s PointInTimeRecoveryUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PointInTimeRecoveryUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s PointInTimeRecoveryUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PointInTimeRecoveryUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PointInTimeRecoveryUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Represents attributes that are copied (projected) from the table into an
 // index. These are in addition to the primary key attributes and index key
 // attributes, which are automatically projected.
@@ -12352,6 +13100,68 @@ func (s *ProvisionedThroughputDescription) SetReadCapacityUnits(v int64) *Provis
 func (s *ProvisionedThroughputDescription) SetWriteCapacityUnits(v int64) *ProvisionedThroughputDescription {
 	s.WriteCapacityUnits = &v
 	return s
+}
+
+// Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
+// requests that receive this exception. Your request is eventually successful,
+// unless your retry queue is too large to finish. Reduce the frequency of requests
+// and use exponential backoff. For more information, go to Error Retries and
+// Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
+// in the Amazon DynamoDB Developer Guide.
+type ProvisionedThroughputExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// You exceeded your maximum allowed provisioned throughput.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisionedThroughputExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionedThroughputExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorProvisionedThroughputExceededException(v protocol.ResponseMetadata) error {
+	return &ProvisionedThroughputExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ProvisionedThroughputExceededException) Code() string {
+	return "ProvisionedThroughputExceededException"
+}
+
+// Message returns the exception's message.
+func (s ProvisionedThroughputExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ProvisionedThroughputExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ProvisionedThroughputExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ProvisionedThroughputExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ProvisionedThroughputExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Replica-specific provisioned throughput settings. If not specified, uses
@@ -13388,6 +14198,62 @@ func (s *Replica) SetRegionName(v string) *Replica {
 	return s
 }
 
+// The specified replica is already part of the global table.
+type ReplicaAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ReplicaAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorReplicaAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ReplicaAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ReplicaAlreadyExistsException) Code() string {
+	return "ReplicaAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ReplicaAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ReplicaAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ReplicaAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ReplicaAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ReplicaAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Represents the auto scaling settings of the replica.
 type ReplicaAutoScalingDescription struct {
 	_ struct{} `type:"structure"`
@@ -13982,6 +14848,62 @@ func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) SetProvisionedReadCapacityUn
 	return s
 }
 
+// The specified replica is no longer part of the global table.
+type ReplicaNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ReplicaNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicaNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorReplicaNotFoundException(v protocol.ResponseMetadata) error {
+	return &ReplicaNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ReplicaNotFoundException) Code() string {
+	return "ReplicaNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ReplicaNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ReplicaNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ReplicaNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ReplicaNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ReplicaNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Represents the properties of a replica.
 type ReplicaSettingsDescription struct {
 	_ struct{} `type:"structure"`
@@ -14312,6 +15234,181 @@ func (s *ReplicationGroupUpdate) SetDelete(v *DeleteReplicationGroupMemberAction
 func (s *ReplicationGroupUpdate) SetUpdate(v *UpdateReplicationGroupMemberAction) *ReplicationGroupUpdate {
 	s.Update = v
 	return s
+}
+
+// Throughput exceeds the current throughput limit for your account. Please
+// contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
+// a limit increase.
+type RequestLimitExceeded struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s RequestLimitExceeded) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RequestLimitExceeded) GoString() string {
+	return s.String()
+}
+
+func newErrorRequestLimitExceeded(v protocol.ResponseMetadata) error {
+	return &RequestLimitExceeded{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RequestLimitExceeded) Code() string {
+	return "RequestLimitExceeded"
+}
+
+// Message returns the exception's message.
+func (s RequestLimitExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RequestLimitExceeded) OrigErr() error {
+	return nil
+}
+
+func (s RequestLimitExceeded) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RequestLimitExceeded) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RequestLimitExceeded) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The operation conflicts with the resource's availability. For example, you
+// attempted to recreate an existing table, or tried to delete a table currently
+// in the CREATING state.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The resource which is being attempted to be changed is in use.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The operation tried to access a nonexistent table or index. The resource
+// might not be specified correctly, or its status might not be ACTIVE.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The resource which is being requested does not exist.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains details for the restore.
@@ -15510,6 +16607,62 @@ func (s *StreamSpecification) SetStreamViewType(v string) *StreamSpecification {
 	return s
 }
 
+// A target table with the specified name already exists.
+type TableAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TableAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TableAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTableAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &TableAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TableAlreadyExistsException) Code() string {
+	return "TableAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s TableAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TableAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s TableAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TableAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TableAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Represents the auto scaling configuration for a global table.
 type TableAutoScalingDescription struct {
 	_ struct{} `type:"structure"`
@@ -15906,6 +17059,119 @@ func (s *TableDescription) SetTableSizeBytes(v int64) *TableDescription {
 func (s *TableDescription) SetTableStatus(v string) *TableDescription {
 	s.TableStatus = &v
 	return s
+}
+
+// A target table with the specified name is either being created or deleted.
+type TableInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TableInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TableInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorTableInUseException(v protocol.ResponseMetadata) error {
+	return &TableInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TableInUseException) Code() string {
+	return "TableInUseException"
+}
+
+// Message returns the exception's message.
+func (s TableInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TableInUseException) OrigErr() error {
+	return nil
+}
+
+func (s TableInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TableInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TableInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A source table with the name TableName does not currently exist within the
+// subscriber's account.
+type TableNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TableNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TableNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorTableNotFoundException(v protocol.ResponseMetadata) error {
+	return &TableNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TableNotFoundException) Code() string {
+	return "TableNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s TableNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TableNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s TableNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TableNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TableNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes a tag. A tag is a key-value pair. You can add up to 50 tags to
@@ -16533,6 +17799,261 @@ func (s *TransactWriteItemsOutput) SetConsumedCapacity(v []*ConsumedCapacity) *T
 func (s *TransactWriteItemsOutput) SetItemCollectionMetrics(v map[string][]*ItemCollectionMetrics) *TransactWriteItemsOutput {
 	s.ItemCollectionMetrics = v
 	return s
+}
+
+// The entire transaction request was canceled.
+//
+// DynamoDB cancels a TransactWriteItems request under the following circumstances:
+//
+//    * A condition in one of the condition expressions is not met.
+//
+//    * A table in the TransactWriteItems request is in a different account
+//    or region.
+//
+//    * More than one action in the TransactWriteItems operation targets the
+//    same item.
+//
+//    * There is insufficient provisioned capacity for the transaction to be
+//    completed.
+//
+//    * An item size becomes too large (larger than 400 KB), or a local secondary
+//    index (LSI) becomes too large, or a similar validation error occurs because
+//    of changes made by the transaction.
+//
+//    * There is a user error, such as an invalid data format.
+//
+// DynamoDB cancels a TransactGetItems request under the following circumstances:
+//
+//    * There is an ongoing TransactGetItems operation that conflicts with a
+//    concurrent PutItem, UpdateItem, DeleteItem or TransactWriteItems request.
+//    In this case the TransactGetItems operation fails with a TransactionCanceledException.
+//
+//    * A table in the TransactGetItems request is in a different account or
+//    region.
+//
+//    * There is insufficient provisioned capacity for the transaction to be
+//    completed.
+//
+//    * There is a user error, such as an invalid data format.
+//
+// If using Java, DynamoDB lists the cancellation reasons on the CancellationReasons
+// property. This property is not set for other languages. Transaction cancellation
+// reasons are ordered in the order of requested items, if an item has no error
+// it will have NONE code and Null message.
+//
+// Cancellation reason codes and possible error messages:
+//
+//    * No Errors: Code: NONE Message: null
+//
+//    * Conditional Check Failed: Code: ConditionalCheckFailed Message: The
+//    conditional request failed.
+//
+//    * Item Collection Size Limit Exceeded: Code: ItemCollectionSizeLimitExceeded
+//    Message: Collection size exceeded.
+//
+//    * Transaction Conflict: Code: TransactionConflict Message: Transaction
+//    is ongoing for the item.
+//
+//    * Provisioned Throughput Exceeded: Code: ProvisionedThroughputExceeded
+//    Messages: The level of configured provisioned throughput for the table
+//    was exceeded. Consider increasing your provisioning level with the UpdateTable
+//    API. This Message is received when provisioned throughput is exceeded
+//    is on a provisioned DynamoDB table. The level of configured provisioned
+//    throughput for one or more global secondary indexes of the table was exceeded.
+//    Consider increasing your provisioning level for the under-provisioned
+//    global secondary indexes with the UpdateTable API. This message is returned
+//    when provisioned throughput is exceeded is on a provisioned GSI.
+//
+//    * Throttling Error: Code: ThrottlingError Messages: Throughput exceeds
+//    the current capacity of your table or index. DynamoDB is automatically
+//    scaling your table or index so please try again shortly. If exceptions
+//    persist, check if you have a hot key: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-partition-key-design.html.
+//    This message is returned when writes get throttled on an On-Demand table
+//    as DynamoDB is automatically scaling the table. Throughput exceeds the
+//    current capacity for one or more global secondary indexes. DynamoDB is
+//    automatically scaling your index so please try again shortly. This message
+//    is returned when when writes get throttled on an On-Demand GSI as DynamoDB
+//    is automatically scaling the GSI.
+//
+//    * Validation Error: Code: ValidationError Messages: One or more parameter
+//    values were invalid. The update expression attempted to update the secondary
+//    index key beyond allowed size limits. The update expression attempted
+//    to update the secondary index key to unsupported type. An operand in the
+//    update expression has an incorrect data type. Item size to update has
+//    exceeded the maximum allowed size. Number overflow. Attempting to store
+//    a number with magnitude larger than supported range. Type mismatch for
+//    attribute to update. Nesting Levels have exceeded supported limits. The
+//    document path provided in the update expression is invalid for update.
+//    The provided expression refers to an attribute that does not exist in
+//    the item.
+type TransactionCanceledException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A list of cancellation reasons.
+	CancellationReasons []*CancellationReason `min:"1" type:"list"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s TransactionCanceledException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransactionCanceledException) GoString() string {
+	return s.String()
+}
+
+func newErrorTransactionCanceledException(v protocol.ResponseMetadata) error {
+	return &TransactionCanceledException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TransactionCanceledException) Code() string {
+	return "TransactionCanceledException"
+}
+
+// Message returns the exception's message.
+func (s TransactionCanceledException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TransactionCanceledException) OrigErr() error {
+	return nil
+}
+
+func (s TransactionCanceledException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TransactionCanceledException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TransactionCanceledException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Operation was rejected because there is an ongoing transaction for the item.
+type TransactionConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TransactionConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransactionConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorTransactionConflictException(v protocol.ResponseMetadata) error {
+	return &TransactionConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TransactionConflictException) Code() string {
+	return "TransactionConflictException"
+}
+
+// Message returns the exception's message.
+func (s TransactionConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TransactionConflictException) OrigErr() error {
+	return nil
+}
+
+func (s TransactionConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TransactionConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TransactionConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The transaction with the given request token is already in progress.
+type TransactionInProgressException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s TransactionInProgressException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransactionInProgressException) GoString() string {
+	return s.String()
+}
+
+func newErrorTransactionInProgressException(v protocol.ResponseMetadata) error {
+	return &TransactionInProgressException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TransactionInProgressException) Code() string {
+	return "TransactionInProgressException"
+}
+
+// Message returns the exception's message.
+func (s TransactionInProgressException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TransactionInProgressException) OrigErr() error {
+	return nil
+}
+
+func (s TransactionInProgressException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TransactionInProgressException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TransactionInProgressException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {

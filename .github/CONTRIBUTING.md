@@ -504,6 +504,7 @@ into Terraform.
   - In `aws/config.go`: Create the new service client in the `{SERVICE}conn`
     field in the `AWSClient` instantiation within `Client()`. e.g.
     `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
+  - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
   - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
     name in the list of customizable endpoints.
   - In `.hashibot.hcl`: Add the new service to automated issue and pull request labeling. e.g. with the `quicksight` service
