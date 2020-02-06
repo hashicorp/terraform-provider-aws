@@ -11,14 +11,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/mitchellh/go-homedir"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/mitchellh/go-homedir"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsS3BucketObject() *schema.Resource {
@@ -390,8 +390,17 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("storage_class", resp.StorageClass)
 	}
 
-	if err := getTagsS3Object(s3conn, d); err != nil {
-		return fmt.Errorf("error getting S3 object tags (bucket: %s, key: %s): %s", bucket, key, err)
+	// Retry due to S3 eventual consistency
+	tags, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return keyvaluetags.S3ObjectListTags(s3conn, bucket, key)
+	})
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for S3 Bucket (%s)n Object (%s): %s", bucket, key, err)
+	}
+
+	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
