@@ -19,6 +19,6 @@ require (
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pquerna/otp v1.2.0
-	golang.org/x/tools v0.0.0-20200106190116-7be0a674c9fc
+	golang.org/x/tools v0.0.0-20200206001521-403f1254bdfd
 	gopkg.in/yaml.v2 v2.2.8
 )
