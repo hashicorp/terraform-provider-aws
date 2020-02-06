@@ -24,6 +24,7 @@ BUG FIXES:
 * resource/aws_appautoscaling_target: Automatically retry creation on `ValidationException: ECS service doesn't exist` for ECS eventual consistency [GH-11693]
 * resource/aws_batch_job_definition: Properly set `container_properties` and `name` into Terraform state and perform drift detection [GH-11488]
 * resource/aws_cloudformation_stack_set: Wait for update operation completion (default timeout of 30 minutes) and report any errors [GH-11726]
+* resource/aws_cloudwatch_log_stream: Prevent state removal of resource immediately after creation due to eventual consistency [GH-11617]
 * resource/aws_codedeploy_deployment_group: Fixes unexpected behaviour when removing block attributes [GH-11648]
 * resource/aws_default_security_group: Ensure `description` attribute is written into Terraform state [GH-11650]
 * resource/aws_dynamodb_table: Skip `ResourceNotFoundException` error during deletion [GH-11692]
