@@ -1,3 +1,4 @@
+## 2.49.0 (Unreleased)
 ## 2.48.0 (February 07, 2020)
 
 NOTES:
