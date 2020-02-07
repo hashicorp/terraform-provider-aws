@@ -74,18 +74,21 @@ func resourceAwsEfsAccessPoint() *schema.Resource {
 				Optional: true,
 				MaxItems: 1,
 				ForceNew: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"path": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							Computed: true,
 						},
 						"creation_info": {
 							Type:     schema.TypeList,
 							Optional: true,
 							ForceNew: true,
 							MaxItems: 1,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"owner_gid": {

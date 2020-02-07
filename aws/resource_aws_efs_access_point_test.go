@@ -108,7 +108,8 @@ func TestAccAWSEFSAccessPoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/"),
 				),
 			},
 			{
