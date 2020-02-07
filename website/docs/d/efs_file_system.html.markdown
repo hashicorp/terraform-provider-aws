@@ -44,3 +44,4 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` -A map of tags to assign to the file system.
 * `throughput_mode` - Throughput mode for the file system.
 * `size_in_bytes` - The current byte count used by the file system.
+* `policy` - The JSON formatted file system policy for the EFS file system.
