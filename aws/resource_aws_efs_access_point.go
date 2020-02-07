@@ -69,11 +69,46 @@ func resourceAwsEfsAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			//"root_directory": {
-			//	Type:     schema.TypeList,
-			//	Optional: true,
-			//	MaxItems: 1,
-			//},
+			"root_directory": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"path": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"creation_info": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"owner_gid": {
+										Type:     schema.TypeInt,
+										Required: true,
+										ForceNew: true,
+									},
+									"owner_uid": {
+										Type:     schema.TypeInt,
+										Required: true,
+										ForceNew: true,
+									},
+									"permisions": {
+										Type:     schema.TypeInt,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -91,6 +126,10 @@ func resourceAwsEfsAccessPointCreate(d *schema.ResourceData, meta interface{}) e
 
 	if v, ok := d.GetOk("posix_user"); ok {
 		input.PosixUser = expandEfsAccessPointPosixUser(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("root_directory"); ok {
+		input.RootDirectory = expandEfsAccessPointRootDirectory(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating EFS Access Point: %#v", input)
@@ -193,6 +232,10 @@ func resourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting posix user: %s", err)
 	}
 
+	if err := d.Set("root_directory", flattenEfsAccessPointRootDirectory(ap.RootDirectory)); err != nil {
+		return fmt.Errorf("error setting root directory: %s", err)
+	}
+
 	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(ap.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
@@ -269,7 +312,6 @@ func expandEfsAccessPointPosixUser(pUser []interface{}) *efs.PosixUser {
 	m := pUser[0].(map[string]interface{})
 
 	posixUser := &efs.PosixUser{
-
 		Gid: aws.Int64(int64(m["gid"].(int))),
 		Uid: aws.Int64(int64(m["uid"].(int))),
 	}
@@ -280,6 +322,43 @@ func expandEfsAccessPointPosixUser(pUser []interface{}) *efs.PosixUser {
 
 	return posixUser
 }
+
+func expandEfsAccessPointRootDirectory(rDir []interface{}) *efs.RootDirectory {
+	if len(rDir) < 1 || rDir[0] == nil {
+		return nil
+	}
+
+	m := rDir[0].(map[string]interface{})
+
+	rootDir := &efs.RootDirectory{}
+
+	if v, ok := m["path"]; ok {
+		rootDir.Path = aws.String(v.(string))
+	}
+
+	if v, ok := m["creation_info"]; ok {
+		rootDir.CreationInfo = expandEfsAccessPointRootDirectoryCreationInfo(v.([]interface{}))
+	}
+
+	return rootDir
+}
+
+func expandEfsAccessPointRootDirectoryCreationInfo(cInfo []interface{}) *efs.CreationInfo {
+	if len(cInfo) < 1 || cInfo[0] == nil {
+		return nil
+	}
+
+	m := cInfo[0].(map[string]interface{})
+
+	creationInfo := &efs.CreationInfo{
+		OwnerGid:    aws.Int64(int64(m["owner_gid"].(int))),
+		OwnerUid:    aws.Int64(int64(m["owner_uid"].(int))),
+		Permissions: aws.String(m["permissions"].(string)),
+	}
+
+	return creationInfo
+}
+
 func flattenEfsAccessPointPosixUser(posixUser *efs.PosixUser) []interface{} {
 	if posixUser == nil {
 		return []interface{}{}
@@ -289,6 +368,33 @@ func flattenEfsAccessPointPosixUser(posixUser *efs.PosixUser) []interface{} {
 		"gid":            aws.Int64Value(posixUser.Gid),
 		"uid":            aws.Int64Value(posixUser.Uid),
 		"secondary_gids": aws.Int64ValueSlice(posixUser.SecondaryGids),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenEfsAccessPointRootDirectory(rDir *efs.RootDirectory) []interface{} {
+	if rDir == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"path":          aws.StringValue(rDir.Path),
+		"creation_info": flattenEfsAccessPointRootDirectoryCreationInfo(rDir.CreationInfo),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenEfsAccessPointRootDirectoryCreationInfo(cInfo *efs.CreationInfo) []interface{} {
+	if cInfo == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"gid":         aws.Int64Value(cInfo.OwnerGid),
+		"uid":         aws.Int64Value(cInfo.OwnerUid),
+		"permissions": aws.StringValue(cInfo.Permissions),
 	}
 
 	return []interface{}{m}

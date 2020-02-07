@@ -108,6 +108,35 @@ func TestAccAWSEFSAccessPoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSAccessPoint_root_directory(t *testing.T) {
+	var ap efs.AccessPointDescription
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_efs_access_point.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSAccessPointConfigRootDirectory(rName, "/home/test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/home/test"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", "0"),
 				),
 			},
 			{
@@ -165,9 +194,7 @@ func TestAccAWSEFSAccessPoint_posix_user_secondary_gids(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.0.secondary_gids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.0.secondary_gids.0", "1002"),
-				),
+					resource.TestCheckResourceAttr(resourceName, "posix_user.0.secondary_gids.#", "1")),
 			},
 			{
 				ResourceName:      resourceName,
@@ -352,6 +379,21 @@ resource "aws_efs_access_point" "test" {
   file_system_id = "${aws_efs_file_system.test.id}"
 }
 `, rName)
+}
+
+func testAccAWSEFSAccessPointConfigRootDirectory(rName, dir string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+
+resource "aws_efs_access_point" "test" {
+  file_system_id = "${aws_efs_file_system.test.id}"
+  root_directory {
+    path = %[2]q
+  }
+}
+`, rName, dir)
 }
 
 func testAccAWSEFSAccessPointConfigPosixUser(rName string) string {
