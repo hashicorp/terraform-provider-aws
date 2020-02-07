@@ -65,7 +65,6 @@ func testSweepRoute53ResolverEndpoints(region string) error {
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
-			panic(err)
 			log.Printf("[WARN] Skipping Route53 Resolver endpoint sweep for %s: %s", region, err)
 			return nil
 		}
