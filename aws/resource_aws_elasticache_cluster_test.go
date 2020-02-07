@@ -928,7 +928,7 @@ func testAccAWSElasticacheClusterConfig_Engine_Memcached(rName string) string {
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = "%s"
   engine          = "memcached"
-  node_type       = "cache.m1.small"
+  node_type       = "cache.t3.small"
   num_cache_nodes = 1
 }
 `, rName)
@@ -939,7 +939,7 @@ func testAccAWSElasticacheClusterConfig_Engine_Redis(rName string) string {
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = "%s"
   engine          = "redis"
-  node_type       = "cache.m1.small"
+  node_type       = "cache.t3.small"
   num_cache_nodes = 1
 }
 `, rName)
@@ -951,7 +951,7 @@ resource "aws_elasticache_cluster" "test" {
   cluster_id           = %q
   engine               = %q
   engine_version       = %q
-  node_type            = "cache.m1.small"
+  node_type            = "cache.t3.small"
   num_cache_nodes      = 1
   parameter_group_name = %q
 }
@@ -963,7 +963,7 @@ func testAccAWSElasticacheClusterConfig_Port(rName string, port int) string {
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = "%s"
   engine          = "memcached"
-  node_type       = "cache.m1.small"
+  node_type       = "cache.t3.small"
   num_cache_nodes = 1
   port            = %d
 }
@@ -998,7 +998,7 @@ resource "aws_elasticache_security_group" "test" {
 resource "aws_elasticache_cluster" "test" {
     cluster_id           = "tf-%s"
     engine               = "memcached"
-    node_type            = "cache.m1.small"
+    node_type            = "cache.t3.small"
     num_cache_nodes      = 1
     port                 = 11211
     security_group_names = ["${aws_elasticache_security_group.test.name}"]
@@ -1029,7 +1029,7 @@ resource "aws_elasticache_security_group" "test" {
 resource "aws_elasticache_cluster" "test" {
     cluster_id               = "tf-%s"
     engine                   = "redis"
-    node_type                = "cache.m1.small"
+    node_type                = "cache.t3.small"
     num_cache_nodes          = 1
     port                     = 6379
     security_group_names     = ["${aws_elasticache_security_group.test.name}"]
@@ -1062,7 +1062,7 @@ resource "aws_elasticache_security_group" "test" {
 resource "aws_elasticache_cluster" "test" {
     cluster_id               = "tf-%s"
     engine                   = "redis"
-    node_type                = "cache.m1.small"
+    node_type                = "cache.t3.small"
     num_cache_nodes          = 1
     port                     = 6379
     security_group_names     = ["${aws_elasticache_security_group.test.name}"]
@@ -1078,7 +1078,7 @@ resource "aws_elasticache_cluster" "test" {
   apply_immediately = true
   cluster_id        = "%s"
   engine            = "memcached"
-  node_type         = "cache.m1.small"
+  node_type         = "cache.t3.small"
   num_cache_nodes   = %d
 }
 `, rName, numCacheNodes)
@@ -1097,7 +1097,7 @@ resource "aws_elasticache_cluster" "test" {
   apply_immediately            = true
   cluster_id                   = "%s"
   engine                       = "memcached"
-  node_type                    = "cache.m1.small"
+  node_type                    = "cache.t3.small"
   num_cache_nodes              = %d
   preferred_availability_zones = [%s]
 }
@@ -1106,9 +1106,7 @@ resource "aws_elasticache_cluster" "test" {
 
 var testAccAWSElasticacheClusterInVPCConfig = fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-    # InsufficientCacheClusterCapacity: cache.m1.small (VPC) is not currently supported in the availability zone us-east-1b
-    blacklisted_zone_ids = ["use1-az1"]
-    state                = "available"
+    state = "available"
 }
 
 resource "aws_vpc" "test" {
@@ -1150,7 +1148,7 @@ resource "aws_elasticache_cluster" "test" {
     // that we correctly handle the fact that the API
     // normalizes names to lowercase.
     cluster_id             = "tf-%s"
-    node_type              = "cache.m1.small"
+    node_type              = "cache.t3.small"
     num_cache_nodes        = 1
     engine                 = "redis"
     engine_version         = "2.8.19"
@@ -1169,9 +1167,7 @@ resource "aws_sns_topic" "test" {
 
 var testAccAWSElasticacheClusterMultiAZInVPCConfig = fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-    # InsufficientCacheClusterCapacity: cache.m1.small (VPC) is not currently supported in the availability zone us-east-1b
-    blacklisted_zone_ids = ["use1-az1"]
-    state                = "available"
+    state = "available"
 }
 
 resource "aws_vpc" "test" {
@@ -1223,7 +1219,7 @@ resource "aws_security_group" "test" {
 resource "aws_elasticache_cluster" "test" {
     cluster_id         = "tf-%s"
     engine             = "memcached"
-    node_type          = "cache.m1.small"
+    node_type          = "cache.t3.small"
     num_cache_nodes    = 2
     port               = 11211
     subnet_group_name  = "${aws_elasticache_subnet_group.test.name}"
