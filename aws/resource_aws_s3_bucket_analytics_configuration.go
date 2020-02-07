@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
@@ -250,7 +251,7 @@ func expandS3AnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
 
 	var tags []*s3.Tag
 	if v, ok := m["tags"]; ok {
-		tags = tagsFromMapS3(v.(map[string]interface{}))
+		tags = keyvaluetags.New(v).IgnoreAws().S3Tags()
 	}
 
 	if prefix == "" && len(tags) == 0 {
@@ -342,7 +343,7 @@ func flattenS3AnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]
 			result["prefix"] = *and.Prefix
 		}
 		if and.Tags != nil {
-			result["tags"] = tagsToMapS3(and.Tags)
+			result["tags"] = keyvaluetags.S3KeyValueTags(and.Tags).IgnoreAws().Map()
 		}
 	} else if analyticsFilter.Prefix != nil {
 		result["prefix"] = *analyticsFilter.Prefix
@@ -350,7 +351,7 @@ func flattenS3AnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]
 		tags := []*s3.Tag{
 			analyticsFilter.Tag,
 		}
-		result["tags"] = tagsToMapS3(tags)
+		result["tags"] = keyvaluetags.S3KeyValueTags(tags).IgnoreAws().Map()
 	} else {
 		return nil
 	}
