@@ -178,6 +178,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `wafregional`
 - `wafv2`
 - `worklink`
+- `workmail`
 - `workspaces`
 - `xray`
 

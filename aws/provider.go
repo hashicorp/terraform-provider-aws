@@ -1077,6 +1077,7 @@ func init() {
 		"wafregional",
 		"wafv2",
 		"worklink",
+		"workmail",
 		"workspaces",
 		"xray",
 	}

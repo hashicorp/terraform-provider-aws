@@ -102,5 +102,6 @@ VPC
 WAF Regional
 WAF
 WorkLink
+WorkMail
 WorkSpaces
 XRay
