@@ -6,6 +6,7 @@ package keyvaluetags
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
@@ -222,6 +223,17 @@ func (tags KeyValueTags) Hash() int {
 	}
 
 	return hash
+}
+
+// UrlEncode returns the KeyValueTags encoded as URL Query parameters.
+func (tags KeyValueTags) UrlEncode() string {
+	values := url.Values{}
+
+	for k, v := range tags {
+		values.Add(k, *v)
+	}
+
+	return values.Encode()
 }
 
 // New creates KeyValueTags from common Terraform Provider SDK types.
