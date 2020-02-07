@@ -98,8 +98,8 @@ func resourceAwsEfsAccessPoint() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
-									"permisions": {
-										Type:     schema.TypeInt,
+									"permissions": {
+										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
@@ -392,8 +392,8 @@ func flattenEfsAccessPointRootDirectoryCreationInfo(cInfo *efs.CreationInfo) []i
 	}
 
 	m := map[string]interface{}{
-		"gid":         aws.Int64Value(cInfo.OwnerGid),
-		"uid":         aws.Int64Value(cInfo.OwnerUid),
+		"owner_gid":   aws.Int64Value(cInfo.OwnerGid),
+		"owner_uid":   aws.Int64Value(cInfo.OwnerUid),
 		"permissions": aws.StringValue(cInfo.Permissions),
 	}
 

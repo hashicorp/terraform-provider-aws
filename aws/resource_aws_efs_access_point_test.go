@@ -148,6 +148,37 @@ func TestAccAWSEFSAccessPoint_root_directory(t *testing.T) {
 	})
 }
 
+func TestAccAWSEFSAccessPoint_root_directory_creation_info(t *testing.T) {
+	var ap efs.AccessPointDescription
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_efs_access_point.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsAccessPointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSAccessPointConfigRootDirectoryCreationInfo(rName, "/home/test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsAccessPointExists(resourceName, &ap),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/home/test"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.owner_gid", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.owner_uid", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.permissions", "755"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEFSAccessPoint_posix_user(t *testing.T) {
 	var ap efs.AccessPointDescription
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -391,6 +422,26 @@ resource "aws_efs_access_point" "test" {
   file_system_id = "${aws_efs_file_system.test.id}"
   root_directory {
     path = %[2]q
+  }
+}
+`, rName, dir)
+}
+
+func testAccAWSEFSAccessPointConfigRootDirectoryCreationInfo(rName, dir string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+
+resource "aws_efs_access_point" "test" {
+  file_system_id = "${aws_efs_file_system.test.id}"
+  root_directory {
+    path = %[2]q
+    creation_info {
+      owner_gid   = 1001
+      owner_uid   = 1001
+      permissions = "755"
+    }
   }
 }
 `, rName, dir)
