@@ -71,6 +71,9 @@ func resourceAwsKmsKey() *schema.Resource {
 					kms.CustomerMasterKeySpecEccNistP521,
 					kms.CustomerMasterKeySpecEccSecgP256k1,
 				}, false),
+				// RM-3261: Suppress diff during "upgrade" that adds the new
+				// field if it's the default anyway.
+				DiffSuppressFunc: suppressEmptyToDefault(kms.CustomerMasterKeySpecSymmetricDefault),
 			},
 			"policy": {
 				Type:             schema.TypeString,
