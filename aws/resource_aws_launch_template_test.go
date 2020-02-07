@@ -528,6 +528,7 @@ func TestAccAWSLaunchTemplate_IamInstanceProfile_EmptyConfigurationBlock(t *test
 
 func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 	var template ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -536,7 +537,7 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_networkInterface,
+				Config: testAccAWSLaunchTemplateConfig_networkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
@@ -605,6 +606,7 @@ func TestAccAWSLaunchTemplate_associatePublicIPAddress(t *testing.T) {
 
 func TestAccAWSLaunchTemplate_networkInterface_ipv6Addresses(t *testing.T) {
 	var template ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -613,7 +615,7 @@ func TestAccAWSLaunchTemplate_networkInterface_ipv6Addresses(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_networkInterface_ipv6Addresses,
+				Config: testAccAWSLaunchTemplateConfig_networkInterface_ipv6Addresses(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
@@ -1102,7 +1104,8 @@ resource "aws_launch_template" "test" {
 `, rName, description)
 }
 
-const testAccAWSLaunchTemplateConfig_networkInterface = `
+func testAccAWSLaunchTemplateConfig_networkInterface(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
@@ -1117,14 +1120,15 @@ resource "aws_network_interface" "test" {
 }
 
 resource "aws_launch_template" "test" {
-  name = "network-interface-launch-template"
+  name = %[1]q
 
   network_interfaces {
     network_interface_id = "${aws_network_interface.test.id}"
     ipv4_address_count = 2
   }
 }
-`
+`, rName)
+}
 
 func testAccAWSLaunchTemplateConfig_associatePublicIpAddress(rName, associatePublicIPAddress string) string {
 	return fmt.Sprintf(`
@@ -1153,9 +1157,10 @@ resource "aws_launch_template" "test" {
 `, rName, associatePublicIPAddress)
 }
 
-const testAccAWSLaunchTemplateConfig_networkInterface_ipv6Addresses = `
+func testAccAWSLaunchTemplateConfig_networkInterface_ipv6Addresses(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = "network-interface-ipv6-addresses-launch-template"
+  name = %[1]q
 
   network_interfaces {
     ipv6_addresses = [
@@ -1164,7 +1169,8 @@ resource "aws_launch_template" "test" {
     ]
   }
 }
-`
+`, rName)
+}
 
 const testAccAWSLaunchTemplateConfig_asg_basic = `
 data "aws_ami" "test_ami" {
