@@ -9,6 +9,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+func getTagsS3Object(conn *s3.S3, d *schema.ResourceData) error {
+	resp, err := retryOnAwsCode(s3.ErrCodeNoSuchKey, func() (interface{}, error) {
+		return conn.GetObjectTagging(&s3.GetObjectTaggingInput{
+			Bucket: aws.String(d.Get("bucket").(string)),
+			Key:    aws.String(d.Get("key").(string)),
+		})
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := d.Set("tags", tagsToMapS3(resp.(*s3.GetObjectTaggingOutput).TagSet)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func setTagsS3Object(conn *s3.S3, d *schema.ResourceData) error {
 	if d.HasChange("tags") {
 		oraw, nraw := d.GetChange("tags")

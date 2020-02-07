@@ -79,19 +79,3 @@ func S3BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, 
 
 	return nil
 }
-
-// S3ObjectListTags lists S3 object tags.
-func S3ObjectListTags(conn *s3.S3, bucket, key string) (KeyValueTags, error) {
-	input := &s3.GetObjectTaggingInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	}
-
-	output, err := conn.GetObjectTagging(input)
-
-	if err != nil {
-		return New(nil), err
-	}
-
-	return S3KeyValueTags(output.TagSet), nil
-}
