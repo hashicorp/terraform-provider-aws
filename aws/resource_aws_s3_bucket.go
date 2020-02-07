@@ -1921,11 +1921,11 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
 			rcRule.Filter = &s3.ReplicationRuleFilter{}
 			filter := f[0].(map[string]interface{})
-			tags := filter["tags"].(map[string]interface{})
+			tags := keyvaluetags.New(filter["tags"]).IgnoreAws().S3Tags()
 			if len(tags) > 0 {
 				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{
 					Prefix: aws.String(filter["prefix"].(string)),
-					Tags:   keyvaluetags.New(tags).IgnoreAws().S3Tags(),
+					Tags:   tags,
 				}
 			} else {
 				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
@@ -1993,12 +1993,12 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 		rule := &s3.LifecycleRule{}
 
 		// Filter
-		tags := r["tags"].(map[string]interface{})
+		tags := keyvaluetags.New(r["tags"]).IgnoreAws().S3Tags()
 		filter := &s3.LifecycleRuleFilter{}
 		if len(tags) > 0 {
 			lifecycleRuleAndOp := &s3.LifecycleRuleAndOperator{}
 			lifecycleRuleAndOp.SetPrefix(r["prefix"].(string))
-			lifecycleRuleAndOp.SetTags(keyvaluetags.New(tags).IgnoreAws().S3Tags())
+			lifecycleRuleAndOp.SetTags(tags)
 			filter.SetAnd(lifecycleRuleAndOp)
 		} else {
 			filter.SetPrefix(r["prefix"].(string))
@@ -2212,11 +2212,11 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				m["prefix"] = aws.StringValue(f.Prefix)
 			}
 			if t := f.Tag; t != nil {
-				m["tags"] = keyvaluetags.S3KeyValueTags([]*s3.Tag{t}).IgnoreAws().RawMap()
+				m["tags"] = keyvaluetags.S3KeyValueTags([]*s3.Tag{t}).IgnoreAws().Map()
 			}
 			if a := f.And; a != nil {
 				m["prefix"] = aws.StringValue(a.Prefix)
-				m["tags"] = keyvaluetags.S3KeyValueTags(a.Tags).IgnoreAws().RawMap()
+				m["tags"] = keyvaluetags.S3KeyValueTags(a.Tags).IgnoreAws().Map()
 			}
 			t["filter"] = []interface{}{m}
 		}

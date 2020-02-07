@@ -50,8 +50,6 @@ func S3BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, 
 
 	sysTags := allTags.Removed(allTags.IgnoreAws())
 
-	// TODO RetryOnAwsCodes([]string{"NoSuchBucket", "OperationAborted"})?
-
 	if len(newTags)+len(sysTags) > 0 {
 		input := &s3.PutBucketTaggingInput{
 			Bucket: aws.String(identifier),
