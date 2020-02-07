@@ -1,40 +1,40 @@
-## 2.48.0 (Unreleased)
+## 2.48.0 (February 07, 2020)
 
 NOTES:
 
-* resource/aws_organizations_policy_attachment: The underlying API calls have switched from `ListPoliciesForTarget` to `ListTargetsForPolicy`. Restrictive IAM Policies for Terraform execution may require updates. [GH-11612]
+* resource/aws_organizations_policy_attachment: The underlying API calls have switched from `ListPoliciesForTarget` to `ListTargetsForPolicy`. Restrictive IAM Policies for Terraform execution may require updates. ([#11612](https://github.com/terraform-providers/terraform-provider-aws/issues/11612))
 
 FEATURES:
 
-* **New Data Source:** `aws_ssm_patch_baseline` [GH-9486]
-* **New Resource:** `aws_datasync_location_smb` [GH-10381]
+* **New Data Source:** `aws_ssm_patch_baseline` ([#9486](https://github.com/terraform-providers/terraform-provider-aws/issues/9486))
+* **New Resource:** `aws_datasync_location_smb` ([#10381](https://github.com/terraform-providers/terraform-provider-aws/issues/10381))
 
 ENHANCEMENTS:
 
-* resource/aws_batch_job_definition: Support resource import [GH-11407]
-* resource/aws_codebuild_project: Add `source` and `secondary_source` configuration block `git_submodules_config` configuration block [GH-10952]
-* resource/aws_codebuild_project: Add `source` configuration block `source_version` argument [GH-9877]
-* resource/aws_elasticache_cluster: Add `computed` flag for `port` property and set to true [GH-10017]
-* resource/aws_fsx_lustre_file_system: Lower minimum `storage_capacity` argument validation to 1200 to match API updates [GH-11847]
-* resource/aws_organizations_policy: Support `type` argument `TAG_POLICY` value in plan-time validation [GH-11612]
-* resource/aws_organizations_policy_attachment: Support tag policies [GH-11612]
+* resource/aws_batch_job_definition: Support resource import ([#11407](https://github.com/terraform-providers/terraform-provider-aws/issues/11407))
+* resource/aws_codebuild_project: Add `source` and `secondary_source` configuration block `git_submodules_config` configuration block ([#10952](https://github.com/terraform-providers/terraform-provider-aws/issues/10952))
+* resource/aws_codebuild_project: Add `source` configuration block `source_version` argument ([#9877](https://github.com/terraform-providers/terraform-provider-aws/issues/9877))
+* resource/aws_elasticache_cluster: Add `computed` flag for `port` property and set to true ([#10017](https://github.com/terraform-providers/terraform-provider-aws/issues/10017))
+* resource/aws_fsx_lustre_file_system: Lower minimum `storage_capacity` argument validation to 1200 to match API updates ([#11847](https://github.com/terraform-providers/terraform-provider-aws/issues/11847))
+* resource/aws_organizations_policy: Support `type` argument `TAG_POLICY` value in plan-time validation ([#11612](https://github.com/terraform-providers/terraform-provider-aws/issues/11612))
+* resource/aws_organizations_policy_attachment: Support tag policies ([#11612](https://github.com/terraform-providers/terraform-provider-aws/issues/11612))
 
 BUG FIXES:
 
-* resource/aws_appautoscaling_target: Prevent state removal of resource immediately after creation due to eventual consistency [GH-11819]
-* resource/aws_appautoscaling_target: Automatically retry creation on `ValidationException: ECS service doesn't exist` for ECS eventual consistency [GH-11693]
-* resource/aws_batch_job_definition: Properly set `container_properties` and `name` into Terraform state and perform drift detection [GH-11488]
-* resource/aws_cloudformation_stack_set: Wait for update operation completion (default timeout of 30 minutes) and report any errors [GH-11726]
-* resource/aws_cloudwatch_log_stream: Prevent state removal of resource immediately after creation due to eventual consistency [GH-11617]
-* resource/aws_codedeploy_deployment_group: Fixes unexpected behaviour when removing block attributes [GH-11648]
-* resource/aws_default_security_group: Ensure `description` attribute is written into Terraform state [GH-11650]
-* resource/aws_dynamodb_table: Skip `ResourceNotFoundException` error during deletion [GH-11692]
-* resource/aws_ec2_client_vpn_endpoint: Ensure `dns_servers` attribute is refreshed in Terraform state [GH-11889]
-* resource/aws_ecs_cluster: Delay check of ECS Cluster status during creation for ECS eventual consistency [GH-11701]
-* resource/aws_kinesis_firehose_delivery_stream: Allow processors to be cleared from extended S3 configuration [GH-11649]
-* resource/aws_network_acl_rule: Trigger resource recreation instead of error when same number rule (but opposite ingress/egress) is removed [GH-11544]
-* resource/aws_placement_group: Additional handling for creation and deletion eventual consistency [GH-11671]
-* resource/aws_s3_bucket: Retry read after creation for 404 status code and prevent 2 minute delay for triggering recreation on existing resources deleted outside Terraform [GH-11894]
+* resource/aws_appautoscaling_target: Prevent state removal of resource immediately after creation due to eventual consistency ([#11819](https://github.com/terraform-providers/terraform-provider-aws/issues/11819))
+* resource/aws_appautoscaling_target: Automatically retry creation on `ValidationException: ECS service doesn't exist` for ECS eventual consistency ([#11693](https://github.com/terraform-providers/terraform-provider-aws/issues/11693))
+* resource/aws_batch_job_definition: Properly set `container_properties` and `name` into Terraform state and perform drift detection ([#11488](https://github.com/terraform-providers/terraform-provider-aws/issues/11488))
+* resource/aws_cloudformation_stack_set: Wait for update operation completion (default timeout of 30 minutes) and report any errors ([#11726](https://github.com/terraform-providers/terraform-provider-aws/issues/11726))
+* resource/aws_cloudwatch_log_stream: Prevent state removal of resource immediately after creation due to eventual consistency ([#11617](https://github.com/terraform-providers/terraform-provider-aws/issues/11617))
+* resource/aws_codedeploy_deployment_group: Fixes unexpected behaviour when removing block attributes ([#11648](https://github.com/terraform-providers/terraform-provider-aws/issues/11648))
+* resource/aws_default_security_group: Ensure `description` attribute is written into Terraform state ([#11650](https://github.com/terraform-providers/terraform-provider-aws/issues/11650))
+* resource/aws_dynamodb_table: Skip `ResourceNotFoundException` error during deletion ([#11692](https://github.com/terraform-providers/terraform-provider-aws/issues/11692))
+* resource/aws_ec2_client_vpn_endpoint: Ensure `dns_servers` attribute is refreshed in Terraform state ([#11889](https://github.com/terraform-providers/terraform-provider-aws/issues/11889))
+* resource/aws_ecs_cluster: Delay check of ECS Cluster status during creation for ECS eventual consistency ([#11701](https://github.com/terraform-providers/terraform-provider-aws/issues/11701))
+* resource/aws_kinesis_firehose_delivery_stream: Allow processors to be cleared from extended S3 configuration ([#11649](https://github.com/terraform-providers/terraform-provider-aws/issues/11649))
+* resource/aws_network_acl_rule: Trigger resource recreation instead of error when same number rule (but opposite ingress/egress) is removed ([#11544](https://github.com/terraform-providers/terraform-provider-aws/issues/11544))
+* resource/aws_placement_group: Additional handling for creation and deletion eventual consistency ([#11671](https://github.com/terraform-providers/terraform-provider-aws/issues/11671))
+* resource/aws_s3_bucket: Retry read after creation for 404 status code and prevent 2 minute delay for triggering recreation on existing resources deleted outside Terraform ([#11894](https://github.com/terraform-providers/terraform-provider-aws/issues/11894))
 
 ## 2.47.0 (January 30, 2020)
 
