@@ -242,10 +242,7 @@ func TestAccAWSElasticacheCluster_SecurityGroup(t *testing.T) {
 
 func TestAccAWSElasticacheCluster_snapshotsWithUpdates(t *testing.T) {
 	var ec elasticache.CacheCluster
-
-	ri := acctest.RandInt()
-	preConfig := fmt.Sprintf(testAccAWSElasticacheClusterConfig_snapshots, ri, ri, acctest.RandString(10))
-	postConfig := fmt.Sprintf(testAccAWSElasticacheClusterConfig_snapshotsUpdated, ri, ri, acctest.RandString(10))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -253,7 +250,7 @@ func TestAccAWSElasticacheCluster_snapshotsWithUpdates(t *testing.T) {
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: preConfig,
+				Config: testAccAWSElasticacheClusterConfig_snapshots(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheClusterExists("aws_elasticache_cluster.test", &ec),
 					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", "snapshot_window", "05:00-09:00"),
@@ -261,7 +258,7 @@ func TestAccAWSElasticacheCluster_snapshotsWithUpdates(t *testing.T) {
 				),
 			},
 			{
-				Config: postConfig,
+				Config: testAccAWSElasticacheClusterConfig_snapshotsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheClusterExists("aws_elasticache_cluster.test", &ec),
 					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", "snapshot_window", "07:00-09:00"),
@@ -948,7 +945,8 @@ resource "aws_elasticache_cluster" "test" {
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
-var testAccAWSElasticacheClusterConfig_snapshots = `
+func testAccAWSElasticacheClusterConfig_snapshots(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
     cluster_id               = "tf-%s"
     engine                   = "redis"
@@ -958,9 +956,11 @@ resource "aws_elasticache_cluster" "test" {
     snapshot_window          = "05:00-09:00"
     snapshot_retention_limit = 3
 }
-`
+`, rName)
+}
 
-var testAccAWSElasticacheClusterConfig_snapshotsUpdated = `
+func testAccAWSElasticacheClusterConfig_snapshotsUpdated(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
     cluster_id               = "tf-%s"
     engine                   = "redis"
@@ -971,7 +971,8 @@ resource "aws_elasticache_cluster" "test" {
     snapshot_retention_limit = 7
     apply_immediately        = true
 }
-`
+`, rName)
+}
 
 func testAccAWSElasticacheClusterConfig_NumCacheNodes(rName string, numCacheNodes int) string {
 	return fmt.Sprintf(`
