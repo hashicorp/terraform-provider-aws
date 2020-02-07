@@ -135,9 +135,11 @@ func TestAccAWSAmplifyApp_repository(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// access_token is ignored because AWS does not store access_token and oauth_token
+				// See https://docs.aws.amazon.com/sdk-for-go/api/service/amplify/#CreateAppInput
 				ImportStateVerifyIgnore: []string{"access_token"},
 			},
 		},
