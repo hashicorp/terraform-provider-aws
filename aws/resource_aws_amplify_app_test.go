@@ -40,6 +40,7 @@ func TestAccAWSAmplifyApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_branch_auto_build", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iam_service_role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
