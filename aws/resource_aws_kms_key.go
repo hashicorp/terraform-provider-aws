@@ -60,7 +60,7 @@ func resourceAwsKmsKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  kms.CustomerMasterKeySpecSymmetricDefault,
-				ForceNew: true,
+				// ForceNew: true,  // RM-3261
 				ValidateFunc: validation.StringInSlice([]string{
 					kms.CustomerMasterKeySpecSymmetricDefault,
 					kms.CustomerMasterKeySpecRsa2048,
