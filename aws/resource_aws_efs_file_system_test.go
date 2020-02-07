@@ -431,6 +431,47 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy_removal(t *testing.T) {
 	})
 }
 
+func TestAccAWSEFSFileSystem_policy(t *testing.T) {
+	var desc efs.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+	rName := acctest.RandomWithPrefix("tf-acc")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfigWPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"creation_token"},
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem("aws_efs_file_system.test", &desc),
+					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfigWPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEFSFileSystem_disappears(t *testing.T) {
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
@@ -626,6 +667,38 @@ func testAccAWSEFSFileSystemConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
 	creation_token = %q
+}
+`, rName)
+}
+
+func testAccAWSEFSFileSystemConfigWPolicy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+	creation_token = %q
+    policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Id": "ExamplePolicy01",
+    "Statement": [
+        {
+            "Sid": "ExampleSatement01",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "elasticfilesystem:ClientMount",
+                "elasticfilesystem:ClientWrite"
+            ],
+            "Condition": {
+                "Bool": {
+                    "aws:SecureTransport": "true"
+                }
+            }
+        }
+    ]
+}
+POLICY
 }
 `, rName)
 }
