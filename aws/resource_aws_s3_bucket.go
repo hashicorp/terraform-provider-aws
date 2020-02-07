@@ -2382,7 +2382,7 @@ func replicationRuleFilterHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := m["tags"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", tagsMapToHash(v.(map[string]interface{}))))
+		buf.WriteString(fmt.Sprintf("%d-", keyvaluetags.New(v).Hash()))
 	}
 	return hashcode.String(buf.String())
 }

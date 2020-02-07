@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -186,16 +184,6 @@ func tagIgnored(t *ec2.Tag) bool {
 		}
 	}
 	return false
-}
-
-// tagsMapToHash returns a stable hash value for a raw tags map.
-// The returned value map be negative (i.e. not suitable for a 'Set' function).
-func tagsMapToHash(tags map[string]interface{}) int {
-	total := 0
-	for k, v := range tags {
-		total = total ^ hashcode.String(fmt.Sprintf("%s-%s", k, v))
-	}
-	return total
 }
 
 // ec2TagsFromTagDescriptions returns the tags from the given tag descriptions.

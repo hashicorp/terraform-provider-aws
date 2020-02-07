@@ -896,6 +896,40 @@ func TestKeyValueTagsChunks(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsHash(t *testing.T) {
+	testCases := []struct {
+		name string
+		tags KeyValueTags
+		zero bool
+	}{
+		{
+			name: "empty",
+			tags: New(map[string]string{}),
+			zero: true,
+		},
+		{
+			name: "not_empty",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			zero: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.Hash()
+
+			if (got == 0 && !testCase.zero) || (got != 0 && testCase.zero) {
+				t.Errorf("unexpected hash code: %d", got)
+			}
+		})
+	}
+}
+
 func testKeyValueTagsVerifyKeys(t *testing.T, got []string, want []string) {
 	for _, g := range got {
 		found := false
