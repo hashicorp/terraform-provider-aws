@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -59,10 +58,6 @@ func testSweepElasticacheReplicationGroups(region string) error {
 }
 
 func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
@@ -125,10 +120,6 @@ func TestAccAWSElasticacheReplicationGroup_Uppercase(t *testing.T) {
 }
 
 func TestAccAWSElasticacheReplicationGroup_updateDescription(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
@@ -173,10 +164,6 @@ func TestAccAWSElasticacheReplicationGroup_updateDescription(t *testing.T) {
 }
 
 func TestAccAWSElasticacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
@@ -213,10 +200,6 @@ func TestAccAWSElasticacheReplicationGroup_updateMaintenanceWindow(t *testing.T)
 }
 
 func TestAccAWSElasticacheReplicationGroup_updateNodeSize(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
@@ -492,10 +475,6 @@ func TestAccAWSElasticacheReplicationGroup_clusteringAndCacheNodesCausesError(t 
 }
 
 func TestAccAWSElasticacheReplicationGroup_enableSnapshotting(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
@@ -854,35 +833,12 @@ func testAccCheckAWSElasticacheReplicationDestroy(s *terraform.State) error {
 
 func testAccAWSElasticacheReplicationGroupConfig(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "tf-test-security-group-descr"
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_elasticache_security_group" "test" {
-  name                 = %[1]q
-  description          = "tf-test-security-group-descr"
-  security_group_names = ["${aws_security_group.test.name}"]
-}
-
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t3.small"
   number_cache_clusters         = 2
   port                          = 6379
-  security_group_names          = ["${aws_elasticache_security_group.test.name}"]
   apply_immediately             = true
   auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
@@ -935,35 +891,12 @@ resource "aws_elasticache_replication_group" "test" {
 
 func testAccAWSElasticacheReplicationGroupConfigEnableSnapshotting(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "tf-test-security-group-descr"
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_elasticache_security_group" "test" {
-  name                 = %[1]q
-  description          = "tf-test-security-group-descr"
-  security_group_names = ["${aws_security_group.test.name}"]
-}
-
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t3.small"
   number_cache_clusters         = 2
   port                          = 6379
-  security_group_names          = ["${aws_elasticache_security_group.test.name}"]
   apply_immediately             = true
   auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
@@ -1003,35 +936,12 @@ resource "aws_elasticache_replication_group" "test" {
 
 func testAccAWSElasticacheReplicationGroupConfigUpdatedDescription(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "tf-test-security-group-descr"
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_elasticache_security_group" "test" {
-  name                 = %[1]q
-  description          = "tf-test-security-group-descr"
-  security_group_names = ["${aws_security_group.test.name}"]
-}
-
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "updated description"
   node_type                     = "cache.t3.small"
   number_cache_clusters         = 2
   port                          = 6379
-  security_group_names          = ["${aws_elasticache_security_group.test.name}"]
   apply_immediately             = true
   auto_minor_version_upgrade    = true
 }
@@ -1040,35 +950,12 @@ resource "aws_elasticache_replication_group" "test" {
 
 func testAccAWSElasticacheReplicationGroupConfigUpdatedMaintenanceWindow(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "tf-test-security-group-descr"
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_elasticache_security_group" "test" {
-  name                 = %[1]q
-  description          = "tf-test-security-group-descr"
-  security_group_names = ["${aws_security_group.test.name}"]
-}
-
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "updated description"
   node_type                     = "cache.t3.small"
   number_cache_clusters         = 2
   port                          = 6379
-  security_group_names          = ["${aws_elasticache_security_group.test.name}"]
   apply_immediately             = true
   auto_minor_version_upgrade    = true
   maintenance_window            = "wed:03:00-wed:06:00"
@@ -1079,35 +966,12 @@ resource "aws_elasticache_replication_group" "test" {
 
 func testAccAWSElasticacheReplicationGroupConfigUpdatedNodeSize(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "tf-test-security-group-descr"
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_elasticache_security_group" "test" {
-  name                 = %[1]q
-  description          = "tf-test-security-group-descr"
-  security_group_names = ["${aws_security_group.test.name}"]
-}
-
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "updated description"
   node_type                     = "cache.t3.medium"
   number_cache_clusters         = 2
   port                          = 6379
-  security_group_names          = ["${aws_elasticache_security_group.test.name}"]
   apply_immediately             = true
 }
 `, rName)
