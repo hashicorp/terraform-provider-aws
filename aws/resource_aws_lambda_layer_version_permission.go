@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	// "strings"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	// "github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -41,7 +42,7 @@ func resourceAwsLambdaLayerVersionPermission() *schema.Resource {
 			},
 			"action": {
 				Type:     schema.TypeString,
-				Optional: true, // add default value lambda:GetLayerVersion ??
+				Required: true,
 				ForceNew: true,
 			},
 			"principal": {
@@ -53,6 +54,10 @@ func resourceAwsLambdaLayerVersionPermission() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			"revision_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -66,10 +71,7 @@ func resourceAwsLambdaLayerVersionPermissionAdd(d *schema.ResourceData, meta int
 	statementId := aws.String(d.Get("statement_id").(string))
 	principal := aws.String(d.Get("principal").(string))
 	organizationId, hasOrganizationId := d.GetOk("organization_id")
-	action := aws.String("lambda:GetLayerVersion")
-	if d.Get("action") != nil {
-		action = aws.String(d.Get("action").(string))
-	}
+	action := aws.String(d.Get("action").(string))
 
 	params := &lambda.AddLayerVersionPermissionInput{
 		LayerName:     layerArn,
@@ -83,19 +85,16 @@ func resourceAwsLambdaLayerVersionPermissionAdd(d *schema.ResourceData, meta int
 		params.OrganizationId = aws.String(organizationId.(string))
 	}
 
-	// if v, ok := d.GetOk("compatible_runtimes"); ok && v.(*schema.Set).Len() > 0 {
-	// 	params.CompatibleRuntimes = expandStringList(v.(*schema.Set).List())
-	// }
-
 	log.Printf("[DEBUG] Adding Lambda layer permissions: %s", params)
 	result, err := conn.AddLayerVersionPermission(params)
 	if err != nil {
 		return fmt.Errorf("Error adding lambda layer permissions: %s", err)
 	}
 
-	log.Printf(aws.StringValue(result.Statement))
+	// log.Printf(aws.StringValue(result.Statement))
 
 	d.SetId(*layerArn + ":" + strconv.FormatInt(*layerVersion, 10))
+	d.Set("revision_id", result.RevisionId)
 
 	return resourceAwsLambdaLayerVersionPermissionGet(d, meta)
 }
@@ -103,7 +102,7 @@ func resourceAwsLambdaLayerVersionPermissionAdd(d *schema.ResourceData, meta int
 func resourceAwsLambdaLayerVersionPermissionGet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
-	layerName, version, err := resourceAwsLambdaLayerVersionParseId(d.Id())
+	layerName, version, err := resourceAwsLambdaLayerVersionPermissionParseId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parsing lambda layer ID: %s", err)
 	}
@@ -114,46 +113,10 @@ func resourceAwsLambdaLayerVersionPermissionGet(d *schema.ResourceData, meta int
 	})
 
 	log.Printf("[DEBUG] OUTPUT: %s", layerVersionPolicyOutput)
-	// 	if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
-	// 		log.Printf("[WARN] Lambda Layer Version (%s) not found, removing from state", d.Id())
-	// 		d.SetId("")
-	// 		return nil
-	// 	}
 
-	// 	if err != nil {
-	// 		return fmt.Errorf("error reading Lambda Layer version (%s): %s", d.Id(), err)
-	// 	}
-
-	// 	if err := d.Set("layer_name", layerName); err != nil {
-	// 		return fmt.Errorf("Error setting lambda layer name: %s", err)
-	// 	}
-	// 	if err := d.Set("version", strconv.FormatInt(version, 10)); err != nil {
-	// 		return fmt.Errorf("Error setting lambda layer version: %s", err)
-	// 	}
-	// 	if err := d.Set("arn", layerVersion.LayerVersionArn); err != nil {
-	// 		return fmt.Errorf("Error setting lambda layer version arn: %s", err)
-	// 	}
-	// 	if err := d.Set("layer_arn", layerVersion.LayerArn); err != nil {
-	// 		return fmt.Errorf("Error setting lambda layer arn: %s", err)
-	// 	}
-	// 	if err := d.Set("description", layerVersion.Description); err != nil {
-	// 		return fmt.Errorf("Error setting lambda layer description: %s", err)
-	// 	}
-	// 	if err := d.Set("license_info", layerVersion.LicenseInfo); err != nil {
-	// 		return fmt.Errorf("Error setting lambda layer license info: %s", err)
-	// 	}
-	// 	if err := d.Set("created_date", layerVersion.CreatedDate); err != nil {
-	// 		return fmt.Errorf("Error setting lambda layer created date: %s", err)
-	// 	}
-	// 	if err := d.Set("source_code_hash", layerVersion.Content.CodeSha256); err != nil {
-	// 		return fmt.Errorf("Error setting lambda layer source code hash: %s", err)
-	// 	}
-	// 	if err := d.Set("source_code_size", layerVersion.Content.CodeSize); err != nil {
-	// 		return fmt.Errorf("Error setting lambda layer source code size: %s", err)
-	// 	}
-	// 	if err := d.Set("compatible_runtimes", flattenStringList(layerVersion.CompatibleRuntimes)); err != nil {
-	// 		return fmt.Errorf("Error setting lambda layer compatible runtimes: %s", err)
-	// 	}
+	if err != nil {
+		return fmt.Errorf("error reading Lambda Layer version permission (%s): %s", d.Id(), err)
+	}
 
 	return nil
 }
@@ -161,14 +124,14 @@ func resourceAwsLambdaLayerVersionPermissionGet(d *schema.ResourceData, meta int
 func resourceAwsLambdaLayerVersionPermissionRemove(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
-	layerName, version, err := resourceAwsLambdaLayerVersionParseId(d.Id())
+	layerName, version, err := resourceAwsLambdaLayerVersionPermissionParseId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parsing lambda layer ID: %s", err)
 	}
 
 	_, err = conn.RemoveLayerVersionPermission(&lambda.RemoveLayerVersionPermissionInput{
 		LayerName:     aws.String(layerName),
-		VersionNumber: aws.Int64(int64(version)),
+		VersionNumber: aws.Int64(version),
 		StatementId:   aws.String(d.Get("statement_id").(string)),
 	})
 	if err != nil {
@@ -177,4 +140,20 @@ func resourceAwsLambdaLayerVersionPermissionRemove(d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Lambda layer permission %q deleted", d.Get("statement_id").(string))
 	return nil
+}
+
+func resourceAwsLambdaLayerVersionPermissionParseId(id string) (layerName string, version int64, err error) {
+	arn, err := arn.Parse(id)
+	if err != nil {
+		return
+	}
+	parts := strings.Split(arn.Resource, ":")
+	if len(parts) != 3 || parts[0] != "layer" {
+		err = fmt.Errorf("lambda_layer ID must be a valid Layer ARN")
+		return
+	}
+
+	layerName = parts[1]
+	version, err = strconv.ParseInt(parts[2], 10, 64)
+	return
 }
