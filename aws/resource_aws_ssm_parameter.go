@@ -47,6 +47,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					ssm.ParameterTierStandard,
 					ssm.ParameterTierAdvanced,
+					ssm.ParameterTierIntelligentTiering,
 				}, false),
 			},
 			"type": {

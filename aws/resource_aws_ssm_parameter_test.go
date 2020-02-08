@@ -55,10 +55,10 @@ func TestAccAWSSSMParameter_Tier(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, "Advanced"),
+				Config: testAccAWSSSMParameterConfigTier(rName, "Intelligent-Tiering"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &parameter1),
-					resource.TestCheckResourceAttr(resourceName, "tier", "Advanced"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "Standard"),
 				),
 			},
 			{
