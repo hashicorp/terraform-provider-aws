@@ -9,13 +9,13 @@ builds:
       - amd64
 
 # Archive customization
-archive:
-  format: zip
+archives:
+  - format: zip
 
-  replacements:
-    amd64: 64-bits
-    386: 32-bits
-    darwin: macOS
+    replacements:
+      amd64: 64-bits
+      386: 32-bits
+      darwin: macOS
 
-  files:
-    - nothing.*
+    files:
+      - nothing.*
