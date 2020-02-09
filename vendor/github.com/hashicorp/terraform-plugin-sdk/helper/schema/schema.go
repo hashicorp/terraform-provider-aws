@@ -1508,13 +1508,13 @@ func validateExactlyOneAttribute(
 	specified := make([]string, 0)
 	unknownVariableValueCount := 0
 	for _, exactlyOneOfKey := range allKeys {
-		if raw, ok := c.Get(exactlyOneOfKey); ok {
-			if raw == hcl2shim.UnknownVariableValue {
-				// This aims to do a best effort check that at least one value is specified whether
-				// it's known or not.
-				unknownVariableValueCount++
-				continue
-			}
+		if c.IsComputed(exactlyOneOfKey) {
+			unknownVariableValueCount++
+			continue
+		}
+
+		_, ok := c.Get(exactlyOneOfKey)
+		if ok {
 			specified = append(specified, exactlyOneOfKey)
 		}
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsLbTargetGroup() *schema.Resource {
@@ -186,7 +187,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 						"protocol": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "HTTP",
+							Default:  elbv2.ProtocolEnumHttp,
 							StateFunc: func(v interface{}) string {
 								return strings.ToUpper(v.(string))
 							},
@@ -288,7 +289,7 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		healthCheckProtocol := healthCheck["protocol"].(string)
 
-		if healthCheckProtocol != "TCP" {
+		if healthCheckProtocol != elbv2.ProtocolEnumTcp {
 			p := healthCheck["path"].(string)
 			if p != "" {
 				params.HealthCheckPath = aws.String(p)
@@ -344,8 +345,12 @@ func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
-	if err := setElbV2Tags(elbconn, d); err != nil {
-		return fmt.Errorf("Error Modifying Tags on LB Target Group: %s", err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating LB Target Group (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("health_check") {
@@ -371,7 +376,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 			healthCheckProtocol := healthCheck["protocol"].(string)
 
-			if healthCheckProtocol != "TCP" && !d.IsNewResource() {
+			if healthCheckProtocol != elbv2.ProtocolEnumTcp && !d.IsNewResource() {
 				params.Matcher = &elbv2.Matcher{
 					HttpCode: aws.String(healthCheck["matcher"].(string)),
 				}
@@ -421,7 +426,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		// groups, so long as it's not enabled. This allows for better support for
 		// modules, but also means we need to completely skip sending the data to the
 		// API if it's defined on a TCP target group.
-		if d.HasChange("stickiness") && d.Get("protocol") != "TCP" {
+		if d.HasChange("stickiness") && d.Get("protocol") != elbv2.ProtocolEnumTcp {
 			stickinessBlocks := d.Get("stickiness").([]interface{})
 			if len(stickinessBlocks) == 1 {
 				stickiness := stickinessBlocks[0].(map[string]interface{})
@@ -615,28 +620,24 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	// This is a workaround to support module design where the module needs to
 	// support HTTP and TCP target groups.
 	switch {
-	case aws.StringValue(targetGroup.Protocol) != "TCP":
+	case aws.StringValue(targetGroup.Protocol) != elbv2.ProtocolEnumTcp:
 		if err = flattenAwsLbTargetGroupStickiness(d, attrResp.Attributes); err != nil {
 			return err
 		}
-	case aws.StringValue(targetGroup.Protocol) == "TCP" && len(d.Get("stickiness").([]interface{})) < 1:
+	case aws.StringValue(targetGroup.Protocol) == elbv2.ProtocolEnumTcp && len(d.Get("stickiness").([]interface{})) < 1:
 		if err = d.Set("stickiness", []interface{}{}); err != nil {
 			return fmt.Errorf("error setting stickiness: %s", err)
 		}
 	}
 
-	tagsResp, err := elbconn.DescribeTags(&elbv2.DescribeTagsInput{
-		ResourceArns: []*string{aws.String(d.Id())},
-	})
+	tags, err := keyvaluetags.Elbv2ListTags(elbconn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("Error retrieving Target Group Tags: %s", err)
+		return fmt.Errorf("error listing tags for LB Target Group (%s): %s", d.Id(), err)
 	}
-	for _, t := range tagsResp.TagDescriptions {
-		if aws.StringValue(t.ResourceArn) == d.Id() {
-			if err := d.Set("tags", tagsToMapELBv2(t.Tags)); err != nil {
-				return fmt.Errorf("error setting tags: %s", err)
-			}
-		}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -681,7 +682,7 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 
 func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
 	protocol := diff.Get("protocol").(string)
-	if protocol == "TCP" {
+	if protocol == elbv2.ProtocolEnumTcp {
 		// TCP load balancers do not support stickiness
 		if stickinessBlocks := diff.Get("stickiness").([]interface{}); len(stickinessBlocks) == 1 {
 			stickiness := stickinessBlocks[0].(map[string]interface{})
@@ -697,7 +698,7 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 		healthCheck := healthChecks[0].(map[string]interface{})
 		protocol := healthCheck["protocol"].(string)
 
-		if protocol == "TCP" {
+		if protocol == elbv2.ProtocolEnumTcp {
 			// Cannot set custom matcher on TCP health checks
 			if m := healthCheck["matcher"].(string); m != "" {
 				return fmt.Errorf("%s: health_check.matcher is not supported for target_groups with TCP protocol", diff.Id())
@@ -718,7 +719,7 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 		}
 	}
 
-	if strings.Contains(protocol, "HTTP") {
+	if strings.Contains(protocol, elbv2.ProtocolEnumHttp) {
 		if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 			healthCheck := healthChecks[0].(map[string]interface{})
 			// HTTP(S) Target Groups cannot use TCP health checks
@@ -732,7 +733,7 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 		return nil
 	}
 
-	if protocol == "TCP" {
+	if protocol == elbv2.ProtocolEnumTcp {
 		if diff.HasChange("health_check.0.interval") {
 			old, new := diff.GetChange("health_check.0.interval")
 			return fmt.Errorf("Health check interval cannot be updated from %d to %d for TCP based Target Group %s,"+

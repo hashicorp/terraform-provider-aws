@@ -15,8 +15,11 @@ func resourceAwsDefaultSecurityGroup() *schema.Resource {
 	dsg.Create = resourceAwsDefaultSecurityGroupCreate
 	dsg.Delete = resourceAwsDefaultSecurityGroupDelete
 
-	// Descriptions cannot be updated
-	delete(dsg.Schema, "description")
+	// description is a computed value for Default Security Groups and cannot be changed
+	dsg.Schema["description"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	}
 
 	// name is a computed value for Default Security Groups and cannot be changed
 	delete(dsg.Schema, "name_prefix")

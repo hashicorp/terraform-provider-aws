@@ -206,6 +206,11 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 
 			"tags": tagsSchema(),
 		},
@@ -314,6 +319,63 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
+	// See also: resource_aws_db_instance.go
+	// Some API calls (e.g. CreateDBInstanceReadReplica and
+	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
+	// correctly apply all settings in one pass. For missing parameters or
+	// unsupported configurations, we may need to call ModifyDBInstance
+	// afterwards to prevent Terraform operators from API errors or needing
+	// to double apply.
+	var requiresModifyDbInstance bool
+	modifyDbInstanceInput := &rds.ModifyDBInstanceInput{
+		ApplyImmediately: aws.Bool(true),
+	}
+
+	// Some ModifyDBInstance parameters (e.g. DBParameterGroupName) require
+	// a database instance reboot to take affect. During resource creation,
+	// we expect everything to be in sync before returning completion.
+	var requiresRebootDbInstance bool
+
+	if attr, ok := d.GetOk("ca_cert_identifier"); ok && attr.(string) != aws.StringValue(resp.DBInstance.CACertificateIdentifier) {
+		modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
+		requiresModifyDbInstance = true
+		requiresRebootDbInstance = true
+	}
+
+	if requiresModifyDbInstance {
+		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(d.Id())
+
+		log.Printf("[INFO] DB Instance (%s) configuration requires ModifyDBInstance: %s", d.Id(), modifyDbInstanceInput)
+		_, err := conn.ModifyDBInstance(modifyDbInstanceInput)
+		if err != nil {
+			return fmt.Errorf("error modifying DB Instance (%s): %s", d.Id(), err)
+		}
+
+		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
+		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+		}
+	}
+
+	if requiresRebootDbInstance {
+		rebootDbInstanceInput := &rds.RebootDBInstanceInput{
+			DBInstanceIdentifier: aws.String(d.Id()),
+		}
+
+		log.Printf("[INFO] DB Instance (%s) configuration requires RebootDBInstance: %s", d.Id(), rebootDbInstanceInput)
+		_, err := conn.RebootDBInstance(rebootDbInstanceInput)
+		if err != nil {
+			return fmt.Errorf("error rebooting DB Instance (%s): %s", d.Id(), err)
+		}
+
+		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
+		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+		}
+	}
+
 	return resourceAwsRDSClusterInstanceRead(d, meta)
 }
 
@@ -391,6 +453,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
+	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 
 	if len(db.DBParameterGroups) > 0 {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
@@ -486,6 +549,12 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
+	if d.HasChange("ca_cert_identifier") {
+		d.SetPartial("ca_cert_identifier")
+		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
+		requestUpdate = true
+	}
+
 	log.Printf("[DEBUG] Send DB Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %#v", req)
@@ -543,8 +612,10 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 	opts := rds.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
 
 	log.Printf("[DEBUG] RDS Cluster Instance destroy configuration: %s", opts)
-	if _, err := conn.DeleteDBInstance(&opts); err != nil {
-		return err
+	_, err := conn.DeleteDBInstance(&opts)
+
+	if err != nil && !isAWSErr(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
+		return fmt.Errorf("error deleting Database Instance %q: %s", d.Id(), err)
 	}
 
 	// re-uses db_instance refresh func
@@ -558,7 +629,7 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err = stateConf.WaitForState()
 	return err
 
 }

@@ -77,18 +77,6 @@ type Snapshot struct {
 	Modules map[string]*SnapshotModule
 }
 
-// NewEmptySnapshot constructs and returns a snapshot containing only an empty
-// root module. This is not useful for anything except placeholders in tests.
-func NewEmptySnapshot() *Snapshot {
-	return &Snapshot{
-		Modules: map[string]*SnapshotModule{
-			"": &SnapshotModule{
-				Files: map[string][]byte{},
-			},
-		},
-	}
-}
-
 // SnapshotModule represents a single module within a Snapshot.
 type SnapshotModule struct {
 	// Dir is the path, relative to the root directory given when the

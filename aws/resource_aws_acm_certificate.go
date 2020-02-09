@@ -174,11 +174,6 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(*resp.CertificateArn)
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.AcmUpdateTags(acmconn, d.Id(), nil, v); err != nil {
-			return fmt.Errorf("error adding tags: %s", err)
-		}
-	}
 
 	return resourceAwsAcmCertificateRead(d, meta)
 }
@@ -189,6 +184,10 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 		DomainName:       aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
 		IdempotencyToken: aws.String(resource.PrefixedUniqueId("tf")), // 32 character limit
 		Options:          expandAcmCertificateOptions(d.Get("options").([]interface{})),
+	}
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AcmTags()
 	}
 
 	if caARN, ok := d.GetOk("certificate_authority_arn"); ok {
@@ -215,11 +214,6 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(*resp.CertificateArn)
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.AcmUpdateTags(acmconn, d.Id(), nil, v); err != nil {
-			return fmt.Errorf("error adding tags: %s", err)
-		}
-	}
 
 	return resourceAwsAcmCertificateRead(d, meta)
 }
@@ -396,6 +390,9 @@ func resourceAwsAcmCertificateImport(conn *acm.ACM, d *schema.ResourceData, upda
 	params := &acm.ImportCertificateInput{
 		PrivateKey:  []byte(d.Get("private_key").(string)),
 		Certificate: []byte(d.Get("certificate_body").(string)),
+	}
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AcmTags()
 	}
 	if chain, ok := d.GetOk("certificate_chain"); ok {
 		params.CertificateChain = []byte(chain.(string))
