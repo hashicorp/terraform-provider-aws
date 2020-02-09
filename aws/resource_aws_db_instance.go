@@ -26,6 +26,15 @@ func resourceAwsDbInstance() *schema.Resource {
 			State: resourceAwsDbInstanceImport,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAwsDbInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAwsDbInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(80 * time.Minute),
