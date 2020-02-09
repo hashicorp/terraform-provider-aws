@@ -2,15 +2,72 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cloudformation_stack_set", &resource.Sweeper{
+		Name: "aws_cloudformation_stack_set",
+		Dependencies: []string{
+			"aws_cloudformation_stack_set_instance",
+		},
+		F: testSweepCloudformationStackSets,
+	})
+}
+
+func testSweepCloudformationStackSets(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).cfconn
+	stackSets, err := listCloudFormationStackSets(conn)
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFormation Stack Set sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFormation Stack Sets: %s", err)
+	}
+
+	var sweeperErrs *multierror.Error
+
+	for _, stackSet := range stackSets {
+		input := &cloudformation.DeleteStackSetInput{
+			StackSetName: stackSet.StackSetName,
+		}
+		name := aws.StringValue(stackSet.StackSetName)
+
+		log.Printf("[INFO] Deleting CloudFormation Stack Set: %s", name)
+		_, err := conn.DeleteStackSet(input)
+
+		if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+			continue
+		}
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting CloudFormation Stack Set (%s): %w", name, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSCloudFormationStackSet_basic(t *testing.T) {
 	var stackSet1 cloudformation.StackSet

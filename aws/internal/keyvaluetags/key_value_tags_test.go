@@ -738,6 +738,93 @@ func TestKeyValueTagsUpdated(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsChunks(t *testing.T) {
+	testCases := []struct {
+		name string
+		tags KeyValueTags
+		size int
+		want []int
+	}{
+		{
+			name: "empty",
+			tags: New(map[string]string{}),
+			size: 10,
+			want: []int{},
+		},
+		{
+			name: "chunk_1",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			size: 1,
+			want: []int{1, 1, 1, 1},
+		},
+		{
+			name: "chunk_2",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			size: 2,
+			want: []int{2, 2},
+		},
+		{
+			name: "chunk_3",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			size: 3,
+			want: []int{3, 1},
+		},
+		{
+			name: "chunk_4",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			size: 4,
+			want: []int{4},
+		},
+		{
+			name: "chunk_5",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			size: 5,
+			want: []int{4},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.Chunks(testCase.size)
+
+			if len(got) != len(testCase.want) {
+				t.Errorf("unexpected number of chunks: %d", len(got))
+			}
+
+			for i, n := range testCase.want {
+				if len(got[i]) != n {
+					t.Errorf("chunk (%d) length %d; want length %d", i, len(got[i]), n)
+				}
+			}
+		})
+	}
+}
+
 func testKeyValueTagsVerifyKeys(t *testing.T, got []string, want []string) {
 	for _, g := range got {
 		found := false

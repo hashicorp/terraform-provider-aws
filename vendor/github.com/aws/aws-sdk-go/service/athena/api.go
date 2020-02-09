@@ -74,12 +74,12 @@ func (c *Athena) BatchGetNamedQueryRequest(input *BatchGetNamedQueryInput) (req 
 // See the AWS API reference guide for Amazon Athena's
 // API operation BatchGetNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -163,12 +163,12 @@ func (c *Athena) BatchGetQueryExecutionRequest(input *BatchGetQueryExecutionInpu
 // See the AWS API reference guide for Amazon Athena's
 // API operation BatchGetQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -252,12 +252,12 @@ func (c *Athena) CreateNamedQueryRequest(input *CreateNamedQueryInput) (req *req
 // See the AWS API reference guide for Amazon Athena's
 // API operation CreateNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -337,12 +337,12 @@ func (c *Athena) CreateWorkGroupRequest(input *CreateWorkGroupInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation CreateWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -427,12 +427,12 @@ func (c *Athena) DeleteNamedQueryRequest(input *DeleteNamedQueryInput) (req *req
 // See the AWS API reference guide for Amazon Athena's
 // API operation DeleteNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -513,12 +513,12 @@ func (c *Athena) DeleteWorkGroupRequest(input *DeleteWorkGroupInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation DeleteWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -598,12 +598,12 @@ func (c *Athena) GetNamedQueryRequest(input *GetNamedQueryInput) (req *request.R
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -684,12 +684,12 @@ func (c *Athena) GetQueryExecutionRequest(input *GetQueryExecutionInput) (req *r
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -788,12 +788,12 @@ func (c *Athena) GetQueryResultsRequest(input *GetQueryResultsInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetQueryResults for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -924,12 +924,12 @@ func (c *Athena) GetWorkGroupRequest(input *GetWorkGroupInput) (req *request.Req
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1019,12 +1019,12 @@ func (c *Athena) ListNamedQueriesRequest(input *ListNamedQueriesInput) (req *req
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListNamedQueries for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1167,12 +1167,12 @@ func (c *Athena) ListQueryExecutionsRequest(input *ListQueryExecutionsInput) (re
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListQueryExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1303,16 +1303,16 @@ func (c *Athena) ListTagsForResourceRequest(input *ListTagsForResourceInput) (re
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A resource, such as a workgroup, was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListTagsForResource
@@ -1396,12 +1396,12 @@ func (c *Athena) ListWorkGroupsRequest(input *ListWorkGroupsInput) (req *request
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListWorkGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1537,16 +1537,16 @@ func (c *Athena) StartQueryExecutionRequest(input *StartQueryExecutionInput) (re
 // See the AWS API reference guide for Amazon Athena's
 // API operation StartQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Indicates that the request was throttled.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StartQueryExecution
@@ -1630,12 +1630,12 @@ func (c *Athena) StopQueryExecutionRequest(input *StopQueryExecutionInput) (req 
 // See the AWS API reference guide for Amazon Athena's
 // API operation StopQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1727,16 +1727,16 @@ func (c *Athena) TagResourceRequest(input *TagResourceInput) (req *request.Reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A resource, such as a workgroup, was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/TagResource
@@ -1817,16 +1817,16 @@ func (c *Athena) UntagResourceRequest(input *UntagResourceInput) (req *request.R
 // See the AWS API reference guide for Amazon Athena's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A resource, such as a workgroup, was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/UntagResource
@@ -1906,12 +1906,12 @@ func (c *Athena) UpdateWorkGroupRequest(input *UpdateWorkGroupInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation UpdateWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -2898,6 +2898,124 @@ func (s *GetWorkGroupOutput) SetWorkGroup(v *WorkGroup) *GetWorkGroupOutput {
 	return s
 }
 
+// Indicates a platform issue, which may be due to a transient condition or
+// outage.
+type InternalServerException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerException(v protocol.ResponseMetadata) error {
+	return &InternalServerException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerException) Code() string {
+	return "InternalServerException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Indicates that something is wrong with the input to the request. For example,
+// a required parameter may be missing or out of range.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The error code returned when the query execution failed to process, or when
+	// the processing request for the named query failed.
+	AthenaErrorCode *string `min:"1" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ListNamedQueriesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3611,6 +3729,64 @@ func (s *QueryExecutionStatus) SetSubmissionDateTime(v time.Time) *QueryExecutio
 	return s
 }
 
+// A resource, such as a workgroup, was not found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	ResourceName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The location in Amazon S3 where query results are stored and the encryption
 // option, if any, used for query results. These are known as "client-side settings".
 // If workgroup settings override client-side settings, then the query uses
@@ -4144,6 +4320,66 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// Indicates that the request was throttled.
+type TooManyRequestsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The reason for the query throttling, for example, when it exceeds the concurrent
+	// query limit.
+	Reason *string `type:"string" enum:"ThrottleReason"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyRequestsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyRequestsException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information about a named query ID that could not be processed.

@@ -49,8 +49,9 @@ or `egress` (outbound).
 * `cidr_blocks` - (Optional) List of CIDR blocks. Cannot be specified with `source_security_group_id`.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
 * `prefix_list_ids` - (Optional) List of prefix list IDs (for allowing access to VPC endpoints).
-* `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp").
-* `protocol` - (Required) The protocol. If not icmp, tcp, udp, or all use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
+Only valid with `egress`.
+* `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp" or "icmpv6").
+* `protocol` - (Required) The protocol. If not icmp, icmpv6, tcp, udp, or all use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
 * `security_group_id` - (Required) The security group to apply this rule to.
 * `source_security_group_id` - (Optional) The security group id to allow access to/from,
      depending on the `type`. Cannot be specified with `cidr_blocks` and `self`.

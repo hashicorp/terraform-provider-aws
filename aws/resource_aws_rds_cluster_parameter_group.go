@@ -161,7 +161,9 @@ func resourceAwsRDSClusterParameterGroupRead(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	d.Set("parameter", flattenParameters(describeParametersResp.Parameters))
+	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters)); err != nil {
+		return fmt.Errorf("error setting parameters: %s", err)
+	}
 
 	resp, err := rdsconn.ListTagsForResource(&rds.ListTagsForResourceInput{
 		ResourceName: aws.String(arn),
@@ -219,10 +221,47 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 				log.Printf("[DEBUG] Modify DB Cluster Parameter Group: %s", modifyOpts)
 				_, err = rdsconn.ModifyDBClusterParameterGroup(&modifyOpts)
 				if err != nil {
-					return fmt.Errorf("Error modifying DB Cluster Parameter Group: %s", err)
+					return fmt.Errorf("error modifying DB Cluster Parameter Group: %s", err)
 				}
 			}
-			d.SetPartial("parameter")
+		}
+
+		// Reset parameters that have been removed
+		parameters, err = expandParameters(os.Difference(ns).List())
+		if err != nil {
+			return err
+		}
+		if len(parameters) > 0 {
+			for parameters != nil {
+				parameterGroupName := d.Get("name").(string)
+				var paramsToReset []*rds.Parameter
+				if len(parameters) <= rdsClusterParameterGroupMaxParamsBulkEdit {
+					paramsToReset, parameters = parameters[:], nil
+				} else {
+					paramsToReset, parameters = parameters[:rdsClusterParameterGroupMaxParamsBulkEdit], parameters[rdsClusterParameterGroupMaxParamsBulkEdit:]
+				}
+
+				resetOpts := rds.ResetDBClusterParameterGroupInput{
+					DBClusterParameterGroupName: aws.String(parameterGroupName),
+					Parameters:                  paramsToReset,
+					ResetAllParameters:          aws.Bool(false),
+				}
+
+				log.Printf("[DEBUG] Reset DB Cluster Parameter Group: %s", resetOpts)
+				err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+					_, err := rdsconn.ResetDBClusterParameterGroup(&resetOpts)
+					if err != nil {
+						if isAWSErr(err, "InvalidDBParameterGroupState", "has pending changes") {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				})
+				if err != nil {
+					return fmt.Errorf("error resetting DB Cluster Parameter Group: %s", err)
+				}
+			}
 		}
 	}
 

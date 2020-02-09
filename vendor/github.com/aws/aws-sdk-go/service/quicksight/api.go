@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
 )
 
 const opCancelIngestion = "CancelIngestion"
@@ -55,7 +56,7 @@ func (c *QuickSight) CancelIngestionRequest(input *CancelIngestionInput) (req *r
 
 // CancelIngestion API operation for Amazon QuickSight.
 //
-// Cancels an on-going ingestion of data into SPICE.
+// Cancels an ongoing ingestion of data into SPICE.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -64,26 +65,27 @@ func (c *QuickSight) CancelIngestionRequest(input *CancelIngestionInput) (req *r
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation CancelIngestion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CancelIngestion
@@ -153,18 +155,14 @@ func (c *QuickSight) CreateDashboardRequest(input *CreateDashboardInput) (req *r
 // CreateDashboard API operation for Amazon QuickSight.
 //
 // Creates a dashboard from a template. To first create a template, see the
-// CreateTemplate API.
+// CreateTemplate API operation.
 //
-// A dashboard is an entity in QuickSight which identifies Quicksight reports,
-// created from analyses. QuickSight dashboards are sharable. With the right
+// A dashboard is an entity in QuickSight that identifies QuickSight reports,
+// created from analyses. You can share QuickSight dashboards. With the right
 // permissions, you can create scheduled email reports from them. The CreateDashboard,
-// DescribeDashboard and ListDashboardsByUser APIs act on the dashboard entity.
-// If you have the correct permissions, you can create a dashboard from a template
-// that exists in a different AWS account.
-//
-// CLI syntax:
-//
-// aws quicksight create-dashboard --cli-input-json file://create-dashboard.json
+// DescribeDashboard, and ListDashboardsByUser API operations act on the dashboard
+// entity. If you have the correct permissions, you can create a dashboard from
+// a template that exists in a different AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -173,29 +171,29 @@ func (c *QuickSight) CreateDashboardRequest(input *CreateDashboardInput) (req *r
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation CreateDashboard for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateDashboard
@@ -266,44 +264,6 @@ func (c *QuickSight) CreateDataSetRequest(input *CreateDataSetInput) (req *reque
 //
 // Creates a dataset.
 //
-// CLI syntax:
-//
-// aws quicksight create-data-set \
-//
-// --aws-account-id=111122223333 \
-//
-// --data-set-id=unique-data-set-id \
-//
-// --name='My dataset' \
-//
-// --import-mode=SPICE \
-//
-// --physical-table-map='{
-//
-// "physical-table-id": {
-//
-// "RelationalTable": {
-//
-// "DataSourceArn": "arn:aws:quicksight:us-west-2:111111111111:datasource/data-source-id",
-//
-// "Name": "table1",
-//
-// "InputColumns": [
-//
-// {
-//
-// "Name": "column1",
-//
-// "Type": "STRING"
-//
-// }
-//
-// ]
-//
-// }
-//
-// }'
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -311,38 +271,39 @@ func (c *QuickSight) CreateDataSetRequest(input *CreateDataSetInput) (req *reque
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation CreateDataSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateDataSet
@@ -413,34 +374,6 @@ func (c *QuickSight) CreateDataSourceRequest(input *CreateDataSourceInput) (req 
 //
 // Creates a data source.
 //
-// The permissions resource is arn:aws:quicksight:region:aws-account-id:datasource/data-source-id
-//
-// CLI syntax:
-//
-// aws quicksight create-data-source \
-//
-// --aws-account-id=111122223333 \
-//
-// --data-source-id=unique-data-source-id \
-//
-// --name='My Data Source' \
-//
-// --type=POSTGRESQL \
-//
-// --data-source-parameters='{ "PostgreSqlParameters": {
-//
-// "Host": "my-db-host.example.com",
-//
-// "Port": 1234,
-//
-// "Database": "my-db" } }' \
-//
-// --credentials='{ "CredentialPair": {
-//
-// "Username": "username",
-//
-// "Password": "password" } }'
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -448,32 +381,33 @@ func (c *QuickSight) CreateDataSourceRequest(input *CreateDataSourceInput) (req 
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation CreateDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateDataSource
@@ -548,11 +482,6 @@ func (c *QuickSight) CreateGroupRequest(input *CreateGroupInput) (req *request.R
 //
 // The response is a group object.
 //
-// CLI Sample:
-//
-// aws quicksight create-group --aws-account-id=111122223333 --namespace=default
-// --group-name="Sales-Management" --description="Sales Management - Forecasting"
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -560,35 +489,36 @@ func (c *QuickSight) CreateGroupRequest(input *CreateGroupInput) (req *request.R
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation CreateGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodePreconditionNotMetException "PreconditionNotMetException"
+//   * PreconditionNotMetException
 //   One or more preconditions aren't met.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateGroup
@@ -659,19 +589,6 @@ func (c *QuickSight) CreateGroupMembershipRequest(input *CreateGroupMembershipIn
 //
 // Adds an Amazon QuickSight user to an Amazon QuickSight group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
-//
-// The condition resource is the user name.
-//
-// The condition key is quicksight:UserName.
-//
-// The response is the group member object.
-//
-// CLI Sample:
-//
-// aws quicksight create-group-membership --aws-account-id=111122223333 --namespace=default
-// --group-name=Sales --member-name=Pat
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -679,29 +596,30 @@ func (c *QuickSight) CreateGroupMembershipRequest(input *CreateGroupMembershipIn
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation CreateGroupMembership for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodePreconditionNotMetException "PreconditionNotMetException"
+//   * PreconditionNotMetException
 //   One or more preconditions aren't met.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateGroupMembership
@@ -770,16 +688,9 @@ func (c *QuickSight) CreateIAMPolicyAssignmentRequest(input *CreateIAMPolicyAssi
 
 // CreateIAMPolicyAssignment API operation for Amazon QuickSight.
 //
-// Creates an assignment with one specified IAM policy ARN and will assigned
-// to specified groups or users of QuickSight. Users and groups need to be in
-// the same namespace.
-//
-// CLI syntax:
-//
-// aws quicksight create-iam-policy-assignment --aws-account-id=111122223333
-// --assignment-name=helpAssignment --policy-arn=arn:aws:iam::aws:policy/AdministratorAccess
-// --identities="user=user5,engineer123,group=QS-Admin" --namespace=default
-// --region=us-west-2
+// Creates an assignment with one specified IAM policy, identified by its Amazon
+// Resource Name (ARN). This policy will be assigned to specified groups or
+// users of Amazon QuickSight. The users and groups need to be in the same namespace.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -788,30 +699,31 @@ func (c *QuickSight) CreateIAMPolicyAssignmentRequest(input *CreateIAMPolicyAssi
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation CreateIAMPolicyAssignment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeConcurrentUpdatingException "ConcurrentUpdatingException"
-//   A resource is already in an "actionable" state that must complete before
-//   a new update can be applied.
+//   * ConcurrentUpdatingException
+//   A resource is already in a state that indicates an action is happening that
+//   must complete before a new update can be applied.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateIAMPolicyAssignment
@@ -883,9 +795,10 @@ func (c *QuickSight) CreateIngestionRequest(input *CreateIngestionInput) (req *r
 // Creates and starts a new SPICE ingestion on a dataset
 //
 // Any ingestions operating on tagged datasets inherit the same tags automatically
-// for use in access-control. For an example, see How do I create an IAM policy
-// to control access to Amazon EC2 resources using tags? (https://aws.example.com/premiumsupport/knowledge-center/iam-ec2-resource-tags/).
-// Tags will be visible on the tagged dataset, but not on the ingestion resource.
+// for use in access control. For an example, see How do I create an IAM policy
+// to control access to Amazon EC2 resources using tags? (https://aws.example.com/premiumsupport/knowledge-center/iam-ec2-resource-tags/)
+// in the AWS Knowledge Center. Tags are visible on the tagged dataset, but
+// not on the ingestion resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -894,29 +807,30 @@ func (c *QuickSight) CreateIngestionRequest(input *CreateIngestionInput) (req *r
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation CreateIngestion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateIngestion
@@ -985,35 +899,15 @@ func (c *QuickSight) CreateTemplateRequest(input *CreateTemplateInput) (req *req
 
 // CreateTemplate API operation for Amazon QuickSight.
 //
-// Creates a template from an existing QuickSight analysis or template. The
-// resulting template can be used to create a dashboard.
+// Creates a template from an existing QuickSight analysis or template. You
+// can use the resulting template to create a dashboard.
 //
-// A template is an entity in QuickSight which encapsulates the metadata required
-// to create an analysis that can be used to create dashboard. It adds a layer
-// of abstraction by use placeholders to replace the dataset associated with
-// the analysis. You can use templates to create dashboards by replacing dataset
-// placeholders with datasets which follow the same schema that was used to
-// create the source analysis and template.
-//
-// To create a template from an existing analysis, use the analysis's ARN, aws-account-id,
-// template-id, source-entity, and data-set-references.
-//
-// CLI syntax to create a template:
-//
-// aws quicksight create-template —cli-input-json file://create-template.json
-//
-// CLI syntax to create a template from another template in the same AWS account:
-//
-// aws quicksight create-template --aws-account-id 111122223333 --template-id
-// reports_test_template --data-set-references DataSetPlaceholder=reports,DataSetArn=arn:aws:quicksight:us-west-2:111122223333:dataset/0dfc789c-81f6-4f4f-b9ac-7db2453eefc8
-// DataSetPlaceholder=Elblogs,DataSetArn=arn:aws:quicksight:us-west-2:111122223333:dataset/f60da323-af68-45db-9016-08e0d1d7ded5
-// --source-entity SourceAnalysis='{Arn=arn:aws:quicksight:us-west-2:111122223333:analysis/7fb74527-c36d-4be8-8139-ac1be4c97365}'
-//
-// To create template from another account’s template, you need to grant cross
-// account resource permission for DescribeTemplate the account that contains
-// the template.
-//
-// You can use a file to pass JSON to the function if you prefer.
+// A template is an entity in QuickSight that encapsulates the metadata required
+// to create an analysis and that you can use to create s dashboard. A template
+// adds a layer of abstraction by using placeholders to replace the dataset
+// associated with the analysis. You can use templates to create dashboards
+// by replacing dataset placeholders with datasets that follow the same schema
+// that was used to create the source analysis and template.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1022,35 +916,36 @@ func (c *QuickSight) CreateTemplateRequest(input *CreateTemplateInput) (req *req
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation CreateTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+// Returned Error Types:
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateTemplate
@@ -1121,11 +1016,6 @@ func (c *QuickSight) CreateTemplateAliasRequest(input *CreateTemplateAliasInput)
 //
 // Creates a template alias for a template.
 //
-// CLI syntax:
-//
-// aws quicksight create-template-alias --aws-account-id 111122223333 --template-id
-// 'reports_test_template' --alias-name PROD —version-number 1
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1133,29 +1023,29 @@ func (c *QuickSight) CreateTemplateAliasRequest(input *CreateTemplateAliasInput)
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation CreateTemplateAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateTemplateAlias
@@ -1226,14 +1116,6 @@ func (c *QuickSight) DeleteDashboardRequest(input *DeleteDashboardInput) (req *r
 //
 // Deletes a dashboard.
 //
-// CLI syntax:
-//
-// aws quicksight delete-dashboard --aws-account-id 111122223333 —dashboard-id
-// 123123123
-//
-// aws quicksight delete-dashboard --aws-account-id 111122223333 —dashboard-id
-// 123123123 —version-number 3
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1241,26 +1123,26 @@ func (c *QuickSight) DeleteDashboardRequest(input *DeleteDashboardInput) (req *r
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DeleteDashboard for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteDashboard
@@ -1331,14 +1213,6 @@ func (c *QuickSight) DeleteDataSetRequest(input *DeleteDataSetInput) (req *reque
 //
 // Deletes a dataset.
 //
-// CLI syntax:
-//
-// aws quicksight delete-data-set \
-//
-// --aws-account-id=111111111111 \
-//
-// --data-set-id=unique-data-set-id
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1346,23 +1220,24 @@ func (c *QuickSight) DeleteDataSetRequest(input *DeleteDataSetInput) (req *reque
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DeleteDataSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteDataSet
@@ -1434,14 +1309,6 @@ func (c *QuickSight) DeleteDataSourceRequest(input *DeleteDataSourceInput) (req 
 // Deletes the data source permanently. This action breaks all the datasets
 // that reference the deleted data source.
 //
-// CLI syntax:
-//
-// aws quicksight delete-data-source \
-//
-// --aws-account-id=111122223333 \
-//
-// --data-source-id=unique-data-source-id
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1449,23 +1316,24 @@ func (c *QuickSight) DeleteDataSourceRequest(input *DeleteDataSourceInput) (req 
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DeleteDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteDataSource
@@ -1536,13 +1404,6 @@ func (c *QuickSight) DeleteGroupRequest(input *DeleteGroupInput) (req *request.R
 //
 // Removes a user group from Amazon QuickSight.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
-//
-// CLI Sample:
-//
-// aws quicksight delete-group -\-aws-account-id=111122223333 -\-namespace=default
-// -\-group-name=Sales-Management
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1550,29 +1411,30 @@ func (c *QuickSight) DeleteGroupRequest(input *DeleteGroupInput) (req *request.R
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DeleteGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodePreconditionNotMetException "PreconditionNotMetException"
+//   * PreconditionNotMetException
 //   One or more preconditions aren't met.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteGroup
@@ -1644,17 +1506,6 @@ func (c *QuickSight) DeleteGroupMembershipRequest(input *DeleteGroupMembershipIn
 // Removes a user from a group so that the user is no longer a member of the
 // group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
-//
-// The condition resource is the user name.
-//
-// The condition key is quicksight:UserName.
-//
-// CLI Sample:
-//
-// aws quicksight delete-group-membership --aws-account-id=111122223333 --namespace=default
-// --group-name=Sales-Management --member-name=Charlie
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1662,29 +1513,30 @@ func (c *QuickSight) DeleteGroupMembershipRequest(input *DeleteGroupMembershipIn
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DeleteGroupMembership for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodePreconditionNotMetException "PreconditionNotMetException"
+//   * PreconditionNotMetException
 //   One or more preconditions aren't met.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteGroupMembership
@@ -1753,12 +1605,7 @@ func (c *QuickSight) DeleteIAMPolicyAssignmentRequest(input *DeleteIAMPolicyAssi
 
 // DeleteIAMPolicyAssignment API operation for Amazon QuickSight.
 //
-// Deletes an existing assignment.
-//
-// CLI syntax:
-//
-// aws quicksight delete-iam-policy-assignment --aws-account-id=111122223333
-// --assignment-name=testtest --region=us-east-1 --namespace=default
+// Deletes an existing IAM policy assignment.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1767,30 +1614,31 @@ func (c *QuickSight) DeleteIAMPolicyAssignmentRequest(input *DeleteIAMPolicyAssi
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DeleteIAMPolicyAssignment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeConcurrentUpdatingException "ConcurrentUpdatingException"
-//   A resource is already in an "actionable" state that must complete before
-//   a new update can be applied.
+//   * ConcurrentUpdatingException
+//   A resource is already in a state that indicates an action is happening that
+//   must complete before a new update can be applied.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteIAMPolicyAssignment
@@ -1861,28 +1709,6 @@ func (c *QuickSight) DeleteTemplateRequest(input *DeleteTemplateInput) (req *req
 //
 // Deletes a template.
 //
-// CLI syntax:
-//
-//    * aws quicksight delete-template --aws-account-id 111122223333 —-template-id
-//    reports_test_template --version-number 2
-//
-//    * aws quicksight delete-template —aws-account-id 111122223333 —template-id
-//    reports_test_template —alias-name STAGING
-//
-//    * aws quicksight delete-template —aws-account-id 111122223333 —template-id
-//    reports_test_template —alias-name ‘\$LATEST’
-//
-//    * aws quicksight delete-template --aws-account-id 111122223333 —-template-id
-//    reports_test_template
-//
-// If version number which is an optional field is not passed the template (including
-// all the versions) is deleted by the API, if version number is provided, the
-// specific template version is deleted by the API.
-//
-// Users can explicitly describe the latest version of the template by passing
-// $LATEST to the alias-name parameter. $LATEST is an internally supported alias,
-// which points to the latest version of the template.
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1890,29 +1716,29 @@ func (c *QuickSight) DeleteTemplateRequest(input *DeleteTemplateInput) (req *req
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DeleteTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+// Returned Error Types:
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteTemplate
@@ -1981,12 +1807,9 @@ func (c *QuickSight) DeleteTemplateAliasRequest(input *DeleteTemplateAliasInput)
 
 // DeleteTemplateAlias API operation for Amazon QuickSight.
 //
-// Update template alias of given template.
-//
-// CLI syntax:
-//
-// aws quicksight delete-template-alias --aws-account-id 111122223333 --template-id
-// 'reports_test_template' --alias-name 'STAGING'
+// Deletes the item that the specified template alias points to. If you provide
+// a specific alias, you delete the version of the template that the alias points
+// to.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1995,20 +1818,20 @@ func (c *QuickSight) DeleteTemplateAliasRequest(input *DeleteTemplateAliasInput)
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DeleteTemplateAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteTemplateAlias
@@ -2081,11 +1904,6 @@ func (c *QuickSight) DeleteUserRequest(input *DeleteUserInput) (req *request.Req
 // the AWS Identity and Access Management (IAM) user or role that's making the
 // call. The IAM user isn't deleted as a result of this call.
 //
-// CLI Sample:
-//
-// aws quicksight delete-user --aws-account-id=111122223333 --namespace=default
-// --user-name=Pat
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2093,26 +1911,27 @@ func (c *QuickSight) DeleteUserRequest(input *DeleteUserInput) (req *request.Req
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DeleteUser for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteUser
@@ -2183,11 +2002,6 @@ func (c *QuickSight) DeleteUserByPrincipalIdRequest(input *DeleteUserByPrincipal
 //
 // Deletes a user identified by its principal ID.
 //
-// CLI Sample:
-//
-// aws quicksight delete-user-by-principal-id --aws-account-id=111122223333
-// --namespace=default --principal-id=ABCDEFJA26JLI7EUUOEHS
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2195,26 +2009,27 @@ func (c *QuickSight) DeleteUserByPrincipalIdRequest(input *DeleteUserByPrincipal
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DeleteUserByPrincipalId for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteUserByPrincipalId
@@ -2285,14 +2100,6 @@ func (c *QuickSight) DescribeDashboardRequest(input *DescribeDashboardInput) (re
 //
 // Provides a summary for a dashboard.
 //
-// CLI syntax:
-//
-//    * aws quicksight describe-dashboard --aws-account-id 111122223333 —dashboard-id
-//    reports_test_report -version-number 2
-//
-//    * aws quicksight describe-dashboard --aws-account-id 111122223333 —dashboard-id
-//    reports_test_report -alias-name ‘$PUBLISHED’
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2300,29 +2107,30 @@ func (c *QuickSight) DescribeDashboardRequest(input *DescribeDashboardInput) (re
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeDashboard for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+// Returned Error Types:
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeDashboard
@@ -2391,12 +2199,7 @@ func (c *QuickSight) DescribeDashboardPermissionsRequest(input *DescribeDashboar
 
 // DescribeDashboardPermissions API operation for Amazon QuickSight.
 //
-// Describes read and write permissions on a dashboard.
-//
-// CLI syntax:
-//
-// aws quicksight describe-dashboard-permissions --aws-account-id 735340738645
-// —dashboard-id reports_test_bob_report
+// Describes read and write permissions for a dashboard.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2405,23 +2208,23 @@ func (c *QuickSight) DescribeDashboardPermissionsRequest(input *DescribeDashboar
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeDashboardPermissions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+// Returned Error Types:
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeDashboardPermissions
@@ -2492,14 +2295,6 @@ func (c *QuickSight) DescribeDataSetRequest(input *DescribeDataSetInput) (req *r
 //
 // Describes a dataset.
 //
-// CLI syntax:
-//
-// aws quicksight describe-data-set \
-//
-// --aws-account-id=111111111111 \
-//
-// --data-set-id=unique-data-set-id
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2507,23 +2302,24 @@ func (c *QuickSight) DescribeDataSetRequest(input *DescribeDataSetInput) (req *r
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeDataSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeDataSet
@@ -2594,15 +2390,7 @@ func (c *QuickSight) DescribeDataSetPermissionsRequest(input *DescribeDataSetPer
 //
 // Describes the permissions on a dataset.
 //
-// The permissions resource is arn:aws:quicksight:region:aws-account-id:dataset/data-set-id
-//
-// CLI syntax:
-//
-// aws quicksight describe-data-set-permissions \
-//
-// --aws-account-id=111122223333 \
-//
-// --data-set-id=unique-data-set-id \
+// The permissions resource is arn:aws:quicksight:region:aws-account-id:dataset/data-set-id.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2611,23 +2399,24 @@ func (c *QuickSight) DescribeDataSetPermissionsRequest(input *DescribeDataSetPer
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeDataSetPermissions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeDataSetPermissions
@@ -2698,8 +2487,6 @@ func (c *QuickSight) DescribeDataSourceRequest(input *DescribeDataSourceInput) (
 //
 // Describes a data source.
 //
-// The permissions resource is arn:aws:quicksight:region:aws-account-id:datasource/data-source-id
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2707,23 +2494,24 @@ func (c *QuickSight) DescribeDataSourceRequest(input *DescribeDataSourceInput) (
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeDataSource
@@ -2794,8 +2582,6 @@ func (c *QuickSight) DescribeDataSourcePermissionsRequest(input *DescribeDataSou
 //
 // Describes the resource permissions for a data source.
 //
-// The permissions resource is aws:quicksight:region:aws-account-id:datasource/data-source-id
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2803,23 +2589,24 @@ func (c *QuickSight) DescribeDataSourcePermissionsRequest(input *DescribeDataSou
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeDataSourcePermissions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeDataSourcePermissions
@@ -2891,15 +2678,6 @@ func (c *QuickSight) DescribeGroupRequest(input *DescribeGroupInput) (req *reque
 // Returns an Amazon QuickSight group's description and Amazon Resource Name
 // (ARN).
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<relevant-aws-account-id>:group/default/<group-name> .
-//
-// The response is the group object.
-//
-// CLI Sample:
-//
-// aws quicksight describe-group -\-aws-account-id=11112222333 -\-namespace=default
-// -\-group-name=Sales
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2907,29 +2685,30 @@ func (c *QuickSight) DescribeGroupRequest(input *DescribeGroupInput) (req *reque
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodePreconditionNotMetException "PreconditionNotMetException"
+//   * PreconditionNotMetException
 //   One or more preconditions aren't met.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeGroup
@@ -2998,12 +2777,8 @@ func (c *QuickSight) DescribeIAMPolicyAssignmentRequest(input *DescribeIAMPolicy
 
 // DescribeIAMPolicyAssignment API operation for Amazon QuickSight.
 //
-// Describes an existing IAMPolicy Assignment by specified assignment name.
-//
-// CLI syntax:
-//
-// aws quicksight describe-iam-policy-assignment --aws-account-id=111122223333
-// --assignment-name=testtest --namespace=default --region=us-east-1
+// Describes an existing IAM policy assignment, as specified by the assignment
+// name.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3012,26 +2787,27 @@ func (c *QuickSight) DescribeIAMPolicyAssignmentRequest(input *DescribeIAMPolicy
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeIAMPolicyAssignment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeIAMPolicyAssignment
@@ -3109,26 +2885,27 @@ func (c *QuickSight) DescribeIngestionRequest(input *DescribeIngestionInput) (re
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeIngestion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeIngestion
@@ -3199,21 +2976,6 @@ func (c *QuickSight) DescribeTemplateRequest(input *DescribeTemplateInput) (req 
 //
 // Describes a template's metadata.
 //
-// CLI syntax:
-//
-// aws quicksight describe-template --aws-account-id 111122223333 --template-id
-// reports_test_template
-//
-// aws quicksight describe-template --aws-account-id 111122223333 --template-id
-// reports_test_template --version-number-2
-//
-// aws quicksight describe-template --aws-account-id 111122223333 --template-id
-// reports_test_template --alias-name '\$LATEST'
-//
-// Users can explicitly describe the latest version of the dashboard by passing
-// $LATEST to the alias-name parameter. $LATEST is an internally supported alias,
-// which points to the latest version of the dashboard.
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3221,35 +2983,36 @@ func (c *QuickSight) DescribeTemplateRequest(input *DescribeTemplateInput) (req 
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+// Returned Error Types:
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeTemplate
@@ -3318,12 +3081,7 @@ func (c *QuickSight) DescribeTemplateAliasRequest(input *DescribeTemplateAliasIn
 
 // DescribeTemplateAlias API operation for Amazon QuickSight.
 //
-// Describes the template aliases of a template.
-//
-// CLI syntax:
-//
-// aws quicksight describe-template-alias --aws-account-id 111122223333 --template-id
-// 'reports_test_template' --alias-name 'STAGING'
+// Describes the template alias for a template.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3332,20 +3090,20 @@ func (c *QuickSight) DescribeTemplateAliasRequest(input *DescribeTemplateAliasIn
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeTemplateAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeTemplateAlias
@@ -3416,11 +3174,6 @@ func (c *QuickSight) DescribeTemplatePermissionsRequest(input *DescribeTemplateP
 //
 // Describes read and write permissions on a template.
 //
-// CLI syntax:
-//
-// aws quicksight describe-template-permissions —aws-account-id 735340738645
-// —template-id reports_test_template
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3428,26 +3181,26 @@ func (c *QuickSight) DescribeTemplatePermissionsRequest(input *DescribeTemplateP
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeTemplatePermissions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeTemplatePermissions
@@ -3518,14 +3271,6 @@ func (c *QuickSight) DescribeUserRequest(input *DescribeUserInput) (req *request
 //
 // Returns information about a user, given the user name.
 //
-// The response is a user object that contains the user's Amazon Resource Name
-// (ARN), AWS Identity and Access Management (IAM) role, and email address.
-//
-// CLI Sample:
-//
-// aws quicksight describe-user --aws-account-id=111122223333 --namespace=default
-// --user-name=Pat
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3533,26 +3278,27 @@ func (c *QuickSight) DescribeUserRequest(input *DescribeUserInput) (req *request
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation DescribeUser for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeUser
@@ -3621,39 +3367,15 @@ func (c *QuickSight) GetDashboardEmbedUrlRequest(input *GetDashboardEmbedUrlInpu
 
 // GetDashboardEmbedUrl API operation for Amazon QuickSight.
 //
-// Generates a server-side embeddable URL and authorization code. Before this
-// can work properly, first you need to configure the dashboards and user permissions.
-// For more information, see Embedding Amazon QuickSight Dashboards (https://docs.aws.example.com/en_us/quicksight/latest/user/embedding.html).
+// Generates a server-side embeddable URL and authorization code. For this process
+// to work properly, first configure the dashboards and user permissions. For
+// more information, see Embedding Amazon QuickSight Dashboards (https://docs.aws.amazon.com/quicksight/latest/user/embedding-dashboards.html)
+// in the Amazon QuickSight User Guide or Embedding Amazon QuickSight Dashboards
+// (https://docs.aws.amazon.com/quicksight/latest/APIReference/qs-dev-embedded-dashboards.html)
+// in the Amazon QuickSight API Reference.
 //
 // Currently, you can use GetDashboardEmbedURL only from the server, not from
 // the user’s browser.
-//
-// CLI Sample:
-//
-// Assume the role with permissions enabled for actions: quickSight:RegisterUser
-// and quicksight:GetDashboardEmbedURL. You can use assume-role, assume-role-with-web-identity,
-// or assume-role-with-saml.
-//
-// aws sts assume-role --role-arn "arn:aws:iam::111122223333:role/embedding_quicksight_dashboard_role"
-// --role-session-name embeddingsession
-//
-// If the user does not exist in QuickSight, register the user:
-//
-// aws quicksight register-user --aws-account-id 111122223333 --namespace default
-// --identity-type IAM --iam-arn "arn:aws:iam::111122223333:role/embedding_quicksight_dashboard_role"
-// --user-role READER --session-name "embeddingsession" --email user123@example.com
-// --region us-east-1
-//
-// Get the URL for the embedded dashboard (IAM identity authentication):
-//
-// aws quicksight get-dashboard-embed-url --aws-account-id 111122223333 --dashboard-id
-// 1a1ac2b2-3fc3-4b44-5e5d-c6db6778df89 --identity-type IAM
-//
-// Get the URL for the embedded dashboard (QUICKSIGHT identity authentication):
-//
-// aws quicksight get-dashboard-embed-url --aws-account-id 111122223333 --dashboard-id
-// 1a1ac2b2-3fc3-4b44-5e5d-c6db6778df89 --identity-type QUICKSIGHT --user-arn
-// arn:aws:quicksight:us-east-1:111122223333:user/default/embedding_quicksight_dashboard_role/embeddingsession
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3662,49 +3384,50 @@ func (c *QuickSight) GetDashboardEmbedUrlRequest(input *GetDashboardEmbedUrlInpu
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation GetDashboardEmbedUrl for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeDomainNotWhitelistedException "DomainNotWhitelistedException"
-//   The domain specified is not on the allowlist. All domains for embedded dashboards
+//   * DomainNotWhitelistedException
+//   The domain specified isn't on the allow list. All domains for embedded dashboards
 //   must be added to the approved list by an Amazon QuickSight admin.
 //
-//   * ErrCodeUserNotFoundException "QuickSightUserNotFoundException"
-//   The user is not found. This error can happen in any operation that requires
-//   finding a user based on a provided user name, such as DeleteUser, DescribeUser,
-//   and so on.
+//   * UserNotFoundException
+//   The user with the provided name isn't found. This error can happen in any
+//   operation that requires finding a user based on a provided user name, such
+//   as DeleteUser, DescribeUser, and so on.
 //
-//   * ErrCodeIdentityTypeNotSupportedException "IdentityTypeNotSupportedException"
-//   The identity type specified is not supported. Supported identity types include
+//   * IdentityTypeNotSupportedException
+//   The identity type specified isn't supported. Supported identity types include
 //   IAM and QUICKSIGHT.
 //
-//   * ErrCodeSessionLifetimeInMinutesInvalidException "SessionLifetimeInMinutesInvalidException"
-//   The number of minutes specified for the lifetime of a session is not valid.
-//   The session lifetime must be from 15 to 600 minutes.
+//   * SessionLifetimeInMinutesInvalidException
+//   The number of minutes specified for the lifetime of a session isn't valid.
+//   The session lifetime must be 15-600 minutes.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/GetDashboardEmbedUrl
@@ -3779,12 +3502,7 @@ func (c *QuickSight) ListDashboardVersionsRequest(input *ListDashboardVersionsIn
 
 // ListDashboardVersions API operation for Amazon QuickSight.
 //
-// Lists all the versions of the dashboards in the Quicksight subscription.
-//
-// CLI syntax:
-//
-// aws quicksight list-template-versions —aws-account-id 111122223333 —template-id
-// reports-test-template
+// Lists all the versions of the dashboards in the QuickSight subscription.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3793,26 +3511,26 @@ func (c *QuickSight) ListDashboardVersionsRequest(input *ListDashboardVersionsIn
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListDashboardVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+// Returned Error Types:
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListDashboardVersions
@@ -3939,12 +3657,7 @@ func (c *QuickSight) ListDashboardsRequest(input *ListDashboardsInput) (req *req
 
 // ListDashboards API operation for Amazon QuickSight.
 //
-// Lists dashboards in the AWS account.
-//
-// CLI syntax:
-//
-// aws quicksight list-dashboards --aws-account-id 111122223333 --max-results
-// 5 —next-token 'next-10'
+// Lists dashboards in an AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3953,20 +3666,20 @@ func (c *QuickSight) ListDashboardsRequest(input *ListDashboardsInput) (req *req
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListDashboards for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListDashboards
@@ -4093,11 +3806,10 @@ func (c *QuickSight) ListDataSetsRequest(input *ListDataSetsInput) (req *request
 
 // ListDataSets API operation for Amazon QuickSight.
 //
-// Lists all of the datasets belonging to this account in an AWS region.
+// Lists all of the datasets belonging to the current AWS account in an AWS
+// Region.
 //
-// The permissions resource is arn:aws:quicksight:region:aws-account-id:dataset/*
-//
-// CLI syntax: aws quicksight list-data-sets --aws-account-id=111111111111
+// The permissions resource is arn:aws:quicksight:region:aws-account-id:dataset/*.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4106,23 +3818,24 @@ func (c *QuickSight) ListDataSetsRequest(input *ListDataSetsInput) (req *request
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListDataSets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListDataSets
@@ -4249,11 +3962,7 @@ func (c *QuickSight) ListDataSourcesRequest(input *ListDataSourcesInput) (req *r
 
 // ListDataSources API operation for Amazon QuickSight.
 //
-// Lists data sources in current AWS region that belong to this AWS account.
-//
-// The permissions resource is: arn:aws:quicksight:region:aws-account-id:datasource/*
-//
-// CLI syntax: aws quicksight list-data-sources --aws-account-id=111122223333
+// Lists data sources in current AWS Region that belong to this AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4262,23 +3971,24 @@ func (c *QuickSight) ListDataSourcesRequest(input *ListDataSourcesInput) (req *r
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListDataSources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListDataSources
@@ -4401,14 +4111,6 @@ func (c *QuickSight) ListGroupMembershipsRequest(input *ListGroupMembershipsInpu
 //
 // Lists member users in a group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
-//
-// The response is a list of group member objects.
-//
-// CLI Sample:
-//
-// aws quicksight list-group-memberships -\-aws-account-id=111122223333 -\-namespace=default
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4416,32 +4118,33 @@ func (c *QuickSight) ListGroupMembershipsRequest(input *ListGroupMembershipsInpu
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListGroupMemberships for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodePreconditionNotMetException "PreconditionNotMetException"
+//   * PreconditionNotMetException
 //   One or more preconditions aren't met.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListGroupMemberships
@@ -4512,14 +4215,6 @@ func (c *QuickSight) ListGroupsRequest(input *ListGroupsInput) (req *request.Req
 //
 // Lists all user groups in Amazon QuickSight.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/*.
-//
-// The response is a list of group objects.
-//
-// CLI Sample:
-//
-// aws quicksight list-groups -\-aws-account-id=111122223333 -\-namespace=default
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4527,32 +4222,33 @@ func (c *QuickSight) ListGroupsRequest(input *ListGroupsInput) (req *request.Req
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodePreconditionNotMetException "PreconditionNotMetException"
+//   * PreconditionNotMetException
 //   One or more preconditions aren't met.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListGroups
@@ -4621,13 +4317,7 @@ func (c *QuickSight) ListIAMPolicyAssignmentsRequest(input *ListIAMPolicyAssignm
 
 // ListIAMPolicyAssignments API operation for Amazon QuickSight.
 //
-// Lists assignments in current QuickSight account.
-//
-// CLI syntax:
-//
-// aws quicksight list-iam-policy-assignments --aws-account-id=111122223333
-// --max-result=5 --assignment-status=ENABLED --namespace=default --region=us-east-1
-// --next-token=3
+// Lists IAM policy assignments in the current Amazon QuickSight account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4636,26 +4326,27 @@ func (c *QuickSight) ListIAMPolicyAssignmentsRequest(input *ListIAMPolicyAssignm
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListIAMPolicyAssignments for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListIAMPolicyAssignments
@@ -4724,13 +4415,9 @@ func (c *QuickSight) ListIAMPolicyAssignmentsForUserRequest(input *ListIAMPolicy
 
 // ListIAMPolicyAssignmentsForUser API operation for Amazon QuickSight.
 //
-// Lists all the assignments and the ARNs for the associated IAM policies assigned
-// to the specified user and the group or groups that the user belongs to.
-//
-// CLI syntax:
-//
-// aws quicksight list-iam-policy-assignments-for-user --aws-account-id=111122223333
-// --user-name=user5 --namespace=default --max-result=6 --region=us-east-1
+// Lists all the IAM policy assignments, including the Amazon Resource Names
+// (ARNs) for the IAM policies assigned to the specified user and group or groups
+// that the user belongs to.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4739,30 +4426,31 @@ func (c *QuickSight) ListIAMPolicyAssignmentsForUserRequest(input *ListIAMPolicy
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListIAMPolicyAssignmentsForUser for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeConcurrentUpdatingException "ConcurrentUpdatingException"
-//   A resource is already in an "actionable" state that must complete before
-//   a new update can be applied.
+//   * ConcurrentUpdatingException
+//   A resource is already in a state that indicates an action is happening that
+//   must complete before a new update can be applied.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListIAMPolicyAssignmentsForUser
@@ -4846,29 +4534,30 @@ func (c *QuickSight) ListIngestionsRequest(input *ListIngestionsInput) (req *req
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListIngestions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListIngestions
@@ -4991,11 +4680,6 @@ func (c *QuickSight) ListTagsForResourceRequest(input *ListTagsForResourceInput)
 //
 // Lists the tags assigned to a resource.
 //
-// CLI syntax:
-//
-//    * aws quicksight list-tags-for-resource --resource-arn arn:aws:quicksight:us-east-1:111111111111:dataset/dataset1
-//    --region us-east-1
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5003,23 +4687,24 @@ func (c *QuickSight) ListTagsForResourceRequest(input *ListTagsForResourceInput)
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListTagsForResource
@@ -5096,11 +4781,6 @@ func (c *QuickSight) ListTemplateAliasesRequest(input *ListTemplateAliasesInput)
 //
 // Lists all the aliases of a template.
 //
-// CLI syntax:
-//
-// aws quicksight list-template-aliases --aws-account-id 111122223333 —template-id
-// 'reports_test_template'
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5108,20 +4788,20 @@ func (c *QuickSight) ListTemplateAliasesRequest(input *ListTemplateAliasesInput)
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListTemplateAliases for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListTemplateAliases
@@ -5248,12 +4928,8 @@ func (c *QuickSight) ListTemplateVersionsRequest(input *ListTemplateVersionsInpu
 
 // ListTemplateVersions API operation for Amazon QuickSight.
 //
-// Lists all the versions of the templates in the Quicksight account.
-//
-// CLI syntax:
-//
-// aws quicksight list-template-versions --aws-account-id 111122223333 --aws-account-id
-// 196359894473 --template-id reports-test-template
+// Lists all the versions of the templates in the current Amazon QuickSight
+// account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5262,26 +4938,26 @@ func (c *QuickSight) ListTemplateVersionsRequest(input *ListTemplateVersionsInpu
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListTemplateVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListTemplateVersions
@@ -5408,12 +5084,7 @@ func (c *QuickSight) ListTemplatesRequest(input *ListTemplatesInput) (req *reque
 
 // ListTemplates API operation for Amazon QuickSight.
 //
-// Lists all the templates in the QuickSight account.
-//
-// CLI syntax:
-//
-// aws quicksight list-templates --aws-account-id 111122223333 --max-results
-// 1 —next-token AYADeJuxwOypAndSoOn
+// Lists all the templates in the current Amazon QuickSight account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5422,26 +5093,26 @@ func (c *QuickSight) ListTemplatesRequest(input *ListTemplatesInput) (req *reque
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListTemplates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListTemplates
@@ -5565,13 +5236,6 @@ func (c *QuickSight) ListUserGroupsRequest(input *ListUserGroupsInput) (req *req
 // Lists the Amazon QuickSight groups that an Amazon QuickSight user is a member
 // of.
 //
-// The response is a one or more group objects.
-//
-// CLI Sample:
-//
-// aws quicksight list-user-groups -\-user-name=Pat -\-aws-account-id=111122223333
-// -\-namespace=default -\-region=us-east-1
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5579,26 +5243,27 @@ func (c *QuickSight) ListUserGroupsRequest(input *ListUserGroupsInput) (req *req
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListUserGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListUserGroups
@@ -5669,13 +5334,6 @@ func (c *QuickSight) ListUsersRequest(input *ListUsersInput) (req *request.Reque
 //
 // Returns a list of all of the Amazon QuickSight users belonging to this account.
 //
-// The response is a list of user objects, containing each user's Amazon Resource
-// Name (ARN), AWS Identity and Access Management (IAM) role, and email address.
-//
-// CLI Sample:
-//
-// aws quicksight list-users --aws-account-id=111122223333 --namespace=default
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5683,29 +5341,30 @@ func (c *QuickSight) ListUsersRequest(input *ListUsersInput) (req *request.Reque
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation ListUsers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value isn't valid.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListUsers
@@ -5778,11 +5437,6 @@ func (c *QuickSight) RegisterUserRequest(input *RegisterUserInput) (req *request
 // AWS Identity and Access Management (IAM) identity or role specified in the
 // request.
 //
-// CLI Sample:
-//
-// aws quicksight register-user -\-aws-account-id=111122223333 -\-namespace=default
-// -\-email=pat@example.com -\-identity-type=IAM -\-user-role=AUTHOR -\-iam-arn=arn:aws:iam::111122223333:user/Pat
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5790,35 +5444,36 @@ func (c *QuickSight) RegisterUserRequest(input *RegisterUserInput) (req *request
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation RegisterUser for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodePreconditionNotMetException "PreconditionNotMetException"
+//   * PreconditionNotMetException
 //   One or more preconditions aren't met.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/RegisterUser
@@ -5887,34 +5542,29 @@ func (c *QuickSight) TagResourceRequest(input *TagResourceInput) (req *request.R
 
 // TagResource API operation for Amazon QuickSight.
 //
-// Assigns a tag or tags to a resource.
-//
 // Assigns one or more tags (key-value pairs) to the specified QuickSight resource.
+//
 // Tags can help you organize and categorize your resources. You can also use
 // them to scope user permissions, by granting a user permission to access or
 // change only resources with certain tag values. You can use the TagResource
-// action with a resource that already has tags. If you specify a new tag key
-// for the resource, this tag is appended to the list of tags associated with
-// the resource. If you specify a tag key that is already associated with the
-// resource, the new tag value that you specify replaces the previous value
+// operation with a resource that already has tags. If you specify a new tag
+// key for the resource, this tag is appended to the list of tags associated
+// with the resource. If you specify a tag key that is already associated with
+// the resource, the new tag value that you specify replaces the previous value
 // for that tag.
 //
 // You can associate as many as 50 tags with a resource. QuickSight supports
-// tagging on data-set, data-source, dashboard, template.
+// tagging on data set, data source, dashboard, and template.
 //
-// Tagging for QuickSight works in a similar was to tagging for other AWS services,
+// Tagging for QuickSight works in a similar way to tagging for other AWS services,
 // except for the following:
 //
-//    * You can't use tags to track AWS costs for QuickSight, because QuickSight
-//    costs are based on users and SPICE capacity, which aren't taggable resources.
+//    * You can't use tags to track AWS costs for QuickSight. This restriction
+//    is because QuickSight costs are based on users and SPICE capacity, which
+//    aren't taggable resources.
 //
 //    * QuickSight doesn't currently support the Tag Editor for AWS Resource
 //    Groups.
-//
-// CLI syntax to tag a resource:
-//
-//    * aws quicksight tag-resource --resource-arn arn:aws:quicksight:us-east-1:111111111111:dataset/dataset1
-//    --tags Key=K1,Value=V1 Key=K2,Value=V2 --region us-east-1
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5923,26 +5573,27 @@ func (c *QuickSight) TagResourceRequest(input *TagResourceInput) (req *request.R
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/TagResource
@@ -6013,11 +5664,6 @@ func (c *QuickSight) UntagResourceRequest(input *UntagResourceInput) (req *reque
 //
 // Removes a tag or tags from a resource.
 //
-// CLI syntax:
-//
-//    * aws quicksight untag-resource --resource-arn arn:aws:quicksight:us-east-1:111111111111:dataset/dataset1
-//    --tag-keys K1 K2 --region us-east-1
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -6025,23 +5671,24 @@ func (c *QuickSight) UntagResourceRequest(input *UntagResourceInput) (req *reque
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UntagResource
@@ -6110,15 +5757,7 @@ func (c *QuickSight) UpdateDashboardRequest(input *UpdateDashboardInput) (req *r
 
 // UpdateDashboard API operation for Amazon QuickSight.
 //
-// Updates a dashboard in the AWS account.
-//
-// CLI syntax:
-//
-// aws quicksight update-dashboard --aws-account-id 111122223333 --dashboard-id
-// 123123123 --dashboard-name "test-update102" --source-entity SourceTemplate={Arn=arn:aws:quicksight:us-west-2:111122223333:template/sales-report-template2}
-// --data-set-references DataSetPlaceholder=SalesDataSet,DataSetArn=arn:aws:quicksight:us-west-2:111122223333:dataset/0e251aef-9ebf-46e1-b852-eb4fa33c1d3a
-//
-// aws quicksight update-dashboard --cli-input-json file://update-dashboard.json
+// Updates a dashboard in an AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6127,29 +5766,29 @@ func (c *QuickSight) UpdateDashboardRequest(input *UpdateDashboardInput) (req *r
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateDashboard for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateDashboard
@@ -6220,55 +5859,6 @@ func (c *QuickSight) UpdateDashboardPermissionsRequest(input *UpdateDashboardPer
 //
 // Updates read and write permissions on a dashboard.
 //
-// CLI syntax:
-//
-// aws quicksight update-dashboard-permissions —cli-input-json file://update-permission.json
-//
-// A sample update-permissions.json for granting read only permissions:
-//
-// { "AwsAccountId": "111122223333", "DashboardId": "reports_test_report", "GrantPermissions":
-// [ { "Principal": "arn:aws:quicksight:us-east-1:111122223333:user/default/user2",
-// "Actions": [ "quicksight:DescribeDashboard", "quicksight:ListDashboardVersions",
-// "quicksight:DescribeDashboardVersion", "quicksight:QueryDashboard" ] } ]
-// }
-//
-// A sample update-permissions.json for granting read and write permissions:
-//
-// { "AwsAccountId": "111122223333", "DashboardId": "reports_test_report", "GrantPermissions":
-// [ { "Principal": "arn:aws:quicksight:us-east-1:111122223333:user/default/user2",
-// "Actions": [ "quicksight:DescribeDashboard", "quicksight:ListDashboardVersions",
-// "quicksight:DescribeDashboardVersion", "quicksight:QueryDashboard", "quicksight:DescribeDashboardPermissions",
-// "quicksight:UpdateDashboardPermissions", "quicksight:DeleteDashboardVersion",
-// "quicksight:DeleteDashboard", "quicksight:UpdateDashboard", "quicksight:UpdateDashboardPublishedVersion",
-// ] } ] }
-//
-// A sample update-permissions.json for revoking write permissions:
-//
-// { "AwsAccountId": "111122223333", "DashboardId": "reports_test_report", "RevokePermissions":
-// [ { "Principal": "arn:aws:quicksight:us-east-1:111122223333:user/default/user2",
-// "Actions": [ "quicksight:DescribeDashboardPermissions", "quicksight:UpdateDashboardPermissions",
-// "quicksight:DeleteDashboardVersion", "quicksight:DeleteDashboard", "quicksight:UpdateDashboard",
-// "quicksight:UpdateDashboardPublishedVersion", ] } ] }
-//
-// A sample update-permissions.json for revoking read and write permissions:
-//
-// { "AwsAccountId": "111122223333", "DashboardId": "reports_test_report", "RevokePermissions":
-// [ { "Principal": "arn:aws:quicksight:us-east-1:111122223333:user/default/user2",
-// "Actions": [ "quicksight:DescribeDashboard", "quicksight:ListDashboardVersions",
-// "quicksight:DescribeDashboardVersion", "quicksight:QueryDashboard", "quicksight:DescribeDashboardPermissions",
-// "quicksight:UpdateDashboardPermissions", "quicksight:DeleteDashboardVersion",
-// "quicksight:DeleteDashboard", "quicksight:UpdateDashboard", "quicksight:UpdateDashboardPublishedVersion",
-// ] } ] }
-//
-// To obtain the principal name of a QuickSight user or group, you can use describe-group
-// or describe-user. For example:
-//
-// aws quicksight describe-user --aws-account-id 111122223333 --namespace default
-// --user-name user2 --region us-east-1 { "User": { "Arn": "arn:aws:quicksight:us-east-1:111122223333:user/default/user2",
-// "Active": true, "Email": "user2@example.com", "Role": "ADMIN", "UserName":
-// "user2", "PrincipalId": "federated/iam/abcd2abcdabcdeabc5ab5" }, "RequestId":
-// "8f74bb31-6291-448a-a71c-a765a44bae31", "Status": 200 }
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -6276,26 +5866,26 @@ func (c *QuickSight) UpdateDashboardPermissionsRequest(input *UpdateDashboardPer
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateDashboardPermissions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateDashboardPermissions
@@ -6366,11 +5956,6 @@ func (c *QuickSight) UpdateDashboardPublishedVersionRequest(input *UpdateDashboa
 //
 // Updates the published version of a dashboard.
 //
-// CLI syntax:
-//
-// aws quicksight update-dashboard-published-version --aws-account-id 111122223333
-// --dashboard-id dashboard-w1 ---version-number 2
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -6378,26 +5963,26 @@ func (c *QuickSight) UpdateDashboardPublishedVersionRequest(input *UpdateDashboa
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateDashboardPublishedVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+// Returned Error Types:
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateDashboardPublishedVersion
@@ -6468,44 +6053,6 @@ func (c *QuickSight) UpdateDataSetRequest(input *UpdateDataSetInput) (req *reque
 //
 // Updates a dataset.
 //
-// CLI syntax:
-//
-// aws quicksight update-data-set \
-//
-// --aws-account-id=111122223333 \
-//
-// --data-set-id=unique-data-set-id \
-//
-// --name='My dataset' \
-//
-// --import-mode=SPICE \
-//
-// --physical-table-map='{
-//
-// "physical-table-id": {
-//
-// "RelationalTable": {
-//
-// "DataSourceArn": "arn:aws:quicksight:us-west-2:111111111111:datasource/data-source-id",
-//
-// "Name": "table1",
-//
-// "InputColumns": [
-//
-// {
-//
-// "Name": "column1",
-//
-// "Type": "STRING"
-//
-// }
-//
-// ]
-//
-// }
-//
-// }'
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -6513,35 +6060,36 @@ func (c *QuickSight) UpdateDataSetRequest(input *UpdateDataSetInput) (req *reque
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateDataSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateDataSet
@@ -6612,20 +6160,7 @@ func (c *QuickSight) UpdateDataSetPermissionsRequest(input *UpdateDataSetPermiss
 //
 // Updates the permissions on a dataset.
 //
-// The permissions resource is arn:aws:quicksight:region:aws-account-id:dataset/data-set-id
-//
-// CLI syntax:
-//
-// aws quicksight update-data-set-permissions \
-//
-// --aws-account-id=111122223333 \
-//
-// --data-set-id=unique-data-set-id \
-//
-// --grant-permissions='[{"Principal":"arn:aws:quicksight:us-east-1:111122223333:user/default/user1","Actions":["quicksight:DescribeDataSet","quicksight:DescribeDataSetPermissions","quicksight:PassDataSet","quicksight:ListIngestions","quicksight:DescribeIngestion"]}]'
-// \
-//
-// --revoke-permissions='[{"Principal":"arn:aws:quicksight:us-east-1:111122223333:user/default/user2","Actions":["quicksight:UpdateDataSet","quicksight:DeleteDataSet","quicksight:UpdateDataSetPermissions","quicksight:CreateIngestion","quicksight:CancelIngestion"]}]'
+// The permissions resource is arn:aws:quicksight:region:aws-account-id:dataset/data-set-id.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6634,26 +6169,27 @@ func (c *QuickSight) UpdateDataSetPermissionsRequest(input *UpdateDataSetPermiss
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateDataSetPermissions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateDataSetPermissions
@@ -6724,23 +6260,6 @@ func (c *QuickSight) UpdateDataSourceRequest(input *UpdateDataSourceInput) (req 
 //
 // Updates a data source.
 //
-// The permissions resource is arn:aws:quicksight:region:aws-account-id:datasource/data-source-id
-//
-// CLI syntax:
-//
-// aws quicksight update-data-source \
-//
-// --aws-account-id=111122223333 \
-//
-// --data-source-id=unique-data-source-id \
-//
-// --name='My Data Source' \
-//
-// --data-source-parameters='{"PostgreSqlParameters":{"Host":"my-db-host.example.com","Port":1234,"Database":"my-db"}}'
-// \
-//
-// --credentials='{"CredentialPair":{"Username":"username","Password":"password"}}
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -6748,26 +6267,27 @@ func (c *QuickSight) UpdateDataSourceRequest(input *UpdateDataSourceInput) (req 
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateDataSource
@@ -6838,23 +6358,6 @@ func (c *QuickSight) UpdateDataSourcePermissionsRequest(input *UpdateDataSourceP
 //
 // Updates the permissions to a data source.
 //
-// The permissions resource is arn:aws:quicksight:region:aws-account-id:datasource/data-source-id
-//
-// CLI syntax:
-//
-// aws quicksight update-data-source-permissions \
-//
-// --aws-account-id=111122223333 \
-//
-// --data-source-id=unique-data-source-id \
-//
-// --name='My Data Source' \
-//
-// --grant-permissions='[{"Principal":"arn:aws:quicksight:us-east-1:111122223333:user/default/user1","Actions":["quicksight:DescribeDataSource","quicksight:DescribeDataSourcePermissions","quicksight:PassDataSource"]}]'
-// \
-//
-// --revoke-permissions='[{"Principal":"arn:aws:quicksight:us-east-1:111122223333:user/default/user2","Actions":["quicksight:UpdateDataSource","quicksight:DeleteDataSource","quicksight:UpdateDataSourcePermissions"]}]'
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -6862,26 +6365,27 @@ func (c *QuickSight) UpdateDataSourcePermissionsRequest(input *UpdateDataSourceP
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateDataSourcePermissions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateDataSourcePermissions
@@ -6952,15 +6456,6 @@ func (c *QuickSight) UpdateGroupRequest(input *UpdateGroupInput) (req *request.R
 //
 // Changes a group description.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
-//
-// The response is a group object.
-//
-// CLI Sample:
-//
-// aws quicksight update-group --aws-account-id=111122223333 --namespace=default
-// --group-name=Sales --description="Sales BI Dashboards"
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -6968,29 +6463,30 @@ func (c *QuickSight) UpdateGroupRequest(input *UpdateGroupInput) (req *request.R
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodePreconditionNotMetException "PreconditionNotMetException"
+//   * PreconditionNotMetException
 //   One or more preconditions aren't met.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateGroup
@@ -7059,14 +6555,8 @@ func (c *QuickSight) UpdateIAMPolicyAssignmentRequest(input *UpdateIAMPolicyAssi
 
 // UpdateIAMPolicyAssignment API operation for Amazon QuickSight.
 //
-// Updates an existing assignment. This operation updates only the optional
-// parameter or parameters that are specified in the request.
-//
-// CLI syntax:
-//
-// aws quicksight update-iam-policy-assignment --aws-account-id=111122223333
-// --assignment-name=FullAccessAssignment --assignment-status=DRAFT --policy-arns=arn:aws:iam::aws:policy/AdministratorAccess
-// --identities="user=user-1,user-2,group=admin" --namespace=default --region=us-east-1
+// Updates an existing IAM policy assignment. This operation updates only the
+// optional parameter or parameters that are specified in the request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7075,30 +6565,31 @@ func (c *QuickSight) UpdateIAMPolicyAssignmentRequest(input *UpdateIAMPolicyAssi
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateIAMPolicyAssignment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeConcurrentUpdatingException "ConcurrentUpdatingException"
-//   A resource is already in an "actionable" state that must complete before
-//   a new update can be applied.
+//   * ConcurrentUpdatingException
+//   A resource is already in a state that indicates an action is happening that
+//   must complete before a new update can be applied.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateIAMPolicyAssignment
@@ -7167,17 +6658,8 @@ func (c *QuickSight) UpdateTemplateRequest(input *UpdateTemplateInput) (req *req
 
 // UpdateTemplate API operation for Amazon QuickSight.
 //
-// Updates a template from an existing QuickSight analysis.
-//
-// CLI syntax:
-//
-// aws quicksight update-template --aws-account-id 111122223333 --template-id
-// reports_test_template --data-set-references DataSetPlaceholder=reports,DataSetArn=arn:aws:quicksight:us-west-2:111122223333:dataset/c684a204-d134-4c53-a63c-451f72c60c28
-// DataSetPlaceholder=Elblogs,DataSetArn=arn:aws:quicksight:us-west-2:111122223333:dataset/15840b7d-b542-4491-937b-602416b367b3
-// —source-entity SourceAnalysis=’{Arn=arn:aws:quicksight:us-west-2:111122223333:analysis/c5731fe9-4708-4598-8f6d-cf2a70875b6d}
-//
-// You can also pass in a json file: aws quicksight update-template —cli-input-json
-// file://create-template.json
+// Updates a template from an existing Amazon QuickSight analysis or another
+// template.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7186,32 +6668,32 @@ func (c *QuickSight) UpdateTemplateRequest(input *UpdateTemplateInput) (req *req
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+// Returned Error Types:
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   * ResourceExistsException
 //   The resource specified already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit is exceeded.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateTemplate
@@ -7282,11 +6764,6 @@ func (c *QuickSight) UpdateTemplateAliasRequest(input *UpdateTemplateAliasInput)
 //
 // Updates the template alias of a template.
 //
-// CLI syntax:
-//
-// aws quicksight update-template-alias --aws-account-id 111122223333 --template-id
-// 'reports_test_template' --alias-name STAGING —template-version-number 2
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -7294,23 +6771,23 @@ func (c *QuickSight) UpdateTemplateAliasRequest(input *UpdateTemplateAliasInput)
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateTemplateAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateTemplateAlias
@@ -7379,30 +6856,7 @@ func (c *QuickSight) UpdateTemplatePermissionsRequest(input *UpdateTemplatePermi
 
 // UpdateTemplatePermissions API operation for Amazon QuickSight.
 //
-// Updates the permissions on a template.
-//
-// CLI syntax:
-//
-//    * aws quicksight describe-template-permissions —aws-account-id 111122223333
-//    —template-id reports_test_template
-//
-//    * aws quicksight update-template-permissions —cli-input-json file://update-permission.json
-//
-//    * The structure of update-permissions.json to add permissions: { "AwsAccountId":
-//    "111122223333", "DashboardId": "reports_test_template", "GrantPermissions":
-//    [ { "Principal": "arn:aws:quicksight:us-east-1:196359894473:user/default/user3",
-//    "Actions": [ "quicksight:DescribeTemplate", "quicksight:ListTemplateVersions"
-//    ] } ] } The structure of update-permissions.json to add permissions: {
-//    "AwsAccountId": "111122223333", "DashboardId": "reports_test_template",
-//    "RevokePermissions": [ { "Principal": "arn:aws:quicksight:us-east-1:196359894473:user/default/user3",
-//    "Actions": [ "quicksight:DescribeTemplate", "quicksight:ListTemplateVersions"
-//    ] } ] } To obtain the principal name of a QuickSight group or user, use
-//    user describe-group or describe-user. For example: aws quicksight describe-user
-//    --aws-account-id 111122223333 --namespace default --user-name user2 --region
-//    us-east-1 { "User": { "Arn": "arn:aws:quicksight:us-east-1:111122223333:user/default/user2",
-//    "Active": true, "Email": "user2@example.com", "Role": "ADMIN", "UserName":
-//    "user2", "PrincipalId": "federated/iam/abcd2abcdabcdeabc5ab5" }, "RequestId":
-//    "8f74bb31-6291-448a-a71c-a765a44bae31", "Status": 200 }
+// Updates the resource permissions for a template.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7411,26 +6865,26 @@ func (c *QuickSight) UpdateTemplatePermissionsRequest(input *UpdateTemplatePermi
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateTemplatePermissions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Updating or deleting a resource can cause an inconsistent state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeUnsupportedUserEditionException "UnsupportedUserEditionException"
+//   * UnsupportedUserEditionException
 //   This error indicates that you are calling an operation on an Amazon QuickSight
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateTemplatePermissions
@@ -7501,15 +6955,6 @@ func (c *QuickSight) UpdateUserRequest(input *UpdateUserInput) (req *request.Req
 //
 // Updates an Amazon QuickSight user.
 //
-// The response is a user object that contains the user's Amazon QuickSight
-// user name, email address, active or inactive status in Amazon QuickSight,
-// Amazon QuickSight role, and Amazon Resource Name (ARN).
-//
-// CLI Sample:
-//
-// aws quicksight update-user --user-name=Pat --role=ADMIN --email=new_address@example.com
-// --aws-account-id=111122223333 --namespace=default --region=us-east-1
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -7517,26 +6962,27 @@ func (c *QuickSight) UpdateUserRequest(input *UpdateUserInput) (req *request.Req
 // See the AWS API reference guide for Amazon QuickSight's
 // API operation UpdateUser for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access to this. The provided credentials couldn't be validated.
-//   You might not be authorized to carry out the request. Ensure that your account
-//   is authorized to use the Amazon QuickSight service, that your policies have
-//   the correct permissions, and that you are using the correct access keys.
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One or more parameters don't have a valid value.
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   One or more resources can't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Access is throttled.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   * ResourceUnavailableException
 //   This resource is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateUser
@@ -7561,14 +7007,77 @@ func (c *QuickSight) UpdateUserWithContext(ctx aws.Context, input *UpdateUserInp
 	return out, req.Send()
 }
 
-// The active IAM policy assignment.
+// You don't have access to this item. The provided credentials couldn't be
+// validated. You might not be authorized to carry out the request. Make sure
+// that your account is authorized to use the Amazon QuickSight service, that
+// your policies have the correct permissions, and that you are using the correct
+// access keys.
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The active AWS Identity and Access Management (IAM) policy assignment.
 type ActiveIAMPolicyAssignment struct {
 	_ struct{} `type:"structure"`
 
 	// A name for the IAM policy assignment.
 	AssignmentName *string `min:"1" type:"string"`
 
-	// The ARN of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	PolicyArn *string `type:"string"`
 }
 
@@ -7594,7 +7103,7 @@ func (s *ActiveIAMPolicyAssignment) SetPolicyArn(v string) *ActiveIAMPolicyAssig
 	return s
 }
 
-// Ad hoc filtering option.
+// Ad hoc (one-time) filtering option.
 type AdHocFilteringOption struct {
 	_ struct{} `type:"structure"`
 
@@ -7618,11 +7127,11 @@ func (s *AdHocFilteringOption) SetAvailabilityStatus(v string) *AdHocFilteringOp
 	return s
 }
 
-// Amazon Elasticsearch parameters.
+// Amazon Elasticsearch Service parameters.
 type AmazonElasticsearchParameters struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Elasticsearch domain.
+	// The Amazon Elasticsearch Service domain.
 	//
 	// Domain is a required field
 	Domain *string `min:"1" type:"string" required:"true"`
@@ -7660,11 +7169,11 @@ func (s *AmazonElasticsearchParameters) SetDomain(v string) *AmazonElasticsearch
 	return s
 }
 
-// Athena parameters.
+// Amazon Athena parameters.
 type AthenaParameters struct {
 	_ struct{} `type:"structure"`
 
-	// The workgroup that Athena uses.
+	// The workgroup that Amazon Athena uses.
 	WorkGroup *string `min:"1" type:"string"`
 }
 
@@ -7697,7 +7206,7 @@ func (s *AthenaParameters) SetWorkGroup(v string) *AthenaParameters {
 	return s
 }
 
-// Aurora parameters.
+// Amazon Aurora parameters.
 type AuroraParameters struct {
 	_ struct{} `type:"structure"`
 
@@ -7773,7 +7282,7 @@ func (s *AuroraParameters) SetPort(v int64) *AuroraParameters {
 	return s
 }
 
-// Aurora PostgreSQL parameters.
+// Amazon Aurora with PostgreSQL compatibility parameters.
 type AuroraPostgreSqlParameters struct {
 	_ struct{} `type:"structure"`
 
@@ -7895,9 +7404,9 @@ func (s *AwsIotAnalyticsParameters) SetDataSetName(v string) *AwsIotAnalyticsPar
 type CalculatedColumn struct {
 	_ struct{} `type:"structure"`
 
-	// A unique ID to identify a calculated column. During dataset update, if the
-	// column ID of a calculated column matches that of an existing calculated column,
-	// QuickSight preserves the existing calculated column.
+	// A unique ID to identify a calculated column. During a dataset update, if
+	// the column ID of a calculated column matches that of an existing calculated
+	// column, Amazon QuickSight preserves the existing calculated column.
 	//
 	// ColumnId is a required field
 	ColumnId *string `min:"1" type:"string" required:"true"`
@@ -8056,7 +7565,7 @@ type CancelIngestionOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -8103,8 +7612,8 @@ type CastColumnTypeOperation struct {
 	// ColumnName is a required field
 	ColumnName *string `min:"1" type:"string" required:"true"`
 
-	// When casting a column from string to datetime type, you can supply a QuickSight
-	// supported format string to denote the source data format.
+	// When casting a column from string to datetime type, you can supply a string
+	// in a format supported by Amazon QuickSight to denote the source data format.
 	Format *string `type:"string"`
 
 	// New column data type.
@@ -8160,9 +7669,9 @@ func (s *CastColumnTypeOperation) SetNewColumnType(v string) *CastColumnTypeOper
 	return s
 }
 
-// Groupings of columns that work together in certain QuickSight features. This
-// is a variant type structure. No more than one of the attributes should be
-// non-null for this structure to be valid.
+// Groupings of columns that work together in certain Amazon QuickSight features.
+// This is a variant type structure. For this structure to be valid, only one
+// of the attributes can be non-null.
 type ColumnGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -8201,7 +7710,7 @@ func (s *ColumnGroup) SetGeoSpatialColumnGroup(v *GeoSpatialColumnGroup) *Column
 	return s
 }
 
-// A structure describing the name, datatype, and geographic role of the columns.
+// A structure describing the name, data type, and geographic role of the columns.
 type ColumnGroupColumnSchema struct {
 	_ struct{} `type:"structure"`
 
@@ -8229,7 +7738,7 @@ func (s *ColumnGroupColumnSchema) SetName(v string) *ColumnGroupColumnSchema {
 type ColumnGroupSchema struct {
 	_ struct{} `type:"structure"`
 
-	// A structure containing the list of column group column schemas.
+	// A structure containing the list of schemas for column group columns.
 	ColumnGroupColumnSchemaList []*ColumnGroupColumnSchema `type:"list"`
 
 	// The name of the column group schema.
@@ -8300,9 +7809,9 @@ func (s *ColumnSchema) SetName(v string) *ColumnSchema {
 	return s
 }
 
-// A tag for a column in a TagColumnOperation. This is a variant type structure.
-// No more than one of the attributes should be non-null for this structure
-// to be valid.
+// A tag for a column in a TagColumnOperation structure. This is a variant type
+// structure. For this structure to be valid, only one of the attributes can
+// be non-null.
 type ColumnTag struct {
 	_ struct{} `type:"structure"`
 
@@ -8324,6 +7833,124 @@ func (s ColumnTag) GoString() string {
 func (s *ColumnTag) SetColumnGeographicRole(v string) *ColumnTag {
 	s.ColumnGeographicRole = &v
 	return s
+}
+
+// A resource is already in a state that indicates an action is happening that
+// must complete before a new update can be applied.
+type ConcurrentUpdatingException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ConcurrentUpdatingException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentUpdatingException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentUpdatingException(v protocol.ResponseMetadata) error {
+	return &ConcurrentUpdatingException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConcurrentUpdatingException) Code() string {
+	return "ConcurrentUpdatingException"
+}
+
+// Message returns the exception's message.
+func (s ConcurrentUpdatingException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConcurrentUpdatingException) OrigErr() error {
+	return nil
+}
+
+func (s ConcurrentUpdatingException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConcurrentUpdatingException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConcurrentUpdatingException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Updating or deleting a resource can cause an inconsistent state.
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A transform operation that creates calculated columns. Columns created in
@@ -8382,34 +8009,30 @@ func (s *CreateColumnsOperation) SetColumns(v []*CalculatedColumn) *CreateColumn
 type CreateDashboardInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID where you want to create the dashboard.
+	// The ID of the AWS account where you want to create the dashboard.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID for the dashboard, also added to IAM policy.
+	// The ID for the dashboard, also added to the IAM policy.
 	//
 	// DashboardId is a required field
 	DashboardId *string `location:"uri" locationName:"DashboardId" min:"1" type:"string" required:"true"`
 
-	// Publishing options when creating dashboard.
+	// Options for publishing the dashboard when you create it:
 	//
-	//    * AvailabilityStatus for AdHocFilteringOption - This can be either ENABLED
-	//    or DISABLED. When This is set to set to DISABLED, QuickSight disables
+	//    * AvailabilityStatus for AdHocFilteringOption - This status can be either
+	//    ENABLED or DISABLED. When this is set to DISABLED, QuickSight disables
 	//    the left filter pane on the published dashboard, which can be used for
-	//    AdHoc filtering. Enabled by default.
+	//    ad hoc (one-time) filtering. This option is ENABLED by default.
 	//
-	//    * AvailabilityStatus for ExportToCSVOption - This can be either ENABLED
-	//    or DISABLED. The visual option to export data to CSV is disabled when
-	//    this is set to DISABLED. Enabled by default.
+	//    * AvailabilityStatus for ExportToCSVOption - This status can be either
+	//    ENABLED or DISABLED. The visual option to export data to .csv format isn't
+	//    enabled when this is set to DISABLED. This option is ENABLED by default.
 	//
-	//    * VisibilityState for SheetControlsOption - This can be either COLLAPSED
-	//    or EXPANDED. The sheet controls pane is collapsed by default when set
-	//    to true. Collapsed by default.
-	//
-	// Shorthand Syntax:
-	//
-	// AdHocFilteringDisabled=boolean,ExportToCSVDisabled=boolean,SheetControlsCollapsed=boolean
+	//    * VisibilityState for SheetControlsOption - This visibility state can
+	//    be either COLLAPSED or EXPANDED. The sheet controls pane is collapsed
+	//    by default when set to true. This option is COLLAPSED by default.
 	DashboardPublishOptions *DashboardPublishOptions `type:"structure"`
 
 	// The display name of the dashboard.
@@ -8418,20 +8041,21 @@ type CreateDashboardInput struct {
 	Name *string `min:"1" type:"string" required:"true"`
 
 	// A structure that contains the parameters of the dashboard. These are parameter
-	// overrides for a dashboard. A dashboard can have any type of parameters and
-	// some parameters might accept multiple values. You could use the following
-	// structure to override two string parameters that accept multiple values:
+	// overrides for a dashboard. A dashboard can have any type of parameters, and
+	// some parameters might accept multiple values. You can use the dashboard permissions
+	// structure described following to override two string parameters that accept
+	// multiple values.
 	Parameters *Parameters `type:"structure"`
 
 	// A structure that contains the permissions of the dashboard. You can use this
-	// for granting permissions with principal and action information.
+	// structure for granting permissions with principal and action information.
 	Permissions []*ResourcePermission `min:"1" type:"list"`
 
-	// Source entity from which the dashboard is created. The souce entity accepts
-	// the ARN of the source template or analysis and also references the replacement
-	// datasets for the placeholders set when creating the template. The replacement
-	// datasets need to follow the same schema as the datasets for which placeholders
-	// were created when creating the template.
+	// The source entity from which the dashboard is created. The source entity
+	// accepts the Amazon Resource Name (ARN) of the source template or analysis
+	// and also references the replacement datasets for the placeholders set when
+	// creating the template. The replacement datasets need to follow the same schema
+	// as the datasets for which placeholders were created when creating the template.
 	//
 	// If you are creating a dashboard from a source entity in a different AWS account,
 	// use the ARN of the source template.
@@ -8584,10 +8208,10 @@ func (s *CreateDashboardInput) SetVersionDescription(v string) *CreateDashboardI
 type CreateDashboardOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the dashboard.
+	// The Amazon Resource Name (ARN) of the dashboard.
 	Arn *string `type:"string"`
 
-	// The creation status of the dashboard create request.
+	// The status of the dashboard creation request.
 	CreationStatus *string `type:"string" enum:"ResourceStatus"`
 
 	// The ID for the dashboard.
@@ -8596,7 +8220,7 @@ type CreateDashboardOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// The ARN of the dashboard, including the version number of the first version
@@ -8653,22 +8277,22 @@ func (s *CreateDashboardOutput) SetVersionArn(v string) *CreateDashboardOutput {
 type CreateDataSetInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Account ID.
+	// The AWS account ID.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// Groupings of columns that work together in certain QuickSight features. Currently
+	// Groupings of columns that work together in certain QuickSight features. Currently,
 	// only geospatial hierarchy is supported.
 	ColumnGroups []*ColumnGroup `min:"1" type:"list"`
 
-	// An ID for the dataset you want to create. This is unique per region per AWS
-	// account.
+	// An ID for the dataset that you want to create. This ID is unique per AWS
+	// Region for each AWS account.
 	//
 	// DataSetId is a required field
 	DataSetId *string `type:"string" required:"true"`
 
-	// Indicates whether or not you want to import the data into SPICE.
+	// Indicates whether you want to import the data into SPICE.
 	//
 	// ImportMode is a required field
 	ImportMode *string `type:"string" required:"true" enum:"DataSetImportMode"`
@@ -8690,7 +8314,7 @@ type CreateDataSetInput struct {
 	// PhysicalTableMap is a required field
 	PhysicalTableMap map[string]*PhysicalTable `min:"1" type:"map" required:"true"`
 
-	// Row-level security configuration on the data you want to create.
+	// The row-level security configuration for the data that you want to create.
 	RowLevelPermissionDataSet *RowLevelPermissionDataSet `type:"structure"`
 
 	// Contains a map of the key-value pairs for the resource tag or tags assigned
@@ -8872,25 +8496,25 @@ func (s *CreateDataSetInput) SetTags(v []*Tag) *CreateDataSetInput {
 type CreateDataSetOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the dataset.
+	// The Amazon Resource Name (ARN) of the dataset.
 	Arn *string `type:"string"`
 
-	// The ID for the dataset you want to create. This is unique per region per
-	// AWS account.
+	// The ID for the dataset that you want to create. This ID is unique per AWS
+	// Region for each AWS account.
 	DataSetId *string `type:"string"`
 
-	// The Amazon Resource Name (ARN) for the ingestion, which is triggered as a
-	// result of dataset creation if the import mode is SPICE
+	// The ARN for the ingestion, which is triggered as a result of dataset creation
+	// if the import mode is SPICE.
 	IngestionArn *string `type:"string"`
 
 	// The ID of the ingestion, which is triggered as a result of dataset creation
-	// if the import mode is SPICE
+	// if the import mode is SPICE.
 	IngestionId *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -8948,16 +8572,17 @@ type CreateDataSourceInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The credentials QuickSight uses to connect to your underlying source. Currently
-	// only username/password based credentials are supported.
+	// The credentials QuickSight that uses to connect to your underlying source.
+	// Currently, only credentials based on user name and password are supported.
 	Credentials *DataSourceCredentials `type:"structure" sensitive:"true"`
 
-	// An ID for the data source. This is unique per AWS Region per AWS account.
+	// An ID for the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	//
 	// DataSourceId is a required field
 	DataSourceId *string `type:"string" required:"true"`
 
-	// The parameters QuickSight uses to connect to your underlying source.
+	// The parameters that QuickSight uses to connect to your underlying source.
 	DataSourceParameters *DataSourceParameters `type:"structure"`
 
 	// A display name for the data source.
@@ -8968,14 +8593,15 @@ type CreateDataSourceInput struct {
 	// A list of resource permissions on the data source.
 	Permissions []*ResourcePermission `min:"1" type:"list"`
 
-	// SSL properties that apply when QuickSight connects to your underlying source.
+	// Secure Socket Layer (SSL) properties that apply when QuickSight connects
+	// to your underlying source.
 	SslProperties *SslProperties `type:"structure"`
 
 	// Contains a map of the key-value pairs for the resource tag or tags assigned
 	// to the data source.
 	Tags []*Tag `min:"1" type:"list"`
 
-	// The type of the data source. Currently the supported types for this operation
+	// The type of the data source. Currently, the supported types for this operation
 	// are: ATHENA, AURORA, AURORA_POSTGRESQL, MARIADB, MYSQL, POSTGRESQL, PRESTO,
 	// REDSHIFT, S3, SNOWFLAKE, SPARK, SQLSERVER, TERADATA. Use ListDataSources
 	// to return a list of all data sources.
@@ -8983,8 +8609,8 @@ type CreateDataSourceInput struct {
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"DataSourceType"`
 
-	// You need to use this parameter only when you want QuickSight to use a VPC
-	// connection when connecting to your underlying source.
+	// Use this parameter only when you want QuickSight to use a VPC connection
+	// when connecting to your underlying source.
 	VpcConnectionProperties *VpcConnectionProperties `type:"structure"`
 }
 
@@ -9130,19 +8756,20 @@ func (s *CreateDataSourceInput) SetVpcConnectionProperties(v *VpcConnectionPrope
 type CreateDataSourceOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the data source.
+	// The Amazon Resource Name (ARN) of the data source.
 	Arn *string `type:"string"`
 
 	// The status of creating the data source.
 	CreationStatus *string `type:"string" enum:"ResourceStatus"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	DataSourceId *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -9377,7 +9004,7 @@ type CreateGroupMembershipOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -9419,7 +9046,7 @@ type CreateGroupOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -9459,26 +9086,27 @@ type CreateIAMPolicyAssignmentInput struct {
 	// AssignmentName is a required field
 	AssignmentName *string `min:"1" type:"string" required:"true"`
 
-	// The status of an assignment:
+	// The status of the assignment. Possible values are as follows:
 	//
-	//    * ENABLED - Anything specified in this assignment is used while creating
+	//    * ENABLED - Anything specified in this assignment is used when creating
 	//    the data source.
 	//
-	//    * DISABLED - This assignment isn't used while creating the data source.
+	//    * DISABLED - This assignment isn't used when creating the data source.
 	//
-	//    * DRAFT - Assignment is an unfinished draft and isn't used while creating
+	//    * DRAFT - This assignment is an unfinished draft and isn't used when creating
 	//    the data source.
 	//
 	// AssignmentStatus is a required field
 	AssignmentStatus *string `type:"string" required:"true" enum:"AssignmentStatus"`
 
-	// The AWS Account ID where you want to assign QuickSight users or groups to
-	// an IAM policy.
+	// The ID of the AWS account where you want to assign an IAM policy to QuickSight
+	// users or groups.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// QuickSight users and/or groups that you want to assign the policy to.
+	// The QuickSight users, groups, or both that you want to assign the policy
+	// to.
 	Identities map[string][]*string `type:"map"`
 
 	// The namespace that contains the assignment.
@@ -9486,8 +9114,8 @@ type CreateIAMPolicyAssignmentInput struct {
 	// Namespace is a required field
 	Namespace *string `location:"uri" locationName:"Namespace" type:"string" required:"true"`
 
-	// An IAM policy ARN that you want to apply to the QuickSight users and groups
-	// specified in this assignment.
+	// The ARN for the IAM policy to apply to the QuickSight users and groups specified
+	// in this assignment.
 	PolicyArn *string `type:"string"`
 }
 
@@ -9571,34 +9199,34 @@ func (s *CreateIAMPolicyAssignmentInput) SetPolicyArn(v string) *CreateIAMPolicy
 type CreateIAMPolicyAssignmentOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An ID for the assignment.
+	// The ID for the assignment.
 	AssignmentId *string `type:"string"`
 
-	// The name of the assignment. Must be unique within an AWS account.
+	// The name of the assignment. This name must be unique within the AWS account.
 	AssignmentName *string `min:"1" type:"string"`
 
-	// The status of an assignment:
+	// The status of the assignment. Possible values are as follows:
 	//
-	//    * ENABLED - Anything specified in this assignment is used while creating
+	//    * ENABLED - Anything specified in this assignment is used when creating
 	//    the data source.
 	//
-	//    * DISABLED - This assignment isn't used while creating the data source.
+	//    * DISABLED - This assignment isn't used when creating the data source.
 	//
-	//    * DRAFT - Assignment is an unfinished draft and isn't used while creating
+	//    * DRAFT - This assignment is an unfinished draft and isn't used when creating
 	//    the data source.
 	AssignmentStatus *string `type:"string" enum:"AssignmentStatus"`
 
-	// QuickSight users and/or groups that are assigned to the IAM policy.
+	// The QuickSight users, groups, or both that the IAM policy is assigned to.
 	Identities map[string][]*string `type:"map"`
 
-	// An IAM policy ARN that is applied to the QuickSight users and groups specified
-	// in this assignment.
+	// The ARN for the IAM policy that is applied to the QuickSight users and groups
+	// specified in this assignment.
 	PolicyArn *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -9744,7 +9372,7 @@ type CreateIngestionOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -9791,14 +9419,15 @@ func (s *CreateIngestionOutput) SetStatus(v int64) *CreateIngestionOutput {
 type CreateTemplateAliasInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name you want to give the template's alias. Alias names can't begin with
-	// a $, which is reserved by QuickSight. Alias names that start with ‘$’
-	// sign are QuickSight reserved naming and can't be deleted.
+	// The name that you want to give to the template alias that you're creating.
+	// Don't start the alias name with the $ character. Alias names that start with
+	// $ are reserved by QuickSight.
 	//
 	// AliasName is a required field
 	AliasName *string `location:"uri" locationName:"AliasName" min:"1" type:"string" required:"true"`
 
-	// AWS account ID that contains the template you are aliasing.
+	// The ID of the AWS account that contains the template that you creating an
+	// alias for.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -9888,10 +9517,10 @@ type CreateTemplateAliasOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
-	// Information on the template alias.
+	// Information about the template alias.
 	TemplateAlias *TemplateAlias `type:"structure"`
 }
 
@@ -9935,14 +9564,12 @@ type CreateTemplateInput struct {
 	// A display name for the template.
 	Name *string `min:"1" type:"string"`
 
-	// A list of resource permissions to be set on the template. The shorthand syntax
-	// should look similar to this: Shorthand Syntax: Principal=string,Actions=string,string
-	// ...
+	// A list of resource permissions to be set on the template.
 	Permissions []*ResourcePermission `min:"1" type:"list"`
 
-	// The ARN of the source entity from which this template is being created. Templates
-	// can be currently created from an analysis or another template. If the ARN
-	// is for an analysis, you must include its dataset references.
+	// The Amazon Resource Name (ARN) of the source entity from which this template
+	// is being created. Currently, you can create a template from an analysis or
+	// another template. If the ARN is for an analysis, include its dataset references.
 	//
 	// SourceEntity is a required field
 	SourceEntity *TemplateSourceEntity `type:"structure" required:"true"`
@@ -9951,15 +9578,15 @@ type CreateTemplateInput struct {
 	// to the resource.
 	Tags []*Tag `min:"1" type:"list"`
 
-	// An ID for the template you want to create. This is unique per AWS region
-	// per AWS account.
+	// An ID for the template that you want to create. This template is unique per
+	// AWS Region in each AWS account.
 	//
 	// TemplateId is a required field
 	TemplateId *string `location:"uri" locationName:"TemplateId" min:"1" type:"string" required:"true"`
 
-	// A description of the current template version being created. This API created
-	// the first version of the template. Every time UpdateTemplate is called a
-	// new version is created. Each version of the template maintains a description
+	// A description of the current template version being created. This API operation
+	// creates the first version of the template. Every time UpdateTemplate is called,
+	// a new version is created. Each version of the template maintains a description
 	// of the version in the VersionDescription field.
 	VersionDescription *string `min:"1" type:"string"`
 }
@@ -10081,7 +9708,7 @@ func (s *CreateTemplateInput) SetVersionDescription(v string) *CreateTemplateInp
 type CreateTemplateOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) for the template.
+	// The ARN for the template.
 	Arn *string `type:"string"`
 
 	// The template creation status.
@@ -10090,14 +9717,14 @@ type CreateTemplateOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// The ID of the template.
 	TemplateId *string `min:"1" type:"string"`
 
-	// The Amazon Resource Name (ARN) for the template, including the version information
-	// of the first version.
+	// The ARN for the template, including the version information of the first
+	// version.
 	VersionArn *string `type:"string"`
 }
 
@@ -10147,7 +9774,7 @@ func (s *CreateTemplateOutput) SetVersionArn(v string) *CreateTemplateOutput {
 	return s
 }
 
-// The combination of username and password that are used as credentials.
+// The combination of user name and password that are used as credentials.
 type CredentialPair struct {
 	_ struct{} `type:"structure"`
 
@@ -10156,7 +9783,7 @@ type CredentialPair struct {
 	// Password is a required field
 	Password *string `min:"1" type:"string" required:"true"`
 
-	// Username.
+	// User name.
 	//
 	// Username is a required field
 	Username *string `min:"1" type:"string" required:"true"`
@@ -10213,7 +9840,7 @@ type CustomSql struct {
 	// The column schema from the SQL query result set.
 	Columns []*InputColumn `min:"1" type:"list"`
 
-	// The ARN of the data source.
+	// The Amazon Resource Name (ARN) of the data source.
 	//
 	// DataSourceArn is a required field
 	DataSourceArn *string `type:"string" required:"true"`
@@ -10305,19 +9932,19 @@ func (s *CustomSql) SetSqlQuery(v string) *CustomSql {
 type Dashboard struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	Arn *string `type:"string"`
 
-	// The time this was created.
+	// The time that this dataset was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
 	// Dashboard ID.
 	DashboardId *string `min:"1" type:"string"`
 
-	// The last time this was published.
+	// The last time that this dataset was published.
 	LastPublishedTime *time.Time `type:"timestamp"`
 
-	// The last time this was updated.
+	// The last time that this dataset was updated.
 	LastUpdatedTime *time.Time `type:"timestamp"`
 
 	// A display name for the dataset.
@@ -10416,10 +10043,10 @@ func (s *DashboardError) SetType(v string) *DashboardError {
 type DashboardPublishOptions struct {
 	_ struct{} `type:"structure"`
 
-	// Ad hoc filtering option.
+	// Ad hoc (one-time) filtering option.
 	AdHocFilteringOption *AdHocFilteringOption `type:"structure"`
 
-	// Export to CSV option.
+	// Export to .csv option.
 	ExportToCSVOption *ExportToCSVOption `type:"structure"`
 
 	// Sheet controls option.
@@ -10497,7 +10124,7 @@ func (s *DashboardSourceEntity) SetSourceTemplate(v *DashboardSourceTemplate) *D
 type DashboardSourceTemplate struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	//
 	// Arn is a required field
 	Arn *string `type:"string" required:"true"`
@@ -10563,22 +10190,22 @@ func (s *DashboardSourceTemplate) SetDataSetReferences(v []*DataSetReference) *D
 type DashboardSummary struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	Arn *string `type:"string"`
 
-	// The time this was created.
+	// The time that this dashboard was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
 	// Dashboard ID.
 	DashboardId *string `min:"1" type:"string"`
 
-	// The last time this was published.
+	// The last time that this dashboard was published.
 	LastPublishedTime *time.Time `type:"timestamp"`
 
-	// The last time this was updated.
+	// The last time that this dashboard was updated.
 	LastUpdatedTime *time.Time `type:"timestamp"`
 
-	// A display name for the dataset.
+	// A display name for the dashboard.
 	Name *string `min:"1" type:"string"`
 
 	// Published version number.
@@ -10641,10 +10268,10 @@ func (s *DashboardSummary) SetPublishedVersionNumber(v int64) *DashboardSummary 
 type DashboardVersion struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	Arn *string `type:"string"`
 
-	// The time this was created.
+	// The time that this dashboard version was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
 	// Description.
@@ -10656,7 +10283,7 @@ type DashboardVersion struct {
 	// Source entity ARN.
 	SourceEntityArn *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *string `type:"string" enum:"ResourceStatus"`
 
 	// Version number.
@@ -10719,10 +10346,10 @@ func (s *DashboardVersion) SetVersionNumber(v int64) *DashboardVersion {
 type DashboardVersionSummary struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	Arn *string `type:"string"`
 
-	// The time this was created.
+	// The time that this dashboard version was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
 	// Description.
@@ -10731,7 +10358,7 @@ type DashboardVersionSummary struct {
 	// Source entity ARN.
 	SourceEntityArn *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *string `type:"string" enum:"ResourceStatus"`
 
 	// Version number.
@@ -10788,27 +10415,27 @@ func (s *DashboardVersionSummary) SetVersionNumber(v int64) *DashboardVersionSum
 type DataSet struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	Arn *string `type:"string"`
 
-	// Groupings of columns that work together in certain QuickSight features. Currently
-	// only geospatial hierarchy is supported.
+	// Groupings of columns that work together in certain Amazon QuickSight features.
+	// Currently, only geospatial hierarchy is supported.
 	ColumnGroups []*ColumnGroup `min:"1" type:"list"`
 
 	// The amount of SPICE capacity used by this dataset. This is 0 if the dataset
 	// isn't imported into SPICE.
 	ConsumedSpiceCapacityInBytes *int64 `type:"long"`
 
-	// The time this was created.
+	// The time that this dataset was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
 	// The ID of the dataset.
 	DataSetId *string `type:"string"`
 
-	// Indicates whether or not you want to import the data into SPICE.
+	// Indicates whether you want to import the data into SPICE.
 	ImportMode *string `type:"string" enum:"DataSetImportMode"`
 
-	// The last time this was updated.
+	// The last time that this dataset was updated.
 	LastUpdatedTime *time.Time `type:"timestamp"`
 
 	// Configures the combination and transformation of the data from the physical
@@ -10825,7 +10452,7 @@ type DataSet struct {
 	// Declares the physical tables that are available in the underlying data sources.
 	PhysicalTableMap map[string]*PhysicalTable `min:"1" type:"map"`
 
-	// Row-level security configuration on the dataset.
+	// The row-level security configuration for the dataset.
 	RowLevelPermissionDataSet *RowLevelPermissionDataSet `type:"structure"`
 }
 
@@ -10957,7 +10584,7 @@ func (s *DataSetConfiguration) SetPlaceholder(v string) *DataSetConfiguration {
 type DataSetReference struct {
 	_ struct{} `type:"structure"`
 
-	// Dataset ARN.
+	// Dataset Amazon Resource Name (ARN).
 	//
 	// DataSetArn is a required field
 	DataSetArn *string `type:"string" required:"true"`
@@ -11034,25 +10661,25 @@ func (s *DataSetSchema) SetColumnSchemaList(v []*ColumnSchema) *DataSetSchema {
 type DataSetSummary struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the dataset.
+	// The Amazon Resource Name (ARN) of the dataset.
 	Arn *string `type:"string"`
 
-	// The time this was created.
+	// The time that this dataset was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
 	// The ID of the dataset.
 	DataSetId *string `type:"string"`
 
-	// Indicates whether or not you want to import the data into SPICE.
+	// Indicates whether you want to import the data into SPICE.
 	ImportMode *string `type:"string" enum:"DataSetImportMode"`
 
-	// The last time this was updated.
+	// The last time that this dataset was updated.
 	LastUpdatedTime *time.Time `type:"timestamp"`
 
 	// A display name for the dataset.
 	Name *string `min:"1" type:"string"`
 
-	// Row-level security configuration on the dataset.
+	// The row-level security configuration for the dataset.
 	RowLevelPermissionDataSet *RowLevelPermissionDataSet `type:"structure"`
 }
 
@@ -11112,37 +10739,39 @@ func (s *DataSetSummary) SetRowLevelPermissionDataSet(v *RowLevelPermissionDataS
 type DataSource struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the data source.
+	// The Amazon Resource Name (ARN) of the data source.
 	Arn *string `type:"string"`
 
-	// The time this was created.
+	// The time that this data source was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	DataSourceId *string `type:"string"`
 
-	// The parameters QuickSight uses to connect to your underlying source. This
-	// is a variant type structure. At most one of the attributes should be non-null
-	// for this structure to be valid.
+	// The parameters that Amazon QuickSight uses to connect to your underlying
+	// source. This is a variant type structure. For this structure to be valid,
+	// only one of the attributes can be non-null.
 	DataSourceParameters *DataSourceParameters `type:"structure"`
 
 	// Error information from the last update or the creation of the data source.
 	ErrorInfo *DataSourceErrorInfo `type:"structure"`
 
-	// The last time this was updated.
+	// The last time that this data source was updated.
 	LastUpdatedTime *time.Time `type:"timestamp"`
 
 	// A display name for the data source.
 	Name *string `min:"1" type:"string"`
 
-	// SSL properties that apply when QuickSight connects to your underlying source.
+	// Secure Socket Layer (SSL) properties that apply when QuickSight connects
+	// to your underlying source.
 	SslProperties *SslProperties `type:"structure"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *string `type:"string" enum:"ResourceStatus"`
 
-	// The type of the data source. This indicates which database engine the data
-	// source connects to.
+	// The type of the data source. This type indicates which database engine the
+	// data source connects to.
 	Type *string `type:"string" enum:"DataSourceType"`
 
 	// The VPC connection information. You need to use this parameter only when
@@ -11266,7 +10895,7 @@ func (s *DataSourceCredentials) SetCredentialPair(v *CredentialPair) *DataSource
 	return s
 }
 
-// Error information on data source creation or update.
+// Error information for the data source creation or update.
 type DataSourceErrorInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -11299,19 +10928,19 @@ func (s *DataSourceErrorInfo) SetType(v string) *DataSourceErrorInfo {
 	return s
 }
 
-// The parameters QuickSight uses to connect to your underlying source. This
-// is a variant type structure. At most one of the attributes should be non-null
-// for this structure to be valid.
+// The parameters that Amazon QuickSight uses to connect to your underlying
+// data source. This is a variant type structure. For this structure to be valid,
+// only one of the attributes can be non-null.
 type DataSourceParameters struct {
 	_ struct{} `type:"structure"`
 
-	// Amazon Elasticsearch parameters.
+	// Amazon Elasticsearch Service parameters.
 	AmazonElasticsearchParameters *AmazonElasticsearchParameters `type:"structure"`
 
-	// Athena parameters.
+	// Amazon Athena parameters.
 	AthenaParameters *AthenaParameters `type:"structure"`
 
-	// Aurora MySQL parameters.
+	// Amazon Aurora MySQL parameters.
 	AuroraParameters *AuroraParameters `type:"structure"`
 
 	// Aurora PostgreSQL parameters.
@@ -11335,10 +10964,10 @@ type DataSourceParameters struct {
 	// Presto parameters.
 	PrestoParameters *PrestoParameters `type:"structure"`
 
-	// RDS parameters.
+	// Amazon RDS parameters.
 	RdsParameters *RdsParameters `type:"structure"`
 
-	// Redshift parameters.
+	// Amazon Redshift parameters.
 	RedshiftParameters *RedshiftParameters `type:"structure"`
 
 	// S3 parameters.
@@ -11701,7 +11330,7 @@ func (s *DecimalParameter) SetValues(v []*float64) *DecimalParameter {
 type DeleteDashboardInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the dashboard you are deleting.
+	// The ID of the AWS account that contains the dashboard that you're deleting.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -11711,7 +11340,7 @@ type DeleteDashboardInput struct {
 	// DashboardId is a required field
 	DashboardId *string `location:"uri" locationName:"DashboardId" min:"1" type:"string" required:"true"`
 
-	// The version number of the dashboard. If version number property is provided,
+	// The version number of the dashboard. If the version number property is provided,
 	// only the specified version of the dashboard is deleted.
 	VersionNumber *int64 `location:"querystring" locationName:"version-number" min:"1" type:"long"`
 }
@@ -11772,7 +11401,7 @@ func (s *DeleteDashboardInput) SetVersionNumber(v int64) *DeleteDashboardInput {
 type DeleteDashboardOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the resource.
+	// The Secure Socket Layer (SSL) properties that apply for the resource.
 	Arn *string `type:"string"`
 
 	// The ID of the dashboard.
@@ -11781,7 +11410,7 @@ type DeleteDashboardOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -11822,13 +11451,13 @@ func (s *DeleteDashboardOutput) SetStatus(v int64) *DeleteDashboardOutput {
 type DeleteDataSetInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Account ID.
+	// The AWS account ID.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID for the dataset you want to create. This is unique per region per
-	// AWS account.
+	// The ID for the dataset that you want to create. This ID is unique per AWS
+	// Region for each AWS account.
 	//
 	// DataSetId is a required field
 	DataSetId *string `location:"uri" locationName:"DataSetId" type:"string" required:"true"`
@@ -11881,17 +11510,17 @@ func (s *DeleteDataSetInput) SetDataSetId(v string) *DeleteDataSetInput {
 type DeleteDataSetOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the dataset.
+	// The Amazon Resource Name (ARN) of the dataset.
 	Arn *string `type:"string"`
 
-	// The ID for the dataset you want to create. This is unique per region per
-	// AWS account.
+	// The ID for the dataset that you want to create. This ID is unique per AWS
+	// Region for each AWS account.
 	DataSetId *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -11937,7 +11566,8 @@ type DeleteDataSourceInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	//
 	// DataSourceId is a required field
 	DataSourceId *string `location:"uri" locationName:"DataSourceId" type:"string" required:"true"`
@@ -11990,16 +11620,17 @@ func (s *DeleteDataSourceInput) SetDataSourceId(v string) *DeleteDataSourceInput
 type DeleteDataSourceOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the data source you deleted.
+	// The Amazon Resource Name (ARN) of the data source that you deleted.
 	Arn *string `type:"string"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	DataSourceId *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -12212,7 +11843,7 @@ type DeleteGroupMembershipOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -12244,7 +11875,7 @@ type DeleteGroupOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -12278,7 +11909,7 @@ type DeleteIAMPolicyAssignmentInput struct {
 	// AssignmentName is a required field
 	AssignmentName *string `location:"uri" locationName:"AssignmentName" min:"1" type:"string" required:"true"`
 
-	// The AWS account ID where you want to delete an IAM policy assignment.
+	// The AWS account ID where you want to delete the IAM policy assignment.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -12354,7 +11985,7 @@ type DeleteIAMPolicyAssignmentOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -12389,19 +12020,19 @@ func (s *DeleteIAMPolicyAssignmentOutput) SetStatus(v int64) *DeleteIAMPolicyAss
 type DeleteTemplateAliasInput struct {
 	_ struct{} `type:"structure"`
 
-	// The alias of the template. If alias-name is provided, the version that the
-	// alias-name points to is deleted. Alias names that start with $ are reserved
-	// by QuickSight and can't be deleted.”
+	// The name for the template alias. If you name a specific alias, you delete
+	// the version that the alias points to. You can specify the latest version
+	// of the template by providing the keyword $LATEST in the AliasName parameter.
 	//
 	// AliasName is a required field
 	AliasName *string `location:"uri" locationName:"AliasName" min:"1" type:"string" required:"true"`
 
-	// AWS account ID that contains the template alias you are deleting.
+	// The ID of the AWS account that contains the item to delete.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// An ID for the template.
+	// The ID for the template that the specified alias is for.
 	//
 	// TemplateId is a required field
 	TemplateId *string `location:"uri" locationName:"TemplateId" min:"1" type:"string" required:"true"`
@@ -12466,19 +12097,19 @@ func (s *DeleteTemplateAliasInput) SetTemplateId(v string) *DeleteTemplateAliasI
 type DeleteTemplateAliasOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the alias.
+	// The name for the template alias.
 	AliasName *string `min:"1" type:"string"`
 
-	// The ARN of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	Arn *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
-	// An ID for the template.
+	// An ID for the template associated with the deletion.
 	TemplateId *string `min:"1" type:"string"`
 }
 
@@ -12525,7 +12156,7 @@ func (s *DeleteTemplateAliasOutput) SetTemplateId(v string) *DeleteTemplateAlias
 type DeleteTemplateInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the template you are deleting.
+	// The ID of the AWS account that contains the template that you're deleting.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -12535,7 +12166,8 @@ type DeleteTemplateInput struct {
 	// TemplateId is a required field
 	TemplateId *string `location:"uri" locationName:"TemplateId" min:"1" type:"string" required:"true"`
 
-	// The version number
+	// Specifies the version of the template that you want to delete. If you don't
+	// provide a version number, DeleteTemplate deletes all versions of the template.
 	VersionNumber *int64 `location:"querystring" locationName:"version-number" min:"1" type:"long"`
 }
 
@@ -12595,13 +12227,13 @@ func (s *DeleteTemplateInput) SetVersionNumber(v int64) *DeleteTemplateInput {
 type DeleteTemplateOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	Arn *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// An ID for the template.
@@ -12724,7 +12356,7 @@ type DeleteUserByPrincipalIdOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -12832,7 +12464,7 @@ type DeleteUserOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -12864,7 +12496,7 @@ type DescribeDashboardInput struct {
 	// The alias name.
 	AliasName *string `location:"querystring" locationName:"alias-name" min:"1" type:"string"`
 
-	// AWS account ID that contains the dashboard you are describing.
+	// The ID of the AWS account that contains the dashboard that you're describing.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -12874,7 +12506,7 @@ type DescribeDashboardInput struct {
 	// DashboardId is a required field
 	DashboardId *string `location:"uri" locationName:"DashboardId" min:"1" type:"string" required:"true"`
 
-	// The version number for the dashboard. If version number isn’t passed the
+	// The version number for the dashboard. If a version number isn't passed, the
 	// latest published dashboard version is described.
 	VersionNumber *int64 `location:"querystring" locationName:"version-number" min:"1" type:"long"`
 }
@@ -12950,7 +12582,7 @@ type DescribeDashboardOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of this request.
+	// The HTTP status of this request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -12985,13 +12617,13 @@ func (s *DescribeDashboardOutput) SetStatus(v int64) *DescribeDashboardOutput {
 type DescribeDashboardPermissionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the dashboard you are describing permissions
-	// of.
+	// The ID of the AWS account that contains the dashboard that you're describing
+	// permissions for.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID for the dashboard, also added to IAM policy.
+	// The ID for the dashboard, also added to the IAM policy.
 	//
 	// DashboardId is a required field
 	DashboardId *string `location:"uri" locationName:"DashboardId" min:"1" type:"string" required:"true"`
@@ -13044,19 +12676,19 @@ func (s *DescribeDashboardPermissionsInput) SetDashboardId(v string) *DescribeDa
 type DescribeDashboardPermissionsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the dashboard.
+	// The Amazon Resource Name (ARN) of the dashboard.
 	DashboardArn *string `type:"string"`
 
 	// The ID for the dashboard.
 	DashboardId *string `min:"1" type:"string"`
 
-	// A structure that contains the permissions of the dashboard.
+	// A structure that contains the permissions for the dashboard.
 	Permissions []*ResourcePermission `min:"1" type:"list"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -13103,13 +12735,13 @@ func (s *DescribeDashboardPermissionsOutput) SetStatus(v int64) *DescribeDashboa
 type DescribeDataSetInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Account ID.
+	// The AWS account ID.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID for the dataset you want to create. This is unique per region per
-	// AWS account.
+	// The ID for the dataset that you want to create. This ID is unique per AWS
+	// Region for each AWS account.
 	//
 	// DataSetId is a required field
 	DataSetId *string `location:"uri" locationName:"DataSetId" type:"string" required:"true"`
@@ -13168,7 +12800,7 @@ type DescribeDataSetOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -13203,13 +12835,13 @@ func (s *DescribeDataSetOutput) SetStatus(v int64) *DescribeDataSetOutput {
 type DescribeDataSetPermissionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Account ID.
+	// The AWS account ID.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID for the dataset you want to create. This is unique per region per
-	// AWS account.
+	// The ID for the dataset that you want to create. This ID is unique per AWS
+	// Region for each AWS account.
 	//
 	// DataSetId is a required field
 	DataSetId *string `location:"uri" locationName:"DataSetId" type:"string" required:"true"`
@@ -13262,11 +12894,11 @@ func (s *DescribeDataSetPermissionsInput) SetDataSetId(v string) *DescribeDataSe
 type DescribeDataSetPermissionsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the dataset.
+	// The Amazon Resource Name (ARN) of the dataset.
 	DataSetArn *string `type:"string"`
 
-	// The ID for the dataset you want to create. This is unique per region per
-	// AWS account.
+	// The ID for the dataset that you want to create. This ID is unique per AWS
+	// Region for each AWS account.
 	DataSetId *string `type:"string"`
 
 	// A list of resource permissions on the dataset.
@@ -13275,7 +12907,7 @@ type DescribeDataSetPermissionsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -13327,7 +12959,8 @@ type DescribeDataSourceInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	//
 	// DataSourceId is a required field
 	DataSourceId *string `location:"uri" locationName:"DataSourceId" type:"string" required:"true"`
@@ -13386,7 +13019,7 @@ type DescribeDataSourceOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -13426,7 +13059,8 @@ type DescribeDataSourcePermissionsInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	//
 	// DataSourceId is a required field
 	DataSourceId *string `location:"uri" locationName:"DataSourceId" type:"string" required:"true"`
@@ -13479,10 +13113,11 @@ func (s *DescribeDataSourcePermissionsInput) SetDataSourceId(v string) *Describe
 type DescribeDataSourcePermissionsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the data source.
+	// The Amazon Resource Name (ARN) of the data source.
 	DataSourceArn *string `type:"string"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	DataSourceId *string `type:"string"`
 
 	// A list of resource permissions on the data source.
@@ -13491,7 +13126,7 @@ type DescribeDataSourcePermissionsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -13620,7 +13255,7 @@ type DescribeGroupOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -13660,7 +13295,7 @@ type DescribeIAMPolicyAssignmentInput struct {
 	// AssignmentName is a required field
 	AssignmentName *string `location:"uri" locationName:"AssignmentName" min:"1" type:"string" required:"true"`
 
-	// The AWS account ID that contains the assignment you want to describe.
+	// The ID of the AWS account that contains the assignment that you want to describe.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -13736,7 +13371,7 @@ type DescribeIAMPolicyAssignmentOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -13852,7 +13487,7 @@ type DescribeIngestionOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -13887,17 +13522,20 @@ func (s *DescribeIngestionOutput) SetStatus(v int64) *DescribeIngestionOutput {
 type DescribeTemplateAliasInput struct {
 	_ struct{} `type:"structure"`
 
-	// The alias name. $PUBLISHED is not supported for template.
+	// The name of the template alias that you want to describe. If you name a specific
+	// alias, you describe the version that the alias points to. You can specify
+	// the latest version of the template by providing the keyword $LATEST in the
+	// AliasName parameter. The keyword $PUBLISHED doesn't apply to templates.
 	//
 	// AliasName is a required field
 	AliasName *string `location:"uri" locationName:"AliasName" min:"1" type:"string" required:"true"`
 
-	// AWS account ID that contains the template alias you are describing.
+	// The ID of the AWS account that contains the template alias that you're describing.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// An ID for the template.
+	// The ID for the template.
 	//
 	// TemplateId is a required field
 	TemplateId *string `location:"uri" locationName:"TemplateId" min:"1" type:"string" required:"true"`
@@ -13965,7 +13603,7 @@ type DescribeTemplateAliasOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// Information about the template alias.
@@ -14003,24 +13641,24 @@ func (s *DescribeTemplateAliasOutput) SetTemplateAlias(v *TemplateAlias) *Descri
 type DescribeTemplateInput struct {
 	_ struct{} `type:"structure"`
 
-	// This is an optional field, when an alias name is provided, the version referenced
-	// by the alias is described. Refer to CreateTemplateAlias to create a template
-	// alias. $PUBLISHED is not supported for template.
+	// The alias of the template that you want to describe. If you name a specific
+	// alias, you describe the version that the alias points to. You can specify
+	// the latest version of the template by providing the keyword $LATEST in the
+	// AliasName parameter. The keyword $PUBLISHED doesn't apply to templates.
 	AliasName *string `location:"querystring" locationName:"alias-name" min:"1" type:"string"`
 
-	// AWS account ID that contains the template you are describing.
+	// The ID of the AWS account that contains the template that you're describing.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// An ID for the template.
+	// The ID for the template.
 	//
 	// TemplateId is a required field
 	TemplateId *string `location:"uri" locationName:"TemplateId" min:"1" type:"string" required:"true"`
 
-	// This is an optional field, when a version number is provided the corresponding
-	// version is describe, if it's not provided the latest version of the template
-	// is described.
+	// (Optional) The number for the version to describe. If a VersionNumber parameter
+	// value isn't provided, the latest version of the template is described.
 	VersionNumber *int64 `location:"querystring" locationName:"version-number" min:"1" type:"long"`
 }
 
@@ -14089,10 +13727,10 @@ func (s *DescribeTemplateInput) SetVersionNumber(v int64) *DescribeTemplateInput
 type DescribeTemplateOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
-	// The template structure of the object you want to describe.
+	// The template structure for the object you want to describe.
 	Template *Template `type:"structure"`
 }
 
@@ -14121,7 +13759,7 @@ func (s *DescribeTemplateOutput) SetTemplate(v *Template) *DescribeTemplateOutpu
 type DescribeTemplatePermissionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the template you are describing.
+	// The ID of the AWS account that contains the template that you're describing.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -14185,10 +13823,10 @@ type DescribeTemplatePermissionsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
-	// The ARN of the template.
+	// The Amazon Resource Name (ARN) of the template.
 	TemplateArn *string `type:"string"`
 
 	// The ID for the template.
@@ -14317,7 +13955,7 @@ type DescribeUserOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// The user name.
@@ -14352,11 +13990,71 @@ func (s *DescribeUserOutput) SetUser(v *User) *DescribeUserOutput {
 	return s
 }
 
-// Error information on a data set SPICE ingestion.
+// The domain specified isn't on the allow list. All domains for embedded dashboards
+// must be added to the approved list by an Amazon QuickSight admin.
+type DomainNotWhitelistedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DomainNotWhitelistedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainNotWhitelistedException) GoString() string {
+	return s.String()
+}
+
+func newErrorDomainNotWhitelistedException(v protocol.ResponseMetadata) error {
+	return &DomainNotWhitelistedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DomainNotWhitelistedException) Code() string {
+	return "DomainNotWhitelistedException"
+}
+
+// Message returns the exception's message.
+func (s DomainNotWhitelistedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DomainNotWhitelistedException) OrigErr() error {
+	return nil
+}
+
+func (s DomainNotWhitelistedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DomainNotWhitelistedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DomainNotWhitelistedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Error information for the SPICE ingestion of a dataset.
 type ErrorInfo struct {
 	_ struct{} `type:"structure"`
 
-	// Error essage.
+	// Error message.
 	Message *string `type:"string"`
 
 	// Error type.
@@ -14385,7 +14083,7 @@ func (s *ErrorInfo) SetType(v string) *ErrorInfo {
 	return s
 }
 
-// Export to CSV option.
+// Export to .csv option.
 type ExportToCSVOption struct {
 	_ struct{} `type:"structure"`
 
@@ -14409,12 +14107,12 @@ func (s *ExportToCSVOption) SetAvailabilityStatus(v string) *ExportToCSVOption {
 	return s
 }
 
-// A transform operation that filters rows based on some condition.
+// A transform operation that filters rows based on a condition.
 type FilterOperation struct {
 	_ struct{} `type:"structure"`
 
-	// An expression that must evaluate to a boolean value. Rows for which the expression
-	// is evaluated to true are kept in the dataset.
+	// An expression that must evaluate to a Boolean value. Rows for which the expression
+	// evaluates to true are kept in the dataset.
 	//
 	// ConditionExpression is a required field
 	ConditionExpression *string `min:"1" type:"string" required:"true"`
@@ -14528,43 +14226,43 @@ func (s *GeoSpatialColumnGroup) SetName(v string) *GeoSpatialColumnGroup {
 type GetDashboardEmbedUrlInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the dashboard you are embedding.
+	// The ID for the AWS account that contains the dashboard that you're embedding.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID for the dashboard, also added to IAM policy
+	// The ID for the dashboard, also added to the IAM policy.
 	//
 	// DashboardId is a required field
 	DashboardId *string `location:"uri" locationName:"DashboardId" min:"1" type:"string" required:"true"`
 
-	// The authentication method the user uses to sign in (IAM only).
+	// The authentication method that the user uses to sign in.
 	//
 	// IdentityType is a required field
 	IdentityType *string `location:"querystring" locationName:"creds-type" type:"string" required:"true" enum:"IdentityType"`
 
-	// Remove the reset button on embedded dashboard. The default is FALSE, which
-	// allows the reset button.
+	// Remove the reset button on the embedded dashboard. The default is FALSE,
+	// which enables the reset button.
 	ResetDisabled *bool `location:"querystring" locationName:"reset-disabled" type:"boolean"`
 
-	// How many minutes the session is valid. The session lifetime must be between
-	// 15 and 600 minutes.
+	// How many minutes the session is valid. The session lifetime must be 15-600
+	// minutes.
 	SessionLifetimeInMinutes *int64 `location:"querystring" locationName:"session-lifetime" min:"15" type:"long"`
 
-	// Remove the undo/redo button on embedded dashboard. The default is FALSE,
+	// Remove the undo/redo button on the embedded dashboard. The default is FALSE,
 	// which enables the undo/redo button.
 	UndoRedoDisabled *bool `location:"querystring" locationName:"undo-redo-disabled" type:"boolean"`
 
-	// The Amazon QuickSight user's ARN, for use with QUICKSIGHT identity type.
-	// You can use this for any Amazon QuickSight users in your account (readers,
-	// authors, or admins) authenticated as one of the following:
+	// The Amazon QuickSight user's Amazon Resource Name (ARN), for use with QUICKSIGHT
+	// identity type. You can use this for any Amazon QuickSight users in your account
+	// (readers, authors, or admins) authenticated as one of the following:
 	//
 	//    * Active Directory (AD) users or group members
 	//
-	//    * Invited non-federated users
+	//    * Invited nonfederated users
 	//
 	//    * IAM users and IAM role-based sessions authenticated through Federated
-	//    Single Sign-On using SAML, OpenID Connect, or IAM Federation
+	//    Single Sign-On using SAML, OpenID Connect, or IAM federation.
 	UserArn *string `location:"querystring" locationName:"user-arn" type:"string"`
 }
 
@@ -14651,16 +14349,16 @@ func (s *GetDashboardEmbedUrlInput) SetUserArn(v string) *GetDashboardEmbedUrlIn
 type GetDashboardEmbedUrlOutput struct {
 	_ struct{} `type:"structure"`
 
-	// URL that you can put into your server-side webpage to embed your dashboard.
+	// An URL that you can put into your server-side webpage to embed your dashboard.
 	// This URL is valid for 5 minutes, and the resulting session is valid for 10
-	// hours. The API provides the URL with an auth_code that enables a single-signon
-	// session.
+	// hours. The API provides the URL with an auth_code value that enables a single
+	// sign-on session.
 	EmbedUrl *string `type:"string" sensitive:"true"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -14698,7 +14396,7 @@ func (s *GetDashboardEmbedUrlOutput) SetStatus(v int64) *GetDashboardEmbedUrlOut
 type Group struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) for the group.
+	// The Amazon Resource Name (ARN) for the group.
 	Arn *string `type:"string"`
 
 	// The group description.
@@ -14750,7 +14448,7 @@ func (s *Group) SetPrincipalId(v string) *Group {
 type GroupMember struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) for the group member (user).
+	// The Amazon Resource Name (ARN) for the group member (user).
 	Arn *string `type:"string"`
 
 	// The name of the group member (user).
@@ -14779,7 +14477,7 @@ func (s *GroupMember) SetMemberName(v string) *GroupMember {
 	return s
 }
 
-// IAM policy assignment.
+// An IAM policy assignment.
 type IAMPolicyAssignment struct {
 	_ struct{} `type:"structure"`
 
@@ -14792,13 +14490,13 @@ type IAMPolicyAssignment struct {
 	// Assignment status.
 	AssignmentStatus *string `type:"string" enum:"AssignmentStatus"`
 
-	// AWS account ID.
+	// The AWS account ID.
 	AwsAccountId *string `min:"12" type:"string"`
 
 	// Identities.
 	Identities map[string][]*string `type:"map"`
 
-	// Policy ARN.
+	// The Amazon Resource Name (ARN) for the IAM policy.
 	PolicyArn *string `type:"string"`
 }
 
@@ -14848,7 +14546,7 @@ func (s *IAMPolicyAssignment) SetPolicyArn(v string) *IAMPolicyAssignment {
 	return s
 }
 
-// IAM policy assignment Summary.
+// IAM policy assignment summary.
 type IAMPolicyAssignmentSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -14881,16 +14579,76 @@ func (s *IAMPolicyAssignmentSummary) SetAssignmentStatus(v string) *IAMPolicyAss
 	return s
 }
 
-// Information on the SPICE ingestion for a dataset.
+// The identity type specified isn't supported. Supported identity types include
+// IAM and QUICKSIGHT.
+type IdentityTypeNotSupportedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s IdentityTypeNotSupportedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IdentityTypeNotSupportedException) GoString() string {
+	return s.String()
+}
+
+func newErrorIdentityTypeNotSupportedException(v protocol.ResponseMetadata) error {
+	return &IdentityTypeNotSupportedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IdentityTypeNotSupportedException) Code() string {
+	return "IdentityTypeNotSupportedException"
+}
+
+// Message returns the exception's message.
+func (s IdentityTypeNotSupportedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IdentityTypeNotSupportedException) OrigErr() error {
+	return nil
+}
+
+func (s IdentityTypeNotSupportedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IdentityTypeNotSupportedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IdentityTypeNotSupportedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Information about the SPICE ingestion for a dataset.
 type Ingestion struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	//
 	// Arn is a required field
 	Arn *string `type:"string" required:"true"`
 
-	// The time this ingestion started.
+	// The time that this ingestion started.
 	//
 	// CreatedTime is a required field
 	CreatedTime *time.Time `type:"timestamp" required:"true"`
@@ -14901,7 +14659,7 @@ type Ingestion struct {
 	// Ingestion ID.
 	IngestionId *string `min:"1" type:"string"`
 
-	// Size of the data ingested in bytes.
+	// The size of the data ingested, in bytes.
 	IngestionSizeInBytes *int64 `type:"long"`
 
 	// Ingestion status.
@@ -14909,10 +14667,10 @@ type Ingestion struct {
 	// IngestionStatus is a required field
 	IngestionStatus *string `type:"string" required:"true" enum:"IngestionStatus"`
 
-	// The time this ingestion took, measured in seconds.
+	// The time that this ingestion took, measured in seconds.
 	IngestionTimeInSeconds *int64 `type:"long"`
 
-	// Information on queued dataset SPICE ingestion.
+	// Information about a queued dataset SPICE ingestion.
 	QueueInfo *QueueInfo `type:"structure"`
 
 	// Event source for this ingestion.
@@ -14921,7 +14679,7 @@ type Ingestion struct {
 	// Type of this ingestion.
 	RequestType *string `type:"string" enum:"IngestionRequestType"`
 
-	// Information on rows during a data set SPICE ingestion.
+	// Information about rows for a data set SPICE ingestion.
 	RowInfo *RowInfo `type:"structure"`
 }
 
@@ -15001,7 +14759,7 @@ func (s *Ingestion) SetRowInfo(v *RowInfo) *Ingestion {
 	return s
 }
 
-// Metadata on a column that is used as the input of a transform operation.
+// Metadata for a column that is used as the input of a transform operation.
 type InputColumn struct {
 	_ struct{} `type:"structure"`
 
@@ -15108,6 +14866,183 @@ func (s *IntegerParameter) SetName(v string) *IntegerParameter {
 func (s *IntegerParameter) SetValues(v []*int64) *IntegerParameter {
 	s.Values = v
 	return s
+}
+
+// An internal failure occurred.
+type InternalFailureException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InternalFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
+	return &InternalFailureException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalFailureException) Code() string {
+	return "InternalFailureException"
+}
+
+// Message returns the exception's message.
+func (s InternalFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalFailureException) OrigErr() error {
+	return nil
+}
+
+func (s InternalFailureException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalFailureException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalFailureException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The NextToken value isn't valid.
+type InvalidNextTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidNextTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidNextTokenException) Code() string {
+	return "InvalidNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidNextTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidNextTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// One or more parameters has a value that isn't valid.
+type InvalidParameterValueException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidParameterValueException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterValueException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterValueException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterValueException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParameterValueException) Code() string {
+	return "InvalidParameterValueException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParameterValueException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParameterValueException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParameterValueException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParameterValueException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParameterValueException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Jira parameters.
@@ -15242,10 +15177,73 @@ func (s *JoinInstruction) SetType(v string) *JoinInstruction {
 	return s
 }
 
+// A limit is exceeded.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+
+	// Limit exceeded.
+	ResourceType *string `type:"string" enum:"ExceptionResourceType"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ListDashboardVersionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the dashboard you are listing.
+	// The ID of the AWS account that contains the dashboard that you're listing
+	// versions for.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -15333,7 +15331,7 @@ type ListDashboardVersionsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -15374,7 +15372,7 @@ func (s *ListDashboardVersionsOutput) SetStatus(v int64) *ListDashboardVersionsO
 type ListDashboardsInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the dashboards you are listing.
+	// The ID of the AWS account that contains the dashboards that you're listing.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -15436,8 +15434,8 @@ func (s *ListDashboardsInput) SetNextToken(v string) *ListDashboardsInput {
 type ListDashboardsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A structure that contains all of the dashboards shared with the user. Provides
-	// basic information about the dashboards.
+	// A structure that contains all of the dashboards shared with the user. This
+	// structure provides basic information about the dashboards.
 	DashboardSummaryList []*DashboardSummary `type:"list"`
 
 	// The token for the next set of results, or null if there are no more results.
@@ -15446,7 +15444,7 @@ type ListDashboardsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -15487,7 +15485,7 @@ func (s *ListDashboardsOutput) SetStatus(v int64) *ListDashboardsOutput {
 type ListDataSetsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Account ID.
+	// The AWS account ID.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -15558,7 +15556,7 @@ type ListDataSetsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -15670,7 +15668,7 @@ type ListDataSourcesOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -15817,7 +15815,7 @@ type ListGroupMembershipsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -15947,7 +15945,7 @@ type ListGroupsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -15988,7 +15986,7 @@ func (s *ListGroupsOutput) SetStatus(v int64) *ListGroupsOutput {
 type ListIAMPolicyAssignmentsForUserInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS account ID that contains the assignment.
+	// The ID of the AWS account that contains the assignments.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -16084,7 +16082,7 @@ func (s *ListIAMPolicyAssignmentsForUserInput) SetUserName(v string) *ListIAMPol
 type ListIAMPolicyAssignmentsForUserOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Active assignments for this user.
+	// The active assignments for this user.
 	ActiveAssignments []*ActiveIAMPolicyAssignment `type:"list"`
 
 	// The token for the next set of results, or null if there are no more results.
@@ -16093,7 +16091,7 @@ type ListIAMPolicyAssignmentsForUserOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -16134,10 +16132,10 @@ func (s *ListIAMPolicyAssignmentsForUserOutput) SetStatus(v int64) *ListIAMPolic
 type ListIAMPolicyAssignmentsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The status of the assignment.
+	// The status of the assignments.
 	AssignmentStatus *string `type:"string" enum:"AssignmentStatus"`
 
-	// The AWS account ID that contains this IAM policy assignment.
+	// The ID of the AWS account that contains these IAM policy assignments.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -16145,7 +16143,7 @@ type ListIAMPolicyAssignmentsInput struct {
 	// The maximum number of results to be returned per request.
 	MaxResults *int64 `location:"querystring" locationName:"max-results" min:"1" type:"integer"`
 
-	// The namespace for this assignment.
+	// The namespace for the assignments.
 	//
 	// Namespace is a required field
 	Namespace *string `location:"uri" locationName:"Namespace" type:"string" required:"true"`
@@ -16231,7 +16229,7 @@ type ListIAMPolicyAssignmentsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -16360,7 +16358,7 @@ type ListIngestionsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -16401,7 +16399,8 @@ func (s *ListIngestionsOutput) SetStatus(v int64) *ListIngestionsOutput {
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the resource you want a list of tags for.
+	// The Amazon Resource Name (ARN) of the resource that you want a list of tags
+	// for.
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `location:"uri" locationName:"ResourceArn" type:"string" required:"true"`
@@ -16445,7 +16444,7 @@ type ListTagsForResourceOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// Contains a map of the key-value pairs for the resource tag or tags assigned
@@ -16484,7 +16483,8 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 type ListTemplateAliasesInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the template aliases you are listing.
+	// The ID of the AWS account that contains the template aliases that you're
+	// listing.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -16569,10 +16569,10 @@ type ListTemplateAliasesOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
-	// A structure containing the list of template aliases.
+	// A structure containing the list of the template's aliases.
 	TemplateAliasList []*TemplateAlias `type:"list"`
 }
 
@@ -16613,7 +16613,7 @@ func (s *ListTemplateAliasesOutput) SetTemplateAliasList(v []*TemplateAlias) *Li
 type ListTemplateVersionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the templates you are listing.
+	// The ID of the AWS account that contains the templates that you're listing.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -16698,7 +16698,7 @@ type ListTemplateVersionsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// A structure containing a list of all the versions of the specified template.
@@ -16742,7 +16742,7 @@ func (s *ListTemplateVersionsOutput) SetTemplateVersionSummaryList(v []*Template
 type ListTemplatesInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the templates you are listing.
+	// The ID of the AWS account that contains the templates that you're listing.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -16810,7 +16810,7 @@ type ListTemplatesOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// A structure containing information about the templates in the list.
@@ -16854,7 +16854,7 @@ func (s *ListTemplatesOutput) SetTemplateSummaryList(v []*TemplateSummary) *List
 type ListUserGroupsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Account ID that the user is in. Currently, you use the ID for the
+	// The AWS account ID that the user is in. Currently, you use the ID for the
 	// AWS account that contains your Amazon QuickSight account.
 	//
 	// AwsAccountId is a required field
@@ -17087,7 +17087,7 @@ type ListUsersOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// The list of users.
@@ -17128,10 +17128,10 @@ func (s *ListUsersOutput) SetUserList(v []*User) *ListUsersOutput {
 	return s
 }
 
-// A unit that joins and data transformations operate on. A logical table has
-// a source, which can be either a physical table or result of a join. When
-// it points to a physical table, a logical table acts as a mutable copy of
-// that table through transform operations.
+// A logical table is a unit that joins and that data transformations operate
+// on. A logical table has a source, which can be either a physical table or
+// result of a join. When a logical table points to a physical table, the logical
+// table acts as a mutable copy of that physical table through transform operations.
 type LogicalTable struct {
 	_ struct{} `type:"structure"`
 
@@ -17214,9 +17214,8 @@ func (s *LogicalTable) SetSource(v *LogicalTableSource) *LogicalTable {
 	return s
 }
 
-// Information on the source of a logical table. This is a variant type structure.
-// No more than one of the attributes should be non-null for this structure
-// to be valid.
+// Information about the source of a logical table. This is a variant type structure.
+// For this structure to be valid, only one of the attributes can be non-null.
 type LogicalTableSource struct {
 	_ struct{} `type:"structure"`
 
@@ -17612,9 +17611,9 @@ func (s *Parameters) SetStringParameters(v []*StringParameter) *Parameters {
 	return s
 }
 
-// A view of a data source. Contains information on the shape of the data in
-// the underlying source. This is a variant type structure. No more than one
-// of the attributes can be non-null for this structure to be valid.
+// A view of a data source that contains information about the shape of the
+// data in the underlying source. This is a variant type structure. For this
+// structure to be valid, only one of the attributes can be non-null.
 type PhysicalTable struct {
 	_ struct{} `type:"structure"`
 
@@ -17757,6 +17756,65 @@ func (s *PostgreSqlParameters) SetPort(v int64) *PostgreSqlParameters {
 	return s
 }
 
+// One or more preconditions aren't met.
+type PreconditionNotMetException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PreconditionNotMetException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PreconditionNotMetException) GoString() string {
+	return s.String()
+}
+
+func newErrorPreconditionNotMetException(v protocol.ResponseMetadata) error {
+	return &PreconditionNotMetException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PreconditionNotMetException) Code() string {
+	return "PreconditionNotMetException"
+}
+
+// Message returns the exception's message.
+func (s PreconditionNotMetException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PreconditionNotMetException) OrigErr() error {
+	return nil
+}
+
+func (s PreconditionNotMetException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PreconditionNotMetException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PreconditionNotMetException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Presto parameters.
 type PrestoParameters struct {
 	_ struct{} `type:"structure"`
@@ -17873,7 +17931,7 @@ func (s *ProjectOperation) SetProjectedColumns(v []*string) *ProjectOperation {
 	return s
 }
 
-// Information on queued dataset SPICE ingestion.
+// Information about a queued dataset SPICE ingestion.
 type QueueInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -17911,7 +17969,7 @@ func (s *QueueInfo) SetWaitingOnIngestion(v string) *QueueInfo {
 	return s
 }
 
-// RDS parameters.
+// Amazon RDS parameters.
 type RdsParameters struct {
 	_ struct{} `type:"structure"`
 
@@ -17970,12 +18028,13 @@ func (s *RdsParameters) SetInstanceId(v string) *RdsParameters {
 	return s
 }
 
-// Redshift parameters. The ClusterId field can be blank if Host and Port are
-// both set, and the other way around.
+// Amazon Redshift parameters. The ClusterId field can be blank if Host and
+// Port are both set. The Host and Port fields can be blank if the ClusterId
+// field is set.
 type RedshiftParameters struct {
 	_ struct{} `type:"structure"`
 
-	// Cluster ID. This can be blank if the Host and Port are provided.
+	// Cluster ID. This field can be blank if the Host and Port are provided.
 	ClusterId *string `min:"1" type:"string"`
 
 	// Database.
@@ -17983,10 +18042,10 @@ type RedshiftParameters struct {
 	// Database is a required field
 	Database *string `min:"1" type:"string" required:"true"`
 
-	// Host. This can be blank if the ClusterId is provided.
+	// Host. This field can be blank if ClusterId is provided.
 	Host *string `min:"1" type:"string"`
 
-	// Port. This can be blank if the ClusterId is provided.
+	// Port. This field can be blank if the ClusterId is provided.
 	Port *int64 `type:"integer"`
 }
 
@@ -18212,7 +18271,7 @@ type RegisterUserOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// The user name.
@@ -18261,7 +18320,7 @@ func (s *RegisterUserOutput) SetUserInvitationUrl(v string) *RegisterUserOutput 
 type RelationalTable struct {
 	_ struct{} `type:"structure"`
 
-	// Data source ARN.
+	// The Amazon Resource Name (ARN) for the data source.
 	//
 	// DataSourceArn is a required field
 	DataSourceArn *string `type:"string" required:"true"`
@@ -18271,12 +18330,12 @@ type RelationalTable struct {
 	// InputColumns is a required field
 	InputColumns []*InputColumn `min:"1" type:"list" required:"true"`
 
-	// Name of the relational table.
+	// The name of the relational table.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// The schema name. Applies to certain relational database engines.
+	// The schema name. This name applies to certain relational database engines.
 	Schema *string `type:"string"`
 }
 
@@ -18353,12 +18412,12 @@ func (s *RelationalTable) SetSchema(v string) *RelationalTable {
 type RenameColumnOperation struct {
 	_ struct{} `type:"structure"`
 
-	// Name of the column to be renamed.
+	// The name of the column to be renamed.
 	//
 	// ColumnName is a required field
 	ColumnName *string `min:"1" type:"string" required:"true"`
 
-	// New name for the column.
+	// The new name for the column.
 	//
 	// NewColumnName is a required field
 	NewColumnName *string `min:"1" type:"string" required:"true"`
@@ -18408,18 +18467,143 @@ func (s *RenameColumnOperation) SetNewColumnName(v string) *RenameColumnOperatio
 	return s
 }
 
+// The resource specified already exists.
+type ResourceExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+
+	// The AWS request ID for this request.
+	ResourceType *string `type:"string" enum:"ExceptionResourceType"`
+}
+
+// String returns the string representation
+func (s ResourceExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceExistsException(v protocol.ResponseMetadata) error {
+	return &ResourceExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceExistsException) Code() string {
+	return "ResourceExistsException"
+}
+
+// Message returns the exception's message.
+func (s ResourceExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceExistsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// One or more resources can't be found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+
+	// The AWS request ID for this request.
+	ResourceType *string `type:"string" enum:"ExceptionResourceType"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Permission for the resource.
 type ResourcePermission struct {
 	_ struct{} `type:"structure"`
 
-	// The action to grant or revoke permissions on. For example, "quicksight:DescribeDashboard".
+	// The action to grant or revoke permissions on, for example "quicksight:DescribeDashboard".
 	//
 	// Actions is a required field
 	Actions []*string `min:"1" type:"list" required:"true"`
 
-	// The ARN of a QuickSight user or group, or an IAM ARN. If you are using cross-account
-	// resource sharing, this is the IAM ARN of an account root. Otherwise, it is
-	// the ARN of a QuickSight user or group. .
+	// The Amazon Resource Name (ARN) of an Amazon QuickSight user or group, or
+	// an IAM ARN. If you are using cross-account resource sharing, this is the
+	// IAM ARN of an account root. Otherwise, it is the ARN of a QuickSight user
+	// or group. .
 	//
 	// Principal is a required field
 	Principal *string `min:"1" type:"string" required:"true"`
@@ -18469,7 +18653,69 @@ func (s *ResourcePermission) SetPrincipal(v string) *ResourcePermission {
 	return s
 }
 
-// Information on rows during a data set SPICE ingestion.
+// This resource is currently unavailable.
+type ResourceUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+
+	// The resource type for this request.
+	ResourceType *string `type:"string" enum:"ExceptionResourceType"`
+}
+
+// String returns the string representation
+func (s ResourceUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceUnavailableException(v protocol.ResponseMetadata) error {
+	return &ResourceUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceUnavailableException) Code() string {
+	return "ResourceUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s ResourceUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Information about rows for a data set SPICE ingestion.
 type RowInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -18502,11 +18748,11 @@ func (s *RowInfo) SetRowsIngested(v int64) *RowInfo {
 	return s
 }
 
-// Row-level security configuration on the dataset.
+// The row-level security configuration for the dataset.
 type RowLevelPermissionDataSet struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the permission dataset.
+	// The Amazon Resource Name (ARN) of the permission dataset.
 	//
 	// Arn is a required field
 	Arn *string `type:"string" required:"true"`
@@ -18604,7 +18850,7 @@ func (s *S3Parameters) SetManifestFileLocation(v *ManifestFileLocation) *S3Param
 type S3Source struct {
 	_ struct{} `type:"structure"`
 
-	// Data source ARN.
+	// The amazon Resource Name (ARN) for the data source.
 	//
 	// DataSourceArn is a required field
 	DataSourceArn *string `type:"string" required:"true"`
@@ -18614,7 +18860,7 @@ type S3Source struct {
 	// InputColumns is a required field
 	InputColumns []*InputColumn `min:"1" type:"list" required:"true"`
 
-	// Information on the S3 source file(s) format.
+	// Information about the format for the S3 source file or files.
 	UploadSettings *UploadSettings `type:"structure"`
 }
 
@@ -18720,6 +18966,66 @@ func (s *ServiceNowParameters) Validate() error {
 func (s *ServiceNowParameters) SetSiteBaseUrl(v string) *ServiceNowParameters {
 	s.SiteBaseUrl = &v
 	return s
+}
+
+// The number of minutes specified for the lifetime of a session isn't valid.
+// The session lifetime must be 15-600 minutes.
+type SessionLifetimeInMinutesInvalidException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SessionLifetimeInMinutesInvalidException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SessionLifetimeInMinutesInvalidException) GoString() string {
+	return s.String()
+}
+
+func newErrorSessionLifetimeInMinutesInvalidException(v protocol.ResponseMetadata) error {
+	return &SessionLifetimeInMinutesInvalidException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SessionLifetimeInMinutesInvalidException) Code() string {
+	return "SessionLifetimeInMinutesInvalidException"
+}
+
+// Message returns the exception's message.
+func (s SessionLifetimeInMinutesInvalidException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SessionLifetimeInMinutesInvalidException) OrigErr() error {
+	return nil
+}
+
+func (s SessionLifetimeInMinutesInvalidException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SessionLifetimeInMinutesInvalidException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SessionLifetimeInMinutesInvalidException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Sheet controls option.
@@ -18954,12 +19260,12 @@ func (s *SqlServerParameters) SetPort(v int64) *SqlServerParameters {
 	return s
 }
 
-// SSL properties that apply when QuickSight connects to your underlying data
-// source.
+// Secure Socket Layer (SSL) properties that apply when QuickSight connects
+// to your underlying data source.
 type SslProperties struct {
 	_ struct{} `type:"structure"`
 
-	// A boolean flag to control whether SSL should be disabled.
+	// A Boolean option to control whether SSL should be disabled.
 	DisableSsl *bool `type:"boolean"`
 }
 
@@ -19032,8 +19338,8 @@ func (s *StringParameter) SetValues(v []*string) *StringParameter {
 	return s
 }
 
-// The keys of the key-value pairs for the resource tag or tags assigned to
-// the resource.
+// The key or keys of the key-value pairs for the resource tag or tags assigned
+// to the resource.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -19156,7 +19462,7 @@ func (s *TagColumnOperation) SetTags(v []*ColumnTag) *TagColumnOperation {
 type TagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the resource you want to tag.
+	// The Amazon Resource Name (ARN) of the resource that you want to tag.
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `location:"uri" locationName:"ResourceArn" type:"string" required:"true"`
@@ -19228,7 +19534,7 @@ type TagResourceOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -19254,19 +19560,19 @@ func (s *TagResourceOutput) SetStatus(v int64) *TagResourceOutput {
 	return s
 }
 
-// A template object. A template is an entity in QuickSight which encapsulates
-// the metadata required to create an analysis that can be used to create dashboard.
-// It adds a layer of abstraction by replacing the dataset associated with the
-// analysis with placeholders. Templates can be used to create dashboards by
-// replacing dataset placeholders with datasets which follow the same schema
-// that was used to create the source analysis and template.
+// A template object. A template is an entity in QuickSight that encapsulates
+// the metadata required to create an analysis and that you can use to create
+// a dashboard. A template adds a layer of abstraction by using placeholders
+// to replace the dataset associated with the analysis. You can use templates
+// to create dashboards by replacing dataset placeholders with datasets that
+// follow the same schema that was used to create the source analysis and template.
 //
 // You can share templates across AWS accounts by allowing users in other AWS
 // accounts to create a template or a dashboard from an existing template.
 type Template struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the template.
+	// The Amazon Resource Name (ARN) of the template.
 	Arn *string `type:"string"`
 
 	// Time when this was created.
@@ -19278,7 +19584,7 @@ type Template struct {
 	// The display name of the template.
 	Name *string `min:"1" type:"string"`
 
-	// The ID for the template. This is unique per region per AWS account.
+	// The ID for the template. This is unique per AWS Region for each AWS account.
 	TemplateId *string `min:"1" type:"string"`
 
 	// A structure describing the versions of the template.
@@ -19338,7 +19644,7 @@ type TemplateAlias struct {
 	// The display name of the template alias.
 	AliasName *string `min:"1" type:"string"`
 
-	// The ARN of the template alias.
+	// The Amazon Resource Name (ARN) of the template alias.
 	Arn *string `type:"string"`
 
 	// The version number of the template alias.
@@ -19410,7 +19716,7 @@ func (s *TemplateError) SetType(v string) *TemplateError {
 type TemplateSourceAnalysis struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	//
 	// Arn is a required field
 	Arn *string `type:"string" required:"true"`
@@ -19530,7 +19836,7 @@ func (s *TemplateSourceEntity) SetSourceTemplate(v *TemplateSourceTemplate) *Tem
 type TemplateSourceTemplate struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	//
 	// Arn is a required field
 	Arn *string `type:"string" required:"true"`
@@ -19572,10 +19878,10 @@ type TemplateSummary struct {
 	// A summary of a template.
 	Arn *string `type:"string"`
 
-	// The last time this was created.
+	// The last time that this template was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
-	// The last time this was updated.
+	// The last time that this template was updated.
 	LastUpdatedTime *time.Time `type:"timestamp"`
 
 	// A structure containing a list of version numbers for the template summary.
@@ -19584,7 +19890,7 @@ type TemplateSummary struct {
 	// A display name for the template.
 	Name *string `min:"1" type:"string"`
 
-	// The ID of the template. This is unique per region per AWS account.
+	// The ID of the template. This ID is unique per AWS Region for each AWS account.
 	TemplateId *string `min:"1" type:"string"`
 }
 
@@ -19638,7 +19944,7 @@ func (s *TemplateSummary) SetTemplateId(v string) *TemplateSummary {
 type TemplateVersion struct {
 	_ struct{} `type:"structure"`
 
-	// The time this was created.
+	// The time that this template version was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
 	// Schema of the dataset identified by the placeholder. The idea is that any
@@ -19652,10 +19958,11 @@ type TemplateVersion struct {
 	// Errors associated with the template.
 	Errors []*TemplateError `min:"1" type:"list"`
 
-	// The ARN of the analysis or template which was used to create this template.
+	// The Amazon Resource Name (ARN) of the analysis or template which was used
+	// to create this template.
 	SourceEntityArn *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *string `type:"string" enum:"ResourceStatus"`
 
 	// The version number of the template.
@@ -19721,10 +20028,10 @@ type TemplateVersionSummary struct {
 	// The ARN of the template version.
 	Arn *string `type:"string"`
 
-	// The time this was created.
+	// The time that this template version was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
-	// The desription of the template version.
+	// The description of the template version.
 	Description *string `min:"1" type:"string"`
 
 	// The status of the template version.
@@ -19850,9 +20157,67 @@ func (s *TeradataParameters) SetPort(v int64) *TeradataParameters {
 	return s
 }
 
+// Access is throttled.
+type ThrottlingException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ThrottlingException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThrottlingException) GoString() string {
+	return s.String()
+}
+
+func newErrorThrottlingException(v protocol.ResponseMetadata) error {
+	return &ThrottlingException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ThrottlingException) Code() string {
+	return "ThrottlingException"
+}
+
+// Message returns the exception's message.
+func (s ThrottlingException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ThrottlingException) OrigErr() error {
+	return nil
+}
+
+func (s ThrottlingException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ThrottlingException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ThrottlingException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // A data transformation on a logical table. This is a variant type structure.
-// No more than one of the attributes should be non-null for this structure
-// to be valid.
+// For this structure to be valid, only one of the attributes can be non-null.
 type TransformOperation struct {
 	_ struct{} `type:"structure"`
 
@@ -20022,10 +20387,72 @@ func (s *TwitterParameters) SetQuery(v string) *TwitterParameters {
 	return s
 }
 
+// This error indicates that you are calling an operation on an Amazon QuickSight
+// subscription where the edition doesn't include support for that operation.
+// Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+// Not every operation and capability is available in every edition.
+type UnsupportedUserEditionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s UnsupportedUserEditionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedUserEditionException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedUserEditionException(v protocol.ResponseMetadata) error {
+	return &UnsupportedUserEditionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnsupportedUserEditionException) Code() string {
+	return "UnsupportedUserEditionException"
+}
+
+// Message returns the exception's message.
+func (s UnsupportedUserEditionException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnsupportedUserEditionException) OrigErr() error {
+	return nil
+}
+
+func (s UnsupportedUserEditionException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnsupportedUserEditionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnsupportedUserEditionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the resource you to untag.
+	// The Amazon Resource Name (ARN) of the resource that you want to untag.
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `location:"uri" locationName:"ResourceArn" type:"string" required:"true"`
@@ -20087,7 +20514,7 @@ type UntagResourceOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -20116,7 +20543,7 @@ func (s *UntagResourceOutput) SetStatus(v int64) *UntagResourceOutput {
 type UpdateDashboardInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the dashboard you are updating.
+	// The ID of the AWS account that contains the dashboard that you're updating.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -20126,20 +20553,20 @@ type UpdateDashboardInput struct {
 	// DashboardId is a required field
 	DashboardId *string `location:"uri" locationName:"DashboardId" min:"1" type:"string" required:"true"`
 
-	// Publishing options when creating a dashboard.
+	// Options for publishing the dashboard when you create it:
 	//
-	//    * AvailabilityStatus for AdHocFilteringOption - This can be either ENABLED
-	//    or DISABLED. When This is set to set to DISABLED, QuickSight disables
+	//    * AvailabilityStatus for AdHocFilteringOption - This status can be either
+	//    ENABLED or DISABLED. When this is set to DISABLED, QuickSight disables
 	//    the left filter pane on the published dashboard, which can be used for
-	//    AdHoc filtering. Enabled by default.
+	//    ad hoc (one-time) filtering. This option is ENABLED by default.
 	//
-	//    * AvailabilityStatus for ExportToCSVOption - This can be either ENABLED
-	//    or DISABLED. The visual option to export data to CSV is disabled when
-	//    this is set to DISABLED. Enabled by default.
+	//    * AvailabilityStatus for ExportToCSVOption - This status can be either
+	//    ENABLED or DISABLED. The visual option to export data to .csv format isn't
+	//    enabled when this is set to DISABLED. This option is ENABLED by default.
 	//
-	//    * VisibilityState for SheetControlsOption - This can be either COLLAPSED
-	//    or EXPANDED. The sheet controls pane is collapsed by default when set
-	//    to true. Collapsed by default.
+	//    * VisibilityState for SheetControlsOption - This visibility state can
+	//    be either COLLAPSED or EXPANDED. The sheet controls pane is collapsed
+	//    by default when set to true. This option is COLLAPSED by default.
 	DashboardPublishOptions *DashboardPublishOptions `type:"structure"`
 
 	// The display name of the dashboard.
@@ -20151,10 +20578,10 @@ type UpdateDashboardInput struct {
 	Parameters *Parameters `type:"structure"`
 
 	// The template or analysis from which the dashboard is created. The SouceTemplate
-	// entity accepts the Arn of the template and also references to replacement
-	// datasets for the placeholders set when creating the template. The replacement
-	// datasets need to follow the same schema as the datasets for which placeholders
-	// were created when creating the template.
+	// entity accepts the Amazon Resource Name (ARN) of the template and also references
+	// to replacement datasets for the placeholders set when creating the template.
+	// The replacement datasets need to follow the same schema as the datasets for
+	// which placeholders were created when creating the template.
 	//
 	// SourceEntity is a required field
 	SourceEntity *DashboardSourceEntity `type:"structure" required:"true"`
@@ -20262,7 +20689,7 @@ func (s *UpdateDashboardInput) SetVersionDescription(v string) *UpdateDashboardI
 type UpdateDashboardOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the resource.
+	// The Amazon Resource Name (ARN) of the resource.
 	Arn *string `type:"string"`
 
 	// The creation status of the request.
@@ -20274,7 +20701,7 @@ type UpdateDashboardOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `type:"integer"`
 
 	// The ARN of the dashboard, including the version number.
@@ -20330,7 +20757,8 @@ func (s *UpdateDashboardOutput) SetVersionArn(v string) *UpdateDashboardOutput {
 type UpdateDashboardPermissionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the dashboard you are updating.
+	// The ID of the AWS account that contains the dashboard whose permissions you're
+	// updating.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -20432,7 +20860,7 @@ func (s *UpdateDashboardPermissionsInput) SetRevokePermissions(v []*ResourcePerm
 type UpdateDashboardPermissionsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the dashboard.
+	// The Amazon Resource Name (ARN) of the dashboard.
 	DashboardArn *string `type:"string"`
 
 	// The ID for the dashboard.
@@ -20444,7 +20872,7 @@ type UpdateDashboardPermissionsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -20491,7 +20919,7 @@ func (s *UpdateDashboardPermissionsOutput) SetStatus(v int64) *UpdateDashboardPe
 type UpdateDashboardPublishedVersionInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the dashboard you are updating.
+	// The ID of the AWS account that contains the dashboard that you're updating.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -20566,7 +20994,7 @@ func (s *UpdateDashboardPublishedVersionInput) SetVersionNumber(v int64) *Update
 type UpdateDashboardPublishedVersionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the dashboard.
+	// The Amazon Resource Name (ARN) of the dashboard.
 	DashboardArn *string `type:"string"`
 
 	// The ID for the dashboard.
@@ -20575,7 +21003,7 @@ type UpdateDashboardPublishedVersionOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -20616,22 +21044,22 @@ func (s *UpdateDashboardPublishedVersionOutput) SetStatus(v int64) *UpdateDashbo
 type UpdateDataSetInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Account ID.
+	// The AWS account ID.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// Groupings of columns that work together in certain QuickSight features. Currently
+	// Groupings of columns that work together in certain QuickSight features. Currently,
 	// only geospatial hierarchy is supported.
 	ColumnGroups []*ColumnGroup `min:"1" type:"list"`
 
-	// The ID for the dataset you want to create. This is unique per region per
-	// AWS account.
+	// The ID for the dataset that you want to update. This ID is unique per AWS
+	// Region for each AWS account.
 	//
 	// DataSetId is a required field
 	DataSetId *string `location:"uri" locationName:"DataSetId" type:"string" required:"true"`
 
-	// Indicates whether or not you want to import the data into SPICE.
+	// Indicates whether you want to import the data into SPICE.
 	//
 	// ImportMode is a required field
 	ImportMode *string `type:"string" required:"true" enum:"DataSetImportMode"`
@@ -20650,7 +21078,7 @@ type UpdateDataSetInput struct {
 	// PhysicalTableMap is a required field
 	PhysicalTableMap map[string]*PhysicalTable `min:"1" type:"map" required:"true"`
 
-	// Row-level security configuration on the data you want to create.
+	// The row-level security configuration for the data you want to create.
 	RowLevelPermissionDataSet *RowLevelPermissionDataSet `type:"structure"`
 }
 
@@ -20793,25 +21221,25 @@ func (s *UpdateDataSetInput) SetRowLevelPermissionDataSet(v *RowLevelPermissionD
 type UpdateDataSetOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the dataset.
+	// The Amazon Resource Name (ARN) of the dataset.
 	Arn *string `type:"string"`
 
-	// The ID for the dataset you want to create. This is unique per region per
-	// AWS account.
+	// The ID for the dataset that you want to create. This ID is unique per AWS
+	// Region for each AWS account.
 	DataSetId *string `type:"string"`
 
-	// The Amazon Resource Name (ARN) for the ingestion, which is triggered as a
-	// result of dataset creation if the import mode is SPICE
+	// The ARN for the ingestion, which is triggered as a result of dataset creation
+	// if the import mode is SPICE.
 	IngestionArn *string `type:"string"`
 
 	// The ID of the ingestion, which is triggered as a result of dataset creation
-	// if the import mode is SPICE
+	// if the import mode is SPICE.
 	IngestionId *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -20864,13 +21292,13 @@ func (s *UpdateDataSetOutput) SetStatus(v int64) *UpdateDataSetOutput {
 type UpdateDataSetPermissionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Account ID.
+	// The AWS account ID.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID for the dataset you want to create. This is unique per region per
-	// AWS account.
+	// The ID for the dataset whose permissions you want to update. This ID is unique
+	// per AWS Region for each AWS account.
 	//
 	// DataSetId is a required field
 	DataSetId *string `location:"uri" locationName:"DataSetId" type:"string" required:"true"`
@@ -20967,17 +21395,17 @@ func (s *UpdateDataSetPermissionsInput) SetRevokePermissions(v []*ResourcePermis
 type UpdateDataSetPermissionsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the dataset.
+	// The Amazon Resource Name (ARN) of the dataset.
 	DataSetArn *string `type:"string"`
 
-	// The ID for the dataset you want to create. This is unique per region per
-	// AWS account.
+	// The ID for the dataset whose permissions you want to update. This ID is unique
+	// per AWS Region for each AWS account.
 	DataSetId *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -21023,16 +21451,17 @@ type UpdateDataSourceInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The credentials QuickSight uses to connect to your underlying source. Currently
-	// only username/password based credentials are supported.
+	// The credentials that QuickSight that uses to connect to your underlying source.
+	// Currently, only credentials based on user name and password are supported.
 	Credentials *DataSourceCredentials `type:"structure" sensitive:"true"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	//
 	// DataSourceId is a required field
 	DataSourceId *string `location:"uri" locationName:"DataSourceId" type:"string" required:"true"`
 
-	// The parameters QuickSight uses to connect to your underlying source.
+	// The parameters that QuickSight uses to connect to your underlying source.
 	DataSourceParameters *DataSourceParameters `type:"structure"`
 
 	// A display name for the data source.
@@ -21040,11 +21469,12 @@ type UpdateDataSourceInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// SSL properties that apply when QuickSight connects to your underlying source.
+	// Secure Socket Layer (SSL) properties that apply when QuickSight connects
+	// to your underlying source.
 	SslProperties *SslProperties `type:"structure"`
 
-	// You need to use this parameter only when you want QuickSight to use a VPC
-	// connection when connecting to your underlying source.
+	// Use this parameter only when you want QuickSight to use a VPC connection
+	// when connecting to your underlying source.
 	VpcConnectionProperties *VpcConnectionProperties `type:"structure"`
 }
 
@@ -21146,16 +21576,17 @@ func (s *UpdateDataSourceInput) SetVpcConnectionProperties(v *VpcConnectionPrope
 type UpdateDataSourceOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the data source.
+	// The Amazon Resource Name (ARN) of the data source.
 	Arn *string `type:"string"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	DataSourceId *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// The update status of the data source's last update.
@@ -21210,7 +21641,8 @@ type UpdateDataSourcePermissionsInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	//
 	// DataSourceId is a required field
 	DataSourceId *string `location:"uri" locationName:"DataSourceId" type:"string" required:"true"`
@@ -21307,16 +21739,17 @@ func (s *UpdateDataSourcePermissionsInput) SetRevokePermissions(v []*ResourcePer
 type UpdateDataSourcePermissionsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the data source.
+	// The Amazon Resource Name (ARN) of the data source.
 	DataSourceArn *string `type:"string"`
 
-	// The ID of the data source. This is unique per AWS Region per AWS account.
+	// The ID of the data source. This ID is unique per AWS Region for each AWS
+	// account.
 	DataSourceId *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -21451,7 +21884,7 @@ type UpdateGroupOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -21486,29 +21919,29 @@ func (s *UpdateGroupOutput) SetStatus(v int64) *UpdateGroupOutput {
 type UpdateIAMPolicyAssignmentInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the assignment. It must be unique within an AWS account.
+	// The name of the assignment. This name must be unique within an AWS account.
 	//
 	// AssignmentName is a required field
 	AssignmentName *string `location:"uri" locationName:"AssignmentName" min:"1" type:"string" required:"true"`
 
-	// The status of an assignment:
+	// The status of the assignment. Possible values are as follows:
 	//
-	//    * ENABLED - Anything specified in this assignment is used while creating
+	//    * ENABLED - Anything specified in this assignment is used when creating
 	//    the data source.
 	//
-	//    * DISABLED - This assignment isn't used while creating the data source.
+	//    * DISABLED - This assignment isn't used when creating the data source.
 	//
-	//    * DRAFT - Assignment is an unfinished draft and isn't used while creating
+	//    * DRAFT - This assignment is an unfinished draft and isn't used when creating
 	//    the data source.
 	AssignmentStatus *string `type:"string" enum:"AssignmentStatus"`
 
-	// The AWS account ID that contains the IAM policy assignment.
+	// The ID of the AWS account that contains the IAM policy assignment.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// QuickSight users and/or groups that you want to assign to the specified IAM
-	// policy.
+	// The QuickSight users, groups, or both that you want to assign the policy
+	// to.
 	Identities map[string][]*string `type:"map"`
 
 	// The namespace of the assignment.
@@ -21516,8 +21949,8 @@ type UpdateIAMPolicyAssignmentInput struct {
 	// Namespace is a required field
 	Namespace *string `location:"uri" locationName:"Namespace" type:"string" required:"true"`
 
-	// An IAM policy ARN that will be applied to specified QuickSight users and
-	// groups in this assignment.
+	// The ARN for the IAM policy to apply to the QuickSight users and groups specified
+	// in this assignment.
 	PolicyArn *string `type:"string"`
 }
 
@@ -21604,28 +22037,28 @@ type UpdateIAMPolicyAssignmentOutput struct {
 	// The name of the assignment.
 	AssignmentName *string `min:"1" type:"string"`
 
-	// The status of the assignment:
+	// The status of the assignment. Possible values are as follows:
 	//
-	//    * ENABLED - Anything specified in this assignment is used while creating
+	//    * ENABLED - Anything specified in this assignment is used when creating
 	//    the data source.
 	//
-	//    * DISABLED - This assignment isn't used while creating the data source.
+	//    * DISABLED - This assignment isn't used when creating the data source.
 	//
-	//    * DRAFT - Assignment is an unfinished draft and isn't used while creating
+	//    * DRAFT - This assignment is an unfinished draft and isn't used when creating
 	//    the data source.
 	AssignmentStatus *string `type:"string" enum:"AssignmentStatus"`
 
-	// QuickSight users and/or groups that are assigned to this IAM policy.
+	// The QuickSight users, groups, or both that the IAM policy is assigned to.
 	Identities map[string][]*string `type:"map"`
 
-	// The IAM policy ARN assigned to the QuickSight users and groups specified
-	// in this request.
+	// The ARN for the IAM policy applied to the QuickSight users and groups specified
+	// in this assignment.
 	PolicyArn *string `type:"string"`
 
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 }
 
@@ -21684,12 +22117,15 @@ func (s *UpdateIAMPolicyAssignmentOutput) SetStatus(v int64) *UpdateIAMPolicyAss
 type UpdateTemplateAliasInput struct {
 	_ struct{} `type:"structure"`
 
-	// The alias name.
+	// The alias of the template that you want to update. If you name a specific
+	// alias, you update the version that the alias points to. You can specify the
+	// latest version of the template by providing the keyword $LATEST in the AliasName
+	// parameter. The keyword $PUBLISHED doesn't apply to templates.
 	//
 	// AliasName is a required field
 	AliasName *string `location:"uri" locationName:"AliasName" min:"1" type:"string" required:"true"`
 
-	// AWS account ID that contains the template aliases you are updating.
+	// The ID of the AWS account that contains the template alias that you're updating.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -21779,7 +22215,7 @@ type UpdateTemplateAliasOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// The template alias.
@@ -21817,7 +22253,7 @@ func (s *UpdateTemplateAliasOutput) SetTemplateAlias(v *TemplateAlias) *UpdateTe
 type UpdateTemplateInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the template you are updating.
+	// The ID of the AWS account that contains the template that you're updating.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -21825,8 +22261,8 @@ type UpdateTemplateInput struct {
 	// The name for the template.
 	Name *string `min:"1" type:"string"`
 
-	// The source QuickSight entity from which this template is being created. Templates
-	// can be currently created from an Analysis or another template.
+	// The source QuickSight entity from which this template is being updated. You
+	// can currently update templates from an Analysis or another template.
 	//
 	// SourceEntity is a required field
 	SourceEntity *TemplateSourceEntity `type:"structure" required:"true"`
@@ -21836,10 +22272,10 @@ type UpdateTemplateInput struct {
 	// TemplateId is a required field
 	TemplateId *string `location:"uri" locationName:"TemplateId" min:"1" type:"string" required:"true"`
 
-	// A description of the current template version being created. This API created
-	// the first version of the template. Every time UpdateTemplate is called a
-	// new version is created. Each version of the template maintains a description
-	// of the version in the VersionDescription field.
+	// A description of the current template version that is being updated. Every
+	// time you call UpdateTemplate, you create a new version of the template. Each
+	// version of the template maintains a description of the version in the VersionDescription
+	// field.
 	VersionDescription *string `min:"1" type:"string"`
 }
 
@@ -21931,14 +22367,14 @@ type UpdateTemplateOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// The ID for the template.
 	TemplateId *string `min:"1" type:"string"`
 
-	// The Amazon Resource Name (ARN) for the template, including the version information
-	// of the first version.
+	// The ARN for the template, including the version information of the first
+	// version.
 	VersionArn *string `type:"string"`
 }
 
@@ -21991,19 +22427,15 @@ func (s *UpdateTemplateOutput) SetVersionArn(v string) *UpdateTemplateOutput {
 type UpdateTemplatePermissionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID that contains the template.
+	// The ID of the AWS account that contains the template.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// A list of resource permissions to be granted on the template. The following
-	// example shows the shorthand syntax:
-	//
-	// Shorthand Syntax: Principal=string,Actions=string,string ...
+	// A list of resource permissions to be granted on the template.
 	GrantPermissions []*ResourcePermission `min:"1" type:"list"`
 
-	// A list of resource permissions to be revoked from the template. Shorthand
-	// syntax: Shorthand Syntax: Principal=string,Actions=string,string ...
+	// A list of resource permissions to be revoked from the template.
 	RevokePermissions []*ResourcePermission `min:"1" type:"list"`
 
 	// The ID for the template.
@@ -22103,10 +22535,10 @@ type UpdateTemplatePermissionsOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
-	// The ARN of the template.
+	// The Amazon Resource Name (ARN) of the template.
 	TemplateArn *string `type:"string"`
 
 	// The ID for the template.
@@ -22271,7 +22703,7 @@ type UpdateUserOutput struct {
 	// The AWS request ID for this operation.
 	RequestId *string `type:"string"`
 
-	// The http status of the request.
+	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
 	// The Amazon QuickSight user.
@@ -22306,11 +22738,11 @@ func (s *UpdateUserOutput) SetUser(v *User) *UpdateUserOutput {
 	return s
 }
 
-// Information on source file(s) format.
+// Information about the format for a source file or files.
 type UploadSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Whether or not the file(s) has a header row.
+	// Whether the file has a header row, or the files each have a header row.
 	ContainsHeader *bool `type:"boolean"`
 
 	// The delimiter between values in the file.
@@ -22387,12 +22819,12 @@ func (s *UploadSettings) SetTextQualifier(v string) *UploadSettings {
 type User struct {
 	_ struct{} `type:"structure"`
 
-	// Active status of user. When you create an Amazon QuickSight user that’s
-	// not an IAM user or an AD user, that user is inactive until they sign in and
-	// provide a password.
+	// The active status of user. When you create an Amazon QuickSight user that’s
+	// not an IAM user or an Active Directory user, that user is inactive until
+	// they sign in and provide a password.
 	Active *bool `type:"boolean"`
 
-	// The Amazon Resource name (ARN) for the user.
+	// The Amazon Resource Name (ARN) for the user.
 	Arn *string `type:"string"`
 
 	// The user's email address.
@@ -22476,11 +22908,72 @@ func (s *User) SetUserName(v string) *User {
 	return s
 }
 
+// The user with the provided name isn't found. This error can happen in any
+// operation that requires finding a user based on a provided user name, such
+// as DeleteUser, DescribeUser, and so on.
+type UserNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request ID for this request.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s UserNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UserNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorUserNotFoundException(v protocol.ResponseMetadata) error {
+	return &UserNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UserNotFoundException) Code() string {
+	return "QuickSightUserNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s UserNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UserNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s UserNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UserNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UserNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // VPC connection properties.
 type VpcConnectionProperties struct {
 	_ struct{} `type:"structure"`
 
-	// VPC connection ARN.
+	// The Amazon Resource Name (ARN) for the VPC connection.
 	//
 	// VpcConnectionArn is a required field
 	VpcConnectionArn *string `type:"string" required:"true"`

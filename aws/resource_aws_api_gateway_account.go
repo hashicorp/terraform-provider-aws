@@ -93,7 +93,7 @@ func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Updating API Gateway Account: %s", input)
 
 	// Retry due to eventual consistency of IAM
-	expectedErrMsg := "The role ARN does not have required permissions set to API Gateway"
+	expectedErrMsg := "The role ARN does not have required permissions"
 	otherErrMsg := "API Gateway could not successfully write to CloudWatch Logs using the ARN specified"
 	var out *apigateway.Account
 	var err error
