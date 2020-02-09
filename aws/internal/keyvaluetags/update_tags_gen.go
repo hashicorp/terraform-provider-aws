@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -45,11 +46,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -58,6 +63,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -73,11 +79,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
@@ -91,6 +99,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -104,7 +113,7 @@ func AccessanalyzerUpdateTags(conn *accessanalyzer.AccessAnalyzer, identifier st
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &accessanalyzer.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -212,7 +221,7 @@ func AmplifyUpdateTags(conn *amplify.Amplify, identifier string, oldTagsMap inte
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &amplify.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -248,7 +257,7 @@ func ApigatewayUpdateTags(conn *apigateway.APIGateway, identifier string, oldTag
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &apigateway.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -284,7 +293,7 @@ func Apigatewayv2UpdateTags(conn *apigatewayv2.ApiGatewayV2, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &apigatewayv2.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -320,7 +329,7 @@ func AppmeshUpdateTags(conn *appmesh.AppMesh, identifier string, oldTagsMap inte
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &appmesh.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -356,7 +365,7 @@ func AppstreamUpdateTags(conn *appstream.AppStream, identifier string, oldTagsMa
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &appstream.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -392,7 +401,7 @@ func AppsyncUpdateTags(conn *appsync.AppSync, identifier string, oldTagsMap inte
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &appsync.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -428,7 +437,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &athena.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -464,7 +473,7 @@ func BackupUpdateTags(conn *backup.Backup, identifier string, oldTagsMap interfa
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &backup.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeyList:  aws.StringSlice(removedTags.Keys()),
+			TagKeyList:  aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -490,6 +499,42 @@ func BackupUpdateTags(conn *backup.Backup, identifier string, oldTagsMap interfa
 	return nil
 }
 
+// CloudfrontUpdateTags updates cloudfront service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudfrontUpdateTags(conn *cloudfront.CloudFront, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &cloudfront.UntagResourceInput{
+			Resource: aws.String(identifier),
+			TagKeys:  &cloudfront.TagKeys{Items: aws.StringSlice(removedTags.IgnoreAws().Keys())},
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &cloudfront.TagResourceInput{
+			Resource: aws.String(identifier),
+			Tags:     &cloudfront.Tags{Items: updatedTags.IgnoreAws().CloudfrontTags()},
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // Cloudhsmv2UpdateTags updates cloudhsmv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -500,7 +545,7 @@ func Cloudhsmv2UpdateTags(conn *cloudhsmv2.CloudHSMV2, identifier string, oldTag
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudhsmv2.UntagResourceInput{
 			ResourceId: aws.String(identifier),
-			TagKeyList: aws.StringSlice(removedTags.Keys()),
+			TagKeyList: aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -572,7 +617,7 @@ func CloudwatchUpdateTags(conn *cloudwatch.CloudWatch, identifier string, oldTag
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudwatch.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -608,7 +653,7 @@ func CloudwatcheventsUpdateTags(conn *cloudwatchevents.CloudWatchEvents, identif
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudwatchevents.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -644,7 +689,7 @@ func CloudwatchlogsUpdateTags(conn *cloudwatchlogs.CloudWatchLogs, identifier st
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudwatchlogs.UntagLogGroupInput{
 			LogGroupName: aws.String(identifier),
-			Tags:         aws.StringSlice(removedTags.Keys()),
+			Tags:         aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagLogGroup(input)
@@ -680,7 +725,7 @@ func CodecommitUpdateTags(conn *codecommit.CodeCommit, identifier string, oldTag
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &codecommit.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -716,7 +761,7 @@ func CodedeployUpdateTags(conn *codedeploy.CodeDeploy, identifier string, oldTag
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &codedeploy.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -752,7 +797,7 @@ func CodepipelineUpdateTags(conn *codepipeline.CodePipeline, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &codepipeline.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -788,7 +833,7 @@ func CognitoidentityUpdateTags(conn *cognitoidentity.CognitoIdentity, identifier
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cognitoidentity.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -824,7 +869,7 @@ func CognitoidentityproviderUpdateTags(conn *cognitoidentityprovider.CognitoIden
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cognitoidentityprovider.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -860,7 +905,7 @@ func ConfigserviceUpdateTags(conn *configservice.ConfigService, identifier strin
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &configservice.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -896,7 +941,7 @@ func DatabasemigrationserviceUpdateTags(conn *databasemigrationservice.DatabaseM
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &databasemigrationservice.RemoveTagsFromResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResource(input)
@@ -932,7 +977,7 @@ func DataexchangeUpdateTags(conn *dataexchange.DataExchange, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &dataexchange.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -968,7 +1013,7 @@ func DatapipelineUpdateTags(conn *datapipeline.DataPipeline, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &datapipeline.RemoveTagsInput{
 			PipelineId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.Keys()),
+			TagKeys:    aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTags(input)
@@ -1004,7 +1049,7 @@ func DatasyncUpdateTags(conn *datasync.DataSync, identifier string, oldTagsMap i
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &datasync.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Keys:        aws.StringSlice(removedTags.Keys()),
+			Keys:        aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1040,7 +1085,7 @@ func DaxUpdateTags(conn *dax.DAX, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &dax.UntagResourceInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1076,7 +1121,7 @@ func DevicefarmUpdateTags(conn *devicefarm.DeviceFarm, identifier string, oldTag
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &devicefarm.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1112,7 +1157,7 @@ func DirectconnectUpdateTags(conn *directconnect.DirectConnect, identifier strin
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &directconnect.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1148,7 +1193,7 @@ func DirectoryserviceUpdateTags(conn *directoryservice.DirectoryService, identif
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &directoryservice.RemoveTagsFromResourceInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.Keys()),
+			TagKeys:    aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResource(input)
@@ -1184,7 +1229,7 @@ func DlmUpdateTags(conn *dlm.DLM, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &dlm.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1220,7 +1265,7 @@ func DocdbUpdateTags(conn *docdb.DocDB, identifier string, oldTagsMap interface{
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &docdb.RemoveTagsFromResourceInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResource(input)
@@ -1256,7 +1301,7 @@ func DynamodbUpdateTags(conn *dynamodb.DynamoDB, identifier string, oldTagsMap i
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &dynamodb.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1328,7 +1373,7 @@ func EcrUpdateTags(conn *ecr.ECR, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &ecr.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1364,7 +1409,7 @@ func EcsUpdateTags(conn *ecs.ECS, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &ecs.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1398,12 +1443,12 @@ func EfsUpdateTags(conn *efs.EFS, identifier string, oldTagsMap interface{}, new
 	newTags := New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &efs.DeleteTagsInput{
-			FileSystemId: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+		input := &efs.UntagResourceInput{
+			ResourceId: aws.String(identifier),
+			TagKeys:    aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
-		_, err := conn.DeleteTags(input)
+		_, err := conn.UntagResource(input)
 
 		if err != nil {
 			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
@@ -1411,12 +1456,12 @@ func EfsUpdateTags(conn *efs.EFS, identifier string, oldTagsMap interface{}, new
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &efs.CreateTagsInput{
-			FileSystemId: aws.String(identifier),
-			Tags:         updatedTags.IgnoreAws().EfsTags(),
+		input := &efs.TagResourceInput{
+			ResourceId: aws.String(identifier),
+			Tags:       updatedTags.IgnoreAws().EfsTags(),
 		}
 
-		_, err := conn.CreateTags(input)
+		_, err := conn.TagResource(input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
@@ -1436,7 +1481,7 @@ func EksUpdateTags(conn *eks.EKS, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &eks.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1472,7 +1517,7 @@ func ElasticacheUpdateTags(conn *elasticache.ElastiCache, identifier string, old
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &elasticache.RemoveTagsFromResourceInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResource(input)
@@ -1498,6 +1543,41 @@ func ElasticacheUpdateTags(conn *elasticache.ElastiCache, identifier string, old
 	return nil
 }
 
+// ElasticbeanstalkUpdateTags updates elasticbeanstalk service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ElasticbeanstalkUpdateTags(conn *elasticbeanstalk.ElasticBeanstalk, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+	removedTags := oldTags.Removed(newTags)
+	updatedTags := oldTags.Updated(newTags)
+
+	// Ensure we do not send empty requests
+	if len(removedTags) == 0 && len(updatedTags) == 0 {
+		return nil
+	}
+
+	input := &elasticbeanstalk.UpdateTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	if len(updatedTags) > 0 {
+		input.TagsToAdd = updatedTags.IgnoreAws().ElasticbeanstalkTags()
+	}
+
+	if len(removedTags) > 0 {
+		input.TagsToRemove = aws.StringSlice(removedTags.Keys())
+	}
+
+	_, err := conn.UpdateTagsForResource(input)
+
+	if err != nil {
+		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+	}
+
+	return nil
+}
+
 // ElasticsearchserviceUpdateTags updates elasticsearchservice service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1508,7 +1588,7 @@ func ElasticsearchserviceUpdateTags(conn *elasticsearchservice.ElasticsearchServ
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &elasticsearchservice.RemoveTagsInput{
 			ARN:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.Keys()),
+			TagKeys: aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTags(input)
@@ -1534,6 +1614,42 @@ func ElasticsearchserviceUpdateTags(conn *elasticsearchservice.ElasticsearchServ
 	return nil
 }
 
+// ElbUpdateTags updates elb service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ElbUpdateTags(conn *elb.ELB, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &elb.RemoveTagsInput{
+			LoadBalancerNames: aws.StringSlice([]string{identifier}),
+			Tags:              removedTags.IgnoreAws().ElbTagKeys(),
+		}
+
+		_, err := conn.RemoveTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &elb.AddTagsInput{
+			LoadBalancerNames: aws.StringSlice([]string{identifier}),
+			Tags:              updatedTags.IgnoreAws().ElbTags(),
+		}
+
+		_, err := conn.AddTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // Elbv2UpdateTags updates elbv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1544,7 +1660,7 @@ func Elbv2UpdateTags(conn *elbv2.ELBV2, identifier string, oldTagsMap interface{
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &elbv2.RemoveTagsInput{
 			ResourceArns: aws.StringSlice([]string{identifier}),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTags(input)
@@ -1580,7 +1696,7 @@ func EmrUpdateTags(conn *emr.EMR, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &emr.RemoveTagsInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.Keys()),
+			TagKeys:    aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTags(input)
@@ -1616,7 +1732,7 @@ func FirehoseUpdateTags(conn *firehose.Firehose, identifier string, oldTagsMap i
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &firehose.UntagDeliveryStreamInput{
 			DeliveryStreamName: aws.String(identifier),
-			TagKeys:            aws.StringSlice(removedTags.Keys()),
+			TagKeys:            aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagDeliveryStream(input)
@@ -1652,7 +1768,7 @@ func FsxUpdateTags(conn *fsx.FSx, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &fsx.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1678,6 +1794,78 @@ func FsxUpdateTags(conn *fsx.FSx, identifier string, oldTagsMap interface{}, new
 	return nil
 }
 
+// GameliftUpdateTags updates gamelift service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GameliftUpdateTags(conn *gamelift.GameLift, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &gamelift.UntagResourceInput{
+			ResourceARN: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &gamelift.TagResourceInput{
+			ResourceARN: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().GameliftTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// GlacierUpdateTags updates glacier service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GlacierUpdateTags(conn *glacier.Glacier, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &glacier.RemoveTagsFromVaultInput{
+			VaultName: aws.String(identifier),
+			TagKeys:   aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.RemoveTagsFromVault(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &glacier.AddTagsToVaultInput{
+			VaultName: aws.String(identifier),
+			Tags:      updatedTags.IgnoreAws().GlacierTags(),
+		}
+
+		_, err := conn.AddTagsToVault(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // GlueUpdateTags updates glue service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1688,7 +1876,7 @@ func GlueUpdateTags(conn *glue.Glue, identifier string, oldTagsMap interface{}, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &glue.UntagResourceInput{
 			ResourceArn:  aws.String(identifier),
-			TagsToRemove: aws.StringSlice(removedTags.Keys()),
+			TagsToRemove: aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1724,7 +1912,7 @@ func GreengrassUpdateTags(conn *greengrass.Greengrass, identifier string, oldTag
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &greengrass.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1760,7 +1948,7 @@ func GuarddutyUpdateTags(conn *guardduty.GuardDuty, identifier string, oldTagsMa
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &guardduty.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1796,7 +1984,7 @@ func ImagebuilderUpdateTags(conn *imagebuilder.Imagebuilder, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &imagebuilder.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1832,7 +2020,7 @@ func IotUpdateTags(conn *iot.IoT, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iot.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1868,7 +2056,7 @@ func IotanalyticsUpdateTags(conn *iotanalytics.IoTAnalytics, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iotanalytics.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1904,7 +2092,7 @@ func IoteventsUpdateTags(conn *iotevents.IoTEvents, identifier string, oldTagsMa
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &iotevents.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1940,7 +2128,7 @@ func KafkaUpdateTags(conn *kafka.Kafka, identifier string, oldTagsMap interface{
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &kafka.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -1966,6 +2154,46 @@ func KafkaUpdateTags(conn *kafka.Kafka, identifier string, oldTagsMap interface{
 	return nil
 }
 
+// KinesisUpdateTags updates kinesis service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisUpdateTags(conn *kinesis.Kinesis, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		for _, removedTags := range removedTags.Chunks(10) {
+			input := &kinesis.RemoveTagsFromStreamInput{
+				StreamName: aws.String(identifier),
+				TagKeys:    aws.StringSlice(removedTags.IgnoreAws().Keys()),
+			}
+
+			_, err := conn.RemoveTagsFromStream(input)
+
+			if err != nil {
+				return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			}
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		for _, updatedTags := range updatedTags.Chunks(10) {
+			input := &kinesis.AddTagsToStreamInput{
+				StreamName: aws.String(identifier),
+				Tags:       aws.StringMap(updatedTags.IgnoreAws().Map()),
+			}
+
+			_, err := conn.AddTagsToStream(input)
+
+			if err != nil {
+				return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // KinesisanalyticsUpdateTags updates kinesisanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1976,7 +2204,7 @@ func KinesisanalyticsUpdateTags(conn *kinesisanalytics.KinesisAnalytics, identif
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &kinesisanalytics.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2012,7 +2240,7 @@ func Kinesisanalyticsv2UpdateTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, i
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &kinesisanalyticsv2.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2048,7 +2276,7 @@ func KmsUpdateTags(conn *kms.KMS, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &kms.UntagResourceInput{
 			KeyId:   aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.Keys()),
+			TagKeys: aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2084,7 +2312,7 @@ func LambdaUpdateTags(conn *lambda.Lambda, identifier string, oldTagsMap interfa
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &lambda.UntagResourceInput{
 			Resource: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.Keys()),
+			TagKeys:  aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2120,7 +2348,7 @@ func LicensemanagerUpdateTags(conn *licensemanager.LicenseManager, identifier st
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &licensemanager.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2156,7 +2384,7 @@ func LightsailUpdateTags(conn *lightsail.Lightsail, identifier string, oldTagsMa
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &lightsail.UntagResourceInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2192,7 +2420,7 @@ func MediaconnectUpdateTags(conn *mediaconnect.MediaConnect, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &mediaconnect.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2228,7 +2456,7 @@ func MediaconvertUpdateTags(conn *mediaconvert.MediaConvert, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &mediaconvert.UntagResourceInput{
 			Arn:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.Keys()),
+			TagKeys: aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2264,7 +2492,7 @@ func MedialiveUpdateTags(conn *medialive.MediaLive, identifier string, oldTagsMa
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &medialive.DeleteTagsInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.DeleteTags(input)
@@ -2300,7 +2528,7 @@ func MediapackageUpdateTags(conn *mediapackage.MediaPackage, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &mediapackage.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2336,7 +2564,7 @@ func MediastoreUpdateTags(conn *mediastore.MediaStore, identifier string, oldTag
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &mediastore.UntagResourceInput{
 			Resource: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.Keys()),
+			TagKeys:  aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2372,7 +2600,7 @@ func MqUpdateTags(conn *mq.MQ, identifier string, oldTagsMap interface{}, newTag
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &mq.DeleteTagsInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.DeleteTags(input)
@@ -2408,7 +2636,7 @@ func NeptuneUpdateTags(conn *neptune.Neptune, identifier string, oldTagsMap inte
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &neptune.RemoveTagsFromResourceInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResource(input)
@@ -2444,7 +2672,7 @@ func OpsworksUpdateTags(conn *opsworks.OpsWorks, identifier string, oldTagsMap i
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &opsworks.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2480,7 +2708,7 @@ func OrganizationsUpdateTags(conn *organizations.Organizations, identifier strin
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &organizations.UntagResourceInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.Keys()),
+			TagKeys:    aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2506,6 +2734,42 @@ func OrganizationsUpdateTags(conn *organizations.Organizations, identifier strin
 	return nil
 }
 
+// PinpointUpdateTags updates pinpoint service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func PinpointUpdateTags(conn *pinpoint.Pinpoint, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &pinpoint.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &pinpoint.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagsModel:   &pinpoint.TagsModel{Tags: updatedTags.IgnoreAws().PinpointTags()},
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // QldbUpdateTags updates qldb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -2516,7 +2780,7 @@ func QldbUpdateTags(conn *qldb.QLDB, identifier string, oldTagsMap interface{}, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &qldb.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2552,7 +2816,7 @@ func RamUpdateTags(conn *ram.RAM, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &ram.UntagResourceInput{
 			ResourceShareArn: aws.String(identifier),
-			TagKeys:          aws.StringSlice(removedTags.Keys()),
+			TagKeys:          aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2588,7 +2852,7 @@ func RdsUpdateTags(conn *rds.RDS, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &rds.RemoveTagsFromResourceInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResource(input)
@@ -2624,7 +2888,7 @@ func RedshiftUpdateTags(conn *redshift.Redshift, identifier string, oldTagsMap i
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &redshift.DeleteTagsInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.DeleteTags(input)
@@ -2660,7 +2924,7 @@ func ResourcegroupsUpdateTags(conn *resourcegroups.ResourceGroups, identifier st
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &resourcegroups.UntagInput{
 			Arn:  aws.String(identifier),
-			Keys: aws.StringSlice(removedTags.Keys()),
+			Keys: aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.Untag(input)
@@ -2686,6 +2950,42 @@ func ResourcegroupsUpdateTags(conn *resourcegroups.ResourceGroups, identifier st
 	return nil
 }
 
+// Route53UpdateTags updates route53 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Route53UpdateTags(conn *route53.Route53, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+	removedTags := oldTags.Removed(newTags)
+	updatedTags := oldTags.Updated(newTags)
+
+	// Ensure we do not send empty requests
+	if len(removedTags) == 0 && len(updatedTags) == 0 {
+		return nil
+	}
+
+	input := &route53.ChangeTagsForResourceInput{
+		ResourceId:   aws.String(identifier),
+		ResourceType: aws.String(resourceType),
+	}
+
+	if len(updatedTags) > 0 {
+		input.AddTags = updatedTags.IgnoreAws().Route53Tags()
+	}
+
+	if len(removedTags) > 0 {
+		input.RemoveTagKeys = aws.StringSlice(removedTags.Keys())
+	}
+
+	_, err := conn.ChangeTagsForResource(input)
+
+	if err != nil {
+		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+	}
+
+	return nil
+}
+
 // Route53resolverUpdateTags updates route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -2696,7 +2996,7 @@ func Route53resolverUpdateTags(conn *route53resolver.Route53Resolver, identifier
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &route53resolver.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2732,7 +3032,7 @@ func SagemakerUpdateTags(conn *sagemaker.SageMaker, identifier string, oldTagsMa
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &sagemaker.DeleteTagsInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.DeleteTags(input)
@@ -2768,7 +3068,7 @@ func SecretsmanagerUpdateTags(conn *secretsmanager.SecretsManager, identifier st
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &secretsmanager.UntagResourceInput{
 			SecretId: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.Keys()),
+			TagKeys:  aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2804,7 +3104,7 @@ func SecurityhubUpdateTags(conn *securityhub.SecurityHub, identifier string, old
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &securityhub.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2840,7 +3140,7 @@ func SfnUpdateTags(conn *sfn.SFN, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &sfn.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2876,7 +3176,7 @@ func SnsUpdateTags(conn *sns.SNS, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &sns.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -2912,7 +3212,7 @@ func SqsUpdateTags(conn *sqs.SQS, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &sqs.UntagQueueInput{
 			QueueUrl: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.Keys()),
+			TagKeys:  aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagQueue(input)
@@ -2949,7 +3249,7 @@ func SsmUpdateTags(conn *ssm.SSM, identifier string, resourceType string, oldTag
 		input := &ssm.RemoveTagsFromResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: aws.String(resourceType),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResource(input)
@@ -2986,7 +3286,7 @@ func StoragegatewayUpdateTags(conn *storagegateway.StorageGateway, identifier st
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &storagegateway.RemoveTagsFromResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResource(input)
@@ -3022,7 +3322,7 @@ func SwfUpdateTags(conn *swf.SWF, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &swf.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -3058,7 +3358,7 @@ func TransferUpdateTags(conn *transfer.Transfer, identifier string, oldTagsMap i
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &transfer.UntagResourceInput{
 			Arn:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.Keys()),
+			TagKeys: aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -3094,7 +3394,7 @@ func WafUpdateTags(conn *waf.WAF, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &waf.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -3130,7 +3430,7 @@ func WafregionalUpdateTags(conn *wafregional.WAFRegional, identifier string, old
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &waf.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
@@ -3156,6 +3456,42 @@ func WafregionalUpdateTags(conn *wafregional.WAFRegional, identifier string, old
 	return nil
 }
 
+// Wafv2UpdateTags updates wafv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Wafv2UpdateTags(conn *wafv2.WAFV2, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &wafv2.UntagResourceInput{
+			ResourceARN: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &wafv2.TagResourceInput{
+			ResourceARN: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().Wafv2Tags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // WorkspacesUpdateTags updates workspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -3166,7 +3502,7 @@ func WorkspacesUpdateTags(conn *workspaces.WorkSpaces, identifier string, oldTag
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &workspaces.DeleteTagsInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.Keys()),
+			TagKeys:    aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.DeleteTags(input)

@@ -37,20 +37,22 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 			MountPoints: []*batch.MountPoint{
 				{ContainerPath: aws.String("/tmp"), ReadOnly: aws.Bool(false), SourceVolume: aws.String("tmp")},
 			},
+			ResourceRequirements: []*batch.ResourceRequirement{},
 			Ulimits: []*batch.Ulimit{
 				{HardLimit: aws.Int64(int64(1024)), Name: aws.String("nofile"), SoftLimit: aws.Int64(int64(1024))},
 			},
+			Vcpus: aws.Int64(int64(1)),
 			Volumes: []*batch.Volume{
 				{
 					Host: &batch.Host{SourcePath: aws.String("/tmp")},
 					Name: aws.String("tmp"),
 				},
 			},
-			Vcpus: aws.Int64(int64(1)),
 		},
 	}
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobDefinitionBaseConfig, ri)
+	resourceName := "aws_batch_job_definition.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
@@ -59,9 +61,14 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists("aws_batch_job_definition.test", &jd),
+					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
 					testAccCheckBatchJobDefinitionAttributes(&jd, &compare),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -73,6 +80,7 @@ func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobDefinitionBaseConfig, ri)
 	updateConfig := fmt.Sprintf(testAccBatchJobDefinitionUpdateConfig, ri)
+	resourceName := "aws_batch_job_definition.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
@@ -81,16 +89,21 @@ func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists("aws_batch_job_definition.test", &before),
+					testAccCheckBatchJobDefinitionExists(resourceName, &before),
 					testAccCheckBatchJobDefinitionAttributes(&before, nil),
 				),
 			},
 			{
 				Config: updateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobDefinitionExists("aws_batch_job_definition.test", &after),
+					testAccCheckBatchJobDefinitionExists(resourceName, &after),
 					testAccCheckJobDefinitionRecreated(t, &before, &after),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

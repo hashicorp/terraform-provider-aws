@@ -2,6 +2,10 @@
 
 package kinesisvideo
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -87,3 +91,19 @@ const (
 	// API.
 	ErrCodeVersionMismatchException = "VersionMismatchException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":                 newErrorAccessDeniedException,
+	"AccountChannelLimitExceededException":  newErrorAccountChannelLimitExceededException,
+	"AccountStreamLimitExceededException":   newErrorAccountStreamLimitExceededException,
+	"ClientLimitExceededException":          newErrorClientLimitExceededException,
+	"DeviceStreamLimitExceededException":    newErrorDeviceStreamLimitExceededException,
+	"InvalidArgumentException":              newErrorInvalidArgumentException,
+	"InvalidDeviceException":                newErrorInvalidDeviceException,
+	"InvalidResourceFormatException":        newErrorInvalidResourceFormatException,
+	"NotAuthorizedException":                newErrorNotAuthorizedException,
+	"ResourceInUseException":                newErrorResourceInUseException,
+	"ResourceNotFoundException":             newErrorResourceNotFoundException,
+	"TagsPerResourceExceededLimitException": newErrorTagsPerResourceExceededLimitException,
+	"VersionMismatchException":              newErrorVersionMismatchException,
+}

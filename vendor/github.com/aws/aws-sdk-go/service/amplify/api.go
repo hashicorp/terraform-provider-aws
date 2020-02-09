@@ -66,22 +66,22 @@ func (c *Amplify) CreateAppRequest(input *CreateAppInput) (req *request.Request,
 // See the AWS API reference guide for AWS Amplify's
 // API operation CreateApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -160,21 +160,21 @@ func (c *Amplify) CreateBackendEnvironmentRequest(input *CreateBackendEnvironmen
 // See the AWS API reference guide for AWS Amplify's
 // API operation CreateBackendEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -253,25 +253,25 @@ func (c *Amplify) CreateBranchRequest(input *CreateBranchInput) (req *request.Re
 // See the AWS API reference guide for AWS Amplify's
 // API operation CreateBranch for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -350,18 +350,18 @@ func (c *Amplify) CreateDeploymentRequest(input *CreateDeploymentInput) (req *re
 // See the AWS API reference guide for AWS Amplify's
 // API operation CreateDeployment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -440,25 +440,25 @@ func (c *Amplify) CreateDomainAssociationRequest(input *CreateDomainAssociationI
 // See the AWS API reference guide for AWS Amplify's
 // API operation CreateDomainAssociation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -537,25 +537,25 @@ func (c *Amplify) CreateWebhookRequest(input *CreateWebhookInput) (req *request.
 // See the AWS API reference guide for AWS Amplify's
 // API operation CreateWebhook for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -634,21 +634,21 @@ func (c *Amplify) DeleteAppRequest(input *DeleteAppInput) (req *request.Request,
 // See the AWS API reference guide for AWS Amplify's
 // API operation DeleteApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -727,21 +727,21 @@ func (c *Amplify) DeleteBackendEnvironmentRequest(input *DeleteBackendEnvironmen
 // See the AWS API reference guide for AWS Amplify's
 // API operation DeleteBackendEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -820,21 +820,21 @@ func (c *Amplify) DeleteBranchRequest(input *DeleteBranchInput) (req *request.Re
 // See the AWS API reference guide for AWS Amplify's
 // API operation DeleteBranch for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -913,21 +913,21 @@ func (c *Amplify) DeleteDomainAssociationRequest(input *DeleteDomainAssociationI
 // See the AWS API reference guide for AWS Amplify's
 // API operation DeleteDomainAssociation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -1006,21 +1006,21 @@ func (c *Amplify) DeleteJobRequest(input *DeleteJobInput) (req *request.Request,
 // See the AWS API reference guide for AWS Amplify's
 // API operation DeleteJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -1099,21 +1099,21 @@ func (c *Amplify) DeleteWebhookRequest(input *DeleteWebhookInput) (req *request.
 // See the AWS API reference guide for AWS Amplify's
 // API operation DeleteWebhook for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -1192,17 +1192,17 @@ func (c *Amplify) GenerateAccessLogsRequest(input *GenerateAccessLogsInput) (req
 // See the AWS API reference guide for AWS Amplify's
 // API operation GenerateAccessLogs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
@@ -1281,17 +1281,17 @@ func (c *Amplify) GetAppRequest(input *GetAppInput) (req *request.Request, outpu
 // See the AWS API reference guide for AWS Amplify's
 // API operation GetApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
@@ -1370,21 +1370,21 @@ func (c *Amplify) GetArtifactUrlRequest(input *GetArtifactUrlInput) (req *reques
 // See the AWS API reference guide for AWS Amplify's
 // API operation GetArtifactUrl for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -1463,17 +1463,17 @@ func (c *Amplify) GetBackendEnvironmentRequest(input *GetBackendEnvironmentInput
 // See the AWS API reference guide for AWS Amplify's
 // API operation GetBackendEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
@@ -1552,17 +1552,17 @@ func (c *Amplify) GetBranchRequest(input *GetBranchInput) (req *request.Request,
 // See the AWS API reference guide for AWS Amplify's
 // API operation GetBranch for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
@@ -1641,17 +1641,17 @@ func (c *Amplify) GetDomainAssociationRequest(input *GetDomainAssociationInput) 
 // See the AWS API reference guide for AWS Amplify's
 // API operation GetDomainAssociation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
@@ -1730,21 +1730,21 @@ func (c *Amplify) GetJobRequest(input *GetJobInput) (req *request.Request, outpu
 // See the AWS API reference guide for AWS Amplify's
 // API operation GetJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -1823,21 +1823,21 @@ func (c *Amplify) GetWebhookRequest(input *GetWebhookInput) (req *request.Reques
 // See the AWS API reference guide for AWS Amplify's
 // API operation GetWebhook for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -1916,14 +1916,14 @@ func (c *Amplify) ListAppsRequest(input *ListAppsInput) (req *request.Request, o
 // See the AWS API reference guide for AWS Amplify's
 // API operation ListApps for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
@@ -2002,18 +2002,18 @@ func (c *Amplify) ListArtifactsRequest(input *ListArtifactsInput) (req *request.
 // See the AWS API reference guide for AWS Amplify's
 // API operation ListArtifacts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -2092,14 +2092,14 @@ func (c *Amplify) ListBackendEnvironmentsRequest(input *ListBackendEnvironmentsI
 // See the AWS API reference guide for AWS Amplify's
 // API operation ListBackendEnvironments for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
@@ -2178,14 +2178,14 @@ func (c *Amplify) ListBranchesRequest(input *ListBranchesInput) (req *request.Re
 // See the AWS API reference guide for AWS Amplify's
 // API operation ListBranches for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
@@ -2264,14 +2264,14 @@ func (c *Amplify) ListDomainAssociationsRequest(input *ListDomainAssociationsInp
 // See the AWS API reference guide for AWS Amplify's
 // API operation ListDomainAssociations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
@@ -2350,18 +2350,18 @@ func (c *Amplify) ListJobsRequest(input *ListJobsInput) (req *request.Request, o
 // See the AWS API reference guide for AWS Amplify's
 // API operation ListJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -2440,15 +2440,15 @@ func (c *Amplify) ListTagsForResourceRequest(input *ListTagsForResourceInput) (r
 // See the AWS API reference guide for AWS Amplify's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalFailureException "InternalFailureException"
+// Returned Error Types:
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Exception thrown when an operation fails due to non-existent resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/ListTagsForResource
@@ -2526,18 +2526,18 @@ func (c *Amplify) ListWebhooksRequest(input *ListWebhooksInput) (req *request.Re
 // See the AWS API reference guide for AWS Amplify's
 // API operation ListWebhooks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -2616,21 +2616,21 @@ func (c *Amplify) StartDeploymentRequest(input *StartDeploymentInput) (req *requ
 // See the AWS API reference guide for AWS Amplify's
 // API operation StartDeployment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -2709,21 +2709,21 @@ func (c *Amplify) StartJobRequest(input *StartJobInput) (req *request.Request, o
 // See the AWS API reference guide for AWS Amplify's
 // API operation StartJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -2802,21 +2802,21 @@ func (c *Amplify) StopJobRequest(input *StopJobInput) (req *request.Request, out
 // See the AWS API reference guide for AWS Amplify's
 // API operation StopJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exception thrown when a resource could not be created because of service
 //   limits.
 //
@@ -2896,15 +2896,15 @@ func (c *Amplify) TagResourceRequest(input *TagResourceInput) (req *request.Requ
 // See the AWS API reference guide for AWS Amplify's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalFailureException "InternalFailureException"
+// Returned Error Types:
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Exception thrown when an operation fails due to non-existent resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/TagResource
@@ -2983,15 +2983,15 @@ func (c *Amplify) UntagResourceRequest(input *UntagResourceInput) (req *request.
 // See the AWS API reference guide for AWS Amplify's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalFailureException "InternalFailureException"
+// Returned Error Types:
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Exception thrown when an operation fails due to non-existent resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/UntagResource
@@ -3069,17 +3069,17 @@ func (c *Amplify) UpdateAppRequest(input *UpdateAppInput) (req *request.Request,
 // See the AWS API reference guide for AWS Amplify's
 // API operation UpdateApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
@@ -3158,21 +3158,21 @@ func (c *Amplify) UpdateBranchRequest(input *UpdateBranchInput) (req *request.Re
 // See the AWS API reference guide for AWS Amplify's
 // API operation UpdateBranch for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -3251,21 +3251,21 @@ func (c *Amplify) UpdateDomainAssociationRequest(input *UpdateDomainAssociationI
 // See the AWS API reference guide for AWS Amplify's
 // API operation UpdateDomainAssociation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -3344,21 +3344,21 @@ func (c *Amplify) UpdateWebhookRequest(input *UpdateWebhookInput) (req *request.
 // See the AWS API reference guide for AWS Amplify's
 // API operation UpdateWebhook for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Exception thrown when a request contains unexpected data.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Exception thrown when an operation fails due to a lack of access.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Exception thrown when an entity has not been found during an operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   Exception thrown when the service fails to perform an operation due to an
 //   internal issue.
 //
-//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   * DependentServiceFailureException
 //   Exception thrown when an operation fails due to a dependent service throwing
 //   an exception.
 //
@@ -3835,6 +3835,62 @@ func (s *BackendEnvironment) SetStackName(v string) *BackendEnvironment {
 func (s *BackendEnvironment) SetUpdateTime(v time.Time) *BackendEnvironment {
 	s.UpdateTime = &v
 	return s
+}
+
+// Exception thrown when a request contains unexpected data.
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Branch for an Amplify App, which maps to a 3rd party repository branch.
@@ -5604,6 +5660,63 @@ func (s *DeleteWebhookOutput) SetWebhook(v *Webhook) *DeleteWebhookOutput {
 	return s
 }
 
+// Exception thrown when an operation fails due to a dependent service throwing
+// an exception.
+type DependentServiceFailureException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s DependentServiceFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DependentServiceFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorDependentServiceFailureException(v protocol.ResponseMetadata) error {
+	return &DependentServiceFailureException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DependentServiceFailureException) Code() string {
+	return "DependentServiceFailureException"
+}
+
+// Message returns the exception's message.
+func (s DependentServiceFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DependentServiceFailureException) OrigErr() error {
+	return nil
+}
+
+func (s DependentServiceFailureException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DependentServiceFailureException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DependentServiceFailureException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Structure for Domain Association, which associates a custom domain with an
 // Amplify App.
 type DomainAssociation struct {
@@ -6363,6 +6476,63 @@ func (s *GetWebhookOutput) SetWebhook(v *Webhook) *GetWebhookOutput {
 	return s
 }
 
+// Exception thrown when the service fails to perform an operation due to an
+// internal issue.
+type InternalFailureException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
+	return &InternalFailureException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalFailureException) Code() string {
+	return "InternalFailureException"
+}
+
+// Message returns the exception's message.
+func (s InternalFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalFailureException) OrigErr() error {
+	return nil
+}
+
+func (s InternalFailureException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalFailureException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalFailureException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Structure for an execution job for an Amplify App.
 type Job struct {
 	_ struct{} `type:"structure"`
@@ -6512,6 +6682,63 @@ func (s *JobSummary) SetStartTime(v time.Time) *JobSummary {
 func (s *JobSummary) SetStatus(v string) *JobSummary {
 	s.Status = &v
 	return s
+}
+
+// Exception thrown when a resource could not be created because of service
+// limits.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Request structure for an Amplify App list request.
@@ -7333,6 +7560,62 @@ func (s *ListWebhooksOutput) SetWebhooks(v []*Webhook) *ListWebhooksOutput {
 	return s
 }
 
+// Exception thrown when an entity has not been found during an operation.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Structure with Production Branch information.
 type ProductionBranch struct {
 	_ struct{} `type:"structure"`
@@ -7382,6 +7665,64 @@ func (s *ProductionBranch) SetStatus(v string) *ProductionBranch {
 func (s *ProductionBranch) SetThumbnailUrl(v string) *ProductionBranch {
 	s.ThumbnailUrl = &v
 	return s
+}
+
+// Exception thrown when an operation fails due to non-existent resource.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Code_ *string `locationName:"code" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Request structure for start a deployment.
@@ -8036,6 +8377,62 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// Exception thrown when an operation fails due to a lack of access.
+type UnauthorizedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnauthorizedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnauthorizedException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
+	return &UnauthorizedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnauthorizedException) Code() string {
+	return "UnauthorizedException"
+}
+
+// Message returns the exception's message.
+func (s UnauthorizedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnauthorizedException) OrigErr() error {
+	return nil
+}
+
+func (s UnauthorizedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnauthorizedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnauthorizedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Request structure used to untag resource.

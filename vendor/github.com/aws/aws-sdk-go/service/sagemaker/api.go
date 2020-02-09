@@ -157,11 +157,11 @@ func (c *SageMaker) AssociateTrialComponentRequest(input *AssociateTrialComponen
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation AssociateTrialComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -322,12 +322,12 @@ func (c *SageMaker) CreateAppRequest(input *CreateAppInput) (req *request.Reques
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateApp
@@ -405,11 +405,11 @@ func (c *SageMaker) CreateAutoMLJobRequest(input *CreateAutoMLJobInput) (req *re
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateAutoMLJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -597,11 +597,11 @@ func (c *SageMaker) CreateCompilationJobRequest(input *CreateCompilationJobInput
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateCompilationJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -688,12 +688,12 @@ func (c *SageMaker) CreateDomainRequest(input *CreateDomainInput) (req *request.
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateDomain
@@ -802,8 +802,8 @@ func (c *SageMaker) CreateEndpointRequest(input *CreateEndpointInput) (req *requ
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -900,8 +900,8 @@ func (c *SageMaker) CreateEndpointConfigRequest(input *CreateEndpointConfigInput
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateEndpointConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -1004,8 +1004,8 @@ func (c *SageMaker) CreateExperimentRequest(input *CreateExperimentInput) (req *
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateExperiment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -1084,12 +1084,12 @@ func (c *SageMaker) CreateFlowDefinitionRequest(input *CreateFlowDefinitionInput
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateFlowDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateFlowDefinition
@@ -1169,12 +1169,12 @@ func (c *SageMaker) CreateHumanTaskUiRequest(input *CreateHumanTaskUiInput) (req
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateHumanTaskUi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateHumanTaskUi
@@ -1256,11 +1256,11 @@ func (c *SageMaker) CreateHyperParameterTuningJobRequest(input *CreateHyperParam
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateHyperParameterTuningJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -1366,11 +1366,11 @@ func (c *SageMaker) CreateLabelingJobRequest(input *CreateLabelingJobInput) (req
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateLabelingJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -1475,8 +1475,8 @@ func (c *SageMaker) CreateModelRequest(input *CreateModelInput) (req *request.Re
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateModel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -1638,12 +1638,12 @@ func (c *SageMaker) CreateMonitoringScheduleRequest(input *CreateMonitoringSched
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateMonitoringSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateMonitoringSchedule
@@ -1758,8 +1758,8 @@ func (c *SageMaker) CreateNotebookInstanceRequest(input *CreateNotebookInstanceI
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateNotebookInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -1855,8 +1855,8 @@ func (c *SageMaker) CreateNotebookInstanceLifecycleConfigRequest(input *CreateNo
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateNotebookInstanceLifecycleConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -1938,6 +1938,11 @@ func (c *SageMaker) CreatePresignedDomainUrlRequest(input *CreatePresignedDomain
 //
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreatePresignedDomainUrl for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFound
+//   Resource being access is not found.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreatePresignedDomainUrl
 func (c *SageMaker) CreatePresignedDomainUrl(input *CreatePresignedDomainUrlInput) (*CreatePresignedDomainUrlOutput, error) {
 	req, out := c.CreatePresignedDomainUrlRequest(input)
@@ -2103,15 +2108,15 @@ func (c *SageMaker) CreateProcessingJobRequest(input *CreateProcessingJobInput) 
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateProcessingJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateProcessingJob
@@ -2230,15 +2235,15 @@ func (c *SageMaker) CreateTrainingJobRequest(input *CreateTrainingJobInput) (req
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateTrainingJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateTrainingJob
@@ -2341,15 +2346,15 @@ func (c *SageMaker) CreateTransformJobRequest(input *CreateTransformJobInput) (r
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateTransformJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateTransformJob
@@ -2441,11 +2446,11 @@ func (c *SageMaker) CreateTrialRequest(input *CreateTrialInput) (req *request.Re
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateTrial for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -2530,12 +2535,10 @@ func (c *SageMaker) CreateTrialComponentRequest(input *CreateTrialComponentInput
 // You can add tags to a trial component and then use the Search API to search
 // for the tags.
 //
-// You can create a trial component through a direct call to the CreateTrialComponent
-// API. However, you can't specify the Source property of the component in the
-// request, therefore, the component isn't associated with an Amazon SageMaker
-// job. You must use Amazon SageMaker Studio, the Amazon SageMaker Python SDK,
-// or the AWS SDK for Python (Boto) to create the component with a valid Source
-// property.
+// CreateTrialComponent can only be invoked from within an Amazon SageMaker
+// managed environment. This includes Amazon SageMaker training jobs, processing
+// jobs, transform jobs, and Amazon SageMaker notebooks. A call to CreateTrialComponent
+// from outside one of these environments results in an error.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2544,8 +2547,8 @@ func (c *SageMaker) CreateTrialComponentRequest(input *CreateTrialComponentInput
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateTrialComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -2630,12 +2633,12 @@ func (c *SageMaker) CreateUserProfileRequest(input *CreateUserProfileInput) (req
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateUserProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateUserProfile
@@ -2717,11 +2720,11 @@ func (c *SageMaker) CreateWorkteamRequest(input *CreateWorkteamInput) (req *requ
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation CreateWorkteam for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -2876,11 +2879,11 @@ func (c *SageMaker) DeleteAppRequest(input *DeleteAppInput) (req *request.Reques
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DeleteApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteApp
@@ -3037,11 +3040,11 @@ func (c *SageMaker) DeleteDomainRequest(input *DeleteDomainInput) (req *request.
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DeleteDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteDomain
@@ -3278,8 +3281,8 @@ func (c *SageMaker) DeleteExperimentRequest(input *DeleteExperimentInput) (req *
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DeleteExperiment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteExperiment
@@ -3358,8 +3361,8 @@ func (c *SageMaker) DeleteFlowDefinitionRequest(input *DeleteFlowDefinitionInput
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DeleteFlowDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteFlowDefinition
@@ -3597,8 +3600,8 @@ func (c *SageMaker) DeleteMonitoringScheduleRequest(input *DeleteMonitoringSched
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DeleteMonitoringSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteMonitoringSchedule
@@ -3914,8 +3917,8 @@ func (c *SageMaker) DeleteTrialRequest(input *DeleteTrialInput) (req *request.Re
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DeleteTrial for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteTrial
@@ -3995,8 +3998,8 @@ func (c *SageMaker) DeleteTrialComponentRequest(input *DeleteTrialComponentInput
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DeleteTrialComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteTrialComponent
@@ -4075,11 +4078,11 @@ func (c *SageMaker) DeleteUserProfileRequest(input *DeleteUserProfileInput) (req
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DeleteUserProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUse "ResourceInUse"
+// Returned Error Types:
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteUserProfile
@@ -4157,8 +4160,8 @@ func (c *SageMaker) DeleteWorkteamRequest(input *DeleteWorkteamInput) (req *requ
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DeleteWorkteam for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -4311,8 +4314,8 @@ func (c *SageMaker) DescribeAppRequest(input *DescribeAppInput) (req *request.Re
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeApp
@@ -4390,8 +4393,8 @@ func (c *SageMaker) DescribeAutoMLJobRequest(input *DescribeAutoMLJobInput) (req
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeAutoMLJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeAutoMLJob
@@ -4546,8 +4549,8 @@ func (c *SageMaker) DescribeCompilationJobRequest(input *DescribeCompilationJobI
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeCompilationJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeCompilationJob
@@ -4625,8 +4628,8 @@ func (c *SageMaker) DescribeDomainRequest(input *DescribeDomainInput) (req *requ
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeDomain
@@ -4853,8 +4856,8 @@ func (c *SageMaker) DescribeExperimentRequest(input *DescribeExperimentInput) (r
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeExperiment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeExperiment
@@ -4932,8 +4935,8 @@ func (c *SageMaker) DescribeFlowDefinitionRequest(input *DescribeFlowDefinitionI
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeFlowDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeFlowDefinition
@@ -5011,8 +5014,8 @@ func (c *SageMaker) DescribeHumanTaskUiRequest(input *DescribeHumanTaskUiInput) 
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeHumanTaskUi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeHumanTaskUi
@@ -5090,8 +5093,8 @@ func (c *SageMaker) DescribeHyperParameterTuningJobRequest(input *DescribeHyperP
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeHyperParameterTuningJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeHyperParameterTuningJob
@@ -5169,8 +5172,8 @@ func (c *SageMaker) DescribeLabelingJobRequest(input *DescribeLabelingJobInput) 
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeLabelingJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeLabelingJob
@@ -5400,8 +5403,8 @@ func (c *SageMaker) DescribeMonitoringScheduleRequest(input *DescribeMonitoringS
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeMonitoringSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeMonitoringSchedule
@@ -5630,8 +5633,8 @@ func (c *SageMaker) DescribeProcessingJobRequest(input *DescribeProcessingJobInp
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeProcessingJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeProcessingJob
@@ -5784,8 +5787,8 @@ func (c *SageMaker) DescribeTrainingJobRequest(input *DescribeTrainingJobInput) 
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeTrainingJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeTrainingJob
@@ -5863,8 +5866,8 @@ func (c *SageMaker) DescribeTransformJobRequest(input *DescribeTransformJobInput
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeTransformJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeTransformJob
@@ -5942,8 +5945,8 @@ func (c *SageMaker) DescribeTrialRequest(input *DescribeTrialInput) (req *reques
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeTrial for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeTrial
@@ -6021,8 +6024,8 @@ func (c *SageMaker) DescribeTrialComponentRequest(input *DescribeTrialComponentI
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeTrialComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeTrialComponent
@@ -6100,8 +6103,8 @@ func (c *SageMaker) DescribeUserProfileRequest(input *DescribeUserProfileInput) 
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DescribeUserProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeUserProfile
@@ -6121,6 +6124,85 @@ func (c *SageMaker) DescribeUserProfile(input *DescribeUserProfileInput) (*Descr
 // for more information on using Contexts.
 func (c *SageMaker) DescribeUserProfileWithContext(ctx aws.Context, input *DescribeUserProfileInput, opts ...request.Option) (*DescribeUserProfileOutput, error) {
 	req, out := c.DescribeUserProfileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeWorkforce = "DescribeWorkforce"
+
+// DescribeWorkforceRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeWorkforce operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeWorkforce for more information on using the DescribeWorkforce
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeWorkforceRequest method.
+//    req, resp := client.DescribeWorkforceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeWorkforce
+func (c *SageMaker) DescribeWorkforceRequest(input *DescribeWorkforceInput) (req *request.Request, output *DescribeWorkforceOutput) {
+	op := &request.Operation{
+		Name:       opDescribeWorkforce,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeWorkforceInput{}
+	}
+
+	output = &DescribeWorkforceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeWorkforce API operation for Amazon SageMaker Service.
+//
+// Lists private workforce information, including workforce name, Amazon Resource
+// Name (ARN), and, if applicable, allowed IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)).
+// Allowable IP address ranges are the IP addresses that workers can use to
+// access tasks.
+//
+// This operation applies only to private workforces.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation DescribeWorkforce for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeWorkforce
+func (c *SageMaker) DescribeWorkforce(input *DescribeWorkforceInput) (*DescribeWorkforceOutput, error) {
+	req, out := c.DescribeWorkforceRequest(input)
+	return out, req.Send()
+}
+
+// DescribeWorkforceWithContext is the same as DescribeWorkforce with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeWorkforce for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) DescribeWorkforceWithContext(ctx aws.Context, input *DescribeWorkforceInput, opts ...request.Option) (*DescribeWorkforceOutput, error) {
+	req, out := c.DescribeWorkforceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6259,8 +6341,8 @@ func (c *SageMaker) DisassociateTrialComponentRequest(input *DisassociateTrialCo
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation DisassociateTrialComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DisassociateTrialComponent
@@ -6817,8 +6899,8 @@ func (c *SageMaker) ListCandidatesForAutoMLJobRequest(input *ListCandidatesForAu
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation ListCandidatesForAutoMLJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListCandidatesForAutoMLJob
@@ -8280,8 +8362,8 @@ func (c *SageMaker) ListLabelingJobsForWorkteamRequest(input *ListLabelingJobsFo
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation ListLabelingJobsForWorkteam for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListLabelingJobsForWorkteam
@@ -9743,8 +9825,8 @@ func (c *SageMaker) ListTrainingJobsForHyperParameterTuningJobRequest(input *Lis
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation ListTrainingJobsForHyperParameterTuningJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListTrainingJobsForHyperParameterTuningJob
@@ -10003,9 +10085,16 @@ func (c *SageMaker) ListTrialComponentsRequest(input *ListTrialComponentsInput) 
 
 // ListTrialComponents API operation for Amazon SageMaker Service.
 //
-// Lists the trial components in your account. You can filter the list to show
-// only components that were created in a specific time range. You can sort
-// the list by trial component name or creation time.
+// Lists the trial components in your account. You can sort the list by trial
+// component name or creation time. You can filter the list to show only components
+// that were created in a specific time range. You can also filter on one of
+// the following:
+//
+//    * ExperimentName
+//
+//    * SourceArn
+//
+//    * TrialName
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10013,6 +10102,11 @@ func (c *SageMaker) ListTrialComponentsRequest(input *ListTrialComponentsInput) 
 //
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation ListTrialComponents for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFound
+//   Resource being access is not found.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListTrialComponents
 func (c *SageMaker) ListTrialComponents(input *ListTrialComponentsInput) (*ListTrialComponentsOutput, error) {
 	req, out := c.ListTrialComponentsRequest(input)
@@ -10148,6 +10242,11 @@ func (c *SageMaker) ListTrialsRequest(input *ListTrialsInput) (req *request.Requ
 //
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation ListTrials for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFound
+//   Resource being access is not found.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListTrials
 func (c *SageMaker) ListTrials(input *ListTrialsInput) (*ListTrialsOutput, error) {
 	req, out := c.ListTrialsRequest(input)
@@ -10617,8 +10716,8 @@ func (c *SageMaker) SearchRequest(input *SearchInput) (req *request.Request, out
 // can sort the search results by any resource property in a ascending or descending
 // order.
 //
-// You can query against the following value types: numerical, text, Booleans,
-// and timestamps.
+// You can query against the following value types: numeric, text, Boolean,
+// and timestamp.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10756,8 +10855,8 @@ func (c *SageMaker) StartMonitoringScheduleRequest(input *StartMonitoringSchedul
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation StartMonitoringSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StartMonitoringSchedule
@@ -10840,8 +10939,8 @@ func (c *SageMaker) StartNotebookInstanceRequest(input *StartNotebookInstanceInp
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation StartNotebookInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -10921,8 +11020,8 @@ func (c *SageMaker) StopAutoMLJobRequest(input *StopAutoMLJobInput) (req *reques
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation StopAutoMLJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopAutoMLJob
@@ -11010,8 +11109,8 @@ func (c *SageMaker) StopCompilationJobRequest(input *StopCompilationJobInput) (r
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation StopCompilationJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopCompilationJob
@@ -11096,8 +11195,8 @@ func (c *SageMaker) StopHyperParameterTuningJobRequest(input *StopHyperParameter
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation StopHyperParameterTuningJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopHyperParameterTuningJob
@@ -11178,8 +11277,8 @@ func (c *SageMaker) StopLabelingJobRequest(input *StopLabelingJobInput) (req *re
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation StopLabelingJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopLabelingJob
@@ -11258,8 +11357,8 @@ func (c *SageMaker) StopMonitoringScheduleRequest(input *StopMonitoringScheduleI
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation StopMonitoringSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopMonitoringSchedule
@@ -11421,8 +11520,8 @@ func (c *SageMaker) StopProcessingJobRequest(input *StopProcessingJobInput) (req
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation StopProcessingJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopProcessingJob
@@ -11508,8 +11607,8 @@ func (c *SageMaker) StopTrainingJobRequest(input *StopTrainingJobInput) (req *re
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation StopTrainingJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopTrainingJob
@@ -11593,8 +11692,8 @@ func (c *SageMaker) StopTransformJobRequest(input *StopTransformJobInput) (req *
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation StopTransformJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+// Returned Error Types:
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/StopTransformJob
@@ -11746,15 +11845,15 @@ func (c *SageMaker) UpdateDomainRequest(input *UpdateDomainInput) (req *request.
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateDomain
@@ -11843,8 +11942,8 @@ func (c *SageMaker) UpdateEndpointRequest(input *UpdateEndpointInput) (req *requ
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -11928,8 +12027,8 @@ func (c *SageMaker) UpdateEndpointWeightsAndCapacitiesRequest(input *UpdateEndpo
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateEndpointWeightsAndCapacities for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -12009,12 +12108,12 @@ func (c *SageMaker) UpdateExperimentRequest(input *UpdateExperimentInput) (req *
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateExperiment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConflictException "ConflictException"
+// Returned Error Types:
+//   * ConflictException
 //   There was a conflict when you attempted to modify an experiment, trial, or
 //   trial component.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateExperiment
@@ -12092,12 +12191,12 @@ func (c *SageMaker) UpdateMonitoringScheduleRequest(input *UpdateMonitoringSched
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateMonitoringSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateMonitoringSchedule
@@ -12178,8 +12277,8 @@ func (c *SageMaker) UpdateNotebookInstanceRequest(input *UpdateNotebookInstanceI
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateNotebookInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -12260,8 +12359,8 @@ func (c *SageMaker) UpdateNotebookInstanceLifecycleConfigRequest(input *UpdateNo
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateNotebookInstanceLifecycleConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -12340,12 +12439,12 @@ func (c *SageMaker) UpdateTrialRequest(input *UpdateTrialInput) (req *request.Re
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateTrial for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConflictException "ConflictException"
+// Returned Error Types:
+//   * ConflictException
 //   There was a conflict when you attempted to modify an experiment, trial, or
 //   trial component.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateTrial
@@ -12423,12 +12522,12 @@ func (c *SageMaker) UpdateTrialComponentRequest(input *UpdateTrialComponentInput
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateTrialComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConflictException "ConflictException"
+// Returned Error Types:
+//   * ConflictException
 //   There was a conflict when you attempted to modify an experiment, trial, or
 //   trial component.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateTrialComponent
@@ -12506,15 +12605,15 @@ func (c *SageMaker) UpdateUserProfileRequest(input *UpdateUserProfileInput) (req
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateUserProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   Resource being accessed is in use.
 //
-//   * ErrCodeResourceNotFound "ResourceNotFound"
+//   * ResourceNotFound
 //   Resource being access is not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateUserProfile
@@ -12534,6 +12633,91 @@ func (c *SageMaker) UpdateUserProfile(input *UpdateUserProfileInput) (*UpdateUse
 // for more information on using Contexts.
 func (c *SageMaker) UpdateUserProfileWithContext(ctx aws.Context, input *UpdateUserProfileInput, opts ...request.Option) (*UpdateUserProfileOutput, error) {
 	req, out := c.UpdateUserProfileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateWorkforce = "UpdateWorkforce"
+
+// UpdateWorkforceRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateWorkforce operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateWorkforce for more information on using the UpdateWorkforce
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateWorkforceRequest method.
+//    req, resp := client.UpdateWorkforceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateWorkforce
+func (c *SageMaker) UpdateWorkforceRequest(input *UpdateWorkforceInput) (req *request.Request, output *UpdateWorkforceOutput) {
+	op := &request.Operation{
+		Name:       opUpdateWorkforce,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateWorkforceInput{}
+	}
+
+	output = &UpdateWorkforceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateWorkforce API operation for Amazon SageMaker Service.
+//
+// Restricts access to tasks assigned to workers in the specified workforce
+// to those within specific ranges of IP addresses. You specify allowed IP addresses
+// by creating a list of up to four CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html).
+//
+// By default, a workforce isn't restricted to specific IP addresses. If you
+// specify a range of IP addresses, workers who attempt to access tasks using
+// any IP address outside the specified range are denied access and get a Not
+// Found error message on the worker portal. After restricting access with this
+// operation, you can see the allowed IP values for a private workforce with
+// the operation.
+//
+// This operation applies only to private workforces.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation UpdateWorkforce for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateWorkforce
+func (c *SageMaker) UpdateWorkforce(input *UpdateWorkforceInput) (*UpdateWorkforceOutput, error) {
+	req, out := c.UpdateWorkforceRequest(input)
+	return out, req.Send()
+}
+
+// UpdateWorkforceWithContext is the same as UpdateWorkforce with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateWorkforce for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) UpdateWorkforceWithContext(ctx aws.Context, input *UpdateWorkforceInput, opts ...request.Option) (*UpdateWorkforceOutput, error) {
+	req, out := c.UpdateWorkforceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -12592,8 +12776,8 @@ func (c *SageMaker) UpdateWorkteamRequest(input *UpdateWorkteamInput) (req *requ
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation UpdateWorkteam for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+// Returned Error Types:
+//   * ResourceLimitExceeded
 //   You have exceeded an Amazon SageMaker resource limit. For example, you might
 //   have too many training jobs created.
 //
@@ -12728,8 +12912,10 @@ type AlgorithmSpecification struct {
 	//
 	//    * You use one of the Amazon SageMaker built-in algorithms
 	//
-	//    * You use one of the following prebuilt Amazon SageMaker Docker images:
-	//    Tensorflow MXNet PyTorch
+	//    * You use one of the following Prebuilt Amazon SageMaker Docker Images
+	//    (https://docs.aws.amazon.com/sagemaker/latest/dg/pre-built-containers-frameworks-deep-learning.html):
+	//    Tensorflow (version >= 1.15) MXNet (version >= 1.6) PyTorch (version >=
+	//    1.3)
 	//
 	//    * You specify at least one MetricDefinition
 	EnableSageMakerMetricsTimeSeries *bool `type:"boolean"`
@@ -14936,7 +15122,8 @@ func (s *CognitoMemberDefinition) SetUserPool(v string) *CognitoMemberDefinition
 type CollectionConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the tensor collection.
+	// The name of the tensor collection. The name must be unique relative to other
+	// rule configuration names.
 	CollectionName *string `min:"1" type:"string"`
 
 	// Parameter values for the tensor collection. The allowed parameters are "name",
@@ -15074,6 +15261,63 @@ func (s *CompilationJobSummary) SetCreationTime(v time.Time) *CompilationJobSumm
 func (s *CompilationJobSummary) SetLastModifiedTime(v time.Time) *CompilationJobSummary {
 	s.LastModifiedTime = &v
 	return s
+}
+
+// There was a conflict when you attempted to modify an experiment, trial, or
+// trial component.
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes the container, as part of model definition.
@@ -16275,6 +16519,20 @@ type CreateEndpointConfigInput struct {
 	// SageMaker uses to encrypt data on the storage volume attached to the ML compute
 	// instance that hosts the endpoint.
 	//
+	// The KmsKeyId can be any of the following formats:
+	//
+	//    * Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
+	//
+	//    * Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
+	//
+	//    * Alias name: alias/ExampleAlias
+	//
+	//    * Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
+	//
+	// The KMS key policy must grant permission to the IAM role that you specify
+	// in your CreateEndpoint, UpdateEndpoint requests. For more information, refer
+	// to the AWS Key Management Service section Using Key Policies in AWS KMS (https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html)
+	//
 	// Certain Nitro-based instances include local storage, dependent on the instance
 	// type. Local storage volumes are encrypted using a hardware module on the
 	// instance. You can't request a KmsKeyId when using an instance type with local
@@ -17339,8 +17597,6 @@ type CreateModelInput struct {
 
 	// Isolates the model container. No inbound or outbound network calls can be
 	// made to or from the model container.
-	//
-	// The Semantic Segmentation built-in algorithm does not support network isolation.
 	EnableNetworkIsolation *bool `type:"boolean"`
 
 	// The Amazon Resource Name (ARN) of the IAM role that Amazon SageMaker can
@@ -18549,8 +18805,6 @@ type CreateTrainingJobInput struct {
 	// to use a VPC, Amazon SageMaker downloads and uploads customer data and model
 	// artifacts through the specified VPC, but the training container does not
 	// have network access.
-	//
-	// The Semantic Segmentation built-in algorithm does not support network isolation.
 	EnableNetworkIsolation *bool `type:"boolean"`
 
 	// Configuration for the experiment.
@@ -20108,7 +20362,7 @@ type DebugRuleConfiguration struct {
 	// The instance type to deploy for a training job.
 	InstanceType *string `type:"string" enum:"ProcessingInstanceType"`
 
-	// Path to local storage location for rules. Defaults to /opt/ml/processing/output/rule/.
+	// Path to local storage location for output of rules. Defaults to /opt/ml/processing/output/rule/.
 	LocalPath *string `type:"string"`
 
 	// The name of the rule configuration. It must be unique relative to other rule
@@ -20128,7 +20382,7 @@ type DebugRuleConfiguration struct {
 	// Path to Amazon S3 storage location for rules.
 	S3OutputPath *string `type:"string"`
 
-	// The size, in GB, of the ML storage volume attached to the notebook instance.
+	// The size, in GB, of the ML storage volume attached to the processing instance.
 	VolumeSizeInGB *int64 `type:"integer"`
 }
 
@@ -23735,8 +23989,6 @@ type DescribeModelOutput struct {
 
 	// If True, no inbound or outbound network calls can be made to or from the
 	// model container.
-	//
-	// The Semantic Segmentation built-in algorithm does not support network isolation.
 	EnableNetworkIsolation *bool `type:"boolean"`
 
 	// The Amazon Resource Name (ARN) of the IAM role that you specified for the
@@ -24924,8 +25176,6 @@ type DescribeTrainingJobOutput struct {
 	// to use a VPC, Amazon SageMaker downloads and uploads customer data and model
 	// artifacts through the specified VPC, but the training container does not
 	// have network access.
-	//
-	// The Semantic Segmentation built-in algorithm does not support network isolation.
 	EnableNetworkIsolation *bool `type:"boolean"`
 
 	// Configuration for the experiment.
@@ -26079,6 +26329,78 @@ func (s *DescribeUserProfileOutput) SetUserProfileName(v string) *DescribeUserPr
 // SetUserSettings sets the UserSettings field's value.
 func (s *DescribeUserProfileOutput) SetUserSettings(v *UserSettings) *DescribeUserProfileOutput {
 	s.UserSettings = v
+	return s
+}
+
+type DescribeWorkforceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the private workforce whose access you want to restrict. WorkforceName
+	// is automatically set to "default" when a workforce is created and cannot
+	// be modified.
+	//
+	// WorkforceName is a required field
+	WorkforceName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeWorkforceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeWorkforceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeWorkforceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeWorkforceInput"}
+	if s.WorkforceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkforceName"))
+	}
+	if s.WorkforceName != nil && len(*s.WorkforceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("WorkforceName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetWorkforceName sets the WorkforceName field's value.
+func (s *DescribeWorkforceInput) SetWorkforceName(v string) *DescribeWorkforceInput {
+	s.WorkforceName = &v
+	return s
+}
+
+type DescribeWorkforceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A single private workforce, which is automatically created when you create
+	// your first private work team. You can create one private work force in each
+	// AWS Region. By default, any workforce related API operation used in a specific
+	// region will apply to the workforce created in that region. To learn how to
+	// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
+	//
+	// Workforce is a required field
+	Workforce *Workforce `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeWorkforceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeWorkforceOutput) GoString() string {
+	return s.String()
+}
+
+// SetWorkforce sets the Workforce field's value.
+func (s *DescribeWorkforceOutput) SetWorkforce(v *Workforce) *DescribeWorkforceOutput {
+	s.Workforce = v
 	return s
 }
 
@@ -27329,8 +27651,7 @@ func (s *FlowDefinitionSummary) SetFlowDefinitionStatus(v string) *FlowDefinitio
 type GetSearchSuggestionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Amazon SageMaker resource to Search for. The only valid Resource
-	// value is TrainingJob.
+	// The name of the Amazon SageMaker resource to Search for.
 	//
 	// Resource is a required field
 	Resource *string `type:"string" required:"true" enum:"ResourceType"`
@@ -27511,7 +27832,7 @@ func (s *GitConfigForUpdate) SetSecretArn(v string) *GitConfigForUpdate {
 	return s
 }
 
-// Defines under what conditions SageMaker creates a human loop.
+// Defines under what conditions SageMaker creates a human loop. Used within .
 type HumanLoopActivationConditionsConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -28023,7 +28344,7 @@ type HumanTaskConfig struct {
 
 	// Defines the maximum number of data objects that can be labeled by human workers
 	// at the same time. Also referred to as batch size. Each object may have more
-	// than one worker at one time.
+	// than one worker at one time. The default value is 1000 objects.
 	MaxConcurrentTaskCount *int64 `min:"1" type:"integer"`
 
 	// The number of human workers that will label an object.
@@ -28288,8 +28609,9 @@ type HumanTaskConfig struct {
 
 	// The length of time that a task remains available for labeling by human workers.
 	// If you choose the Amazon Mechanical Turk workforce, the maximum is 12 hours
-	// (43200). For private and vendor workforces, the maximum is as listed.
-	TaskAvailabilityLifetimeInSeconds *int64 `min:"1" type:"integer"`
+	// (43200). The default value is 864000 seconds (1 day). For private and vendor
+	// workforces, the maximum is as listed.
+	TaskAvailabilityLifetimeInSeconds *int64 `min:"60" type:"integer"`
 
 	// A description of the task for your human workers.
 	//
@@ -28351,8 +28673,8 @@ func (s *HumanTaskConfig) Validate() error {
 	if s.PreHumanTaskLambdaArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("PreHumanTaskLambdaArn"))
 	}
-	if s.TaskAvailabilityLifetimeInSeconds != nil && *s.TaskAvailabilityLifetimeInSeconds < 1 {
-		invalidParams.Add(request.NewErrParamMinValue("TaskAvailabilityLifetimeInSeconds", 1))
+	if s.TaskAvailabilityLifetimeInSeconds != nil && *s.TaskAvailabilityLifetimeInSeconds < 60 {
+		invalidParams.Add(request.NewErrParamMinValue("TaskAvailabilityLifetimeInSeconds", 60))
 	}
 	if s.TaskDescription == nil {
 		invalidParams.Add(request.NewErrParamRequired("TaskDescription"))
@@ -28756,8 +29078,6 @@ type HyperParameterTrainingJobDefinition struct {
 	// to use a VPC, Amazon SageMaker downloads and uploads customer data and model
 	// artifacts through the specified VPC, but the training container does not
 	// have network access.
-	//
-	// The Semantic Segmentation built-in algorithm does not support network isolation.
 	EnableNetworkIsolation *bool `type:"boolean"`
 
 	// Specifies ranges of integer, continuous, and categorical hyperparameters
@@ -29711,6 +30031,16 @@ type InputConfig struct {
 	//    If using the CLI, {\"input\":[1,1024,1024,3]} Examples for two inputs:
 	//    If using the console, {"data1": [1,28,28,1], "data2":[1,28,28,1]} If using
 	//    the CLI, {\"data1\": [1,28,28,1], \"data2\":[1,28,28,1]}
+	//
+	//    * KERAS: You must specify the name and shape (NCHW format) of expected
+	//    data inputs using a dictionary format for your trained model. Note that
+	//    while Keras model artifacts should be uploaded in NHWC (channel-last)
+	//    format, DataInputConfig should be specified in NCHW (channel-first) format.
+	//    The dictionary formats required for the console and CLI are different.
+	//    Examples for one input: If using the console, {"input_1":[1,3,224,224]}
+	//    If using the CLI, {\"input_1\":[1,3,224,224]} Examples for two inputs:
+	//    If using the console, {"input_1": [1,3,224,224], "input_2":[1,3,224,224]}
+	//    If using the CLI, {\"input_1\": [1,3,224,224], \"input_2\":[1,3,224,224]}
 	//
 	//    * MXNET/ONNX: You must specify the name and shape (NCHW format) of the
 	//    expected data inputs in order using a dictionary format for your trained
@@ -31973,7 +32303,8 @@ type ListExperimentsInput struct {
 	// A filter that returns only experiments created before the specified time.
 	CreatedBefore *time.Time `type:"timestamp"`
 
-	// The maximum number of experiments to return in the response.
+	// The maximum number of experiments to return in the response. The default
+	// value is 10.
 	MaxResults *int64 `min:"1" type:"integer"`
 
 	// If the previous call to ListExperiments didn't return the full set of experiments,
@@ -34528,7 +34859,12 @@ type ListTrialComponentsInput struct {
 	// A filter that returns only components created before the specified time.
 	CreatedBefore *time.Time `type:"timestamp"`
 
-	// The maximum number of components to return in the response.
+	// A filter that returns only components that are part of the specified experiment.
+	// If you specify ExperimentName, you can't filter by SourceArn or TrialName.
+	ExperimentName *string `min:"1" type:"string"`
+
+	// The maximum number of components to return in the response. The default value
+	// is 10.
 	MaxResults *int64 `min:"1" type:"integer"`
 
 	// If the previous call to ListTrialComponents didn't return the full set of
@@ -34542,8 +34878,13 @@ type ListTrialComponentsInput struct {
 	SortOrder *string `type:"string" enum:"SortOrder"`
 
 	// A filter that returns only components that have the specified source Amazon
-	// Resource Name (ARN).
+	// Resource Name (ARN). If you specify SourceArn, you can't filter by ExperimentName
+	// or TrialName.
 	SourceArn *string `type:"string"`
+
+	// A filter that returns only components that are part of the specified trial.
+	// If you specify TrialName, you can't filter by ExperimentName or SourceArn.
+	TrialName *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -34559,8 +34900,14 @@ func (s ListTrialComponentsInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ListTrialComponentsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListTrialComponentsInput"}
+	if s.ExperimentName != nil && len(*s.ExperimentName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ExperimentName", 1))
+	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.TrialName != nil && len(*s.TrialName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TrialName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -34578,6 +34925,12 @@ func (s *ListTrialComponentsInput) SetCreatedAfter(v time.Time) *ListTrialCompon
 // SetCreatedBefore sets the CreatedBefore field's value.
 func (s *ListTrialComponentsInput) SetCreatedBefore(v time.Time) *ListTrialComponentsInput {
 	s.CreatedBefore = &v
+	return s
+}
+
+// SetExperimentName sets the ExperimentName field's value.
+func (s *ListTrialComponentsInput) SetExperimentName(v string) *ListTrialComponentsInput {
+	s.ExperimentName = &v
 	return s
 }
 
@@ -34608,6 +34961,12 @@ func (s *ListTrialComponentsInput) SetSortOrder(v string) *ListTrialComponentsIn
 // SetSourceArn sets the SourceArn field's value.
 func (s *ListTrialComponentsInput) SetSourceArn(v string) *ListTrialComponentsInput {
 	s.SourceArn = &v
+	return s
+}
+
+// SetTrialName sets the TrialName field's value.
+func (s *ListTrialComponentsInput) SetTrialName(v string) *ListTrialComponentsInput {
+	s.TrialName = &v
 	return s
 }
 
@@ -34655,7 +35014,8 @@ type ListTrialsInput struct {
 	// A filter that returns only trials that are part of the specified experiment.
 	ExperimentName *string `min:"1" type:"string"`
 
-	// The maximum number of trials to return in the response.
+	// The maximum number of trials to return in the response. The default value
+	// is 10.
 	MaxResults *int64 `min:"1" type:"integer"`
 
 	// If the previous call to ListTrials didn't return the full set of trials,
@@ -36591,7 +36951,7 @@ type NestedFilters struct {
 	Filters []*Filter `min:"1" type:"list" required:"true"`
 
 	// The name of the property to use in the nested filters. The value must match
-	// a listed property name, such as InputDataConfig .
+	// a listed property name, such as InputDataConfig.
 	//
 	// NestedPropertyName is a required field
 	NestedPropertyName *string `min:"1" type:"string" required:"true"`
@@ -38204,13 +38564,12 @@ func (s *ProductionVariantSummary) SetVariantName(v string) *ProductionVariantSu
 	return s
 }
 
-// A type of SuggestionQuery. A suggestion query for retrieving property names
-// that match the specified hint.
+// Part of the SuggestionQuery type. Specifies a hint for retrieving property
+// names that begin with the specified text.
 type PropertyNameQuery struct {
 	_ struct{} `type:"structure"`
 
-	// Text that is part of a property's name. The property names of hyperparameter,
-	// metric, and tag key names that begin with the specified text in the PropertyNameHint.
+	// Text that begins a property's name.
 	//
 	// PropertyNameHint is a required field
 	PropertyNameHint *string `type:"string" required:"true"`
@@ -38863,6 +39222,119 @@ func (s *ResourceConfig) SetVolumeSizeInGB(v int64) *ResourceConfig {
 	return s
 }
 
+// Resource being accessed is in use.
+type ResourceInUse struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUse) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUse(v protocol.ResponseMetadata) error {
+	return &ResourceInUse{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUse) Code() string {
+	return "ResourceInUse"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUse) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUse) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUse) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUse) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUse) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have exceeded an Amazon SageMaker resource limit. For example, you might
+// have too many training jobs created.
+type ResourceLimitExceeded struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceLimitExceeded) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceLimitExceeded) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceLimitExceeded(v protocol.ResponseMetadata) error {
+	return &ResourceLimitExceeded{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceLimitExceeded) Code() string {
+	return "ResourceLimitExceeded"
+}
+
+// Message returns the exception's message.
+func (s ResourceLimitExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceLimitExceeded) OrigErr() error {
+	return nil
+}
+
+func (s ResourceLimitExceeded) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceLimitExceeded) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceLimitExceeded) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Specifies the maximum number of training jobs and parallel training jobs
 // that a hyperparameter tuning job can launch.
 type ResourceLimits struct {
@@ -38923,6 +39395,62 @@ func (s *ResourceLimits) SetMaxNumberOfTrainingJobs(v int64) *ResourceLimits {
 func (s *ResourceLimits) SetMaxParallelTrainingJobs(v int64) *ResourceLimits {
 	s.MaxParallelTrainingJobs = &v
 	return s
+}
+
+// Resource being access is not found.
+type ResourceNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFound(v protocol.ResponseMetadata) error {
+	return &ResourceNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFound) Code() string {
+	return "ResourceNotFound"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFound) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFound) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFound) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The instance type and quantity.
@@ -39301,8 +39829,7 @@ type SearchInput struct {
 	// and Sort parameters.
 	NextToken *string `type:"string"`
 
-	// The name of the Amazon SageMaker resource to search for. Currently, the only
-	// valid Resource value is TrainingJob.
+	// The name of the Amazon SageMaker resource to search for.
 	//
 	// Resource is a required field
 	Resource *string `type:"string" required:"true" enum:"ResourceType"`
@@ -39669,13 +40196,13 @@ func (s *SharingSettings) SetS3OutputPath(v string) *SharingSettings {
 // of the JSON lines in the AugmentedManifestFile is shuffled. The shuffling
 // order is determined using the Seed value.
 //
-// For Pipe input mode, shuffling is done at the start of every epoch. With
-// large datasets, this ensures that the order of the training data is different
-// for each epoch, and it helps reduce bias and possible overfitting. In a multi-node
-// training job when ShuffleConfig is combined with S3DataDistributionType of
-// ShardedByS3Key, the data is shuffled across nodes so that the content sent
-// to a particular node on the first epoch might be sent to a different node
-// on the second epoch.
+// For Pipe input mode, when ShuffleConfig is specified shuffling is done at
+// the start of every epoch. With large datasets, this ensures that the order
+// of the training data is different for each epoch, and it helps reduce bias
+// and possible overfitting. In a multi-node training job when ShuffleConfig
+// is combined with S3DataDistributionType of ShardedByS3Key, the data is shuffled
+// across nodes so that the content sent to a particular node on the first epoch
+// might be sent to a different node on the second epoch.
 type ShuffleConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -39820,6 +40347,53 @@ func (s *SourceAlgorithmSpecification) Validate() error {
 // SetSourceAlgorithms sets the SourceAlgorithms field's value.
 func (s *SourceAlgorithmSpecification) SetSourceAlgorithms(v []*SourceAlgorithm) *SourceAlgorithmSpecification {
 	s.SourceAlgorithms = v
+	return s
+}
+
+// A list of IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)).
+// Used to create an allow list of IP addresses for a private workforce. For
+// more information, see .
+type SourceIpConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A list of one to four Classless Inter-Domain Routing (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
+	// (CIDR) values.
+	//
+	// Maximum: 4 CIDR values
+	//
+	// The following Length Constraints apply to individual CIDR values in the CIDR
+	// value list.
+	//
+	// Cidrs is a required field
+	Cidrs []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s SourceIpConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SourceIpConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SourceIpConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SourceIpConfig"}
+	if s.Cidrs == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cidrs"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCidrs sets the Cidrs field's value.
+func (s *SourceIpConfig) SetCidrs(v []*string) *SourceIpConfig {
+	s.Cidrs = v
 	return s
 }
 
@@ -40556,12 +41130,13 @@ func (s *SubscribedWorkteam) SetWorkteamArn(v string) *SubscribedWorkteam {
 	return s
 }
 
-// Limits the property names that are included in the response.
+// Specified in the GetSearchSuggestions request. Limits the property names
+// that are included in the response.
 type SuggestionQuery struct {
 	_ struct{} `type:"structure"`
 
-	// A type of SuggestionQuery. Defines a property name hint. Only property names
-	// that match the specified hint are included in the response.
+	// Defines a property name hint. Only property names that begin with the specified
+	// hint are included in the response.
 	PropertyNameQuery *PropertyNameQuery `type:"structure"`
 }
 
@@ -41988,13 +42563,13 @@ type TransformOutput struct {
 	// encrypt the model artifacts at rest using Amazon S3 server-side encryption.
 	// The KmsKeyId can be any of the following formats:
 	//
-	//    * // KMS Key ID "1234abcd-12ab-34cd-56ef-1234567890ab"
+	//    * Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * // Amazon Resource Name (ARN) of a KMS Key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+	//    * Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * // KMS Key Alias "alias/ExampleAlias"
+	//    * Alias name: alias/ExampleAlias
 	//
-	//    * // Amazon Resource Name (ARN) of a KMS Key Alias "arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"
+	//    * Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
 	//
 	// If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS
 	// key for Amazon S3 for your role's account. For more information, see KMS-Managed
@@ -42096,9 +42671,13 @@ type TransformResources struct {
 	// that run the batch transform job. The VolumeKmsKeyId can be any of the following
 	// formats:
 	//
-	//    * // KMS Key ID "1234abcd-12ab-34cd-56ef-1234567890ab"
+	//    * Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * // Amazon Resource Name (ARN) of a KMS Key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+	//    * Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
+	//
+	//    * Alias name: alias/ExampleAlias
+	//
+	//    * Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
 	VolumeKmsKeyId *string `type:"string"`
 }
 
@@ -44456,6 +45035,95 @@ func (s *UpdateUserProfileOutput) SetUserProfileArn(v string) *UpdateUserProfile
 	return s
 }
 
+type UpdateWorkforceInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of one to four worker IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
+	// that can be used to access tasks assigned to this workforce.
+	//
+	// Maximum: 4 CIDR values
+	SourceIpConfig *SourceIpConfig `type:"structure"`
+
+	// The name of the private workforce whose access you want to restrict. WorkforceName
+	// is automatically set to "default" when a workforce is created and cannot
+	// be modified.
+	//
+	// WorkforceName is a required field
+	WorkforceName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateWorkforceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateWorkforceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateWorkforceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateWorkforceInput"}
+	if s.WorkforceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkforceName"))
+	}
+	if s.WorkforceName != nil && len(*s.WorkforceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("WorkforceName", 1))
+	}
+	if s.SourceIpConfig != nil {
+		if err := s.SourceIpConfig.Validate(); err != nil {
+			invalidParams.AddNested("SourceIpConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSourceIpConfig sets the SourceIpConfig field's value.
+func (s *UpdateWorkforceInput) SetSourceIpConfig(v *SourceIpConfig) *UpdateWorkforceInput {
+	s.SourceIpConfig = v
+	return s
+}
+
+// SetWorkforceName sets the WorkforceName field's value.
+func (s *UpdateWorkforceInput) SetWorkforceName(v string) *UpdateWorkforceInput {
+	s.WorkforceName = &v
+	return s
+}
+
+type UpdateWorkforceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A single private workforce, which is automatically created when you create
+	// your first private work team. You can create one private work force in each
+	// AWS Region. By default, any workforce related API operation used in a specific
+	// region will apply to the workforce created in that region. To learn how to
+	// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
+	//
+	// Workforce is a required field
+	Workforce *Workforce `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateWorkforceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateWorkforceOutput) GoString() string {
+	return s.String()
+}
+
+// SetWorkforce sets the Workforce field's value.
+func (s *UpdateWorkforceOutput) SetWorkforce(v *Workforce) *UpdateWorkforceOutput {
+	s.Workforce = v
+	return s
+}
+
 type UpdateWorkteamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -44817,6 +45485,70 @@ func (s *VpcConfig) SetSecurityGroupIds(v []*string) *VpcConfig {
 // SetSubnets sets the Subnets field's value.
 func (s *VpcConfig) SetSubnets(v []*string) *VpcConfig {
 	s.Subnets = v
+	return s
+}
+
+// A single private workforce, which is automatically created when you create
+// your first private work team. You can create one private work force in each
+// AWS Region. By default, any workforce related API operation used in a specific
+// region will apply to the workforce created in that region. To learn how to
+// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
+type Workforce struct {
+	_ struct{} `type:"structure"`
+
+	// The most recent date that was used to successfully add one or more IP address
+	// ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
+	// to a private workforce's allow list.
+	LastUpdatedDate *time.Time `type:"timestamp"`
+
+	// A list of one to four IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
+	// to be added to the workforce allow list.
+	SourceIpConfig *SourceIpConfig `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the private workforce.
+	//
+	// WorkforceArn is a required field
+	WorkforceArn *string `type:"string" required:"true"`
+
+	// The name of the private workforce whose access you want to restrict. WorkforceName
+	// is automatically set to "default" when a workforce is created and cannot
+	// be modified.
+	//
+	// WorkforceName is a required field
+	WorkforceName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Workforce) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Workforce) GoString() string {
+	return s.String()
+}
+
+// SetLastUpdatedDate sets the LastUpdatedDate field's value.
+func (s *Workforce) SetLastUpdatedDate(v time.Time) *Workforce {
+	s.LastUpdatedDate = &v
+	return s
+}
+
+// SetSourceIpConfig sets the SourceIpConfig field's value.
+func (s *Workforce) SetSourceIpConfig(v *SourceIpConfig) *Workforce {
+	s.SourceIpConfig = v
+	return s
+}
+
+// SetWorkforceArn sets the WorkforceArn field's value.
+func (s *Workforce) SetWorkforceArn(v string) *Workforce {
+	s.WorkforceArn = &v
+	return s
+}
+
+// SetWorkforceName sets the WorkforceName field's value.
+func (s *Workforce) SetWorkforceName(v string) *Workforce {
+	s.WorkforceName = &v
 	return s
 }
 
@@ -45492,6 +46224,9 @@ const (
 const (
 	// FrameworkTensorflow is a Framework enum value
 	FrameworkTensorflow = "TENSORFLOW"
+
+	// FrameworkKeras is a Framework enum value
+	FrameworkKeras = "KERAS"
 
 	// FrameworkMxnet is a Framework enum value
 	FrameworkMxnet = "MXNET"
@@ -46631,6 +47366,24 @@ const (
 
 	// TrainingInstanceTypeMlM416xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlM416xlarge = "ml.m4.16xlarge"
+
+	// TrainingInstanceTypeMlG4dnXlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dnXlarge = "ml.g4dn.xlarge"
+
+	// TrainingInstanceTypeMlG4dn2xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dn2xlarge = "ml.g4dn.2xlarge"
+
+	// TrainingInstanceTypeMlG4dn4xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dn4xlarge = "ml.g4dn.4xlarge"
+
+	// TrainingInstanceTypeMlG4dn8xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dn8xlarge = "ml.g4dn.8xlarge"
+
+	// TrainingInstanceTypeMlG4dn12xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dn12xlarge = "ml.g4dn.12xlarge"
+
+	// TrainingInstanceTypeMlG4dn16xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dn16xlarge = "ml.g4dn.16xlarge"
 
 	// TrainingInstanceTypeMlM5Large is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlM5Large = "ml.m5.large"

@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -263,7 +262,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		FileSystemId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "FileSystemNotFound" {
+		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
 			log.Printf("[WARN] EFS file system (%s) could not be found.", d.Id())
 			d.SetId("")
 			return nil
@@ -273,16 +272,6 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 
 	if hasEmptyFileSystems(resp) {
 		return fmt.Errorf("EFS file system %q could not be found.", d.Id())
-	}
-
-	tags, err := keyvaluetags.EfsListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for EFS file system (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error settings tags: %s", err)
 	}
 
 	var fs *efs.FileSystemDescription
@@ -314,8 +303,13 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	d.Set("throughput_mode", fs.ThroughputMode)
 
+	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	region := meta.(*AWSClient).region
-	if err := d.Set("dns_name", resourceAwsEfsDnsName(aws.StringValue(fs.FileSystemId), region)); err != nil {
+	dnsSuffix := meta.(*AWSClient).dnsSuffix
+	if err := d.Set("dns_name", resourceAwsEfsDnsName(aws.StringValue(fs.FileSystemId), region, dnsSuffix)); err != nil {
 		return fmt.Errorf("error setting dns_name: %s", err)
 	}
 
@@ -343,16 +337,27 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("Error delete file system: %s with err %s", d.Id(), err.Error())
 	}
+
+	err = waitForDeleteEfsFileSystem(conn, d.Id(), 10*time.Minute)
+	if err != nil {
+		return fmt.Errorf("Error waiting for EFS file system (%q) to delete: %w", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] EFS file system %q deleted.", d.Id())
+
+	return nil
+}
+
+func waitForDeleteEfsFileSystem(conn *efs.EFS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"available", "deleting"},
 		Target:  []string{},
 		Refresh: func() (interface{}, string, error) {
 			resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
-				FileSystemId: aws.String(d.Id()),
+				FileSystemId: aws.String(id),
 			})
 			if err != nil {
-				efsErr, ok := err.(awserr.Error)
-				if ok && efsErr.Code() == "FileSystemNotFound" {
+				if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
 					return nil, "", nil
 				}
 				return nil, "error", err
@@ -366,20 +371,12 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 			log.Printf("[DEBUG] current status of %q: %q", *fs.FileSystemId, *fs.LifeCycleState)
 			return fs, *fs.LifeCycleState, nil
 		},
-		Timeout:    10 * time.Minute,
+		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for EFS file system (%q) to delete: %s",
-			d.Id(), err.Error())
-	}
-
-	log.Printf("[DEBUG] EFS file system %q deleted.", d.Id())
-
-	return nil
+	_, err := stateConf.WaitForState()
+	return err
 }
 
 func hasEmptyFileSystems(fs *efs.DescribeFileSystemsOutput) bool {
@@ -389,8 +386,8 @@ func hasEmptyFileSystems(fs *efs.DescribeFileSystemsOutput) bool {
 	return true
 }
 
-func resourceAwsEfsDnsName(fileSystemId, region string) string {
-	return fmt.Sprintf("%s.efs.%s.amazonaws.com", fileSystemId, region)
+func resourceAwsEfsDnsName(fileSystemId, region string, dnsSuffix string) string {
+	return fmt.Sprintf("%s.efs.%s.%s", fileSystemId, region, dnsSuffix)
 }
 
 func resourceEfsFileSystemCreateUpdateRefreshFunc(id string, conn *efs.EFS) resource.StateRefreshFunc {

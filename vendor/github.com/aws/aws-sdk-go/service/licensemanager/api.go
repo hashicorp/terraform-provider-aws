@@ -73,24 +73,24 @@ func (c *LicenseManager) CreateLicenseConfigurationRequest(input *CreateLicenseC
 // See the AWS API reference guide for AWS License Manager's
 // API operation CreateLicenseConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
+//   * ResourceLimitExceededException
 //   Your resource limits have been exceeded.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/CreateLicenseConfiguration
@@ -171,21 +171,21 @@ func (c *LicenseManager) DeleteLicenseConfigurationRequest(input *DeleteLicenseC
 // See the AWS API reference guide for AWS License Manager's
 // API operation DeleteLicenseConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/DeleteLicenseConfiguration
@@ -263,21 +263,21 @@ func (c *LicenseManager) GetLicenseConfigurationRequest(input *GetLicenseConfigu
 // See the AWS API reference guide for AWS License Manager's
 // API operation GetLicenseConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/GetLicenseConfiguration
@@ -355,18 +355,18 @@ func (c *LicenseManager) GetServiceSettingsRequest(input *GetServiceSettingsInpu
 // See the AWS API reference guide for AWS License Manager's
 // API operation GetServiceSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServerInternalException "ServerInternalException"
+// Returned Error Types:
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/GetServiceSettings
@@ -448,24 +448,24 @@ func (c *LicenseManager) ListAssociationsForLicenseConfigurationRequest(input *L
 // See the AWS API reference guide for AWS License Manager's
 // API operation ListAssociationsForLicenseConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeFilterLimitExceededException "FilterLimitExceededException"
+//   * FilterLimitExceededException
 //   The request uses too many filters or too many filter values.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/ListAssociationsForLicenseConfiguration
@@ -543,21 +543,21 @@ func (c *LicenseManager) ListFailuresForLicenseConfigurationOperationsRequest(in
 // See the AWS API reference guide for AWS License Manager's
 // API operation ListFailuresForLicenseConfigurationOperations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/ListFailuresForLicenseConfigurationOperations
@@ -635,24 +635,24 @@ func (c *LicenseManager) ListLicenseConfigurationsRequest(input *ListLicenseConf
 // See the AWS API reference guide for AWS License Manager's
 // API operation ListLicenseConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeFilterLimitExceededException "FilterLimitExceededException"
+//   * FilterLimitExceededException
 //   The request uses too many filters or too many filter values.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/ListLicenseConfigurations
@@ -730,21 +730,21 @@ func (c *LicenseManager) ListLicenseSpecificationsForResourceRequest(input *List
 // See the AWS API reference guide for AWS License Manager's
 // API operation ListLicenseSpecificationsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/ListLicenseSpecificationsForResource
@@ -822,27 +822,27 @@ func (c *LicenseManager) ListResourceInventoryRequest(input *ListResourceInvento
 // See the AWS API reference guide for AWS License Manager's
 // API operation ListResourceInventory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeFilterLimitExceededException "FilterLimitExceededException"
+//   * FilterLimitExceededException
 //   The request uses too many filters or too many filter values.
 //
-//   * ErrCodeFailedDependencyException "FailedDependencyException"
+//   * FailedDependencyException
 //   A dependency required to run the API is missing.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/ListResourceInventory
@@ -920,21 +920,21 @@ func (c *LicenseManager) ListTagsForResourceRequest(input *ListTagsForResourceIn
 // See the AWS API reference guide for AWS License Manager's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/ListTagsForResource
@@ -1014,24 +1014,24 @@ func (c *LicenseManager) ListUsageForLicenseConfigurationRequest(input *ListUsag
 // See the AWS API reference guide for AWS License Manager's
 // API operation ListUsageForLicenseConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeFilterLimitExceededException "FilterLimitExceededException"
+//   * FilterLimitExceededException
 //   The request uses too many filters or too many filter values.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/ListUsageForLicenseConfiguration
@@ -1110,21 +1110,21 @@ func (c *LicenseManager) TagResourceRequest(input *TagResourceInput) (req *reque
 // See the AWS API reference guide for AWS License Manager's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/TagResource
@@ -1203,21 +1203,21 @@ func (c *LicenseManager) UntagResourceRequest(input *UntagResourceInput) (req *r
 // See the AWS API reference guide for AWS License Manager's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/UntagResource
@@ -1303,21 +1303,21 @@ func (c *LicenseManager) UpdateLicenseConfigurationRequest(input *UpdateLicenseC
 // See the AWS API reference guide for AWS License Manager's
 // API operation UpdateLicenseConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/UpdateLicenseConfiguration
@@ -1402,30 +1402,30 @@ func (c *LicenseManager) UpdateLicenseSpecificationsForResourceRequest(input *Up
 // See the AWS API reference guide for AWS License Manager's
 // API operation UpdateLicenseSpecificationsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeInvalidResourceStateException "InvalidResourceStateException"
+//   * InvalidResourceStateException
 //   License Manager cannot allocate a license to a resource because of its state.
 //
 //   For example, you cannot allocate a license to an instance in the process
 //   of shutting down.
 //
-//   * ErrCodeLicenseUsageException "LicenseUsageException"
+//   * LicenseUsageException
 //   You do not have enough licenses available to support a new resource launch.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/UpdateLicenseSpecificationsForResource
@@ -1504,21 +1504,21 @@ func (c *LicenseManager) UpdateServiceSettingsRequest(input *UpdateServiceSettin
 // See the AWS API reference guide for AWS License Manager's
 // API operation UpdateServiceSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more parameter values are not valid.
 //
-//   * ErrCodeServerInternalException "ServerInternalException"
+//   * ServerInternalException
 //   The server experienced an internal error. Try again.
 //
-//   * ErrCodeAuthorizationException "AuthorizationException"
+//   * AuthorizationException
 //   The AWS user account does not have permission to perform the action. Check
 //   the IAM policy associated with this account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to resource denied.
 //
-//   * ErrCodeRateLimitExceededException "RateLimitExceededException"
+//   * RateLimitExceededException
 //   Too many requests have been submitted. Try again after a brief wait.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/license-manager-2018-08-01/UpdateServiceSettings
@@ -1541,6 +1541,119 @@ func (c *LicenseManager) UpdateServiceSettingsWithContext(ctx aws.Context, input
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Access to resource denied.
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The AWS user account does not have permission to perform the action. Check
+// the IAM policy associated with this account.
+type AuthorizationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AuthorizationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuthorizationException) GoString() string {
+	return s.String()
+}
+
+func newErrorAuthorizationException(v protocol.ResponseMetadata) error {
+	return &AuthorizationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AuthorizationException) Code() string {
+	return "AuthorizationException"
+}
+
+// Message returns the exception's message.
+func (s AuthorizationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AuthorizationException) OrigErr() error {
+	return nil
+}
+
+func (s AuthorizationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AuthorizationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AuthorizationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes automated discovery.
@@ -1803,6 +1916,62 @@ func (s DeleteLicenseConfigurationOutput) GoString() string {
 	return s.String()
 }
 
+// A dependency required to run the API is missing.
+type FailedDependencyException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s FailedDependencyException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailedDependencyException) GoString() string {
+	return s.String()
+}
+
+func newErrorFailedDependencyException(v protocol.ResponseMetadata) error {
+	return &FailedDependencyException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FailedDependencyException) Code() string {
+	return "FailedDependencyException"
+}
+
+// Message returns the exception's message.
+func (s FailedDependencyException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FailedDependencyException) OrigErr() error {
+	return nil
+}
+
+func (s FailedDependencyException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FailedDependencyException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FailedDependencyException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // A filter name and value pair that is used to return more specific results
 // from a describe operation. Filters can be used to match a set of resources
 // by specific criteria, such as tags, attributes, or IDs.
@@ -1836,6 +2005,62 @@ func (s *Filter) SetName(v string) *Filter {
 func (s *Filter) SetValues(v []*string) *Filter {
 	s.Values = v
 	return s
+}
+
+// The request uses too many filters or too many filter values.
+type FilterLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s FilterLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FilterLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorFilterLimitExceededException(v protocol.ResponseMetadata) error {
+	return &FilterLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FilterLimitExceededException) Code() string {
+	return "FilterLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s FilterLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FilterLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s FilterLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FilterLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FilterLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type GetLicenseConfigurationInput struct {
@@ -2108,6 +2333,121 @@ func (s *GetServiceSettingsOutput) SetS3BucketArn(v string) *GetServiceSettingsO
 func (s *GetServiceSettingsOutput) SetSnsTopicArn(v string) *GetServiceSettingsOutput {
 	s.SnsTopicArn = &v
 	return s
+}
+
+// One or more parameter values are not valid.
+type InvalidParameterValueException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidParameterValueException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterValueException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterValueException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterValueException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParameterValueException) Code() string {
+	return "InvalidParameterValueException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParameterValueException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParameterValueException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParameterValueException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParameterValueException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParameterValueException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// License Manager cannot allocate a license to a resource because of its state.
+//
+// For example, you cannot allocate a license to an instance in the process
+// of shutting down.
+type InvalidResourceStateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidResourceStateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidResourceStateException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidResourceStateException(v protocol.ResponseMetadata) error {
+	return &InvalidResourceStateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidResourceStateException) Code() string {
+	return "InvalidResourceStateException"
+}
+
+// Message returns the exception's message.
+func (s InvalidResourceStateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidResourceStateException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidResourceStateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidResourceStateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidResourceStateException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // An inventory filter.
@@ -2571,6 +2911,62 @@ func (s *LicenseSpecification) Validate() error {
 func (s *LicenseSpecification) SetLicenseConfigurationArn(v string) *LicenseSpecification {
 	s.LicenseConfigurationArn = &v
 	return s
+}
+
+// You do not have enough licenses available to support a new resource launch.
+type LicenseUsageException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s LicenseUsageException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LicenseUsageException) GoString() string {
+	return s.String()
+}
+
+func newErrorLicenseUsageException(v protocol.ResponseMetadata) error {
+	return &LicenseUsageException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LicenseUsageException) Code() string {
+	return "LicenseUsageException"
+}
+
+// Message returns the exception's message.
+func (s LicenseUsageException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LicenseUsageException) OrigErr() error {
+	return nil
+}
+
+func (s LicenseUsageException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LicenseUsageException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LicenseUsageException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListAssociationsForLicenseConfigurationInput struct {
@@ -3460,6 +3856,62 @@ func (s *ProductInformationFilter) SetProductInformationFilterValue(v []*string)
 	return s
 }
 
+// Too many requests have been submitted. Try again after a brief wait.
+type RateLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s RateLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RateLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorRateLimitExceededException(v protocol.ResponseMetadata) error {
+	return &RateLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RateLimitExceededException) Code() string {
+	return "RateLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s RateLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RateLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s RateLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RateLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RateLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Details about a resource.
 type ResourceInventory struct {
 	_ struct{} `type:"structure"`
@@ -3527,6 +3979,118 @@ func (s *ResourceInventory) SetResourceOwningAccountId(v string) *ResourceInvent
 func (s *ResourceInventory) SetResourceType(v string) *ResourceInventory {
 	s.ResourceType = &v
 	return s
+}
+
+// Your resource limits have been exceeded.
+type ResourceLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceLimitExceededException(v protocol.ResponseMetadata) error {
+	return &ResourceLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceLimitExceededException) Code() string {
+	return "ResourceLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s ResourceLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The server experienced an internal error. Try again.
+type ServerInternalException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServerInternalException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServerInternalException) GoString() string {
+	return s.String()
+}
+
+func newErrorServerInternalException(v protocol.ResponseMetadata) error {
+	return &ServerInternalException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServerInternalException) Code() string {
+	return "ServerInternalException"
+}
+
+// Message returns the exception's message.
+func (s ServerInternalException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServerInternalException) OrigErr() error {
+	return nil
+}
+
+func (s ServerInternalException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServerInternalException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServerInternalException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Details about a tag for a license configuration.

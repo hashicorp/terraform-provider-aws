@@ -2,6 +2,10 @@
 
 package imagebuilder
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCallRateLimitExceededException for service response error code
@@ -107,3 +111,22 @@ const (
 	// The service is unable to process your request at this time.
 	ErrCodeServiceUnavailableException = "ServiceUnavailableException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CallRateLimitExceededException":       newErrorCallRateLimitExceededException,
+	"ClientException":                      newErrorClientException,
+	"ForbiddenException":                   newErrorForbiddenException,
+	"IdempotentParameterMismatchException": newErrorIdempotentParameterMismatchException,
+	"InvalidPaginationTokenException":      newErrorInvalidPaginationTokenException,
+	"InvalidParameterCombinationException": newErrorInvalidParameterCombinationException,
+	"InvalidParameterException":            newErrorInvalidParameterException,
+	"InvalidParameterValueException":       newErrorInvalidParameterValueException,
+	"InvalidRequestException":              newErrorInvalidRequestException,
+	"InvalidVersionNumberException":        newErrorInvalidVersionNumberException,
+	"ResourceAlreadyExistsException":       newErrorResourceAlreadyExistsException,
+	"ResourceDependencyException":          newErrorResourceDependencyException,
+	"ResourceInUseException":               newErrorResourceInUseException,
+	"ResourceNotFoundException":            newErrorResourceNotFoundException,
+	"ServiceException":                     newErrorServiceException,
+	"ServiceUnavailableException":          newErrorServiceUnavailableException,
+}

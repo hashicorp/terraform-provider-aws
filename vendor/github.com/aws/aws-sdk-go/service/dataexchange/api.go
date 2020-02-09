@@ -68,20 +68,20 @@ func (c *DataExchange) CancelJobRequest(input *CancelJobInput) (req *request.Req
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation CancelJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The request couldn't be completed because it conflicted with the current
 //   state of the resource.
 //
@@ -160,20 +160,20 @@ func (c *DataExchange) CreateDataSetRequest(input *CreateDataSetInput) (req *req
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation CreateDataSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeThrottlingException "ThrottlingException"
+// Returned Error Types:
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeServiceLimitExceededException "ServiceLimitExceededException"
+//   * ServiceLimitExceededException
 //   The request has exceeded the quotas imposed by the service.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to the resource is denied.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/CreateDataSet
@@ -251,20 +251,20 @@ func (c *DataExchange) CreateJobRequest(input *CreateJobInput) (req *request.Req
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation CreateJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to the resource is denied.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/CreateJob
@@ -342,20 +342,20 @@ func (c *DataExchange) CreateRevisionRequest(input *CreateRevisionInput) (req *r
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation CreateRevision for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to the resource is denied.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/CreateRevision
@@ -434,23 +434,23 @@ func (c *DataExchange) DeleteAssetRequest(input *DeleteAssetInput) (req *request
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation DeleteAsset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to the resource is denied.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The request couldn't be completed because it conflicted with the current
 //   state of the resource.
 //
@@ -530,23 +530,23 @@ func (c *DataExchange) DeleteDataSetRequest(input *DeleteDataSetInput) (req *req
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation DeleteDataSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to the resource is denied.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The request couldn't be completed because it conflicted with the current
 //   state of the resource.
 //
@@ -626,23 +626,23 @@ func (c *DataExchange) DeleteRevisionRequest(input *DeleteRevisionInput) (req *r
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation DeleteRevision for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to the resource is denied.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The request couldn't be completed because it conflicted with the current
 //   state of the resource.
 //
@@ -721,17 +721,17 @@ func (c *DataExchange) GetAssetRequest(input *GetAssetInput) (req *request.Reque
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation GetAsset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/GetAsset
@@ -809,17 +809,17 @@ func (c *DataExchange) GetDataSetRequest(input *GetDataSetInput) (req *request.R
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation GetDataSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/GetDataSet
@@ -897,17 +897,17 @@ func (c *DataExchange) GetJobRequest(input *GetJobInput) (req *request.Request, 
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation GetJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/GetJob
@@ -985,17 +985,17 @@ func (c *DataExchange) GetRevisionRequest(input *GetRevisionInput) (req *request
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation GetRevision for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/GetRevision
@@ -1080,17 +1080,17 @@ func (c *DataExchange) ListDataSetRevisionsRequest(input *ListDataSetRevisionsIn
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation ListDataSetRevisions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/ListDataSetRevisions
@@ -1228,17 +1228,17 @@ func (c *DataExchange) ListDataSetsRequest(input *ListDataSetsInput) (req *reque
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation ListDataSets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/ListDataSets
@@ -1374,17 +1374,17 @@ func (c *DataExchange) ListJobsRequest(input *ListJobsInput) (req *request.Reque
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation ListJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/ListJobs
@@ -1521,17 +1521,17 @@ func (c *DataExchange) ListRevisionAssetsRequest(input *ListRevisionAssetsInput)
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation ListRevisionAssets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/ListRevisionAssets
@@ -1736,23 +1736,23 @@ func (c *DataExchange) StartJobRequest(input *StartJobInput) (req *request.Reque
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation StartJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to the resource is denied.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The request couldn't be completed because it conflicted with the current
 //   state of the resource.
 //
@@ -1981,23 +1981,23 @@ func (c *DataExchange) UpdateAssetRequest(input *UpdateAssetInput) (req *request
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation UpdateAsset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to the resource is denied.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The request couldn't be completed because it conflicted with the current
 //   state of the resource.
 //
@@ -2076,20 +2076,20 @@ func (c *DataExchange) UpdateDataSetRequest(input *UpdateDataSetInput) (req *req
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation UpdateDataSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to the resource is denied.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/UpdateDataSet
@@ -2167,23 +2167,23 @@ func (c *DataExchange) UpdateRevisionRequest(input *UpdateRevisionInput) (req *r
 // See the AWS API reference guide for AWS Data Exchange's
 // API operation UpdateRevision for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The request was invalid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   An exception occurred with the service.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to the resource is denied.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource couldn't be found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The limit on the number of requests per second was exceeded.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The request couldn't be completed because it conflicted with the current
 //   state of the resource.
 //
@@ -2207,6 +2207,63 @@ func (c *DataExchange) UpdateRevisionWithContext(ctx aws.Context, input *UpdateR
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Access to the resource is denied.
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// Access to the resource is denied.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The destination for the asset.
@@ -2529,6 +2586,71 @@ func (s CancelJobOutput) String() string {
 // GoString returns the string representation
 func (s CancelJobOutput) GoString() string {
 	return s.String()
+}
+
+// The request couldn't be completed because it conflicted with the current
+// state of the resource.
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The request couldn't be completed because it conflicted with the current
+	// state of the resource.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The unique identifier for the resource with the conflict.
+	ResourceId *string `type:"string"`
+
+	// The type of the resource with the conflict.
+	ResourceType *string `type:"string" enum:"ResourceType"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A request to create a data set that contains one or more revisions.
@@ -4559,6 +4681,63 @@ func (s *ImportAssetsFromS3ResponseDetails) SetRevisionId(v string) *ImportAsset
 	return s
 }
 
+// An exception occurred with the service.
+type InternalServerException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message identifying the service exception that occurred.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerException(v protocol.ResponseMetadata) error {
+	return &InternalServerException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerException) Code() string {
+	return "InternalServerException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // AWS Data Exchange Jobs are asynchronous import or export operations used
 // to create or copy assets. A data set owner can both import and export as
 // they see fit. Someone with an entitlement to a data set can only export.
@@ -5279,6 +5458,69 @@ func (s *RequestDetails) SetImportAssetsFromS3(v *ImportAssetsFromS3RequestDetai
 	return s
 }
 
+// The resource couldn't be found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The resource couldn't be found.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The unique identifier for the resource that couldn't be found.
+	ResourceId *string `type:"string"`
+
+	// The type of resource that couldn't be found.
+	ResourceType *string `type:"string" enum:"ResourceType"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Details for the response.
 type ResponseDetails struct {
 	_ struct{} `type:"structure"`
@@ -5463,6 +5705,66 @@ func (s *S3SnapshotAsset) SetSize(v float64) *S3SnapshotAsset {
 	return s
 }
 
+// The request has exceeded the quotas imposed by the service.
+type ServiceLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	LimitName *string `type:"string" enum:"LimitName"`
+
+	LimitValue *float64 `type:"double"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceLimitExceededException(v protocol.ResponseMetadata) error {
+	return &ServiceLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceLimitExceededException) Code() string {
+	return "ServiceLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s ServiceLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type StartJobInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5579,6 +5881,63 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// The limit on the number of requests per second was exceeded.
+type ThrottlingException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The limit on the number of requests per second was exceeded.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ThrottlingException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThrottlingException) GoString() string {
+	return s.String()
+}
+
+func newErrorThrottlingException(v protocol.ResponseMetadata) error {
+	return &ThrottlingException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ThrottlingException) Code() string {
+	return "ThrottlingException"
+}
+
+// Message returns the exception's message.
+func (s ThrottlingException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ThrottlingException) OrigErr() error {
+	return nil
+}
+
+func (s ThrottlingException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ThrottlingException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ThrottlingException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -6160,6 +6519,63 @@ func (s *UpdateRevisionOutput) SetSourceId(v string) *UpdateRevisionOutput {
 func (s *UpdateRevisionOutput) SetUpdatedAt(v time.Time) *UpdateRevisionOutput {
 	s.UpdatedAt = &v
 	return s
+}
+
+// The request was invalid.
+type ValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message that informs you about what was invalid about the request.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ValidationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The type of file your data is stored in. Currently, the supported asset type

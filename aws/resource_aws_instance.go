@@ -953,29 +953,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if _, ok := d.GetOk("iam_instance_profile"); ok {
 			// Does not have an Iam Instance Profile associated with it, need to associate
 			if len(resp.IamInstanceProfileAssociations) == 0 {
-				input := &ec2.AssociateIamInstanceProfileInput{
-					InstanceId: aws.String(d.Id()),
-					IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
-						Name: aws.String(d.Get("iam_instance_profile").(string)),
-					},
+				if err := associateInstanceProfile(d, conn); err != nil {
+					return err
 				}
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.AssociateIamInstanceProfile(input)
-					if err != nil {
-						if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
-					}
-					return nil
-				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AssociateIamInstanceProfile(input)
-				}
-				if err != nil {
-					return fmt.Errorf("Error associating instance with instance profile: %s", err)
-				}
-
 			} else {
 				// Has an Iam Instance Profile associated with it, need to replace the association
 				associationId := resp.IamInstanceProfileAssociations[0].AssociationId
@@ -985,21 +965,37 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 						Name: aws.String(d.Get("iam_instance_profile").(string)),
 					},
 				}
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.ReplaceIamInstanceProfileAssociation(input)
-					if err != nil {
-						if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-							return resource.RetryableError(err)
+
+				// If the instance is running, we can replace the instance profile association.
+				// If it is stopped, the association must be removed and the new one attached separately. (GH-8262)
+				instanceState := d.Get("instance_state").(string)
+
+				if instanceState != "" {
+					if instanceState == ec2.InstanceStateNameStopped || instanceState == ec2.InstanceStateNameStopping || instanceState == ec2.InstanceStateNameShuttingDown {
+						if err := disassociateInstanceProfile(associationId, conn); err != nil {
+							return err
 						}
-						return resource.NonRetryableError(err)
+						if err := associateInstanceProfile(d, conn); err != nil {
+							return err
+						}
+					} else {
+						err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+							_, err := conn.ReplaceIamInstanceProfileAssociation(input)
+							if err != nil {
+								if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+									return resource.RetryableError(err)
+								}
+								return resource.NonRetryableError(err)
+							}
+							return nil
+						})
+						if isResourceTimeoutError(err) {
+							_, err = conn.ReplaceIamInstanceProfileAssociation(input)
+						}
+						if err != nil {
+							return fmt.Errorf("Error replacing instance profile association: %s", err)
+						}
 					}
-					return nil
-				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.ReplaceIamInstanceProfileAssociation(input)
-				}
-				if err != nil {
-					return fmt.Errorf("Error replacing instance profile association: %s", err)
 				}
 			}
 			// An Iam Instance Profile has _not_ been provided but is pending a change. This means there is a pending removal
@@ -1007,11 +1003,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			if len(resp.IamInstanceProfileAssociations) > 0 {
 				// Has an Iam Instance Profile associated with it, need to remove the association
 				associationId := resp.IamInstanceProfileAssociations[0].AssociationId
-
-				_, err := conn.DisassociateIamInstanceProfile(&ec2.DisassociateIamInstanceProfileInput{
-					AssociationId: associationId,
-				})
-				if err != nil {
+				if err := disassociateInstanceProfile(associationId, conn); err != nil {
 					return err
 				}
 			}
@@ -1107,19 +1099,8 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
 		}
 
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
-			Target:     []string{"stopped"},
-			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{}),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for instance (%s) to stop: %s", d.Id(), err)
+		if err := waitForInstanceStopping(conn, d.Id(), 10*time.Minute); err != nil {
+			return err
 		}
 
 		log.Printf("[INFO] Modifying instance type %s", d.Id())
@@ -1141,7 +1122,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error starting instance (%s): %s", d.Id(), err)
 		}
 
-		stateConf = &resource.StateChangeConf{
+		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"pending", "stopped"},
 			Target:     []string{"running"},
 			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{"terminated"}),
@@ -1311,6 +1292,42 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 		}
 	}
 
+	return nil
+}
+
+func associateInstanceProfile(d *schema.ResourceData, conn *ec2.EC2) error {
+	input := &ec2.AssociateIamInstanceProfileInput{
+		InstanceId: aws.String(d.Id()),
+		IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
+			Name: aws.String(d.Get("iam_instance_profile").(string)),
+		},
+	}
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.AssociateIamInstanceProfile(input)
+		if err != nil {
+			if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.AssociateIamInstanceProfile(input)
+	}
+	if err != nil {
+		return fmt.Errorf("error associating instance with instance profile: %s", err)
+	}
+	return nil
+}
+
+func disassociateInstanceProfile(associationId *string, conn *ec2.EC2) error {
+	_, err := conn.DisassociateIamInstanceProfile(&ec2.DisassociateIamInstanceProfileInput{
+		AssociationId: associationId,
+	})
+	if err != nil {
+		return fmt.Errorf("error disassociating instance with instance profile: %w", err)
+	}
 	return nil
 }
 
@@ -1960,6 +1977,27 @@ func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error
 	}
 
 	return waitForInstanceDeletion(conn, id, timeout)
+}
+
+func waitForInstanceStopping(conn *ec2.EC2, id string, timeout time.Duration) error {
+	log.Printf("[DEBUG] Waiting for instance (%s) to become stopped", id)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
+		Target:     []string{"stopped"},
+		Refresh:    InstanceStateRefreshFunc(conn, id, []string{}),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf(
+			"error waiting for instance (%s) to stop: %s", id, err)
+	}
+
+	return nil
 }
 
 func waitForInstanceDeletion(conn *ec2.EC2, id string, timeout time.Duration) error {

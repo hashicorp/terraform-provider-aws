@@ -17,7 +17,7 @@ func init() {
 	resource.AddTestSweepers("aws_directory_service_directory", &resource.Sweeper{
 		Name:         "aws_directory_service_directory",
 		F:            testSweepDirectoryServiceDirectories,
-		Dependencies: []string{"aws_fsx_windows_file_system"},
+		Dependencies: []string{"aws_fsx_windows_file_system", "aws_workspaces_directory"},
 	})
 }
 

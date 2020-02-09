@@ -254,7 +254,12 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
-							ForceNew: true,
+						},
+						"kms_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -345,13 +350,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("server_side_encryption"); ok {
-		options := v.([]interface{})
-		if options[0] == nil {
-			return fmt.Errorf("At least one field is expected inside server_side_encryption")
-		}
-
-		s := options[0].(map[string]interface{})
-		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(s)
+		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(v.([]interface{}))
 	}
 
 	var output *dynamodb.CreateTableOutput
@@ -562,6 +561,21 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	if d.HasChange("server_side_encryption") {
+		// "ValidationException: One or more parameter values were invalid: Server-Side Encryption modification must be the only operation in the request".
+		_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
+			TableName:        aws.String(d.Id()),
+			SSESpecification: expandDynamoDbEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
+		})
+		if err != nil {
+			return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
+		}
+
+		if err := waitForDynamoDbSSEUpdateToBeCompleted(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("ttl") {
 		if err := updateDynamoDbTimeToLive(d.Id(), d.Get("ttl").([]interface{}), conn); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) time to live: %s", d.Id(), err)
@@ -680,13 +694,12 @@ func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		}
 		return nil
 	})
+
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteTable(input)
 	}
-	if err != nil {
-		return fmt.Errorf("Error deleting DynamoDB table: %s", err)
-	}
-	return nil
+
+	return err
 }
 
 func waitForDynamodbTableDeletion(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) error {
@@ -969,6 +982,38 @@ func waitForDynamoDbTtlUpdateToBeCompleted(tableName string, toEnable bool, conn
 	}
 
 	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForDynamoDbSSEUpdateToBeCompleted(tableName string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			dynamodb.SSEStatusDisabling,
+			dynamodb.SSEStatusEnabling,
+			dynamodb.SSEStatusUpdating,
+		},
+		Target: []string{
+			dynamodb.SSEStatusDisabled,
+			dynamodb.SSEStatusEnabled,
+		},
+		Timeout: timeout,
+		Refresh: func() (interface{}, string, error) {
+			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
+				TableName: aws.String(tableName),
+			})
+			if err != nil {
+				return 42, "", err
+			}
+
+			// Disabling SSE returns null SSEDescription.
+			if result.Table.SSEDescription == nil {
+				return result, dynamodb.SSEStatusDisabled, nil
+			}
+			return result, aws.StringValue(result.Table.SSEDescription.Status), nil
+		},
+	}
+	_, err := stateConf.WaitForState()
+
 	return err
 }
 

@@ -2,6 +2,10 @@
 
 package dataexchange
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -47,3 +51,13 @@ const (
 	// The request was invalid.
 	ErrCodeValidationException = "ValidationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":         newErrorAccessDeniedException,
+	"ConflictException":             newErrorConflictException,
+	"InternalServerException":       newErrorInternalServerException,
+	"ResourceNotFoundException":     newErrorResourceNotFoundException,
+	"ServiceLimitExceededException": newErrorServiceLimitExceededException,
+	"ThrottlingException":           newErrorThrottlingException,
+	"ValidationException":           newErrorValidationException,
+}

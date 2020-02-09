@@ -2,6 +2,10 @@
 
 package globalaccelerator
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAcceleratorNotDisabledException for service response error code
@@ -88,3 +92,19 @@ const (
 	// The listener that you specified doesn't exist.
 	ErrCodeListenerNotFoundException = "ListenerNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AcceleratorNotDisabledException":       newErrorAcceleratorNotDisabledException,
+	"AcceleratorNotFoundException":          newErrorAcceleratorNotFoundException,
+	"AccessDeniedException":                 newErrorAccessDeniedException,
+	"AssociatedEndpointGroupFoundException": newErrorAssociatedEndpointGroupFoundException,
+	"AssociatedListenerFoundException":      newErrorAssociatedListenerFoundException,
+	"EndpointGroupAlreadyExistsException":   newErrorEndpointGroupAlreadyExistsException,
+	"EndpointGroupNotFoundException":        newErrorEndpointGroupNotFoundException,
+	"InternalServiceErrorException":         newErrorInternalServiceErrorException,
+	"InvalidArgumentException":              newErrorInvalidArgumentException,
+	"InvalidNextTokenException":             newErrorInvalidNextTokenException,
+	"InvalidPortRangeException":             newErrorInvalidPortRangeException,
+	"LimitExceededException":                newErrorLimitExceededException,
+	"ListenerNotFoundException":             newErrorListenerNotFoundException,
+}

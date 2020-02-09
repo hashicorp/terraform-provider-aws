@@ -51,6 +51,27 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchemaComputed(),
+			"throughput_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"provisioned_throughput_in_mibps": {
+				Type:     schema.TypeFloat,
+				Computed: true,
+			},
+			"lifecycle_policy": {
+				Type:     schema.TypeList,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"transition_to_ia": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -78,16 +99,6 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(*describeResp.FileSystems[0].FileSystemId)
-
-	tags, err := keyvaluetags.EfsListTags(efsconn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for EFS file system (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error settings tags: %s", err)
-	}
 
 	var fs *efs.FileSystemDescription
 	for _, f := range describeResp.FileSystems {
@@ -117,8 +128,26 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("file_system_id", fs.FileSystemId)
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
+	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
+	d.Set("throughput_mode", fs.ThroughputMode)
+
+	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	res, err := efsconn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
+		FileSystemId: fs.FileSystemId,
+	})
+	if err != nil {
+		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %s",
+			aws.StringValue(fs.FileSystemId), err)
+	}
+	if err := resourceAwsEfsFileSystemSetLifecyclePolicy(d, res.LifecyclePolicies); err != nil {
+		return err
+	}
 
 	region := meta.(*AWSClient).region
-	err = d.Set("dns_name", resourceAwsEfsDnsName(*fs.FileSystemId, region))
+	dnsSuffix := meta.(*AWSClient).dnsSuffix
+	err = d.Set("dns_name", resourceAwsEfsDnsName(*fs.FileSystemId, region, dnsSuffix))
 	return err
 }
