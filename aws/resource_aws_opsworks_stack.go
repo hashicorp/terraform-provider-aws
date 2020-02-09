@@ -5,15 +5,15 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsOpsworksStack() *schema.Resource {
@@ -335,7 +335,8 @@ func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	stack := resp.Stacks[0]
-	d.Set("arn", stack.Arn)
+	arn := aws.StringValue(stack.Arn)
+	d.Set("arn", arn)
 	d.Set("agent_version", stack.AgentVersion)
 	d.Set("name", stack.Name)
 	d.Set("region", stack.Region)
@@ -365,6 +366,16 @@ func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("manage_berkshelf", stack.ChefConfiguration.ManageBerkshelf)
 	}
 	resourceAwsOpsworksSetStackCustomCookbooksSource(d, stack.CustomCookbooksSource)
+
+	tags, err := keyvaluetags.OpsworksListTags(client, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Opsworks stack (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -528,18 +539,6 @@ func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) er
 		req.Attributes["Color"] = aws.String(v.(string))
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "opsworks",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
-	}
-
-	if tagErr := setTagsOpsworks(client, d, arn.String()); tagErr != nil {
-		return tagErr
-	}
-
 	req.ChefConfiguration = &opsworks.ChefConfiguration{
 		BerkshelfVersion: aws.String(d.Get("berkshelf_version").(string)),
 		ManageBerkshelf:  aws.Bool(d.Get("manage_berkshelf").(bool)),
@@ -555,6 +554,21 @@ func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) er
 	_, err = client.UpdateStack(req)
 	if err != nil {
 		return err
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "opsworks",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
+	}.String()
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.OpsworksUpdateTags(client, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsOpsworksStackRead(d, meta)

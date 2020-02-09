@@ -38,13 +38,14 @@ func resourceAwsIamAccessKey() *schema.Resource {
 				}, false),
 			},
 			"secret": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Please use a PGP key to encrypt",
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"ses_smtp_password": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"pgp_key": {
 				Type:     schema.TypeString,

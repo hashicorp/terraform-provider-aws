@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
+const s3BucketCreationTimeout = 2 * time.Minute
+
 func resourceAwsS3Bucket() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsS3BucketCreate,
@@ -757,19 +759,39 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
 
-	var err error
+	input := &s3.HeadBucketInput{
+		Bucket: aws.String(d.Id()),
+	}
 
-	_, err = retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return s3conn.HeadBucket(&s3.HeadBucketInput{
-			Bucket: aws.String(d.Id()),
-		})
-	})
-	if err != nil {
-		if awsError, ok := err.(awserr.RequestFailure); ok && awsError.StatusCode() == 404 {
-			log.Printf("[WARN] S3 Bucket (%s) not found, error code (404)", d.Id())
-			d.SetId("")
-			return nil
+	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
+		_, err := s3conn.HeadBucket(input)
+
+		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+			return resource.RetryableError(err)
 		}
+
+		if d.IsNewResource() && isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = s3conn.HeadBucket(input)
+	}
+
+	if isAWSErrRequestFailureStatusCode(err, 404) || isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
 		return fmt.Errorf("error reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
