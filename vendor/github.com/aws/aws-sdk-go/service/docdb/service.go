@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "DocDB" // Name of service.
 	EndpointsID = "rds"   // ID to lookup a service endpoint with.
-	ServiceID   = "DocDB" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "DocDB" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the DocDB client with a session.

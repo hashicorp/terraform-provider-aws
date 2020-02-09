@@ -65,23 +65,23 @@ func (c *AppSync) CreateApiCacheRequest(input *CreateApiCacheInput) (req *reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation CreateApiCache for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateApiCache
@@ -160,31 +160,31 @@ func (c *AppSync) CreateApiKeyRequest(input *CreateApiKeyInput) (req *request.Re
 // See the AWS API reference guide for AWS AppSync's
 // API operation CreateApiKey for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
-//   * ErrCodeApiKeyLimitExceededException "ApiKeyLimitExceededException"
+//   * ApiKeyLimitExceededException
 //   The API key exceeded a limit. Try your request again.
 //
-//   * ErrCodeApiKeyValidityOutOfBoundsException "ApiKeyValidityOutOfBoundsException"
+//   * ApiKeyValidityOutOfBoundsException
 //   The API key expiration must be set to a value between 1 and 365 days from
 //   creation (for CreateApiKey) or from update (for UpdateApiKey).
 //
@@ -263,23 +263,23 @@ func (c *AppSync) CreateDataSourceRequest(input *CreateDataSourceInput) (req *re
 // See the AWS API reference guide for AWS AppSync's
 // API operation CreateDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateDataSource
@@ -360,19 +360,19 @@ func (c *AppSync) CreateFunctionRequest(input *CreateFunctionInput) (req *reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation CreateFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateFunction
@@ -450,25 +450,25 @@ func (c *AppSync) CreateGraphqlApiRequest(input *CreateGraphqlApiInput) (req *re
 // See the AWS API reference guide for AWS AppSync's
 // API operation CreateGraphqlApi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
-//   * ErrCodeApiLimitExceededException "ApiLimitExceededException"
+//   * ApiLimitExceededException
 //   The GraphQL API exceeded a limit. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateGraphqlApi
@@ -549,19 +549,19 @@ func (c *AppSync) CreateResolverRequest(input *CreateResolverInput) (req *reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation CreateResolver for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateResolver
@@ -639,23 +639,23 @@ func (c *AppSync) CreateTypeRequest(input *CreateTypeInput) (req *request.Reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation CreateType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateType
@@ -734,23 +734,23 @@ func (c *AppSync) DeleteApiCacheRequest(input *DeleteApiCacheInput) (req *reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation DeleteApiCache for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DeleteApiCache
@@ -829,19 +829,19 @@ func (c *AppSync) DeleteApiKeyRequest(input *DeleteApiKeyInput) (req *request.Re
 // See the AWS API reference guide for AWS AppSync's
 // API operation DeleteApiKey for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DeleteApiKey
@@ -920,23 +920,23 @@ func (c *AppSync) DeleteDataSourceRequest(input *DeleteDataSourceInput) (req *re
 // See the AWS API reference guide for AWS AppSync's
 // API operation DeleteDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DeleteDataSource
@@ -1015,19 +1015,19 @@ func (c *AppSync) DeleteFunctionRequest(input *DeleteFunctionInput) (req *reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation DeleteFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DeleteFunction
@@ -1106,26 +1106,26 @@ func (c *AppSync) DeleteGraphqlApiRequest(input *DeleteGraphqlApiInput) (req *re
 // See the AWS API reference guide for AWS AppSync's
 // API operation DeleteGraphqlApi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have access to perform this operation on this resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DeleteGraphqlApi
@@ -1204,19 +1204,19 @@ func (c *AppSync) DeleteResolverRequest(input *DeleteResolverInput) (req *reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation DeleteResolver for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DeleteResolver
@@ -1295,23 +1295,23 @@ func (c *AppSync) DeleteTypeRequest(input *DeleteTypeInput) (req *request.Reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation DeleteType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DeleteType
@@ -1390,23 +1390,23 @@ func (c *AppSync) FlushApiCacheRequest(input *FlushApiCacheInput) (req *request.
 // See the AWS API reference guide for AWS AppSync's
 // API operation FlushApiCache for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/FlushApiCache
@@ -1484,23 +1484,23 @@ func (c *AppSync) GetApiCacheRequest(input *GetApiCacheInput) (req *request.Requ
 // See the AWS API reference guide for AWS AppSync's
 // API operation GetApiCache for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetApiCache
@@ -1578,23 +1578,23 @@ func (c *AppSync) GetDataSourceRequest(input *GetDataSourceInput) (req *request.
 // See the AWS API reference guide for AWS AppSync's
 // API operation GetDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetDataSource
@@ -1672,16 +1672,16 @@ func (c *AppSync) GetFunctionRequest(input *GetFunctionInput) (req *request.Requ
 // See the AWS API reference guide for AWS AppSync's
 // API operation GetFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetFunction
@@ -1759,22 +1759,22 @@ func (c *AppSync) GetGraphqlApiRequest(input *GetGraphqlApiInput) (req *request.
 // See the AWS API reference guide for AWS AppSync's
 // API operation GetGraphqlApi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have access to perform this operation on this resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetGraphqlApi
@@ -1852,18 +1852,18 @@ func (c *AppSync) GetIntrospectionSchemaRequest(input *GetIntrospectionSchemaInp
 // See the AWS API reference guide for AWS AppSync's
 // API operation GetIntrospectionSchema for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeGraphQLSchemaException "GraphQLSchemaException"
+// Returned Error Types:
+//   * GraphQLSchemaException
 //   The GraphQL schema is not valid.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetIntrospectionSchema
@@ -1941,16 +1941,16 @@ func (c *AppSync) GetResolverRequest(input *GetResolverInput) (req *request.Requ
 // See the AWS API reference guide for AWS AppSync's
 // API operation GetResolver for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetResolver
@@ -2028,19 +2028,19 @@ func (c *AppSync) GetSchemaCreationStatusRequest(input *GetSchemaCreationStatusI
 // See the AWS API reference guide for AWS AppSync's
 // API operation GetSchemaCreationStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetSchemaCreationStatus
@@ -2118,23 +2118,23 @@ func (c *AppSync) GetTypeRequest(input *GetTypeInput) (req *request.Request, out
 // See the AWS API reference guide for AWS AppSync's
 // API operation GetType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetType
@@ -2217,19 +2217,19 @@ func (c *AppSync) ListApiKeysRequest(input *ListApiKeysInput) (req *request.Requ
 // See the AWS API reference guide for AWS AppSync's
 // API operation ListApiKeys for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListApiKeys
@@ -2307,19 +2307,19 @@ func (c *AppSync) ListDataSourcesRequest(input *ListDataSourcesInput) (req *requ
 // See the AWS API reference guide for AWS AppSync's
 // API operation ListDataSources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListDataSources
@@ -2397,19 +2397,19 @@ func (c *AppSync) ListFunctionsRequest(input *ListFunctionsInput) (req *request.
 // See the AWS API reference guide for AWS AppSync's
 // API operation ListFunctions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListFunctions
@@ -2487,15 +2487,15 @@ func (c *AppSync) ListGraphqlApisRequest(input *ListGraphqlApisInput) (req *requ
 // See the AWS API reference guide for AWS AppSync's
 // API operation ListGraphqlApis for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListGraphqlApis
@@ -2573,19 +2573,19 @@ func (c *AppSync) ListResolversRequest(input *ListResolversInput) (req *request.
 // See the AWS API reference guide for AWS AppSync's
 // API operation ListResolvers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListResolvers
@@ -2663,19 +2663,19 @@ func (c *AppSync) ListResolversByFunctionRequest(input *ListResolversByFunctionI
 // See the AWS API reference guide for AWS AppSync's
 // API operation ListResolversByFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListResolversByFunction
@@ -2753,25 +2753,25 @@ func (c *AppSync) ListTagsForResourceRequest(input *ListTagsForResourceInput) (r
 // See the AWS API reference guide for AWS AppSync's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have access to perform this operation on this resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListTagsForResource
@@ -2849,23 +2849,23 @@ func (c *AppSync) ListTypesRequest(input *ListTypesInput) (req *request.Request,
 // See the AWS API reference guide for AWS AppSync's
 // API operation ListTypes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListTypes
@@ -2945,23 +2945,23 @@ func (c *AppSync) StartSchemaCreationRequest(input *StartSchemaCreationInput) (r
 // See the AWS API reference guide for AWS AppSync's
 // API operation StartSchemaCreation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/StartSchemaCreation
@@ -3040,25 +3040,25 @@ func (c *AppSync) TagResourceRequest(input *TagResourceInput) (req *request.Requ
 // See the AWS API reference guide for AWS AppSync's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have access to perform this operation on this resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/TagResource
@@ -3137,25 +3137,25 @@ func (c *AppSync) UntagResourceRequest(input *UntagResourceInput) (req *request.
 // See the AWS API reference guide for AWS AppSync's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have access to perform this operation on this resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UntagResource
@@ -3233,23 +3233,23 @@ func (c *AppSync) UpdateApiCacheRequest(input *UpdateApiCacheInput) (req *reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation UpdateApiCache for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateApiCache
@@ -3327,25 +3327,25 @@ func (c *AppSync) UpdateApiKeyRequest(input *UpdateApiKeyInput) (req *request.Re
 // See the AWS API reference guide for AWS AppSync's
 // API operation UpdateApiKey for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request exceeded a limit. Try your request again.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
-//   * ErrCodeApiKeyValidityOutOfBoundsException "ApiKeyValidityOutOfBoundsException"
+//   * ApiKeyValidityOutOfBoundsException
 //   The API key expiration must be set to a value between 1 and 365 days from
 //   creation (for CreateApiKey) or from update (for UpdateApiKey).
 //
@@ -3424,23 +3424,23 @@ func (c *AppSync) UpdateDataSourceRequest(input *UpdateDataSourceInput) (req *re
 // See the AWS API reference guide for AWS AppSync's
 // API operation UpdateDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateDataSource
@@ -3518,19 +3518,19 @@ func (c *AppSync) UpdateFunctionRequest(input *UpdateFunctionInput) (req *reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation UpdateFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateFunction
@@ -3608,26 +3608,26 @@ func (c *AppSync) UpdateGraphqlApiRequest(input *UpdateGraphqlApiInput) (req *re
 // See the AWS API reference guide for AWS AppSync's
 // API operation UpdateGraphqlApi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have access to perform this operation on this resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateGraphqlApi
@@ -3705,19 +3705,19 @@ func (c *AppSync) UpdateResolverRequest(input *UpdateResolverInput) (req *reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation UpdateResolver for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateResolver
@@ -3795,23 +3795,23 @@ func (c *AppSync) UpdateTypeRequest(input *UpdateTypeInput) (req *request.Reques
 // See the AWS API reference guide for AWS AppSync's
 // API operation UpdateType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The request is not well formed. For example, a value is invalid or a required
 //   field is missing. Check the field values, and then try again.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Another modification is in progress at this time and it must complete before
 //   you can make your change.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource specified in the request was not found. Check the resource,
 //   and then try again.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal AWS AppSync error occurred. Try your request again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateType
@@ -3834,6 +3834,62 @@ func (c *AppSync) UpdateTypeWithContext(ctx aws.Context, input *UpdateTypeInput,
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// You do not have access to perform this operation on this resource.
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes an additional authentication provider.
@@ -4077,6 +4133,175 @@ func (s *ApiKey) SetId(v string) *ApiKey {
 	return s
 }
 
+// The API key exceeded a limit. Try your request again.
+type ApiKeyLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ApiKeyLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApiKeyLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorApiKeyLimitExceededException(v protocol.ResponseMetadata) error {
+	return &ApiKeyLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApiKeyLimitExceededException) Code() string {
+	return "ApiKeyLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s ApiKeyLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApiKeyLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ApiKeyLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApiKeyLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApiKeyLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The API key expiration must be set to a value between 1 and 365 days from
+// creation (for CreateApiKey) or from update (for UpdateApiKey).
+type ApiKeyValidityOutOfBoundsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ApiKeyValidityOutOfBoundsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApiKeyValidityOutOfBoundsException) GoString() string {
+	return s.String()
+}
+
+func newErrorApiKeyValidityOutOfBoundsException(v protocol.ResponseMetadata) error {
+	return &ApiKeyValidityOutOfBoundsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApiKeyValidityOutOfBoundsException) Code() string {
+	return "ApiKeyValidityOutOfBoundsException"
+}
+
+// Message returns the exception's message.
+func (s ApiKeyValidityOutOfBoundsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApiKeyValidityOutOfBoundsException) OrigErr() error {
+	return nil
+}
+
+func (s ApiKeyValidityOutOfBoundsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApiKeyValidityOutOfBoundsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApiKeyValidityOutOfBoundsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The GraphQL API exceeded a limit. Try your request again.
+type ApiLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ApiLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApiLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorApiLimitExceededException(v protocol.ResponseMetadata) error {
+	return &ApiLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ApiLimitExceededException) Code() string {
+	return "ApiLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s ApiLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ApiLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ApiLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ApiLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ApiLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The authorization config in case the HTTP endpoint requires authorization.
 type AuthorizationConfig struct {
 	_ struct{} `type:"structure"`
@@ -4158,6 +4383,63 @@ func (s *AwsIamConfig) SetSigningRegion(v string) *AwsIamConfig {
 func (s *AwsIamConfig) SetSigningServiceName(v string) *AwsIamConfig {
 	s.SigningServiceName = &v
 	return s
+}
+
+// The request is not well formed. For example, a value is invalid or a required
+// field is missing. Check the field values, and then try again.
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The caching configuration for a resolver that has caching enabled.
@@ -4259,6 +4541,63 @@ func (s *CognitoUserPoolConfig) SetAwsRegion(v string) *CognitoUserPoolConfig {
 func (s *CognitoUserPoolConfig) SetUserPoolId(v string) *CognitoUserPoolConfig {
 	s.UserPoolId = &v
 	return s
+}
+
+// Another modification is in progress at this time and it must complete before
+// you can make your change.
+type ConcurrentModificationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConcurrentModificationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentModificationException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentModificationException(v protocol.ResponseMetadata) error {
+	return &ConcurrentModificationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConcurrentModificationException) Code() string {
+	return "ConcurrentModificationException"
+}
+
+// Message returns the exception's message.
+func (s ConcurrentModificationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConcurrentModificationException) OrigErr() error {
+	return nil
+}
+
+func (s ConcurrentModificationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConcurrentModificationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConcurrentModificationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Represents the input of a CreateApiCache operation.
@@ -6834,6 +7173,62 @@ func (s *GetTypeOutput) SetType(v *Type) *GetTypeOutput {
 	return s
 }
 
+// The GraphQL schema is not valid.
+type GraphQLSchemaException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s GraphQLSchemaException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GraphQLSchemaException) GoString() string {
+	return s.String()
+}
+
+func newErrorGraphQLSchemaException(v protocol.ResponseMetadata) error {
+	return &GraphQLSchemaException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s GraphQLSchemaException) Code() string {
+	return "GraphQLSchemaException"
+}
+
+// Message returns the exception's message.
+func (s GraphQLSchemaException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s GraphQLSchemaException) OrigErr() error {
+	return nil
+}
+
+func (s GraphQLSchemaException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s GraphQLSchemaException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s GraphQLSchemaException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Describes a GraphQL API.
 type GraphqlApi struct {
 	_ struct{} `type:"structure"`
@@ -6990,6 +7385,62 @@ func (s *HttpDataSourceConfig) SetEndpoint(v string) *HttpDataSourceConfig {
 	return s
 }
 
+// An internal AWS AppSync error occurred. Try your request again.
+type InternalFailureException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
+	return &InternalFailureException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalFailureException) Code() string {
+	return "InternalFailureException"
+}
+
+// Message returns the exception's message.
+func (s InternalFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalFailureException) OrigErr() error {
+	return nil
+}
+
+func (s InternalFailureException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalFailureException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalFailureException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type LambdaConflictHandlerConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -7050,6 +7501,62 @@ func (s *LambdaDataSourceConfig) Validate() error {
 func (s *LambdaDataSourceConfig) SetLambdaFunctionArn(v string) *LambdaDataSourceConfig {
 	s.LambdaFunctionArn = &v
 	return s
+}
+
+// The request exceeded a limit. Try your request again.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListApiKeysInput struct {
@@ -7892,6 +8399,63 @@ func (s *LogConfig) SetFieldLogLevel(v string) *LogConfig {
 	return s
 }
 
+// The resource specified in the request was not found. Check the resource,
+// and then try again.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Describes an OpenID Connect configuration.
 type OpenIDConnectConfig struct {
 	_ struct{} `type:"structure"`
@@ -8463,6 +9027,62 @@ func (s *Type) SetFormat(v string) *Type {
 func (s *Type) SetName(v string) *Type {
 	s.Name = &v
 	return s
+}
+
+// You are not authorized to perform this operation.
+type UnauthorizedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnauthorizedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnauthorizedException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
+	return &UnauthorizedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnauthorizedException) Code() string {
+	return "UnauthorizedException"
+}
+
+// Message returns the exception's message.
+func (s UnauthorizedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnauthorizedException) OrigErr() error {
+	return nil
+}
+
+func (s UnauthorizedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnauthorizedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnauthorizedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {

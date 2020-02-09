@@ -78,23 +78,23 @@ func (c *ApplicationAutoScaling) DeleteScalingPolicyRequest(input *DeleteScaling
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DeleteScalingPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found. For any operation that depends on
 //   the existence of a scalable target, this exception is thrown if the scalable
 //   target with the specified service namespace, resource ID, and scalable dimension
 //   does not exist. For any operation that deletes or deregisters a resource,
 //   this exception is thrown if the resource cannot be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScalingPolicy
@@ -177,23 +177,23 @@ func (c *ApplicationAutoScaling) DeleteScheduledActionRequest(input *DeleteSched
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DeleteScheduledAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found. For any operation that depends on
 //   the existence of a scalable target, this exception is thrown if the scalable
 //   target with the specified service namespace, resource ID, and scalable dimension
 //   does not exist. For any operation that deletes or deregisters a resource,
 //   this exception is thrown if the resource cannot be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScheduledAction
@@ -277,23 +277,23 @@ func (c *ApplicationAutoScaling) DeregisterScalableTargetRequest(input *Deregist
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DeregisterScalableTarget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found. For any operation that depends on
 //   the existence of a scalable target, this exception is thrown if the scalable
 //   target with the specified service namespace, resource ID, and scalable dimension
 //   does not exist. For any operation that deletes or deregisters a resource,
 //   this exception is thrown if the resource cannot be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeregisterScalableTarget
@@ -383,19 +383,19 @@ func (c *ApplicationAutoScaling) DescribeScalableTargetsRequest(input *DescribeS
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DescribeScalableTargets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The next token supplied was invalid.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalableTargets
@@ -539,19 +539,19 @@ func (c *ApplicationAutoScaling) DescribeScalingActivitiesRequest(input *Describ
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DescribeScalingActivities for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The next token supplied was invalid.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingActivities
@@ -693,12 +693,12 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesRequest(input *DescribeS
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DescribeScalingPolicies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeFailedResourceAccessException "FailedResourceAccessException"
+//   * FailedResourceAccessException
 //   Failed access to resources caused an exception. This exception is thrown
 //   when Application Auto Scaling is unable to retrieve the alarms associated
 //   with a scaling policy due to a client error, for example, if the role ARN
@@ -706,14 +706,14 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesRequest(input *DescribeS
 //   DescribeAlarms (https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
 //   on your behalf.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The next token supplied was invalid.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingPolicies
@@ -856,19 +856,19 @@ func (c *ApplicationAutoScaling) DescribeScheduledActionsRequest(input *Describe
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DescribeScheduledActions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The next token supplied was invalid.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScheduledActions
@@ -1024,27 +1024,27 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation PutScalingPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A per-account resource limit is exceeded. For more information, see Application
 //   Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found. For any operation that depends on
 //   the existence of a scalable target, this exception is thrown if the scalable
 //   target with the specified service namespace, resource ID, and scalable dimension
 //   does not exist. For any operation that deletes or deregisters a resource,
 //   this exception is thrown if the resource cannot be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeFailedResourceAccessException "FailedResourceAccessException"
+//   * FailedResourceAccessException
 //   Failed access to resources caused an exception. This exception is thrown
 //   when Application Auto Scaling is unable to retrieve the alarms associated
 //   with a scaling policy due to a client error, for example, if the role ARN
@@ -1052,7 +1052,7 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 //   DescribeAlarms (https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
 //   on your behalf.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScalingPolicy
@@ -1148,27 +1148,27 @@ func (c *ApplicationAutoScaling) PutScheduledActionRequest(input *PutScheduledAc
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation PutScheduledAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A per-account resource limit is exceeded. For more information, see Application
 //   Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found. For any operation that depends on
 //   the existence of a scalable target, this exception is thrown if the scalable
 //   target with the specified service namespace, resource ID, and scalable dimension
 //   does not exist. For any operation that deletes or deregisters a resource,
 //   this exception is thrown if the resource cannot be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScheduledAction
@@ -1266,20 +1266,20 @@ func (c *ApplicationAutoScaling) RegisterScalableTargetRequest(input *RegisterSc
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation RegisterScalableTarget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A per-account resource limit is exceeded. For more information, see Application
 //   Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/RegisterScalableTarget
@@ -1339,6 +1339,63 @@ func (s *Alarm) SetAlarmARN(v string) *Alarm {
 func (s *Alarm) SetAlarmName(v string) *Alarm {
 	s.AlarmName = &v
 	return s
+}
+
+// Concurrent updates caused an exception, for example, if you request an update
+// to an Application Auto Scaling resource that already has a pending update.
+type ConcurrentUpdateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConcurrentUpdateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentUpdateException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentUpdateException(v protocol.ResponseMetadata) error {
+	return &ConcurrentUpdateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConcurrentUpdateException) Code() string {
+	return "ConcurrentUpdateException"
+}
+
+// Message returns the exception's message.
+func (s ConcurrentUpdateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConcurrentUpdateException) OrigErr() error {
+	return nil
+}
+
+func (s ConcurrentUpdateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConcurrentUpdateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConcurrentUpdateException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Represents a CloudWatch metric of your choosing for a target tracking scaling
@@ -1498,6 +1555,11 @@ type DeleteScalingPolicyInput struct {
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
 	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -1540,6 +1602,9 @@ type DeleteScalingPolicyInput struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -1667,6 +1732,11 @@ type DeleteScheduledActionInput struct {
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
 	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -1709,6 +1779,9 @@ type DeleteScheduledActionInput struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -1841,6 +1914,11 @@ type DeregisterScalableTargetInput struct {
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
 	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -1883,6 +1961,9 @@ type DeregisterScalableTargetInput struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -2010,6 +2091,11 @@ type DescribeScalableTargetsInput struct {
 	//
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	ResourceIds []*string `type:"list"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -2052,6 +2138,9 @@ type DescribeScalableTargetsInput struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service that provides the resource or custom-resource
@@ -2199,6 +2288,11 @@ type DescribeScalingActivitiesInput struct {
 	//
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2241,6 +2335,9 @@ type DescribeScalingActivitiesInput struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service that provides the resource or custom-resource
@@ -2394,6 +2491,11 @@ type DescribeScalingPoliciesInput struct {
 	//
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2436,6 +2538,9 @@ type DescribeScalingPoliciesInput struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service that provides the resource or custom-resource
@@ -2592,6 +2697,11 @@ type DescribeScheduledActionsInput struct {
 	//
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2634,6 +2744,9 @@ type DescribeScheduledActionsInput struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The names of the scheduled actions to describe.
@@ -2743,6 +2856,236 @@ func (s *DescribeScheduledActionsOutput) SetScheduledActions(v []*ScheduledActio
 	return s
 }
 
+// Failed access to resources caused an exception. This exception is thrown
+// when Application Auto Scaling is unable to retrieve the alarms associated
+// with a scaling policy due to a client error, for example, if the role ARN
+// specified for a scalable target does not have permission to call the CloudWatch
+// DescribeAlarms (https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
+// on your behalf.
+type FailedResourceAccessException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s FailedResourceAccessException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailedResourceAccessException) GoString() string {
+	return s.String()
+}
+
+func newErrorFailedResourceAccessException(v protocol.ResponseMetadata) error {
+	return &FailedResourceAccessException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FailedResourceAccessException) Code() string {
+	return "FailedResourceAccessException"
+}
+
+// Message returns the exception's message.
+func (s FailedResourceAccessException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FailedResourceAccessException) OrigErr() error {
+	return nil
+}
+
+func (s FailedResourceAccessException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FailedResourceAccessException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FailedResourceAccessException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The service encountered an internal error.
+type InternalServiceException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServiceException(v protocol.ResponseMetadata) error {
+	return &InternalServiceException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServiceException) Code() string {
+	return "InternalServiceException"
+}
+
+// Message returns the exception's message.
+func (s InternalServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServiceException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServiceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServiceException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServiceException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The next token supplied was invalid.
+type InvalidNextTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidNextTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidNextTokenException) Code() string {
+	return "InvalidNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidNextTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidNextTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A per-account resource limit is exceeded. For more information, see Application
+// Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Describes the dimension names and values associated with a metric.
 type MetricDimension struct {
 	_ struct{} `type:"structure"`
@@ -2794,6 +3137,66 @@ func (s *MetricDimension) SetName(v string) *MetricDimension {
 func (s *MetricDimension) SetValue(v string) *MetricDimension {
 	s.Value = &v
 	return s
+}
+
+// The specified object could not be found. For any operation that depends on
+// the existence of a scalable target, this exception is thrown if the scalable
+// target with the specified service namespace, resource ID, and scalable dimension
+// does not exist. For any operation that deletes or deregisters a resource,
+// this exception is thrown if the resource cannot be found.
+type ObjectNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ObjectNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ObjectNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorObjectNotFoundException(v protocol.ResponseMetadata) error {
+	return &ObjectNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ObjectNotFoundException) Code() string {
+	return "ObjectNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ObjectNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ObjectNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ObjectNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ObjectNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ObjectNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Represents a predefined metric for a target tracking scaling policy to use
@@ -2875,7 +3278,7 @@ type PutScalingPolicyInput struct {
 	//
 	// TargetTrackingScaling—Not supported for Amazon EMR
 	//
-	// StepScaling—Not supported for DynamoDB or Amazon Comprehend
+	// StepScaling—Not supported for DynamoDB, Amazon Comprehend, or AWS Lambda
 	//
 	// For more information, see Target Tracking Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
 	// and Step Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
@@ -2916,6 +3319,11 @@ type PutScalingPolicyInput struct {
 	//
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -2959,6 +3367,9 @@ type PutScalingPolicyInput struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3150,6 +3561,11 @@ type PutScheduledActionInput struct {
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
 	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3192,6 +3608,9 @@ type PutScheduledActionInput struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3386,6 +3805,11 @@ type RegisterScalableTargetInput struct {
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
 	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3437,6 +3861,9 @@ type RegisterScalableTargetInput struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3615,6 +4042,11 @@ type ScalableTarget struct {
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
 	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3663,6 +4095,9 @@ type ScalableTarget struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3831,6 +4266,11 @@ type ScalingActivity struct {
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
 	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3873,6 +4313,9 @@ type ScalingActivity struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -4037,6 +4480,11 @@ type ScalingPolicy struct {
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
 	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -4079,6 +4527,9 @@ type ScalingPolicy struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -4215,6 +4666,11 @@ type ScheduledAction struct {
 	//    * Amazon Comprehend document classification endpoint - The resource type
 	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
 	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -4257,6 +4713,9 @@ type ScheduledAction struct {
 	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
 	//    number of inference units for an Amazon Comprehend document classification
 	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
@@ -4751,6 +5210,63 @@ func (s *TargetTrackingScalingPolicyConfiguration) SetTargetValue(v float64) *Ta
 	return s
 }
 
+// An exception was thrown for a validation issue. Review the available parameters
+// for the API request.
+type ValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ValidationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 const (
 	// AdjustmentTypeChangeInCapacity is a AdjustmentType enum value
 	AdjustmentTypeChangeInCapacity = "ChangeInCapacity"
@@ -4829,6 +5345,9 @@ const (
 
 	// MetricTypeComprehendInferenceUtilization is a MetricType enum value
 	MetricTypeComprehendInferenceUtilization = "ComprehendInferenceUtilization"
+
+	// MetricTypeLambdaProvisionedConcurrencyUtilization is a MetricType enum value
+	MetricTypeLambdaProvisionedConcurrencyUtilization = "LambdaProvisionedConcurrencyUtilization"
 )
 
 const (
@@ -4875,6 +5394,9 @@ const (
 
 	// ScalableDimensionComprehendDocumentClassifierEndpointDesiredInferenceUnits is a ScalableDimension enum value
 	ScalableDimensionComprehendDocumentClassifierEndpointDesiredInferenceUnits = "comprehend:document-classifier-endpoint:DesiredInferenceUnits"
+
+	// ScalableDimensionLambdaFunctionProvisionedConcurrency is a ScalableDimension enum value
+	ScalableDimensionLambdaFunctionProvisionedConcurrency = "lambda:function:ProvisionedConcurrency"
 )
 
 const (
@@ -4924,4 +5446,7 @@ const (
 
 	// ServiceNamespaceComprehend is a ServiceNamespace enum value
 	ServiceNamespaceComprehend = "comprehend"
+
+	// ServiceNamespaceLambda is a ServiceNamespace enum value
+	ServiceNamespaceLambda = "lambda"
 )

@@ -178,6 +178,10 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"kms_key_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -29,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/dataexchange"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
@@ -46,18 +48,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -79,6 +86,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
@@ -92,6 +100,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -102,6 +111,8 @@ func ServiceClientType(serviceName string) string {
 	var funcType reflect.Type
 
 	switch serviceName {
+	case "accessanalyzer":
+		funcType = reflect.TypeOf(accessanalyzer.New)
 	case "acm":
 		funcType = reflect.TypeOf(acm.New)
 	case "acmpca":
@@ -148,6 +159,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(configservice.New)
 	case "databasemigrationservice":
 		funcType = reflect.TypeOf(databasemigrationservice.New)
+	case "dataexchange":
+		funcType = reflect.TypeOf(dataexchange.New)
 	case "datapipeline":
 		funcType = reflect.TypeOf(datapipeline.New)
 	case "datasync":
@@ -182,6 +195,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(elasticbeanstalk.New)
 	case "elasticsearchservice":
 		funcType = reflect.TypeOf(elasticsearchservice.New)
+	case "elb":
+		funcType = reflect.TypeOf(elb.New)
 	case "elbv2":
 		funcType = reflect.TypeOf(elbv2.New)
 	case "emr":
@@ -190,12 +205,18 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(firehose.New)
 	case "fsx":
 		funcType = reflect.TypeOf(fsx.New)
+	case "gamelift":
+		funcType = reflect.TypeOf(gamelift.New)
+	case "glacier":
+		funcType = reflect.TypeOf(glacier.New)
 	case "glue":
 		funcType = reflect.TypeOf(glue.New)
 	case "guardduty":
 		funcType = reflect.TypeOf(guardduty.New)
 	case "greengrass":
 		funcType = reflect.TypeOf(greengrass.New)
+	case "imagebuilder":
+		funcType = reflect.TypeOf(imagebuilder.New)
 	case "inspector":
 		funcType = reflect.TypeOf(inspector.New)
 	case "iot":
@@ -206,6 +227,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(iotevents.New)
 	case "kafka":
 		funcType = reflect.TypeOf(kafka.New)
+	case "kinesis":
+		funcType = reflect.TypeOf(kinesis.New)
 	case "kinesisanalytics":
 		funcType = reflect.TypeOf(kinesisanalytics.New)
 	case "kinesisanalyticsv2":
@@ -248,6 +271,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(redshift.New)
 	case "resourcegroups":
 		funcType = reflect.TypeOf(resourcegroups.New)
+	case "route53":
+		funcType = reflect.TypeOf(route53.New)
 	case "route53resolver":
 		funcType = reflect.TypeOf(route53resolver.New)
 	case "sagemaker":
@@ -274,6 +299,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(waf.New)
 	case "wafregional":
 		funcType = reflect.TypeOf(wafregional.New)
+	case "wafv2":
+		funcType = reflect.TypeOf(wafv2.New)
 	case "workspaces":
 		funcType = reflect.TypeOf(workspaces.New)
 	default:

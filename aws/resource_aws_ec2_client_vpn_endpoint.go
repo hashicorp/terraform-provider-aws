@@ -223,7 +223,12 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	d.Set("server_certificate_arn", result.ClientVpnEndpoints[0].ServerCertificateArn)
 	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
 	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
-	d.Set("status", result.ClientVpnEndpoints[0].Status)
+	d.Set("dns_servers", result.ClientVpnEndpoints[0].DnsServers)
+
+	if result.ClientVpnEndpoints[0].Status != nil {
+		d.Set("status", result.ClientVpnEndpoints[0].Status.Code)
+	}
+
 	d.Set("split_tunnel", result.ClientVpnEndpoints[0].SplitTunnel)
 
 	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
