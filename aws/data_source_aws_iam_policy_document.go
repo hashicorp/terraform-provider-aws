@@ -39,6 +39,10 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"source_json_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+			},
 			"statement": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -111,6 +115,39 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 		if err := json.Unmarshal([]byte(sourceJSON.(string)), mergedDoc); err != nil {
 			return err
 		}
+	}
+
+	// populate mergedDoc with any provided source_json_list
+	if sourceJSONList, hasSourceJSONList := d.GetOk("source_json_list"); hasSourceJSONList {
+
+		// generate sid map to assure there are no duplicates in source jsons
+		sidMap := make(map[string]struct{})
+		for _, stmt := range mergedDoc.Statements {
+			if stmt.Sid != "" {
+				sidMap[stmt.Sid] = struct{}{}
+			}
+		}
+
+		// merge sourceDocs in order specified
+		for sourceJSONIndex, sourceJSON := range sourceJSONList.([]string) {
+			sourceDoc := &IAMPolicyDoc{}
+			if err := json.Unmarshal([]byte(sourceJSON), sourceDoc); err != nil {
+				return err
+			}
+
+			// assure all statements in sourceDoc are unique before merging
+			for stmtIndex, stmt := range sourceDoc.Statements {
+				if stmt.Sid != "" {
+					if _, sidExists := sidMap[stmt.Sid]; sidExists {
+						return fmt.Errorf("Found duplicate sid (%s) in source_json_list (item %d; statement %d). Either remove the sid or ensure the sid is unique across all statements.", stmt.Sid, sourceJSONIndex, stmtIndex)
+					}
+					sidMap[stmt.Sid] = struct{}{}
+				}
+			}
+
+			mergedDoc.Merge(sourceDoc)
+		}
+
 	}
 
 	// process the current document
