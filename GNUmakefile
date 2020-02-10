@@ -3,6 +3,7 @@ TEST?=./...
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 PKG_NAME=aws
 WEBSITE_REPO=github.com/hashicorp/terraform-website
+TEST_COUNT?=1
 
 default: build
 
@@ -21,7 +22,7 @@ test: fmtcheck
 	go test $(TEST) -timeout=30s -parallel=4
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v -count 1 -parallel 20 $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test $(TEST) -v -count $(TEST_COUNT) -parallel 20 $(TESTARGS) -timeout 120m
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
