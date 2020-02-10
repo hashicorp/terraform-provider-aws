@@ -14,7 +14,7 @@ ENHANCEMENTS:
 
 * resource/aws_batch_job_definition: Support resource import ([#11407](https://github.com/terraform-providers/terraform-provider-aws/issues/11407))
 * resource/aws_codebuild_project: Add `source` and `secondary_source` configuration block `git_submodules_config` configuration block ([#10952](https://github.com/terraform-providers/terraform-provider-aws/issues/10952))
-* resource/aws_codebuild_project: Add `source` configuration block `source_version` argument ([#9877](https://github.com/terraform-providers/terraform-provider-aws/issues/9877))
+* resource/aws_codebuild_project: Add `source_version` argument ([#9877](https://github.com/terraform-providers/terraform-provider-aws/issues/9877))
 * resource/aws_elasticache_cluster: Add `computed` flag for `port` property and set to true ([#10017](https://github.com/terraform-providers/terraform-provider-aws/issues/10017))
 * resource/aws_fsx_lustre_file_system: Lower minimum `storage_capacity` argument validation to 1200 to match API updates ([#11847](https://github.com/terraform-providers/terraform-provider-aws/issues/11847))
 * resource/aws_organizations_policy: Support `type` argument `TAG_POLICY` value in plan-time validation ([#11612](https://github.com/terraform-providers/terraform-provider-aws/issues/11612))
