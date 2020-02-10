@@ -66,6 +66,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 #### destination_config on_failure Configuration Block
 
 * `destination_arn` - (Required) The Amazon Resource Name (ARN) of the destination resource.
+
 ## Attributes Reference
 
 * `function_arn` - The the ARN of the Lambda function the event source mapping is sending events to. (Note: this is a computed value that differs from `function_name` above.)
