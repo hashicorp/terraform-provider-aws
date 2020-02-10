@@ -1,4 +1,9 @@
 ## 2.49.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_gamelift_fleet: Add `tags` argument [GH-11559]
+
 ## 2.48.0 (February 07, 2020)
 
 NOTES:
