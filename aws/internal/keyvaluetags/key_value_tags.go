@@ -5,7 +5,10 @@
 package keyvaluetags
 
 import (
+	"fmt"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 )
 
 const (
@@ -196,6 +199,17 @@ func (tags KeyValueTags) Chunks(size int) []KeyValueTags {
 	}
 
 	return result
+}
+
+// Hash returns a stable hash value.
+// The returned value may be negative (i.e. not suitable for a 'Set' function).
+func (tags KeyValueTags) Hash() int {
+	hash := 0
+	for k, v := range tags {
+		hash = hash ^ hashcode.String(fmt.Sprintf("%s-%s", k, *v))
+	}
+
+	return hash
 }
 
 // New creates KeyValueTags from common Terraform Provider SDK types.
