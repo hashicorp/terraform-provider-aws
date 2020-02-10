@@ -261,6 +261,7 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					acmpca.CertificateAuthorityTypeRoot,
 					acmpca.CertificateAuthorityTypeSubordinate,
+					acmpca.CertificateAuthorityTypeRoot,
 				}, false),
 			},
 		},
