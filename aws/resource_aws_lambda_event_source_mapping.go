@@ -123,6 +123,27 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"destination_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_failure": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"function_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -204,6 +225,10 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		if bisectBatchOnFunctionError, ok := d.GetOk("bisect_batch_on_function_error"); ok {
 			params.SetBisectBatchOnFunctionError(bisectBatchOnFunctionError.(bool))
 		}
+
+		if vDest, ok := d.GetOk("destination_config"); ok {
+			params.SetDestinationConfig(expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{})))
+		}
 	}
 
 	// IAM profiles and roles can take some time to propagate in AWS:
@@ -282,6 +307,10 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 		d.Set("maximum_retry_attempts", eventSourceMappingConfiguration.MaximumRetryAttempts)
 		d.Set("maximum_record_age_in_seconds", eventSourceMappingConfiguration.MaximumRecordAgeInSeconds)
 		d.Set("bisect_batch_on_function_error", eventSourceMappingConfiguration.BisectBatchOnFunctionError)
+		dest := flattenLambdaEventSourceMappingDestinationConfig(eventSourceMappingConfiguration.DestinationConfig)
+		if dest != nil {
+			d.Set("destination_config", dest)
+		}
 	} else {
 		d.Set("parallelization_factor", 1)
 		d.Set("maximum_retry_attempts", 10000)
@@ -371,6 +400,10 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 
 		if bisectBatchOnFunctionError, ok := d.GetOk("bisect_batch_on_function_error"); ok {
 			params.SetBisectBatchOnFunctionError(bisectBatchOnFunctionError.(bool))
+		}
+
+		if vDest, ok := d.GetOk("destination_config"); ok {
+			params.SetDestinationConfig(expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{})))
 		}
 	}
 

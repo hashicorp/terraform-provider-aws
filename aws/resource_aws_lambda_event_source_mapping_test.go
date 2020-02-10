@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -508,6 +509,51 @@ func TestAccAWSLambdaEventSourceMapping_BisectBatch(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaEventSourceMapping_KinesisDestinationConfig(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rString := acctest.RandString(8)
+	resourceName := "aws_lambda_event_source_mapping.test"
+	streamName := fmt.Sprintf("tf_acc_stream_dest_config_%s", rString)
+	streamNameUpdated := fmt.Sprintf("tf_acc_stream_dest_config_updated_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisDestinationConfig(rName, streamName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
+					testAccCheckLambdaEventSourceMappingOnFailureDestinationArnHasSuffix(&conf, ":"+streamName),
+					testAccCheckLambdaEventSourceMappingOnFailureDestinationArnHasSuffix(&conf, ":"+streamName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"starting_position",
+					"starting_position_timestamp",
+				},
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisDestinationConfig(rName, streamNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
+					testAccCheckLambdaEventSourceMappingOnFailureDestinationArnHasSuffix(&conf, ":"+streamNameUpdated),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
@@ -821,6 +867,47 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position             = "TRIM_HORIZON"
 }
 `, maximumRecordAgeInSeconds)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigKinesisDestinationConfig(rName string, streamName string) string {
+	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
+resource "aws_sqs_queue" "sqs_queue_test" {
+  name = "%s"
+}
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size                    = 100
+  enabled                       = true
+  event_source_arn              = "${aws_kinesis_stream.test.arn}"
+  function_name                 = "${aws_lambda_function.test.arn}"
+  starting_position             = "TRIM_HORIZON"
+  destination_config {
+    on_failure {
+      destination_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
+    }
+  }
+}
+`, streamName)
+}
+
+func testAccCheckLambdaEventSourceMappingOnFailureDestinationArnHasSuffix(mapping *lambda.EventSourceMappingConfiguration, arnSuffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var d string
+		vDest := mapping.DestinationConfig
+		if vDest != nil {
+			vOnFailure := vDest.OnFailure
+			if vOnFailure != nil {
+				if vOnFailure.Destination != nil {
+					d = *vOnFailure.Destination
+				}
+			}
+		}
+
+		if !strings.HasSuffix(d, arnSuffix) {
+			return fmt.Errorf("Expected on_failure destination ARN %s to have suffix %s", d, arnSuffix)
+		}
+
+		return nil
+	}
 }
 
 func testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName,
