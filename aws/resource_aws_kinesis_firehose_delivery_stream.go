@@ -20,10 +20,6 @@ const (
 	firehoseDeliveryStreamStatusDeleted = "DESTROYED"
 )
 
-const (
-	firehoseDeliveryStreamStatusDeleted = "DESTROYED"
-)
-
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -67,19 +63,19 @@ func s3ConfigurationSchema() *schema.Schema {
 				"buffer_size": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					// Default:  5,
+					Default:  5,
 				},
 
 				"buffer_interval": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					// Default:  300,
+					Default:  300,
 				},
 
 				"compression_format": {
 					Type:     schema.TypeString,
 					Optional: true,
-					// Default:  "UNCOMPRESSED",
+					Default:  "UNCOMPRESSED",
 				},
 
 				"kms_key_arn": {
@@ -553,9 +549,6 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 	if pc == nil {
 		return []map[string]interface{}{}
 	}
-	if !aws.BoolValue(pc.Enabled) && len(pc.Processors) == 0 {
-		return []map[string]interface{}{}
-	}
 
 	processingConfiguration := make([]map[string]interface{}, 1)
 
@@ -655,7 +648,6 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			if err := d.Set("extended_s3_configuration", flattenFirehoseExtendedS3Configuration(destination.ExtendedS3DestinationDescription)); err != nil {
 				return fmt.Errorf("error setting extended_s3_configuration: %s", err)
 			}
-			d.Set("s3_configuration", nil)
 		}
 		d.Set("destination_id", destination.DestinationId)
 	}
@@ -2426,85 +2418,6 @@ func firehoseDeliveryStreamSSEStateRefreshFunc(conn *firehose.Firehose, sn strin
 
 		return resp.DeliveryStreamDescription, aws.StringValue(resp.DeliveryStreamDescription.DeliveryStreamEncryptionConfiguration.Status), nil
 	}
-}
-
-func waitForKinesisFirehoseDeliveryStreamCreation(conn *firehose.Firehose, deliveryStreamName string) (*firehose.DeliveryStreamDescription, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{firehose.DeliveryStreamStatusCreating},
-		Target:     []string{firehose.DeliveryStreamStatusActive},
-		Refresh:    firehoseDeliveryStreamStateRefreshFunc(conn, deliveryStreamName),
-		Timeout:    20 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	v, err := stateConf.WaitForState()
-	if err != nil {
-		return nil, err
-	}
-
-	return v.(*firehose.DeliveryStreamDescription), nil
-}
-
-func waitForKinesisFirehoseDeliveryStreamDeletion(conn *firehose.Firehose, deliveryStreamName string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{firehose.DeliveryStreamStatusDeleting},
-		Target:     []string{firehoseDeliveryStreamStatusDeleted},
-		Refresh:    firehoseDeliveryStreamStateRefreshFunc(conn, deliveryStreamName),
-		Timeout:    20 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForKinesisFirehoseDeliveryStreamSSEEnabled(conn *firehose.Firehose, deliveryStreamName string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{firehose.DeliveryStreamEncryptionStatusEnabling},
-		Target:     []string{firehose.DeliveryStreamEncryptionStatusEnabled},
-		Refresh:    firehoseDeliveryStreamSSEStateRefreshFunc(conn, deliveryStreamName),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForKinesisFirehoseDeliveryStreamSSEDisabled(conn *firehose.Firehose, deliveryStreamName string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{firehose.DeliveryStreamEncryptionStatusDisabling},
-		Target:     []string{firehose.DeliveryStreamEncryptionStatusDisabled},
-		Refresh:    firehoseDeliveryStreamSSEStateRefreshFunc(conn, deliveryStreamName),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func isKinesisFirehoseDeliveryStreamOptionDisabled(v interface{}) bool {
-	options := v.([]interface{})
-	if len(options) == 0 || options[0] == nil {
-		return true
-	}
-	m := options[0].(map[string]interface{})
-
-	var enabled bool
-
-	if v, ok := m["enabled"]; ok {
-		enabled = v.(bool)
-	}
-
-	return !enabled
 }
 
 func waitForKinesisFirehoseDeliveryStreamCreation(conn *firehose.Firehose, deliveryStreamName string) (*firehose.DeliveryStreamDescription, error) {
