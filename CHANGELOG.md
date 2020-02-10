@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_gamelift_fleet: Add `tags` argument [GH-11559]
 
+BUG FIXES:
+
+* resource/aws_route53_record: The artificial, hardcoded five minute timeouts for creation and deletions have been removed in preference of the default AWS Go SDK retrying logic [GH-11895]
+
 ## 2.48.0 (February 07, 2020)
 
 NOTES:
