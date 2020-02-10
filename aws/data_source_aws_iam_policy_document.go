@@ -31,6 +31,10 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"override_json_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+			},
 			"policy_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -239,6 +243,19 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 
 	// merge our current document into mergedDoc
 	mergedDoc.Merge(doc)
+
+	// merge override_json_list policies into mergedDoc in order specified
+	if overrideJSONList, hasOverideJSONList := d.GetOk("overide_json_list"); hasOverideJSONList {
+		for _, overrideJSON := range overrideJSONList.([]string) {
+			overrideDoc := &IAMPolicyDoc{}
+			if err := json.Unmarshal([]byte(overrideJSON), overrideDoc); err != nil {
+				return err
+			}
+
+			mergedDoc.Merge(overrideDoc)
+		}
+
+	}
 
 	// merge in override_json
 	if overrideJSON, hasOverrideJSON := d.GetOk("override_json"); hasOverrideJSON {
