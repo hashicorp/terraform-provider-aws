@@ -834,7 +834,7 @@ func CodestarnotificationsUpdateTags(conn *codestarnotifications.CodeStarNotific
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &codestarnotifications.UntagResourceInput{
 			Arn:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.Keys()),
+			TagKeys: aws.StringSlice(removedTags.IgnoreAws().Keys()),
 		}
 
 		_, err := conn.UntagResource(input)
