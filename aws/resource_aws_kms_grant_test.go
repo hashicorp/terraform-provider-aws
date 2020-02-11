@@ -150,7 +150,7 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 				Config: testAccAWSKmsGrant_ARN(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsGrantExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "operations.2238845196", "Encrypt"),
 					resource.TestCheckResourceAttr(resourceName, "operations.1237510779", "Decrypt"),
