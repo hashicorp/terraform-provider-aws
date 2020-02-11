@@ -201,10 +201,22 @@ func (tags KeyValueTags) Chunks(size int) []KeyValueTags {
 	return result
 }
 
+// ContainsAll returns whether or not all the target tags are contained.
+func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
+	for key, value := range target {
+		if v, ok := tags[key]; !ok || *v != *value {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Hash returns a stable hash value.
 // The returned value may be negative (i.e. not suitable for a 'Set' function).
 func (tags KeyValueTags) Hash() int {
 	hash := 0
+
 	for k, v := range tags {
 		hash = hash ^ hashcode.String(fmt.Sprintf("%s-%s", k, *v))
 	}
