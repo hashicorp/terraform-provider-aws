@@ -247,7 +247,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 	mergedDoc.Merge(doc)
 
 	// merge override_json_list policies into mergedDoc in order specified
-	if overrideJSONList, hasOverideJSONList := d.GetOk("overide_json_list"); hasOverideJSONList {
+	if overrideJSONList, hasOverrideJSONList := d.GetOk("override_json_list"); hasOverrideJSONList {
 		for _, overrideJSON := range overrideJSONList.([]interface{}) {
 			overrideDoc := &IAMPolicyDoc{}
 			if err := json.Unmarshal([]byte(overrideJSON.(string)), overrideDoc); err != nil {
