@@ -178,6 +178,16 @@ func CodecommitKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// CodestarnotificationsTags returns codestarnotifications service tags.
+func (tags KeyValueTags) CodestarnotificationsTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// CodestarnotificationsKeyValueTags creates KeyValueTags from codestarnotifications service tags.
+func CodestarnotificationsKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // CognitoidentityTags returns cognitoidentity service tags.
 func (tags KeyValueTags) CognitoidentityTags() map[string]*string {
 	return aws.StringMap(tags.Map())

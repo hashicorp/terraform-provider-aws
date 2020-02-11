@@ -21,6 +21,7 @@ CodeBuild
 CodeCommit
 CodeDeploy
 CodePipeline
+CodeStar Notifications
 Cognito
 Config
 Cost and Usage Report

@@ -103,6 +103,7 @@ var mapServiceNames = []string{
 	"batch",
 	"cloudwatchlogs",
 	"codecommit",
+	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
 	"dataexchange",
