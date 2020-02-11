@@ -150,6 +150,33 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11858
+func TestAccAWSCognitoUserPool_withAdminCreateUserConfigurationAndPasswordPolicy(t *testing.T) {
+	name := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigAndPasswordPolicy(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", "7"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
 	name := acctest.RandString(5)
 	resourceName := "aws_cognito_user_pool.test"
@@ -1110,6 +1137,27 @@ resource "aws_cognito_user_pool" "test" {
   auto_verified_attributes = ["email"]
 }
 `, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigAndPasswordPolicy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  admin_create_user_config {
+    allow_admin_create_user_only = true
+  }
+
+  password_policy {
+    minimum_length                   = 7
+    require_lowercase                = true
+    require_numbers                  = false
+    require_symbols                  = true
+    require_uppercase                = false
+    temporary_password_validity_days = 7
+  }
+}
+`, rName)
 }
 
 func testAccAWSCognitoUserPoolConfig_withPasswordPolicy(name string) string {

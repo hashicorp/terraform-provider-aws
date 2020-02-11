@@ -67,6 +67,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"unused_account_validity_days": {
 							Type:          schema.TypeInt,
 							Optional:      true,
+							Computed:      true,
 							Deprecated:    "Use password_policy.temporary_password_validity_days instead",
 							ValidateFunc:  validation.IntBetween(0, 90),
 							ConflictsWith: []string{"password_policy.0.temporary_password_validity_days"},
