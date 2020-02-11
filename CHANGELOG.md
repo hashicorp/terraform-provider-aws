@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_gamelift_fleet: Add `tags` argument [GH-11559]
+* resource/aws_neptune_cluster: Add `enable_cloudwatch_logs_exports` argument (support audit logging) [GH-11949]
 
 BUG FIXES:
 
