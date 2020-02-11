@@ -671,8 +671,7 @@ var testAccAWSIAMPolicyDocumentSourceListExpectedJSON = `{
       "Action": "bar:ActionTwo"
     }
   ]
-}
-`
+}`
 
 var testAccAWSIAMPolicyDocumentSourceBlankConfig = `
 data "aws_iam_policy_document" "test_source_blank" {
@@ -874,8 +873,7 @@ var testAccAWSIAMPolicyDocumentOverrideListExpectedJSON = `{
       "Action": "foo:ActionTwo"
     }
   ]
-}
-`
+}`
 
 var testAccAWSIAMPolicyDocumentNoStatementMergeConfig = `
 data "aws_iam_policy_document" "source" {
