@@ -964,7 +964,7 @@ resource "aws_neptune_cluster" "test" {
 
 func testAccAWSNeptuneClusterConfig_cloudwatchLogsExports(rName string) string {
 	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
-resource "aws_neptune_cluster" "default" {
+resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %q
   availability_zones                  = "${slice(data.aws_availability_zones.test.names,0,3)}"
   skip_final_snapshot                  = true
