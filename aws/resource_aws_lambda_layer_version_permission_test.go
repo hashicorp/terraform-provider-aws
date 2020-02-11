@@ -62,29 +62,97 @@ func testSweepLambdaLayerVersionPermission(region string) error {
 	return nil
 }
 
-func TestAccAWSLambdaLayerVersionPermission_basic(t *testing.T) {
+func TestAccAWSLambdaLayerVersionPermission_all(t *testing.T) {
 	resourceName := "aws_lambda_layer_version_permission.lambda_layer_permission"
 	layerName := fmt.Sprintf("tf_acc_lambda_layer_version_permission_testing_%s", acctest.RandString(8))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy2,
+		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaLayerVersionPermission(layerName),
+				Config: testAccAWSLambdaLayerVersionPermission_all(layerName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaLayerVersionExists("aws_lambda_layer_version.lambda_layer", layerName),
+					testAccCheckAwsLambdaLayerVersionPermissionExists("aws_lambda_layer_version_permission.lambda_layer_permission", layerName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
 				),
 			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func testAccAWSLambdaLayerVersionPermission(layerName string) string {
+func TestAccAWSLambdaLayerVersionPermission_org(t *testing.T) {
+	resourceName := "aws_lambda_layer_version_permission.lambda_layer_permission"
+	layerName := fmt.Sprintf("tf_acc_lambda_layer_version_permission_testing_%s", acctest.RandString(8))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaLayerVersionPermission_org(layerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaLayerVersionExists("aws_lambda_layer_version.lambda_layer", layerName),
+					testAccCheckAwsLambdaLayerVersionPermissionExists("aws_lambda_layer_version_permission.lambda_layer_permission", layerName),
+					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
+					resource.TestCheckResourceAttr(resourceName, "organization_id", "o-0123456789"),
+				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaLayerVersionPermission_account(t *testing.T) {
+	resourceName := "aws_lambda_layer_version_permission.lambda_layer_permission"
+	layerName := fmt.Sprintf("tf_acc_lambda_layer_version_permission_testing_%s", acctest.RandString(8))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaLayerVersionPermission_account(layerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaLayerVersionExists("aws_lambda_layer_version.lambda_layer", layerName),
+					testAccCheckAwsLambdaLayerVersionPermissionExists("aws_lambda_layer_version_permission.lambda_layer_permission", layerName),
+					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "456789820214"),
+					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
+				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Creating Lambda layer and Lambda layer permissions
+
+func testAccAWSLambdaLayerVersionPermission_all(layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer" {
 	filename   = "test-fixtures/lambdatest.zip"
@@ -101,32 +169,107 @@ resource "aws_lambda_layer_version_permission" "lambda_layer_permission" {
 `, layerName)
 }
 
-func testAccCheckLambdaLayerVersionDestroy2(s *terraform.State) error {
+func testAccAWSLambdaLayerVersionPermission_org(layerName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "lambda_layer" {
+	filename   = "test-fixtures/lambdatest.zip"
+	layer_name = "%s"
+}
+
+resource "aws_lambda_layer_version_permission" "lambda_layer_permission" {
+	layer_arn = aws_lambda_layer_version.lambda_layer.layer_arn
+	layer_version = aws_lambda_layer_version.lambda_layer.version
+	action = "lambda:GetLayerVersion"
+	statement_id = "xaccount"
+	principal = "*"
+	organization_id = "o-0123456789"
+}
+`, layerName)
+}
+
+func testAccAWSLambdaLayerVersionPermission_account(layerName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "lambda_layer" {
+	filename   = "test-fixtures/lambdatest.zip"
+	layer_name = "%s"
+}
+
+resource "aws_lambda_layer_version_permission" "lambda_layer_permission" {
+	layer_arn = aws_lambda_layer_version.lambda_layer.layer_arn
+	layer_version = aws_lambda_layer_version.lambda_layer.version
+	action = "lambda:GetLayerVersion"
+	statement_id = "xaccount"
+	principal = "456789820214"
+}
+`, layerName)
+}
+
+func testAccCheckAwsLambdaLayerVersionPermissionExists(res, layerName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[res]
+		if !ok {
+			return fmt.Errorf("Lambda Layer version permission not found: %s", res)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Lambda Layer version policy ID not set")
+		}
+
+		if rs.Primary.Attributes["revision_id"] == "" {
+			return fmt.Errorf("Lambda Layer Version Permission not set")
+		}
+
+		_, _, version, err := resourceAwsLambdaLayerVersionPermissionParseId(rs.Primary.Attributes["id"])
+		if err != nil {
+			return fmt.Errorf("Error parsing lambda layer ID: %s", err)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+
+		_, err = conn.GetLayerVersionPolicy(&lambda.GetLayerVersionPolicyInput{
+			LayerName:     aws.String(layerName),
+			VersionNumber: aws.Int64(version),
+		})
+
+		if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+			return err
+		}
+
+		return err
+	}
+}
+
+func testAccCheckLambdaLayerVersionPermissionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lambda_layer_version" {
+		if rs.Type != "aws_lambda_layer_version_permission" {
 			continue
 		}
 
-		layerName, version, err := resourceAwsLambdaLayerVersionParseId(rs.Primary.ID)
+		layerName, _, version, err := resourceAwsLambdaLayerVersionPermissionParseId(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		_, err = conn.GetLayerVersion(&lambda.GetLayerVersionInput{
+		_, err = conn.GetLayerVersionPolicy(&lambda.GetLayerVersionPolicyInput{
 			LayerName:     aws.String(layerName),
 			VersionNumber: aws.Int64(version),
 		})
+
 		if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 		if err != nil {
 			return err
 		}
+		// as I've created Lambda layer, not only layer permission, need to check if layer was destroyed.
+		err = testAccCheckLambdaLayerVersionDestroy(s)
+		if err != nil {
+			return err
+		}
 
-		return fmt.Errorf("Lambda Layer Version (%s) still exists", rs.Primary.ID)
+		return fmt.Errorf("Lambda Layer Version Permission (%s) still exists", rs.Primary.ID)
 	}
-
 	return nil
 }
