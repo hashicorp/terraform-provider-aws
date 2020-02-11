@@ -1,5 +1,9 @@
 ## 2.49.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_codestarnotifications_notification_rule` [GH-10991]
+
 ENHANCEMENTS:
 
 * data-source/aws_api_gateway_rest_api: Add `api_key_source`, `arn`, `binary_media_types`, `description`, `endpoint_configuration`, `execution_arn`, `minimum_compression_size`, `policy`, and `tags` attributes [GH-10971]
