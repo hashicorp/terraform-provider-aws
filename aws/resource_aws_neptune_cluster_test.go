@@ -343,6 +343,54 @@ func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 	})
 }
 
+func TestAccAWSNeptuneCluster_updateCloudwatchLogsExports(t *testing.T) {
+	var dbCluster neptune.DBCluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_neptune_cluster.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
+					resource.TestCheckNoResourceAttr(
+						resourceName, "enable_cloudwatch_logs_exports.#"),
+				),
+			},
+			{
+				Config: testAccAWSNeptuneClusterConfig_cloudwatchLogsExports(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.2451111801", "audit"),
+				),
+			},
+			{
+				Config: testAccAWSNeptuneClusterConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "0"),
+				),
+			},
+			{
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSNeptuneClusterDestroy(s *terraform.State) error {
 	return testAccCheckAWSNeptuneClusterDestroyWithProvider(s, testAccProvider)
 }
@@ -841,6 +889,17 @@ resource "aws_neptune_cluster" "default" {
   availability_zones                  = ["us-west-2a", "us-west-2b", "us-west-2c"]
   iam_database_authentication_enabled = true
   skip_final_snapshot                 = true
+}
+`, n)
+}
+
+func testAccAWSNeptuneClusterConfig_cloudwatchLogsExports(n int) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "default" {
+  cluster_identifier                   = "tf-neptune-cluster-%d"
+  availability_zones                   = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  skip_final_snapshot                  = true
+  enable_cloudwatch_logs_exports       = ["audit"]
 }
 `, n)
 }

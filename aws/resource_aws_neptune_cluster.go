@@ -15,6 +15,14 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const (
+
+	// A constant for the supported CloudwatchLogsExports types
+	// is not currently available in the AWS sdk-for-go
+	// https://docs.aws.amazon.com/sdk-for-go/api/service/neptune/#pkg-constants
+	CloudwatchLogsExportsAudit = "audit"
+)
+
 func resourceAwsNeptuneCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsNeptuneClusterCreate,
@@ -93,6 +101,18 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"enable_cloudwatch_logs_exports": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						CloudwatchLogsExportsAudit,
+					}, false),
+				},
+				Set: schema.HashString,
 			},
 
 			"engine": {
@@ -284,6 +304,11 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
+	if attr := d.Get("enable_cloudwatch_logs_exports").(*schema.Set); attr.Len() > 0 {
+		createDbClusterInput.EnableCloudwatchLogsExports = expandStringList(attr.List())
+		restoreDBClusterFromSnapshotInput.EnableCloudwatchLogsExports = expandStringList(attr.List())
+	}
+
 	if attr, ok := d.GetOk("engine_version"); ok {
 		createDbClusterInput.EngineVersion = aws.String(attr.(string))
 		restoreDBClusterFromSnapshotInput.EngineVersion = aws.String(attr.(string))
@@ -442,6 +467,11 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+
+	if err := d.Set("enable_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
+		return fmt.Errorf("Error saving EnableCloudwatchLogsExports to state for Neptune Cluster (%s): %s", d.Id(), err)
+	}
+
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine_version", dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
@@ -513,6 +543,27 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		} else {
 			req.VpcSecurityGroupIds = []*string{}
 		}
+		requestUpdate = true
+	}
+
+	if d.HasChange("enable_cloudwatch_logs_exports") {
+		logs := &neptune.CloudwatchLogsExportConfiguration{}
+
+		old, new := d.GetChange("enable_cloudwatch_logs_exports")
+
+		disableLogTypes := old.(*schema.Set).Difference(new.(*schema.Set))
+
+		if disableLogTypes.Len() > 0 {
+			logs.SetDisableLogTypes(expandStringList(disableLogTypes.List()))
+		}
+
+		enableLogTypes := new.(*schema.Set).Difference(old.(*schema.Set))
+
+		if enableLogTypes.Len() > 0 {
+			logs.SetEnableLogTypes(expandStringList(enableLogTypes.List()))
+		}
+
+		req.CloudwatchLogsExportConfiguration = logs
 		requestUpdate = true
 	}
 
