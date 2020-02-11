@@ -256,7 +256,7 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"delete_protection": {
+			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -290,7 +290,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		Engine:              aws.String(d.Get("engine").(string)),
 		Port:                aws.Int64(int64(d.Get("port").(int))),
 		StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
-		DeletionProtection:  aws.Bool(d.Get("delete_protection").(bool)),
+		DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 		Tags:                tags,
 	}
 	restoreDBClusterFromSnapshotInput := &neptune.RestoreDBClusterFromSnapshotInput{
@@ -298,7 +298,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		Engine:              aws.String(d.Get("engine").(string)),
 		Port:                aws.Int64(int64(d.Get("port").(int))),
 		SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
-		DeletionProtection:  aws.Bool(d.Get("delete_protection").(bool)),
+		DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 		Tags:                tags,
 	}
 
@@ -496,7 +496,7 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
-	d.Set("delete_protection", dbc.DeletionProtection)
+	d.Set("deletion_protection", dbc.DeletionProtection)
 
 	var sg []string
 	for _, g := range dbc.VpcSecurityGroups {
@@ -603,8 +603,8 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		requestUpdate = true
 	}
-	if d.HasChange("delete_protection") {
-		req.DeletionProtection = aws.Bool(d.Get("delete_protection").(bool))
+	if d.HasChange("deletion_protection") {
+		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 		requestUpdate = true
 	}
 

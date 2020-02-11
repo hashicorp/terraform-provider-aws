@@ -38,7 +38,7 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
 			},
 			{
@@ -356,8 +356,8 @@ func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 
 func TestAccAWSNeptuneCluster_updateCloudwatchLogsExports(t *testing.T) {
 	var dbCluster neptune.DBCluster
-	rInt := acctest.RandInt()
-	resourceName := "aws_neptune_cluster.default"
+	rName := acctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -365,30 +365,29 @@ func TestAccAWSNeptuneCluster_updateCloudwatchLogsExports(t *testing.T) {
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNeptuneClusterConfig(rInt),
+				Config: testAccAWSNeptuneClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
-					resource.TestCheckNoResourceAttr(
-						resourceName, "enable_cloudwatch_logs_exports.#"),
+					resource.TestCheckNoResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#"),
 				),
 			},
 			{
-				Config: testAccAWSNeptuneClusterConfig_cloudwatchLogsExports(rInt),
+				Config: testAccAWSNeptuneClusterConfig_cloudwatchLogsExports(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &dbCluster),
+					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.2451111801", "audit"),
 				),
 			},
 			{
-				Config: testAccAWSNeptuneClusterConfig(rInt),
+				Config: testAccAWSNeptuneClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &dbCluster),
+					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_neptune_cluster.default",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -416,7 +415,7 @@ func TestAccAWSNeptuneCluster_deleteProtection(t *testing.T) {
 				Config: testAccAWSNeptuneClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
 			},
 			{
@@ -434,14 +433,14 @@ func TestAccAWSNeptuneCluster_deleteProtection(t *testing.T) {
 				Config: testAccAWSNeptuneClusterConfigDeleteProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 				),
 			},
 			{
 				Config: testAccAWSNeptuneClusterConfigDeleteProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
 			},
 		},
@@ -596,7 +595,7 @@ resource "aws_neptune_cluster" "test" {
   engine                               = "neptune"
   neptune_cluster_parameter_group_name = "default.neptune1"
   skip_final_snapshot                  = true
-  delete_protection                    = %t
+  deletion_protection                    = %t
 }
 `, rName, isProtected)
 }
@@ -963,13 +962,13 @@ resource "aws_neptune_cluster" "test" {
 `, rName)
 }
 
-func testAccAWSNeptuneClusterConfig_cloudwatchLogsExports(n int) string {
-	return fmt.Sprintf(`
+func testAccAWSNeptuneClusterConfig_cloudwatchLogsExports(rName string) string {
+	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
 resource "aws_neptune_cluster" "default" {
-  cluster_identifier                   = "tf-neptune-cluster-%d"
-  availability_zones                   = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  cluster_identifier                   = %q
+  availability_zones                  = "${slice(data.aws_availability_zones.test.names,0,3)}"
   skip_final_snapshot                  = true
   enable_cloudwatch_logs_exports       = ["audit"]
 }
-`, n)
+`, rName)
 }
