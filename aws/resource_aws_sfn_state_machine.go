@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -69,17 +68,21 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 		Tags:       keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().SfnTags(),
 	}
 
-	var activity *sfn.CreateStateMachineOutput
+	var stateMachine *sfn.CreateStateMachineOutput
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
-		activity, err = conn.CreateStateMachine(params)
+		stateMachine, err = conn.CreateStateMachine(params)
 
 		if err != nil {
 			// Note: the instance may be in a deleting mode, hence the retry
 			// when creating the step function. This can happen when we are
 			// updating the resource (since there is no update API call).
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "StateMachineDeleting" {
+			if isAWSErr(err, sfn.ErrCodeStateMachineDeleting, "") {
+				return resource.RetryableError(err)
+			}
+			//This is done to deal with IAM eventual consistency
+			if isAWSErr(err, "AccessDeniedException", "") {
 				return resource.RetryableError(err)
 			}
 
@@ -89,14 +92,14 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		activity, err = conn.CreateStateMachine(params)
+		stateMachine, err = conn.CreateStateMachine(params)
 	}
 
 	if err != nil {
 		return fmt.Errorf("Error creating Step Function State Machine: %s", err)
 	}
 
-	d.SetId(*activity.StateMachineArn)
+	d.SetId(*stateMachine.StateMachineArn)
 
 	return resourceAwsSfnStateMachineRead(d, meta)
 }
@@ -112,11 +115,9 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 	})
 	if err != nil {
 
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() == "NotFoundException" || awserr.Code() == "StateMachineDoesNotExist" {
-				d.SetId("")
-				return nil
-			}
+		if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "") {
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
@@ -157,7 +158,7 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Updating Step Function State Machine: %#v", params)
 
 	if err != nil {
-		if isAWSErr(err, "StateMachineDoesNotExist", "State Machine Does Not Exist") {
+		if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "State Machine Does Not Exist") {
 			return fmt.Errorf("Error updating Step Function State Machine: %s", err)
 		}
 		return err
