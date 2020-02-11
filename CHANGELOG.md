@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_api_gateway_rest_api: Add `api_key_source`, `arn`, `binary_media_types`, `description`, `endpoint_configuration`, `execution_arn`, `minimum_compression_size`, `policy`, and `tags` attributes [GH-10971]
 * resource/aws_db_instance: Support `agent` value in `enable_cloudwatch_logs_exports` argument plan-time validation (Support MSSQL agent log) [GH-11472]
 * resource/aws_gamelift_fleet: Add `tags` argument [GH-11559]
 * resource/aws_neptune_cluster: Add `enable_cloudwatch_logs_exports` argument (support audit logging) [GH-11949]
