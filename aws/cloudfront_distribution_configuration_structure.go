@@ -977,7 +977,14 @@ func expandLoggingConfig(m map[string]interface{}) *cloudfront.LoggingConfig {
 		lc.Prefix = aws.String(m["prefix"].(string))
 		lc.Bucket = aws.String(m["bucket"].(string))
 		lc.IncludeCookies = aws.Bool(m["include_cookies"].(bool))
-		lc.Enabled = aws.Bool(true)
+
+		var rawEnableFlag interface{} = m["Enabled"]
+		if rawEnableFlag != nil {
+			lc.Enabled = aws.Bool(rawEnableFlag.(bool))
+		} else {
+			lc.Enabled = aws.Bool(true) // preserve backwards compatibility
+		}
+
 	} else {
 		lc.Prefix = aws.String("")
 		lc.Bucket = aws.String("")
