@@ -7,6 +7,7 @@ ENHANCEMENTS:
 * resource/aws_db_instance: Add `delete_automated_backups` argument [GH-8461]
 * resource/aws_gamelift_fleet: Add `tags` argument [GH-11559]
 * resource/aws_neptune_cluster: Add `enable_cloudwatch_logs_exports` argument (support audit logging) [GH-11949]
+* resource/aws_neptune_cluster: Add `deletion_protection` argument [GH-11731]
 * resource/aws_rds_global_database: Support `aurora-mysql` value in `engine` argument plan-time validation (Support Aurora MySQL 5.7) [GH-11790]
 
 BUG FIXES:
