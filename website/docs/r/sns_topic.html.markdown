@@ -45,7 +45,7 @@ EOF
 }
 ```
 
-##  Example with Server-side encryption (SSE)
+## Example with Server-side encryption (SSE)
 
 ```hcl
 resource "aws_sns_topic" "user_updates" {
