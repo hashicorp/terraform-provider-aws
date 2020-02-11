@@ -2065,6 +2065,39 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfigurationUpdate(t *testing.T) 
 	})
 }
 
+func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MSSQL(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_MSSQL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Oracle(t *testing.T) {
 	var dbInstance rds.DBInstance
 
@@ -4268,6 +4301,22 @@ resource "aws_db_instance" "test" {
   engine                          = "oracle-se"
   identifier                      = %q
   instance_class                  = "db.t3.micro"
+  password                        = "avoid-plaintext-passwords"
+  username                        = "tfacctest"
+  skip_final_snapshot             = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_MSSQL(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage               = 20
+  enabled_cloudwatch_logs_exports = ["agent", "error"]
+  engine                          = "sqlserver-se"
+  identifier                      = %q
+  instance_class                  = "db.m4.large"
+  license_model                   = "license-included"
   password                        = "avoid-plaintext-passwords"
   username                        = "tfacctest"
   skip_final_snapshot             = true
