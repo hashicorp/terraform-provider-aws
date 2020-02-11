@@ -23,10 +23,18 @@ data "aws_api_gateway_rest_api" "my_rest_api" {
 
 ## Argument Reference
 
- * `name` - (Required) The name of the REST API to look up. If no REST API is found with this name, an error will be returned. 
- If multiple REST APIs are found with this name, an error will be returned.
+* `name` - (Required) The name of the REST API to look up. If no REST API is found with this name, an error will be returned. If multiple REST APIs are found with this name, an error will be returned.
 
 ## Attributes Reference
 
- * `id` - Set to the ID of the found REST API.
- * `root_resource_id` - Set to the ID of the API Gateway Resource on the found REST API where the route matches '/'.
+* `id` - Set to the ID of the found REST API.
+* `arn` - The ARN of the REST API.
+* `root_resource_id` - Set to the ID of the API Gateway Resource on the found REST API where the route matches '/'.
+* `description` - The description of the REST API.
+* `api_key_source` - The source of the API key for requests.
+* `policy` - JSON formatted policy document that controls access to the API Gateway.
+* `minimum_compression_size` - Minimum response size to compress for the REST API.
+* `binary_media_types` - The list of binary media types supported by the REST API.
+* `endpoint_configuration` - The endpoint configuration of this RestApi showing the endpoint types of the API.
+* `tags` - Key-value mapping of resource tags.
+ 
