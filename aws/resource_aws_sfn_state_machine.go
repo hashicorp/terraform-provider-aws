@@ -53,6 +53,10 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -122,6 +126,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
+	d.Set("arn", sm.StateMachineArn)
 	d.Set("definition", sm.Definition)
 	d.Set("name", sm.Name)
 	d.Set("role_arn", sm.RoleArn)

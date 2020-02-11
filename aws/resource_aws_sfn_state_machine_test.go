@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
+	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	roleResourceName := "aws_iam_role.iam_for_sfn"
 	rName := acctest.RandomWithPrefix("tf-acc")
@@ -25,7 +26,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 			{
 				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName),
+					testAccCheckAWSSfnExists(resourceName, &sm),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "states", regexp.MustCompile(`stateMachine:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -43,7 +44,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 			{
 				Config: testAccAWSSfnStateMachineConfig(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName),
+					testAccCheckAWSSfnExists(resourceName, &sm),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "states", regexp.MustCompile(`stateMachine:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -57,6 +58,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 }
 
 func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
+	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	rName := acctest.RandomWithPrefix("tf-acc")
 
@@ -68,7 +70,7 @@ func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
 			{
 				Config: testAccAWSSfnStateMachineConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName),
+					testAccCheckAWSSfnExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -81,7 +83,7 @@ func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
 			{
 				Config: testAccAWSSfnStateMachineConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName),
+					testAccCheckAWSSfnExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -90,7 +92,7 @@ func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
 			{
 				Config: testAccAWSSfnStateMachineConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName),
+					testAccCheckAWSSfnExists(resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -113,7 +115,7 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 			{
 				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName),
+					testAccCheckAWSSfnExists(resourceName, &sm),
 					testAccCheckAWSSfnStateMachineDisappears(&sm),
 				),
 				ExpectNonEmptyPlan: true,
@@ -122,7 +124,7 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSfnExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSSfnExists(n string, sm *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -135,11 +137,17 @@ func testAccCheckAWSSfnExists(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).sfnconn
 
-		_, err := conn.DescribeStateMachine(&sfn.DescribeStateMachineInput{
+		resp, err := conn.DescribeStateMachine(&sfn.DescribeStateMachineInput{
 			StateMachineArn: aws.String(rs.Primary.ID),
 		})
 
-		return err
+		if err != nil {
+			return err
+		}
+
+		*sm = *resp
+
+		return nil
 	}
 }
 
