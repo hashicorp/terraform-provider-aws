@@ -19,8 +19,24 @@ func (cp *containerProperties) Reduce() error {
 		return aws.StringValue(cp.Environment[i].Name) < aws.StringValue(cp.Environment[j].Name)
 	})
 
+	if len(cp.Environment) == 0 {
+		cp.Environment = nil
+	}
+
+	if len(cp.MountPoints) == 0 {
+		cp.MountPoints = nil
+	}
+
 	if len(cp.ResourceRequirements) == 0 {
 		cp.ResourceRequirements = nil
+	}
+
+	if len(cp.Ulimits) == 0 {
+		cp.Ulimits = nil
+	}
+
+	if len(cp.Volumes) == 0 {
+		cp.Volumes = nil
 	}
 
 	return nil
