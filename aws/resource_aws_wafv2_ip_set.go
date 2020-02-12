@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,6 +20,21 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 		Read:   resourceAwsWafv2IPSetRead,
 		Update: resourceAwsWafv2IPSetUpdate,
 		Delete: resourceAwsWafv2IPSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
+				}
+				id := idParts[0]
+				name := idParts[1]
+				scope := idParts[2]
+				d.SetId(id)
+				d.Set("name", name)
+				d.Set("scope", scope)
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"addresses": {

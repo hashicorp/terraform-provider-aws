@@ -48,6 +48,12 @@ func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "3"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAWSWafv2IPSetImportStateIdFunc(resourceName),
+			},
 		},
 	})
 }
@@ -116,6 +122,8 @@ func TestAccAwsWafv2IPSet_changeNameForceNew(t *testing.T) {
 		},
 	})
 }
+
+// TAGS
 
 func testAccCheckAWSWafv2IPSetDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
@@ -213,4 +221,15 @@ resource "aws_wafv2_ip_set" "ip_set" {
   ip_address_version = "IPV4"
 }
 `, name)
+}
+
+func testAccAWSWafv2IPSetImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"]), nil
+	}
 }
