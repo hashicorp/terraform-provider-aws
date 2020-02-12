@@ -77,3 +77,54 @@ func S3BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, 
 
 	return nil
 }
+
+// S3ObjectListTags lists S3 object tags.
+func S3ObjectListTags(conn *s3.S3, bucket, key string) (KeyValueTags, error) {
+	input := &s3.GetObjectTaggingInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+
+	output, err := conn.GetObjectTagging(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return S3KeyValueTags(output.TagSet), nil
+}
+
+// S3ObjectUpdateTags updates S3 object tags.
+func S3ObjectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if len(newTags) > 0 {
+		input := &s3.PutObjectTaggingInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+			Tagging: &s3.Tagging{
+				TagSet: newTags.IgnoreAws().S3Tags(),
+			},
+		}
+
+		_, err := conn.PutObjectTagging(input)
+
+		if err != nil {
+			return fmt.Errorf("error setting resource tags (%s/%s): %w", bucket, key, err)
+		}
+	} else if len(oldTags) > 0 {
+		input := &s3.DeleteObjectTaggingInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+		}
+
+		_, err := conn.DeleteObjectTagging(input)
+
+		if err != nil {
+			return fmt.Errorf("error deleting resource tags (%s/%s): %w", bucket, key, err)
+		}
+	}
+
+	return nil
+}
