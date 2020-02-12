@@ -8,7 +8,7 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/bflad/tfproviderlint/helper/terraformtype"
+	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/schema"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -67,7 +67,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 func isHasChangeCall(e ast.Expr, info *types.Info) bool {
 	switch e := e.(type) {
 	case *ast.CallExpr:
-		return terraformtype.IsHelperSchemaReceiverMethod(e.Fun, info, terraformtype.TypeNameResourceData, "HasChange")
+		return schema.IsReceiverMethod(e.Fun, info, schema.TypeNameResourceData, "HasChange")
 	}
 
 	return false

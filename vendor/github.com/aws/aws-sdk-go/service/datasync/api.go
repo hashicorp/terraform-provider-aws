@@ -286,6 +286,88 @@ func (c *DataSync) CreateLocationEfsWithContext(ctx aws.Context, input *CreateLo
 	return out, req.Send()
 }
 
+const opCreateLocationFsxWindows = "CreateLocationFsxWindows"
+
+// CreateLocationFsxWindowsRequest generates a "aws/request.Request" representing the
+// client's request for the CreateLocationFsxWindows operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateLocationFsxWindows for more information on using the CreateLocationFsxWindows
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateLocationFsxWindowsRequest method.
+//    req, resp := client.CreateLocationFsxWindowsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CreateLocationFsxWindows
+func (c *DataSync) CreateLocationFsxWindowsRequest(input *CreateLocationFsxWindowsInput) (req *request.Request, output *CreateLocationFsxWindowsOutput) {
+	op := &request.Operation{
+		Name:       opCreateLocationFsxWindows,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateLocationFsxWindowsInput{}
+	}
+
+	output = &CreateLocationFsxWindowsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateLocationFsxWindows API operation for AWS DataSync.
+//
+// Creates an endpoint for an Amazon FSx for Windows file system.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS DataSync's
+// API operation CreateLocationFsxWindows for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   This exception is thrown when the client submits a malformed request.
+//
+//   * InternalException
+//   This exception is thrown when an error occurs in the AWS DataSync service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CreateLocationFsxWindows
+func (c *DataSync) CreateLocationFsxWindows(input *CreateLocationFsxWindowsInput) (*CreateLocationFsxWindowsOutput, error) {
+	req, out := c.CreateLocationFsxWindowsRequest(input)
+	return out, req.Send()
+}
+
+// CreateLocationFsxWindowsWithContext is the same as CreateLocationFsxWindows with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateLocationFsxWindows for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DataSync) CreateLocationFsxWindowsWithContext(ctx aws.Context, input *CreateLocationFsxWindowsInput, opts ...request.Option) (*CreateLocationFsxWindowsOutput, error) {
+	req, out := c.CreateLocationFsxWindowsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateLocationNfs = "CreateLocationNfs"
 
 // CreateLocationNfsRequest generates a "aws/request.Request" representing the
@@ -1055,6 +1137,89 @@ func (c *DataSync) DescribeLocationEfs(input *DescribeLocationEfsInput) (*Descri
 // for more information on using Contexts.
 func (c *DataSync) DescribeLocationEfsWithContext(ctx aws.Context, input *DescribeLocationEfsInput, opts ...request.Option) (*DescribeLocationEfsOutput, error) {
 	req, out := c.DescribeLocationEfsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeLocationFsxWindows = "DescribeLocationFsxWindows"
+
+// DescribeLocationFsxWindowsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeLocationFsxWindows operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeLocationFsxWindows for more information on using the DescribeLocationFsxWindows
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeLocationFsxWindowsRequest method.
+//    req, resp := client.DescribeLocationFsxWindowsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeLocationFsxWindows
+func (c *DataSync) DescribeLocationFsxWindowsRequest(input *DescribeLocationFsxWindowsInput) (req *request.Request, output *DescribeLocationFsxWindowsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeLocationFsxWindows,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeLocationFsxWindowsInput{}
+	}
+
+	output = &DescribeLocationFsxWindowsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeLocationFsxWindows API operation for AWS DataSync.
+//
+// Returns metadata, such as the path information about an Amazon FSx for Windows
+// location.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS DataSync's
+// API operation DescribeLocationFsxWindows for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   This exception is thrown when the client submits a malformed request.
+//
+//   * InternalException
+//   This exception is thrown when an error occurs in the AWS DataSync service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeLocationFsxWindows
+func (c *DataSync) DescribeLocationFsxWindows(input *DescribeLocationFsxWindowsInput) (*DescribeLocationFsxWindowsOutput, error) {
+	req, out := c.DescribeLocationFsxWindowsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeLocationFsxWindowsWithContext is the same as DescribeLocationFsxWindows with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeLocationFsxWindows for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DataSync) DescribeLocationFsxWindowsWithContext(ctx aws.Context, input *DescribeLocationFsxWindowsInput, opts ...request.Option) (*DescribeLocationFsxWindowsOutput, error) {
+	req, out := c.DescribeLocationFsxWindowsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2996,6 +3161,158 @@ func (s *CreateLocationEfsOutput) SetLocationArn(v string) *CreateLocationEfsOut
 	return s
 }
 
+type CreateLocationFsxWindowsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Windows domain that the FSx for Windows server belongs to.
+	Domain *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) for the FSx for Windows file system.
+	//
+	// FsxFilesystemArn is a required field
+	FsxFilesystemArn *string `type:"string" required:"true"`
+
+	// The password of the user who has the permissions to access files and folders
+	// in the FSx for Windows file system.
+	//
+	// Password is a required field
+	Password *string `type:"string" required:"true" sensitive:"true"`
+
+	// The Amazon Resource Names (ARNs) of the security groups that are to use to
+	// configure the FSx for Windows file system.
+	//
+	// SecurityGroupArns is a required field
+	SecurityGroupArns []*string `min:"1" type:"list" required:"true"`
+
+	// A subdirectory in the location’s path. This subdirectory in the Amazon
+	// FSx for Windows file system is used to read data from the Amazon FSx for
+	// Windows source location or write data to the FSx for Windows destination.
+	Subdirectory *string `type:"string"`
+
+	// The key-value pair that represents a tag that you want to add to the resource.
+	// The value can be an empty string. This value helps you manage, filter, and
+	// search for your resources. We recommend that you create a name tag for your
+	// location.
+	Tags []*TagListEntry `type:"list"`
+
+	// The user who has the permissions to access files and folders in the FSx for
+	// Windows file system.
+	//
+	// User is a required field
+	User *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateLocationFsxWindowsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateLocationFsxWindowsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateLocationFsxWindowsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateLocationFsxWindowsInput"}
+	if s.FsxFilesystemArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FsxFilesystemArn"))
+	}
+	if s.Password == nil {
+		invalidParams.Add(request.NewErrParamRequired("Password"))
+	}
+	if s.SecurityGroupArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("SecurityGroupArns"))
+	}
+	if s.SecurityGroupArns != nil && len(s.SecurityGroupArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityGroupArns", 1))
+	}
+	if s.User == nil {
+		invalidParams.Add(request.NewErrParamRequired("User"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomain sets the Domain field's value.
+func (s *CreateLocationFsxWindowsInput) SetDomain(v string) *CreateLocationFsxWindowsInput {
+	s.Domain = &v
+	return s
+}
+
+// SetFsxFilesystemArn sets the FsxFilesystemArn field's value.
+func (s *CreateLocationFsxWindowsInput) SetFsxFilesystemArn(v string) *CreateLocationFsxWindowsInput {
+	s.FsxFilesystemArn = &v
+	return s
+}
+
+// SetPassword sets the Password field's value.
+func (s *CreateLocationFsxWindowsInput) SetPassword(v string) *CreateLocationFsxWindowsInput {
+	s.Password = &v
+	return s
+}
+
+// SetSecurityGroupArns sets the SecurityGroupArns field's value.
+func (s *CreateLocationFsxWindowsInput) SetSecurityGroupArns(v []*string) *CreateLocationFsxWindowsInput {
+	s.SecurityGroupArns = v
+	return s
+}
+
+// SetSubdirectory sets the Subdirectory field's value.
+func (s *CreateLocationFsxWindowsInput) SetSubdirectory(v string) *CreateLocationFsxWindowsInput {
+	s.Subdirectory = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateLocationFsxWindowsInput) SetTags(v []*TagListEntry) *CreateLocationFsxWindowsInput {
+	s.Tags = v
+	return s
+}
+
+// SetUser sets the User field's value.
+func (s *CreateLocationFsxWindowsInput) SetUser(v string) *CreateLocationFsxWindowsInput {
+	s.User = &v
+	return s
+}
+
+type CreateLocationFsxWindowsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the FSx for Windows file system location
+	// that is created.
+	LocationArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CreateLocationFsxWindowsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateLocationFsxWindowsOutput) GoString() string {
+	return s.String()
+}
+
+// SetLocationArn sets the LocationArn field's value.
+func (s *CreateLocationFsxWindowsOutput) SetLocationArn(v string) *CreateLocationFsxWindowsOutput {
+	s.LocationArn = &v
+	return s
+}
+
 // CreateLocationNfsRequest
 type CreateLocationNfsInput struct {
 	_ struct{} `type:"structure"`
@@ -4009,6 +4326,114 @@ func (s *DescribeLocationEfsOutput) SetLocationArn(v string) *DescribeLocationEf
 // SetLocationUri sets the LocationUri field's value.
 func (s *DescribeLocationEfsOutput) SetLocationUri(v string) *DescribeLocationEfsOutput {
 	s.LocationUri = &v
+	return s
+}
+
+type DescribeLocationFsxWindowsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the FSx for Windows location to describe.
+	//
+	// LocationArn is a required field
+	LocationArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeLocationFsxWindowsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeLocationFsxWindowsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeLocationFsxWindowsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeLocationFsxWindowsInput"}
+	if s.LocationArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("LocationArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLocationArn sets the LocationArn field's value.
+func (s *DescribeLocationFsxWindowsInput) SetLocationArn(v string) *DescribeLocationFsxWindowsInput {
+	s.LocationArn = &v
+	return s
+}
+
+type DescribeLocationFsxWindowsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The time that the FSx for Windows location was created.
+	CreationTime *time.Time `type:"timestamp"`
+
+	// The name of the Windows domain that the FSx for Windows server belongs to.
+	Domain *string `type:"string"`
+
+	// The Amazon resource Name (ARN) of the FSx for Windows location that was described.
+	LocationArn *string `type:"string"`
+
+	// The URL of the FSx for Windows location that was described.
+	LocationUri *string `type:"string"`
+
+	// The Amazon Resource Names (ARNs) of the security groups that are configured
+	// for the for the FSx for Windows file system.
+	SecurityGroupArns []*string `min:"1" type:"list"`
+
+	// The user who has the permissions to access files and folders in the FSx for
+	// Windows file system.
+	User *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeLocationFsxWindowsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeLocationFsxWindowsOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *DescribeLocationFsxWindowsOutput) SetCreationTime(v time.Time) *DescribeLocationFsxWindowsOutput {
+	s.CreationTime = &v
+	return s
+}
+
+// SetDomain sets the Domain field's value.
+func (s *DescribeLocationFsxWindowsOutput) SetDomain(v string) *DescribeLocationFsxWindowsOutput {
+	s.Domain = &v
+	return s
+}
+
+// SetLocationArn sets the LocationArn field's value.
+func (s *DescribeLocationFsxWindowsOutput) SetLocationArn(v string) *DescribeLocationFsxWindowsOutput {
+	s.LocationArn = &v
+	return s
+}
+
+// SetLocationUri sets the LocationUri field's value.
+func (s *DescribeLocationFsxWindowsOutput) SetLocationUri(v string) *DescribeLocationFsxWindowsOutput {
+	s.LocationUri = &v
+	return s
+}
+
+// SetSecurityGroupArns sets the SecurityGroupArns field's value.
+func (s *DescribeLocationFsxWindowsOutput) SetSecurityGroupArns(v []*string) *DescribeLocationFsxWindowsOutput {
+	s.SecurityGroupArns = v
+	return s
+}
+
+// SetUser sets the User field's value.
+func (s *DescribeLocationFsxWindowsOutput) SetUser(v string) *DescribeLocationFsxWindowsOutput {
+	s.User = &v
 	return s
 }
 
@@ -5513,6 +5938,12 @@ type Options struct {
 	// NONE: Ignore UID and GID.
 	Gid *string `type:"string" enum:"Gid"`
 
+	// A value that determines the type of logs DataSync will deliver to your AWS
+	// CloudWatch Logs file. If set to OFF, no logs will be delivered. BASIC will
+	// deliver a few logs per transfer operation and TRANSFER will deliver a verbose
+	// log that contains logs for every file that is transferred.
+	LogLevel *string `type:"string" enum:"LogLevel"`
+
 	// A value that indicates the last time that a file was modified (that is, a
 	// file was written to) before the PREPARING phase.
 	//
@@ -5645,6 +6076,12 @@ func (s *Options) SetBytesPerSecond(v int64) *Options {
 // SetGid sets the Gid field's value.
 func (s *Options) SetGid(v string) *Options {
 	s.Gid = &v
+	return s
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *Options) SetLogLevel(v string) *Options {
+	s.LogLevel = &v
 	return s
 }
 
@@ -6586,6 +7023,17 @@ const (
 
 	// GidBoth is a Gid enum value
 	GidBoth = "BOTH"
+)
+
+const (
+	// LogLevelOff is a LogLevel enum value
+	LogLevelOff = "OFF"
+
+	// LogLevelBasic is a LogLevel enum value
+	LogLevelBasic = "BASIC"
+
+	// LogLevelTransfer is a LogLevel enum value
+	LogLevelTransfer = "TRANSFER"
 )
 
 const (

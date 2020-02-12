@@ -44,11 +44,27 @@ func resourceAwsKmsKey() *schema.Resource {
 			"key_usage": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  kms.KeyUsageTypeEncryptDecrypt,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"",
 					kms.KeyUsageTypeEncryptDecrypt,
+					kms.KeyUsageTypeSignVerify,
+				}, false),
+			},
+			"customer_master_key_spec": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  kms.CustomerMasterKeySpecSymmetricDefault,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					kms.CustomerMasterKeySpecSymmetricDefault,
+					kms.CustomerMasterKeySpecRsa2048,
+					kms.CustomerMasterKeySpecRsa3072,
+					kms.CustomerMasterKeySpecRsa4096,
+					kms.CustomerMasterKeySpecEccNistP256,
+					kms.CustomerMasterKeySpecEccNistP384,
+					kms.CustomerMasterKeySpecEccNistP521,
+					kms.CustomerMasterKeySpecEccSecgP256k1,
 				}, false),
 			},
 			"policy": {
@@ -82,12 +98,12 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
 	// Allow aws to chose default values if we don't pass them
-	var req kms.CreateKeyInput
+	req := &kms.CreateKeyInput{
+		CustomerMasterKeySpec: aws.String(d.Get("customer_master_key_spec").(string)),
+		KeyUsage:              aws.String(d.Get("key_usage").(string)),
+	}
 	if v, exists := d.GetOk("description"); exists {
 		req.Description = aws.String(v.(string))
-	}
-	if v, exists := d.GetOk("key_usage"); exists {
-		req.KeyUsage = aws.String(v.(string))
 	}
 	if v, exists := d.GetOk("policy"); exists {
 		req.Policy = aws.String(v.(string))
@@ -103,20 +119,20 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
 	err := resource.Retry(30*time.Second, func() *resource.RetryError {
 		var err error
-		resp, err = conn.CreateKey(&req)
-		if isAWSErr(err, "MalformedPolicyDocumentException", "") {
+		resp, err = conn.CreateKey(req)
+		if isAWSErr(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
 			return resource.RetryableError(err)
 		}
 		return resource.NonRetryableError(err)
 	})
 	if isResourceTimeoutError(err) {
-		resp, err = conn.CreateKey(&req)
+		resp, err = conn.CreateKey(req)
 	}
 	if err != nil {
 		return err
 	}
 
-	d.SetId(*resp.KeyMetadata.KeyId)
+	d.SetId(aws.StringValue(resp.KeyMetadata.KeyId))
 	d.Set("key_id", resp.KeyMetadata.KeyId)
 
 	return resourceAwsKmsKeyUpdate(d, meta)
@@ -133,7 +149,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	if d.IsNewResource() {
 		var out interface{}
-		out, err = retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+		out, err = retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
 			return conn.DescribeKey(req)
 		})
 		resp, _ = out.(*kms.DescribeKeyOutput)
@@ -145,23 +161,22 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	metadata := resp.KeyMetadata
 
-	if *metadata.KeyState == "PendingDeletion" {
+	if aws.StringValue(metadata.KeyState) == kms.KeyStatePendingDeletion {
 		log.Printf("[WARN] Removing KMS key %s because it's already gone", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.SetId(*metadata.KeyId)
-
 	d.Set("arn", metadata.Arn)
 	d.Set("key_id", metadata.KeyId)
 	d.Set("description", metadata.Description)
 	d.Set("key_usage", metadata.KeyUsage)
+	d.Set("customer_master_key_spec", metadata.CustomerMasterKeySpec)
 	d.Set("is_enabled", metadata.Enabled)
 
-	pOut, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+	pOut, err := retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
 		return conn.GetKeyPolicy(&kms.GetKeyPolicyInput{
-			KeyId:      metadata.KeyId,
+			KeyId:      aws.String(d.Id()),
 			PolicyName: aws.String("default"),
 		})
 	})
@@ -176,9 +191,9 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("policy", policy)
 
-	out, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+	out, err := retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
 		return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
-			KeyId: metadata.KeyId,
+			KeyId: aws.String(d.Id()),
 		})
 	})
 	if err != nil {
@@ -459,8 +474,8 @@ func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// Wait for propagation since KMS is eventually consistent
 	wait := resource.StateChangeConf{
-		Pending:                   []string{"Enabled", "Disabled"},
-		Target:                    []string{"PendingDeletion"},
+		Pending:                   []string{kms.KeyStateEnabled, kms.KeyStateDisabled},
+		Target:                    []string{kms.KeyStatePendingDeletion},
 		Timeout:                   20 * time.Minute,
 		MinTimeout:                2 * time.Second,
 		ContinuousTargetOccurence: 10,

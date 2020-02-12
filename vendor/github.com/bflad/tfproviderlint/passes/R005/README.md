@@ -17,3 +17,14 @@ if d.HasChanges("attr1", "attr2") {
   // handle attr1 and attr2 changes
 }
 ```
+
+## Ignoring Reports
+
+Singular reports can be ignored by adding the a `//lintignore:R005` Go code comment at the end of the offending line or on the line immediately proceding, e.g.
+
+```go
+//lintignore:R005
+if d.HasChange("attr1") || d.HasChange("attr2") {
+  // handle attr1 and attr2 changes
+}
+```

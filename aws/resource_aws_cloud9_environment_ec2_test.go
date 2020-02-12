@@ -39,7 +39,7 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"instance_type"},
+				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id"},
 			},
 			{
 				Config: testAccAWSCloud9EnvironmentEc2Config(uEnvName),
@@ -182,64 +182,71 @@ func testAccPreCheckAWSCloud9(t *testing.T) {
 	}
 }
 
-func testAccAWSCloud9EnvironmentEc2Config(name string) string {
+func testAccAWSCloud9EnvironmentEc2ConfigBase() string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # t2.micro instance type is not available in these Availability Zones
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-cloud9-environment-ec2"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-cloud9-environment-ec2"
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route" "test" {
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+  route_table_id         = aws_vpc.test.main_route_table_id
+}
+`)
+}
+
+func testAccAWSCloud9EnvironmentEc2Config(name string) string {
+	return testAccAWSCloud9EnvironmentEc2ConfigBase() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
+  depends_on = [aws_route.test]
+
   instance_type = "t2.micro"
-  name          = "%s"
+  name          = %[1]q
+  subnet_id     = aws_subnet.test.id
 }
 `, name)
 }
 
 func testAccAWSCloud9EnvironmentEc2AllFieldsConfig(name, description, userName string) string {
-	return fmt.Sprintf(`
+	return testAccAWSCloud9EnvironmentEc2ConfigBase() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
-  instance_type               = "t2.micro"
-  name                        = "%s"
-  description                 = "%s"
+  depends_on = [aws_route.test]
+
   automatic_stop_time_minutes = 60
-  subnet_id                   = "${aws_subnet.test.id}"
-  owner_arn                   = "${aws_iam_user.test.arn}"
-  depends_on                  = ["aws_route_table_association.test"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-cloud9-environment-ec2-all-fields"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = "${aws_vpc.test.id}"
-  cidr_block = "10.10.0.0/19"
-
-  tags = {
-    Name = "tf-acc-cloud9-environment-ec2-all-fields"
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.test.id}"
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  subnet_id      = "${aws_subnet.test.id}"
-  route_table_id = "${aws_route_table.test.id}"
+  description                 = %[2]q
+  instance_type               = "t2.micro"
+  name                        = %[1]q
+  owner_arn                   = aws_iam_user.test.arn
+  subnet_id                   = aws_subnet.test.id
 }
 
 resource "aws_iam_user" "test" {
-  name = "%s"
+  name = %[3]q
 }
 `, name, description, userName)
 }

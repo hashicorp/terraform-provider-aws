@@ -26,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -54,6 +55,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -150,6 +152,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(codedeploy.New)
 	case "codepipeline":
 		funcType = reflect.TypeOf(codepipeline.New)
+	case "codestarnotifications":
+		funcType = reflect.TypeOf(codestarnotifications.New)
 	case "cognitoidentity":
 		funcType = reflect.TypeOf(cognitoidentity.New)
 	case "cognitoidentityprovider":
@@ -206,6 +210,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(fsx.New)
 	case "gamelift":
 		funcType = reflect.TypeOf(gamelift.New)
+	case "glacier":
+		funcType = reflect.TypeOf(glacier.New)
 	case "glue":
 		funcType = reflect.TypeOf(glue.New)
 	case "guardduty":

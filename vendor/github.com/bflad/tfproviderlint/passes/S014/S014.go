@@ -9,9 +9,9 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
-	"github.com/bflad/tfproviderlint/helper/terraformtype"
+	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/schema"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
-	"github.com/bflad/tfproviderlint/passes/schemamap"
+	"github.com/bflad/tfproviderlint/passes/helper/schema/schemamapcompositelit"
 )
 
 const Doc = `check for Schema that Elem does not contain extraneous fields
@@ -26,7 +26,7 @@ var Analyzer = &analysis.Analyzer{
 	Name: analyzerName,
 	Doc:  Doc,
 	Requires: []*analysis.Analyzer{
-		schemamap.Analyzer,
+		schemamapcompositelit.Analyzer,
 		commentignore.Analyzer,
 	},
 	Run: run,
@@ -34,17 +34,17 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
-	schemamaps := pass.ResultOf[schemamap.Analyzer].([]*ast.CompositeLit)
+	schemamapcompositelits := pass.ResultOf[schemamapcompositelit.Analyzer].([]*ast.CompositeLit)
 
-	for _, smap := range schemamaps {
-		for _, schemaCompositeLit := range schemamap.GetSchemaAttributes(smap) {
-			schema := terraformtype.NewHelperSchemaSchemaInfo(schemaCompositeLit, pass.TypesInfo)
+	for _, smap := range schemamapcompositelits {
+		for _, schemaCompositeLit := range schema.GetSchemaMapSchemas(smap) {
+			schemaInfo := schema.NewSchemaInfo(schemaCompositeLit, pass.TypesInfo)
 
-			if ignorer.ShouldIgnore(analyzerName, schema.AstCompositeLit) {
+			if ignorer.ShouldIgnore(analyzerName, schemaInfo.AstCompositeLit) {
 				continue
 			}
 
-			elemKvExpr := schema.Fields[terraformtype.SchemaFieldElem]
+			elemKvExpr := schemaInfo.Fields[schema.SchemaFieldElem]
 
 			if elemKvExpr == nil {
 				continue
@@ -55,7 +55,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			default:
 				continue
 			case *ast.UnaryExpr:
-				if elemValue.Op != token.AND || !terraformtype.IsHelperSchemaTypeSchema(pass.TypesInfo.TypeOf(elemValue.X)) {
+				if elemValue.Op != token.AND || !schema.IsTypeSchema(pass.TypesInfo.TypeOf(elemValue.X)) {
 					continue
 				}
 
@@ -63,9 +63,9 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				default:
 					continue
 				case *ast.CompositeLit:
-					elemSchema := terraformtype.NewHelperSchemaSchemaInfo(tElemSchema, pass.TypesInfo)
+					elemSchema := schema.NewSchemaInfo(tElemSchema, pass.TypesInfo)
 
-					for _, field := range []string{terraformtype.SchemaFieldComputed, terraformtype.SchemaFieldOptional, terraformtype.SchemaFieldRequired} {
+					for _, field := range []string{schema.SchemaFieldComputed, schema.SchemaFieldOptional, schema.SchemaFieldRequired} {
 						if kvExpr := elemSchema.Fields[field]; kvExpr != nil {
 							pass.Reportf(kvExpr.Pos(), "%s: schema within Elem should not configure Computed, Optional, or Required", analyzerName)
 							break

@@ -1,3 +1,9 @@
+# v0.5.0
+
+ENHANCEMENTS
+
+* check: Verify sidebar navigation for missing links and mismatched link text (if legacy directory structure)
+
 # v0.4.1
 
 BUG FIXES

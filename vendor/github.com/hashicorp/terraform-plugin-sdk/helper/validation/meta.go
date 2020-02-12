@@ -14,9 +14,9 @@ func NoZeroValues(i interface{}, k string) (s []string, es []error) {
 	if reflect.ValueOf(i).Interface() == reflect.Zero(reflect.TypeOf(i)).Interface() {
 		switch reflect.TypeOf(i).Kind() {
 		case reflect.String:
-			es = append(es, fmt.Errorf("%s must not be empty", k))
+			es = append(es, fmt.Errorf("%s must not be empty, got %v", k, i))
 		case reflect.Int, reflect.Float64:
-			es = append(es, fmt.Errorf("%s must not be zero", k))
+			es = append(es, fmt.Errorf("%s must not be zero, got %v", k, i))
 		default:
 			// this validator should only ever be applied to TypeString, TypeInt and TypeFloat
 			panic(fmt.Errorf("can't use NoZeroValues with %T attribute %s", i, k))
