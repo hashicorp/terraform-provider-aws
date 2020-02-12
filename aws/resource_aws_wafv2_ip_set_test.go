@@ -78,6 +78,45 @@ func TestAccAwsWafv2IPSet_minimal(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2IPSet_changeNameForceNew(t *testing.T) {
+	var before, after wafv2.IPSet
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipSetNewName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_ip_set.ip_set"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafv2IPSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2IPSetConfig(ipSetName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafv2IPSetExists("aws_wafv2_ip_set.ip_set", &before),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
+					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_version", wafv2.IPAddressVersionIpv4),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2IPSetConfig(ipSetNewName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafv2IPSetExists("aws_wafv2_ip_set.ip_set", &after),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", ipSetNewName),
+					resource.TestCheckResourceAttr(resourceName, "description", ipSetNewName),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_version", wafv2.IPAddressVersionIpv4),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSWafv2IPSetDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_wafv2_ip_set" {
