@@ -60,17 +60,21 @@ func testSweepS3Buckets(region string) error {
 	for _, bucket := range output.Buckets {
 		name := aws.StringValue(bucket.Name)
 
-		hasPrefix := false
+		sweepable := false
 		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(name, prefix) {
-				hasPrefix = true
+				sweepable = true
 				break
 			}
 		}
 
-		if !hasPrefix {
+		if matched, _ := regexp.MatchString(`^terraform-\d+$`, name); matched == true {
+			sweepable = true
+		}
+
+		if !sweepable {
 			log.Printf("[INFO] Skipping S3 Bucket: %s", name)
 			continue
 		}
