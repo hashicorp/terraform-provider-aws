@@ -1859,6 +1859,46 @@ func TestToSnakeCase(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsString(t *testing.T) {
+	testCases := []struct {
+		name string
+		tags KeyValueTags
+		want string
+	}{
+		{
+			name: "empty",
+			tags: New(map[string]string{}),
+			want: "map[]",
+		},
+		{
+			name: "single",
+			tags: New(map[string]string{
+				"key1": "value1",
+			}),
+			want: "map[key1:value1]",
+		},
+		{
+			name: "multiple",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			want: "map[key1:value1 key2:value2 key3:value3]",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.String()
+
+			if got != testCase.want {
+				t.Errorf("unexpected string value: %q", got)
+			}
+		})
+	}
+}
+
 func testKeyValueTagsVerifyKeys(t *testing.T, got []string, want []string) {
 	for _, g := range got {
 		found := false

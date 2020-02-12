@@ -395,6 +395,23 @@ func (tags KeyValueTags) UrlEncode() string {
 	return values.Encode()
 }
 
+func (tags KeyValueTags) String() string {
+	var builder strings.Builder
+
+	builder.WriteString("map[")
+	i := 0
+	for k, v := range tags {
+		if i > 0 {
+			builder.WriteString(" ")
+		}
+		fmt.Fprintf(&builder, "%s:%s", k, *v)
+		i++
+	}
+	builder.WriteString("]")
+
+	return builder.String()
+}
+
 // New creates KeyValueTags from common Terraform Provider SDK types.
 // Supports map[string]string, map[string]*string, map[string]interface{}, and []interface{}.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
