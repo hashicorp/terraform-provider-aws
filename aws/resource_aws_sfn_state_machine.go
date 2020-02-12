@@ -113,7 +113,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 		if awserr, ok := err.(awserr.Error); ok {
 			if awserr.Code() == "NotFoundException" || awserr.Code() == "StateMachineDoesNotExist" {
 				d.SetId("")
-				return nil
+				return nila
 			}
 		}
 		return err
@@ -130,7 +130,8 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 
 	tags, err := keyvaluetags.SfnListTags(conn, d.Id())
 
-	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "") && !isAWSErr(err, "AccessDeniedException", "") {
+		// ignore tag permissions errors for now
 		return fmt.Errorf("error listing tags for SFN State Machine (%s): %s", d.Id(), err)
 	}
 
