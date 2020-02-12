@@ -46,7 +46,7 @@ data "aws_vpc_endpoint_service" "custome" {
 The arguments of this data source act as filters for querying the available VPC endpoint services.
 The given filters must match exactly one VPC endpoint service whose data will be exported as attributes.
 
-* `service` - (Optional) The common name of an AWS service (e.g. `s3` or `sagemaker.notebook`).
+* `service` - (Optional) The common name of an AWS service (e.g. `s3`).
 * `service_name` - (Optional) The service name that can be specified when creating a VPC endpoint.
 
 ~> **NOTE:** One of `service` or `service_name` must be specified.

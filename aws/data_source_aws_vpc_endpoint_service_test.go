@@ -61,56 +61,6 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpointService_SageMakerRuntime(t *testing.T) {
-	datasourceName := "data.aws_vpc_endpoint_service.test"
-	region := testAccGetRegion()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceAwsVpcEndpointServiceSageMakerRuntimeConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "service_name", fmt.Sprintf("com.amazonaws.%s.sagemaker.runtime", region)),
-					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "owner", "amazon"),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", fmt.Sprintf("runtime.sagemaker.%s.amazonaws.com", region)),
-					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccDataSourceAwsVpcEndpointService_SageMakerNotebook(t *testing.T) {
-	datasourceName := "data.aws_vpc_endpoint_service.test"
-	region := testAccGetRegion()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceAwsVpcEndpointServiceSageMakerNotebookConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "service_name", fmt.Sprintf("aws.sagemaker.%s.notebook", region)),
-					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "2"),
-					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "owner", "amazon"),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", fmt.Sprintf("*.notebook.%s.sagemaker.aws", region)),
-					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
@@ -147,18 +97,6 @@ data "aws_vpc_endpoint_service" "test" {
 const testAccDataSourceAwsVpcEndpointServiceInterfaceConfig = `
 data "aws_vpc_endpoint_service" "test" {
   service = "ec2"
-}
-`
-
-const testAccDataSourceAwsVpcEndpointServiceSageMakerRuntimeConfig = `
-data "aws_vpc_endpoint_service" "test" {
-  service = "sagemaker.runtime"
-}
-`
-
-const testAccDataSourceAwsVpcEndpointServiceSageMakerNotebookConfig = `
-data "aws_vpc_endpoint_service" "test" {
-  service = "sagemaker.notebook"
 }
 `
 
