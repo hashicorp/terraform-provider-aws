@@ -1433,7 +1433,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 
 	// Instance store backed AMIs do not provide a root device name.
 	if *image.RootDeviceType == ec2.DeviceTypeInstanceStore {
-		return nil, fmt.Errorf("Instance store backed AMIs do not provide a root device name - Use an EBS AMI")
+		return nil, nil
 	}
 
 	// Some AMIs have a RootDeviceName like "/dev/sda1" that does not appear as a
@@ -1642,15 +1642,20 @@ func readBlockDeviceMappingsFromConfig(
 				log.Print("[WARN] IOPs is only valid for storate type io1 for EBS Volumes")
 			}
 
-			dn, err := fetchRootDeviceName(d.Get("ami").(string), conn)
-			if err != nil {
-				return nil, fmt.Errorf("Expected 1 AMI for ID: %s (%s)", d.Get("ami").(string), err)
-			}
+			if dn, err := fetchRootDeviceName(d.Get("ami").(string), conn); err == nil {
+				if dn == nil {
+					return nil, fmt.Errorf(
+						"Expected 1 AMI for ID: %s, got none",
+						d.Get("ami").(string))
+				}
 
-			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-				DeviceName: dn,
-				Ebs:        ebs,
-			})
+				blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
+					DeviceName: dn,
+					Ebs:        ebs,
+				})
+			} else {
+				return nil, err
+			}
 		}
 	}
 

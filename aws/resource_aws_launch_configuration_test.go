@@ -127,6 +127,25 @@ func TestAccAWSLaunchConfiguration_withBlockDevices(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchConfiguration_updateRootBlockDevice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
@@ -547,6 +566,35 @@ data "aws_ami" "ubuntu" {
   }
 }
 `)
+}
+
+func testAccAWSLaunchConfigurationConfig_instanceStoreAMI() string {
+	return fmt.Sprintf(`
+data "aws_ami" "ubuntu_instance_store" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  # Latest Ubuntu 18.04 LTS amd64 instance-store HVM AMI
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-instance/ubuntu-bionic-18.04-amd64-server*"]
+  }
+}
+`)
+}
+
+func testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rInt int) string {
+	return testAccAWSLaunchConfigurationConfig_instanceStoreAMI() + fmt.Sprintf(`
+resource "aws_launch_configuration" "bar" {
+  name_prefix = "tf-acc-test-%d"
+  image_id = "${data.aws_ami.ubuntu_instance_store.id}"
+
+	# When the instance type is updated, the new type must support ephemeral storage.
+  instance_type = "m1.small"
+  user_data = "foobar-user-data"
+  associate_public_ip_address = false
+}
+`, rInt)
 }
 
 func testAccAWSLaunchConfigurationConfigWithRootBlockDevice(rInt int) string {
