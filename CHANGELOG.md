@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * resource/aws_db_instance: Support `agent` value in `enable_cloudwatch_logs_exports` argument plan-time validation (Support MSSQL agent log) [GH-11472]
 * resource/aws_db_instance: Add `delete_automated_backups` argument [GH-8461]
 * resource/aws_gamelift_fleet: Add `tags` argument [GH-11559]
+* resource/aws_instance: Add `hibernation` argument [GH-6961]
 * resource/aws_launch_template: Add `cpu_options` configuration block (support disabling multithreading) [GH-6552]
 * resource/aws_neptune_cluster: Add `enable_cloudwatch_logs_exports` argument (support audit logging) [GH-11949]
 * resource/aws_neptune_cluster: Add `deletion_protection` argument [GH-11731]
