@@ -8,8 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsAppmeshVirtualService() *schema.Resource {
@@ -105,6 +106,8 @@ func resourceAwsAppmeshVirtualService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -116,6 +119,7 @@ func resourceAwsAppmeshVirtualServiceCreate(d *schema.ResourceData, meta interfa
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualServiceName: aws.String(d.Get("name").(string)),
 		Spec:               expandAppmeshVirtualServiceSpec(d.Get("spec").([]interface{})),
+		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppmeshTags(),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh virtual service: %#v", req)
@@ -150,14 +154,25 @@ func resourceAwsAppmeshVirtualServiceRead(d *schema.ResourceData, meta interface
 		return nil
 	}
 
+	arn := aws.StringValue(resp.VirtualService.Metadata.Arn)
 	d.Set("name", resp.VirtualService.VirtualServiceName)
 	d.Set("mesh_name", resp.VirtualService.MeshName)
-	d.Set("arn", resp.VirtualService.Metadata.Arn)
+	d.Set("arn", arn)
 	d.Set("created_date", resp.VirtualService.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.VirtualService.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	err = d.Set("spec", flattenAppmeshVirtualServiceSpec(resp.VirtualService.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
+	}
+
+	tags, err := keyvaluetags.AppmeshListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for App Mesh virtual service (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -178,6 +193,15 @@ func resourceAwsAppmeshVirtualServiceUpdate(d *schema.ResourceData, meta interfa
 		_, err := conn.UpdateVirtualService(req)
 		if err != nil {
 			return fmt.Errorf("error updating App Mesh virtual service: %s", err)
+		}
+	}
+
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating App Mesh virtual service (%s) tags: %s", arn, err)
 		}
 	}
 

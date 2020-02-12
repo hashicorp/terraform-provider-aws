@@ -10,11 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform/helper/customdiff"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDynamoDbTable() *schema.Resource {
@@ -253,7 +254,12 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
-							ForceNew: true,
+						},
+						"kms_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -289,10 +295,13 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
 
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DynamodbTags()
+
 	req := &dynamodb.CreateTableInput{
 		TableName:   aws.String(d.Get("name").(string)),
 		BillingMode: aws.String(d.Get("billing_mode").(string)),
 		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
+		Tags:        tags,
 	}
 
 	billingMode := d.Get("billing_mode").(string)
@@ -341,16 +350,11 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("server_side_encryption"); ok {
-		options := v.([]interface{})
-		if options[0] == nil {
-			return fmt.Errorf("At least one field is expected inside server_side_encryption")
-		}
-
-		s := options[0].(map[string]interface{})
-		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(s)
+		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(v.([]interface{}))
 	}
 
 	var output *dynamodb.CreateTableOutput
+	var requiresTagging bool
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateTable(req)
@@ -370,11 +374,21 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 				req.BillingMode = nil
 				return resource.RetryableError(err)
 			}
+			// AWS GovCloud (US) and others may reply with the following until their API is updated:
+			// ValidationException: Unsupported input parameter Tags
+			if isAWSErr(err, "ValidationException", "Unsupported input parameter Tags") {
+				req.Tags = nil
+				requiresTagging = true
+				return resource.RetryableError(err)
+			}
 
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateTable(req)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating DynamoDB Table: %s", err)
 	}
@@ -386,14 +400,16 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
+	if requiresTagging {
+		if err := keyvaluetags.DynamodbUpdateTags(conn, d.Get("arn").(string), nil, tags); err != nil {
+			return fmt.Errorf("error adding DynamoDB Table (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	if d.Get("ttl.0.enabled").(bool) {
 		if err := updateDynamoDbTimeToLive(d.Id(), d.Get("ttl").([]interface{}), conn); err != nil {
 			return fmt.Errorf("error enabling DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
 		}
-	}
-
-	if err := setTagsDynamoDb(conn, d); err != nil {
-		return fmt.Errorf("error adding DynamoDB Table (%s) tags: %s", d.Id(), err)
 	}
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
@@ -545,6 +561,21 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	if d.HasChange("server_side_encryption") {
+		// "ValidationException: One or more parameter values were invalid: Server-Side Encryption modification must be the only operation in the request".
+		_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
+			TableName:        aws.String(d.Id()),
+			SSESpecification: expandDynamoDbEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
+		})
+		if err != nil {
+			return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
+		}
+
+		if err := waitForDynamoDbSSEUpdateToBeCompleted(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("ttl") {
 		if err := updateDynamoDbTimeToLive(d.Id(), d.Get("ttl").([]interface{}), conn); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) time to live: %s", d.Id(), err)
@@ -552,7 +583,8 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("tags") {
-		if err := setTagsDynamoDb(conn, d); err != nil {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.DynamodbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -601,6 +633,7 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return err
 	}
+
 	d.Set("tags", tags)
 
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
@@ -639,7 +672,7 @@ func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		TableName: aws.String(tableName),
 	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteTable(input)
 		if err != nil {
 			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
@@ -661,6 +694,12 @@ func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteTable(input)
+	}
+
+	return err
 }
 
 func waitForDynamodbTableDeletion(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) error {
@@ -746,9 +785,11 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateContinuousBackups(input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating DynamoDB PITR status: %s", err)
 	}
 
 	if err := waitForDynamoDbBackupUpdateToBeCompleted(d.Id(), toEnable, conn); err != nil {
@@ -768,7 +809,7 @@ func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (map[string]stri
 		return nil, fmt.Errorf("Error reading tags from dynamodb resource: %s", err)
 	}
 
-	result := tagsToMapDynamoDb(output.Tags)
+	result := keyvaluetags.DynamodbKeyValueTags(output.Tags).IgnoreAws().Map()
 
 	// TODO Read NextToken if available
 
@@ -941,6 +982,38 @@ func waitForDynamoDbTtlUpdateToBeCompleted(tableName string, toEnable bool, conn
 	}
 
 	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForDynamoDbSSEUpdateToBeCompleted(tableName string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			dynamodb.SSEStatusDisabling,
+			dynamodb.SSEStatusEnabling,
+			dynamodb.SSEStatusUpdating,
+		},
+		Target: []string{
+			dynamodb.SSEStatusDisabled,
+			dynamodb.SSEStatusEnabled,
+		},
+		Timeout: timeout,
+		Refresh: func() (interface{}, string, error) {
+			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
+				TableName: aws.String(tableName),
+			})
+			if err != nil {
+				return 42, "", err
+			}
+
+			// Disabling SSE returns null SSEDescription.
+			if result.Table.SSEDescription == nil {
+				return result, dynamodb.SSEStatusDisabled, nil
+			}
+			return result, aws.StringValue(result.Table.SSEDescription.Status), nil
+		},
+	}
+	_, err := stateConf.WaitForState()
+
 	return err
 }
 

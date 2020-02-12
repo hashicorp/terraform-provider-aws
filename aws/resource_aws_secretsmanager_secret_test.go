@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/jen20/awspolicyequivalence"
 )
 
@@ -70,7 +70,7 @@ func TestAccAwsSecretsManagerSecret_Basic(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -105,7 +105,7 @@ func TestAccAwsSecretsManagerSecret_withNamePrefix(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -133,7 +133,7 @@ func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -167,7 +167,7 @@ func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -201,7 +201,7 @@ func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) 
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -236,7 +236,7 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -288,7 +288,7 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -342,7 +342,7 @@ func TestAccAwsSecretsManagerSecret_Tags(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -396,7 +396,7 @@ func TestAccAwsSecretsManagerSecret_policy(t *testing.T) {
 	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Sid":"EnableAllPermissions","Effect":"Allow","Principal":{"AWS":"*"},"Action":"secretsmanager:GetSecretValue","Resource":"*"}]}`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -502,6 +502,22 @@ func testAccCheckAwsSecretsManagerSecretHasPolicy(name string, expectedPolicyTex
 	}
 }
 
+func testAccPreCheckAWSSecretsManager(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+
+	input := &secretsmanager.ListSecretsInput{}
+
+	_, err := conn.ListSecrets(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAwsSecretsManagerSecretConfig_Description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
@@ -578,7 +594,7 @@ resource "aws_lambda_function" "test1" {
   function_name = "%[1]s-1"
   handler       = "exports.example"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_permission" "test1" {
@@ -594,7 +610,7 @@ resource "aws_lambda_function" "test2" {
   function_name = "%[1]s-2"
   handler       = "exports.example"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_permission" "test2" {
@@ -621,7 +637,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s"
   handler       = "exports.example"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_permission" "test" {

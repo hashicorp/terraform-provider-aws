@@ -1,12 +1,12 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_public_virtual_interface"
-sidebar_current: "docs-aws-resource-dx-public-virtual-interface"
 description: |-
   Provides a Direct Connect public virtual interface resource.
 ---
 
-# aws_dx_public_virtual_interface
+# Resource: aws_dx_public_virtual_interface
 
 Provides a Direct Connect public virtual interface resource.
 

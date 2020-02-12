@@ -1,12 +1,12 @@
 ---
+subcategory: "License Manager"
 layout: "aws"
 page_title: "AWS: aws_licensemanager_license_configuration"
-sidebar_current: "docs-aws-resource-licensemanager-license-configuration"
 description: |-
   Provides a License Manager license configuration resource.
 ---
 
-# aws_licensemanager_license_configuration
+# Resource: aws_licensemanager_license_configuration
 
 Provides a License Manager license configuration resource.
 
@@ -23,7 +23,7 @@ resource "aws_licensemanager_license_configuration" "example" {
   license_counting_type    = "Socket"
 
   license_rules = [
-    "#minimumSockets=2"
+    "#minimumSockets=2",
   ]
 
   tags = {

@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCloudFormationStackSet() *schema.Resource {
@@ -21,6 +23,10 @@ func resourceAwsCloudFormationStackSet() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -74,11 +80,7 @@ func resourceAwsCloudFormationStackSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags": tagsSchema(),
 			"template_body": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -120,7 +122,7 @@ func resourceAwsCloudFormationStackSetCreate(d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = expandCloudFormationTags(v.(map[string]interface{}))
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CloudformationTags()
 	}
 
 	if v, ok := d.GetOk("template_body"); ok {
@@ -186,7 +188,7 @@ func resourceAwsCloudFormationStackSetRead(d *schema.ResourceData, meta interfac
 
 	d.Set("stack_set_id", stackSet.StackSetId)
 
-	if err := d.Set("tags", flattenCloudFormationTags(stackSet.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.CloudformationKeyValueTags(stackSet.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -220,7 +222,7 @@ func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = expandCloudFormationTags(v.(map[string]interface{}))
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CloudformationTags()
 	}
 
 	if v, ok := d.GetOk("template_url"); ok {
@@ -231,10 +233,14 @@ func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Updating CloudFormation Stack Set: %s", input)
-	_, err := conn.UpdateStackSet(input)
+	output, err := conn.UpdateStackSet(input)
 
 	if err != nil {
 		return fmt.Errorf("error updating CloudFormation Stack Set (%s): %s", d.Id(), err)
+	}
+
+	if err := waitForCloudFormationStackSetOperation(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return fmt.Errorf("error waiting for CloudFormation Stack Set (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceAwsCloudFormationStackSetRead(d, meta)
@@ -259,4 +265,29 @@ func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interf
 	}
 
 	return nil
+}
+
+func listCloudFormationStackSets(conn *cloudformation.CloudFormation) ([]*cloudformation.StackSetSummary, error) {
+	input := &cloudformation.ListStackSetsInput{
+		Status: aws.String(cloudformation.StackSetStatusActive),
+	}
+	result := make([]*cloudformation.StackSetSummary, 0)
+
+	for {
+		output, err := conn.ListStackSets(input)
+
+		if err != nil {
+			return result, err
+		}
+
+		result = append(result, output.Summaries...)
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return result, nil
 }

@@ -1,12 +1,12 @@
 ---
+subcategory: "RAM"
 layout: "aws"
 page_title: "AWS: aws_ram_resource_share"
-sidebar_current: "docs-aws-resource-ram-resource-share"
 description: |-
   Manages a Resource Access Manager (RAM) Resource Share.
 ---
 
-# aws_ram_resource_share
+# Resource: aws_ram_resource_share
 
 Manages a Resource Access Manager (RAM) Resource Share. To association principals with the share, see the [`aws_ram_principal_association` resource](/docs/providers/aws/r/ram_principal_association.html). To associate resources with the share, see the [`aws_ram_resource_association` resource](/docs/providers/aws/r/ram_resource_association.html).
 

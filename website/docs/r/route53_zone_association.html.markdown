@@ -1,12 +1,12 @@
 ---
+subcategory: "Route53"
 layout: "aws"
 page_title: "AWS: aws_route53_zone_association"
-sidebar_current: "docs-aws-resource-route53-zone-association"
 description: |-
   Manages a Route53 Hosted Zone VPC association
 ---
 
-# aws_route53_zone_association
+# Resource: aws_route53_zone_association
 
 Manages a Route53 Hosted Zone VPC association. VPC associations can only be made on private zones.
 

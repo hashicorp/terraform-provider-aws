@@ -3,6 +3,7 @@
 package mq
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -65,20 +66,20 @@ func (c *MQ) CreateBrokerRequest(input *CreateBrokerRequest) (req *request.Reque
 // See the AWS API reference guide for AmazonMQ's
 // API operation CreateBroker for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/CreateBroker
@@ -157,17 +158,17 @@ func (c *MQ) CreateConfigurationRequest(input *CreateConfigurationRequest) (req 
 // See the AWS API reference guide for AmazonMQ's
 // API operation CreateConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/CreateConfiguration
@@ -246,17 +247,17 @@ func (c *MQ) CreateTagsRequest(input *CreateTagsInput) (req *request.Request, ou
 // See the AWS API reference guide for AmazonMQ's
 // API operation CreateTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/CreateTags
@@ -335,20 +336,20 @@ func (c *MQ) CreateUserRequest(input *CreateUserRequest) (req *request.Request, 
 // See the AWS API reference guide for AmazonMQ's
 // API operation CreateUser for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/CreateUser
@@ -426,17 +427,17 @@ func (c *MQ) DeleteBrokerRequest(input *DeleteBrokerInput) (req *request.Request
 // See the AWS API reference guide for AmazonMQ's
 // API operation DeleteBroker for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DeleteBroker
@@ -506,7 +507,7 @@ func (c *MQ) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Request, ou
 
 // DeleteTags API operation for AmazonMQ.
 //
-// Remove a tag from a resource.
+// Removes a tag from a resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -515,17 +516,17 @@ func (c *MQ) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Request, ou
 // See the AWS API reference guide for AmazonMQ's
 // API operation DeleteTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DeleteTags
@@ -604,17 +605,17 @@ func (c *MQ) DeleteUserRequest(input *DeleteUserInput) (req *request.Request, ou
 // See the AWS API reference guide for AmazonMQ's
 // API operation DeleteUser for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DeleteUser
@@ -692,17 +693,17 @@ func (c *MQ) DescribeBrokerRequest(input *DescribeBrokerInput) (req *request.Req
 // See the AWS API reference guide for AmazonMQ's
 // API operation DescribeBroker for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DescribeBroker
@@ -722,6 +723,176 @@ func (c *MQ) DescribeBroker(input *DescribeBrokerInput) (*DescribeBrokerResponse
 // for more information on using Contexts.
 func (c *MQ) DescribeBrokerWithContext(ctx aws.Context, input *DescribeBrokerInput, opts ...request.Option) (*DescribeBrokerResponse, error) {
 	req, out := c.DescribeBrokerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeBrokerEngineTypes = "DescribeBrokerEngineTypes"
+
+// DescribeBrokerEngineTypesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeBrokerEngineTypes operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeBrokerEngineTypes for more information on using the DescribeBrokerEngineTypes
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeBrokerEngineTypesRequest method.
+//    req, resp := client.DescribeBrokerEngineTypesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DescribeBrokerEngineTypes
+func (c *MQ) DescribeBrokerEngineTypesRequest(input *DescribeBrokerEngineTypesInput) (req *request.Request, output *DescribeBrokerEngineTypesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeBrokerEngineTypes,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/broker-engine-types",
+	}
+
+	if input == nil {
+		input = &DescribeBrokerEngineTypesInput{}
+	}
+
+	output = &DescribeBrokerEngineTypesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeBrokerEngineTypes API operation for AmazonMQ.
+//
+// Describe available engine types and versions.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonMQ's
+// API operation DescribeBrokerEngineTypes for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DescribeBrokerEngineTypes
+func (c *MQ) DescribeBrokerEngineTypes(input *DescribeBrokerEngineTypesInput) (*DescribeBrokerEngineTypesOutput, error) {
+	req, out := c.DescribeBrokerEngineTypesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeBrokerEngineTypesWithContext is the same as DescribeBrokerEngineTypes with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeBrokerEngineTypes for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MQ) DescribeBrokerEngineTypesWithContext(ctx aws.Context, input *DescribeBrokerEngineTypesInput, opts ...request.Option) (*DescribeBrokerEngineTypesOutput, error) {
+	req, out := c.DescribeBrokerEngineTypesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeBrokerInstanceOptions = "DescribeBrokerInstanceOptions"
+
+// DescribeBrokerInstanceOptionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeBrokerInstanceOptions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeBrokerInstanceOptions for more information on using the DescribeBrokerInstanceOptions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeBrokerInstanceOptionsRequest method.
+//    req, resp := client.DescribeBrokerInstanceOptionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DescribeBrokerInstanceOptions
+func (c *MQ) DescribeBrokerInstanceOptionsRequest(input *DescribeBrokerInstanceOptionsInput) (req *request.Request, output *DescribeBrokerInstanceOptionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeBrokerInstanceOptions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/broker-instance-options",
+	}
+
+	if input == nil {
+		input = &DescribeBrokerInstanceOptionsInput{}
+	}
+
+	output = &DescribeBrokerInstanceOptionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeBrokerInstanceOptions API operation for AmazonMQ.
+//
+// Describe available broker instance options.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonMQ's
+// API operation DescribeBrokerInstanceOptions for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DescribeBrokerInstanceOptions
+func (c *MQ) DescribeBrokerInstanceOptions(input *DescribeBrokerInstanceOptionsInput) (*DescribeBrokerInstanceOptionsOutput, error) {
+	req, out := c.DescribeBrokerInstanceOptionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeBrokerInstanceOptionsWithContext is the same as DescribeBrokerInstanceOptions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeBrokerInstanceOptions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MQ) DescribeBrokerInstanceOptionsWithContext(ctx aws.Context, input *DescribeBrokerInstanceOptionsInput, opts ...request.Option) (*DescribeBrokerInstanceOptionsOutput, error) {
+	req, out := c.DescribeBrokerInstanceOptionsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -780,17 +951,17 @@ func (c *MQ) DescribeConfigurationRequest(input *DescribeConfigurationInput) (re
 // See the AWS API reference guide for AmazonMQ's
 // API operation DescribeConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DescribeConfiguration
@@ -868,17 +1039,17 @@ func (c *MQ) DescribeConfigurationRevisionRequest(input *DescribeConfigurationRe
 // See the AWS API reference guide for AmazonMQ's
 // API operation DescribeConfigurationRevision for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DescribeConfigurationRevision
@@ -956,17 +1127,17 @@ func (c *MQ) DescribeUserRequest(input *DescribeUserInput) (req *request.Request
 // See the AWS API reference guide for AmazonMQ's
 // API operation DescribeUser for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/DescribeUser
@@ -1044,14 +1215,14 @@ func (c *MQ) ListBrokersRequest(input *ListBrokersInput) (req *request.Request, 
 // See the AWS API reference guide for AmazonMQ's
 // API operation ListBrokers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/ListBrokers
@@ -1129,17 +1300,17 @@ func (c *MQ) ListConfigurationRevisionsRequest(input *ListConfigurationRevisions
 // See the AWS API reference guide for AmazonMQ's
 // API operation ListConfigurationRevisions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/ListConfigurationRevisions
@@ -1217,14 +1388,14 @@ func (c *MQ) ListConfigurationsRequest(input *ListConfigurationsInput) (req *req
 // See the AWS API reference guide for AmazonMQ's
 // API operation ListConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/ListConfigurations
@@ -1302,17 +1473,17 @@ func (c *MQ) ListTagsRequest(input *ListTagsInput) (req *request.Request, output
 // See the AWS API reference guide for AmazonMQ's
 // API operation ListTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/ListTags
@@ -1390,17 +1561,17 @@ func (c *MQ) ListUsersRequest(input *ListUsersInput) (req *request.Request, outp
 // See the AWS API reference guide for AmazonMQ's
 // API operation ListUsers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/ListUsers
@@ -1479,17 +1650,17 @@ func (c *MQ) RebootBrokerRequest(input *RebootBrokerInput) (req *request.Request
 // See the AWS API reference guide for AmazonMQ's
 // API operation RebootBroker for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/RebootBroker
@@ -1567,20 +1738,20 @@ func (c *MQ) UpdateBrokerRequest(input *UpdateBrokerRequest) (req *request.Reque
 // See the AWS API reference guide for AmazonMQ's
 // API operation UpdateBroker for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/UpdateBroker
@@ -1658,20 +1829,20 @@ func (c *MQ) UpdateConfigurationRequest(input *UpdateConfigurationRequest) (req 
 // See the AWS API reference guide for AmazonMQ's
 // API operation UpdateConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/UpdateConfiguration
@@ -1750,20 +1921,20 @@ func (c *MQ) UpdateUserRequest(input *UpdateUserRequest) (req *request.Request, 
 // See the AWS API reference guide for AmazonMQ's
 // API operation UpdateUser for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mq-2017-11-27/UpdateUser
@@ -1786,6 +1957,121 @@ func (c *MQ) UpdateUserWithContext(ctx aws.Context, input *UpdateUserRequest, op
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Name of the availability zone.
+type AvailabilityZone struct {
+	_ struct{} `type:"structure"`
+
+	// Id for the availability zone.
+	Name *string `locationName:"name" type:"string"`
+}
+
+// String returns the string representation
+func (s AvailabilityZone) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AvailabilityZone) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *AvailabilityZone) SetName(v string) *AvailabilityZone {
+	s.Name = &v
+	return s
+}
+
+// Returns information about an error.
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Types of broker engines.
+type BrokerEngineType struct {
+	_ struct{} `type:"structure"`
+
+	// The type of broker engine.
+	EngineType *string `locationName:"engineType" type:"string" enum:"EngineType"`
+
+	// The list of engine versions.
+	EngineVersions []*EngineVersion `locationName:"engineVersions" type:"list"`
+}
+
+// String returns the string representation
+func (s BrokerEngineType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BrokerEngineType) GoString() string {
+	return s.String()
+}
+
+// SetEngineType sets the EngineType field's value.
+func (s *BrokerEngineType) SetEngineType(v string) *BrokerEngineType {
+	s.EngineType = &v
+	return s
+}
+
+// SetEngineVersions sets the EngineVersions field's value.
+func (s *BrokerEngineType) SetEngineVersions(v []*EngineVersion) *BrokerEngineType {
+	s.EngineVersions = v
+	return s
 }
 
 // Returns information about all brokers.
@@ -1827,6 +2113,75 @@ func (s *BrokerInstance) SetEndpoints(v []*string) *BrokerInstance {
 // SetIpAddress sets the IpAddress field's value.
 func (s *BrokerInstance) SetIpAddress(v string) *BrokerInstance {
 	s.IpAddress = &v
+	return s
+}
+
+// Option for host instance type.
+type BrokerInstanceOption struct {
+	_ struct{} `type:"structure"`
+
+	// The list of available az.
+	AvailabilityZones []*AvailabilityZone `locationName:"availabilityZones" type:"list"`
+
+	// The type of broker engine.
+	EngineType *string `locationName:"engineType" type:"string" enum:"EngineType"`
+
+	// The type of broker instance.
+	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
+	// The broker's storage type.
+	StorageType *string `locationName:"storageType" type:"string" enum:"BrokerStorageType"`
+
+	// The list of supported deployment modes.
+	SupportedDeploymentModes []*string `locationName:"supportedDeploymentModes" type:"list"`
+
+	// The list of supported engine versions.
+	SupportedEngineVersions []*string `locationName:"supportedEngineVersions" type:"list"`
+}
+
+// String returns the string representation
+func (s BrokerInstanceOption) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BrokerInstanceOption) GoString() string {
+	return s.String()
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *BrokerInstanceOption) SetAvailabilityZones(v []*AvailabilityZone) *BrokerInstanceOption {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetEngineType sets the EngineType field's value.
+func (s *BrokerInstanceOption) SetEngineType(v string) *BrokerInstanceOption {
+	s.EngineType = &v
+	return s
+}
+
+// SetHostInstanceType sets the HostInstanceType field's value.
+func (s *BrokerInstanceOption) SetHostInstanceType(v string) *BrokerInstanceOption {
+	s.HostInstanceType = &v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *BrokerInstanceOption) SetStorageType(v string) *BrokerInstanceOption {
+	s.StorageType = &v
+	return s
+}
+
+// SetSupportedDeploymentModes sets the SupportedDeploymentModes field's value.
+func (s *BrokerInstanceOption) SetSupportedDeploymentModes(v []*string) *BrokerInstanceOption {
+	s.SupportedDeploymentModes = v
+	return s
+}
+
+// SetSupportedEngineVersions sets the SupportedEngineVersions field's value.
+func (s *BrokerInstanceOption) SetSupportedEngineVersions(v []*string) *BrokerInstanceOption {
+	s.SupportedEngineVersions = v
 	return s
 }
 
@@ -2128,6 +2483,64 @@ func (s *Configurations) SetPending(v *ConfigurationId) *Configurations {
 	return s
 }
 
+// Returns information about an error.
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type CreateBrokerRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -2142,6 +2555,9 @@ type CreateBrokerRequest struct {
 
 	// The deployment mode of the broker.
 	DeploymentMode *string `locationName:"deploymentMode" type:"string" enum:"DeploymentMode"`
+
+	// Encryption options for the broker.
+	EncryptionOptions *EncryptionOptions `locationName:"encryptionOptions" type:"structure"`
 
 	// The type of broker engine. Note: Currently, Amazon MQ supports only ActiveMQ.
 	EngineType *string `locationName:"engineType" type:"string" enum:"EngineType"`
@@ -2161,6 +2577,9 @@ type CreateBrokerRequest struct {
 
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
+	// The storage type of the broker.
+	StorageType *string `locationName:"storageType" type:"string" enum:"BrokerStorageType"`
+
 	SubnetIds []*string `locationName:"subnetIds" type:"list"`
 
 	Tags map[string]*string `locationName:"tags" type:"map"`
@@ -2176,6 +2595,21 @@ func (s CreateBrokerRequest) String() string {
 // GoString returns the string representation
 func (s CreateBrokerRequest) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateBrokerRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateBrokerRequest"}
+	if s.EncryptionOptions != nil {
+		if err := s.EncryptionOptions.Validate(); err != nil {
+			invalidParams.AddNested("EncryptionOptions", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
@@ -2205,6 +2639,12 @@ func (s *CreateBrokerRequest) SetCreatorRequestId(v string) *CreateBrokerRequest
 // SetDeploymentMode sets the DeploymentMode field's value.
 func (s *CreateBrokerRequest) SetDeploymentMode(v string) *CreateBrokerRequest {
 	s.DeploymentMode = &v
+	return s
+}
+
+// SetEncryptionOptions sets the EncryptionOptions field's value.
+func (s *CreateBrokerRequest) SetEncryptionOptions(v *EncryptionOptions) *CreateBrokerRequest {
+	s.EncryptionOptions = v
 	return s
 }
 
@@ -2247,6 +2687,12 @@ func (s *CreateBrokerRequest) SetPubliclyAccessible(v bool) *CreateBrokerRequest
 // SetSecurityGroups sets the SecurityGroups field's value.
 func (s *CreateBrokerRequest) SetSecurityGroups(v []*string) *CreateBrokerRequest {
 	s.SecurityGroups = v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *CreateBrokerRequest) SetStorageType(v string) *CreateBrokerRequest {
+	s.StorageType = &v
 	return s
 }
 
@@ -2747,6 +3193,95 @@ func (s DeleteUserOutput) GoString() string {
 	return s.String()
 }
 
+type DescribeBrokerEngineTypesInput struct {
+	_ struct{} `type:"structure"`
+
+	EngineType *string `location:"querystring" locationName:"engineType" type:"string"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeBrokerEngineTypesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeBrokerEngineTypesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeBrokerEngineTypesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeBrokerEngineTypesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEngineType sets the EngineType field's value.
+func (s *DescribeBrokerEngineTypesInput) SetEngineType(v string) *DescribeBrokerEngineTypesInput {
+	s.EngineType = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeBrokerEngineTypesInput) SetMaxResults(v int64) *DescribeBrokerEngineTypesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeBrokerEngineTypesInput) SetNextToken(v string) *DescribeBrokerEngineTypesInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeBrokerEngineTypesOutput struct {
+	_ struct{} `type:"structure"`
+
+	BrokerEngineTypes []*BrokerEngineType `locationName:"brokerEngineTypes" type:"list"`
+
+	MaxResults *int64 `locationName:"maxResults" min:"5" type:"integer"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeBrokerEngineTypesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeBrokerEngineTypesOutput) GoString() string {
+	return s.String()
+}
+
+// SetBrokerEngineTypes sets the BrokerEngineTypes field's value.
+func (s *DescribeBrokerEngineTypesOutput) SetBrokerEngineTypes(v []*BrokerEngineType) *DescribeBrokerEngineTypesOutput {
+	s.BrokerEngineTypes = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeBrokerEngineTypesOutput) SetMaxResults(v int64) *DescribeBrokerEngineTypesOutput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeBrokerEngineTypesOutput) SetNextToken(v string) *DescribeBrokerEngineTypesOutput {
+	s.NextToken = &v
+	return s
+}
+
 type DescribeBrokerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2786,6 +3321,111 @@ func (s *DescribeBrokerInput) SetBrokerId(v string) *DescribeBrokerInput {
 	return s
 }
 
+type DescribeBrokerInstanceOptionsInput struct {
+	_ struct{} `type:"structure"`
+
+	EngineType *string `location:"querystring" locationName:"engineType" type:"string"`
+
+	HostInstanceType *string `location:"querystring" locationName:"hostInstanceType" type:"string"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	StorageType *string `location:"querystring" locationName:"storageType" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeBrokerInstanceOptionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeBrokerInstanceOptionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeBrokerInstanceOptionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeBrokerInstanceOptionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEngineType sets the EngineType field's value.
+func (s *DescribeBrokerInstanceOptionsInput) SetEngineType(v string) *DescribeBrokerInstanceOptionsInput {
+	s.EngineType = &v
+	return s
+}
+
+// SetHostInstanceType sets the HostInstanceType field's value.
+func (s *DescribeBrokerInstanceOptionsInput) SetHostInstanceType(v string) *DescribeBrokerInstanceOptionsInput {
+	s.HostInstanceType = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeBrokerInstanceOptionsInput) SetMaxResults(v int64) *DescribeBrokerInstanceOptionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeBrokerInstanceOptionsInput) SetNextToken(v string) *DescribeBrokerInstanceOptionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *DescribeBrokerInstanceOptionsInput) SetStorageType(v string) *DescribeBrokerInstanceOptionsInput {
+	s.StorageType = &v
+	return s
+}
+
+type DescribeBrokerInstanceOptionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	BrokerInstanceOptions []*BrokerInstanceOption `locationName:"brokerInstanceOptions" type:"list"`
+
+	MaxResults *int64 `locationName:"maxResults" min:"5" type:"integer"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeBrokerInstanceOptionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeBrokerInstanceOptionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetBrokerInstanceOptions sets the BrokerInstanceOptions field's value.
+func (s *DescribeBrokerInstanceOptionsOutput) SetBrokerInstanceOptions(v []*BrokerInstanceOption) *DescribeBrokerInstanceOptionsOutput {
+	s.BrokerInstanceOptions = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeBrokerInstanceOptionsOutput) SetMaxResults(v int64) *DescribeBrokerInstanceOptionsOutput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeBrokerInstanceOptionsOutput) SetNextToken(v string) *DescribeBrokerInstanceOptionsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type DescribeBrokerResponse struct {
 	_ struct{} `type:"structure"`
 
@@ -2810,6 +3450,9 @@ type DescribeBrokerResponse struct {
 	// The deployment mode of the broker.
 	DeploymentMode *string `locationName:"deploymentMode" type:"string" enum:"DeploymentMode"`
 
+	// Encryption options for the broker.
+	EncryptionOptions *EncryptionOptions `locationName:"encryptionOptions" type:"structure"`
+
 	// The type of broker engine. Note: Currently, Amazon MQ supports only ActiveMQ.
 	EngineType *string `locationName:"engineType" type:"string" enum:"EngineType"`
 
@@ -2827,9 +3470,16 @@ type DescribeBrokerResponse struct {
 
 	PendingEngineVersion *string `locationName:"pendingEngineVersion" type:"string"`
 
+	PendingHostInstanceType *string `locationName:"pendingHostInstanceType" type:"string"`
+
+	PendingSecurityGroups []*string `locationName:"pendingSecurityGroups" type:"list"`
+
 	PubliclyAccessible *bool `locationName:"publiclyAccessible" type:"boolean"`
 
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
+
+	// The storage type of the broker.
+	StorageType *string `locationName:"storageType" type:"string" enum:"BrokerStorageType"`
 
 	SubnetIds []*string `locationName:"subnetIds" type:"list"`
 
@@ -2902,6 +3552,12 @@ func (s *DescribeBrokerResponse) SetDeploymentMode(v string) *DescribeBrokerResp
 	return s
 }
 
+// SetEncryptionOptions sets the EncryptionOptions field's value.
+func (s *DescribeBrokerResponse) SetEncryptionOptions(v *EncryptionOptions) *DescribeBrokerResponse {
+	s.EncryptionOptions = v
+	return s
+}
+
 // SetEngineType sets the EngineType field's value.
 func (s *DescribeBrokerResponse) SetEngineType(v string) *DescribeBrokerResponse {
 	s.EngineType = &v
@@ -2938,6 +3594,18 @@ func (s *DescribeBrokerResponse) SetPendingEngineVersion(v string) *DescribeBrok
 	return s
 }
 
+// SetPendingHostInstanceType sets the PendingHostInstanceType field's value.
+func (s *DescribeBrokerResponse) SetPendingHostInstanceType(v string) *DescribeBrokerResponse {
+	s.PendingHostInstanceType = &v
+	return s
+}
+
+// SetPendingSecurityGroups sets the PendingSecurityGroups field's value.
+func (s *DescribeBrokerResponse) SetPendingSecurityGroups(v []*string) *DescribeBrokerResponse {
+	s.PendingSecurityGroups = v
+	return s
+}
+
 // SetPubliclyAccessible sets the PubliclyAccessible field's value.
 func (s *DescribeBrokerResponse) SetPubliclyAccessible(v bool) *DescribeBrokerResponse {
 	s.PubliclyAccessible = &v
@@ -2947,6 +3615,12 @@ func (s *DescribeBrokerResponse) SetPubliclyAccessible(v bool) *DescribeBrokerRe
 // SetSecurityGroups sets the SecurityGroups field's value.
 func (s *DescribeBrokerResponse) SetSecurityGroups(v []*string) *DescribeBrokerResponse {
 	s.SecurityGroups = v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *DescribeBrokerResponse) SetStorageType(v string) *DescribeBrokerResponse {
+	s.StorageType = &v
 	return s
 }
 
@@ -3303,6 +3977,196 @@ func (s *DescribeUserResponse) SetPending(v *UserPendingChanges) *DescribeUserRe
 func (s *DescribeUserResponse) SetUsername(v string) *DescribeUserResponse {
 	s.Username = &v
 	return s
+}
+
+// Encryption options for the broker.
+type EncryptionOptions struct {
+	_ struct{} `type:"structure"`
+
+	// The customer master key (CMK) to use for the AWS Key Management Service (KMS).
+	// This key is used to encrypt your data at rest. If not provided, Amazon MQ
+	// will use a default CMK to encrypt your data.
+	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
+
+	// Enables the use of an AWS owned CMK using AWS Key Management Service (KMS).
+	//
+	// UseAwsOwnedKey is a required field
+	UseAwsOwnedKey *bool `locationName:"useAwsOwnedKey" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s EncryptionOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionOptions) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EncryptionOptions) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EncryptionOptions"}
+	if s.UseAwsOwnedKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("UseAwsOwnedKey"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *EncryptionOptions) SetKmsKeyId(v string) *EncryptionOptions {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetUseAwsOwnedKey sets the UseAwsOwnedKey field's value.
+func (s *EncryptionOptions) SetUseAwsOwnedKey(v bool) *EncryptionOptions {
+	s.UseAwsOwnedKey = &v
+	return s
+}
+
+// Id of the engine version.
+type EngineVersion struct {
+	_ struct{} `type:"structure"`
+
+	// Id for the version.
+	Name *string `locationName:"name" type:"string"`
+}
+
+// String returns the string representation
+func (s EngineVersion) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EngineVersion) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *EngineVersion) SetName(v string) *EngineVersion {
+	s.Name = &v
+	return s
+}
+
+// Returns information about an error.
+type ForbiddenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ForbiddenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForbiddenException) GoString() string {
+	return s.String()
+}
+
+func newErrorForbiddenException(v protocol.ResponseMetadata) error {
+	return &ForbiddenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ForbiddenException) Code() string {
+	return "ForbiddenException"
+}
+
+// Message returns the exception's message.
+func (s ForbiddenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ForbiddenException) OrigErr() error {
+	return nil
+}
+
+func (s ForbiddenException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ForbiddenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ForbiddenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Returns information about an error.
+type InternalServerErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
+	return &InternalServerErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerErrorException) Code() string {
+	return "InternalServerErrorException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerErrorException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerErrorException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerErrorException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListBrokersInput struct {
@@ -3825,6 +4689,64 @@ func (s *LogsSummary) SetPending(v *PendingLogs) *LogsSummary {
 	return s
 }
 
+// Returns information about an error.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The list of information about logs to be enabled for the specified broker.
 type PendingLogs struct {
 	_ struct{} `type:"structure"`
@@ -3955,6 +4877,64 @@ func (s *SanitizationWarning) SetReason(v string) *SanitizationWarning {
 	return s
 }
 
+// Returns information about an error.
+type UnauthorizedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnauthorizedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnauthorizedException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
+	return &UnauthorizedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnauthorizedException) Code() string {
+	return "UnauthorizedException"
+}
+
+// Message returns the exception's message.
+func (s UnauthorizedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnauthorizedException) OrigErr() error {
+	return nil
+}
+
+func (s UnauthorizedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnauthorizedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnauthorizedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type UpdateBrokerRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -3968,8 +4948,12 @@ type UpdateBrokerRequest struct {
 
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
+	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
+
+	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 }
 
 // String returns the string representation
@@ -4022,9 +5006,21 @@ func (s *UpdateBrokerRequest) SetEngineVersion(v string) *UpdateBrokerRequest {
 	return s
 }
 
+// SetHostInstanceType sets the HostInstanceType field's value.
+func (s *UpdateBrokerRequest) SetHostInstanceType(v string) *UpdateBrokerRequest {
+	s.HostInstanceType = &v
+	return s
+}
+
 // SetLogs sets the Logs field's value.
 func (s *UpdateBrokerRequest) SetLogs(v *Logs) *UpdateBrokerRequest {
 	s.Logs = v
+	return s
+}
+
+// SetSecurityGroups sets the SecurityGroups field's value.
+func (s *UpdateBrokerRequest) SetSecurityGroups(v []*string) *UpdateBrokerRequest {
+	s.SecurityGroups = v
 	return s
 }
 
@@ -4040,8 +5036,12 @@ type UpdateBrokerResponse struct {
 
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
+	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
+
+	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 }
 
 // String returns the string representation
@@ -4078,9 +5078,21 @@ func (s *UpdateBrokerResponse) SetEngineVersion(v string) *UpdateBrokerResponse 
 	return s
 }
 
+// SetHostInstanceType sets the HostInstanceType field's value.
+func (s *UpdateBrokerResponse) SetHostInstanceType(v string) *UpdateBrokerResponse {
+	s.HostInstanceType = &v
+	return s
+}
+
 // SetLogs sets the Logs field's value.
 func (s *UpdateBrokerResponse) SetLogs(v *Logs) *UpdateBrokerResponse {
 	s.Logs = v
+	return s
+}
+
+// SetSecurityGroups sets the SecurityGroups field's value.
+func (s *UpdateBrokerResponse) SetSecurityGroups(v []*string) *UpdateBrokerResponse {
+	s.SecurityGroups = v
 	return s
 }
 
@@ -4491,6 +5503,15 @@ const (
 
 	// BrokerStateRebootInProgress is a BrokerState enum value
 	BrokerStateRebootInProgress = "REBOOT_IN_PROGRESS"
+)
+
+// The storage type of the broker.
+const (
+	// BrokerStorageTypeEbs is a BrokerStorageType enum value
+	BrokerStorageTypeEbs = "EBS"
+
+	// BrokerStorageTypeEfs is a BrokerStorageType enum value
+	BrokerStorageTypeEfs = "EFS"
 )
 
 // The type of change pending for the ActiveMQ user.

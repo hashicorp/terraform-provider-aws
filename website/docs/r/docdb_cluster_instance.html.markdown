@@ -1,12 +1,12 @@
 ---
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_instance"
-sidebar_current: "docs-aws-resource-docdb-cluster-instance"
 description: |-
   Provides an DocDB Cluster Resource Instance
 ---
 
-# aws_docdb_cluster_instance
+# Resource: aws_docdb_cluster_instance
 
 Provides an DocDB Cluster Resource Instance. A Cluster Instance Resource defines
 attributes that are specific to a single instance in a [DocDB Cluster][1].
@@ -24,7 +24,7 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
   count              = 2
   identifier         = "docdb-cluster-demo-${count.index}"
   cluster_identifier = "${aws_docdb_cluster.default.id}"
-  instance_class     = "db.r4.large"
+  instance_class     = "db.r5.large"
 }
 
 resource "aws_docdb_cluster" "default" {
@@ -45,7 +45,7 @@ The following arguments are supported:
 * `apply_immediately` - (Optional) Specifies whether any database modifications
      are applied immediately, or during the next maintenance window. Default is`false`.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
-* `availability_zone` - (Optional, Computed) The EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/AmazonDocDB/latest/APIReference/API_CreateDBInstance.html) about the details.
+* `availability_zone` - (Optional, Computed) The EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/documentdb/latest/developerguide/API_CreateDBInstance.html) about the details.
 * `cluster_identifier` - (Required) The identifier of the [`aws_docdb_cluster`](/docs/providers/aws/r/docdb_cluster.html) in which to launch this instance.
 * `engine` - (Optional) The name of the database engine to be used for the DocDB instance. Defaults to `docdb`. Valid Values: `docdb`.
 * `identifier` - (Optional, Forces new resource) The indentifier for the DocDB instance, if omitted, Terraform will assign a random, unique identifier.
@@ -75,9 +75,9 @@ In addition to all arguments above, the following attributes are exported:
 * `kms_key_id` - The ARN for the KMS encryption key if one is set to the cluster.
 * `port` - The database port
 * `preferred_backup_window` - The daily time range during which automated backups are created if automated backups are enabled.
-* `status` - The DocDB instance status
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
+* `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 
 [1]: /docs/providers/aws/r/docdb_cluster.html
 [2]: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-cluster-manage-performance.html#db-cluster-manage-scaling-instance

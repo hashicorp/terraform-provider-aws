@@ -2,15 +2,72 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cloudformation_stack_set", &resource.Sweeper{
+		Name: "aws_cloudformation_stack_set",
+		Dependencies: []string{
+			"aws_cloudformation_stack_set_instance",
+		},
+		F: testSweepCloudformationStackSets,
+	})
+}
+
+func testSweepCloudformationStackSets(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).cfconn
+	stackSets, err := listCloudFormationStackSets(conn)
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFormation Stack Set sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFormation Stack Sets: %s", err)
+	}
+
+	var sweeperErrs *multierror.Error
+
+	for _, stackSet := range stackSets {
+		input := &cloudformation.DeleteStackSetInput{
+			StackSetName: stackSet.StackSetName,
+		}
+		name := aws.StringValue(stackSet.StackSetName)
+
+		log.Printf("[INFO] Deleting CloudFormation Stack Set: %s", name)
+		_, err := conn.DeleteStackSet(input)
+
+		if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+			continue
+		}
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting CloudFormation Stack Set (%s): %w", name, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSCloudFormationStackSet_basic(t *testing.T) {
 	var stackSet1 cloudformation.StackSet
@@ -204,7 +261,7 @@ func TestAccAWSCloudFormationStackSet_Name(t *testing.T) {
 			},
 			{
 				Config:      testAccAWSCloudFormationStackSetConfigName(acctest.RandStringFromCharSet(129, acctest.CharSetAlpha)),
-				ExpectError: regexp.MustCompile(`expected length`),
+				ExpectError: regexp.MustCompile(`(cannot be longer|expected length)`),
 			},
 			{
 				Config:      testAccAWSCloudFormationStackSetConfigName("1"),
@@ -751,7 +808,8 @@ resource "aws_iam_role" "test2" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test1.arn}"
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -773,7 +831,8 @@ resource "aws_iam_role" "test2" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test2.arn}"
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -791,7 +850,8 @@ resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   description             = %[3]q
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -809,7 +869,8 @@ resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   execution_role_name     = %[3]q
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -826,7 +887,8 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -843,10 +905,12 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  parameters              = {
+
+  parameters = {
     Parameter1 = %[3]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -863,11 +927,13 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  parameters              = {
+
+  parameters = {
     Parameter1 = %[3]q
     Parameter2 = %[4]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -884,7 +950,8 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -901,10 +968,12 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  parameters              = {
+
+  parameters = {
     Parameter1 = %[3]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -921,10 +990,12 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  parameters              = {
+
+  parameters = {
     Parameter1 = %[3]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -941,10 +1012,12 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  tags                    = {
+
+  tags = {
     Key1 = %[3]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -961,11 +1034,13 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  tags                    = {
+
+  tags = {
     Key1 = %[3]q
     Key2 = %[4]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -982,7 +1057,8 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -1002,12 +1078,14 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_object" "test" {
-  acl     = "public-read"
-  bucket  = "${aws_s3_bucket.test.bucket}"
+  acl    = "public-read"
+  bucket = "${aws_s3_bucket.test.bucket}"
+
   content = <<CONTENT
 %[2]s
 CONTENT
-  key     = "%[1]s-template1.yml"
+
+  key = "%[1]s-template1.yml"
 }
 
 resource "aws_cloudformation_stack_set" "test" {
@@ -1031,12 +1109,14 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_object" "test" {
-  acl     = "public-read"
-  bucket  = "${aws_s3_bucket.test.bucket}"
+  acl    = "public-read"
+  bucket = "${aws_s3_bucket.test.bucket}"
+
   content = <<CONTENT
 %[2]s
 CONTENT
-  key     = "%[1]s-template2.yml"
+
+  key = "%[1]s-template2.yml"
 }
 
 resource "aws_cloudformation_stack_set" "test" {

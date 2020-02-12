@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -630,6 +630,25 @@ resource "aws_s3_bucket" "destination" {
   force_destroy = true
 }
 
+resource "aws_iam_role_policy" "destination" {
+  role   = aws_iam_role.destination.id
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": [
+      "s3:*"
+    ],
+    "Effect": "Allow",
+    "Resource": [
+      "${aws_s3_bucket.destination.arn}",
+      "${aws_s3_bucket.destination.arn}/*"
+    ]
+  }]
+}
+POLICY
+}
+
 resource "aws_datasync_location_s3" "destination" {
   s3_bucket_arn = "${aws_s3_bucket.destination.arn}"
   subdirectory  = "/destination"
@@ -637,6 +656,8 @@ resource "aws_datasync_location_s3" "destination" {
   s3_config {
     bucket_access_role_arn = "${aws_iam_role.destination.arn}"
   }
+
+  depends_on = [aws_iam_role_policy.destination]
 }
 `, rName, rName)
 }
@@ -743,10 +764,11 @@ resource "aws_instance" "source" {
 
   ami                         = "${data.aws_ami.source-aws-thinstaller.id}"
   associate_public_ip_address = true
+
   # Default instance type from sync.sh
-  instance_type               = "c5.2xlarge"
-  vpc_security_group_ids      = ["${aws_security_group.source.id}"]
-  subnet_id                   = "${aws_subnet.source.id}"
+  instance_type          = "c5.2xlarge"
+  vpc_security_group_ids = ["${aws_security_group.source.id}"]
+  subnet_id              = "${aws_subnet.source.id}"
 
   tags = {
     Name = "tf-acc-test-datasync-task"

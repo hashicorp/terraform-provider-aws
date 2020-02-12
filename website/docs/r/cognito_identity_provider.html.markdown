@@ -1,4 +1,5 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_provider"
 side_bar_current: "docs-aws-resource-cognito-identity-provider"
@@ -6,7 +7,7 @@ description: |-
   Provides a Cognito User Identity Provider resource.
 ---
 
-# aws_cognito_identity_provider
+# Resource: aws_cognito_identity_provider
 
 Provides a Cognito User Identity Provider resource.
 

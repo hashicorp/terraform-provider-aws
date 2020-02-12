@@ -1,12 +1,12 @@
 ---
+subcategory: "Route53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rule_association"
-sidebar_current: "docs-aws-resource-route53-resolver-rule-association"
 description: |-
   Provides a Route53 Resolver rule association.
 ---
 
-# aws_route53_resolver_rule_association
+# Resource: aws_route53_resolver_rule_association
 
 Provides a Route53 Resolver rule association.
 

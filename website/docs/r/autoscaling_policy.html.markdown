@@ -1,12 +1,12 @@
 ---
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_policy"
-sidebar_current: "docs-aws-resource-autoscaling-policy"
 description: |-
   Provides an AutoScaling Scaling Group resource.
 ---
 
-# aws_autoscaling_policy
+# Resource: aws_autoscaling_policy
 
 Provides an AutoScaling Scaling Policy resource.
 
@@ -57,7 +57,7 @@ The following arguments are only available to "SimpleScaling" type policies:
 The following arguments are only available to "StepScaling" type policies:
 
 * `metric_aggregation_type` - (Optional) The aggregation type for the policy's metrics. Valid values are "Minimum", "Maximum", and "Average". Without a value, AWS will treat the aggregation type as "Average".
-* `step_adjustments` - (Optional) A set of adjustments that manage
+* `step_adjustment` - (Optional) A set of adjustments that manage
 group scaling. These have the following structure:
 
 ```hcl

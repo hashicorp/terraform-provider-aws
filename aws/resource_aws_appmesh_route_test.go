@@ -3,14 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -100,12 +99,14 @@ func testSweepAppmeshRoutes(region string) error {
 	return nil
 }
 
-func testAccAwsAppmeshRoute_basic(t *testing.T) {
+func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 	var r appmesh.RouteData
-	resourceName := "aws_appmesh_route.foo"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vrName := fmt.Sprintf("tf-test-router-%d", acctest.RandInt())
-	rName := fmt.Sprintf("tf-test-route-%d", acctest.RandInt())
+	resourceName := "aws_appmesh_route.test"
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vrName := acctest.RandomWithPrefix("tf-acc-test")
+	vn1Name := acctest.RandomWithPrefix("tf-acc-test")
+	vn2Name := acctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -113,24 +114,39 @@ func testAccAwsAppmeshRoute_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshRouteConfig_basic(meshName, vrName, rName),
+				Config: testAccAppmeshRouteConfig_httpRoute(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshRouteExists(
-						resourceName, &r),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", rName),
-					resource.TestCheckResourceAttr(
-						resourceName, "mesh_name", meshName),
-					resource.TestCheckResourceAttr(
-						resourceName, "virtual_router_name", vrName),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(
-						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName))),
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
+				),
+			},
+			{
+				Config: testAccAppmeshRouteConfig_httpRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/path"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
 				),
 			},
 			{
@@ -143,14 +159,14 @@ func testAccAwsAppmeshRoute_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_allAttributes(t *testing.T) {
+func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
 	var r appmesh.RouteData
-	resourceName := "aws_appmesh_route.foo"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vrName := fmt.Sprintf("tf-test-router-%d", acctest.RandInt())
-	vn1Name := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
-	vn2Name := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
-	rName := fmt.Sprintf("tf-test-route-%d", acctest.RandInt())
+	resourceName := "aws_appmesh_route.test"
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vrName := acctest.RandomWithPrefix("tf-acc-test")
+	vn1Name := acctest.RandomWithPrefix("tf-acc-test")
+	vn2Name := acctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -158,66 +174,98 @@ func testAccAwsAppmeshRoute_allAttributes(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshRouteConfig_allAttributes(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccAppmeshRouteConfig_tcpRoute(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshRouteExists(
-						resourceName, &r),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", rName),
-					resource.TestCheckResourceAttr(
-						resourceName, "mesh_name", meshName),
-					resource.TestCheckResourceAttr(
-						resourceName, "virtual_router_name", vrName),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.http_route.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.http_route.0.action.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.http_route.0.match.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(
-						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName))),
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.0.action.0.weighted_target.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
 				),
 			},
 			{
-				Config: testAccAppmeshRouteConfig_allAttributesUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Config: testAccAppmeshRouteConfig_tcpRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshRouteExists(
-						resourceName, &r),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", rName),
-					resource.TestCheckResourceAttr(
-						resourceName, "mesh_name", meshName),
-					resource.TestCheckResourceAttr(
-						resourceName, "virtual_router_name", vrName),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.http_route.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.http_route.0.action.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.http_route.0.match.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.http_route.0.match.0.prefix", "/path"),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(
-						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName))),
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.0.action.0.weighted_target.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s/%s", meshName, vrName, rName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsAppmeshRoute_tags(t *testing.T) {
+	var r appmesh.RouteData
+	resourceName := "aws_appmesh_route.test"
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vrName := acctest.RandomWithPrefix("tf-acc-test")
+	vn1Name := acctest.RandomWithPrefix("tf-acc-test")
+	vn2Name := acctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppmeshRouteConfigWithTags(meshName, vrName, vn1Name, vn2Name, rName, "foo", "bar", "good", "bad"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.good", "bad"),
+				),
+			},
+			{
+				Config: testAccAppmeshRouteConfigWithTags(meshName, vrName, vn1Name, vn2Name, rName, "foo2", "bar", "good", "bad2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.foo2", "bar"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.good", "bad2"),
+				),
+			},
+			{
+				Config: testAccAppmeshRouteConfig_httpRoute(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s/%s", meshName, vrName, rName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -275,74 +323,49 @@ func testAccCheckAppmeshRouteExists(name string, v *appmesh.RouteData) resource.
 	}
 }
 
-func testAccAppmeshRouteConfig_basic(meshName, vrName, rName string) string {
+func testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name string) string {
 	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "foo" {
-  name = "%s"
+resource "aws_appmesh_mesh" "test" {
+	name = %[1]q
 }
 
-resource "aws_appmesh_virtual_router" "foo" {
-  name      = "%s"
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
+resource "aws_appmesh_virtual_router" "test" {
+	name      = %[2]q
+	mesh_name = "${aws_appmesh_mesh.test.id}"
 
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-  }
-}
-
-resource "aws_appmesh_route" "foo" {
-  name                = "%s"
-  mesh_name           = "${aws_appmesh_mesh.foo.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.foo.name}"
-
-  spec {}
-}
-`, meshName, vrName, rName)
-}
-
-func testAccAppmeshRouteConfig_allAttributes(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "foo" {
-  name = "%s"
-}
-
-resource "aws_appmesh_virtual_router" "foo" {
-  name      = "%s"
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-  }
+	spec {
+		listener {
+			port_mapping {
+				port     = 8080
+				protocol = "http"
+			}
+		}
+	}
 }
 
 resource "aws_appmesh_virtual_node" "foo" {
-  name      = "%s"
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
+	name      = %[3]q
+	mesh_name = "${aws_appmesh_mesh.test.id}"
 
-  spec {}
+	spec {}
 }
 
 resource "aws_appmesh_virtual_node" "bar" {
-  name      = "%s"
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
+	name      = %[4]q
+	mesh_name = "${aws_appmesh_mesh.test.id}"
 
-  spec {}
+	spec {}
+}
+`, meshName, vrName, vn1Name, vn2Name)
 }
 
-resource "aws_appmesh_route" "foo" {
-  name                = "%s"
-  mesh_name           = "${aws_appmesh_mesh.foo.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.foo.name}"
+func testAccAppmeshRouteConfig_httpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
 
   spec {
     http_route {
@@ -359,47 +382,16 @@ resource "aws_appmesh_route" "foo" {
     }
   }
 }
-`, meshName, vrName, vn1Name, vn2Name, rName)
+`, rName)
 }
 
-func testAccAppmeshRouteConfig_allAttributesUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "foo" {
-  name = "%s"
-}
+func testAccAppmeshRouteConfig_httpRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 
-resource "aws_appmesh_virtual_router" "foo" {
-  name      = "%s"
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-  }
-}
-
-resource "aws_appmesh_virtual_node" "foo" {
-  name      = "%s"
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {}
-}
-
-resource "aws_appmesh_virtual_node" "bar" {
-  name      = "%s"
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {}
-}
-
-resource "aws_appmesh_route" "foo" {
-  name                = "%s"
-  mesh_name           = "${aws_appmesh_mesh.foo.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.foo.name}"
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
 
   spec {
     http_route {
@@ -421,5 +413,85 @@ resource "aws_appmesh_route" "foo" {
     }
   }
 }
-`, meshName, vrName, vn1Name, vn2Name, rName)
+`, rName)
+}
+
+func testAccAppmeshRouteConfig_tcpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    tcp_route {
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppmeshRouteConfig_tcpRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    tcp_route {
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 90
+        }
+
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          weight       = 10
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppmeshRouteConfigWithTags(meshName, vrName, vn1Name, vn2Name, rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    http_route {
+      match {
+        prefix = "/"
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+
+  tags = {
+	%[2]s = %[3]q
+	%[4]s = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

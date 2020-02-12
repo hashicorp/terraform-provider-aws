@@ -1,12 +1,12 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_cluster"
-sidebar_current: "docs-aws-resource-redshift-cluster"
 description: |-
   Provides a Redshift Cluster resource.
 ---
 
-# aws_redshift_cluster
+# Resource: aws_redshift_cluster
 
 Provides a Redshift Cluster Resource.
 
@@ -73,6 +73,15 @@ string.
 * `snapshot_copy` - (Optional) Configuration of automatic copy of snapshots from one region to another. Documented below.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
+### Timeouts
+
+`aws_redshift_cluster` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `75 minutes`) Used for creating Clusters.
+- `update` - (Default `40 minutes`) Used for Cluster Argument changes.
+- `delete` - (Default `40 minutes`) Used for destroying Clusters.
+
 ### Nested Blocks
 
 #### `logging`
@@ -92,6 +101,7 @@ For more information on the permissions required for the bucket, please read the
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of cluster
 * `id` - The Redshift Cluster ID.
 * `cluster_identifier` - The Cluster Identifier
 * `cluster_type` - The cluster type

@@ -1,12 +1,12 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_rails_app_layer"
-sidebar_current: "docs-aws-resource-opsworks-rails-app-layer"
 description: |-
   Provides an OpsWorks Ruby on Rails application layer resource.
 ---
 
-# aws_opsworks_rails_app_layer
+# Resource: aws_opsworks_rails_app_layer
 
 Provides an OpsWorks Ruby on Rails application layer resource.
 

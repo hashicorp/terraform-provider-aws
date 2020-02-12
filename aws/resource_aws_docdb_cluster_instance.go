@@ -8,10 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDocDBClusterInstance() *schema.Resource {
@@ -159,6 +159,12 @@ func resourceAwsDocDBClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 
 			"writer": {
@@ -171,7 +177,7 @@ func resourceAwsDocDBClusterInstance() *schema.Resource {
 
 func resourceAwsDocDBClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
-	tags := tagsFromMapDocDB(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DocdbTags()
 
 	createOpts := &docdb.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -213,6 +219,9 @@ func resourceAwsDocDBClusterInstanceCreate(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateDBInstance(createOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating DocDB Instance: %s", err)
 	}
@@ -303,8 +312,15 @@ func resourceAwsDocDBClusterInstanceRead(d *schema.ResourceData, meta interface{
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
+	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 
-	if err := saveTagsDocDB(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
+	tags, err := keyvaluetags.DocdbListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for DocumentDB Cluster Instance (%s): %s", d.Get("arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -343,6 +359,12 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 		requestUpdate = true
 	}
 
+	if d.HasChange("ca_cert_identifier") {
+		d.SetPartial("ca_cert_identifier")
+		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
+		requestUpdate = true
+	}
+
 	log.Printf("[DEBUG] Send DB Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %#v", req)
@@ -356,6 +378,9 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.ModifyDBInstance(req)
+		}
 		if err != nil {
 			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
 		}
@@ -378,8 +403,14 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 
 	}
 
-	if err := setTagsDocDB(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.DocdbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating DocumentDB Cluster Instance (%s) tags: %s", d.Get("arn").(string), err)
+		}
+
+		d.SetPartial("tags")
 	}
 
 	return resourceAwsDocDBClusterInstanceRead(d, meta)

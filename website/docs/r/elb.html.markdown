@@ -1,12 +1,12 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_elb"
-sidebar_current: "docs-aws-resource-elb"
 description: |-
   Provides an Elastic Load Balancer resource.
 ---
 
-# aws_elb
+# Resource: aws_elb
 
 Provides an Elastic Load Balancer resource, also known as a "Classic
 Load Balancer" after the release of

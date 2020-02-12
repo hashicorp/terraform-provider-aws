@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsSsmParameter() *schema.Resource {
@@ -36,6 +36,10 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+			},
+			"version": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 	}
@@ -72,6 +76,7 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)
+	d.Set("version", param.Version)
 
 	return nil
 }

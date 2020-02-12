@@ -1,18 +1,35 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_classifier"
-sidebar_current: "docs-aws-resource-glue-classifier"
 description: |-
   Provides an Glue Classifier resource.
 ---
 
-# aws_glue_classifier
+# Resource: aws_glue_classifier
 
 Provides a Glue Classifier resource.
 
-~> **NOTE:** It is only valid to create one type of classifier (grok, JSON, or XML). Changing classifier types will recreate the classifier.
+~> **NOTE:** It is only valid to create one type of classifier (csv, grok, JSON, or XML). Changing classifier types will recreate the classifier.
 
 ## Example Usage
+
+### Csv Classifier
+
+```hcl
+resource "aws_glue_classifier" "example" {
+  name = "example"
+
+  csv_classifier {
+    allow_single_column    = false
+    contains_header        = "PRESENT"
+    delimiter              = ","
+    disable_value_trimming = false
+    header                 = ["example1", "example2"]
+    quote_symbol           = "'"
+  }
+}
+```
 
 ### Grok Classifier
 
@@ -56,10 +73,20 @@ resource "aws_glue_classifier" "example" {
 
 The following arguments are supported:
 
+* `csv_classifier` - (Optional) A classifier for Csv content. Defined below.
 * `grok_classifier` – (Optional) A classifier that uses grok patterns. Defined below.
 * `json_classifier` – (Optional) A classifier for JSON content. Defined below.
 * `name` – (Required) The name of the classifier.
 * `xml_classifier` – (Optional) A classifier for XML content. Defined below.
+
+### csv_classifier
+
+* `allow_single_column` - (Optional) Enables the processing of files that contain only one column.
+* `contains_header` - (Optional) Indicates whether the CSV file contains a header. This can be one of "ABSENT", "PRESENT", or "UNKNOWN".
+* `delimiter` - (Optional) The delimiter used in the Csv to separate columns.
+* `disable_value_trimming` - (Optional) Specifies whether to trim column values. 
+* `header` - (Optional) A list of strings representing column names.
+* `quote_symbol` - (Optional) A custom symbol to denote what combines content into a single column value. It must be different from the column delimiter.
 
 ### grok_classifier
 

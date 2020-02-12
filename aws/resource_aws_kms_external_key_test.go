@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/jen20/awspolicyequivalence"
 )
 
@@ -554,7 +554,8 @@ func testAccAWSKmsExternalKeyConfigPolicy(policy string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
   deletion_window_in_days = 7
-  policy                  = <<POLICY
+
+  policy = <<POLICY
 %[1]s
 POLICY
 }
@@ -565,7 +566,8 @@ func testAccAWSKmsExternalKeyConfigTags1(value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
   deletion_window_in_days = 7
-  tags                    = {
+
+  tags = {
     key1 = %[1]q
   }
 }
@@ -576,7 +578,8 @@ func testAccAWSKmsExternalKeyConfigTags2(value1, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
   deletion_window_in_days = 7
-  tags                    = {
+
+  tags = {
     key1 = %[1]q
     key2 = %[2]q
   }

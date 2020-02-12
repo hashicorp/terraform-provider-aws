@@ -1,12 +1,12 @@
 ---
+subcategory: "MediaPackage"
 layout: "aws"
 page_title: "AWS: aws_media_package_channel"
-sidebar_current: "docs-aws-resource-media-package-channel"
 description: |-
   Provides an AWS Elemental MediaPackage Channel.
 ---
 
-# aws_media_package_channel
+# Resource: aws_media_package_channel
 
 Provides an AWS Elemental MediaPackage Channel.
 

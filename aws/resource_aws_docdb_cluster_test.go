@@ -7,10 +7,10 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -41,6 +41,8 @@ func TestAccAWSDocDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttr(resourceName,
 						"enabled_cloudwatch_logs_exports.0", "audit"),
+					resource.TestCheckResourceAttr(resourceName,
+						"enabled_cloudwatch_logs_exports.1", "profiler"),
 				),
 			},
 			{
@@ -48,6 +50,7 @@ func TestAccAWSDocDBCluster_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -79,6 +82,7 @@ func TestAccAWSDocDBCluster_namePrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -110,6 +114,7 @@ func TestAccAWSDocDBCluster_generatedName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -140,6 +145,7 @@ func TestAccAWSDocDBCluster_takeFinalSnapshot(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -188,6 +194,7 @@ func TestAccAWSDocDBCluster_updateTags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -226,6 +233,7 @@ func TestAccAWSDocDBCluster_updateCloudwatchLogsExports(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -264,6 +272,7 @@ func TestAccAWSDocDBCluster_kmsKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -297,6 +306,7 @@ func TestAccAWSDocDBCluster_encrypted(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -333,6 +343,7 @@ func TestAccAWSDocDBCluster_backupsUpdate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -377,6 +388,7 @@ func TestAccAWSDocDBCluster_Port(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -533,19 +545,23 @@ func testAccCheckDocDBClusterSnapshot(rInt int) resource.TestCheckFunc {
 func testAccDocDBClusterConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-docdb-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.docdb3.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
+
   tags = {
     Environment = "production"
   }
+
   enabled_cloudwatch_logs_exports = [
-	"audit",
+    "audit",
+    "profiler",
   ]
-}`, n)
+}
+`, n)
 }
 
 func testAccDocDBClusterConfig_namePrefix() string {
@@ -572,56 +588,63 @@ resource "aws_docdb_cluster" "test" {
 func testAccDocDBClusterConfigWithFinalSnapshot(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-docdb-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.docdb3.6"
-  final_snapshot_identifier = "tf-acctest-docdbcluster-snapshot-%d"
+  final_snapshot_identifier       = "tf-acctest-docdbcluster-snapshot-%d"
+
   tags = {
     Environment = "production"
   }
-}`, n, n)
+}
+`, n, n)
 }
 
 func testAccDocDBClusterConfigWithoutUserNameAndPassword(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  cluster_identifier  = "tf-docdb-cluster-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }
 
 func testAccDocDBClusterConfigUpdatedTags(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-docdb-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.docdb3.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
+
   tags = {
     Environment = "production"
-    AnotherTag = "test"
+    AnotherTag  = "test"
   }
-}`, n)
+}
+`, n)
 }
 
 func testAccDocDBClusterNoCloudwatchLogsConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-docdb-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.docdb3.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
+
   tags = {
     Environment = "production"
   }
-}`, n)
+}
+`, n)
 }
 
 func testAccDocDBClusterConfig_kmsKey(n int) string {
@@ -669,36 +692,39 @@ resource "aws_docdb_cluster" "default" {
   master_password = "mustbeeightcharaters"
   storage_encrypted = true
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }
 
 func testAccDocDBClusterConfig_backups(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
-  backup_retention_period = 5
-  preferred_backup_window = "07:00-09:00"
+  cluster_identifier           = "tf-docdb-cluster-%d"
+  availability_zones           = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username              = "foo"
+  master_password              = "mustbeeightcharaters"
+  backup_retention_period      = 5
+  preferred_backup_window      = "07:00-09:00"
   preferred_maintenance_window = "tue:04:00-tue:04:30"
-  skip_final_snapshot = true
-}`, n)
+  skip_final_snapshot          = true
+}
+`, n)
 }
 
 func testAccDocDBClusterConfig_backupsUpdate(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
-  backup_retention_period = 10
-  preferred_backup_window = "03:00-09:00"
+  cluster_identifier           = "tf-docdb-cluster-%d"
+  availability_zones           = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username              = "foo"
+  master_password              = "mustbeeightcharaters"
+  backup_retention_period      = 10
+  preferred_backup_window      = "03:00-09:00"
   preferred_maintenance_window = "wed:01:00-wed:01:30"
-  apply_immediately = true
-  skip_final_snapshot = true
-}`, n)
+  apply_immediately            = true
+  skip_final_snapshot          = true
+}
+`, n)
 }
 
 func testAccDocDBClusterConfig_Port(rInt, port int) string {
@@ -714,5 +740,6 @@ resource "aws_docdb_cluster" "test" {
   master_username                 = "foo"
   port                            = %d
   skip_final_snapshot             = true
-}`, rInt, port)
+}
+`, rInt, port)
 }

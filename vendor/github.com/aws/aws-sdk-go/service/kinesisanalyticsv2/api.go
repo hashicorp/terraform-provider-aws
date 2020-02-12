@@ -67,23 +67,26 @@ func (c *KinesisAnalyticsV2) AddApplicationCloudWatchLoggingOptionRequest(input 
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation AddApplicationCloudWatchLoggingOption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
+//
+//   * InvalidApplicationConfigurationException
+//   The user-provided application configuration is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/AddApplicationCloudWatchLoggingOption
 func (c *KinesisAnalyticsV2) AddApplicationCloudWatchLoggingOption(input *AddApplicationCloudWatchLoggingOptionInput) (*AddApplicationCloudWatchLoggingOptionOutput, error) {
@@ -168,26 +171,26 @@ func (c *KinesisAnalyticsV2) AddApplicationInputRequest(input *AddApplicationInp
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation AddApplicationInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeCodeValidationException "CodeValidationException"
+//   * CodeValidationException
 //   The user-provided application code (query) is not valid. This can be a simple
 //   syntax error.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/AddApplicationInput
@@ -268,22 +271,22 @@ func (c *KinesisAnalyticsV2) AddApplicationInputProcessingConfigurationRequest(i
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation AddApplicationInputProcessingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/AddApplicationInputProcessingConfiguration
@@ -376,22 +379,22 @@ func (c *KinesisAnalyticsV2) AddApplicationOutputRequest(input *AddApplicationOu
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation AddApplicationOutput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/AddApplicationOutput
@@ -477,22 +480,22 @@ func (c *KinesisAnalyticsV2) AddApplicationReferenceDataSourceRequest(input *Add
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation AddApplicationReferenceDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/AddApplicationReferenceDataSource
@@ -512,6 +515,105 @@ func (c *KinesisAnalyticsV2) AddApplicationReferenceDataSource(input *AddApplica
 // for more information on using Contexts.
 func (c *KinesisAnalyticsV2) AddApplicationReferenceDataSourceWithContext(ctx aws.Context, input *AddApplicationReferenceDataSourceInput, opts ...request.Option) (*AddApplicationReferenceDataSourceOutput, error) {
 	req, out := c.AddApplicationReferenceDataSourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opAddApplicationVpcConfiguration = "AddApplicationVpcConfiguration"
+
+// AddApplicationVpcConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the AddApplicationVpcConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AddApplicationVpcConfiguration for more information on using the AddApplicationVpcConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AddApplicationVpcConfigurationRequest method.
+//    req, resp := client.AddApplicationVpcConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/AddApplicationVpcConfiguration
+func (c *KinesisAnalyticsV2) AddApplicationVpcConfigurationRequest(input *AddApplicationVpcConfigurationInput) (req *request.Request, output *AddApplicationVpcConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opAddApplicationVpcConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AddApplicationVpcConfigurationInput{}
+	}
+
+	output = &AddApplicationVpcConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AddApplicationVpcConfiguration API operation for Amazon Kinesis Analytics.
+//
+// Adds a Virtual Private Cloud (VPC) configuration to the application. Applications
+// can use VPCs to store and access resources securely.
+//
+// Note the following about VPC configurations for Kinesis Data Analytics applications:
+//
+//    * VPC configurations are not supported for SQL applications.
+//
+//    * When a VPC is added to a Kinesis Data Analytics application, the application
+//    can no longer be accessed from the Internet directly. To enable Internet
+//    access to the application, add an Internet gateway to your VPC.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Analytics's
+// API operation AddApplicationVpcConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   Specified application can't be found.
+//
+//   * ResourceInUseException
+//   The application is not available for this operation.
+//
+//   * InvalidArgumentException
+//   The specified input parameter value is not valid.
+//
+//   * ConcurrentModificationException
+//   Exception thrown as a result of concurrent modifications to an application.
+//   This error can be the result of attempting to modify an application without
+//   using the current application ID.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/AddApplicationVpcConfiguration
+func (c *KinesisAnalyticsV2) AddApplicationVpcConfiguration(input *AddApplicationVpcConfigurationInput) (*AddApplicationVpcConfigurationOutput, error) {
+	req, out := c.AddApplicationVpcConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// AddApplicationVpcConfigurationWithContext is the same as AddApplicationVpcConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AddApplicationVpcConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisAnalyticsV2) AddApplicationVpcConfigurationWithContext(ctx aws.Context, input *AddApplicationVpcConfigurationInput, opts ...request.Option) (*AddApplicationVpcConfigurationOutput, error) {
+	req, out := c.AddApplicationVpcConfigurationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -563,10 +665,7 @@ func (c *KinesisAnalyticsV2) CreateApplicationRequest(input *CreateApplicationIn
 //
 // Creates an Amazon Kinesis Data Analytics application. For information about
 // creating a Kinesis Data Analytics application, see Creating an Application
-// (https://docs.aws.amazon.com/kinesisanalytics/latest/Java/creating-app.html).
-//
-// SQL is not enabled for this private beta release. Using SQL parameters (such
-// as SqlApplicationConfiguration) will result in an error.
+// (https://docs.aws.amazon.com/kinesisanalytics/latest/java/getting-started.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -575,22 +674,32 @@ func (c *KinesisAnalyticsV2) CreateApplicationRequest(input *CreateApplicationIn
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation CreateApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCodeValidationException "CodeValidationException"
+// Returned Error Types:
+//   * CodeValidationException
 //   The user-provided application code (query) is not valid. This can be a simple
 //   syntax error.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The number of allowed resources has been exceeded.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
+//
+//   * TooManyTagsException
+//   Application created with too many tags, or too many tags added to an application.
+//   Note that the maximum number of application tags includes system tags. The
+//   maximum number of user-defined application tags is 50.
+//
+//   * ConcurrentModificationException
+//   Exception thrown as a result of concurrent modifications to an application.
+//   This error can be the result of attempting to modify an application without
+//   using the current application ID.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/CreateApplication
 func (c *KinesisAnalyticsV2) CreateApplication(input *CreateApplicationInput) (*CreateApplicationOutput, error) {
@@ -668,24 +777,24 @@ func (c *KinesisAnalyticsV2) CreateApplicationSnapshotRequest(input *CreateAppli
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation CreateApplicationSnapshot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The number of allowed resources has been exceeded.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/CreateApplicationSnapshot
@@ -765,23 +874,26 @@ func (c *KinesisAnalyticsV2) DeleteApplicationRequest(input *DeleteApplicationIn
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
+//
+//   * InvalidApplicationConfigurationException
+//   The user-provided application configuration is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplication
 func (c *KinesisAnalyticsV2) DeleteApplication(input *DeleteApplicationInput) (*DeleteApplicationOutput, error) {
@@ -859,23 +971,26 @@ func (c *KinesisAnalyticsV2) DeleteApplicationCloudWatchLoggingOptionRequest(inp
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplicationCloudWatchLoggingOption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
+//
+//   * InvalidApplicationConfigurationException
+//   The user-provided application configuration is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplicationCloudWatchLoggingOption
 func (c *KinesisAnalyticsV2) DeleteApplicationCloudWatchLoggingOption(input *DeleteApplicationCloudWatchLoggingOptionInput) (*DeleteApplicationCloudWatchLoggingOptionOutput, error) {
@@ -952,22 +1067,22 @@ func (c *KinesisAnalyticsV2) DeleteApplicationInputProcessingConfigurationReques
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplicationInputProcessingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplicationInputProcessingConfiguration
@@ -1048,22 +1163,22 @@ func (c *KinesisAnalyticsV2) DeleteApplicationOutputRequest(input *DeleteApplica
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplicationOutput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplicationOutput
@@ -1146,22 +1261,22 @@ func (c *KinesisAnalyticsV2) DeleteApplicationReferenceDataSourceRequest(input *
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplicationReferenceDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplicationReferenceDataSource
@@ -1240,21 +1355,21 @@ func (c *KinesisAnalyticsV2) DeleteApplicationSnapshotRequest(input *DeleteAppli
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplicationSnapshot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplicationSnapshot
@@ -1274,6 +1389,96 @@ func (c *KinesisAnalyticsV2) DeleteApplicationSnapshot(input *DeleteApplicationS
 // for more information on using Contexts.
 func (c *KinesisAnalyticsV2) DeleteApplicationSnapshotWithContext(ctx aws.Context, input *DeleteApplicationSnapshotInput, opts ...request.Option) (*DeleteApplicationSnapshotOutput, error) {
 	req, out := c.DeleteApplicationSnapshotRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteApplicationVpcConfiguration = "DeleteApplicationVpcConfiguration"
+
+// DeleteApplicationVpcConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteApplicationVpcConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteApplicationVpcConfiguration for more information on using the DeleteApplicationVpcConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteApplicationVpcConfigurationRequest method.
+//    req, resp := client.DeleteApplicationVpcConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplicationVpcConfiguration
+func (c *KinesisAnalyticsV2) DeleteApplicationVpcConfigurationRequest(input *DeleteApplicationVpcConfigurationInput) (req *request.Request, output *DeleteApplicationVpcConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteApplicationVpcConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteApplicationVpcConfigurationInput{}
+	}
+
+	output = &DeleteApplicationVpcConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteApplicationVpcConfiguration API operation for Amazon Kinesis Analytics.
+//
+// Removes a VPC configuration from a Kinesis Data Analytics application.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Analytics's
+// API operation DeleteApplicationVpcConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   Specified application can't be found.
+//
+//   * ResourceInUseException
+//   The application is not available for this operation.
+//
+//   * InvalidArgumentException
+//   The specified input parameter value is not valid.
+//
+//   * ConcurrentModificationException
+//   Exception thrown as a result of concurrent modifications to an application.
+//   This error can be the result of attempting to modify an application without
+//   using the current application ID.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplicationVpcConfiguration
+func (c *KinesisAnalyticsV2) DeleteApplicationVpcConfiguration(input *DeleteApplicationVpcConfigurationInput) (*DeleteApplicationVpcConfigurationOutput, error) {
+	req, out := c.DeleteApplicationVpcConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// DeleteApplicationVpcConfigurationWithContext is the same as DeleteApplicationVpcConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteApplicationVpcConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisAnalyticsV2) DeleteApplicationVpcConfigurationWithContext(ctx aws.Context, input *DeleteApplicationVpcConfigurationInput, opts ...request.Option) (*DeleteApplicationVpcConfigurationOutput, error) {
+	req, out := c.DeleteApplicationVpcConfigurationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1335,14 +1540,14 @@ func (c *KinesisAnalyticsV2) DescribeApplicationRequest(input *DescribeApplicati
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DescribeApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DescribeApplication
@@ -1420,14 +1625,14 @@ func (c *KinesisAnalyticsV2) DescribeApplicationSnapshotRequest(input *DescribeA
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DescribeApplicationSnapshot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -1515,24 +1720,24 @@ func (c *KinesisAnalyticsV2) DiscoverInputSchemaRequest(input *DiscoverInputSche
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DiscoverInputSchema for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeUnableToDetectSchemaException "UnableToDetectSchemaException"
+//   * UnableToDetectSchemaException
 //   The data format is not valid. Amazon Kinesis Data Analytics cannot detect
 //   the schema for the given streaming source.
 //
-//   * ErrCodeResourceProvisionedThroughputExceededException "ResourceProvisionedThroughputExceededException"
+//   * ResourceProvisionedThroughputExceededException
 //   Discovery failed to get a record from the streaming source because of the
 //   Amazon Kinesis Streams ProvisionedThroughputExceededException. For more information,
 //   see GetRecords (http://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html)
 //   in the Amazon Kinesis Streams API Reference.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service cannot complete the request.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DiscoverInputSchema
@@ -1610,11 +1815,11 @@ func (c *KinesisAnalyticsV2) ListApplicationSnapshotsRequest(input *ListApplicat
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation ListApplicationSnapshots for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -1697,8 +1902,8 @@ func (c *KinesisAnalyticsV2) ListApplicationsRequest(input *ListApplicationsInpu
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation ListApplications for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/ListApplications
@@ -1718,6 +1923,94 @@ func (c *KinesisAnalyticsV2) ListApplications(input *ListApplicationsInput) (*Li
 // for more information on using Contexts.
 func (c *KinesisAnalyticsV2) ListApplicationsWithContext(ctx aws.Context, input *ListApplicationsInput, opts ...request.Option) (*ListApplicationsOutput, error) {
 	req, out := c.ListApplicationsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/ListTagsForResource
+func (c *KinesisAnalyticsV2) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for Amazon Kinesis Analytics.
+//
+// Retrieves the list of key-value tags assigned to the application. For more
+// information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Analytics's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   Specified application can't be found.
+//
+//   * InvalidArgumentException
+//   The specified input parameter value is not valid.
+//
+//   * ConcurrentModificationException
+//   Exception thrown as a result of concurrent modifications to an application.
+//   This error can be the result of attempting to modify an application without
+//   using the current application ID.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/ListTagsForResource
+func (c *KinesisAnalyticsV2) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisAnalyticsV2) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1771,9 +2064,6 @@ func (c *KinesisAnalyticsV2) StartApplicationRequest(input *StartApplicationInpu
 // Starts the specified Amazon Kinesis Data Analytics application. After creating
 // an application, you must exclusively call this operation to start your application.
 //
-// SQL is not enabled for this private beta. Using SQL parameters (such as RunConfiguration$SqlRunConfigurations)
-// will result in an error.
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1781,20 +2071,20 @@ func (c *KinesisAnalyticsV2) StartApplicationRequest(input *StartApplicationInpu
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation StartApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeInvalidApplicationConfigurationException "InvalidApplicationConfigurationException"
+//   * InvalidApplicationConfigurationException
 //   The user-provided application configuration is not valid.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/StartApplication
@@ -1875,18 +2165,21 @@ func (c *KinesisAnalyticsV2) StopApplicationRequest(input *StopApplicationInput)
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation StopApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
+//
+//   * InvalidApplicationConfigurationException
+//   The user-provided application configuration is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/StopApplication
 func (c *KinesisAnalyticsV2) StopApplication(input *StopApplicationInput) (*StopApplicationOutput, error) {
@@ -1905,6 +2198,202 @@ func (c *KinesisAnalyticsV2) StopApplication(input *StopApplicationInput) (*Stop
 // for more information on using Contexts.
 func (c *KinesisAnalyticsV2) StopApplicationWithContext(ctx aws.Context, input *StopApplicationInput, opts ...request.Option) (*StopApplicationOutput, error) {
 	req, out := c.StopApplicationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/TagResource
+func (c *KinesisAnalyticsV2) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for Amazon Kinesis Analytics.
+//
+// Adds one or more key-value tags to a Kinesis Analytics application. Note
+// that the maximum number of application tags includes system tags. The maximum
+// number of user-defined application tags is 50. For more information, see
+// Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Analytics's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   Specified application can't be found.
+//
+//   * ResourceInUseException
+//   The application is not available for this operation.
+//
+//   * TooManyTagsException
+//   Application created with too many tags, or too many tags added to an application.
+//   Note that the maximum number of application tags includes system tags. The
+//   maximum number of user-defined application tags is 50.
+//
+//   * InvalidArgumentException
+//   The specified input parameter value is not valid.
+//
+//   * ConcurrentModificationException
+//   Exception thrown as a result of concurrent modifications to an application.
+//   This error can be the result of attempting to modify an application without
+//   using the current application ID.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/TagResource
+func (c *KinesisAnalyticsV2) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisAnalyticsV2) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/UntagResource
+func (c *KinesisAnalyticsV2) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for Amazon Kinesis Analytics.
+//
+// Removes one or more tags from a Kinesis Analytics application. For more information,
+// see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Analytics's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   Specified application can't be found.
+//
+//   * ResourceInUseException
+//   The application is not available for this operation.
+//
+//   * TooManyTagsException
+//   Application created with too many tags, or too many tags added to an application.
+//   Note that the maximum number of application tags includes system tags. The
+//   maximum number of user-defined application tags is 50.
+//
+//   * InvalidArgumentException
+//   The specified input parameter value is not valid.
+//
+//   * ConcurrentModificationException
+//   Exception thrown as a result of concurrent modifications to an application.
+//   This error can be the result of attempting to modify an application without
+//   using the current application ID.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/UntagResource
+func (c *KinesisAnalyticsV2) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisAnalyticsV2) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1961,9 +2450,6 @@ func (c *KinesisAnalyticsV2) UpdateApplicationRequest(input *UpdateApplicationIn
 // Kinesis Data Analytics updates the ApplicationVersionId each time you update
 // your application.
 //
-// SQL is not enabled for this private beta. Using SQL parameters (such as SqlApplicationConfigurationUpdate)
-// will result in an error.
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1971,27 +2457,30 @@ func (c *KinesisAnalyticsV2) UpdateApplicationRequest(input *UpdateApplicationIn
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation UpdateApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCodeValidationException "CodeValidationException"
+// Returned Error Types:
+//   * CodeValidationException
 //   The user-provided application code (query) is not valid. This can be a simple
 //   syntax error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The specified input parameter value is not valid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request JSON is not valid for the operation.
+//
+//   * InvalidApplicationConfigurationException
+//   The user-provided application configuration is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/UpdateApplication
 func (c *KinesisAnalyticsV2) UpdateApplication(input *UpdateApplicationInput) (*UpdateApplicationOutput, error) {
@@ -2505,7 +2994,7 @@ type AddApplicationOutputOutput struct {
 	ApplicationVersionId *int64 `min:"1" type:"long"`
 
 	// Describes the application output configuration. For more information, see
-	// Configuring Application Output (http://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-it-works-output.html).
+	// Configuring Application Output (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-it-works-output.html).
 	OutputDescriptions []*OutputDescription `type:"list"`
 }
 
@@ -2659,6 +3148,128 @@ func (s *AddApplicationReferenceDataSourceOutput) SetApplicationVersionId(v int6
 // SetReferenceDataSourceDescriptions sets the ReferenceDataSourceDescriptions field's value.
 func (s *AddApplicationReferenceDataSourceOutput) SetReferenceDataSourceDescriptions(v []*ReferenceDataSourceDescription) *AddApplicationReferenceDataSourceOutput {
 	s.ReferenceDataSourceDescriptions = v
+	return s
+}
+
+type AddApplicationVpcConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an existing application.
+	//
+	// ApplicationName is a required field
+	ApplicationName *string `min:"1" type:"string" required:"true"`
+
+	// The version of the application to which you want to add the input processing
+	// configuration. You can use the DescribeApplication operation to get the current
+	// application version. If the version specified is not the current version,
+	// the ConcurrentModificationException is returned.
+	//
+	// CurrentApplicationVersionId is a required field
+	CurrentApplicationVersionId *int64 `min:"1" type:"long" required:"true"`
+
+	// Description of the VPC to add to the application.
+	//
+	// VpcConfiguration is a required field
+	VpcConfiguration *VpcConfiguration `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s AddApplicationVpcConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AddApplicationVpcConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AddApplicationVpcConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AddApplicationVpcConfigurationInput"}
+	if s.ApplicationName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationName"))
+	}
+	if s.ApplicationName != nil && len(*s.ApplicationName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationName", 1))
+	}
+	if s.CurrentApplicationVersionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentApplicationVersionId"))
+	}
+	if s.CurrentApplicationVersionId != nil && *s.CurrentApplicationVersionId < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CurrentApplicationVersionId", 1))
+	}
+	if s.VpcConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpcConfiguration"))
+	}
+	if s.VpcConfiguration != nil {
+		if err := s.VpcConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("VpcConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplicationName sets the ApplicationName field's value.
+func (s *AddApplicationVpcConfigurationInput) SetApplicationName(v string) *AddApplicationVpcConfigurationInput {
+	s.ApplicationName = &v
+	return s
+}
+
+// SetCurrentApplicationVersionId sets the CurrentApplicationVersionId field's value.
+func (s *AddApplicationVpcConfigurationInput) SetCurrentApplicationVersionId(v int64) *AddApplicationVpcConfigurationInput {
+	s.CurrentApplicationVersionId = &v
+	return s
+}
+
+// SetVpcConfiguration sets the VpcConfiguration field's value.
+func (s *AddApplicationVpcConfigurationInput) SetVpcConfiguration(v *VpcConfiguration) *AddApplicationVpcConfigurationInput {
+	s.VpcConfiguration = v
+	return s
+}
+
+type AddApplicationVpcConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the application.
+	ApplicationARN *string `min:"1" type:"string"`
+
+	// Provides the current application version. Kinesis Data Analytics updates
+	// the ApplicationVersionId each time you update the application.
+	ApplicationVersionId *int64 `min:"1" type:"long"`
+
+	// The parameters of the new VPC configuration.
+	VpcConfigurationDescription *VpcConfigurationDescription `type:"structure"`
+}
+
+// String returns the string representation
+func (s AddApplicationVpcConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AddApplicationVpcConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetApplicationARN sets the ApplicationARN field's value.
+func (s *AddApplicationVpcConfigurationOutput) SetApplicationARN(v string) *AddApplicationVpcConfigurationOutput {
+	s.ApplicationARN = &v
+	return s
+}
+
+// SetApplicationVersionId sets the ApplicationVersionId field's value.
+func (s *AddApplicationVpcConfigurationOutput) SetApplicationVersionId(v int64) *AddApplicationVpcConfigurationOutput {
+	s.ApplicationVersionId = &v
+	return s
+}
+
+// SetVpcConfigurationDescription sets the VpcConfigurationDescription field's value.
+func (s *AddApplicationVpcConfigurationOutput) SetVpcConfigurationDescription(v *VpcConfigurationDescription) *AddApplicationVpcConfigurationOutput {
+	s.VpcConfigurationDescription = v
 	return s
 }
 
@@ -2822,6 +3433,9 @@ type ApplicationConfiguration struct {
 	// The creation and update parameters for an SQL-based Kinesis Data Analytics
 	// application.
 	SqlApplicationConfiguration *SqlApplicationConfiguration `type:"structure"`
+
+	// The array of descriptions of VPC configurations available to the application.
+	VpcConfigurations []*VpcConfiguration `type:"list"`
 }
 
 // String returns the string representation
@@ -2865,6 +3479,16 @@ func (s *ApplicationConfiguration) Validate() error {
 			invalidParams.AddNested("SqlApplicationConfiguration", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.VpcConfigurations != nil {
+		for i, v := range s.VpcConfigurations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "VpcConfigurations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2902,6 +3526,12 @@ func (s *ApplicationConfiguration) SetSqlApplicationConfiguration(v *SqlApplicat
 	return s
 }
 
+// SetVpcConfigurations sets the VpcConfigurations field's value.
+func (s *ApplicationConfiguration) SetVpcConfigurations(v []*VpcConfiguration) *ApplicationConfiguration {
+	s.VpcConfigurations = v
+	return s
+}
+
 // Describes details about the application code and starting parameters for
 // an Amazon Kinesis Data Analytics application.
 type ApplicationConfigurationDescription struct {
@@ -2927,6 +3557,9 @@ type ApplicationConfigurationDescription struct {
 	// The details about inputs, outputs, and reference data sources for an SQL-based
 	// Kinesis Data Analytics application.
 	SqlApplicationConfigurationDescription *SqlApplicationConfigurationDescription `type:"structure"`
+
+	// The array of descriptions of VPC configurations available to the application.
+	VpcConfigurationDescriptions []*VpcConfigurationDescription `type:"list"`
 }
 
 // String returns the string representation
@@ -2975,6 +3608,12 @@ func (s *ApplicationConfigurationDescription) SetSqlApplicationConfigurationDesc
 	return s
 }
 
+// SetVpcConfigurationDescriptions sets the VpcConfigurationDescriptions field's value.
+func (s *ApplicationConfigurationDescription) SetVpcConfigurationDescriptions(v []*VpcConfigurationDescription) *ApplicationConfigurationDescription {
+	s.VpcConfigurationDescriptions = v
+	return s
+}
+
 // Describes updates to an application's configuration.
 type ApplicationConfigurationUpdate struct {
 	_ struct{} `type:"structure"`
@@ -2996,6 +3635,10 @@ type ApplicationConfigurationUpdate struct {
 
 	// Describes updates to an SQL-based Kinesis Data Analytics application's configuration.
 	SqlApplicationConfigurationUpdate *SqlApplicationConfigurationUpdate `type:"structure"`
+
+	// Updates to the array of descriptions of VPC configurations available to the
+	// application.
+	VpcConfigurationUpdates []*VpcConfigurationUpdate `type:"list"`
 }
 
 // String returns the string representation
@@ -3036,6 +3679,16 @@ func (s *ApplicationConfigurationUpdate) Validate() error {
 			invalidParams.AddNested("SqlApplicationConfigurationUpdate", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.VpcConfigurationUpdates != nil {
+		for i, v := range s.VpcConfigurationUpdates {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "VpcConfigurationUpdates", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3070,6 +3723,12 @@ func (s *ApplicationConfigurationUpdate) SetFlinkApplicationConfigurationUpdate(
 // SetSqlApplicationConfigurationUpdate sets the SqlApplicationConfigurationUpdate field's value.
 func (s *ApplicationConfigurationUpdate) SetSqlApplicationConfigurationUpdate(v *SqlApplicationConfigurationUpdate) *ApplicationConfigurationUpdate {
 	s.SqlApplicationConfigurationUpdate = v
+	return s
+}
+
+// SetVpcConfigurationUpdates sets the VpcConfigurationUpdates field's value.
+func (s *ApplicationConfigurationUpdate) SetVpcConfigurationUpdates(v []*VpcConfigurationUpdate) *ApplicationConfigurationUpdate {
+	s.VpcConfigurationUpdates = v
 	return s
 }
 
@@ -3114,7 +3773,7 @@ type ApplicationDetail struct {
 	// The current timestamp when the application was last updated.
 	LastUpdateTimestamp *time.Time `type:"timestamp"`
 
-	// The runtime environment for the application (SQL-1.0 or JAVA-8-FLINK-1.5).
+	// The runtime environment for the application (SQL-1.0 or FLINK-1_6).
 	//
 	// RuntimeEnvironment is a required field
 	RuntimeEnvironment *string `type:"string" required:"true" enum:"RuntimeEnvironment"`
@@ -3388,7 +4047,7 @@ type ApplicationSummary struct {
 	// ApplicationVersionId is a required field
 	ApplicationVersionId *int64 `min:"1" type:"long" required:"true"`
 
-	// The runtime environment for the application (SQL-1.0 or JAVA-8-FLINK-1.5).
+	// The runtime environment for the application (SQL-1.0 or FLINK-1_6).
 	//
 	// RuntimeEnvironment is a required field
 	RuntimeEnvironment *string `type:"string" required:"true" enum:"RuntimeEnvironment"`
@@ -3504,20 +4163,39 @@ func (s *CSVMappingParameters) SetRecordRowDelimiter(v string) *CSVMappingParame
 
 // Describes an application's checkpointing configuration. Checkpointing is
 // the process of persisting application state for fault tolerance. For more
-// information, see  Checkpoints for Fault Tolerance (https://ci.apache.org/projects/flink/flink-docs-release-1.6/concepts/programming-model.html#checkpoints-for-fault-tolerance)
+// information, see Checkpoints for Fault Tolerance (https://ci.apache.org/projects/flink/flink-docs-release-1.6/concepts/programming-model.html#checkpoints-for-fault-tolerance)
 // in the Apache Flink Documentation (https://ci.apache.org/projects/flink/flink-docs-release-1.6/).
 type CheckpointConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Describes the interval in milliseconds between checkpoint operations.
-	CheckpointInterval *int64 `type:"long"`
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointInterval vaue of 60000, even if this value is set to
+	// another value using this API or in application code.
+	CheckpointInterval *int64 `min:"1" type:"long"`
 
 	// Describes whether checkpointing is enabled for a Java-based Kinesis Data
 	// Analytics application.
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointingEnabled value of true, even if this value is set
+	// to another value using this API or in application code.
 	CheckpointingEnabled *bool `type:"boolean"`
 
 	// Describes whether the application uses Amazon Kinesis Data Analytics' default
-	// checkpointing behavior.
+	// checkpointing behavior. You must set this property to CUSTOM in order to
+	// set the CheckpointingEnabled, CheckpointInterval, or MinPauseBetweenCheckpoints
+	// parameters.
+	//
+	// If this value is set to DEFAULT, the application will use the following values,
+	// even if they are set to other values using APIs or application code:
+	//
+	//    * CheckpointingEnabled: true
+	//
+	//    * CheckpointInterval: 60000
+	//
+	//    * MinPauseBetweenCheckpoints: 5000
 	//
 	// ConfigurationType is a required field
 	ConfigurationType *string `type:"string" required:"true" enum:"ConfigurationType"`
@@ -3525,8 +4203,12 @@ type CheckpointConfiguration struct {
 	// Describes the minimum time in milliseconds after a checkpoint operation completes
 	// that a new checkpoint operation can start. If a checkpoint operation takes
 	// longer than the CheckpointInterval, the application otherwise performs continual
-	// checkpoint operations. For more information, see  Tuning Checkpointing (https://ci.apache.org/projects/flink/flink-docs-stable/ops/state/large_state_tuning.html#tuning-checkpointing)
+	// checkpoint operations. For more information, see Tuning Checkpointing (https://ci.apache.org/projects/flink/flink-docs-stable/ops/state/large_state_tuning.html#tuning-checkpointing)
 	// in the Apache Flink Documentation (https://ci.apache.org/projects/flink/flink-docs-release-1.6/).
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a MinPauseBetweenCheckpoints value of 5000, even if this value is
+	// set using this API or in application code.
 	MinPauseBetweenCheckpoints *int64 `type:"long"`
 }
 
@@ -3543,6 +4225,9 @@ func (s CheckpointConfiguration) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CheckpointConfiguration) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CheckpointConfiguration"}
+	if s.CheckpointInterval != nil && *s.CheckpointInterval < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CheckpointInterval", 1))
+	}
 	if s.ConfigurationType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ConfigurationType"))
 	}
@@ -3583,18 +4268,39 @@ type CheckpointConfigurationDescription struct {
 	_ struct{} `type:"structure"`
 
 	// Describes the interval in milliseconds between checkpoint operations.
-	CheckpointInterval *int64 `type:"long"`
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointInterval vaue of 60000, even if this value is set to
+	// another value using this API or in application code.
+	CheckpointInterval *int64 `min:"1" type:"long"`
 
 	// Describes whether checkpointing is enabled for a Java-based Kinesis Data
 	// Analytics application.
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointingEnabled value of true, even if this value is set
+	// to another value using this API or in application code.
 	CheckpointingEnabled *bool `type:"boolean"`
 
 	// Describes whether the application uses the default checkpointing behavior
 	// in Kinesis Data Analytics.
+	//
+	// If this value is set to DEFAULT, the application will use the following values,
+	// even if they are set to other values using APIs or application code:
+	//
+	//    * CheckpointingEnabled: true
+	//
+	//    * CheckpointInterval: 60000
+	//
+	//    * MinPauseBetweenCheckpoints: 5000
 	ConfigurationType *string `type:"string" enum:"ConfigurationType"`
 
 	// Describes the minimum time in milliseconds after a checkpoint operation completes
 	// that a new checkpoint operation can start.
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a MinPauseBetweenCheckpoints value of 5000, even if this value is
+	// set using this API or in application code.
 	MinPauseBetweenCheckpoints *int64 `type:"long"`
 }
 
@@ -3638,17 +4344,40 @@ type CheckpointConfigurationUpdate struct {
 	_ struct{} `type:"structure"`
 
 	// Describes updates to the interval in milliseconds between checkpoint operations.
-	CheckpointIntervalUpdate *int64 `type:"long"`
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointInterval vaue of 60000, even if this value is set to
+	// another value using this API or in application code.
+	CheckpointIntervalUpdate *int64 `min:"1" type:"long"`
 
 	// Describes updates to whether checkpointing is enabled for an application.
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointingEnabled value of true, even if this value is set
+	// to another value using this API or in application code.
 	CheckpointingEnabledUpdate *bool `type:"boolean"`
 
 	// Describes updates to whether the application uses the default checkpointing
-	// behavior of Kinesis Data Analytics.
+	// behavior of Kinesis Data Analytics. You must set this property to CUSTOM
+	// in order to set the CheckpointingEnabled, CheckpointInterval, or MinPauseBetweenCheckpoints
+	// parameters.
+	//
+	// If this value is set to DEFAULT, the application will use the following values,
+	// even if they are set to other values using APIs or application code:
+	//
+	//    * CheckpointingEnabled: true
+	//
+	//    * CheckpointInterval: 60000
+	//
+	//    * MinPauseBetweenCheckpoints: 5000
 	ConfigurationTypeUpdate *string `type:"string" enum:"ConfigurationType"`
 
 	// Describes updates to the minimum time in milliseconds after a checkpoint
 	// operation completes that a new checkpoint operation can start.
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a MinPauseBetweenCheckpoints value of 5000, even if this value is
+	// set using this API or in application code.
 	MinPauseBetweenCheckpointsUpdate *int64 `type:"long"`
 }
 
@@ -3660,6 +4389,19 @@ func (s CheckpointConfigurationUpdate) String() string {
 // GoString returns the string representation
 func (s CheckpointConfigurationUpdate) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CheckpointConfigurationUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CheckpointConfigurationUpdate"}
+	if s.CheckpointIntervalUpdate != nil && *s.CheckpointIntervalUpdate < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CheckpointIntervalUpdate", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCheckpointIntervalUpdate sets the CheckpointIntervalUpdate field's value.
@@ -4006,6 +4748,121 @@ func (s *CodeContentUpdate) SetZipFileContentUpdate(v []byte) *CodeContentUpdate
 	return s
 }
 
+// The user-provided application code (query) is not valid. This can be a simple
+// syntax error.
+type CodeValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CodeValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CodeValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorCodeValidationException(v protocol.ResponseMetadata) error {
+	return &CodeValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CodeValidationException) Code() string {
+	return "CodeValidationException"
+}
+
+// Message returns the exception's message.
+func (s CodeValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CodeValidationException) OrigErr() error {
+	return nil
+}
+
+func (s CodeValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CodeValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CodeValidationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Exception thrown as a result of concurrent modifications to an application.
+// This error can be the result of attempting to modify an application without
+// using the current application ID.
+type ConcurrentModificationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConcurrentModificationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentModificationException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentModificationException(v protocol.ResponseMetadata) error {
+	return &ConcurrentModificationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConcurrentModificationException) Code() string {
+	return "ConcurrentModificationException"
+}
+
+// Message returns the exception's message.
+func (s ConcurrentModificationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConcurrentModificationException) OrigErr() error {
+	return nil
+}
+
+func (s ConcurrentModificationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConcurrentModificationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConcurrentModificationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type CreateApplicationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4024,7 +4881,7 @@ type CreateApplicationInput struct {
 	// application configuration errors.
 	CloudWatchLoggingOptions []*CloudWatchLoggingOption `type:"list"`
 
-	// The runtime environment for the application (SQL-1.0 or JAVA-8-FLINK-1.5).
+	// The runtime environment for the application (SQL-1.0 or FLINK-1_6).
 	//
 	// RuntimeEnvironment is a required field
 	RuntimeEnvironment *string `type:"string" required:"true" enum:"RuntimeEnvironment"`
@@ -4034,6 +4891,12 @@ type CreateApplicationInput struct {
 	//
 	// ServiceExecutionRole is a required field
 	ServiceExecutionRole *string `min:"1" type:"string" required:"true"`
+
+	// A list of one or more tags to assign to the application. A tag is a key-value
+	// pair that identifies an application. Note that the maximum number of application
+	// tags includes system tags. The maximum number of user-defined application
+	// tags is 50. For more information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html).
+	Tags []*Tag `min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -4064,6 +4927,9 @@ func (s *CreateApplicationInput) Validate() error {
 	if s.ServiceExecutionRole != nil && len(*s.ServiceExecutionRole) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ServiceExecutionRole", 1))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
 	if s.ApplicationConfiguration != nil {
 		if err := s.ApplicationConfiguration.Validate(); err != nil {
 			invalidParams.AddNested("ApplicationConfiguration", err.(request.ErrInvalidParams))
@@ -4076,6 +4942,16 @@ func (s *CreateApplicationInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "CloudWatchLoggingOptions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -4119,6 +4995,12 @@ func (s *CreateApplicationInput) SetRuntimeEnvironment(v string) *CreateApplicat
 // SetServiceExecutionRole sets the ServiceExecutionRole field's value.
 func (s *CreateApplicationInput) SetServiceExecutionRole(v string) *CreateApplicationInput {
 	s.ServiceExecutionRole = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateApplicationInput) SetTags(v []*Tag) *CreateApplicationInput {
+	s.Tags = v
 	return s
 }
 
@@ -4833,6 +5715,114 @@ func (s DeleteApplicationSnapshotOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteApplicationVpcConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an existing application.
+	//
+	// ApplicationName is a required field
+	ApplicationName *string `min:"1" type:"string" required:"true"`
+
+	// The current application version ID. You can retrieve the application version
+	// ID using DescribeApplication.
+	//
+	// CurrentApplicationVersionId is a required field
+	CurrentApplicationVersionId *int64 `min:"1" type:"long" required:"true"`
+
+	// The ID of the VPC configuration to delete.
+	//
+	// VpcConfigurationId is a required field
+	VpcConfigurationId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteApplicationVpcConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteApplicationVpcConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteApplicationVpcConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteApplicationVpcConfigurationInput"}
+	if s.ApplicationName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationName"))
+	}
+	if s.ApplicationName != nil && len(*s.ApplicationName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationName", 1))
+	}
+	if s.CurrentApplicationVersionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentApplicationVersionId"))
+	}
+	if s.CurrentApplicationVersionId != nil && *s.CurrentApplicationVersionId < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CurrentApplicationVersionId", 1))
+	}
+	if s.VpcConfigurationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpcConfigurationId"))
+	}
+	if s.VpcConfigurationId != nil && len(*s.VpcConfigurationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcConfigurationId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplicationName sets the ApplicationName field's value.
+func (s *DeleteApplicationVpcConfigurationInput) SetApplicationName(v string) *DeleteApplicationVpcConfigurationInput {
+	s.ApplicationName = &v
+	return s
+}
+
+// SetCurrentApplicationVersionId sets the CurrentApplicationVersionId field's value.
+func (s *DeleteApplicationVpcConfigurationInput) SetCurrentApplicationVersionId(v int64) *DeleteApplicationVpcConfigurationInput {
+	s.CurrentApplicationVersionId = &v
+	return s
+}
+
+// SetVpcConfigurationId sets the VpcConfigurationId field's value.
+func (s *DeleteApplicationVpcConfigurationInput) SetVpcConfigurationId(v string) *DeleteApplicationVpcConfigurationInput {
+	s.VpcConfigurationId = &v
+	return s
+}
+
+type DeleteApplicationVpcConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the Kinesis Data Analytics application.
+	ApplicationARN *string `min:"1" type:"string"`
+
+	// The updated version ID of the application.
+	ApplicationVersionId *int64 `min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s DeleteApplicationVpcConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteApplicationVpcConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetApplicationARN sets the ApplicationARN field's value.
+func (s *DeleteApplicationVpcConfigurationOutput) SetApplicationARN(v string) *DeleteApplicationVpcConfigurationOutput {
+	s.ApplicationARN = &v
+	return s
+}
+
+// SetApplicationVersionId sets the ApplicationVersionId field's value.
+func (s *DeleteApplicationVpcConfigurationOutput) SetApplicationVersionId(v int64) *DeleteApplicationVpcConfigurationOutput {
+	s.ApplicationVersionId = &v
+	return s
+}
+
 type DescribeApplicationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4918,8 +5908,7 @@ type DescribeApplicationSnapshotInput struct {
 	// ApplicationName is a required field
 	ApplicationName *string `min:"1" type:"string" required:"true"`
 
-	// The identifier of an application snapshot. You can retrieve this value using
-	// .
+	// The identifier of an application snapshot. You can retrieve this value using .
 	//
 	// SnapshotName is a required field
 	SnapshotName *string `min:"1" type:"string" required:"true"`
@@ -5311,7 +6300,7 @@ type FlinkApplicationConfiguration struct {
 
 	// Describes an application's checkpointing configuration. Checkpointing is
 	// the process of persisting application state for fault tolerance. For more
-	// information, see  Checkpoints for Fault Tolerance (https://ci.apache.org/projects/flink/flink-docs-release-1.6/concepts/programming-model.html#checkpoints-for-fault-tolerance)
+	// information, see Checkpoints for Fault Tolerance (https://ci.apache.org/projects/flink/flink-docs-release-1.6/concepts/programming-model.html#checkpoints-for-fault-tolerance)
 	// in the Apache Flink Documentation (https://ci.apache.org/projects/flink/flink-docs-release-1.6/).
 	CheckpointConfiguration *CheckpointConfiguration `type:"structure"`
 
@@ -5463,6 +6452,11 @@ func (s FlinkApplicationConfigurationUpdate) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *FlinkApplicationConfigurationUpdate) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "FlinkApplicationConfigurationUpdate"}
+	if s.CheckpointConfigurationUpdate != nil {
+		if err := s.CheckpointConfigurationUpdate.Validate(); err != nil {
+			invalidParams.AddNested("CheckpointConfigurationUpdate", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.ParallelismConfigurationUpdate != nil {
 		if err := s.ParallelismConfigurationUpdate.Validate(); err != nil {
 			invalidParams.AddNested("ParallelismConfigurationUpdate", err.(request.ErrInvalidParams))
@@ -5490,6 +6484,36 @@ func (s *FlinkApplicationConfigurationUpdate) SetMonitoringConfigurationUpdate(v
 // SetParallelismConfigurationUpdate sets the ParallelismConfigurationUpdate field's value.
 func (s *FlinkApplicationConfigurationUpdate) SetParallelismConfigurationUpdate(v *ParallelismConfigurationUpdate) *FlinkApplicationConfigurationUpdate {
 	s.ParallelismConfigurationUpdate = v
+	return s
+}
+
+// Describes the starting parameters for an Apache Flink-based Kinesis Data
+// Analytics application.
+type FlinkRunConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// When restoring from a savepoint, specifies whether the runtime is allowed
+	// to skip a state that cannot be mapped to the new program. This will happen
+	// if the program is updated between savepoints to remove stateful parameters,
+	// and state data in the savepoint no longer corresponds to valid application
+	// data. For more information, see Allowing Non-Restored State (https://ci.apache.org/projects/flink/flink-docs-release-1.8/ops/state/savepoints.html#allowing-non-restored-state)
+	// in the Apache Flink documentation (https://ci.apache.org/projects/flink/flink-docs-release-1.8/).
+	AllowNonRestoredState *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s FlinkRunConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FlinkRunConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetAllowNonRestoredState sets the AllowNonRestoredState field's value.
+func (s *FlinkRunConfiguration) SetAllowNonRestoredState(v bool) *FlinkRunConfiguration {
+	s.AllowNonRestoredState = &v
 	return s
 }
 
@@ -5738,6 +6762,10 @@ type InputLambdaProcessor struct {
 
 	// The ARN of the AWS Lambda function that operates on records in the stream.
 	//
+	// To specify an earlier version of the Lambda function than the latest, include
+	// the Lambda function version in the Lambda function ARN. For more information
+	// about Lambda ARNs, see Example ARNs: AWS Lambda (/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-lambda)
+	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
 }
@@ -5783,6 +6811,10 @@ type InputLambdaProcessorDescription struct {
 	// The ARN of the AWS Lambda function that is used to preprocess the records
 	// in the stream.
 	//
+	// To specify an earlier version of the Lambda function than the latest, include
+	// the Lambda function version in the Lambda function ARN. For more information
+	// about Lambda ARNs, see Example ARNs: AWS Lambda (/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-lambda)
+	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
 
@@ -5824,6 +6856,10 @@ type InputLambdaProcessorUpdate struct {
 
 	// The Amazon Resource Name (ARN) of the new AWS Lambda function that is used
 	// to preprocess the records in the stream.
+	//
+	// To specify an earlier version of the Lambda function than the latest, include
+	// the Lambda function version in the Lambda function ARN. For more information
+	// about Lambda ARNs, see Example ARNs: AWS Lambda (/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-lambda)
 	//
 	// ResourceARNUpdate is a required field
 	ResourceARNUpdate *string `min:"1" type:"string" required:"true"`
@@ -6299,6 +7335,174 @@ func (s *InputUpdate) SetKinesisStreamsInputUpdate(v *KinesisStreamsInputUpdate)
 func (s *InputUpdate) SetNamePrefixUpdate(v string) *InputUpdate {
 	s.NamePrefixUpdate = &v
 	return s
+}
+
+// The user-provided application configuration is not valid.
+type InvalidApplicationConfigurationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidApplicationConfigurationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidApplicationConfigurationException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidApplicationConfigurationException(v protocol.ResponseMetadata) error {
+	return &InvalidApplicationConfigurationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidApplicationConfigurationException) Code() string {
+	return "InvalidApplicationConfigurationException"
+}
+
+// Message returns the exception's message.
+func (s InvalidApplicationConfigurationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidApplicationConfigurationException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidApplicationConfigurationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidApplicationConfigurationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidApplicationConfigurationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified input parameter value is not valid.
+type InvalidArgumentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidArgumentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidArgumentException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidArgumentException(v protocol.ResponseMetadata) error {
+	return &InvalidArgumentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidArgumentException) Code() string {
+	return "InvalidArgumentException"
+}
+
+// Message returns the exception's message.
+func (s InvalidArgumentException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidArgumentException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidArgumentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidArgumentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidArgumentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The request JSON is not valid for the operation.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // For an SQL-based Amazon Kinesis Data Analytics application, provides additional
@@ -6871,6 +8075,10 @@ type LambdaOutput struct {
 	// The Amazon Resource Name (ARN) of the destination Lambda function to write
 	// to.
 	//
+	// To specify an earlier version of the Lambda function than the latest, include
+	// the Lambda function version in the Lambda function ARN. For more information
+	// about Lambda ARNs, see Example ARNs: AWS Lambda (/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-lambda)
+	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
 }
@@ -6956,6 +8164,10 @@ type LambdaOutputUpdate struct {
 
 	// The Amazon Resource Name (ARN) of the destination AWS Lambda function.
 	//
+	// To specify an earlier version of the Lambda function than the latest, include
+	// the Lambda function version in the Lambda function ARN. For more information
+	// about Lambda ARNs, see Example ARNs: AWS Lambda (/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-lambda)
+	//
 	// ResourceARNUpdate is a required field
 	ResourceARNUpdate *string `min:"1" type:"string" required:"true"`
 }
@@ -6990,6 +8202,62 @@ func (s *LambdaOutputUpdate) Validate() error {
 func (s *LambdaOutputUpdate) SetResourceARNUpdate(v string) *LambdaOutputUpdate {
 	s.ResourceARNUpdate = &v
 	return s
+}
+
+// The number of allowed resources has been exceeded.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListApplicationSnapshotsInput struct {
@@ -7180,6 +8448,70 @@ func (s *ListApplicationsOutput) SetNextToken(v string) *ListApplicationsOutput 
 	return s
 }
 
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the application for which to retrieve tags.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *ListTagsForResourceInput) SetResourceARN(v string) *ListTagsForResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The key-value tags assigned to the application.
+	Tags []*Tag `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput {
+	s.Tags = v
+	return s
+}
+
 // When you configure an SQL-based Amazon Kinesis Data Analytics application's
 // input at the time of creating or updating an application, provides additional
 // mapping information specific to the record format (such as JSON, CSV, or
@@ -7240,12 +8572,13 @@ func (s *MappingParameters) SetJSONMappingParameters(v *JSONMappingParameters) *
 
 // Describes configuration parameters for Amazon CloudWatch logging for a Java-based
 // Kinesis Data Analytics application. For more information about CloudWatch
-// logging, see Monitoring (https://docs.aws.amazon.com/kinesisanalytics/latest/Java/monitoring-overview.html).
+// logging, see Monitoring (https://docs.aws.amazon.com/kinesisanalytics/latest/java/monitoring-overview.html).
 type MonitoringConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Describes whether to use the default CloudWatch logging configuration for
-	// an application.
+	// an application. You must set this property to CUSTOM in order to set the
+	// LogLevel or MetricsLevel parameters.
 	//
 	// ConfigurationType is a required field
 	ConfigurationType *string `type:"string" required:"true" enum:"ConfigurationType"`
@@ -7348,7 +8681,8 @@ type MonitoringConfigurationUpdate struct {
 	_ struct{} `type:"structure"`
 
 	// Describes updates to whether to use the default CloudWatch logging configuration
-	// for an application.
+	// for an application. You must set this property to CUSTOM in order to set
+	// the LogLevel or MetricsLevel parameters.
 	ConfigurationTypeUpdate *string `type:"string" enum:"ConfigurationType"`
 
 	// Describes updates to the verbosity of the CloudWatch Logs for an application.
@@ -7692,15 +9026,22 @@ type ParallelismConfiguration struct {
 	AutoScalingEnabled *bool `type:"boolean"`
 
 	// Describes whether the application uses the default parallelism for the Kinesis
-	// Data Analytics service.
+	// Data Analytics service. You must set this property to CUSTOM in order to
+	// change your application's AutoScalingEnabled, Parallelism, or ParallelismPerKPU
+	// properties.
 	//
 	// ConfigurationType is a required field
 	ConfigurationType *string `type:"string" required:"true" enum:"ConfigurationType"`
 
 	// Describes the initial number of parallel tasks that a Java-based Kinesis
-	// Data Analytics application can perform. The Kinesis Data Analytics service
-	// can increase this number automatically if ParallelismConfiguration$AutoScalingEnabled
-	// is set to true.
+	// Data Analytics application can perform. If AutoScalingEnabled is set to True,
+	// Kinesis Data Analytics increases the CurrentParallelism value in response
+	// to application load. The service can increase the CurrentParallelism value
+	// up to the maximum parallelism, which is ParalellismPerKPU times the maximum
+	// KPUs for the application. The maximum KPUs for an application is 32 by default,
+	// and can be increased by requesting a limit increase. If application load
+	// is reduced, the service can reduce the CurrentParallelism value down to the
+	// Parallelism setting.
 	Parallelism *int64 `min:"1" type:"integer"`
 
 	// Describes the number of parallel tasks that a Java-based Kinesis Data Analytics
@@ -7777,11 +9118,24 @@ type ParallelismConfigurationDescription struct {
 	ConfigurationType *string `type:"string" enum:"ConfigurationType"`
 
 	// Describes the current number of parallel tasks that a Java-based Kinesis
-	// Data Analytics application can perform.
+	// Data Analytics application can perform. If AutoScalingEnabled is set to True,
+	// Kinesis Data Analytics can increase this value in response to application
+	// load. The service can increase this value up to the maximum parallelism,
+	// which is ParalellismPerKPU times the maximum KPUs for the application. The
+	// maximum KPUs for an application is 32 by default, and can be increased by
+	// requesting a limit increase. If application load is reduced, the service
+	// can reduce the CurrentParallelism value down to the Parallelism setting.
 	CurrentParallelism *int64 `min:"1" type:"integer"`
 
 	// Describes the initial number of parallel tasks that a Java-based Kinesis
-	// Data Analytics application can perform.
+	// Data Analytics application can perform. If AutoScalingEnabled is set to True,
+	// then Kinesis Data Analytics can increase the CurrentParallelism value in
+	// response to application load. The service can increase CurrentParallelism
+	// up to the maximum parallelism, which is ParalellismPerKPU times the maximum
+	// KPUs for the application. The maximum KPUs for an application is 32 by default,
+	// and can be increased by requesting a limit increase. If application load
+	// is reduced, the service can reduce the CurrentParallelism value down to the
+	// Parallelism setting.
 	Parallelism *int64 `min:"1" type:"integer"`
 
 	// Describes the number of parallel tasks that a Java-based Kinesis Data Analytics
@@ -7840,6 +9194,8 @@ type ParallelismConfigurationUpdate struct {
 
 	// Describes updates to whether the application uses the default parallelism
 	// for the Kinesis Data Analytics service, or if a custom parallelism is used.
+	// You must set this property to CUSTOM in order to change your application's
+	// AutoScalingEnabled, Parallelism, or ParallelismPerKPU properties.
 	ConfigurationTypeUpdate *string `type:"string" enum:"ConfigurationType"`
 
 	// Describes updates to the number of parallel tasks an application can perform
@@ -7847,7 +9203,13 @@ type ParallelismConfigurationUpdate struct {
 	ParallelismPerKPUUpdate *int64 `min:"1" type:"integer"`
 
 	// Describes updates to the initial number of parallel tasks an application
-	// can perform.
+	// can perform. If AutoScalingEnabled is set to True, then Kinesis Data Analytics
+	// can increase the CurrentParallelism value in response to application load.
+	// The service can increase CurrentParallelism up to the maximum parallelism,
+	// which is ParalellismPerKPU times the maximum KPUs for the application. The
+	// maximum KPUs for an application is 32 by default, and can be increased by
+	// requesting a limit increase. If application load is reduced, the service
+	// will reduce CurrentParallelism down to the Parallelism setting.
 	ParallelismUpdate *int64 `min:"1" type:"integer"`
 }
 
@@ -7969,7 +9331,7 @@ func (s *PropertyGroup) SetPropertyMap(v map[string]*string) *PropertyGroup {
 type RecordColumn struct {
 	_ struct{} `type:"structure"`
 
-	// A reference to the data element in the streaming input of the reference data
+	// A reference to the data element in the streaming input or the reference data
 	// source.
 	Mapping *string `type:"string"`
 
@@ -8328,12 +9690,187 @@ func (s *ReferenceDataSourceUpdate) SetTableNameUpdate(v string) *ReferenceDataS
 	return s
 }
 
+// The application is not available for this operation.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Specified application can't be found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Discovery failed to get a record from the streaming source because of the
+// Amazon Kinesis Streams ProvisionedThroughputExceededException. For more information,
+// see GetRecords (http://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html)
+// in the Amazon Kinesis Streams API Reference.
+type ResourceProvisionedThroughputExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceProvisionedThroughputExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceProvisionedThroughputExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceProvisionedThroughputExceededException(v protocol.ResponseMetadata) error {
+	return &ResourceProvisionedThroughputExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceProvisionedThroughputExceededException) Code() string {
+	return "ResourceProvisionedThroughputExceededException"
+}
+
+// Message returns the exception's message.
+func (s ResourceProvisionedThroughputExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceProvisionedThroughputExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceProvisionedThroughputExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceProvisionedThroughputExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceProvisionedThroughputExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Describes the starting parameters for an Amazon Kinesis Data Analytics application.
 type RunConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Describes the restore behavior of a restarting application.
 	ApplicationRestoreConfiguration *ApplicationRestoreConfiguration `type:"structure"`
+
+	// Describes the starting parameters for an Apache Flink-based Kinesis Data
+	// Analytics application.
+	FlinkRunConfiguration *FlinkRunConfiguration `type:"structure"`
 
 	// Describes the starting parameters for an SQL-based Kinesis Data Analytics
 	// application.
@@ -8381,6 +9918,12 @@ func (s *RunConfiguration) SetApplicationRestoreConfiguration(v *ApplicationRest
 	return s
 }
 
+// SetFlinkRunConfiguration sets the FlinkRunConfiguration field's value.
+func (s *RunConfiguration) SetFlinkRunConfiguration(v *FlinkRunConfiguration) *RunConfiguration {
+	s.FlinkRunConfiguration = v
+	return s
+}
+
 // SetSqlRunConfigurations sets the SqlRunConfigurations field's value.
 func (s *RunConfiguration) SetSqlRunConfigurations(v []*SqlRunConfiguration) *RunConfiguration {
 	s.SqlRunConfigurations = v
@@ -8418,6 +9961,10 @@ type RunConfigurationUpdate struct {
 
 	// Describes updates to the restore behavior of a restarting application.
 	ApplicationRestoreConfiguration *ApplicationRestoreConfiguration `type:"structure"`
+
+	// Describes the starting parameters for an Apache Flink-based Kinesis Data
+	// Analytics application.
+	FlinkRunConfiguration *FlinkRunConfiguration `type:"structure"`
 }
 
 // String returns the string representation
@@ -8448,6 +9995,12 @@ func (s *RunConfigurationUpdate) Validate() error {
 // SetApplicationRestoreConfiguration sets the ApplicationRestoreConfiguration field's value.
 func (s *RunConfigurationUpdate) SetApplicationRestoreConfiguration(v *ApplicationRestoreConfiguration) *RunConfigurationUpdate {
 	s.ApplicationRestoreConfiguration = v
+	return s
+}
+
+// SetFlinkRunConfiguration sets the FlinkRunConfiguration field's value.
+func (s *RunConfigurationUpdate) SetFlinkRunConfiguration(v *FlinkRunConfiguration) *RunConfigurationUpdate {
+	s.FlinkRunConfiguration = v
 	return s
 }
 
@@ -8848,6 +10401,62 @@ func (s *S3ReferenceDataSourceUpdate) SetBucketARNUpdate(v string) *S3ReferenceD
 func (s *S3ReferenceDataSourceUpdate) SetFileKeyUpdate(v string) *S3ReferenceDataSourceUpdate {
 	s.FileKeyUpdate = &v
 	return s
+}
+
+// The service cannot complete the request.
+type ServiceUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
+	return &ServiceUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceUnavailableException) Code() string {
+	return "ServiceUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s ServiceUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Provides details about a snapshot of application state.
@@ -9396,6 +11005,394 @@ func (s StopApplicationOutput) GoString() string {
 	return s.String()
 }
 
+// A key-value pair (the value is optional) that you can define and assign to
+// AWS resources. If you specify a tag that already exists, the tag value is
+// replaced with the value that you specify in the request. Note that the maximum
+// number of application tags includes system tags. The maximum number of user-defined
+// application tags is 50. For more information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html).
+type Tag struct {
+	_ struct{} `type:"structure"`
+
+	// The key of the key-value tag.
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
+
+	// The value of the key-value tag. The value is optional.
+	Value *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Tag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Tag) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *Tag) SetKey(v string) *Tag {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Tag) SetValue(v string) *Tag {
+	s.Value = &v
+	return s
+}
+
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the application to assign the tags.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+
+	// The key-value tags to assign to the application.
+	//
+	// Tags is a required field
+	Tags []*Tag `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *TagResourceInput) SetResourceARN(v string) *TagResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v []*Tag) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
+// Application created with too many tags, or too many tags added to an application.
+// Note that the maximum number of application tags includes system tags. The
+// maximum number of user-defined application tags is 50.
+type TooManyTagsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyTagsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyTagsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyTagsException(v protocol.ResponseMetadata) error {
+	return &TooManyTagsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyTagsException) Code() string {
+	return "TooManyTagsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyTagsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyTagsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyTagsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyTagsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyTagsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The data format is not valid. Amazon Kinesis Data Analytics cannot detect
+// the schema for the given streaming source.
+type UnableToDetectSchemaException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// Stream data that was modified by the processor specified in the InputProcessingConfiguration
+	// parameter.
+	ProcessedInputRecords []*string `type:"list"`
+
+	// Raw stream data that was sampled to infer the schema.
+	RawInputRecords []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s UnableToDetectSchemaException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnableToDetectSchemaException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnableToDetectSchemaException(v protocol.ResponseMetadata) error {
+	return &UnableToDetectSchemaException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnableToDetectSchemaException) Code() string {
+	return "UnableToDetectSchemaException"
+}
+
+// Message returns the exception's message.
+func (s UnableToDetectSchemaException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnableToDetectSchemaException) OrigErr() error {
+	return nil
+}
+
+func (s UnableToDetectSchemaException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnableToDetectSchemaException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnableToDetectSchemaException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The request was rejected because a specified parameter is not supported or
+// a specified resource is not valid for this operation.
+type UnsupportedOperationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnsupportedOperationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedOperationException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedOperationException(v protocol.ResponseMetadata) error {
+	return &UnsupportedOperationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnsupportedOperationException) Code() string {
+	return "UnsupportedOperationException"
+}
+
+// Message returns the exception's message.
+func (s UnsupportedOperationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnsupportedOperationException) OrigErr() error {
+	return nil
+}
+
+func (s UnsupportedOperationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnsupportedOperationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnsupportedOperationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the Kinesis Analytics application from which to remove the tags.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+
+	// A list of keys of tags to remove from the specified application.
+	//
+	// TagKeys is a required field
+	TagKeys []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+	if s.TagKeys != nil && len(s.TagKeys) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TagKeys", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *UntagResourceInput) SetResourceARN(v string) *UntagResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateApplicationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9541,6 +11538,196 @@ func (s *UpdateApplicationOutput) SetApplicationDetail(v *ApplicationDetail) *Up
 	return s
 }
 
+// Describes the parameters of a VPC used by the application.
+type VpcConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The array of SecurityGroup (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SecurityGroup.html)
+	// IDs used by the VPC configuration.
+	//
+	// SecurityGroupIds is a required field
+	SecurityGroupIds []*string `min:"1" type:"list" required:"true"`
+
+	// The array of Subnet (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Subnet.html)
+	// IDs used by the VPC configuration.
+	//
+	// SubnetIds is a required field
+	SubnetIds []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s VpcConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VpcConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VpcConfiguration"}
+	if s.SecurityGroupIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("SecurityGroupIds"))
+	}
+	if s.SecurityGroupIds != nil && len(s.SecurityGroupIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityGroupIds", 1))
+	}
+	if s.SubnetIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("SubnetIds"))
+	}
+	if s.SubnetIds != nil && len(s.SubnetIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SubnetIds", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *VpcConfiguration) SetSecurityGroupIds(v []*string) *VpcConfiguration {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *VpcConfiguration) SetSubnetIds(v []*string) *VpcConfiguration {
+	s.SubnetIds = v
+	return s
+}
+
+// Describes the parameters of a VPC used by the application.
+type VpcConfigurationDescription struct {
+	_ struct{} `type:"structure"`
+
+	// The array of SecurityGroup (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SecurityGroup.html)
+	// IDs used by the VPC configuration.
+	//
+	// SecurityGroupIds is a required field
+	SecurityGroupIds []*string `min:"1" type:"list" required:"true"`
+
+	// The array of Subnet (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Subnet.html)
+	// IDs used by the VPC configuration.
+	//
+	// SubnetIds is a required field
+	SubnetIds []*string `min:"1" type:"list" required:"true"`
+
+	// The ID of the VPC configuration.
+	//
+	// VpcConfigurationId is a required field
+	VpcConfigurationId *string `min:"1" type:"string" required:"true"`
+
+	// The ID of the associated VPC.
+	//
+	// VpcId is a required field
+	VpcId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s VpcConfigurationDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcConfigurationDescription) GoString() string {
+	return s.String()
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *VpcConfigurationDescription) SetSecurityGroupIds(v []*string) *VpcConfigurationDescription {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *VpcConfigurationDescription) SetSubnetIds(v []*string) *VpcConfigurationDescription {
+	s.SubnetIds = v
+	return s
+}
+
+// SetVpcConfigurationId sets the VpcConfigurationId field's value.
+func (s *VpcConfigurationDescription) SetVpcConfigurationId(v string) *VpcConfigurationDescription {
+	s.VpcConfigurationId = &v
+	return s
+}
+
+// SetVpcId sets the VpcId field's value.
+func (s *VpcConfigurationDescription) SetVpcId(v string) *VpcConfigurationDescription {
+	s.VpcId = &v
+	return s
+}
+
+// Describes updates to the VPC configuration used by the application.
+type VpcConfigurationUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// Describes updates to the array of SecurityGroup (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SecurityGroup.html)
+	// IDs used by the VPC configuration.
+	SecurityGroupIdUpdates []*string `min:"1" type:"list"`
+
+	// Describes updates to the array of Subnet (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Subnet.html)
+	// IDs used by the VPC configuration.
+	SubnetIdUpdates []*string `min:"1" type:"list"`
+
+	// Describes an update to the ID of the VPC configuration.
+	//
+	// VpcConfigurationId is a required field
+	VpcConfigurationId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s VpcConfigurationUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcConfigurationUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VpcConfigurationUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VpcConfigurationUpdate"}
+	if s.SecurityGroupIdUpdates != nil && len(s.SecurityGroupIdUpdates) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityGroupIdUpdates", 1))
+	}
+	if s.SubnetIdUpdates != nil && len(s.SubnetIdUpdates) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SubnetIdUpdates", 1))
+	}
+	if s.VpcConfigurationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpcConfigurationId"))
+	}
+	if s.VpcConfigurationId != nil && len(*s.VpcConfigurationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcConfigurationId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSecurityGroupIdUpdates sets the SecurityGroupIdUpdates field's value.
+func (s *VpcConfigurationUpdate) SetSecurityGroupIdUpdates(v []*string) *VpcConfigurationUpdate {
+	s.SecurityGroupIdUpdates = v
+	return s
+}
+
+// SetSubnetIdUpdates sets the SubnetIdUpdates field's value.
+func (s *VpcConfigurationUpdate) SetSubnetIdUpdates(v []*string) *VpcConfigurationUpdate {
+	s.SubnetIdUpdates = v
+	return s
+}
+
+// SetVpcConfigurationId sets the VpcConfigurationId field's value.
+func (s *VpcConfigurationUpdate) SetVpcConfigurationId(v string) *VpcConfigurationUpdate {
+	s.VpcConfigurationId = &v
+	return s
+}
+
 const (
 	// ApplicationRestoreTypeSkipRestoreFromSnapshot is a ApplicationRestoreType enum value
 	ApplicationRestoreTypeSkipRestoreFromSnapshot = "SKIP_RESTORE_FROM_SNAPSHOT"
@@ -9641,6 +11828,9 @@ const (
 
 	// RuntimeEnvironmentFlink16 is a RuntimeEnvironment enum value
 	RuntimeEnvironmentFlink16 = "FLINK-1_6"
+
+	// RuntimeEnvironmentFlink18 is a RuntimeEnvironment enum value
+	RuntimeEnvironmentFlink18 = "FLINK-1_8"
 )
 
 const (

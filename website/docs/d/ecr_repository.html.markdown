@@ -1,7 +1,7 @@
 ---
+subcategory: "ECR"
 layout: "aws"
 page_title: "AWS: aws_ecr_repository"
-sidebar_current: "docs-aws-datasource-ecr-repository"
 description: |-
     Provides details about an ECR Repository
 ---

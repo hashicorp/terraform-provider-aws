@@ -69,7 +69,7 @@ func (c *OpsWorks) AssignInstanceRequest(input *AssignInstanceInput) (req *reque
 // Required Permissions: To use this action, an AWS Identity and Access Management
 // (IAM) user must have a Manage permissions level for the stack or an attached
 // policy that explicitly grants permissions. For more information on user permissions,
-// see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -78,11 +78,11 @@ func (c *OpsWorks) AssignInstanceRequest(input *AssignInstanceInput) (req *reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation AssignInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/AssignInstance
@@ -156,12 +156,12 @@ func (c *OpsWorks) AssignVolumeRequest(input *AssignVolumeInput) (req *request.R
 // The volume must first be registered with the stack by calling RegisterVolume.
 // After you register the volume, you must call UpdateVolume to specify a mount
 // point before calling AssignVolume. For more information, see Resource Management
-// (http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
+// (https://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -170,11 +170,11 @@ func (c *OpsWorks) AssignVolumeRequest(input *AssignVolumeInput) (req *request.R
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation AssignVolume for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/AssignVolume
@@ -246,12 +246,12 @@ func (c *OpsWorks) AssociateElasticIpRequest(input *AssociateElasticIpInput) (re
 //
 // Associates one of the stack's registered Elastic IP addresses with a specified
 // instance. The address must first be registered with the stack by calling
-// RegisterElasticIp. For more information, see Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
+// RegisterElasticIp. For more information, see Resource Management (https://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -260,11 +260,11 @@ func (c *OpsWorks) AssociateElasticIpRequest(input *AssociateElasticIpInput) (re
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation AssociateElasticIp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/AssociateElasticIp
@@ -337,16 +337,16 @@ func (c *OpsWorks) AttachElasticLoadBalancerRequest(input *AttachElasticLoadBala
 // Attaches an Elastic Load Balancing load balancer to a specified layer. AWS
 // OpsWorks Stacks does not support Application Load Balancer. You can only
 // use Classic Load Balancer with AWS OpsWorks Stacks. For more information,
-// see Elastic Load Balancing (http://docs.aws.amazon.com/opsworks/latest/userguide/layers-elb.html).
+// see Elastic Load Balancing (https://docs.aws.amazon.com/opsworks/latest/userguide/layers-elb.html).
 //
 // You must create the Elastic Load Balancing instance separately, by using
 // the Elastic Load Balancing console, API, or CLI. For more information, see
-//  Elastic Load Balancing Developer Guide (http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/Welcome.html).
+// Elastic Load Balancing Developer Guide (https://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/Welcome.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -355,11 +355,11 @@ func (c *OpsWorks) AttachElasticLoadBalancerRequest(input *AttachElasticLoadBala
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation AttachElasticLoadBalancer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/AttachElasticLoadBalancer
@@ -429,12 +429,12 @@ func (c *OpsWorks) CloneStackRequest(input *CloneStackInput) (req *request.Reque
 // CloneStack API operation for AWS OpsWorks.
 //
 // Creates a clone of a specified stack. For more information, see Clone a Stack
-// (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-cloning.html).
+// (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-cloning.html).
 // By default, all parameters are set to the values used by the parent stack.
 //
 // Required Permissions: To use this action, an IAM user must have an attached
 // policy that explicitly grants permissions. For more information about user
-// permissions, see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// permissions, see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -443,11 +443,11 @@ func (c *OpsWorks) CloneStackRequest(input *CloneStackInput) (req *request.Reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation CloneStack for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/CloneStack
@@ -517,12 +517,12 @@ func (c *OpsWorks) CreateAppRequest(input *CreateAppInput) (req *request.Request
 // CreateApp API operation for AWS OpsWorks.
 //
 // Creates an app for a specified stack. For more information, see Creating
-// Apps (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html).
+// Apps (https://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -531,11 +531,11 @@ func (c *OpsWorks) CreateAppRequest(input *CreateAppInput) (req *request.Request
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation CreateApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/CreateApp
@@ -605,13 +605,13 @@ func (c *OpsWorks) CreateDeploymentRequest(input *CreateDeploymentInput) (req *r
 // CreateDeployment API operation for AWS OpsWorks.
 //
 // Runs deployment or stack commands. For more information, see Deploying Apps
-// (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-deploying.html)
-// and Run Stack Commands (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-commands.html).
+// (https://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-deploying.html)
+// and Run Stack Commands (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-commands.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Deploy
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information on user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -620,11 +620,11 @@ func (c *OpsWorks) CreateDeploymentRequest(input *CreateDeploymentInput) (req *r
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation CreateDeployment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/CreateDeployment
@@ -694,12 +694,12 @@ func (c *OpsWorks) CreateInstanceRequest(input *CreateInstanceInput) (req *reque
 // CreateInstance API operation for AWS OpsWorks.
 //
 // Creates an instance in a specified stack. For more information, see Adding
-// an Instance to a Layer (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
+// an Instance to a Layer (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -708,11 +708,11 @@ func (c *OpsWorks) CreateInstanceRequest(input *CreateInstanceInput) (req *reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation CreateInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/CreateInstance
@@ -781,7 +781,7 @@ func (c *OpsWorks) CreateLayerRequest(input *CreateLayerInput) (req *request.Req
 
 // CreateLayer API operation for AWS OpsWorks.
 //
-// Creates a layer. For more information, see How to Create a Layer (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-create.html).
+// Creates a layer. For more information, see How to Create a Layer (https://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-create.html).
 //
 // You should use CreateLayer for noncustom layer types such as PHP App Server
 // only if the stack does not have an existing layer of that type. A stack can
@@ -793,7 +793,7 @@ func (c *OpsWorks) CreateLayerRequest(input *CreateLayerInput) (req *request.Req
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -802,11 +802,11 @@ func (c *OpsWorks) CreateLayerRequest(input *CreateLayerInput) (req *request.Req
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation CreateLayer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/CreateLayer
@@ -875,11 +875,11 @@ func (c *OpsWorks) CreateStackRequest(input *CreateStackInput) (req *request.Req
 
 // CreateStack API operation for AWS OpsWorks.
 //
-// Creates a new stack. For more information, see Create a New Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-edit.html).
+// Creates a new stack. For more information, see Create a New Stack (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-edit.html).
 //
 // Required Permissions: To use this action, an IAM user must have an attached
 // policy that explicitly grants permissions. For more information about user
-// permissions, see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// permissions, see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -888,8 +888,8 @@ func (c *OpsWorks) CreateStackRequest(input *CreateStackInput) (req *request.Req
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation CreateStack for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/CreateStack
@@ -962,7 +962,7 @@ func (c *OpsWorks) CreateUserProfileRequest(input *CreateUserProfileInput) (req 
 //
 // Required Permissions: To use this action, an IAM user must have an attached
 // policy that explicitly grants permissions. For more information about user
-// permissions, see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// permissions, see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -971,8 +971,8 @@ func (c *OpsWorks) CreateUserProfileRequest(input *CreateUserProfileInput) (req 
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation CreateUserProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/CreateUserProfile
@@ -1047,7 +1047,7 @@ func (c *OpsWorks) DeleteAppRequest(input *DeleteAppInput) (req *request.Request
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1056,11 +1056,11 @@ func (c *OpsWorks) DeleteAppRequest(input *DeleteAppInput) (req *request.Request
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DeleteApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DeleteApp
@@ -1133,12 +1133,12 @@ func (c *OpsWorks) DeleteInstanceRequest(input *DeleteInstanceInput) (req *reque
 // Deletes a specified instance, which terminates the associated Amazon EC2
 // instance. You must stop an instance before you can delete it.
 //
-// For more information, see Deleting Instances (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-delete.html).
+// For more information, see Deleting Instances (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-delete.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1147,11 +1147,11 @@ func (c *OpsWorks) DeleteInstanceRequest(input *DeleteInstanceInput) (req *reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DeleteInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DeleteInstance
@@ -1223,12 +1223,12 @@ func (c *OpsWorks) DeleteLayerRequest(input *DeleteLayerInput) (req *request.Req
 //
 // Deletes a specified layer. You must first stop and then delete all associated
 // instances or unassign registered instances. For more information, see How
-// to Delete a Layer (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-delete.html).
+// to Delete a Layer (https://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-delete.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1237,11 +1237,11 @@ func (c *OpsWorks) DeleteLayerRequest(input *DeleteLayerInput) (req *request.Req
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DeleteLayer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DeleteLayer
@@ -1313,12 +1313,12 @@ func (c *OpsWorks) DeleteStackRequest(input *DeleteStackInput) (req *request.Req
 //
 // Deletes a specified stack. You must first delete all instances, layers, and
 // apps or deregister registered instances. For more information, see Shut Down
-// a Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-shutting.html).
+// a Stack (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-shutting.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1327,11 +1327,11 @@ func (c *OpsWorks) DeleteStackRequest(input *DeleteStackInput) (req *request.Req
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DeleteStack for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DeleteStack
@@ -1405,7 +1405,7 @@ func (c *OpsWorks) DeleteUserProfileRequest(input *DeleteUserProfileInput) (req 
 //
 // Required Permissions: To use this action, an IAM user must have an attached
 // policy that explicitly grants permissions. For more information about user
-// permissions, see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// permissions, see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1414,11 +1414,11 @@ func (c *OpsWorks) DeleteUserProfileRequest(input *DeleteUserProfileInput) (req 
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DeleteUserProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DeleteUserProfile
@@ -1489,12 +1489,12 @@ func (c *OpsWorks) DeregisterEcsClusterRequest(input *DeregisterEcsClusterInput)
 // DeregisterEcsCluster API operation for AWS OpsWorks.
 //
 // Deregisters a specified Amazon ECS cluster from a stack. For more information,
-// see  Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-ecscluster.html#workinglayers-ecscluster-delete).
+// see Resource Management (https://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-ecscluster.html#workinglayers-ecscluster-delete).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack or an attached policy that explicitly grants
-// permissions. For more information on user permissions, see http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html
-// (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// permissions. For more information on user permissions, see https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html
+// (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1503,11 +1503,11 @@ func (c *OpsWorks) DeregisterEcsClusterRequest(input *DeregisterEcsClusterInput)
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DeregisterEcsCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DeregisterEcsCluster
@@ -1578,12 +1578,12 @@ func (c *OpsWorks) DeregisterElasticIpRequest(input *DeregisterElasticIpInput) (
 // DeregisterElasticIp API operation for AWS OpsWorks.
 //
 // Deregisters a specified Elastic IP address. The address can then be registered
-// by another stack. For more information, see Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
+// by another stack. For more information, see Resource Management (https://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1592,11 +1592,11 @@ func (c *OpsWorks) DeregisterElasticIpRequest(input *DeregisterElasticIpInput) (
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DeregisterElasticIp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DeregisterElasticIp
@@ -1673,7 +1673,7 @@ func (c *OpsWorks) DeregisterInstanceRequest(input *DeregisterInstanceInput) (re
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1682,11 +1682,11 @@ func (c *OpsWorks) DeregisterInstanceRequest(input *DeregisterInstanceInput) (re
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DeregisterInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DeregisterInstance
@@ -1761,7 +1761,7 @@ func (c *OpsWorks) DeregisterRdsDbInstanceRequest(input *DeregisterRdsDbInstance
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1770,11 +1770,11 @@ func (c *OpsWorks) DeregisterRdsDbInstanceRequest(input *DeregisterRdsDbInstance
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DeregisterRdsDbInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DeregisterRdsDbInstance
@@ -1845,12 +1845,12 @@ func (c *OpsWorks) DeregisterVolumeRequest(input *DeregisterVolumeInput) (req *r
 // DeregisterVolume API operation for AWS OpsWorks.
 //
 // Deregisters an Amazon EBS volume. The volume can then be registered by another
-// stack. For more information, see Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
+// stack. For more information, see Resource Management (https://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1859,11 +1859,11 @@ func (c *OpsWorks) DeregisterVolumeRequest(input *DeregisterVolumeInput) (req *r
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DeregisterVolume for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DeregisterVolume
@@ -1943,11 +1943,11 @@ func (c *OpsWorks) DescribeAgentVersionsRequest(input *DescribeAgentVersionsInpu
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeAgentVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeAgentVersions
@@ -2023,7 +2023,7 @@ func (c *OpsWorks) DescribeAppsRequest(input *DescribeAppsInput) (req *request.R
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2032,11 +2032,11 @@ func (c *OpsWorks) DescribeAppsRequest(input *DescribeAppsInput) (req *request.R
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeApps for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeApps
@@ -2112,7 +2112,7 @@ func (c *OpsWorks) DescribeCommandsRequest(input *DescribeCommandsInput) (req *r
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2121,11 +2121,11 @@ func (c *OpsWorks) DescribeCommandsRequest(input *DescribeCommandsInput) (req *r
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeCommands for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeCommands
@@ -2201,7 +2201,7 @@ func (c *OpsWorks) DescribeDeploymentsRequest(input *DescribeDeploymentsInput) (
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2210,11 +2210,11 @@ func (c *OpsWorks) DescribeDeploymentsRequest(input *DescribeDeploymentsInput) (
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeDeployments for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeDeployments
@@ -2297,7 +2297,7 @@ func (c *OpsWorks) DescribeEcsClustersRequest(input *DescribeEcsClustersInput) (
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack or an attached policy that explicitly
 // grants permission. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // This call accepts only one resource-identifying parameter.
 //
@@ -2308,11 +2308,11 @@ func (c *OpsWorks) DescribeEcsClustersRequest(input *DescribeEcsClustersInput) (
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeEcsClusters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeEcsClusters
@@ -2348,7 +2348,7 @@ func (c *OpsWorks) DescribeEcsClustersWithContext(ctx aws.Context, input *Descri
 //    // Example iterating over at most 3 pages of a DescribeEcsClusters operation.
 //    pageNum := 0
 //    err := client.DescribeEcsClustersPages(params,
-//        func(page *DescribeEcsClustersOutput, lastPage bool) bool {
+//        func(page *opsworks.DescribeEcsClustersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2380,10 +2380,12 @@ func (c *OpsWorks) DescribeEcsClustersPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEcsClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEcsClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2431,14 +2433,14 @@ func (c *OpsWorks) DescribeElasticIpsRequest(input *DescribeElasticIpsInput) (re
 
 // DescribeElasticIps API operation for AWS OpsWorks.
 //
-// Describes Elastic IP addresses (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html).
+// Describes Elastic IP addresses (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html).
 //
 // This call accepts only one resource-identifying parameter.
 //
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2447,11 +2449,11 @@ func (c *OpsWorks) DescribeElasticIpsRequest(input *DescribeElasticIpsInput) (re
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeElasticIps for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeElasticIps
@@ -2527,7 +2529,7 @@ func (c *OpsWorks) DescribeElasticLoadBalancersRequest(input *DescribeElasticLoa
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2536,11 +2538,11 @@ func (c *OpsWorks) DescribeElasticLoadBalancersRequest(input *DescribeElasticLoa
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeElasticLoadBalancers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeElasticLoadBalancers
@@ -2616,7 +2618,7 @@ func (c *OpsWorks) DescribeInstancesRequest(input *DescribeInstancesInput) (req 
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2625,11 +2627,11 @@ func (c *OpsWorks) DescribeInstancesRequest(input *DescribeInstancesInput) (req 
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeInstances
@@ -2705,7 +2707,7 @@ func (c *OpsWorks) DescribeLayersRequest(input *DescribeLayersInput) (req *reque
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2714,11 +2716,11 @@ func (c *OpsWorks) DescribeLayersRequest(input *DescribeLayersInput) (req *reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeLayers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeLayers
@@ -2794,7 +2796,7 @@ func (c *OpsWorks) DescribeLoadBasedAutoScalingRequest(input *DescribeLoadBasedA
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2803,11 +2805,11 @@ func (c *OpsWorks) DescribeLoadBasedAutoScalingRequest(input *DescribeLoadBasedA
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeLoadBasedAutoScaling for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeLoadBasedAutoScaling
@@ -2880,7 +2882,7 @@ func (c *OpsWorks) DescribeMyUserProfileRequest(input *DescribeMyUserProfileInpu
 //
 // Required Permissions: To use this action, an IAM user must have self-management
 // enabled or an attached policy that explicitly grants permissions. For more
-// information about user permissions, see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// information about user permissions, see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3033,7 +3035,7 @@ func (c *OpsWorks) DescribePermissionsRequest(input *DescribePermissionsInput) (
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3042,11 +3044,11 @@ func (c *OpsWorks) DescribePermissionsRequest(input *DescribePermissionsInput) (
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribePermissions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribePermissions
@@ -3122,7 +3124,7 @@ func (c *OpsWorks) DescribeRaidArraysRequest(input *DescribeRaidArraysInput) (re
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3131,11 +3133,11 @@ func (c *OpsWorks) DescribeRaidArraysRequest(input *DescribeRaidArraysInput) (re
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeRaidArrays for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeRaidArrays
@@ -3209,7 +3211,7 @@ func (c *OpsWorks) DescribeRdsDbInstancesRequest(input *DescribeRdsDbInstancesIn
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // This call accepts only one resource-identifying parameter.
 //
@@ -3220,11 +3222,11 @@ func (c *OpsWorks) DescribeRdsDbInstancesRequest(input *DescribeRdsDbInstancesIn
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeRdsDbInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeRdsDbInstances
@@ -3298,7 +3300,7 @@ func (c *OpsWorks) DescribeServiceErrorsRequest(input *DescribeServiceErrorsInpu
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // This call accepts only one resource-identifying parameter.
 //
@@ -3309,11 +3311,11 @@ func (c *OpsWorks) DescribeServiceErrorsRequest(input *DescribeServiceErrorsInpu
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeServiceErrors for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeServiceErrors
@@ -3387,7 +3389,7 @@ func (c *OpsWorks) DescribeStackProvisioningParametersRequest(input *DescribeSta
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3396,11 +3398,11 @@ func (c *OpsWorks) DescribeStackProvisioningParametersRequest(input *DescribeSta
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeStackProvisioningParameters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeStackProvisioningParameters
@@ -3475,7 +3477,7 @@ func (c *OpsWorks) DescribeStackSummaryRequest(input *DescribeStackSummaryInput)
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3484,11 +3486,11 @@ func (c *OpsWorks) DescribeStackSummaryRequest(input *DescribeStackSummaryInput)
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeStackSummary for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeStackSummary
@@ -3562,7 +3564,7 @@ func (c *OpsWorks) DescribeStacksRequest(input *DescribeStacksInput) (req *reque
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3571,11 +3573,11 @@ func (c *OpsWorks) DescribeStacksRequest(input *DescribeStacksInput) (req *reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeStacks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeStacks
@@ -3651,7 +3653,7 @@ func (c *OpsWorks) DescribeTimeBasedAutoScalingRequest(input *DescribeTimeBasedA
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3660,11 +3662,11 @@ func (c *OpsWorks) DescribeTimeBasedAutoScalingRequest(input *DescribeTimeBasedA
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeTimeBasedAutoScaling for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeTimeBasedAutoScaling
@@ -3737,7 +3739,7 @@ func (c *OpsWorks) DescribeUserProfilesRequest(input *DescribeUserProfilesInput)
 //
 // Required Permissions: To use this action, an IAM user must have an attached
 // policy that explicitly grants permissions. For more information about user
-// permissions, see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// permissions, see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3746,11 +3748,11 @@ func (c *OpsWorks) DescribeUserProfilesRequest(input *DescribeUserProfilesInput)
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeUserProfiles for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeUserProfiles
@@ -3826,7 +3828,7 @@ func (c *OpsWorks) DescribeVolumesRequest(input *DescribeVolumesInput) (req *req
 // Required Permissions: To use this action, an IAM user must have a Show, Deploy,
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information about user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3835,11 +3837,11 @@ func (c *OpsWorks) DescribeVolumesRequest(input *DescribeVolumesInput) (req *req
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DescribeVolumes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DescribeVolumes
@@ -3914,7 +3916,7 @@ func (c *OpsWorks) DetachElasticLoadBalancerRequest(input *DetachElasticLoadBala
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3923,8 +3925,8 @@ func (c *OpsWorks) DetachElasticLoadBalancerRequest(input *DetachElasticLoadBala
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DetachElasticLoadBalancer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DetachElasticLoadBalancer
@@ -3996,12 +3998,12 @@ func (c *OpsWorks) DisassociateElasticIpRequest(input *DisassociateElasticIpInpu
 //
 // Disassociates an Elastic IP address from its instance. The address remains
 // registered with the stack. For more information, see Resource Management
-// (http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
+// (https://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4010,11 +4012,11 @@ func (c *OpsWorks) DisassociateElasticIpRequest(input *DisassociateElasticIpInpu
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation DisassociateElasticIp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/DisassociateElasticIp
@@ -4089,7 +4091,7 @@ func (c *OpsWorks) GetHostnameSuggestionRequest(input *GetHostnameSuggestionInpu
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4098,11 +4100,11 @@ func (c *OpsWorks) GetHostnameSuggestionRequest(input *GetHostnameSuggestionInpu
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation GetHostnameSuggestion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/GetHostnameSuggestion
@@ -4171,6 +4173,7 @@ func (c *OpsWorks) GrantAccessRequest(input *GrantAccessInput) (req *request.Req
 
 // GrantAccess API operation for AWS OpsWorks.
 //
+//
 // This action can be used only with Windows stacks.
 //
 // Grants RDP access to a Windows instance for a specified time period.
@@ -4182,11 +4185,11 @@ func (c *OpsWorks) GrantAccessRequest(input *GrantAccessInput) (req *request.Req
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation GrantAccess for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/GrantAccess
@@ -4264,11 +4267,11 @@ func (c *OpsWorks) ListTagsRequest(input *ListTagsInput) (req *request.Request, 
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation ListTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/ListTags
@@ -4339,12 +4342,12 @@ func (c *OpsWorks) RebootInstanceRequest(input *RebootInstanceInput) (req *reque
 // RebootInstance API operation for AWS OpsWorks.
 //
 // Reboots a specified instance. For more information, see Starting, Stopping,
-// and Rebooting Instances (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-starting.html).
+// and Rebooting Instances (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-starting.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4353,11 +4356,11 @@ func (c *OpsWorks) RebootInstanceRequest(input *RebootInstanceInput) (req *reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation RebootInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/RebootInstance
@@ -4428,12 +4431,12 @@ func (c *OpsWorks) RegisterEcsClusterRequest(input *RegisterEcsClusterInput) (re
 //
 // Registers a specified Amazon ECS cluster with a stack. You can register only
 // one cluster with a stack. A cluster can be registered with only one stack.
-// For more information, see  Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-ecscluster.html).
+// For more information, see Resource Management (https://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-ecscluster.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack or an attached policy that explicitly grants
-// permissions. For more information on user permissions, see  Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// permissions. For more information on user permissions, see Managing User
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4442,11 +4445,11 @@ func (c *OpsWorks) RegisterEcsClusterRequest(input *RegisterEcsClusterInput) (re
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation RegisterEcsCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/RegisterEcsCluster
@@ -4518,12 +4521,12 @@ func (c *OpsWorks) RegisterElasticIpRequest(input *RegisterElasticIpInput) (req 
 // Registers an Elastic IP address with a specified stack. An address can be
 // registered with only one stack at a time. If the address is already registered,
 // you must first deregister it by calling DeregisterElasticIp. For more information,
-// see Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
+// see Resource Management (https://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4532,11 +4535,11 @@ func (c *OpsWorks) RegisterElasticIpRequest(input *RegisterElasticIpInput) (req 
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation RegisterElasticIp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/RegisterElasticIp
@@ -4613,18 +4616,18 @@ func (c *OpsWorks) RegisterInstanceRequest(input *RegisterInstanceInput) (req *r
 // agent on the instance, and registering the instance with the stack. RegisterInstance
 // handles only the second step. You should instead use the AWS CLI register
 // command, which performs the entire registration operation. For more information,
-// see  Registering an Instance with an AWS OpsWorks Stacks Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/registered-instances-register.html).
+// see Registering an Instance with an AWS OpsWorks Stacks Stack (https://docs.aws.amazon.com/opsworks/latest/userguide/registered-instances-register.html).
 //
 // Registered instances have the same requirements as instances that are created
 // by using the CreateInstance API. For example, registered instances must be
 // running a supported Linux-based operating system, and they must have a supported
 // instance type. For more information about requirements for instances that
-// you want to register, see  Preparing the Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/registered-instances-register-registering-preparer.html).
+// you want to register, see Preparing the Instance (https://docs.aws.amazon.com/opsworks/latest/userguide/registered-instances-register-registering-preparer.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4633,11 +4636,11 @@ func (c *OpsWorks) RegisterInstanceRequest(input *RegisterInstanceInput) (req *r
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation RegisterInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/RegisterInstance
@@ -4712,7 +4715,7 @@ func (c *OpsWorks) RegisterRdsDbInstanceRequest(input *RegisterRdsDbInstanceInpu
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4721,11 +4724,11 @@ func (c *OpsWorks) RegisterRdsDbInstanceRequest(input *RegisterRdsDbInstanceInpu
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation RegisterRdsDbInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/RegisterRdsDbInstance
@@ -4797,12 +4800,12 @@ func (c *OpsWorks) RegisterVolumeRequest(input *RegisterVolumeInput) (req *reque
 // Registers an Amazon EBS volume with a specified stack. A volume can be registered
 // with only one stack at a time. If the volume is already registered, you must
 // first deregister it by calling DeregisterVolume. For more information, see
-// Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
+// Resource Management (https://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4811,11 +4814,11 @@ func (c *OpsWorks) RegisterVolumeRequest(input *RegisterVolumeInput) (req *reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation RegisterVolume for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/RegisterVolume
@@ -4887,7 +4890,7 @@ func (c *OpsWorks) SetLoadBasedAutoScalingRequest(input *SetLoadBasedAutoScaling
 //
 // Specify the load-based auto scaling configuration for a specified layer.
 // For more information, see Managing Load with Time-based and Load-based Instances
-// (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-autoscaling.html).
+// (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-autoscaling.html).
 //
 // To use load-based auto scaling, you must create a set of load-based auto
 // scaling instances. Load-based auto scaling operates only on the instances
@@ -4897,7 +4900,7 @@ func (c *OpsWorks) SetLoadBasedAutoScalingRequest(input *SetLoadBasedAutoScaling
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4906,11 +4909,11 @@ func (c *OpsWorks) SetLoadBasedAutoScalingRequest(input *SetLoadBasedAutoScaling
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation SetLoadBasedAutoScaling for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/SetLoadBasedAutoScaling
@@ -4981,12 +4984,12 @@ func (c *OpsWorks) SetPermissionRequest(input *SetPermissionInput) (req *request
 // SetPermission API operation for AWS OpsWorks.
 //
 // Specifies a user's permissions. For more information, see Security and Permissions
-// (http://docs.aws.amazon.com/opsworks/latest/userguide/workingsecurity.html).
+// (https://docs.aws.amazon.com/opsworks/latest/userguide/workingsecurity.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4995,11 +4998,11 @@ func (c *OpsWorks) SetPermissionRequest(input *SetPermissionInput) (req *request
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation SetPermission for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/SetPermission
@@ -5071,12 +5074,12 @@ func (c *OpsWorks) SetTimeBasedAutoScalingRequest(input *SetTimeBasedAutoScaling
 //
 // Specify the time-based auto scaling configuration for a specified instance.
 // For more information, see Managing Load with Time-based and Load-based Instances
-// (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-autoscaling.html).
+// (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-autoscaling.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5085,11 +5088,11 @@ func (c *OpsWorks) SetTimeBasedAutoScalingRequest(input *SetTimeBasedAutoScaling
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation SetTimeBasedAutoScaling for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/SetTimeBasedAutoScaling
@@ -5160,12 +5163,12 @@ func (c *OpsWorks) StartInstanceRequest(input *StartInstanceInput) (req *request
 // StartInstance API operation for AWS OpsWorks.
 //
 // Starts a specified instance. For more information, see Starting, Stopping,
-// and Rebooting Instances (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-starting.html).
+// and Rebooting Instances (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-starting.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5174,11 +5177,11 @@ func (c *OpsWorks) StartInstanceRequest(input *StartInstanceInput) (req *request
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation StartInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/StartInstance
@@ -5253,7 +5256,7 @@ func (c *OpsWorks) StartStackRequest(input *StartStackInput) (req *request.Reque
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5262,11 +5265,11 @@ func (c *OpsWorks) StartStackRequest(input *StartStackInput) (req *request.Reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation StartStack for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/StartStack
@@ -5339,12 +5342,12 @@ func (c *OpsWorks) StopInstanceRequest(input *StopInstanceInput) (req *request.R
 // Stops a specified instance. When you stop a standard instance, the data disappears
 // and must be reinstalled when you restart the instance. You can stop an Amazon
 // EBS-backed instance without losing data. For more information, see Starting,
-// Stopping, and Rebooting Instances (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-starting.html).
+// Stopping, and Rebooting Instances (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-starting.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5353,11 +5356,11 @@ func (c *OpsWorks) StopInstanceRequest(input *StopInstanceInput) (req *request.R
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation StopInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/StopInstance
@@ -5432,7 +5435,7 @@ func (c *OpsWorks) StopStackRequest(input *StopStackInput) (req *request.Request
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5441,11 +5444,11 @@ func (c *OpsWorks) StopStackRequest(input *StopStackInput) (req *request.Request
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation StopStack for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/StopStack
@@ -5516,7 +5519,7 @@ func (c *OpsWorks) TagResourceRequest(input *TagResourceInput) (req *request.Req
 // TagResource API operation for AWS OpsWorks.
 //
 // Apply cost-allocation tags to a specified stack or layer in AWS OpsWorks
-// Stacks. For more information about how tagging works, see Tags (http://docs.aws.amazon.com/opsworks/latest/userguide/tagging.html)
+// Stacks. For more information about how tagging works, see Tags (https://docs.aws.amazon.com/opsworks/latest/userguide/tagging.html)
 // in the AWS OpsWorks User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5526,11 +5529,11 @@ func (c *OpsWorks) TagResourceRequest(input *TagResourceInput) (req *request.Req
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/TagResource
@@ -5608,7 +5611,7 @@ func (c *OpsWorks) UnassignInstanceRequest(input *UnassignInstanceInput) (req *r
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack or an attached policy that explicitly grants
 // permissions. For more information about user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5617,11 +5620,11 @@ func (c *OpsWorks) UnassignInstanceRequest(input *UnassignInstanceInput) (req *r
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UnassignInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UnassignInstance
@@ -5692,12 +5695,12 @@ func (c *OpsWorks) UnassignVolumeRequest(input *UnassignVolumeInput) (req *reque
 // UnassignVolume API operation for AWS OpsWorks.
 //
 // Unassigns an assigned Amazon EBS volume. The volume remains registered with
-// the stack. For more information, see Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
+// the stack. For more information, see Resource Management (https://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5706,11 +5709,11 @@ func (c *OpsWorks) UnassignVolumeRequest(input *UnassignVolumeInput) (req *reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UnassignVolume for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UnassignVolume
@@ -5789,11 +5792,11 @@ func (c *OpsWorks) UntagResourceRequest(input *UntagResourceInput) (req *request
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UntagResource
@@ -5868,7 +5871,7 @@ func (c *OpsWorks) UpdateAppRequest(input *UpdateAppInput) (req *request.Request
 // Required Permissions: To use this action, an IAM user must have a Deploy
 // or Manage permissions level for the stack, or an attached policy that explicitly
 // grants permissions. For more information on user permissions, see Managing
-// User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5877,11 +5880,11 @@ func (c *OpsWorks) UpdateAppRequest(input *UpdateAppInput) (req *request.Request
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UpdateApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UpdateApp
@@ -5952,12 +5955,12 @@ func (c *OpsWorks) UpdateElasticIpRequest(input *UpdateElasticIpInput) (req *req
 // UpdateElasticIp API operation for AWS OpsWorks.
 //
 // Updates a registered Elastic IP address's name. For more information, see
-// Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
+// Resource Management (https://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5966,11 +5969,11 @@ func (c *OpsWorks) UpdateElasticIpRequest(input *UpdateElasticIpInput) (req *req
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UpdateElasticIp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UpdateElasticIp
@@ -6045,7 +6048,7 @@ func (c *OpsWorks) UpdateInstanceRequest(input *UpdateInstanceInput) (req *reque
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6054,11 +6057,11 @@ func (c *OpsWorks) UpdateInstanceRequest(input *UpdateInstanceInput) (req *reque
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UpdateInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UpdateInstance
@@ -6133,7 +6136,7 @@ func (c *OpsWorks) UpdateLayerRequest(input *UpdateLayerInput) (req *request.Req
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6142,11 +6145,11 @@ func (c *OpsWorks) UpdateLayerRequest(input *UpdateLayerInput) (req *request.Req
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UpdateLayer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UpdateLayer
@@ -6220,7 +6223,7 @@ func (c *OpsWorks) UpdateMyUserProfileRequest(input *UpdateMyUserProfileInput) (
 //
 // Required Permissions: To use this action, an IAM user must have self-management
 // enabled or an attached policy that explicitly grants permissions. For more
-// information about user permissions, see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// information about user permissions, see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6229,8 +6232,8 @@ func (c *OpsWorks) UpdateMyUserProfileRequest(input *UpdateMyUserProfileInput) (
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UpdateMyUserProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UpdateMyUserProfile
@@ -6305,7 +6308,7 @@ func (c *OpsWorks) UpdateRdsDbInstanceRequest(input *UpdateRdsDbInstanceInput) (
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6314,11 +6317,11 @@ func (c *OpsWorks) UpdateRdsDbInstanceRequest(input *UpdateRdsDbInstanceInput) (
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UpdateRdsDbInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UpdateRdsDbInstance
@@ -6393,7 +6396,7 @@ func (c *OpsWorks) UpdateStackRequest(input *UpdateStackInput) (req *request.Req
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6402,11 +6405,11 @@ func (c *OpsWorks) UpdateStackRequest(input *UpdateStackInput) (req *request.Req
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UpdateStack for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UpdateStack
@@ -6480,7 +6483,7 @@ func (c *OpsWorks) UpdateUserProfileRequest(input *UpdateUserProfileInput) (req 
 //
 // Required Permissions: To use this action, an IAM user must have an attached
 // policy that explicitly grants permissions. For more information about user
-// permissions, see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// permissions, see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6489,11 +6492,11 @@ func (c *OpsWorks) UpdateUserProfileRequest(input *UpdateUserProfileInput) (req 
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UpdateUserProfile for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UpdateUserProfile
@@ -6564,12 +6567,12 @@ func (c *OpsWorks) UpdateVolumeRequest(input *UpdateVolumeInput) (req *request.R
 // UpdateVolume API operation for AWS OpsWorks.
 //
 // Updates an Amazon EBS volume's name or mount point. For more information,
-// see Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
+// see Resource Management (https://docs.aws.amazon.com/opsworks/latest/userguide/resources.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
 // permissions. For more information on user permissions, see Managing User
-// Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+// Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6578,11 +6581,11 @@ func (c *OpsWorks) UpdateVolumeRequest(input *UpdateVolumeInput) (req *request.R
 // See the AWS API reference guide for AWS OpsWorks's
 // API operation UpdateVolume for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   Indicates that a request was not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Indicates that a resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/opsworks-2013-02-18/UpdateVolume
@@ -6672,14 +6675,14 @@ type App struct {
 	// An array of EnvironmentVariable objects that specify environment variables
 	// to be associated with the app. After you deploy the app, these variables
 	// are defined on the associated app server instances. For more information,
-	// see  Environment Variables (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
+	// see Environment Variables (https://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
 	//
 	// There is no specific limit on the number of environment variables. However,
 	// the size of the associated data structure - which includes the variable names,
-	// values, and protected flag values - cannot exceed 10 KB (10240 Bytes). This
-	// limit should accommodate most if not all use cases, but if you do exceed
-	// it, you will cause an exception (API) with an "Environment: is too large
-	// (maximum is 10KB)" message.
+	// values, and protected flag values - cannot exceed 20 KB. This limit should
+	// accommodate most if not all use cases, but if you do exceed it, you will
+	// cause an exception (API) with an "Environment: is too large (maximum is 20
+	// KB)" message.
 	Environment []*EnvironmentVariable `type:"list"`
 
 	// The app name.
@@ -7060,7 +7063,7 @@ type AutoScalingThresholds struct {
 	// To use custom alarms, you must update your service role to allow cloudwatch:DescribeAlarms.
 	// You can either have AWS OpsWorks Stacks update the role for you when you
 	// first use this feature or you can edit the role manually. For more information,
-	// see Allowing AWS OpsWorks Stacks to Act on Your Behalf (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-servicerole.html).
+	// see Allowing AWS OpsWorks Stacks to Act on Your Behalf (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-servicerole.html).
 	Alarms []*string `type:"list"`
 
 	// The CPU utilization threshold, as a percent of the available CPU. A value
@@ -7162,7 +7165,7 @@ func (s *AutoScalingThresholds) SetThresholdsWaitTime(v int64) *AutoScalingThres
 }
 
 // Describes a block device mapping. This data type maps directly to the Amazon
-// EC2 BlockDeviceMapping (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_BlockDeviceMapping.html)
+// EC2 BlockDeviceMapping (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_BlockDeviceMapping.html)
 // data type.
 type BlockDeviceMapping struct {
 	_ struct{} `type:"structure"`
@@ -7179,7 +7182,7 @@ type BlockDeviceMapping struct {
 	// Suppresses the specified device included in the AMI's block device mapping.
 	NoDevice *string `type:"string"`
 
-	// The virtual device name. For more information, see BlockDeviceMapping (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_BlockDeviceMapping.html).
+	// The virtual device name. For more information, see BlockDeviceMapping (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_BlockDeviceMapping.html).
 	VirtualName *string `type:"string"`
 }
 
@@ -7279,7 +7282,7 @@ type CloneStackInput struct {
 
 	// A ChefConfiguration object that specifies whether to enable Berkshelf and
 	// the Berkshelf version on Chef 11.10 stacks. For more information, see Create
-	// a New Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
+	// a New Stack (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
 	ChefConfiguration *ChefConfiguration `type:"structure"`
 
 	// A list of source stack app IDs to be included in the cloned stack.
@@ -7295,8 +7298,8 @@ type CloneStackInput struct {
 	ConfigurationManager *StackConfigurationManager `type:"structure"`
 
 	// Contains the information required to retrieve an app or cookbook from a repository.
-	// For more information, see Creating Apps (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html)
-	// or Custom Recipes and Cookbooks (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook.html).
+	// For more information, see Adding Apps (https://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html)
+	// or Cookbooks and Recipes (https://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook.html).
 	CustomCookbooksSource *Source `type:"structure"`
 
 	// A string that contains user-defined, custom JSON. It is used to override
@@ -7306,25 +7309,26 @@ type CloneStackInput struct {
 	// "{\"key1\": \"value1\", \"key2\": \"value2\",...}"
 	//
 	// For more information about custom JSON, see Use Custom JSON to Modify the
-	// Stack Configuration Attributes (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html)
+	// Stack Configuration Attributes (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html)
 	CustomJson *string `type:"string"`
 
 	// The cloned stack's default Availability Zone, which must be in the specified
-	// region. For more information, see Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// region. For more information, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	// If you also specify a value for DefaultSubnetId, the subnet must be in the
 	// same zone. For more information, see the VpcId parameter description.
 	DefaultAvailabilityZone *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of an IAM profile that is the default profile
 	// for all of the stack's EC2 instances. For more information about IAM ARNs,
-	// see Using Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// see Using Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	DefaultInstanceProfileArn *string `type:"string"`
 
 	// The stack's operating system, which must be set to one of the following.
 	//
 	//    * A supported Linux operating system: An Amazon Linux version, such as
-	//    Amazon Linux 2017.09, Amazon Linux 2017.03, Amazon Linux 2016.09, Amazon
-	//    Linux 2016.03, Amazon Linux 2015.09, or Amazon Linux 2015.03.
+	//    Amazon Linux 2018.03, Amazon Linux 2017.09, Amazon Linux 2017.03, Amazon
+	//    Linux 2016.09, Amazon Linux 2016.03, Amazon Linux 2015.09, or Amazon Linux
+	//    2015.03.
 	//
 	//    * A supported Ubuntu operating system, such as Ubuntu 16.04 LTS, Ubuntu
 	//    14.04 LTS, or Ubuntu 12.04 LTS.
@@ -7339,11 +7343,11 @@ type CloneStackInput struct {
 	//
 	//    * A custom AMI: Custom. You specify the custom AMI you want to use when
 	//    you create instances. For more information about how to use custom AMIs
-	//    with OpsWorks, see Using Custom AMIs (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
+	//    with OpsWorks, see Using Custom AMIs (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
 	//
 	// The default option is the parent stack's operating system. For more information
 	// about supported operating systems, see AWS OpsWorks Stacks Operating Systems
-	// (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
+	// (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
 	//
 	// You can specify a different Linux operating system for the cloned stack,
 	// but you cannot change from Linux to Windows or Windows to Linux.
@@ -7351,16 +7355,16 @@ type CloneStackInput struct {
 
 	// The default root device type. This value is used by default for all instances
 	// in the cloned stack, but you can override it when you create an instance.
-	// For more information, see Storage for the Root Device (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
+	// For more information, see Storage for the Root Device (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
 	DefaultRootDeviceType *string `type:"string" enum:"RootDeviceType"`
 
 	// A default Amazon EC2 key pair name. The default value is none. If you specify
 	// a key pair name, AWS OpsWorks installs the public key on the instance and
 	// you can use the private key with an SSH client to log in to the instance.
-	// For more information, see  Using SSH to Communicate with an Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
-	// and  Managing SSH Access (http://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
+	// For more information, see Using SSH to Communicate with an Instance (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
+	// and Managing SSH Access (https://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
 	// You can override this setting by specifying a different key pair, or no key
-	// pair, when you  create an instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
+	// pair, when you create an instance (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
 	DefaultSshKeyName *string `type:"string"`
 
 	// The stack's default VPC subnet ID. This parameter is required if you specify
@@ -7384,7 +7388,7 @@ type CloneStackInput struct {
 	//
 	//    * Fruits
 	//
-	//    * Greek_Deities
+	//    * Greek_Deities_and_Titans
 	//
 	//    * Legendary_creatures_from_Japan
 	//
@@ -7406,7 +7410,7 @@ type CloneStackInput struct {
 	Name *string `type:"string"`
 
 	// The cloned stack AWS region, such as "ap-northeast-2". For more information
-	// about AWS regions, see Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// about AWS regions, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	Region *string `type:"string"`
 
 	// The stack AWS Identity and Access Management (IAM) role, which allows AWS
@@ -7415,7 +7419,7 @@ type CloneStackInput struct {
 	// you create a stack by using the AWS OpsWorks Stacks console, it creates the
 	// role for you. You can obtain an existing stack's IAM ARN programmatically
 	// by calling DescribePermissions. For more information about IAM ARNs, see
-	// Using Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// Using Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	//
 	// You must set this parameter to a valid service role ARN or the action will
 	// fail; there is no default value. You can specify the source stack's service
@@ -7452,7 +7456,7 @@ type CloneStackInput struct {
 	//    security group with a layer on creation; custom security groups are required
 	//    only for those layers that need custom settings.
 	//
-	// For more information, see Create a New Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
+	// For more information, see Create a New Stack (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
 	UseOpsworksSecurityGroups *bool `type:"boolean"`
 
 	// The ID of the VPC that the cloned stack is to be launched into. It must be
@@ -7478,9 +7482,9 @@ type CloneStackInput struct {
 	//    * You must specify a value for DefaultSubnetId.
 	//
 	// For more information about how to use AWS OpsWorks Stacks with a VPC, see
-	// Running a Stack in a VPC (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-vpc.html).
+	// Running a Stack in a VPC (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-vpc.html).
 	// For more information about default VPC and EC2 Classic, see Supported Platforms
-	// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-platforms.html).
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-platforms.html).
 	VpcId *string `type:"string"`
 }
 
@@ -7701,7 +7705,7 @@ func (s *CloudWatchLogsConfiguration) SetLogStreams(v []*CloudWatchLogsLogStream
 
 // Describes the Amazon CloudWatch logs configuration for a layer. For detailed
 // information about members of this data type, see the CloudWatch Logs Agent
-// Reference (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AgentReference.html).
+// Reference (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AgentReference.html).
 type CloudWatchLogsLogStream struct {
 	_ struct{} `type:"structure"`
 
@@ -7719,7 +7723,7 @@ type CloudWatchLogsLogStream struct {
 	BufferDuration *int64 `type:"integer"`
 
 	// Specifies how the time stamp is extracted from logs. For more information,
-	// see the CloudWatch Logs Agent Reference (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AgentReference.html).
+	// see the CloudWatch Logs Agent Reference (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AgentReference.html).
 	DatetimeFormat *string `type:"string"`
 
 	// Specifies the encoding of the log file so that the file can be read correctly.
@@ -8005,17 +8009,16 @@ type CreateAppInput struct {
 	// An array of EnvironmentVariable objects that specify environment variables
 	// to be associated with the app. After you deploy the app, these variables
 	// are defined on the associated app server instance. For more information,
-	// see  Environment Variables (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
+	// see Environment Variables (https://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
 	//
 	// There is no specific limit on the number of environment variables. However,
 	// the size of the associated data structure - which includes the variables'
-	// names, values, and protected flag values - cannot exceed 10 KB (10240 Bytes).
-	// This limit should accommodate most if not all use cases. Exceeding it will
-	// cause an exception with the message, "Environment: is too large (maximum
-	// is 10KB)."
+	// names, values, and protected flag values - cannot exceed 20 KB. This limit
+	// should accommodate most if not all use cases. Exceeding it will cause an
+	// exception with the message, "Environment: is too large (maximum is 20KB)."
 	//
-	// This parameter is supported only by Chef 11.10 stacks. If you have specified
-	// one or more environment variables, you cannot modify the stack's Chef version.
+	// If you have specified one or more environment variables, you cannot modify
+	// the stack's Chef version.
 	Environment []*EnvironmentVariable `type:"list"`
 
 	// The app name.
@@ -8200,14 +8203,15 @@ type CreateDeploymentInput struct {
 	// A user-defined comment.
 	Comment *string `type:"string"`
 
-	// A string that contains user-defined, custom JSON. It is used to override
-	// the corresponding default stack configuration JSON values. The string should
-	// be in the following format:
+	// A string that contains user-defined, custom JSON. You can use this parameter
+	// to override some corresponding default stack configuration JSON values. The
+	// string should be in the following format:
 	//
 	// "{\"key1\": \"value1\", \"key2\": \"value2\",...}"
 	//
 	// For more information about custom JSON, see Use Custom JSON to Modify the
-	// Stack Configuration Attributes (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html).
+	// Stack Configuration Attributes (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html)
+	// and Overriding Attributes With Custom JSON (https://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json-override.html).
 	CustomJson *string `type:"string"`
 
 	// The instance IDs for the deployment targets.
@@ -8340,7 +8344,7 @@ type CreateInstanceInput struct {
 
 	// A custom AMI ID to be used to create the instance. The AMI should be based
 	// on one of the supported operating systems. For more information, see Using
-	// Custom AMIs (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
+	// Custom AMIs (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
 	//
 	// If you specify a custom AMI, you must set Os to Custom.
 	AmiId *string `type:"string"`
@@ -8348,7 +8352,7 @@ type CreateInstanceInput struct {
 	// The instance architecture. The default option is x86_64. Instance types do
 	// not necessarily support both architectures. For a list of the architectures
 	// that are supported by the different instance types, see Instance Families
-	// and Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html).
+	// and Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html).
 	Architecture *string `type:"string" enum:"Architecture"`
 
 	// For load-based or time-based instances, the type. Windows stacks can use
@@ -8356,11 +8360,11 @@ type CreateInstanceInput struct {
 	AutoScalingType *string `type:"string" enum:"AutoScalingType"`
 
 	// The instance Availability Zone. For more information, see Regions and Endpoints
-	// (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	AvailabilityZone *string `type:"string"`
 
 	// An array of BlockDeviceMapping objects that specify the instance's block
-	// devices. For more information, see Block Device Mapping (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html).
+	// devices. For more information, see Block Device Mapping (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html).
 	// Note that block device mappings are not supported for custom AMIs.
 	BlockDeviceMappings []*BlockDeviceMapping `type:"list"`
 
@@ -8383,7 +8387,7 @@ type CreateInstanceInput struct {
 	// The instance type, such as t2.micro. For a list of supported instance types,
 	// open the stack in the console, choose Instances, and choose + Instance. The
 	// Size list contains the currently supported types. For more information, see
-	// Instance Families and Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html).
+	// Instance Families and Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html).
 	// The parameter values that you use to specify the various types are in the
 	// API Name column of the Available Instance Types table.
 	//
@@ -8398,8 +8402,9 @@ type CreateInstanceInput struct {
 	// The instance's operating system, which must be set to one of the following.
 	//
 	//    * A supported Linux operating system: An Amazon Linux version, such as
-	//    Amazon Linux 2017.09, Amazon Linux 2017.03, Amazon Linux 2016.09, Amazon
-	//    Linux 2016.03, Amazon Linux 2015.09, or Amazon Linux 2015.03.
+	//    Amazon Linux 2018.03, Amazon Linux 2017.09, Amazon Linux 2017.03, Amazon
+	//    Linux 2016.09, Amazon Linux 2016.03, Amazon Linux 2015.09, or Amazon Linux
+	//    2015.03.
 	//
 	//    * A supported Ubuntu operating system, such as Ubuntu 16.04 LTS, Ubuntu
 	//    14.04 LTS, or Ubuntu 12.04 LTS.
@@ -8416,19 +8421,19 @@ type CreateInstanceInput struct {
 	//    * A custom AMI: Custom.
 	//
 	// For more information about the supported operating systems, see AWS OpsWorks
-	// Stacks Operating Systems (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
+	// Stacks Operating Systems (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
 	//
 	// The default option is the current Amazon Linux version. If you set this parameter
 	// to Custom, you must use the CreateInstance action's AmiId parameter to specify
 	// the custom AMI that you want to use. Block device mappings are not supported
 	// if the value is Custom. For more information about supported operating systems,
-	// see Operating Systems (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html)For
+	// see Operating Systems (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html)For
 	// more information about how to use custom AMIs with AWS OpsWorks Stacks, see
-	// Using Custom AMIs (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
+	// Using Custom AMIs (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
 	Os *string `type:"string"`
 
 	// The instance root device type. For more information, see Storage for the
-	// Root Device (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
+	// Root Device (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
 	RootDeviceType *string `type:"string" enum:"RootDeviceType"`
 
 	// The instance's Amazon EC2 key-pair name.
@@ -8452,7 +8457,7 @@ type CreateInstanceInput struct {
 	// For more information about dedicated hosts, see Dedicated Hosts Overview
 	// (http://aws.amazon.com/ec2/dedicated-hosts/) and Amazon EC2 Dedicated Hosts
 	// (http://aws.amazon.com/ec2/dedicated-hosts/). For more information about
-	// dedicated instances, see Dedicated Instances (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/dedicated-instance.html)
+	// dedicated instances, see Dedicated Instances (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/dedicated-instance.html)
 	// and Amazon EC2 Dedicated Instances (http://aws.amazon.com/ec2/purchasing-options/dedicated-instances/).
 	Tenancy *string `type:"string"`
 
@@ -8630,13 +8635,13 @@ type CreateLayerInput struct {
 	// ARN.
 	Attributes map[string]*string `type:"map"`
 
-	// Whether to automatically assign an Elastic IP address (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
-	// to the layer's instances. For more information, see How to Edit a Layer (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
+	// Whether to automatically assign an Elastic IP address (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
+	// to the layer's instances. For more information, see How to Edit a Layer (https://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
 	AutoAssignElasticIps *bool `type:"boolean"`
 
 	// For stacks that are running in a VPC, whether to automatically assign a public
 	// IP address to the layer's instances. For more information, see How to Edit
-	// a Layer (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
+	// a Layer (https://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
 	AutoAssignPublicIps *bool `type:"boolean"`
 
 	// Specifies CloudWatch Logs configuration options for the layer. For more information,
@@ -8644,12 +8649,12 @@ type CreateLayerInput struct {
 	CloudWatchLogsConfiguration *CloudWatchLogsConfiguration `type:"structure"`
 
 	// The ARN of an IAM profile to be used for the layer's EC2 instances. For more
-	// information about IAM ARNs, see Using Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// information about IAM ARNs, see Using Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	CustomInstanceProfileArn *string `type:"string"`
 
 	// A JSON-formatted string containing custom stack configuration and deployment
 	// attributes to be installed on the layer's instances. For more information,
-	// see  Using Custom JSON (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json-override.html).
+	// see Using Custom JSON (https://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json-override.html).
 	// This feature is supported as of version 1.7.42 of the AWS CLI.
 	CustomJson *string `type:"string"`
 
@@ -8692,7 +8697,7 @@ type CreateLayerInput struct {
 	// to the alphanumeric characters, '-', '_', and '.'.
 	//
 	// The built-in layers' short names are defined by AWS OpsWorks Stacks. For
-	// more information, see the Layer Reference (http://docs.aws.amazon.com/opsworks/latest/userguide/layers.html).
+	// more information, see the Layer Reference (https://docs.aws.amazon.com/opsworks/latest/userguide/layers.html).
 	//
 	// Shortname is a required field
 	Shortname *string `type:"string" required:"true"`
@@ -8918,7 +8923,7 @@ type CreateStackInput struct {
 
 	// A ChefConfiguration object that specifies whether to enable Berkshelf and
 	// the Berkshelf version on Chef 11.10 stacks. For more information, see Create
-	// a New Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
+	// a New Stack (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
 	ChefConfiguration *ChefConfiguration `type:"structure"`
 
 	// The configuration manager. When you create a stack we recommend that you
@@ -8928,8 +8933,8 @@ type CreateStackInput struct {
 	ConfigurationManager *StackConfigurationManager `type:"structure"`
 
 	// Contains the information required to retrieve an app or cookbook from a repository.
-	// For more information, see Creating Apps (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html)
-	// or Custom Recipes and Cookbooks (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook.html).
+	// For more information, see Adding Apps (https://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html)
+	// or Cookbooks and Recipes (https://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook.html).
 	CustomCookbooksSource *Source `type:"structure"`
 
 	// A string that contains user-defined, custom JSON. It can be used to override
@@ -8939,18 +8944,18 @@ type CreateStackInput struct {
 	// "{\"key1\": \"value1\", \"key2\": \"value2\",...}"
 	//
 	// For more information about custom JSON, see Use Custom JSON to Modify the
-	// Stack Configuration Attributes (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html).
+	// Stack Configuration Attributes (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html).
 	CustomJson *string `type:"string"`
 
 	// The stack's default Availability Zone, which must be in the specified region.
-	// For more information, see Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// For more information, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	// If you also specify a value for DefaultSubnetId, the subnet must be in the
 	// same zone. For more information, see the VpcId parameter description.
 	DefaultAvailabilityZone *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of an IAM profile that is the default profile
 	// for all of the stack's EC2 instances. For more information about IAM ARNs,
-	// see Using Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// see Using Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	//
 	// DefaultInstanceProfileArn is a required field
 	DefaultInstanceProfileArn *string `type:"string" required:"true"`
@@ -8960,8 +8965,9 @@ type CreateStackInput struct {
 	// You can specify one of the following.
 	//
 	//    * A supported Linux operating system: An Amazon Linux version, such as
-	//    Amazon Linux 2017.09, Amazon Linux 2017.03, Amazon Linux 2016.09, Amazon
-	//    Linux 2016.03, Amazon Linux 2015.09, or Amazon Linux 2015.03.
+	//    Amazon Linux 2018.03, Amazon Linux 2017.09, Amazon Linux 2017.03, Amazon
+	//    Linux 2016.09, Amazon Linux 2016.03, Amazon Linux 2015.09, or Amazon Linux
+	//    2015.03.
 	//
 	//    * A supported Ubuntu operating system, such as Ubuntu 16.04 LTS, Ubuntu
 	//    14.04 LTS, or Ubuntu 12.04 LTS.
@@ -8976,26 +8982,26 @@ type CreateStackInput struct {
 	//    Windows Server 2012 R2 with SQL Server Web.
 	//
 	//    * A custom AMI: Custom. You specify the custom AMI you want to use when
-	//    you create instances. For more information, see  Using Custom AMIs (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
+	//    you create instances. For more information, see Using Custom AMIs (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
 	//
 	// The default option is the current Amazon Linux version. For more information
 	// about supported operating systems, see AWS OpsWorks Stacks Operating Systems
-	// (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
+	// (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
 	DefaultOs *string `type:"string"`
 
 	// The default root device type. This value is the default for all instances
 	// in the stack, but you can override it when you create an instance. The default
 	// option is instance-store. For more information, see Storage for the Root
-	// Device (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
+	// Device (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
 	DefaultRootDeviceType *string `type:"string" enum:"RootDeviceType"`
 
 	// A default Amazon EC2 key pair name. The default value is none. If you specify
 	// a key pair name, AWS OpsWorks installs the public key on the instance and
 	// you can use the private key with an SSH client to log in to the instance.
-	// For more information, see  Using SSH to Communicate with an Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
-	// and  Managing SSH Access (http://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
+	// For more information, see Using SSH to Communicate with an Instance (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
+	// and Managing SSH Access (https://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
 	// You can override this setting by specifying a different key pair, or no key
-	// pair, when you  create an instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
+	// pair, when you create an instance (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
 	DefaultSshKeyName *string `type:"string"`
 
 	// The stack's default VPC subnet ID. This parameter is required if you specify
@@ -9019,7 +9025,7 @@ type CreateStackInput struct {
 	//
 	//    * Fruits
 	//
-	//    * Greek_Deities
+	//    * Greek_Deities_and_Titans
 	//
 	//    * Legendary_creatures_from_Japan
 	//
@@ -9043,7 +9049,7 @@ type CreateStackInput struct {
 	Name *string `type:"string" required:"true"`
 
 	// The stack's AWS region, such as ap-south-1. For more information about Amazon
-	// regions, see Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// regions, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	//
 	// In the AWS CLI, this API maps to the --stack-region parameter. If the --stack-region
 	// parameter and the AWS CLI common parameter --region are set to the same value,
@@ -9067,7 +9073,7 @@ type CreateStackInput struct {
 	// The stack's AWS Identity and Access Management (IAM) role, which allows AWS
 	// OpsWorks Stacks to work with AWS resources on your behalf. You must set this
 	// parameter to the Amazon Resource Name (ARN) for an existing IAM role. For
-	// more information about IAM ARNs, see Using Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// more information about IAM ARNs, see Using Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	//
 	// ServiceRoleArn is a required field
 	ServiceRoleArn *string `type:"string" required:"true"`
@@ -9095,7 +9101,7 @@ type CreateStackInput struct {
 	//    custom security groups are required only for those layers that need custom
 	//    settings.
 	//
-	// For more information, see Create a New Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
+	// For more information, see Create a New Stack (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
 	UseOpsworksSecurityGroups *bool `type:"boolean"`
 
 	// The ID of the VPC that the stack is to be launched into. The VPC must be
@@ -9121,9 +9127,9 @@ type CreateStackInput struct {
 	//    * You must specify a value for DefaultSubnetId.
 	//
 	// For more information about how to use AWS OpsWorks Stacks with a VPC, see
-	// Running a Stack in a VPC (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-vpc.html).
+	// Running a Stack in a VPC (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-vpc.html).
 	// For more information about default VPC and EC2-Classic, see Supported Platforms
-	// (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-platforms.html).
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-platforms.html).
 	VpcId *string `type:"string"`
 }
 
@@ -9302,7 +9308,7 @@ type CreateUserProfileInput struct {
 	_ struct{} `type:"structure"`
 
 	// Whether users can specify their own SSH public key through the My Settings
-	// page. For more information, see Setting an IAM User's Public SSH Key (http://docs.aws.amazon.com/opsworks/latest/userguide/security-settingsshkey.html).
+	// page. For more information, see Setting an IAM User's Public SSH Key (https://docs.aws.amazon.com/opsworks/latest/userguide/security-settingsshkey.html).
 	AllowSelfManagement *bool `type:"boolean"`
 
 	// The user's IAM ARN; this can also be a federated user's ARN.
@@ -9739,7 +9745,7 @@ type Deployment struct {
 	// "{\"key1\": \"value1\", \"key2\": \"value2\",...}"
 	//
 	// For more information on custom JSON, see Use Custom JSON to Modify the Stack
-	// Configuration Attributes (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html).
+	// Configuration Attributes (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html).
 	CustomJson *string `type:"string"`
 
 	// The deployment ID.
@@ -10960,7 +10966,7 @@ type DescribePermissionsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The user's IAM ARN. This can also be a federated user's ARN. For more information
-	// about IAM ARNs, see Using Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// about IAM ARNs, see Using Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	IamUserArn *string `type:"string"`
 
 	// The stack ID.
@@ -11721,7 +11727,7 @@ func (s DisassociateElasticIpOutput) GoString() string {
 }
 
 // Describes an Amazon EBS volume. This data type maps directly to the Amazon
-// EC2 EbsBlockDevice (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html)
+// EC2 EbsBlockDevice (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html)
 // data type.
 type EbsBlockDevice struct {
 	_ struct{} `type:"structure"`
@@ -11730,13 +11736,13 @@ type EbsBlockDevice struct {
 	DeleteOnTermination *bool `type:"boolean"`
 
 	// The number of I/O operations per second (IOPS) that the volume supports.
-	// For more information, see EbsBlockDevice (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html).
+	// For more information, see EbsBlockDevice (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html).
 	Iops *int64 `type:"integer"`
 
 	// The snapshot ID.
 	SnapshotId *string `type:"string"`
 
-	// The volume size, in GiB. For more information, see EbsBlockDevice (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html).
+	// The volume size, in GiB. For more information, see EbsBlockDevice (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html).
 	VolumeSize *int64 `type:"integer"`
 
 	// The volume type. gp2 for General Purpose (SSD) volumes, io1 for Provisioned
@@ -11857,7 +11863,7 @@ type ElasticIp struct {
 	// The name.
 	Name *string `type:"string"`
 
-	// The AWS region. For more information, see Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// The AWS region. For more information, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	Region *string `type:"string"`
 }
 
@@ -12226,7 +12232,7 @@ type Instance struct {
 	AgentVersion *string `type:"string"`
 
 	// A custom AMI ID to be used to create the instance. For more information,
-	// see Instances (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html)
+	// see Instances (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html)
 	AmiId *string `type:"string"`
 
 	// The instance architecture: "i386" or "x86_64".
@@ -12239,7 +12245,7 @@ type Instance struct {
 	AutoScalingType *string `type:"string" enum:"AutoScalingType"`
 
 	// The instance Availability Zone. For more information, see Regions and Endpoints
-	// (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	AvailabilityZone *string `type:"string"`
 
 	// An array of BlockDeviceMapping objects that specify the instance's block
@@ -12261,7 +12267,7 @@ type Instance struct {
 	// For container instances, the instance's ARN.
 	EcsContainerInstanceArn *string `type:"string"`
 
-	// The instance Elastic IP address  (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html).
+	// The instance Elastic IP address (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html).
 	ElasticIp *string `type:"string"`
 
 	// The instance host name.
@@ -12284,7 +12290,7 @@ type Instance struct {
 	InstanceId *string `type:"string"`
 
 	// The ARN of the instance's IAM profile. For more information about IAM ARNs,
-	// see Using Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// see Using Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	InstanceProfileArn *string `type:"string"`
 
 	// The instance type, such as t2.micro.
@@ -12324,7 +12330,7 @@ type Instance struct {
 	ReportedOs *ReportedOs `type:"structure"`
 
 	// The instance's root device type. For more information, see Storage for the
-	// Root Device (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
+	// Root Device (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
 	RootDeviceType *string `type:"string" enum:"RootDeviceType"`
 
 	// The root device volume ID.
@@ -12645,7 +12651,7 @@ func (s *Instance) SetVirtualizationType(v string) *Instance {
 }
 
 // Contains a description of an Amazon EC2 instance from the Amazon EC2 metadata
-// service. For more information, see Instance Metadata and User Data (http://docs.aws.amazon.com/sdkfornet/latest/apidocs/Index.html).
+// service. For more information, see Instance Metadata and User Data (https://docs.aws.amazon.com/sdkfornet/latest/apidocs/Index.html).
 type InstanceIdentity struct {
 	_ struct{} `type:"structure"`
 
@@ -12889,13 +12895,13 @@ type Layer struct {
 	// is set to the cluster's ARN.
 	Attributes map[string]*string `type:"map"`
 
-	// Whether to automatically assign an Elastic IP address (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
-	// to the layer's instances. For more information, see How to Edit a Layer (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
+	// Whether to automatically assign an Elastic IP address (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
+	// to the layer's instances. For more information, see How to Edit a Layer (https://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
 	AutoAssignElasticIps *bool `type:"boolean"`
 
 	// For stacks that are running in a VPC, whether to automatically assign a public
 	// IP address to the layer's instances. For more information, see How to Edit
-	// a Layer (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
+	// a Layer (https://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
 	AutoAssignPublicIps *bool `type:"boolean"`
 
 	// The Amazon CloudWatch Logs configuration settings for the layer.
@@ -12905,7 +12911,7 @@ type Layer struct {
 	CreatedAt *string `type:"string"`
 
 	// The ARN of the default IAM profile to be used for the layer's EC2 instances.
-	// For more information about IAM ARNs, see Using Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// For more information about IAM ARNs, see Using Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	CustomInstanceProfileArn *string `type:"string"`
 
 	// A JSON formatted string containing the layer's custom stack configuration
@@ -12920,11 +12926,10 @@ type Layer struct {
 
 	// AWS OpsWorks Stacks supports five lifecycle events: setup, configuration,
 	// deploy, undeploy, and shutdown. For each layer, AWS OpsWorks Stacks runs
-	// a set of standard recipes for each event. In addition, you can provide custom
-	// recipes for any or all layers and events. AWS OpsWorks Stacks runs custom
-	// event recipes after the standard recipes. LayerCustomRecipes specifies the
-	// custom recipes for a particular layer to be run in response to each of the
-	// five events.
+	// a set of standard recipes for each event. You can also provide custom recipes
+	// for any or all layers and events. AWS OpsWorks Stacks runs custom event recipes
+	// after the standard recipes. LayerCustomRecipes specifies the custom recipes
+	// for a particular layer to be run in response to each of the five events.
 	//
 	// To specify a recipe, use the cookbook's directory name in the repository
 	// followed by two colons and the recipe name, which is the recipe's file name
@@ -13304,10 +13309,10 @@ type OperatingSystem struct {
 	// operating system.
 	ConfigurationManagers []*OperatingSystemConfigurationManager `type:"list"`
 
-	// The ID of a supported operating system, such as Amazon Linux 2017.09.
+	// The ID of a supported operating system, such as Amazon Linux 2018.03.
 	Id *string `type:"string"`
 
-	// The name of the operating system, such as Amazon Linux 2017.09.
+	// The name of the operating system, such as Amazon Linux 2018.03.
 	Name *string `type:"string"`
 
 	// A short name for the operating system manufacturer.
@@ -13423,7 +13428,7 @@ type Permission struct {
 	AllowSudo *bool `type:"boolean"`
 
 	// The Amazon Resource Name (ARN) for an AWS Identity and Access Management
-	// (IAM) role. For more information about IAM ARNs, see Using Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// (IAM) role. For more information about IAM ARNs, see Using Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	IamUserArn *string `type:"string"`
 
 	// The user's permission level, which must be the following:
@@ -13439,7 +13444,7 @@ type Permission struct {
 	//    * iam_only
 	//
 	// For more information on the permissions associated with these levels, see
-	// Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html)
+	// Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html)
 	Level *string `type:"string"`
 
 	// A stack ID.
@@ -13491,7 +13496,7 @@ type RaidArray struct {
 	_ struct{} `type:"structure"`
 
 	// The array's Availability Zone. For more information, see Regions and Endpoints
-	// (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	AvailabilityZone *string `type:"string"`
 
 	// When the RAID array was created.
@@ -14317,6 +14322,63 @@ func (s *ReportedOs) SetVersion(v string) *ReportedOs {
 	return s
 }
 
+// Indicates that a resource was not found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The exception message.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Describes a user's SSH information.
 type SelfUserProfile struct {
 	_ struct{} `type:"structure"`
@@ -14558,7 +14620,7 @@ type SetPermissionInput struct {
 	//    * iam_only
 	//
 	// For more information about the permissions associated with these levels,
-	// see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
+	// see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 	Level *string `type:"string"`
 
 	// The stack ID.
@@ -14703,7 +14765,7 @@ type ShutdownEventConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Whether to enable Elastic Load Balancing connection draining. For more information,
-	// see Connection Draining (http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#conn-drain)
+	// see Connection Draining (https://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/TerminologyandKeyConcepts.html#conn-drain)
 	DelayUntilElbConnectionsDrained *bool `type:"boolean"`
 
 	// The time, in seconds, that AWS OpsWorks Stacks will wait after triggering
@@ -14734,8 +14796,8 @@ func (s *ShutdownEventConfiguration) SetExecutionTimeout(v int64) *ShutdownEvent
 }
 
 // Contains the information required to retrieve an app or cookbook from a repository.
-// For more information, see Creating Apps (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html)
-// or Custom Recipes and Cookbooks (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook.html).
+// For more information, see Creating Apps (https://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html)
+// or Custom Recipes and Cookbooks (https://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook.html).
 type Source struct {
 	_ struct{} `type:"structure"`
 
@@ -14746,8 +14808,8 @@ type Source struct {
 	//
 	//    * For HTTP bundles and Subversion repositories, set Password to the password.
 	//
-	// For more information on how to safely handle IAM credentials, see http://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html
-	// (http://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html).
+	// For more information on how to safely handle IAM credentials, see https://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html
+	// (https://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html).
 	//
 	// In responses, AWS OpsWorks Stacks returns *****FILTERED***** instead of the
 	// actual value.
@@ -14905,7 +14967,7 @@ type Stack struct {
 	Attributes map[string]*string `type:"map"`
 
 	// A ChefConfiguration object that specifies whether to enable Berkshelf and
-	// the Berkshelf version. For more information, see Create a New Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
+	// the Berkshelf version. For more information, see Create a New Stack (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
 	ChefConfiguration *ChefConfiguration `type:"structure"`
 
 	// The configuration manager.
@@ -14915,8 +14977,8 @@ type Stack struct {
 	CreatedAt *string `type:"string"`
 
 	// Contains the information required to retrieve an app or cookbook from a repository.
-	// For more information, see Creating Apps (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html)
-	// or Custom Recipes and Cookbooks (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook.html).
+	// For more information, see Adding Apps (https://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html)
+	// or Cookbooks and Recipes (https://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook.html).
 	CustomCookbooksSource *Source `type:"structure"`
 
 	// A JSON object that contains user-defined attributes to be added to the stack
@@ -14927,16 +14989,16 @@ type Stack struct {
 	// "{\"key1\": \"value1\", \"key2\": \"value2\",...}"
 	//
 	// For more information on custom JSON, see Use Custom JSON to Modify the Stack
-	// Configuration Attributes (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html).
+	// Configuration Attributes (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html).
 	CustomJson *string `type:"string"`
 
 	// The stack's default Availability Zone. For more information, see Regions
-	// and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	DefaultAvailabilityZone *string `type:"string"`
 
 	// The ARN of an IAM profile that is the default profile for all of the stack's
 	// EC2 instances. For more information about IAM ARNs, see Using Identifiers
-	// (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	DefaultInstanceProfileArn *string `type:"string"`
 
 	// The stack's default operating system.
@@ -14944,7 +15006,7 @@ type Stack struct {
 
 	// The default root device type. This value is used by default for all instances
 	// in the stack, but you can override it when you create an instance. For more
-	// information, see Storage for the Root Device (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
+	// information, see Storage for the Root Device (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
 	DefaultRootDeviceType *string `type:"string" enum:"RootDeviceType"`
 
 	// A default Amazon EC2 key pair for the stack's instances. You can override
@@ -14961,7 +15023,7 @@ type Stack struct {
 	Name *string `type:"string"`
 
 	// The stack AWS region, such as "ap-northeast-2". For more information about
-	// AWS regions, see Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// AWS regions, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	Region *string `type:"string"`
 
 	// The stack AWS Identity and Access Management (IAM) role.
@@ -15334,7 +15396,12 @@ func (s StartStackOutput) GoString() string {
 type StopInstanceInput struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies whether to force an instance to stop.
+	// Specifies whether to force an instance to stop. If the instance's root device
+	// type is ebs, or EBS-backed, adding the Force parameter to the StopInstances
+	// API call disassociates the AWS OpsWorks Stacks instance from EC2, and forces
+	// deletion of only the OpsWorks Stacks instance. You must also delete the formerly-associated
+	// instance in EC2 after troubleshooting and replacing the AWS OpsWorks Stacks
+	// instance with a new one.
 	Force *bool `type:"boolean"`
 
 	// The instance ID.
@@ -15814,17 +15881,16 @@ type UpdateAppInput struct {
 	// An array of EnvironmentVariable objects that specify environment variables
 	// to be associated with the app. After you deploy the app, these variables
 	// are defined on the associated app server instances.For more information,
-	// see  Environment Variables (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
+	// see Environment Variables (https://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
 	//
 	// There is no specific limit on the number of environment variables. However,
 	// the size of the associated data structure - which includes the variables'
-	// names, values, and protected flag values - cannot exceed 10 KB (10240 Bytes).
-	// This limit should accommodate most if not all use cases. Exceeding it will
-	// cause an exception with the message, "Environment: is too large (maximum
-	// is 10KB)."
+	// names, values, and protected flag values - cannot exceed 20 KB. This limit
+	// should accommodate most if not all use cases. Exceeding it will cause an
+	// exception with the message, "Environment: is too large (maximum is 20 KB)."
 	//
-	// This parameter is supported only by Chef 11.10 stacks. If you have specified
-	// one or more environment variables, you cannot modify the stack's Chef version.
+	// If you have specified one or more environment variables, you cannot modify
+	// the stack's Chef version.
 	Environment []*EnvironmentVariable `type:"list"`
 
 	// The app name.
@@ -16043,7 +16109,7 @@ type UpdateInstanceInput struct {
 
 	// The instance architecture. Instance types do not necessarily support both
 	// architectures. For a list of the architectures that are supported by the
-	// different instance types, see Instance Families and Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html).
+	// different instance types, see Instance Families and Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html).
 	Architecture *string `type:"string" enum:"Architecture"`
 
 	// For load-based or time-based instances, the type. Windows stacks can use
@@ -16074,7 +16140,7 @@ type UpdateInstanceInput struct {
 	// The instance type, such as t2.micro. For a list of supported instance types,
 	// open the stack in the console, choose Instances, and choose + Instance. The
 	// Size list contains the currently supported types. For more information, see
-	// Instance Families and Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html).
+	// Instance Families and Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html).
 	// The parameter values that you use to specify the various types are in the
 	// API Name column of the Available Instance Types table.
 	InstanceType *string `type:"string"`
@@ -16086,8 +16152,9 @@ type UpdateInstanceInput struct {
 	// You cannot update an instance that is using a custom AMI.
 	//
 	//    * A supported Linux operating system: An Amazon Linux version, such as
-	//    Amazon Linux 2017.09, Amazon Linux 2017.03, Amazon Linux 2016.09, Amazon
-	//    Linux 2016.03, Amazon Linux 2015.09, or Amazon Linux 2015.03.
+	//    Amazon Linux 2018.03, Amazon Linux 2017.09, Amazon Linux 2017.03, Amazon
+	//    Linux 2016.09, Amazon Linux 2016.03, Amazon Linux 2015.09, or Amazon Linux
+	//    2015.03.
 	//
 	//    * A supported Ubuntu operating system, such as Ubuntu 16.04 LTS, Ubuntu
 	//    14.04 LTS, or Ubuntu 12.04 LTS.
@@ -16102,14 +16169,14 @@ type UpdateInstanceInput struct {
 	//    Windows Server 2012 R2 with SQL Server Web.
 	//
 	// For more information about supported operating systems, see AWS OpsWorks
-	// Stacks Operating Systems (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
+	// Stacks Operating Systems (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
 	//
 	// The default option is the current Amazon Linux version. If you set this parameter
 	// to Custom, you must use the AmiId parameter to specify the custom AMI that
 	// you want to use. For more information about supported operating systems,
-	// see Operating Systems (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
+	// see Operating Systems (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
 	// For more information about how to use custom AMIs with OpsWorks, see Using
-	// Custom AMIs (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
+	// Custom AMIs (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
 	//
 	// You can specify a different Linux operating system for the updated stack,
 	// but you cannot change from Linux to Windows or Windows to Linux.
@@ -16234,13 +16301,13 @@ type UpdateLayerInput struct {
 	// One or more user-defined key/value pairs to be added to the stack attributes.
 	Attributes map[string]*string `type:"map"`
 
-	// Whether to automatically assign an Elastic IP address (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
-	// to the layer's instances. For more information, see How to Edit a Layer (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
+	// Whether to automatically assign an Elastic IP address (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
+	// to the layer's instances. For more information, see How to Edit a Layer (https://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
 	AutoAssignElasticIps *bool `type:"boolean"`
 
 	// For stacks that are running in a VPC, whether to automatically assign a public
 	// IP address to the layer's instances. For more information, see How to Edit
-	// a Layer (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
+	// a Layer (https://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-basics-edit.html).
 	AutoAssignPublicIps *bool `type:"boolean"`
 
 	// Specifies CloudWatch Logs configuration options for the layer. For more information,
@@ -16248,12 +16315,12 @@ type UpdateLayerInput struct {
 	CloudWatchLogsConfiguration *CloudWatchLogsConfiguration `type:"structure"`
 
 	// The ARN of an IAM profile to be used for all of the layer's EC2 instances.
-	// For more information about IAM ARNs, see Using Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// For more information about IAM ARNs, see Using Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	CustomInstanceProfileArn *string `type:"string"`
 
 	// A JSON-formatted string containing custom stack configuration and deployment
 	// attributes to be installed on the layer's instances. For more information,
-	// see  Using Custom JSON (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json-override.html).
+	// see Using Custom JSON (https://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json-override.html).
 	CustomJson *string `type:"string"`
 
 	// A LayerCustomRecipes object that specifies the layer's custom recipes.
@@ -16296,7 +16363,7 @@ type UpdateLayerInput struct {
 	// /\A[a-z0-9\-\_\.]+\Z/.
 	//
 	// The built-in layers' short names are defined by AWS OpsWorks Stacks. For
-	// more information, see the Layer Reference (http://docs.aws.amazon.com/opsworks/latest/userguide/layers.html)
+	// more information, see the Layer Reference (https://docs.aws.amazon.com/opsworks/latest/userguide/layers.html)
 	Shortname *string `type:"string"`
 
 	// Whether to use Amazon EBS-optimized instances.
@@ -16590,7 +16657,7 @@ type UpdateStackInput struct {
 
 	// A ChefConfiguration object that specifies whether to enable Berkshelf and
 	// the Berkshelf version on Chef 11.10 stacks. For more information, see Create
-	// a New Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
+	// a New Stack (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
 	ChefConfiguration *ChefConfiguration `type:"structure"`
 
 	// The configuration manager. When you update a stack, we recommend that you
@@ -16600,8 +16667,8 @@ type UpdateStackInput struct {
 	ConfigurationManager *StackConfigurationManager `type:"structure"`
 
 	// Contains the information required to retrieve an app or cookbook from a repository.
-	// For more information, see Creating Apps (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html)
-	// or Custom Recipes and Cookbooks (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook.html).
+	// For more information, see Adding Apps (https://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html)
+	// or Cookbooks and Recipes (https://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook.html).
 	CustomCookbooksSource *Source `type:"structure"`
 
 	// A string that contains user-defined, custom JSON. It can be used to override
@@ -16611,25 +16678,26 @@ type UpdateStackInput struct {
 	// "{\"key1\": \"value1\", \"key2\": \"value2\",...}"
 	//
 	// For more information about custom JSON, see Use Custom JSON to Modify the
-	// Stack Configuration Attributes (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html).
+	// Stack Configuration Attributes (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-json.html).
 	CustomJson *string `type:"string"`
 
 	// The stack's default Availability Zone, which must be in the stack's region.
-	// For more information, see Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// For more information, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	// If you also specify a value for DefaultSubnetId, the subnet must be in the
 	// same zone. For more information, see CreateStack.
 	DefaultAvailabilityZone *string `type:"string"`
 
 	// The ARN of an IAM profile that is the default profile for all of the stack's
 	// EC2 instances. For more information about IAM ARNs, see Using Identifiers
-	// (http://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
+	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html).
 	DefaultInstanceProfileArn *string `type:"string"`
 
 	// The stack's operating system, which must be set to one of the following:
 	//
 	//    * A supported Linux operating system: An Amazon Linux version, such as
-	//    Amazon Linux 2017.09, Amazon Linux 2017.03, Amazon Linux 2016.09, Amazon
-	//    Linux 2016.03, Amazon Linux 2015.09, or Amazon Linux 2015.03.
+	//    Amazon Linux 2018.03, Amazon Linux 2017.09, Amazon Linux 2017.03, Amazon
+	//    Linux 2016.09, Amazon Linux 2016.03, Amazon Linux 2015.09, or Amazon Linux
+	//    2015.03.
 	//
 	//    * A supported Ubuntu operating system, such as Ubuntu 16.04 LTS, Ubuntu
 	//    14.04 LTS, or Ubuntu 12.04 LTS.
@@ -16645,25 +16713,25 @@ type UpdateStackInput struct {
 	//
 	//    * A custom AMI: Custom. You specify the custom AMI you want to use when
 	//    you create instances. For more information about how to use custom AMIs
-	//    with OpsWorks, see Using Custom AMIs (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
+	//    with OpsWorks, see Using Custom AMIs (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
 	//
 	// The default option is the stack's current operating system. For more information
 	// about supported operating systems, see AWS OpsWorks Stacks Operating Systems
-	// (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
+	// (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-os.html).
 	DefaultOs *string `type:"string"`
 
 	// The default root device type. This value is used by default for all instances
 	// in the stack, but you can override it when you create an instance. For more
-	// information, see Storage for the Root Device (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
+	// information, see Storage for the Root Device (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html#storage-for-the-root-device).
 	DefaultRootDeviceType *string `type:"string" enum:"RootDeviceType"`
 
 	// A default Amazon EC2 key-pair name. The default value is none. If you specify
 	// a key-pair name, AWS OpsWorks Stacks installs the public key on the instance
 	// and you can use the private key with an SSH client to log in to the instance.
-	// For more information, see  Using SSH to Communicate with an Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
-	// and  Managing SSH Access (http://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
+	// For more information, see Using SSH to Communicate with an Instance (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
+	// and Managing SSH Access (https://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
 	// You can override this setting by specifying a different key pair, or no key
-	// pair, when you  create an instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
+	// pair, when you create an instance (https://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
 	DefaultSshKeyName *string `type:"string"`
 
 	// The stack's default VPC subnet ID. This parameter is required if you specify
@@ -16687,7 +16755,7 @@ type UpdateStackInput struct {
 	//
 	//    * Fruits
 	//
-	//    * Greek_Deities
+	//    * Greek_Deities_and_Titans
 	//
 	//    * Legendary_creatures_from_Japan
 	//
@@ -16738,7 +16806,7 @@ type UpdateStackInput struct {
 	//    manually associate a built-in security group with a layer on. Custom security
 	//    groups are required only for those layers that need custom settings.
 	//
-	// For more information, see Create a New Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
+	// For more information, see Create a New Stack (https://docs.aws.amazon.com/opsworks/latest/userguide/workingstacks-creating.html).
 	UseOpsworksSecurityGroups *bool `type:"boolean"`
 }
 
@@ -16891,7 +16959,7 @@ type UpdateUserProfileInput struct {
 	_ struct{} `type:"structure"`
 
 	// Whether users can specify their own SSH public key through the My Settings
-	// page. For more information, see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/security-settingsshkey.html).
+	// page. For more information, see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/security-settingsshkey.html).
 	AllowSelfManagement *bool `type:"boolean"`
 
 	// The user IAM ARN. This can also be a federated user's ARN.
@@ -17046,7 +17114,7 @@ type UserProfile struct {
 	_ struct{} `type:"structure"`
 
 	// Whether users can specify their own SSH public key through the My Settings
-	// page. For more information, see Managing User Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/security-settingsshkey.html).
+	// page. For more information, see Managing User Permissions (https://docs.aws.amazon.com/opsworks/latest/userguide/security-settingsshkey.html).
 	AllowSelfManagement *bool `type:"boolean"`
 
 	// The user's IAM ARN.
@@ -17102,12 +17170,69 @@ func (s *UserProfile) SetSshUsername(v string) *UserProfile {
 	return s
 }
 
+// Indicates that a request was not valid.
+type ValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The exception message.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ValidationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Describes an instance's Amazon EBS volume.
 type Volume struct {
 	_ struct{} `type:"structure"`
 
 	// The volume Availability Zone. For more information, see Regions and Endpoints
-	// (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	AvailabilityZone *string `type:"string"`
 
 	// The device name.
@@ -17117,7 +17242,7 @@ type Volume struct {
 	Ec2VolumeId *string `type:"string"`
 
 	// Specifies whether an Amazon EBS volume is encrypted. For more information,
-	// see Amazon EBS Encryption (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
+	// see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
 	Encrypted *bool `type:"boolean"`
 
 	// The instance ID.
@@ -17136,19 +17261,19 @@ type Volume struct {
 	RaidArrayId *string `type:"string"`
 
 	// The AWS region. For more information about AWS regions, see Regions and Endpoints
-	// (http://docs.aws.amazon.com/general/latest/gr/rande.html).
+	// (https://docs.aws.amazon.com/general/latest/gr/rande.html).
 	Region *string `type:"string"`
 
 	// The volume size.
 	Size *int64 `type:"integer"`
 
-	// The value returned by DescribeVolumes (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeVolumes.html).
+	// The value returned by DescribeVolumes (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeVolumes.html).
 	Status *string `type:"string"`
 
 	// The volume ID.
 	VolumeId *string `type:"string"`
 
-	// The volume type. For more information, see  Amazon EBS Volume Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+	// The volume type. For more information, see Amazon EBS Volume Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 	//
 	//    * standard - Magnetic. Magnetic volumes must have a minimum size of 1
 	//    GiB and a maximum size of 1024 GiB.
@@ -17267,7 +17392,7 @@ type VolumeConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies whether an Amazon EBS volume is encrypted. For more information,
-	// see Amazon EBS Encryption (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
+	// see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
 	Encrypted *bool `type:"boolean"`
 
 	// For PIOPS volumes, the IOPS per disk.
@@ -17291,7 +17416,7 @@ type VolumeConfiguration struct {
 	// Size is a required field
 	Size *int64 `type:"integer" required:"true"`
 
-	// The volume type. For more information, see  Amazon EBS Volume Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+	// The volume type. For more information, see Amazon EBS Volume Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 	//
 	//    * standard - Magnetic. Magnetic volumes must have a minimum size of 1
 	//    GiB and a maximum size of 1024 GiB.

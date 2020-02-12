@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCloudFormationStackSetInstance() *schema.Resource {
@@ -248,6 +248,31 @@ func resourceAwsCloudFormationStackSetInstanceParseId(id string) (string, string
 	}
 
 	return parts[0], parts[1], parts[2], nil
+}
+
+func listCloudFormationStackSetInstances(conn *cloudformation.CloudFormation, stackSetName string) ([]*cloudformation.StackInstanceSummary, error) {
+	input := &cloudformation.ListStackInstancesInput{
+		StackSetName: aws.String(stackSetName),
+	}
+	result := make([]*cloudformation.StackInstanceSummary, 0)
+
+	for {
+		output, err := conn.ListStackInstances(input)
+
+		if err != nil {
+			return result, err
+		}
+
+		result = append(result, output.Summaries...)
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return result, nil
 }
 
 func refreshCloudformationStackSetOperation(conn *cloudformation.CloudFormation, stackSetName, operationID string) resource.StateRefreshFunc {

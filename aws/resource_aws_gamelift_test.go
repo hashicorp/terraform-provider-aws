@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 type testAccGameliftGame struct {
@@ -27,7 +28,6 @@ func testAccAWSGameliftSampleGame(region string) (*testAccGameliftGame, error) {
 	bucket := fmt.Sprintf("gamelift-sample-builds-prod-%s", region)
 	key := fmt.Sprintf("%s/server/sample_build_%s", version, version)
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/sample-build-upload-role-%s", accId, region)
-
 	launchPath := `C:\game\Bin64.Release.Dedicated\MultiplayerProjectLauncher_Server.exe`
 
 	gg := &testAccGameliftGame{
@@ -65,5 +65,5 @@ func testAccGameliftAccountIdByRegion(region string) (string, error) {
 		return accId, nil
 	}
 
-	return "", fmt.Errorf("Account ID not found for region %q", region)
+	return "", &resource.NotFoundError{Message: fmt.Sprintf("GameLift Account ID not found for region %q", region)}
 }

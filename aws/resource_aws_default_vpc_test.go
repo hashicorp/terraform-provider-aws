@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDefaultVpc_basic(t *testing.T) {
@@ -48,10 +48,6 @@ func testAccCheckAWSDefaultVpcDestroy(s *terraform.State) error {
 }
 
 const testAccAWSDefaultVpcConfigBasic = `
-provider "aws" {
-    region = "us-west-2"
-}
-
 resource "aws_default_vpc" "foo" {
 	tags = {
 		Name = "Default VPC"

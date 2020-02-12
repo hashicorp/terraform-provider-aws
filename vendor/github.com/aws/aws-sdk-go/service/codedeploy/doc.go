@@ -52,8 +52,8 @@
 //    this is an AppSpec file that specifies the Amazon ECS task definition,
 //    container, and port where production traffic is rerouted. For an EC2/On-premises
 //    deployment, this is an archive file that contains source content—source
-//    code, webpages, executable files, and deployment scripts—along with an
-//    AppSpec file. Revisions are stored in Amazon S3 buckets or GitHub repositories.
+//    code, webpages, executable files, and deployment scripts—along with
+//    an AppSpec file. Revisions are stored in Amazon S3 buckets or GitHub repositories.
 //    For Amazon S3, a revision is uniquely identified by its Amazon S3 object
 //    key and its ETag, version, or both. For GitHub, a revision is uniquely
 //    identified by its commit ID.

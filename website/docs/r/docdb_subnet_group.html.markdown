@@ -1,12 +1,12 @@
 ---
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_subnet_group"
-sidebar_current: "docs-aws-resource-docdb-subnet-group"
 description: |-
   Provides an DocumentDB subnet group resource.
 ---
 
-# aws_docdb_subnet_group
+# Resource: aws_docdb_subnet_group
 
 Provides an DocumentDB subnet group resource.
 

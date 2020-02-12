@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSBeanstalkConfigurationTemplate_basic(t *testing.T) {
@@ -145,15 +145,16 @@ func testAccCheckBeanstalkConfigurationTemplateExists(n string, config *elasticb
 func testAccBeanstalkConfigurationTemplateConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "tf-test-%s"
+  name        = "tf-test-%s"
   description = "tf-test-desc-%s"
 }
 
 resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
-  name = "tf-test-template-config"
-  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  name                = "tf-test-template-config"
+  application         = "${aws_elastic_beanstalk_application.tftest.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
-}`, r, r)
+}
+`, r, r)
 }
 
 func testAccBeanstalkConfigurationTemplateConfig_VPC(name string) string {
@@ -219,7 +220,6 @@ resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
     name      = "InstanceType"
     value     = "m1.small"
   }
-
 }
 `, name, name)
 }
