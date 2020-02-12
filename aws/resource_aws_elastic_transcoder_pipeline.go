@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsElasticTranscoderPipeline() *schema.Resource {
@@ -238,7 +238,7 @@ func expandETNotifications(d *schema.ResourceData) *elastictranscoder.Notificati
 	}
 
 	s := set.(*schema.Set).List()
-	if s == nil || len(s) == 0 {
+	if len(s) == 0 {
 		return nil
 	}
 

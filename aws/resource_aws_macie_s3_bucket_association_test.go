@@ -6,16 +6,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSMacieS3BucketAssociation_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMacieS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccAWSMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMacieS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -138,6 +138,22 @@ func testAccCheckAWSMacieS3BucketAssociationExists(name string) resource.TestChe
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSMacie(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).macieconn
+
+	input := &macie.ListS3ResourcesInput{}
+
+	_, err := conn.ListS3Resources(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

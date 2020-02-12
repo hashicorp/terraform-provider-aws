@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_acl_rule"
-sidebar_current: "docs-aws-resource-network-acl-rule"
 description: |-
   Provides an network ACL Rule resource.
 ---
 
-# aws_network_acl_rule
+# Resource: aws_network_acl_rule
 
 Creates an entry (a rule) in a network ACL with the specified rule number.
 
@@ -29,7 +29,8 @@ resource "aws_network_acl_rule" "bar" {
   egress         = false
   protocol       = "tcp"
   rule_action    = "allow"
-  cidr_block     = "0.0.0.0/0"
+  # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
+  cidr_block = # add a CIDR block here
   from_port      = 22
   to_port        = 22
 }

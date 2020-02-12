@@ -3,18 +3,17 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
-	"strings"
 	"time"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsOpsworksStack() *schema.Resource {
@@ -251,9 +250,13 @@ func resourceAwsOpsworksSetStackCustomCookbooksSource(d *schema.ResourceData, v 
 		if v.Revision != nil {
 			m["revision"] = *v.Revision
 		}
-		// v.Password will, on read, contain the placeholder string
+
+		// v.Password and v.SshKey will, on read, contain the placeholder string
 		// "*****FILTERED*****", so we ignore it on read and let persist
 		// the value already in the state.
+		m["password"] = d.Get("custom_cookbooks_source.0.password").(string)
+		m["ssh_key"] = d.Get("custom_cookbooks_source.0.ssh_key").(string)
+
 		nv = append(nv, m)
 	}
 
@@ -332,7 +335,8 @@ func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	stack := resp.Stacks[0]
-	d.Set("arn", stack.Arn)
+	arn := aws.StringValue(stack.Arn)
+	d.Set("arn", arn)
 	d.Set("agent_version", stack.AgentVersion)
 	d.Set("name", stack.Name)
 	d.Set("region", stack.Region)
@@ -363,6 +367,16 @@ func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	resourceAwsOpsworksSetStackCustomCookbooksSource(d, stack.CustomCookbooksSource)
 
+	tags, err := keyvaluetags.OpsworksListTags(client, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Opsworks stack (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -387,11 +401,7 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 		return nil, fmt.Errorf("Error creating AWS session: %s", err)
 	}
 
-	sess.Handlers.Build.PushBackNamed(addTerraformVersionToUserAgent)
-
-	if extraDebug := os.Getenv("TERRAFORM_AWS_AUTHFAILURE_DEBUG"); extraDebug != "" {
-		sess.Handlers.UnmarshalError.PushFrontNamed(debugAuthFailure)
-	}
+	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", meta.(*AWSClient).terraformVersion))
 
 	newSession := sess.Copy(&aws.Config{Region: aws.String(region)})
 	newOpsworksconn := opsworks.New(newSession)
@@ -439,33 +449,31 @@ func resourceAwsOpsworksStackCreate(d *schema.ResourceData, meta interface{}) er
 
 	var resp *opsworks.CreateStackOutput
 	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
-		var cerr error
-		resp, cerr = client.CreateStack(req)
-		if cerr != nil {
-			if opserr, ok := cerr.(awserr.Error); ok {
-				// If Terraform is also managing the service IAM role,
-				// it may have just been created and not yet be
-				// propagated.
-				// AWS doesn't provide a machine-readable code for this
-				// specific error, so we're forced to do fragile message
-				// matching.
-				// The full error we're looking for looks something like
-				// the following:
-				// Service Role Arn: [...] is not yet propagated, please try again in a couple of minutes
-				propErr := "not yet propagated"
-				trustErr := "not the necessary trust relationship"
-				validateErr := "validate IAM role permission"
-				if opserr.Code() == "ValidationException" && (strings.Contains(opserr.Message(), trustErr) || strings.Contains(opserr.Message(), propErr) || strings.Contains(opserr.Message(), validateErr)) {
-					log.Printf("[INFO] Waiting for service IAM role to propagate")
-					return resource.RetryableError(cerr)
-				}
+		resp, err = client.CreateStack(req)
+		if err != nil {
+			// If Terraform is also managing the service IAM role, it may have just been created and not yet be
+			// propagated. AWS doesn't provide a machine-readable code for this specific error, so we're forced
+			// to do fragile message matching.
+			// The full error we're looking for looks something like the following:
+			// Service Role Arn: [...] is not yet propagated, please try again in a couple of minutes
+			propErr := "not yet propagated"
+			trustErr := "not the necessary trust relationship"
+			validateErr := "validate IAM role permission"
+
+			if isAWSErr(err, "ValidationException", propErr) || isAWSErr(err, "ValidationException", trustErr) || isAWSErr(err, "ValidationException", validateErr) {
+				log.Printf("[INFO] Waiting for service IAM role to propagate")
+				return resource.RetryableError(err)
 			}
-			return resource.NonRetryableError(cerr)
+
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = client.CreateStack(req)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating Opsworks stack: %s", err)
 	}
 
 	stackId := *resp.StackId
@@ -531,18 +539,6 @@ func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) er
 		req.Attributes["Color"] = aws.String(v.(string))
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "opsworks",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
-	}
-
-	if tagErr := setTagsOpsworks(client, d, arn.String()); tagErr != nil {
-		return tagErr
-	}
-
 	req.ChefConfiguration = &opsworks.ChefConfiguration{
 		BerkshelfVersion: aws.String(d.Get("berkshelf_version").(string)),
 		ManageBerkshelf:  aws.Bool(d.Get("manage_berkshelf").(bool)),
@@ -558,6 +554,21 @@ func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) er
 	_, err = client.UpdateStack(req)
 	if err != nil {
 		return err
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "opsworks",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
+	}.String()
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.OpsworksUpdateTags(client, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsOpsworksStackRead(d, meta)

@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 var snsPlatformRequiresPlatformPrincipal = map[string]bool{
@@ -174,6 +174,9 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = snsconn.SetPlatformApplicationAttributes(req)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error updating SNS platform application: %s", err)
@@ -240,10 +243,7 @@ func resourceAwsSnsPlatformApplicationDelete(d *schema.ResourceData, meta interf
 	_, err := snsconn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
 		PlatformApplicationArn: aws.String(d.Id()),
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func decodeResourceAwsSnsPlatformApplicationID(input string) (arnS, name, platform string, err error) {

@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
@@ -73,6 +73,13 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 			{
 				Config:      testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt, 2),
 				ExpectError: regexp.MustCompile(`Multiple matching EC2 DHCP Options found`),
+			},
+			{
+				// We have one last empty step here because otherwise we'll leave the
+				// test case with resources in the state and an erroneous config, and
+				// thus the automatic destroy step will fail. This ensures we end with
+				// both an empty state and a valid config.
+				Config: `/* this config intentionally left blank */`,
 			},
 		},
 	})

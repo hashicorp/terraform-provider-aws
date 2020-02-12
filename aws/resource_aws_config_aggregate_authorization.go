@@ -7,14 +7,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsConfigAggregateAuthorization() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsConfigAggregateAuthorizationPut,
 		Read:   resourceAwsConfigAggregateAuthorizationRead,
+		Update: resourceAwsConfigAggregateAuthorizationUpdate,
 		Delete: resourceAwsConfigAggregateAuthorizationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -37,6 +38,7 @@ func resourceAwsConfigAggregateAuthorization() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -50,6 +52,7 @@ func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta int
 	req := &configservice.PutAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountId),
 		AuthorizedAwsRegion: aws.String(region),
+		Tags:                keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ConfigserviceTags(),
 	}
 
 	_, err := conn.PutAggregationAuthorization(req)
@@ -58,6 +61,7 @@ func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta int
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", accountId, region))
+
 	return resourceAwsConfigAggregateAuthorizationRead(d, meta)
 }
 
@@ -77,17 +81,47 @@ func resourceAwsConfigAggregateAuthorizationRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("Error retrieving list of aggregate authorizations: %s", err)
 	}
 
+	var aggregationAuthorization *configservice.AggregationAuthorization
 	// Check for existing authorization
 	for _, auth := range aggregateAuthorizations {
 		if accountId == aws.StringValue(auth.AuthorizedAccountId) && region == aws.StringValue(auth.AuthorizedAwsRegion) {
-			d.Set("arn", auth.AggregationAuthorizationArn)
-			return nil
+			aggregationAuthorization = auth
 		}
 	}
 
-	log.Printf("[WARN] Aggregate Authorization not found, removing from state: %s", d.Id())
-	d.SetId("")
+	if aggregationAuthorization == nil {
+		log.Printf("[WARN] Aggregate Authorization not found, removing from state: %s", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)
+
+	tags, err := keyvaluetags.ConfigserviceListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Config Aggregate Authorization (%s): %s", d.Get("arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
+}
+
+func resourceAwsConfigAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).configconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.ConfigserviceUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Config Aggregate Authorization (%s) tags: %s", d.Get("arn").(string), err)
+		}
+	}
+
+	return resourceAwsConfigAggregateAuthorizationRead(d, meta)
 }
 
 func resourceAwsConfigAggregateAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
@@ -120,9 +154,7 @@ func describeConfigAggregateAuthorizations(conn *configservice.ConfigService) ([
 		if err != nil {
 			return aggregationAuthorizations, err
 		}
-		for _, aggregationAuthorization := range output.AggregationAuthorizations {
-			aggregationAuthorizations = append(aggregationAuthorizations, aggregationAuthorization)
-		}
+		aggregationAuthorizations = append(aggregationAuthorizations, output.AggregationAuthorizations...)
 		if output.NextToken == nil {
 			break
 		}

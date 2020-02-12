@@ -1,12 +1,12 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_event_subscription"
-sidebar_current: "docs-aws-resource-redshift-event-subscription"
 description: |-
   Provides a Redshift event subscription resource.
 ---
 
-# aws_redshift_event_subscription
+# Resource: aws_redshift_event_subscription
 
 Provides a Redshift event subscription resource.
 
@@ -25,8 +25,8 @@ resource "aws_sns_topic" "default" {
 }
 
 resource "aws_redshift_event_subscription" "default" {
-  name      = "redshift-event-sub"
-  sns_topic = "${aws_sns_topic.default.arn}"
+  name          = "redshift-event-sub"
+  sns_topic_arn = "${aws_sns_topic.default.arn}"
 
   source_type = "cluster"
   source_ids  = ["${aws_redshift_cluster.default.id}"]
@@ -63,6 +63,7 @@ The following arguments are supported:
 
 The following additional atttributes are provided:
 
+* `arn` - Amazon Resource Name (ARN) of the Redshift event notification subscription
 * `id` - The name of the Redshift event notification subscription
 * `customer_aws_id` - The AWS customer account associated with the Redshift event notification subscription
 

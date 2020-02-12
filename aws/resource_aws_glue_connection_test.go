@@ -3,14 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -28,10 +27,6 @@ func testSweepGlueConnections(region string) error {
 	conn := client.(*AWSClient).glueconn
 	catalogID := client.(*AWSClient).accountid
 
-	prefixes := []string{
-		"tf-acc-test-",
-	}
-
 	input := &glue.GetConnectionsInput{
 		CatalogId: aws.String(catalogID),
 	}
@@ -41,23 +36,12 @@ func testSweepGlueConnections(region string) error {
 			return false
 		}
 		for _, connection := range page.ConnectionList {
-			skip := true
-			name := connection.Name
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Glue Connection: %s", *name)
-				continue
-			}
+			name := aws.StringValue(connection.Name)
 
-			log.Printf("[INFO] Deleting Glue Connection: %s", *name)
-			err := deleteGlueConnection(conn, catalogID, *name)
+			log.Printf("[INFO] Deleting Glue Connection: %s", name)
+			err := deleteGlueConnection(conn, catalogID, name)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", *name, err)
+				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", name, err)
 			}
 		}
 		return !lastPage

@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSSESReceiptRuleSet_basic(t *testing.T) {
@@ -16,7 +16,7 @@ func TestAccAWSSESReceiptRuleSet_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
@@ -83,11 +83,7 @@ func testAccCheckAwsSESReceiptRuleSetExists(n string) resource.TestCheckFunc {
 		}
 
 		_, err := conn.DescribeReceiptRuleSet(params)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

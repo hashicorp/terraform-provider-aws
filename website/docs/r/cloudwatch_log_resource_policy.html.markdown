@@ -1,12 +1,12 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_resource_policy"
-sidebar_current: "docs-aws-resource-cloudwatch-log-resource-policy"
 description: |-
   Provides a resource to manage a CloudWatch log resource policy
 ---
 
-# aws_cloudwatch_log_resource_policy
+# Resource: aws_cloudwatch_log_resource_policy
 
 Provides a resource to manage a CloudWatch log resource policy.
 

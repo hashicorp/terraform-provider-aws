@@ -1,12 +1,12 @@
 ---
+subcategory: "CloudFront"
 layout: "aws"
-page_title: "AWS: cloudfront_distribution"
-sidebar_current: "docs-aws-resource-cloudfront-distribution"
+page_title: "AWS: aws_cloudfront_distribution"
 description: |-
   Provides a CloudFront web distribution resource.
 ---
 
-# aws_cloudfront_distribution
+# Resource: aws_cloudfront_distribution
 
 Creates an Amazon CloudFront web distribution.
 
@@ -144,6 +144,53 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
+The following example below creates a Cloudfront distribution with an origin group for failover routing:
+
+```hcl
+resource "aws_cloudfront_distribution" "s3_distribution" {
+  origin_group {
+    origin_id = "groupS3"
+
+    failover_criteria {
+      status_codes = [403, 404, 500, 502]
+    }
+
+    member {
+      origin_id = "primaryS3"
+    }
+
+    member {
+      origin_id = "failoverS3"
+    }
+  }
+
+  origin {
+    domain_name = "${aws_s3_bucket.primary.bucket_regional_domain_name}"
+    origin_id   = "primaryS3"
+
+    s3_origin_config {
+      origin_access_identity = "${aws_cloudfront_origin_access_identity.default.cloudfront_access_identity_path}"
+    }
+  }
+
+  origin {
+    domain_name = "${aws_s3_bucket.failover.bucket_regional_domain_name}"
+    origin_id   = "failoverS3"
+
+    s3_origin_config {
+      origin_access_identity = "${aws_cloudfront_origin_access_identity.default.cloudfront_access_identity_path}"
+    }
+  }
+
+  default_cache_behavior {
+    # ... other configuration ...
+    target_origin_id = "groupS3"
+  }
+
+  # ... other configuration ...
+}
+```
+
 ## Argument Reference
 
 The CloudFront distribution argument layout is a complex structure composed
@@ -153,12 +200,6 @@ of several sub-resources - these resources are laid out below.
 
   * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for
     this distribution.
-
-  * `cache_behavior` (Optional) - **Deprecated**, use `ordered_cache_behavior` instead.
-
-  * `ordered_cache_behavior` (Optional) - An ordered list of [cache behaviors](#cache-behavior-arguments)
-    resource for this distribution. List from top to bottom
-+    in order of precedence. The topmost cache behavior will have precedence 0.
 
   * `comment` (Optional) - Any comments you want to include about the
     distribution.
@@ -184,8 +225,15 @@ of several sub-resources - these resources are laid out below.
     configuration](#logging-config-arguments) that controls how logs are written
     to your distribution (maximum one).
 
+  * `ordered_cache_behavior` (Optional) - An ordered list of [cache behaviors](#cache-behavior-arguments)
+    resource for this distribution. List from top to bottom
+    in order of precedence. The topmost cache behavior will have precedence 0.
+
   * `origin` (Required) - One or more [origins](#origin-arguments) for this
     distribution (multiples allowed).
+
+  * `origin_group` (Optional) - One or more [origin_group](#origin-group-arguments) for this
+  distribution (multiples allowed).  
 
   * `price_class` (Optional) - The price class for this distribution. One of
     `PriceClass_All`, `PriceClass_200`, `PriceClass_100`
@@ -201,11 +249,17 @@ of several sub-resources - these resources are laid out below.
 
   * `web_acl_id` (Optional) - If you're using AWS WAF to filter CloudFront
     requests, the Id of the AWS WAF web ACL that is associated with the
-    distribution.
+    distribution. The WAF Web ACL must exist in the WAF Global (CloudFront)
+    region and the credentials configuring this argument must have
+    `waf:GetWebACL` permissions assigned.
 
   * `retain_on_delete` (Optional) - Disables the distribution instead of
     deleting it when destroying the resource through Terraform. If this is set,
     the distribution needs to be deleted manually afterwards. Default: `false`.
+
+  * `wait_for_deployment` (Optional) - If enabled, the resource will wait for
+    the distribution status to change from `InProgress` to `Deployed`. Setting
+    this to`false` will skip the process. Default: `true`.
 
 #### Cache Behavior Arguments
 
@@ -374,7 +428,7 @@ argument is not required.
 
   * `s3_origin_config` - The [CloudFront S3 origin](#s3-origin-config-arguments)
     configuration information. If a custom origin is required, use
-    `custom_origin_config` instead.
+    `custom_origin_config` instead.    
 
 ##### Custom Origin Config Arguments
 
@@ -397,6 +451,22 @@ argument is not required.
 
 * `origin_access_identity` (Optional) - The [CloudFront origin access
   identity][5] to associate with the origin.
+
+#### Origin Group Arguments
+
+  * `origin_id` (Required) - A unique identifier for the origin group.
+
+  * `failover_criteria` (Required) - The [failover criteria](#failover-criteria-arguments) for when to failover to the secondary origin
+
+  * `member` (Required) - Ordered [member](#member-arguments) configuration blocks assigned to the origin group, where the first member is the primary origin. You must specify two members.
+
+##### Failover Criteria Arguments
+
+* `status_codes` (Required) - A list of HTTP status codes for the origin group
+
+##### Member Arguments
+
+* `origin_id` (Required) - The unique identifier of the member origin
 
 #### Restrictions Arguments
 
@@ -429,7 +499,8 @@ The arguments of `geo_restriction` are:
     this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 
   * `minimum_protocol_version` - The minimum version of the SSL protocol that
-    you want CloudFront to use for HTTPS connections. One of `SSLv3`, `TLSv1`,
+    you want CloudFront to use for HTTPS connections. Can only be set if 
+    `cloudfront_default_certificate = false`. One of `SSLv3`, `TLSv1`,
     `TLSv1_2016`, `TLSv1.1_2016` or `TLSv1.2_2018`. Default: `TLSv1`. **NOTE**:
     If you are using a custom certificate (specified with `acm_certificate_arn`
     or `iam_certificate_id`), and have specified `sni-only` in
@@ -477,7 +548,6 @@ In addition to all arguments above, the following attributes are exported:
      route an [Alias Resource Record Set][7] to. This attribute is simply an
      alias for the zone ID `Z2FDTNDATAQYW2`.
 
-
 [1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
 [2]: https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistribution.html
 [3]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
@@ -485,7 +555,6 @@ In addition to all arguments above, the following attributes are exported:
 [5]: /docs/providers/aws/r/cloudfront_origin_access_identity.html
 [6]: https://aws.amazon.com/certificate-manager/
 [7]: http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html
-
 
 ## Import
 

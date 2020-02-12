@@ -10,14 +10,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_key_pair", &resource.Sweeper{
 		Name: "aws_key_pair",
-		F:    testSweepKeyPairs,
+		Dependencies: []string{
+			"aws_elastic_beanstalk_environment",
+			"aws_instance",
+			"aws_spot_fleet_request",
+		},
+		F: testSweepKeyPairs,
 	})
 }
 
@@ -30,14 +35,7 @@ func testSweepKeyPairs(region string) error {
 
 	log.Printf("Destroying the tmp keys in (%s)", client.(*AWSClient).region)
 
-	resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("key-name"),
-				Values: []*string{aws.String("tmp-key*")},
-			},
-		},
-	})
+	resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping EC2 Key Pair sweep for %s: %s", region, err)
@@ -83,6 +81,50 @@ func TestAccAWSKeyPair_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"public_key"},
+			},
+		},
+	})
+}
+
+func TestAccAWSKeyPair_tags(t *testing.T) {
+	var keyPair ec2.KeyPairInfo
+	resourceName := "aws_key_pair.a_key_pair"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKeyPairDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKeyPairConfigTags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"public_key"},
+			},
+			{
+				Config: testAccAWSKeyPairConfigTags2("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSKeyPairConfigTags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -144,6 +186,27 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSKeyPair_disappears(t *testing.T) {
+	var keyPair ec2.KeyPairInfo
+	resourceName := "aws_key_pair.a_key_pair"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKeyPairDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKeyPairConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					testAccCheckAWSKeyPairDisappears(&keyPair),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 	ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -174,6 +237,21 @@ func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSKeyPairDisappears(keyPair *ec2.KeyPairInfo) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		req := &ec2.DeleteKeyPairInput{
+			KeyName: keyPair.KeyName,
+		}
+		if _, err := conn.DeleteKeyPair(req); err != nil {
+			return err
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSKeyPairFingerprint(conf *ec2.KeyPairInfo, expectedFingerprint string) resource.TestCheckFunc {
@@ -230,6 +308,33 @@ resource "aws_key_pair" "a_key_pair" {
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 `
+
+func testAccAWSKeyPairConfigTags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_key_pair" "a_key_pair" {
+  key_name   = "tf-acc-key-pair"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccAWSKeyPairConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_key_pair" "a_key_pair" {
+  key_name   = "tf-acc-key-pair"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 const testAccAWSKeyPairConfig_generatedName = `
 resource "aws_key_pair" "a_key_pair" {

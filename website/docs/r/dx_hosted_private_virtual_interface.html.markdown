@@ -1,12 +1,12 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_hosted_private_virtual_interface"
-sidebar_current: "docs-aws-resource-dx-hosted-private-virtual-interface"
 description: |-
   Provides a Direct Connect hosted private virtual interface resource.
 ---
 
-# aws_dx_hosted_private_virtual_interface
+# Resource: aws_dx_hosted_private_virtual_interface
 
 Provides a Direct Connect hosted private virtual interface resource. This resource represents the allocator's side of the hosted virtual interface.
 A hosted virtual interface is a virtual interface that is owned by another AWS account.
@@ -46,6 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
 * `jumbo_frame_capable` - Indicates whether jumbo frames (9001 MTU) are supported.
+* `aws_device` - The Direct Connect endpoint on which the virtual interface terminates.
 
 ## Timeouts
 

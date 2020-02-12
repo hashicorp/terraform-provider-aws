@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
@@ -73,13 +73,15 @@ func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
 func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 	lbName := fmt.Sprintf("testlistener-https-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProvidersWithTLS,
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBListenerConfigHTTPS(lbName, targetGroupName),
+				Config: testAccDataSourceAWSLBListenerConfigHTTPS(lbName, targetGroupName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_lb_listener.front_end", "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_listener.front_end", "arn"),
@@ -89,7 +91,7 @@ func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_lb_listener.front_end", "port", "443"),
 					resource.TestCheckResourceAttr("data.aws_lb_listener.front_end", "default_action.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_lb_listener.front_end", "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttr("data.aws_lb_listener.front_end", "ssl_policy", "ELBSecurityPolicy-2015-05"),
+					resource.TestCheckResourceAttr("data.aws_lb_listener.front_end", "ssl_policy", "ELBSecurityPolicy-2016-08"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_listener.from_lb_and_port", "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_listener.from_lb_and_port", "arn"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_listener.from_lb_and_port", "default_action.0.target_group_arn"),
@@ -98,7 +100,7 @@ func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_lb_listener.from_lb_and_port", "port", "443"),
 					resource.TestCheckResourceAttr("data.aws_lb_listener.from_lb_and_port", "default_action.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_lb_listener.from_lb_and_port", "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttr("data.aws_lb_listener.from_lb_and_port", "ssl_policy", "ELBSecurityPolicy-2015-05"),
+					resource.TestCheckResourceAttr("data.aws_lb_listener.from_lb_and_port", "ssl_policy", "ELBSecurityPolicy-2016-08"),
 				),
 			},
 		},
@@ -122,7 +124,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -183,10 +185,10 @@ resource "aws_security_group" "alb_test" {
   vpc_id      = "${aws_vpc.alb_test.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -241,7 +243,7 @@ resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -302,10 +304,10 @@ resource "aws_security_group" "alb_test" {
   vpc_id      = "${aws_vpc.alb_test.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -327,16 +329,17 @@ data "aws_alb_listener" "front_end" {
 data "aws_alb_listener" "from_lb_and_port" {
   load_balancer_arn = "${aws_alb.alb_test.arn}"
   port              = "${aws_alb_listener.front_end.port}"
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
-func testAccDataSourceAWSLBListenerConfigHTTPS(lbName, targetGroupName string) string {
+func testAccDataSourceAWSLBListenerConfigHTTPS(lbName, targetGroupName, certificate, key string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.alb_test.id}"
   protocol          = "HTTPS"
   port              = "443"
-  ssl_policy        = "ELBSecurityPolicy-2015-05"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = "${aws_iam_server_certificate.test_cert.arn}"
 
   default_action {
@@ -346,10 +349,10 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = "%[1]s"
   internal        = false
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -362,7 +365,7 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = "%[2]s"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.alb_test.id}"
@@ -421,10 +424,10 @@ resource "aws_security_group" "alb_test" {
   vpc_id      = "${aws_vpc.alb_test.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -440,31 +443,9 @@ resource "aws_security_group" "alb_test" {
 }
 
 resource "aws_iam_server_certificate" "test_cert" {
-  name             = "terraform-test-cert-%d"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-  private_key      = "${tls_private_key.example.private_key_pem}"
-}
-
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
+  name             = "terraform-test-cert-%[3]d"
+  certificate_body = "%[4]s"
+  private_key      = "%[5]s"
 }
 
 data "aws_lb_listener" "front_end" {
@@ -474,5 +455,6 @@ data "aws_lb_listener" "front_end" {
 data "aws_lb_listener" "from_lb_and_port" {
   load_balancer_arn = "${aws_lb.alb_test.arn}"
   port              = "${aws_lb_listener.front_end.port}"
-}`, lbName, targetGroupName, acctest.RandInt())
+}
+`, lbName, targetGroupName, acctest.RandInt(), certificate, key)
 }

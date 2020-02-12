@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSSsmDocumentDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_ssm_document.test"
-	name := "test_document"
+	name := fmt.Sprintf("test_document-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -69,7 +70,7 @@ DOC
 }
 
 data "aws_ssm_document" "test" {
-  name = "${aws_ssm_document.test.name}"
+  name            = "${aws_ssm_document.test.name}"
   document_format = "%s"
 }
 `, name, documentFormat)

@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRedshiftCluster() *schema.Resource {
@@ -25,7 +26,18 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			State: resourceAwsRedshiftClusterImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(75 * time.Minute),
+			Update: schema.DefaultTimeout(40 * time.Minute),
+			Delete: schema.DefaultTimeout(40 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"database_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -153,8 +165,7 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			"encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Default:  false,
 			},
 
 			"enhanced_vpc_routing": {
@@ -167,7 +178,6 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 
@@ -243,9 +253,10 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			},
 
 			"logging": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
+				Type:             schema.TypeList,
+				MaxItems:         1,
+				Optional:         true,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enable": {
@@ -269,27 +280,24 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			},
 
 			"enable_logging": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Computed:      true,
-				Deprecated:    "Use enable in the 'logging' block instead",
-				ConflictsWith: []string{"logging"},
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				Removed:  "Use `logging` configuration block `enable` argument instead",
 			},
 
 			"bucket_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				Deprecated:    "Use bucket_name in the 'logging' block instead",
-				ConflictsWith: []string{"logging"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Removed:  "Use `logging` configuration block `bucket_name` argument instead",
 			},
 
 			"s3_key_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				Deprecated:    "Use s3_key_prefix in the 'logging' block instead",
-				ConflictsWith: []string{"logging"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Removed:  "Use `logging` configuration block `s3_key_prefix` argument instead",
 			},
 
 			"snapshot_identifier": {
@@ -325,7 +333,7 @@ func resourceAwsRedshiftClusterImport(
 
 func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
-	tags := tagsFromMapRedshift(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RedshiftTags()
 
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
 		restoreOpts := &redshift.RestoreFromClusterSnapshotInput{
@@ -482,10 +490,10 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "backing-up", "modifying", "restoring"},
+		Pending:    []string{"creating", "backing-up", "modifying", "restoring", "available, prep-for-resize"},
 		Target:     []string{"available"},
 		Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d.Id(), conn),
-		Timeout:    75 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 	}
 
@@ -501,13 +509,9 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	logging, ok := d.GetOk("logging.0.enable")
-	_, deprecatedOk := d.GetOk("enable_logging")
-	if (ok && logging.(bool)) || deprecatedOk {
-		loggingErr := enableRedshiftClusterLogging(d, conn)
-		if loggingErr != nil {
-			log.Printf("[ERROR] Error Enabling Logging on Redshift Cluster: %s", err)
-			return loggingErr
+	if logging, ok := d.GetOk("logging.0.enable"); ok && logging.(bool) {
+		if err := enableRedshiftClusterLogging(d, conn); err != nil {
+			return fmt.Errorf("error enabling Redshift Cluster (%s) logging: %s", d.Id(), err)
 		}
 	}
 
@@ -612,23 +616,15 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
-	d.Set("tags", tagsToMapRedshift(rsc.Tags))
+	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(rsc.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	d.Set("snapshot_copy", flattenRedshiftSnapshotCopy(rsc.ClusterSnapshotCopyStatus))
 
-	// TODO: Deprecated fields - remove in next major version
-	d.Set("bucket_name", loggingStatus.BucketName)
-	d.Set("enable_logging", loggingStatus.LoggingEnabled)
-	d.Set("s3_key_prefix", loggingStatus.S3KeyPrefix)
-
-	d.Set("logging", flattenRedshiftLogging(loggingStatus))
-
-	return nil
-}
-
-func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	d.Partial(true)
+	if err := d.Set("logging", flattenRedshiftLogging(loggingStatus)); err != nil {
+		return fmt.Errorf("error setting logging: %s", err)
+	}
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -637,9 +633,23 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
 	}.String()
-	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
-		return tagErr
-	} else {
+
+	d.Set("arn", arn)
+
+	return nil
+}
+
+func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).redshiftconn
+	d.Partial(true)
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Redshift Cluster (%s) tags: %s", d.Get("arn").(string), err)
+		}
+
 		d.SetPartial("tags")
 	}
 
@@ -713,6 +723,16 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		requestUpdate = true
 	}
 
+	if d.HasChange("encrypted") {
+		req.Encrypted = aws.Bool(d.Get("encrypted").(bool))
+		requestUpdate = true
+	}
+
+	if d.Get("encrypted").(bool) && d.HasChange("kms_key_id") {
+		req.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
+		requestUpdate = true
+	}
+
 	if requestUpdate {
 		log.Printf("[INFO] Modifying Redshift Cluster: %s", d.Id())
 		log.Printf("[DEBUG] Redshift Cluster Modify options: %s", req)
@@ -757,10 +777,10 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 	if requestUpdate || d.HasChange("iam_roles") {
 
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"creating", "deleting", "rebooting", "resizing", "renaming", "modifying"},
+			Pending:    []string{"creating", "deleting", "rebooting", "resizing", "renaming", "modifying", "available, prep-for-resize"},
 			Target:     []string{"available"},
 			Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d.Id(), conn),
-			Timeout:    40 * time.Minute,
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 		}
 
@@ -803,22 +823,6 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 				return err
 			}
 		}
-	} else if d.HasChange("enable_logging") || d.HasChange("bucket_name") || d.HasChange("s3_key_prefix") {
-		if enableLogging, ok := d.GetOk("enable_logging"); ok && enableLogging.(bool) {
-			log.Printf("[INFO] Enabling Logging for Redshift Cluster %q", d.Id())
-			err := enableRedshiftClusterLogging(d, conn)
-			if err != nil {
-				return err
-			}
-		} else {
-			log.Printf("[INFO] Disabling Logging for Redshift Cluster %q", d.Id())
-			_, err := conn.DisableLogging(&redshift.DisableLoggingInput{
-				ClusterIdentifier: aws.String(d.Id()),
-			})
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	d.Partial(false)
@@ -827,36 +831,23 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func enableRedshiftClusterLogging(d *schema.ResourceData, conn *redshift.Redshift) error {
-	var bucketName, v interface{}
-	var deprecatedOk, ok bool
-	bucketName, deprecatedOk = d.GetOk("bucket_name")
-	v, ok = d.GetOk("logging.0.bucket_name")
-	if ok {
-		bucketName = v
-	}
-	if !ok && !deprecatedOk {
+	bucketNameRaw, ok := d.GetOk("logging.0.bucket_name")
+
+	if !ok {
 		return fmt.Errorf("bucket_name must be set when enabling logging for Redshift Clusters")
 	}
 
 	params := &redshift.EnableLoggingInput{
 		ClusterIdentifier: aws.String(d.Id()),
-		BucketName:        aws.String(bucketName.(string)),
+		BucketName:        aws.String(bucketNameRaw.(string)),
 	}
 
-	var s3KeyPrefix interface{}
-	s3KeyPrefix, deprecatedOk = d.GetOk("s3_key_prefix")
-	v, ok = d.GetOk("logging.0.s3_key_prefix")
-	if ok {
-		s3KeyPrefix = v
-	}
-	if ok || deprecatedOk {
-		params.S3KeyPrefix = aws.String(s3KeyPrefix.(string))
+	if v, ok := d.GetOk("logging.0.s3_key_prefix"); ok {
+		params.S3KeyPrefix = aws.String(v.(string))
 	}
 
-	_, loggingErr := conn.EnableLogging(params)
-	if loggingErr != nil {
-		log.Printf("[ERROR] Error Enabling Logging on Redshift Cluster: %s", loggingErr)
-		return loggingErr
+	if _, err := conn.EnableLogging(params); err != nil {
+		return fmt.Errorf("error enabling Redshift Cluster (%s) logging: %s", d.Id(), err)
 	}
 	return nil
 }
@@ -902,7 +893,8 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", deleteOpts)
-	err := deleteAwsRedshiftCluster(&deleteOpts, conn)
+	log.Printf("[DEBUG] schema.TimeoutDelete: %+v", d.Timeout(schema.TimeoutDelete))
+	err := deleteAwsRedshiftCluster(&deleteOpts, conn, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return err
 	}
@@ -912,7 +904,7 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.Redshift) error {
+func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.Redshift, timeout time.Duration) error {
 	id := *opts.ClusterIdentifier
 	log.Printf("[INFO] Deleting Redshift Cluster %q", id)
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
@@ -923,6 +915,9 @@ func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCluster(opts)
+	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Redshift Cluster (%s): %s", id, err)
 	}
@@ -931,7 +926,7 @@ func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.
 		Pending:    []string{"available", "creating", "deleting", "rebooting", "resizing", "renaming", "final-snapshot"},
 		Target:     []string{"destroyed"},
 		Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(id, conn),
-		Timeout:    40 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 5 * time.Second,
 	}
 

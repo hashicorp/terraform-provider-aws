@@ -5,12 +5,13 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"strings"
 )
 
 func resourceAwsAppautoscalingTarget() *schema.Resource {
@@ -19,6 +20,9 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 		Read:   resourceAwsAppautoscalingTargetRead,
 		Update: resourceAwsAppautoscalingTargetPut,
 		Delete: resourceAwsAppautoscalingTargetDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsAppautoscalingTargetImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"max_capacity": {
@@ -74,8 +78,10 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {
-			if isAWSErr(err, "ValidationException", "Unable to assume IAM role") {
-				log.Printf("[DEBUG] Retrying creation of Application Autoscaling Scalable Target due to possible issues with IAM: %s", err)
+			if isAWSErr(err, applicationautoscaling.ErrCodeValidationException, "Unable to assume IAM role") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, applicationautoscaling.ErrCodeValidationException, "ECS service doesn't exist") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -83,6 +89,10 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.RegisterScalableTarget(&targetOpts)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error creating application autoscaling target: %s", err)
 	}
@@ -94,11 +104,28 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{}) error {
+	var t *applicationautoscaling.ScalableTarget
+
 	conn := meta.(*AWSClient).appautoscalingconn
 
 	namespace := d.Get("service_namespace").(string)
 	dimension := d.Get("scalable_dimension").(string)
-	t, err := getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
+
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		t, err = getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		if d.IsNewResource() && t == nil {
+			return resource.RetryableError(&resource.NotFoundError{})
+		}
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		t, err = getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -189,4 +216,27 @@ func getAwsAppautoscalingTarget(resourceId, namespace, dimension string,
 	}
 
 	return nil, nil
+}
+
+func resourceAwsAppautoscalingTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+
+	if len(idParts) < 3 {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>", d.Id())
+	}
+
+	serviceNamespace := idParts[0]
+	resourceId := strings.Join(idParts[1:len(idParts)-1], "/")
+	scalableDimension := idParts[len(idParts)-1]
+
+	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>", d.Id())
+	}
+
+	d.Set("service_namespace", serviceNamespace)
+	d.Set("resource_id", resourceId)
+	d.Set("scalable_dimension", scalableDimension)
+	d.SetId(resourceId)
+
+	return []*schema.ResourceData{d}, nil
 }

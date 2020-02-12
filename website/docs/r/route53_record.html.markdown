@@ -1,12 +1,12 @@
 ---
+subcategory: "Route53"
 layout: "aws"
 page_title: "AWS: aws_route53_record"
-sidebar_current: "docs-aws-resource-route53-record"
 description: |-
   Provides a Route53 record resource.
 ---
 
-# aws_route53_record
+# Resource: aws_route53_record
 
 Provides a Route53 record resource.
 
@@ -90,6 +90,31 @@ resource "aws_route53_record" "www" {
 }
 ```
 
+### NS and SOA Record Management
+
+When creating Route 53 zones, the `NS` and `SOA` records for the zone are automatically created. Enabling the `allow_overwrite` argument will allow managing these records in a single Terraform run without the requirement for `terraform import`.
+
+```hcl
+resource "aws_route53_zone" "example" {
+  name = "test.example.com"
+}
+
+resource "aws_route53_record" "example" {
+  allow_overwrite = true
+  name            = "test.example.com"
+  ttl             = 30
+  type            = "NS"
+  zone_id         = "${aws_route53_zone.example.zone_id}"
+
+  records = [
+    "${aws_route53_zone.example.name_servers.0}",
+    "${aws_route53_zone.example.name_servers.1}",
+    "${aws_route53_zone.example.name_servers.2}",
+    "${aws_route53_zone.example.name_servers.3}",
+  ]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -108,7 +133,7 @@ The following arguments are supported:
 * `latency_routing_policy` - (Optional) A block indicating a routing policy based on the latency between the requestor and an AWS region. Conflicts with any other routing policy. Documented below.
 * `weighted_routing_policy` - (Optional) A block indicating a weighted routing policy. Conflicts with any other routing policy. Documented below.
 * `multivalue_answer_routing_policy` - (Optional) Set to `true` to indicate a multivalue answer routing policy. Conflicts with any other routing policy.
-* `allow_overwrite` - (Optional) Allow creation of this record in Terraform to overwrite an existing record, if any. This does not prevent other resources within Terraform or manual Route53 changes from overwriting this record. `true` by default.
+* `allow_overwrite` - (Optional) Allow creation of this record in Terraform to overwrite an existing record, if any. This does not affect the ability to update the record in Terraform and does not prevent other resources within Terraform or manual Route 53 changes outside Terraform from overwriting this record. `false` by default. This configuration is not recommended for most environments.
 
 Exactly one of `records` or `alias` must be specified: this determines whether it's an alias record.
 

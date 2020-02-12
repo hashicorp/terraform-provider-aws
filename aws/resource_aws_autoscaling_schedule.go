@@ -3,12 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const awsAutoscalingScheduleTimeLayout = "2006-01-02T15:04:05Z"
@@ -19,6 +20,9 @@ func resourceAwsAutoscalingSchedule() *schema.Resource {
 		Read:   resourceAwsAutoscalingScheduleRead,
 		Update: resourceAwsAutoscalingScheduleCreate,
 		Delete: resourceAwsAutoscalingScheduleDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsAutoscalingScheduleImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -69,6 +73,27 @@ func resourceAwsAutoscalingSchedule() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceAwsAutoscalingScheduleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	splitId := strings.Split(d.Id(), "/")
+	if len(splitId) != 2 {
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s. Please follow 'asg-name/action-name'", d.Id())
+	}
+
+	asgName := splitId[0]
+	actionName := splitId[1]
+
+	err := d.Set("autoscaling_group_name", asgName)
+	if err != nil {
+		return []*schema.ResourceData{}, fmt.Errorf("failed to set autoscaling_group_name value")
+	}
+	err = d.Set("scheduled_action_name", actionName)
+	if err != nil {
+		return []*schema.ResourceData{}, fmt.Errorf("failed to set scheduled_action_name value")
+	}
+	d.SetId(actionName)
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsAutoscalingScheduleCreate(d *schema.ResourceData, meta interface{}) error {
@@ -129,7 +154,7 @@ func resourceAwsAutoscalingScheduleCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAutoscalingScheduleRead(d *schema.ResourceData, meta interface{}) error {
-	sa, err, exists := resourceAwsASGScheduledActionRetrieve(d, meta)
+	sa, exists, err := resourceAwsASGScheduledActionRetrieve(d, meta)
 	if err != nil {
 		return err
 	}
@@ -189,7 +214,7 @@ func resourceAwsAutoscalingScheduleDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsASGScheduledActionRetrieve(d *schema.ResourceData, meta interface{}) (*autoscaling.ScheduledUpdateGroupAction, error, bool) {
+func resourceAwsASGScheduledActionRetrieve(d *schema.ResourceData, meta interface{}) (*autoscaling.ScheduledUpdateGroupAction, bool, error) {
 	autoscalingconn := meta.(*AWSClient).autoscalingconn
 
 	params := &autoscaling.DescribeScheduledActionsInput{
@@ -205,15 +230,15 @@ func resourceAwsASGScheduledActionRetrieve(d *schema.ResourceData, meta interfac
 			log.Printf("[WARN] Autoscaling Scheduled Action (%s) not found, removing from state", d.Id())
 			d.SetId("")
 
-			return nil, nil, false
+			return nil, false, nil
 		}
-		return nil, fmt.Errorf("Error retrieving Autoscaling Scheduled Actions: %s", err), false
+		return nil, false, fmt.Errorf("Error retrieving Autoscaling Scheduled Actions: %s", err)
 	}
 
 	if len(actions.ScheduledUpdateGroupActions) != 1 ||
 		*actions.ScheduledUpdateGroupActions[0].ScheduledActionName != d.Id() {
-		return nil, nil, false
+		return nil, false, nil
 	}
 
-	return actions.ScheduledUpdateGroupActions[0], nil, true
+	return actions.ScheduledUpdateGroupActions[0], true, nil
 }

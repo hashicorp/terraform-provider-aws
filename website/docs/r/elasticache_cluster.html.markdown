@@ -1,12 +1,12 @@
 ---
+subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_cluster"
-sidebar_current: "docs-aws-resource-elasticache-cluster"
 description: |-
   Provides an ElastiCache Cluster resource.
 ---
 
-# aws_elasticache_cluster
+# Resource: aws_elasticache_cluster
 
 Provides an ElastiCache Cluster resource, which manages a Memcached cluster or Redis instance.
 For working with Redis (Cluster Mode Enabled) replication groups, see the
@@ -43,6 +43,7 @@ resource "aws_elasticache_cluster" "example" {
   node_type            = "cache.m4.large"
   num_cache_nodes      = 1
   parameter_group_name = "default.redis3.2"
+  engine_version       = "3.2.10"
   port                 = 6379
 }
 ```
@@ -128,8 +129,6 @@ SNS topic to send ElastiCache notifications to. Example:
 * `az_mode` - (Optional, Memcached only) Specifies whether the nodes in this Memcached node group are created in a single Availability Zone or created across multiple Availability Zones in the cluster's region. Valid values for this parameter are `single-az` or `cross-az`, default is `single-az`. If you want to choose `cross-az`, `num_cache_nodes` must be greater than `1`
 
 * `availability_zone` - (Optional) The Availability Zone for the cache cluster. If you want to create cache nodes in multi-az, use `preferred_availability_zones` instead. Default: System chosen Availability Zone.
-
-* `availability_zones` - (*DEPRECATED*, Optional, Memcached only) Use `preferred_availability_zones` instead unless you want to create cache nodes in single-az, then use `availability_zone`. Set of Availability Zones in which the cache nodes will be created.
 
 * `preferred_availability_zones` - (Optional, Memcached only) A list of the Availability Zones in which cache nodes are created. If you are creating your cluster in an Amazon VPC you can only locate nodes in Availability Zones that are associated with the subnets in the selected subnet group. The number of Availability Zones listed must equal the value of `num_cache_nodes`. If you want all the nodes in the same Availability Zone, use `availability_zone` instead, or repeat the Availability Zone multiple times in the list. Default: System chosen Availability Zones. Detecting drift of existing node availability zone is not currently supported. Updating this argument by itself to migrate existing node availability zones is not currently supported and will show a perpetual difference.
 

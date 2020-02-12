@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsLoadBalancerBackendServerPolicies() *schema.Resource {
@@ -96,9 +96,7 @@ func resourceAwsLoadBalancerBackendServerPoliciesRead(d *schema.ResourceData, me
 			continue
 		}
 
-		for _, name := range backendServer.PolicyNames {
-			policyNames = append(policyNames, name)
-		}
+		policyNames = append(policyNames, backendServer.PolicyNames...)
 	}
 
 	d.Set("load_balancer_name", loadBalancerName)

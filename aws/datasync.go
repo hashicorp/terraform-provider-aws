@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSyncParseLocationURI(uri string) (string, error) {
@@ -31,6 +31,20 @@ func expandDataSyncEc2Config(l []interface{}) *datasync.Ec2Config {
 	}
 
 	return ec2Config
+}
+
+func expandDataSyncSmbMountOptions(l []interface{}) *datasync.SmbMountOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	smbMountOptions := &datasync.SmbMountOptions{
+		Version: aws.String(m["version"].(string)),
+	}
+
+	return smbMountOptions
 }
 
 func expandDataSyncOnPremConfig(l []interface{}) *datasync.OnPremConfig {
@@ -94,6 +108,18 @@ func flattenDataSyncEc2Config(ec2Config *datasync.Ec2Config) []interface{} {
 	m := map[string]interface{}{
 		"security_group_arns": schema.NewSet(schema.HashString, flattenStringList(ec2Config.SecurityGroupArns)),
 		"subnet_arn":          aws.StringValue(ec2Config.SubnetArn),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDataSyncSmbMountOptions(mountOptions *datasync.SmbMountOptions) []interface{} {
+	if mountOptions == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"version": aws.StringValue(mountOptions.Version),
 	}
 
 	return []interface{}{m}

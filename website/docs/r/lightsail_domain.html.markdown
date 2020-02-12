@@ -1,12 +1,12 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_domain"
-sidebar_current: "docs-aws-resource-lightsail-domain"
 description: |-
   Provides an Lightsail Domain
 ---
 
-# aws_lightsail_domain
+# Resource: aws_lightsail_domain
 
 Creates a domain resource for the specified domain (e.g., example.com).
 You cannot register a new domain name using Lightsail. You must register

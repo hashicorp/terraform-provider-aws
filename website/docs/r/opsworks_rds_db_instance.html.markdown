@@ -1,12 +1,12 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_rds_db_instance"
-sidebar_current: "docs-aws-resource-opsworks-rds-db-instance"
 description: |-
   Provides an OpsWorks RDS DB Instance resource.
 ---
 
-# aws_opsworks_rds_db_instance
+# Resource: aws_opsworks_rds_db_instance
 
 Provides an OpsWorks RDS DB Instance resource.
 
@@ -28,7 +28,7 @@ resource "aws_opsworks_rds_db_instance" "my_instance" {
 
 The following arguments are supported:
 
-* `stack_id` - (Required) The stack to register a db inatance for. Changing this will force a new resource.
+* `stack_id` - (Required) The stack to register a db instance for. Changing this will force a new resource.
 * `rds_db_instance_arn` - (Required) The db instance to register for this stack. Changing this will force a new resource.
 * `db_user` - (Required) A db username
 * `db_password` - (Required) A db password

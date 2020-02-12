@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsGameliftAlias() *schema.Resource {
@@ -60,6 +62,7 @@ func resourceAwsGameliftAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -71,6 +74,7 @@ func resourceAwsGameliftAliasCreate(d *schema.ResourceData, meta interface{}) er
 	input := gamelift.CreateAliasInput{
 		Name:            aws.String(d.Get("name").(string)),
 		RoutingStrategy: rs,
+		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GameliftTags(),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -103,10 +107,20 @@ func resourceAwsGameliftAliasRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	a := out.Alias
 
-	d.Set("arn", a.AliasArn)
+	arn := aws.StringValue(a.AliasArn)
+	d.Set("arn", arn)
 	d.Set("description", a.Description)
 	d.Set("name", a.Name)
 	d.Set("routing_strategy", flattenGameliftRoutingStrategy(a.RoutingStrategy))
+	tags, err := keyvaluetags.GameliftListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Game Lift Alias (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -125,6 +139,15 @@ func resourceAwsGameliftAliasUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.GameliftUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Game Lift Alias (%s) tags: %s", arn, err)
+		}
+	}
+
 	return resourceAwsGameliftAliasRead(d, meta)
 }
 
@@ -135,11 +158,7 @@ func resourceAwsGameliftAliasDelete(d *schema.ResourceData, meta interface{}) er
 	_, err := conn.DeleteAlias(&gamelift.DeleteAliasInput{
 		AliasId: aws.String(d.Id()),
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func expandGameliftRoutingStrategy(cfg []interface{}) *gamelift.RoutingStrategy {
@@ -168,7 +187,7 @@ func flattenGameliftRoutingStrategy(rs *gamelift.RoutingStrategy) []interface{} 
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	if rs.FleetId != nil {
 		m["fleet_id"] = *rs.FleetId
 	}

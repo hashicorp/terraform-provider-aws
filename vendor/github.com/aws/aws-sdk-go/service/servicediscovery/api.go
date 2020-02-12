@@ -72,20 +72,20 @@ func (c *ServiceDiscovery) CreateHttpNamespaceRequest(input *CreateHttpNamespace
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation CreateHttpNamespace for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeNamespaceAlreadyExists "NamespaceAlreadyExists"
+//   * NamespaceAlreadyExists
 //   The namespace that you're trying to create already exists.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   The resource can't be created because you've reached the limit on the number
 //   of resources.
 //
-//   * ErrCodeDuplicateRequest "DuplicateRequest"
+//   * DuplicateRequest
 //   The operation is already in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/CreateHttpNamespace
@@ -169,20 +169,20 @@ func (c *ServiceDiscovery) CreatePrivateDnsNamespaceRequest(input *CreatePrivate
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation CreatePrivateDnsNamespace for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeNamespaceAlreadyExists "NamespaceAlreadyExists"
+//   * NamespaceAlreadyExists
 //   The namespace that you're trying to create already exists.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   The resource can't be created because you've reached the limit on the number
 //   of resources.
 //
-//   * ErrCodeDuplicateRequest "DuplicateRequest"
+//   * DuplicateRequest
 //   The operation is already in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/CreatePrivateDnsNamespace
@@ -266,20 +266,20 @@ func (c *ServiceDiscovery) CreatePublicDnsNamespaceRequest(input *CreatePublicDn
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation CreatePublicDnsNamespace for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeNamespaceAlreadyExists "NamespaceAlreadyExists"
+//   * NamespaceAlreadyExists
 //   The namespace that you're trying to create already exists.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   The resource can't be created because you've reached the limit on the number
 //   of resources.
 //
-//   * ErrCodeDuplicateRequest "DuplicateRequest"
+//   * DuplicateRequest
 //   The operation is already in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/CreatePublicDnsNamespace
@@ -351,17 +351,7 @@ func (c *ServiceDiscovery) CreateServiceRequest(input *CreateServiceInput) (req 
 // Creates a service, which defines the configuration for the following entities:
 //
 //    * For public and private DNS namespaces, one of the following combinations
-//    of DNS records in Amazon Route 53:
-//
-// A
-//
-// AAAA
-//
-// A and AAAA
-//
-// SRV
-//
-// CNAME
+//    of DNS records in Amazon Route 53: A AAAA A and AAAA SRV CNAME
 //
 //    * Optionally, a health check
 //
@@ -380,20 +370,20 @@ func (c *ServiceDiscovery) CreateServiceRequest(input *CreateServiceInput) (req 
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation CreateService for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   The resource can't be created because you've reached the limit on the number
 //   of resources.
 //
-//   * ErrCodeNamespaceNotFound "NamespaceNotFound"
+//   * NamespaceNotFound
 //   No namespace exists with the specified ID.
 //
-//   * ErrCodeServiceAlreadyExists "ServiceAlreadyExists"
+//   * ServiceAlreadyExists
 //   The service can't be created because a service with the same name already
 //   exists.
 //
@@ -473,20 +463,20 @@ func (c *ServiceDiscovery) DeleteNamespaceRequest(input *DeleteNamespaceInput) (
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation DeleteNamespace for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeNamespaceNotFound "NamespaceNotFound"
+//   * NamespaceNotFound
 //   No namespace exists with the specified ID.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   The specified resource can't be deleted because it contains other resources.
 //   For example, you can't delete a service that contains any instances.
 //
-//   * ErrCodeDuplicateRequest "DuplicateRequest"
+//   * DuplicateRequest
 //   The operation is already in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/DeleteNamespace
@@ -566,16 +556,16 @@ func (c *ServiceDiscovery) DeleteServiceRequest(input *DeleteServiceInput) (req 
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation DeleteService for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeServiceNotFound "ServiceNotFound"
+//   * ServiceNotFound
 //   No service exists with the specified ID.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   The specified resource can't be deleted because it contains other resources.
 //   For example, you can't delete a service that contains any instances.
 //
@@ -655,24 +645,24 @@ func (c *ServiceDiscovery) DeregisterInstanceRequest(input *DeregisterInstanceIn
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation DeregisterInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDuplicateRequest "DuplicateRequest"
+// Returned Error Types:
+//   * DuplicateRequest
 //   The operation is already in progress.
 //
-//   * ErrCodeInvalidInput "InvalidInput"
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeInstanceNotFound "InstanceNotFound"
+//   * InstanceNotFound
 //   No instance exists with the specified ID, or the instance was recently registered,
 //   and information about the instance hasn't propagated yet.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   The specified resource can't be deleted because it contains other resources.
 //   For example, you can't delete a service that contains any instances.
 //
-//   * ErrCodeServiceNotFound "ServiceNotFound"
+//   * ServiceNotFound
 //   No service exists with the specified ID.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/DeregisterInstance
@@ -752,14 +742,14 @@ func (c *ServiceDiscovery) DiscoverInstancesRequest(input *DiscoverInstancesInpu
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation DiscoverInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceNotFound "ServiceNotFound"
+// Returned Error Types:
+//   * ServiceNotFound
 //   No service exists with the specified ID.
 //
-//   * ErrCodeNamespaceNotFound "NamespaceNotFound"
+//   * NamespaceNotFound
 //   No namespace exists with the specified ID.
 //
-//   * ErrCodeInvalidInput "InvalidInput"
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
@@ -839,17 +829,17 @@ func (c *ServiceDiscovery) GetInstanceRequest(input *GetInstanceInput) (req *req
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation GetInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInstanceNotFound "InstanceNotFound"
+// Returned Error Types:
+//   * InstanceNotFound
 //   No instance exists with the specified ID, or the instance was recently registered,
 //   and information about the instance hasn't propagated yet.
 //
-//   * ErrCodeInvalidInput "InvalidInput"
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeServiceNotFound "ServiceNotFound"
+//   * ServiceNotFound
 //   No service exists with the specified ID.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/GetInstance
@@ -937,17 +927,17 @@ func (c *ServiceDiscovery) GetInstancesHealthStatusRequest(input *GetInstancesHe
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation GetInstancesHealthStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInstanceNotFound "InstanceNotFound"
+// Returned Error Types:
+//   * InstanceNotFound
 //   No instance exists with the specified ID, or the instance was recently registered,
 //   and information about the instance hasn't propagated yet.
 //
-//   * ErrCodeInvalidInput "InvalidInput"
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeServiceNotFound "ServiceNotFound"
+//   * ServiceNotFound
 //   No service exists with the specified ID.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/GetInstancesHealthStatus
@@ -983,7 +973,7 @@ func (c *ServiceDiscovery) GetInstancesHealthStatusWithContext(ctx aws.Context, 
 //    // Example iterating over at most 3 pages of a GetInstancesHealthStatus operation.
 //    pageNum := 0
 //    err := client.GetInstancesHealthStatusPages(params,
-//        func(page *GetInstancesHealthStatusOutput, lastPage bool) bool {
+//        func(page *servicediscovery.GetInstancesHealthStatusOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1015,10 +1005,12 @@ func (c *ServiceDiscovery) GetInstancesHealthStatusPagesWithContext(ctx aws.Cont
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetInstancesHealthStatusOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetInstancesHealthStatusOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1075,13 +1067,13 @@ func (c *ServiceDiscovery) GetNamespaceRequest(input *GetNamespaceInput) (req *r
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation GetNamespace for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeNamespaceNotFound "NamespaceNotFound"
+//   * NamespaceNotFound
 //   No namespace exists with the specified ID.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/GetNamespace
@@ -1162,13 +1154,13 @@ func (c *ServiceDiscovery) GetOperationRequest(input *GetOperationInput) (req *r
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation GetOperation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeOperationNotFound "OperationNotFound"
+//   * OperationNotFound
 //   No operation exists with the specified ID.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/GetOperation
@@ -1246,13 +1238,13 @@ func (c *ServiceDiscovery) GetServiceRequest(input *GetServiceInput) (req *reque
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation GetService for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeServiceNotFound "ServiceNotFound"
+//   * ServiceNotFound
 //   No service exists with the specified ID.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/GetService
@@ -1337,11 +1329,11 @@ func (c *ServiceDiscovery) ListInstancesRequest(input *ListInstancesInput) (req 
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation ListInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceNotFound "ServiceNotFound"
+// Returned Error Types:
+//   * ServiceNotFound
 //   No service exists with the specified ID.
 //
-//   * ErrCodeInvalidInput "InvalidInput"
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
@@ -1379,7 +1371,7 @@ func (c *ServiceDiscovery) ListInstancesWithContext(ctx aws.Context, input *List
 //    // Example iterating over at most 3 pages of a ListInstances operation.
 //    pageNum := 0
 //    err := client.ListInstancesPages(params,
-//        func(page *ListInstancesOutput, lastPage bool) bool {
+//        func(page *servicediscovery.ListInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1411,10 +1403,12 @@ func (c *ServiceDiscovery) ListInstancesPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1478,8 +1472,8 @@ func (c *ServiceDiscovery) ListNamespacesRequest(input *ListNamespacesInput) (re
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation ListNamespaces for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
@@ -1517,7 +1511,7 @@ func (c *ServiceDiscovery) ListNamespacesWithContext(ctx aws.Context, input *Lis
 //    // Example iterating over at most 3 pages of a ListNamespaces operation.
 //    pageNum := 0
 //    err := client.ListNamespacesPages(params,
-//        func(page *ListNamespacesOutput, lastPage bool) bool {
+//        func(page *servicediscovery.ListNamespacesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1549,10 +1543,12 @@ func (c *ServiceDiscovery) ListNamespacesPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNamespacesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNamespacesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1615,8 +1611,8 @@ func (c *ServiceDiscovery) ListOperationsRequest(input *ListOperationsInput) (re
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation ListOperations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
@@ -1654,7 +1650,7 @@ func (c *ServiceDiscovery) ListOperationsWithContext(ctx aws.Context, input *Lis
 //    // Example iterating over at most 3 pages of a ListOperations operation.
 //    pageNum := 0
 //    err := client.ListOperationsPages(params,
-//        func(page *ListOperationsOutput, lastPage bool) bool {
+//        func(page *servicediscovery.ListOperationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1686,10 +1682,12 @@ func (c *ServiceDiscovery) ListOperationsPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListOperationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListOperationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1753,8 +1751,8 @@ func (c *ServiceDiscovery) ListServicesRequest(input *ListServicesInput) (req *r
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation ListServices for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInput "InvalidInput"
+// Returned Error Types:
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
@@ -1792,7 +1790,7 @@ func (c *ServiceDiscovery) ListServicesWithContext(ctx aws.Context, input *ListS
 //    // Example iterating over at most 3 pages of a ListServices operation.
 //    pageNum := 0
 //    err := client.ListServicesPages(params,
-//        func(page *ListServicesOutput, lastPage bool) bool {
+//        func(page *servicediscovery.ListServicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1824,10 +1822,12 @@ func (c *ServiceDiscovery) ListServicesPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListServicesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListServicesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1916,24 +1916,24 @@ func (c *ServiceDiscovery) RegisterInstanceRequest(input *RegisterInstanceInput)
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation RegisterInstance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDuplicateRequest "DuplicateRequest"
+// Returned Error Types:
+//   * DuplicateRequest
 //   The operation is already in progress.
 //
-//   * ErrCodeInvalidInput "InvalidInput"
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeResourceInUse "ResourceInUse"
+//   * ResourceInUse
 //   The specified resource can't be deleted because it contains other resources.
 //   For example, you can't delete a service that contains any instances.
 //
-//   * ErrCodeResourceLimitExceeded "ResourceLimitExceeded"
+//   * ResourceLimitExceeded
 //   The resource can't be created because you've reached the limit on the number
 //   of resources.
 //
-//   * ErrCodeServiceNotFound "ServiceNotFound"
+//   * ServiceNotFound
 //   No service exists with the specified ID.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/RegisterInstance
@@ -2020,19 +2020,19 @@ func (c *ServiceDiscovery) UpdateInstanceCustomHealthStatusRequest(input *Update
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation UpdateInstanceCustomHealthStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInstanceNotFound "InstanceNotFound"
+// Returned Error Types:
+//   * InstanceNotFound
 //   No instance exists with the specified ID, or the instance was recently registered,
 //   and information about the instance hasn't propagated yet.
 //
-//   * ErrCodeServiceNotFound "ServiceNotFound"
+//   * ServiceNotFound
 //   No service exists with the specified ID.
 //
-//   * ErrCodeCustomHealthNotFound "CustomHealthNotFound"
+//   * CustomHealthNotFound
 //   The health check for the instance that is specified by ServiceId and InstanceId
 //   is not a custom health check.
 //
-//   * ErrCodeInvalidInput "InvalidInput"
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
@@ -2127,16 +2127,16 @@ func (c *ServiceDiscovery) UpdateServiceRequest(input *UpdateServiceInput) (req 
 // See the AWS API reference guide for AWS Cloud Map's
 // API operation UpdateService for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDuplicateRequest "DuplicateRequest"
+// Returned Error Types:
+//   * DuplicateRequest
 //   The operation is already in progress.
 //
-//   * ErrCodeInvalidInput "InvalidInput"
+//   * InvalidInput
 //   One or more specified values aren't valid. For example, a required value
 //   might be missing, a numeric value might be outside the allowed range, or
 //   a string value might exceed length constraints.
 //
-//   * ErrCodeServiceNotFound "ServiceNotFound"
+//   * ServiceNotFound
 //   No service exists with the specified ID.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/UpdateService
@@ -2567,6 +2567,63 @@ func (s CreateServiceOutput) GoString() string {
 func (s *CreateServiceOutput) SetService(v *Service) *CreateServiceOutput {
 	s.Service = v
 	return s
+}
+
+// The health check for the instance that is specified by ServiceId and InstanceId
+// is not a custom health check.
+type CustomHealthNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CustomHealthNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CustomHealthNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorCustomHealthNotFound(v protocol.ResponseMetadata) error {
+	return &CustomHealthNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CustomHealthNotFound) Code() string {
+	return "CustomHealthNotFound"
+}
+
+// Message returns the exception's message.
+func (s CustomHealthNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CustomHealthNotFound) OrigErr() error {
+	return nil
+}
+
+func (s CustomHealthNotFound) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CustomHealthNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CustomHealthNotFound) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type DeleteNamespaceInput struct {
@@ -3132,23 +3189,15 @@ type DnsRecord struct {
 	//
 	//    * The values of priority and weight are both set to 1 and can't be changed.
 	//
-	//
 	//    * The value of port comes from the value that you specify for the AWS_INSTANCE_PORT
 	//    attribute when you submit a RegisterInstance request.
 	//
 	//    * The value of service-hostname is a concatenation of the following values:
-	//
-	// The value that you specify for InstanceId when you register an instance.
-	//
-	// The name of the service.
-	//
-	// The name of the namespace.
-	//
-	// For example, if the value of InstanceId is test, the name of the service
-	//    is backend, and the name of the namespace is example.com, the value of
-	//    service-hostname is:
-	//
-	// test.backend.example.com
+	//    The value that you specify for InstanceId when you register an instance.
+	//    The name of the service. The name of the namespace. For example, if the
+	//    value of InstanceId is test, the name of the service is backend, and the
+	//    name of the namespace is example.com, the value of service-hostname is:
+	//    test.backend.example.com
 	//
 	// If you specify settings for an SRV record and if you specify values for AWS_INSTANCE_IPV4,
 	// AWS_INSTANCE_IPV6, or both in the RegisterInstance request, AWS Cloud Map
@@ -3195,6 +3244,65 @@ func (s *DnsRecord) SetTTL(v int64) *DnsRecord {
 func (s *DnsRecord) SetType(v string) *DnsRecord {
 	s.Type = &v
 	return s
+}
+
+// The operation is already in progress.
+type DuplicateRequest struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The ID of the operation that is already in progress.
+	DuplicateOperationId *string `type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s DuplicateRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DuplicateRequest) GoString() string {
+	return s.String()
+}
+
+func newErrorDuplicateRequest(v protocol.ResponseMetadata) error {
+	return &DuplicateRequest{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DuplicateRequest) Code() string {
+	return "DuplicateRequest"
+}
+
+// Message returns the exception's message.
+func (s DuplicateRequest) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DuplicateRequest) OrigErr() error {
+	return nil
+}
+
+func (s DuplicateRequest) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DuplicateRequest) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DuplicateRequest) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type GetInstanceInput struct {
@@ -3664,14 +3772,11 @@ type HealthCheckConfig struct {
 	//
 	//    * HTTPS: Route 53 tries to establish a TCP connection. If successful,
 	//    Route 53 submits an HTTPS request and waits for an HTTP status code of
-	//    200 or greater and less than 400.
+	//    200 or greater and less than 400. If you specify HTTPS for the value of
+	//    Type, the endpoint must support TLS v1.0 or later.
 	//
-	// If you specify HTTPS for the value of Type, the endpoint must support TLS
-	//    v1.0 or later.
-	//
-	//    * TCP: Route 53 tries to establish a TCP connection.
-	//
-	// If you specify TCP for Type, don't specify a value for ResourcePath.
+	//    * TCP: Route 53 tries to establish a TCP connection. If you specify TCP
+	//    for Type, don't specify a value for ResourcePath.
 	//
 	// For more information, see How Route 53 Determines Whether an Endpoint Is
 	// Healthy (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-determining-health-of-endpoints.html)
@@ -3919,7 +4024,6 @@ type Instance struct {
 	//
 	//    * The attributes that apply to the records that are defined in the service.
 	//
-	//
 	//    * For each attribute, the applicable value.
 	//
 	// Supported attribute keys include the following:
@@ -3933,8 +4037,8 @@ type Instance struct {
 	//
 	// Note the following:
 	//
-	// The configuration for the service that is specified by ServiceId must include
-	// settings for an A record, an AAAA record, or both.
+	//    * The configuration for the service that is specified by ServiceId must
+	//    include settings for an A record, an AAAA record, or both.
 	//
 	//    * In the service that is specified by ServiceId, the value of RoutingPolicy
 	//    must be WEIGHTED.
@@ -3954,30 +4058,37 @@ type Instance struct {
 	// If the service configuration includes a CNAME record, the domain name that
 	// you want Route 53 to return in response to DNS queries, for example, example.com.
 	//
-	// This value is required if the service specified by ServiceIdincludes settings for an CNAME record.
+	// This value is required if the service specified by ServiceId includes settings
+	// for an CNAME record.
 	//
 	// AWS_INSTANCE_IPV4
 	//
 	// If the service configuration includes an A record, the IPv4 address that
 	// you want Route 53 to return in response to DNS queries, for example, 192.0.2.44.
 	//
-	// This value is required if the service specified by ServiceIdincludes settings for an A record. If the service includes settings for an
-	// SRV record, you must specify a value for AWS_INSTANCE_IPV4, AWS_INSTANCE_IPV6, or both.
+	// This value is required if the service specified by ServiceId includes settings
+	// for an A record. If the service includes settings for an SRV record, you
+	// must specify a value for AWS_INSTANCE_IPV4, AWS_INSTANCE_IPV6, or both.
 	//
 	// AWS_INSTANCE_IPV6
 	//
 	// If the service configuration includes an AAAA record, the IPv6 address that
 	// you want Route 53 to return in response to DNS queries, for example, 2001:0db8:85a3:0000:0000:abcd:0001:2345.
 	//
-	// This value is required if the service specified by ServiceIdincludes settings for an AAAA record. If the service includes settings for
-	// an SRV record, you must specify a value for AWS_INSTANCE_IPV4, AWS_INSTANCE_IPV6, or both.
+	// This value is required if the service specified by ServiceId includes settings
+	// for an AAAA record. If the service includes settings for an SRV record, you
+	// must specify a value for AWS_INSTANCE_IPV4, AWS_INSTANCE_IPV6, or both.
 	//
 	// AWS_INSTANCE_PORT
 	//
 	// If the service includes an SRV record, the value that you want Route 53 to
 	// return for the port.
 	//
-	// If the service includes HealthCheckConfig
+	// If the service includes HealthCheckConfig, the port on the endpoint that
+	// you want Route 53 to send requests to.
+	//
+	// This value is required if you specified settings for an SRV record when you
+	// created the service.
 	Attributes map[string]*string `type:"map"`
 
 	// A unique string that identifies the request and that allows failed RegisterInstance
@@ -4001,10 +4112,9 @@ type Instance struct {
 	//
 	//    * If you specify an existing InstanceId and ServiceId, AWS Cloud Map updates
 	//    the existing DNS records. If there's also an existing health check, AWS
-	//    Cloud Map deletes the old health check and creates a new one.
-	//
-	// The health check isn't deleted immediately, so it will still appear for a
-	//    while if you submit a ListHealthChecks request, for example.
+	//    Cloud Map deletes the old health check and creates a new one. The health
+	//    check isn't deleted immediately, so it will still appear for a while if
+	//    you submit a ListHealthChecks request, for example.
 	//
 	// Id is a required field
 	Id *string `type:"string" required:"true"`
@@ -4036,6 +4146,63 @@ func (s *Instance) SetCreatorRequestId(v string) *Instance {
 func (s *Instance) SetId(v string) *Instance {
 	s.Id = &v
 	return s
+}
+
+// No instance exists with the specified ID, or the instance was recently registered,
+// and information about the instance hasn't propagated yet.
+type InstanceNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InstanceNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorInstanceNotFound(v protocol.ResponseMetadata) error {
+	return &InstanceNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InstanceNotFound) Code() string {
+	return "InstanceNotFound"
+}
+
+// Message returns the exception's message.
+func (s InstanceNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InstanceNotFound) OrigErr() error {
+	return nil
+}
+
+func (s InstanceNotFound) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InstanceNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InstanceNotFound) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A complex type that contains information about the instances that you registered
@@ -4093,6 +4260,64 @@ func (s *InstanceSummary) SetAttributes(v map[string]*string) *InstanceSummary {
 func (s *InstanceSummary) SetId(v string) *InstanceSummary {
 	s.Id = &v
 	return s
+}
+
+// One or more specified values aren't valid. For example, a required value
+// might be missing, a numeric value might be outside the allowed range, or
+// a string value might exceed length constraints.
+type InvalidInput struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidInput) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidInput(v protocol.ResponseMetadata) error {
+	return &InvalidInput{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidInput) Code() string {
+	return "InvalidInput"
+}
+
+// Message returns the exception's message.
+func (s InvalidInput) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidInput) OrigErr() error {
+	return nil
+}
+
+func (s InvalidInput) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidInput) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidInput) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListInstancesInput struct {
@@ -4654,6 +4879,68 @@ func (s *Namespace) SetType(v string) *Namespace {
 	return s
 }
 
+// The namespace that you're trying to create already exists.
+type NamespaceAlreadyExists struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The CreatorRequestId that was used to create the namespace.
+	CreatorRequestId *string `type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The ID of the existing namespace.
+	NamespaceId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s NamespaceAlreadyExists) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NamespaceAlreadyExists) GoString() string {
+	return s.String()
+}
+
+func newErrorNamespaceAlreadyExists(v protocol.ResponseMetadata) error {
+	return &NamespaceAlreadyExists{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NamespaceAlreadyExists) Code() string {
+	return "NamespaceAlreadyExists"
+}
+
+// Message returns the exception's message.
+func (s NamespaceAlreadyExists) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NamespaceAlreadyExists) OrigErr() error {
+	return nil
+}
+
+func (s NamespaceAlreadyExists) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NamespaceAlreadyExists) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NamespaceAlreadyExists) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // A complex type that identifies the namespaces that you want to list. You
 // can choose to list public or private namespaces.
 type NamespaceFilter struct {
@@ -4728,6 +5015,62 @@ func (s *NamespaceFilter) SetName(v string) *NamespaceFilter {
 func (s *NamespaceFilter) SetValues(v []*string) *NamespaceFilter {
 	s.Values = v
 	return s
+}
+
+// No namespace exists with the specified ID.
+type NamespaceNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s NamespaceNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NamespaceNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorNamespaceNotFound(v protocol.ResponseMetadata) error {
+	return &NamespaceNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NamespaceNotFound) Code() string {
+	return "NamespaceNotFound"
+}
+
+// Message returns the exception's message.
+func (s NamespaceNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NamespaceNotFound) OrigErr() error {
+	return nil
+}
+
+func (s NamespaceNotFound) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NamespaceNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NamespaceNotFound) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A complex type that contains information that is specific to the namespace
@@ -5078,6 +5421,62 @@ func (s *OperationFilter) SetValues(v []*string) *OperationFilter {
 	return s
 }
 
+// No operation exists with the specified ID.
+type OperationNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s OperationNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OperationNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorOperationNotFound(v protocol.ResponseMetadata) error {
+	return &OperationNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s OperationNotFound) Code() string {
+	return "OperationNotFound"
+}
+
+// Message returns the exception's message.
+func (s OperationNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s OperationNotFound) OrigErr() error {
+	return nil
+}
+
+func (s OperationNotFound) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s OperationNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s OperationNotFound) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // A complex type that contains information about an operation that matches
 // the criteria that you specified in a ListOperations request.
 type OperationSummary struct {
@@ -5129,7 +5528,6 @@ type RegisterInstanceInput struct {
 	//
 	//    * The attributes that apply to the records that are defined in the service.
 	//
-	//
 	//    * For each attribute, the applicable value.
 	//
 	// Supported attribute keys include the following:
@@ -5139,12 +5537,13 @@ type RegisterInstanceInput struct {
 	// If you want AWS Cloud Map to create an Amazon Route 53 alias record that
 	// routes traffic to an Elastic Load Balancing load balancer, specify the DNS
 	// name that is associated with the load balancer. For information about how
-	// to get the DNS name, see "DNSName" in the topic AliasTarget (http://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html)in the Route 53 API Reference.
+	// to get the DNS name, see "DNSName" in the topic AliasTarget (http://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html)
+	// in the Route 53 API Reference.
 	//
 	// Note the following:
 	//
-	// The configuration for the service that is specified by ServiceId must include
-	// settings for an A record, an AAAA record, or both.
+	//    * The configuration for the service that is specified by ServiceId must
+	//    include settings for an A record, an AAAA record, or both.
 	//
 	//    * In the service that is specified by ServiceId, the value of RoutingPolicy
 	//    must be WEIGHTED.
@@ -5161,42 +5560,53 @@ type RegisterInstanceInput struct {
 	//
 	// AWS_INIT_HEALTH_STATUS
 	//
-	// If the service configuration includes HealthCheckCustomConfig, you can optionally use AWS_INIT_HEALTH_STATUSto specify the initial status of the custom health check, HEALTHYor UNHEALTHY. If you don't specify a value for AWS_INIT_HEALTH_STATUS, the initial status is HEALTHY.
+	// If the service configuration includes HealthCheckCustomConfig, you can optionally
+	// use AWS_INIT_HEALTH_STATUS to specify the initial status of the custom health
+	// check, HEALTHY or UNHEALTHY. If you don't specify a value for AWS_INIT_HEALTH_STATUS,
+	// the initial status is HEALTHY.
 	//
 	// AWS_INSTANCE_CNAME
 	//
 	// If the service configuration includes a CNAME record, the domain name that
 	// you want Route 53 to return in response to DNS queries, for example, example.com.
 	//
-	// This value is required if the service specified by ServiceIdincludes settings for an CNAME record.
+	// This value is required if the service specified by ServiceId includes settings
+	// for an CNAME record.
 	//
 	// AWS_INSTANCE_IPV4
 	//
 	// If the service configuration includes an A record, the IPv4 address that
 	// you want Route 53 to return in response to DNS queries, for example, 192.0.2.44.
 	//
-	// This value is required if the service specified by ServiceIdincludes settings for an A record. If the service includes settings for an
-	// SRV record, you must specify a value for AWS_INSTANCE_IPV4, AWS_INSTANCE_IPV6, or both.
+	// This value is required if the service specified by ServiceId includes settings
+	// for an A record. If the service includes settings for an SRV record, you
+	// must specify a value for AWS_INSTANCE_IPV4, AWS_INSTANCE_IPV6, or both.
 	//
 	// AWS_INSTANCE_IPV6
 	//
 	// If the service configuration includes an AAAA record, the IPv6 address that
 	// you want Route 53 to return in response to DNS queries, for example, 2001:0db8:85a3:0000:0000:abcd:0001:2345.
 	//
-	// This value is required if the service specified by ServiceIdincludes settings for an AAAA record. If the service includes settings for
-	// an SRV record, you must specify a value for AWS_INSTANCE_IPV4, AWS_INSTANCE_IPV6, or both.
+	// This value is required if the service specified by ServiceId includes settings
+	// for an AAAA record. If the service includes settings for an SRV record, you
+	// must specify a value for AWS_INSTANCE_IPV4, AWS_INSTANCE_IPV6, or both.
 	//
 	// AWS_INSTANCE_PORT
 	//
 	// If the service includes an SRV record, the value that you want Route 53 to
 	// return for the port.
 	//
-	// If the service includes HealthCheckConfig, the port on the endpoint that you want Route 53 to send requests to.
+	// If the service includes HealthCheckConfig, the port on the endpoint that
+	// you want Route 53 to send requests to.
 	//
 	// This value is required if you specified settings for an SRV record when you
 	// created the service.
 	//
 	// Custom attributes
+	//
+	// You can add up to 30 custom attributes. For each key-value pair, the maximum
+	// length of the attribute name is 255 characters, and the maximum length of
+	// the attribute value is 1,024 characters.
 	//
 	// Attributes is a required field
 	Attributes map[string]*string `type:"map" required:"true"`
@@ -5222,9 +5632,8 @@ type RegisterInstanceInput struct {
 	//
 	//    * If you specify an existing InstanceId and ServiceId, AWS Cloud Map updates
 	//    the existing DNS records, if any. If there's also an existing health check,
-	//    AWS Cloud Map deletes the old health check and creates a new one.
-	//
-	// The health check isn't deleted immediately, so it will still appear for a
+	//    AWS Cloud Map deletes the old health check and creates a new one. The
+	//    health check isn't deleted immediately, so it will still appear for a
 	//    while if you submit a ListHealthChecks request, for example.
 	//
 	// InstanceId is a required field
@@ -5311,6 +5720,120 @@ func (s RegisterInstanceOutput) GoString() string {
 func (s *RegisterInstanceOutput) SetOperationId(v string) *RegisterInstanceOutput {
 	s.OperationId = &v
 	return s
+}
+
+// The specified resource can't be deleted because it contains other resources.
+// For example, you can't delete a service that contains any instances.
+type ResourceInUse struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUse) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUse(v protocol.ResponseMetadata) error {
+	return &ResourceInUse{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUse) Code() string {
+	return "ResourceInUse"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUse) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUse) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUse) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUse) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUse) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource can't be created because you've reached the limit on the number
+// of resources.
+type ResourceLimitExceeded struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceLimitExceeded) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceLimitExceeded) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceLimitExceeded(v protocol.ResponseMetadata) error {
+	return &ResourceLimitExceeded{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceLimitExceeded) Code() string {
+	return "ResourceLimitExceeded"
+}
+
+// Message returns the exception's message.
+func (s ResourceLimitExceeded) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceLimitExceeded) OrigErr() error {
+	return nil
+}
+
+func (s ResourceLimitExceeded) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceLimitExceeded) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceLimitExceeded) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A complex type that contains information about the specified service.
@@ -5443,6 +5966,69 @@ func (s *Service) SetName(v string) *Service {
 func (s *Service) SetNamespaceId(v string) *Service {
 	s.NamespaceId = &v
 	return s
+}
+
+// The service can't be created because a service with the same name already
+// exists.
+type ServiceAlreadyExists struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The CreatorRequestId that was used to create the service.
+	CreatorRequestId *string `type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The ID of the existing service.
+	ServiceId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceAlreadyExists) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceAlreadyExists) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceAlreadyExists(v protocol.ResponseMetadata) error {
+	return &ServiceAlreadyExists{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceAlreadyExists) Code() string {
+	return "ServiceAlreadyExists"
+}
+
+// Message returns the exception's message.
+func (s ServiceAlreadyExists) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceAlreadyExists) OrigErr() error {
+	return nil
+}
+
+func (s ServiceAlreadyExists) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceAlreadyExists) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceAlreadyExists) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A complex type that contains changes to an existing service.
@@ -5641,6 +6227,62 @@ func (s *ServiceFilter) SetName(v string) *ServiceFilter {
 func (s *ServiceFilter) SetValues(v []*string) *ServiceFilter {
 	s.Values = v
 	return s
+}
+
+// No service exists with the specified ID.
+type ServiceNotFound struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceNotFound) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceNotFound) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceNotFound(v protocol.ResponseMetadata) error {
+	return &ServiceNotFound{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceNotFound) Code() string {
+	return "ServiceNotFound"
+}
+
+// Message returns the exception's message.
+func (s ServiceNotFound) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceNotFound) OrigErr() error {
+	return nil
+}
+
+func (s ServiceNotFound) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceNotFound) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceNotFound) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A complex type that contains information about a specified service.

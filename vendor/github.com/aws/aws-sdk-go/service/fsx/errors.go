@@ -2,6 +2,10 @@
 
 package fsx
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeActiveDirectoryError for service response error code
@@ -35,6 +39,26 @@ const (
 	// A generic error indicating a failure with a client request.
 	ErrCodeBadRequest = "BadRequest"
 
+	// ErrCodeDataRepositoryTaskEnded for service response error code
+	// "DataRepositoryTaskEnded".
+	//
+	// The data repository task could not be canceled because the task has already
+	// ended.
+	ErrCodeDataRepositoryTaskEnded = "DataRepositoryTaskEnded"
+
+	// ErrCodeDataRepositoryTaskExecuting for service response error code
+	// "DataRepositoryTaskExecuting".
+	//
+	// An existing data repository task is currently executing on the file system.
+	// Wait until the existing task has completed, then create the new task.
+	ErrCodeDataRepositoryTaskExecuting = "DataRepositoryTaskExecuting"
+
+	// ErrCodeDataRepositoryTaskNotFound for service response error code
+	// "DataRepositoryTaskNotFound".
+	//
+	// The data repository task or tasks you specified could not be found.
+	ErrCodeDataRepositoryTaskNotFound = "DataRepositoryTaskNotFound"
+
 	// ErrCodeFileSystemNotFound for service response error code
 	// "FileSystemNotFound".
 	//
@@ -54,6 +78,12 @@ const (
 	//
 	// A generic error indicating a server-side failure.
 	ErrCodeInternalServerError = "InternalServerError"
+
+	// ErrCodeInvalidExportPath for service response error code
+	// "InvalidExportPath".
+	//
+	// The path provided for data repository export isn't valid.
+	ErrCodeInvalidExportPath = "InvalidExportPath"
 
 	// ErrCodeInvalidImportPath for service response error code
 	// "InvalidImportPath".
@@ -103,4 +133,33 @@ const (
 	// An error indicating that a particular service limit was exceeded. You can
 	// increase some service limits by contacting AWS Support.
 	ErrCodeServiceLimitExceeded = "ServiceLimitExceeded"
+
+	// ErrCodeUnsupportedOperation for service response error code
+	// "UnsupportedOperation".
+	//
+	// The requested operation is not supported for this resource or API.
+	ErrCodeUnsupportedOperation = "UnsupportedOperation"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ActiveDirectoryError":           newErrorActiveDirectoryError,
+	"BackupInProgress":               newErrorBackupInProgress,
+	"BackupNotFound":                 newErrorBackupNotFound,
+	"BackupRestoring":                newErrorBackupRestoring,
+	"BadRequest":                     newErrorBadRequest,
+	"DataRepositoryTaskEnded":        newErrorDataRepositoryTaskEnded,
+	"DataRepositoryTaskExecuting":    newErrorDataRepositoryTaskExecuting,
+	"DataRepositoryTaskNotFound":     newErrorDataRepositoryTaskNotFound,
+	"FileSystemNotFound":             newErrorFileSystemNotFound,
+	"IncompatibleParameterError":     newErrorIncompatibleParameterError,
+	"InternalServerError":            newErrorInternalServerError,
+	"InvalidExportPath":              newErrorInvalidExportPath,
+	"InvalidImportPath":              newErrorInvalidImportPath,
+	"InvalidNetworkSettings":         newErrorInvalidNetworkSettings,
+	"MissingFileSystemConfiguration": newErrorMissingFileSystemConfiguration,
+	"NotServiceResourceError":        newErrorNotServiceResourceError,
+	"ResourceDoesNotSupportTagging":  newErrorResourceDoesNotSupportTagging,
+	"ResourceNotFound":               newErrorResourceNotFound,
+	"ServiceLimitExceeded":           newErrorServiceLimitExceeded,
+	"UnsupportedOperation":           newErrorUnsupportedOperation,
+}

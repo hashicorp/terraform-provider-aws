@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSRedshiftSnapshotCopyGrant_Basic(t *testing.T) {
@@ -33,6 +33,48 @@ func TestAccAWSRedshiftSnapshotCopyGrant_Basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRedshiftSnapshotCopyGrant_Update(t *testing.T) {
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_redshift_snapshot_copy_grant.basic"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftSnapshotCopyGrantDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRedshiftSnapshotCopyGrant_Basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-redshift-snapshot-copy-grant-basic"),
+				),
+			},
+			{
+				Config: testAccAWSRedshiftSnapshotCopyGrantWithTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-redshift-snapshot-copy-grant-basic"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Env", "Production"),
+				),
+			},
+			{
+				Config: testAccAWSRedshiftSnapshotCopyGrant_Basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-redshift-snapshot-copy-grant-basic"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRedshiftSnapshotCopyGrantDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).redshiftconn
 
@@ -42,11 +84,7 @@ func testAccCheckAWSRedshiftSnapshotCopyGrantDestroy(s *terraform.State) error {
 		}
 
 		err := waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 
 	return nil
@@ -95,6 +133,19 @@ resource "aws_redshift_snapshot_copy_grant" "basic" {
 
   tags = {
     Name = "tf-redshift-snapshot-copy-grant-basic"
+  }
+}
+`, rName)
+}
+
+func testAccAWSRedshiftSnapshotCopyGrantWithTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshift_snapshot_copy_grant" "basic" {
+  snapshot_copy_grant_name = "%s"
+
+  tags = {
+	Name = "tf-redshift-snapshot-copy-grant-basic"
+	Env	 = "Production"
   }
 }
 `, rName)

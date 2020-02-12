@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsElasticacheSecurityGroup() *schema.Resource {
@@ -128,7 +128,7 @@ func resourceAwsElasticacheSecurityGroupDelete(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Cache security group delete: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
 			CacheSecurityGroupName: aws.String(d.Id()),
 		})
@@ -150,4 +150,12 @@ func resourceAwsElasticacheSecurityGroupDelete(d *schema.ResourceData, meta inte
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
+			CacheSecurityGroupName: aws.String(d.Id()),
+		})
+	}
+
+	return err
 }

@@ -1,12 +1,12 @@
 ---
+subcategory: "CloudTrail"
 layout: "aws"
-page_title: "AWS: cloudtrail"
-sidebar_current: "docs-aws-resource-cloudtrail"
+page_title: "AWS: aws_cloudtrail"
 description: |-
   Provides a CloudTrail resource.
 ---
 
-# aws_cloudtrail
+# Resource: aws_cloudtrail
 
 Provides a CloudTrail resource.
 
@@ -22,6 +22,8 @@ Enable CloudTrail to capture all compatible management events in region.
 For capturing events from services like IAM, `include_global_service_events` must be enabled.
 
 ```hcl
+data "aws_caller_identity" "current" {}
+
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-trail-foobar"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
@@ -53,7 +55,7 @@ resource "aws_s3_bucket" "foo" {
               "Service": "cloudtrail.amazonaws.com"
             },
             "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::tf-test-trail/*",
+            "Resource": "arn:aws:s3:::tf-test-trail/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
             "Condition": {
                 "StringEquals": {
                     "s3:x-amz-acl": "bucket-owner-full-control"
@@ -137,7 +139,7 @@ The following arguments are supported:
 
 * `name` - (Required) Specifies the name of the trail.
 * `s3_bucket_name` - (Required) Specifies the name of the S3 bucket designated for publishing log files.
-* `s3_key_prefix` - (Optional) Specifies the S3 key prefix that precedes
+* `s3_key_prefix` - (Optional) Specifies the S3 key prefix that follows
     the name of the bucket you have designated for log file delivery.
 * `cloud_watch_logs_role_arn` - (Optional) Specifies the role for the CloudWatch Logs
     endpoint to assume to write to a user’s log group.

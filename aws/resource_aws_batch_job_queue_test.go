@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -28,10 +28,6 @@ func testSweepBatchJobQueues(region string) error {
 	}
 	conn := client.(*AWSClient).batchconn
 
-	prefixes := []string{
-		"tf_acc",
-	}
-
 	out, err := conn.DescribeJobQueues(&batch.DescribeJobQueuesInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -42,17 +38,6 @@ func testSweepBatchJobQueues(region string) error {
 	}
 	for _, jobQueue := range out.JobQueues {
 		name := jobQueue.JobQueueName
-		skip := true
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(*name, prefix) {
-				skip = false
-				break
-			}
-		}
-		if skip {
-			log.Printf("[INFO] Skipping Batch Job Queue: %s", *name)
-			continue
-		}
 
 		log.Printf("[INFO] Disabling Batch Job Queue: %s", *name)
 		err := disableBatchJobQueue(*name, conn)
@@ -75,17 +60,23 @@ func TestAccAWSBatchJobQueue_basic(t *testing.T) {
 	var jq batch.JobQueueDetail
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobQueueBasic, ri)
+	resourceName := "aws_batch_job_queue.test_queue"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists("aws_batch_job_queue.test_queue", &jq),
+					testAccCheckBatchJobQueueExists(resourceName, &jq),
 					testAccCheckBatchJobQueueAttributes(&jq),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -97,7 +88,7 @@ func TestAccAWSBatchJobQueue_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -118,24 +109,30 @@ func TestAccAWSBatchJobQueue_update(t *testing.T) {
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobQueueBasic, ri)
 	updateConfig := fmt.Sprintf(testAccBatchJobQueueUpdate, ri)
+	resourceName := "aws_batch_job_queue.test_queue"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists("aws_batch_job_queue.test_queue", &jq),
+					testAccCheckBatchJobQueueExists(resourceName, &jq),
 					testAccCheckBatchJobQueueAttributes(&jq),
 				),
 			},
 			{
 				Config: updateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists("aws_batch_job_queue.test_queue", &jq),
+					testAccCheckBatchJobQueueExists(resourceName, &jq),
 					testAccCheckBatchJobQueueAttributes(&jq),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -307,7 +304,7 @@ resource "aws_subnet" "test_acc" {
 
 resource "aws_batch_compute_environment" "test_environment" {
   compute_environment_name = "tf_acctest_batch_compute_environment_%[1]d"
-  compute_resources = {
+  compute_resources {
     instance_role = "${aws_iam_role.aws_batch_service_role.arn}"
     instance_type = ["m3.medium"]
     max_vcpus = 1

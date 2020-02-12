@@ -1,7 +1,7 @@
 ---
+subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_function"
-sidebar_current: "docs-aws-datasource-lambda-function"
 description: |-
   Provides a Lambda Function data source.
 ---
@@ -27,13 +27,13 @@ data "aws_lambda_function" "existing" {
 The following arguments are supported:
 
 * `function_name` - (Required) Name of the lambda function.
-* `qualifier` - (Optional) Qualifier of the lambda function. Defaults to `$LATEST`.
+* `qualifier` - (Optional) Alias name or version number of the lambda function. e.g. `$LATEST`, `my-alias`, or `1`
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) identifying your Lambda Function.
+* `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) Amazon Resource Name (ARN) identifying your Lambda Function. See also `qualified_arn`.
 * `dead_letter_config` - Configure the function's *dead letter queue*.
 * `description` - Description of what your Lambda Function does.
 * `environment` - The Lambda environment's configuration settings.
@@ -41,9 +41,10 @@ In addition to all arguments above, the following attributes are exported:
 * `invoke_arn` - The ARN to be used for invoking Lambda Function from API Gateway.
 * `kms_key_arn` - The ARN for the KMS encryption key.
 * `last_modified` - The date this resource was last modified.
+* `layers` - A list of Lambda Layer ARNs attached to your Lambda Function.
 * `memory_size` - Amount of memory in MB your Lambda Function can use at runtime.
-* `qualified_arn` - The Amazon Resource Name (ARN) identifying your Lambda Function Version
-* `reserved_concurrent_executions` - The amount of reserved concurrent executions for this lambda function.
+* `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) Amazon Resource Name (ARN) identifying your Lambda Function. See also `arn`.
+* `reserved_concurrent_executions` - The amount of reserved concurrent executions for this lambda function or `-1` if unreserved.
 * `role` - IAM role attached to the Lambda Function.
 * `runtime` - The runtime environment for the Lambda function..
 * `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file.

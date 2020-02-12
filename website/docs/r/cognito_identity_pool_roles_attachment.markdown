@@ -1,12 +1,12 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_pool_roles_attachment"
-sidebar_current: "docs-aws-resource-cognito-identity-pool-roles-attachment"
 description: |-
   Provides an AWS Cognito Identity Pool Roles Attachment.
 ---
 
-# aws_cognito_identity_pool_roles_attachment
+# Resource: aws_cognito_identity_pool_roles_attachment
 
 Provides an AWS Cognito Identity Pool Roles Attachment.
 
@@ -17,7 +17,7 @@ resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool"
   allow_unauthenticated_identities = false
 
-  supported_login_providers {
+  supported_login_providers = {
     "graph.facebook.com" = "7346241598935555"
   }
 }
@@ -89,7 +89,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }

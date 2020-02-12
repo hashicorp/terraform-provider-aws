@@ -38,34 +38,34 @@ type IAMPolicyStatementCondition struct {
 type IAMPolicyStatementPrincipalSet []IAMPolicyStatementPrincipal
 type IAMPolicyStatementConditionSet []IAMPolicyStatementCondition
 
-func (self *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
+func (s *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
 	// adopt newDoc's Id
 	if len(newDoc.Id) > 0 {
-		self.Id = newDoc.Id
+		s.Id = newDoc.Id
 	}
 
 	// let newDoc upgrade our Version
-	if newDoc.Version > self.Version {
-		self.Version = newDoc.Version
+	if newDoc.Version > s.Version {
+		s.Version = newDoc.Version
 	}
 
 	// merge in newDoc's statements, overwriting any existing Sids
 	var seen bool
 	for _, newStatement := range newDoc.Statements {
 		if len(newStatement.Sid) == 0 {
-			self.Statements = append(self.Statements, newStatement)
+			s.Statements = append(s.Statements, newStatement)
 			continue
 		}
 		seen = false
-		for i, existingStatement := range self.Statements {
+		for i, existingStatement := range s.Statements {
 			if existingStatement.Sid == newStatement.Sid {
-				self.Statements[i] = newStatement
+				s.Statements[i] = newStatement
 				seen = true
 				break
 			}
 		}
 		if !seen {
-			self.Statements = append(self.Statements, newStatement)
+			s.Statements = append(s.Statements, newStatement)
 		}
 	}
 }
@@ -94,13 +94,28 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 	for _, p := range ps {
 		switch i := p.Identifiers.(type) {
 		case []string:
-			if _, ok := raw[p.Type]; !ok {
+			switch v := raw[p.Type].(type) {
+			case nil:
 				raw[p.Type] = make([]string, 0, len(i))
+			case string:
+				// Convert to []string to prevent panic
+				raw[p.Type] = make([]string, 0, len(i)+1)
+				raw[p.Type] = append(raw[p.Type].([]string), v)
 			}
 			sort.Sort(sort.Reverse(sort.StringSlice(i)))
 			raw[p.Type] = append(raw[p.Type].([]string), i...)
 		case string:
-			raw[p.Type] = i
+			switch v := raw[p.Type].(type) {
+			case nil:
+				raw[p.Type] = i
+			case string:
+				// Convert to []string to stop drop of principals
+				raw[p.Type] = make([]string, 0, 2)
+				raw[p.Type] = append(raw[p.Type].([]string), v)
+				raw[p.Type] = append(raw[p.Type].([]string), i)
+			case []string:
+				raw[p.Type] = append(raw[p.Type].([]string), i)
+			}
 		default:
 			return []byte{}, fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet", i)
 		}
@@ -177,12 +192,12 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 
 	for test_key, test_value := range data {
 		for var_key, var_values := range test_value {
-			switch var_values.(type) {
+			switch var_values := var_values.(type) {
 			case string:
-				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values.(string)}})
+				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values}})
 			case []interface{}:
 				values := []string{}
-				for _, v := range var_values.([]interface{}) {
+				for _, v := range var_values {
 					values = append(values, v.(string))
 				}
 				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: values})

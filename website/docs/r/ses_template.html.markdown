@@ -1,12 +1,12 @@
 ---
+subcategory: "SES"
 layout: "aws"
 page_title: "AWS: aws_ses_template"
-sidebar_current: "docs-aws-resource-ses-template"
 description: |-
   Provides a resource to create a SES template
 ---
 
-# aws_ses_template
+# Resource: aws_ses_template
 
 Provides a resource to create a SES template.
 

@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_deployment"
-sidebar_current: "docs-aws-resource-api-gateway-deployment"
 description: |-
   Provides an API Gateway Deployment.
 ---
 
-# aws_api_gateway_deployment
+# Resource: aws_api_gateway_deployment
 
 Provides an API Gateway Deployment.
 
@@ -58,7 +58,7 @@ resource "aws_api_gateway_deployment" "MyDemoDeployment" {
 The following arguments are supported:
 
 * `rest_api_id` - (Required) The ID of the associated REST API
-* `stage_name` - (Required) The name of the stage. If the specified stage already exists, it will be updated to point to the new deployment. If the stage does not exist, a new one will be created and point to this deployment. Use `""` to point at the default stage.
+* `stage_name` - (Optional) The name of the stage. If the specified stage already exists, it will be updated to point to the new deployment. If the stage does not exist, a new one will be created and point to this deployment.
 * `description` - (Optional) The description of the deployment
 * `stage_description` - (Optional) The description of the stage
 * `variables` - (Optional) A map that defines variables for the stage

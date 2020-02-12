@@ -10,9 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsAmi() *schema.Resource {
@@ -41,9 +42,12 @@ func dataSourceAwsAmi() *schema.Resource {
 			},
 			"owners": {
 				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Required: true,
+				MinItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.NoZeroValues,
+				},
 			},
 			// Computed values.
 			"architecture": {
@@ -182,49 +186,15 @@ func dataSourceAwsAmi() *schema.Resource {
 func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	executableUsers, executableUsersOk := d.GetOk("executable_users")
-	filters, filtersOk := d.GetOk("filter")
-	nameRegex, nameRegexOk := d.GetOk("name_regex")
-	owners, ownersOk := d.GetOk("owners")
-
-	if !executableUsersOk && !filtersOk && !nameRegexOk && !ownersOk {
-		return fmt.Errorf("One of executable_users, filters, name_regex, or owners must be assigned")
+	params := &ec2.DescribeImagesInput{
+		Owners: expandStringList(d.Get("owners").([]interface{})),
 	}
 
-	params := &ec2.DescribeImagesInput{}
-	if executableUsersOk {
-		params.ExecutableUsers = expandStringList(executableUsers.([]interface{}))
+	if v, ok := d.GetOk("executable_users"); ok {
+		params.ExecutableUsers = expandStringList(v.([]interface{}))
 	}
-	if filtersOk {
-		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
-	}
-	if ownersOk {
-		o := expandStringList(owners.([]interface{}))
-
-		if len(o) > 0 {
-			params.Owners = o
-		}
-	}
-
-	// Deprecated: pre-2.0.0 warning logging
-	if !ownersOk {
-		log.Print("[WARN] The \"owners\" argument will become required in the next major version.")
-		log.Print("[WARN] Documentation can be found at: https://www.terraform.io/docs/providers/aws/d/ami.html#owners")
-
-		missingOwnerFilter := true
-
-		if filtersOk {
-			for _, filter := range params.Filters {
-				if aws.StringValue(filter.Name) == "owner-alias" || aws.StringValue(filter.Name) == "owner-id" {
-					missingOwnerFilter = false
-					break
-				}
-			}
-		}
-
-		if missingOwnerFilter {
-			log.Print("[WARN] Potential security issue: missing \"owners\" filtering for AMI. Check AMI to ensure it came from trusted source.")
-		}
+	if v, ok := d.GetOk("filter"); ok {
+		params.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading AMI: %s", params)
@@ -234,7 +204,7 @@ func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var filteredImages []*ec2.Image
-	if nameRegexOk {
+	if nameRegex, ok := d.GetOk("name_regex"); ok {
 		r := regexp.MustCompile(nameRegex.(string))
 		for _, image := range resp.Images {
 			// Check for a very rare case where the response would include no
@@ -321,8 +291,8 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image) error {
 	if err := d.Set("state_reason", amiStateReason(image.StateReason)); err != nil {
 		return err
 	}
-	if err := d.Set("tags", tagsToMap(image.Tags)); err != nil {
-		return err
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(image.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 	return nil
 }

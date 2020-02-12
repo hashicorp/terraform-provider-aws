@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSIAMPolicy_basic(t *testing.T) {
@@ -63,6 +63,28 @@ func TestAccAWSIAMPolicy_description(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMPolicy_disappears(t *testing.T) {
+	var out iam.GetPolicyOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMPolicyConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckAWSIAMPolicyDisappears(&out),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -210,6 +232,19 @@ func testAccCheckAWSIAMPolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSIAMPolicyDisappears(out *iam.GetPolicyOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		params := &iam.DeletePolicyInput{
+			PolicyArn: out.Policy.Arn,
+		}
+
+		_, err := iamconn.DeletePolicy(params)
+		return err
+	}
 }
 
 func testAccAWSIAMPolicyConfigDescription(rName, description string) string {

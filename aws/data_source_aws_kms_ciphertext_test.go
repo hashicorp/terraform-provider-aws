@@ -3,7 +3,7 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsKmsCiphertext_basic(t *testing.T) {
@@ -32,10 +32,6 @@ func TestAccDataSourceAwsKmsCiphertext_validate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.aws_kms_ciphertext.foo", "ciphertext_blob"),
-					resource.TestCheckResourceAttrSet(
-						"data.aws_kms_secret.foo", "plaintext"),
-					resource.TestCheckResourceAttr(
-						"data.aws_kms_secret.foo", "plaintext", "Super secret data"),
 				),
 			},
 		},
@@ -52,10 +48,6 @@ func TestAccDataSourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.aws_kms_ciphertext.foo", "ciphertext_blob"),
-					resource.TestCheckResourceAttrSet(
-						"data.aws_kms_secret.foo", "plaintext"),
-					resource.TestCheckResourceAttr(
-						"data.aws_kms_secret.foo", "plaintext", "Super secret data"),
 				),
 			},
 		},
@@ -63,10 +55,6 @@ func TestAccDataSourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
 }
 
 const testAccDataSourceAwsKmsCiphertextConfig_basic = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_kms_key" "foo" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-basic"
   is_enabled = true
@@ -80,10 +68,6 @@ data "aws_kms_ciphertext" "foo" {
 `
 
 const testAccDataSourceAwsKmsCiphertextConfig_validate = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_kms_key" "foo" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-validate"
   is_enabled = true
@@ -95,19 +79,9 @@ data "aws_kms_ciphertext" "foo" {
   plaintext = "Super secret data"
 }
 
-data "aws_kms_secret" "foo" {
-  secret {
-    name = "plaintext"
-    payload = "${data.aws_kms_ciphertext.foo.ciphertext_blob}"
-  }
-}
 `
 
 const testAccDataSourceAwsKmsCiphertextConfig_validate_withContext = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_kms_key" "foo" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-validate-with-context"
   is_enabled = true
@@ -118,19 +92,9 @@ data "aws_kms_ciphertext" "foo" {
 
   plaintext = "Super secret data"
 
-  context {
-	name = "value"
+  context = {
+		name = "value"
   }
 }
 
-data "aws_kms_secret" "foo" {
-  secret {
-    name = "plaintext"
-    payload = "${data.aws_kms_ciphertext.foo.ciphertext_blob}"
-
-    context {
-	  name = "value"
-    }
-  }
-}
 `

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsCodeCommitTrigger() *schema.Resource {
@@ -124,11 +124,7 @@ func resourceAwsCodeCommitTriggerDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.PutRepositoryTriggers(input)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func expandAwsCodeCommitTriggers(configured []interface{}) []*codecommit.RepositoryTrigger {

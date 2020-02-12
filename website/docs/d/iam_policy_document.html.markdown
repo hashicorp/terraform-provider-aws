@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_policy_document"
-sidebar_current: "docs-aws-datasource-iam-policy-document"
 description: |-
   Generates an IAM policy document in JSON format
 ---
@@ -14,7 +14,7 @@ This is a data source which can be used to construct a JSON representation of
 an IAM policy document, for use with resources which expect policy documents,
 such as the `aws_iam_policy` resource.
 
--> For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html).
+-> For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
 ```hcl
 data "aws_iam_policy_document" "example" {
@@ -119,15 +119,15 @@ each accept the following arguments:
 Each policy may have either zero or more `principals` blocks or zero or more
 `not_principals` blocks, both of which each accept the following arguments:
 
-* `type` (Required) The type of principal. For AWS accounts this is "AWS".
+* `type` (Required) The type of principal. For AWS ARNs this is "AWS".  For AWS services (e.g. Lambda), this is "Service".
 * `identifiers` (Required) List of identifiers for principals. When `type`
-  is "AWS", these are IAM user or role ARNs.
+  is "AWS", these are IAM user or role ARNs.  When `type` is "Service", these are AWS Service roles e.g. `lambda.amazonaws.com`.
 
 Each policy statement may have zero or more `condition` blocks, which each
 accept the following arguments:
 
 * `test` (Required) The name of the
-  [IAM condition type](http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html#AccessPolicyLanguage_ConditionType)
+  [IAM condition operator](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html)
   to evaluate.
 * `variable` (Required) The name of a
   [Context Variable](http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html#AvailableKeys)

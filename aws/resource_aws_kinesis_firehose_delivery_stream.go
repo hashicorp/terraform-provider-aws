@@ -10,10 +10,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+const (
+	firehoseDeliveryStreamStatusDeleted = "DESTROYED"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
@@ -98,9 +103,10 @@ func s3ConfigurationSchema() *schema.Schema {
 
 func processingConfigurationSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
+		Type:             schema.TypeList,
+		Optional:         true,
+		MaxItems:         1,
+		DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"enabled": {
@@ -228,6 +234,7 @@ func flattenFirehoseExtendedS3Configuration(description *firehose.ExtendedS3Dest
 		"cloudwatch_logging_options":           flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":                   aws.StringValue(description.CompressionFormat),
 		"data_format_conversion_configuration": flattenFirehoseDataFormatConversionConfiguration(description.DataFormatConversionConfiguration),
+		"error_output_prefix":                  aws.StringValue(description.ErrorOutputPrefix),
 		"prefix":                               aws.StringValue(description.Prefix),
 		"processing_configuration":             flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
 		"role_arn":                             aws.StringValue(description.RoleARN),
@@ -327,11 +334,25 @@ func flattenFirehoseDataFormatConversionConfiguration(dfcc *firehose.DataFormatC
 		return []map[string]interface{}{}
 	}
 
+	enabled := aws.BoolValue(dfcc.Enabled)
+	ifc := flattenFirehoseInputFormatConfiguration(dfcc.InputFormatConfiguration)
+	ofc := flattenFirehoseOutputFormatConfiguration(dfcc.OutputFormatConfiguration)
+	sc := flattenFirehoseSchemaConfiguration(dfcc.SchemaConfiguration)
+
+	// The AWS SDK can represent "no data format conversion configuration" in two ways:
+	// 1. With a nil value
+	// 2. With enabled set to false and nil for ALL the config sections.
+	// We normalize this with an empty configuration in the state due
+	// to the existing Default: true on the enabled attribute.
+	if !enabled && len(ifc) == 0 && len(ofc) == 0 && len(sc) == 0 {
+		return []map[string]interface{}{}
+	}
+
 	m := map[string]interface{}{
-		"enabled":                     aws.BoolValue(dfcc.Enabled),
-		"input_format_configuration":  flattenFirehoseInputFormatConfiguration(dfcc.InputFormatConfiguration),
-		"output_format_configuration": flattenFirehoseOutputFormatConfiguration(dfcc.OutputFormatConfiguration),
-		"schema_configuration":        flattenFirehoseSchemaConfiguration(dfcc.SchemaConfiguration),
+		"enabled":                     enabled,
+		"input_format_configuration":  ifc,
+		"output_format_configuration": ofc,
+		"schema_configuration":        sc,
 	}
 
 	return []map[string]interface{}{m}
@@ -542,7 +563,7 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 		"BufferIntervalInSeconds": "60",
 	}
 
-	processors := make([]interface{}, len(pc.Processors), len(pc.Processors))
+	processors := make([]interface{}, len(pc.Processors))
 	for i, p := range pc.Processors {
 		t := aws.StringValue(p.Type)
 		parameters := make([]interface{}, 0)
@@ -578,8 +599,19 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 
 func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDescription) error {
 	d.Set("version_id", s.VersionId)
-	d.Set("arn", *s.DeliveryStreamARN)
+	d.Set("arn", s.DeliveryStreamARN)
 	d.Set("name", s.DeliveryStreamName)
+
+	sseOptions := map[string]interface{}{
+		"enabled": false,
+	}
+	if s.DeliveryStreamEncryptionConfiguration != nil && aws.StringValue(s.DeliveryStreamEncryptionConfiguration.Status) == firehose.DeliveryStreamEncryptionStatusEnabled {
+		sseOptions["enabled"] = true
+	}
+	if err := d.Set("server_side_encryption", []map[string]interface{}{sseOptions}); err != nil {
+		return fmt.Errorf("error setting server_side_encryption: %s", err)
+	}
+
 	if len(s.Destinations) > 0 {
 		destination := s.Destinations[0]
 		if destination.RedshiftDestinationDescription != nil {
@@ -665,11 +697,29 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 
 			"tags": tagsSchema(),
 
+			"server_side_encryption": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				ConflictsWith:    []string{"kinesis_source_configuration"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
+
 			"kinesis_source_configuration": {
-				Type:     schema.TypeList,
-				ForceNew: true,
-				Optional: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				ForceNew:      true,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"server_side_encryption"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kinesis_stream_arn": {
@@ -995,6 +1045,11 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 									},
 								},
 							},
+						},
+
+						"error_output_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 
 						"kms_key_arn": {
@@ -1396,6 +1451,10 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
+	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
+		configuration.ErrorOutputPrefix = aws.String(v.(string))
+	}
+
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
 		configuration.S3BackupConfiguration = expandS3BackupConfig(d.Get("extended_s3_configuration").([]interface{})[0].(map[string]interface{}))
@@ -1477,6 +1536,10 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
+	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
+		configuration.ErrorOutputPrefix = aws.String(v.(string))
+	}
+
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
 		configuration.S3BackupUpdate = updateS3BackupConfig(d.Get("extended_s3_configuration").([]interface{})[0].(map[string]interface{}))
@@ -1486,8 +1549,12 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 }
 
 func expandFirehoseDataFormatConversionConfiguration(l []interface{}) *firehose.DataFormatConversionConfiguration {
-	if len(l) == 0 {
-		return nil
+	if len(l) == 0 || l[0] == nil {
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &firehose.DataFormatConversionConfiguration{
+			Enabled: aws.Bool(false),
+		}
 	}
 
 	m := l[0].(map[string]interface{})
@@ -1501,7 +1568,7 @@ func expandFirehoseDataFormatConversionConfiguration(l []interface{}) *firehose.
 }
 
 func expandFirehoseInputFormatConfiguration(l []interface{}) *firehose.InputFormatConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1513,7 +1580,7 @@ func expandFirehoseInputFormatConfiguration(l []interface{}) *firehose.InputForm
 }
 
 func expandFirehoseDeserializer(l []interface{}) *firehose.Deserializer {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1560,7 +1627,7 @@ func expandFirehoseOpenXJsonSerDe(l []interface{}) *firehose.OpenXJsonSerDe {
 }
 
 func expandFirehoseOutputFormatConfiguration(l []interface{}) *firehose.OutputFormatConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1572,7 +1639,7 @@ func expandFirehoseOutputFormatConfiguration(l []interface{}) *firehose.OutputFo
 }
 
 func expandFirehoseSerializer(l []interface{}) *firehose.Serializer {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1636,7 +1703,7 @@ func expandFirehoseParquetSerDe(l []interface{}) *firehose.ParquetSerDe {
 }
 
 func expandFirehoseSchemaConfiguration(l []interface{}) *firehose.SchemaConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1662,7 +1729,12 @@ func expandFirehoseSchemaConfiguration(l []interface{}) *firehose.SchemaConfigur
 func extractProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
 	config := s3["processing_configuration"].([]interface{})
 	if len(config) == 0 {
-		return nil
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &firehose.ProcessingConfiguration{
+			Enabled:    aws.Bool(false),
+			Processors: []*firehose.Processor{},
+		}
 	}
 
 	processingConfiguration := config[0].(map[string]interface{})
@@ -1677,17 +1749,25 @@ func extractProcessors(processingConfigurationProcessors []interface{}) []*fireh
 	processors := []*firehose.Processor{}
 
 	for _, processor := range processingConfigurationProcessors {
-		processors = append(processors, extractProcessor(processor.(map[string]interface{})))
+		extractedProcessor := extractProcessor(processor.(map[string]interface{}))
+		if extractedProcessor != nil {
+			processors = append(processors, extractedProcessor)
+		}
 	}
 
 	return processors
 }
 
 func extractProcessor(processingConfigurationProcessor map[string]interface{}) *firehose.Processor {
-	return &firehose.Processor{
-		Type:       aws.String(processingConfigurationProcessor["type"].(string)),
-		Parameters: extractProcessorParameters(processingConfigurationProcessor["parameters"].([]interface{})),
+	var processor *firehose.Processor
+	processorType := processingConfigurationProcessor["type"].(string)
+	if processorType != "" {
+		processor = &firehose.Processor{
+			Type:       aws.String(processorType),
+			Parameters: extractProcessorParameters(processingConfigurationProcessor["parameters"].([]interface{})),
+		}
 	}
+	return processor
 }
 
 func extractProcessorParameters(processorParameters []interface{}) []*firehose.ProcessorParameter {
@@ -2064,6 +2144,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		}
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		createInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().FirehoseTags()
+	}
+
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateDeliveryStream(createInput)
 		if err != nil {
@@ -2089,34 +2173,32 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateDeliveryStream(createInput)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating Kinesis Firehose Delivery Stream: %s", err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"CREATING"},
-		Target:     []string{"ACTIVE"},
-		Refresh:    firehoseStreamStateRefreshFunc(conn, sn),
-		Timeout:    20 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	firehoseStream, err := stateConf.WaitForState()
+	s, err := waitForKinesisFirehoseDeliveryStreamCreation(conn, sn)
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Kinesis Stream (%s) to become active: %s",
-			sn, err)
+		return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) creation: %s", sn, err)
 	}
 
-	s := firehoseStream.(*firehose.DeliveryStreamDescription)
-	d.SetId(*s.DeliveryStreamARN)
+	d.SetId(aws.StringValue(s.DeliveryStreamARN))
 	d.Set("arn", s.DeliveryStreamARN)
 
-	if err := setTagsKinesisFirehose(conn, d, sn); err != nil {
-		return fmt.Errorf(
-			"Error setting for Kinesis Stream (%s) tags: %s",
-			sn, err)
+	if v, ok := d.GetOk("server_side_encryption"); ok && !isKinesisFirehoseDeliveryStreamOptionDisabled(v) {
+		_, err := conn.StartDeliveryStreamEncryption(&firehose.StartDeliveryStreamEncryptionInput{
+			DeliveryStreamName: aws.String(sn),
+		})
+		if err != nil {
+			return fmt.Errorf("error starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
+		}
+
+		if err := waitForKinesisFirehoseDeliveryStreamSSEEnabled(conn, sn); err != nil {
+			return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption to be enabled: %s", sn, err)
+		}
 	}
 
 	return resourceAwsKinesisFirehoseDeliveryStreamRead(d, meta)
@@ -2201,7 +2283,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateDestination(updateInput)
 		if err != nil {
-			log.Printf("[DEBUG] Error creating Firehose Delivery Stream: %s", err)
+			log.Printf("[DEBUG] Error updating Firehose Delivery Stream: %s", err)
 
 			// Retry for IAM eventual consistency
 			if isAWSErr(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
@@ -2224,16 +2306,49 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateDestination(updateInput)
+	}
+
 	if err != nil {
 		return fmt.Errorf(
 			"Error Updating Kinesis Firehose Delivery Stream: \"%s\"\n%s",
 			sn, err)
 	}
 
-	if err := setTagsKinesisFirehose(conn, d, sn); err != nil {
-		return fmt.Errorf(
-			"Error Updating Kinesis Firehose Delivery Stream tags: \"%s\"\n%s",
-			sn, err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.FirehoseUpdateTags(conn, sn, o, n); err != nil {
+			return fmt.Errorf("error updating Kinesis Firehose Delivery Stream (%s) tags: %s", sn, err)
+		}
+	}
+
+	if d.HasChange("server_side_encryption") {
+		_, n := d.GetChange("server_side_encryption")
+		if isKinesisFirehoseDeliveryStreamOptionDisabled(n) {
+			_, err := conn.StopDeliveryStreamEncryption(&firehose.StopDeliveryStreamEncryptionInput{
+				DeliveryStreamName: aws.String(sn),
+			})
+			if err != nil {
+				return fmt.Errorf("error stopping Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
+			}
+
+			if err := waitForKinesisFirehoseDeliveryStreamSSEDisabled(conn, sn); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption to be disabled: %s", sn, err)
+			}
+		} else {
+			_, err := conn.StartDeliveryStreamEncryption(&firehose.StartDeliveryStreamEncryptionInput{
+				DeliveryStreamName: aws.String(sn),
+			})
+			if err != nil {
+				return fmt.Errorf("error starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
+			}
+
+			if err := waitForKinesisFirehoseDeliveryStreamSSEEnabled(conn, sn); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption to be enabled: %s", sn, err)
+			}
+		}
 	}
 
 	return resourceAwsKinesisFirehoseDeliveryStreamRead(d, meta)
@@ -2262,8 +2377,14 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 		return err
 	}
 
-	if err := getTagsKinesisFirehose(conn, d, sn); err != nil {
-		return err
+	tags, err := keyvaluetags.FirehoseListTags(conn, sn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %s", sn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -2276,43 +2397,121 @@ func resourceAwsKinesisFirehoseDeliveryStreamDelete(d *schema.ResourceData, meta
 	_, err := conn.DeleteDeliveryStream(&firehose.DeleteDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
 	})
-
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"DELETING"},
-		Target:     []string{"DESTROYED"},
-		Refresh:    firehoseStreamStateRefreshFunc(conn, sn),
-		Timeout:    20 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Delivery Stream (%s) to be destroyed: %s",
-			sn, err)
+	if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, sn); err != nil {
+		return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) deletion: %s", sn, err)
 	}
 
 	return nil
 }
 
-func firehoseStreamStateRefreshFunc(conn *firehose.Firehose, sn string) resource.StateRefreshFunc {
+func firehoseDeliveryStreamStateRefreshFunc(conn *firehose.Firehose, sn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		describeOpts := &firehose.DescribeDeliveryStreamInput{
+		resp, err := conn.DescribeDeliveryStream(&firehose.DescribeDeliveryStreamInput{
 			DeliveryStreamName: aws.String(sn),
-		}
-		resp, err := conn.DescribeDeliveryStream(describeOpts)
+		})
 		if err != nil {
 			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
-				return 42, "DESTROYED", nil
+				return &firehose.DeliveryStreamDescription{}, firehoseDeliveryStreamStatusDeleted, nil
 			}
-			return nil, "failed", err
+			return nil, "", err
 		}
 
-		return resp.DeliveryStreamDescription, *resp.DeliveryStreamDescription.DeliveryStreamStatus, nil
+		return resp.DeliveryStreamDescription, aws.StringValue(resp.DeliveryStreamDescription.DeliveryStreamStatus), nil
 	}
+}
+
+func firehoseDeliveryStreamSSEStateRefreshFunc(conn *firehose.Firehose, sn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeDeliveryStream(&firehose.DescribeDeliveryStreamInput{
+			DeliveryStreamName: aws.String(sn),
+		})
+		if err != nil {
+			return nil, "", err
+		}
+
+		return resp.DeliveryStreamDescription, aws.StringValue(resp.DeliveryStreamDescription.DeliveryStreamEncryptionConfiguration.Status), nil
+	}
+}
+
+func waitForKinesisFirehoseDeliveryStreamCreation(conn *firehose.Firehose, deliveryStreamName string) (*firehose.DeliveryStreamDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{firehose.DeliveryStreamStatusCreating},
+		Target:     []string{firehose.DeliveryStreamStatusActive},
+		Refresh:    firehoseDeliveryStreamStateRefreshFunc(conn, deliveryStreamName),
+		Timeout:    20 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	v, err := stateConf.WaitForState()
+	if err != nil {
+		return nil, err
+	}
+
+	return v.(*firehose.DeliveryStreamDescription), nil
+}
+
+func waitForKinesisFirehoseDeliveryStreamDeletion(conn *firehose.Firehose, deliveryStreamName string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{firehose.DeliveryStreamStatusDeleting},
+		Target:     []string{firehoseDeliveryStreamStatusDeleted},
+		Refresh:    firehoseDeliveryStreamStateRefreshFunc(conn, deliveryStreamName),
+		Timeout:    20 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForKinesisFirehoseDeliveryStreamSSEEnabled(conn *firehose.Firehose, deliveryStreamName string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{firehose.DeliveryStreamEncryptionStatusEnabling},
+		Target:     []string{firehose.DeliveryStreamEncryptionStatusEnabled},
+		Refresh:    firehoseDeliveryStreamSSEStateRefreshFunc(conn, deliveryStreamName),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForKinesisFirehoseDeliveryStreamSSEDisabled(conn *firehose.Firehose, deliveryStreamName string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{firehose.DeliveryStreamEncryptionStatusDisabling},
+		Target:     []string{firehose.DeliveryStreamEncryptionStatusDisabled},
+		Refresh:    firehoseDeliveryStreamSSEStateRefreshFunc(conn, deliveryStreamName),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func isKinesisFirehoseDeliveryStreamOptionDisabled(v interface{}) bool {
+	options := v.([]interface{})
+	if len(options) == 0 || options[0] == nil {
+		return true
+	}
+	m := options[0].(map[string]interface{})
+
+	var enabled bool
+
+	if v, ok := m["enabled"]; ok {
+		enabled = v.(bool)
+	}
+
+	return !enabled
 }

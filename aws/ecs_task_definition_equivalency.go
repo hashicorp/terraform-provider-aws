@@ -45,7 +45,7 @@ func EcsContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (boo
 		return false, err
 	}
 
-	equal := bytes.Compare(canonicalJson1, canonicalJson2) == 0
+	equal := bytes.Equal(canonicalJson1, canonicalJson2)
 	if !equal {
 		log.Printf("[DEBUG] Canonical definitions are not equal.\nFirst: %s\nSecond: %s\n",
 			canonicalJson1, canonicalJson2)
@@ -78,7 +78,7 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 
 		// Deal with fields which may be re-ordered in the API
 		sort.Slice(def.Environment, func(i, j int) bool {
-			return *def.Environment[i].Name < *def.Environment[j].Name
+			return aws.StringValue(def.Environment[i].Name) < aws.StringValue(def.Environment[j].Name)
 		})
 
 		// Create a mutable copy

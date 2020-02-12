@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -27,6 +27,11 @@ func testSweepEc2CapacityReservations(region string) error {
 	conn := client.(*AWSClient).ec2conn
 
 	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Capacity Reservation sweep for %s: %s", region, err)
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error retrieving EC2 Capacity Reservations: %s", err)
@@ -64,7 +69,7 @@ func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -99,7 +104,7 @@ func TestAccAWSEc2CapacityReservation_ebsOptimized(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -126,7 +131,7 @@ func TestAccAWSEc2CapacityReservation_endDate(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -157,10 +162,11 @@ func TestAccAWSEc2CapacityReservation_endDate(t *testing.T) {
 
 func TestAccAWSEc2CapacityReservation_endDateType(t *testing.T) {
 	var cr ec2.CapacityReservation
+	endDate := time.Now().UTC().Add(12 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -177,10 +183,10 @@ func TestAccAWSEc2CapacityReservation_endDateType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2CapacityReservationConfig_endDate("2019-10-31T07:39:57Z"),
+				Config: testAccEc2CapacityReservationConfig_endDate(endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "end_date", "2019-10-31T07:39:57Z"),
+					resource.TestCheckResourceAttr(resourceName, "end_date", endDate),
 					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
 				),
 			},
@@ -200,7 +206,7 @@ func TestAccAWSEc2CapacityReservation_ephemeralStorage(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -225,7 +231,7 @@ func TestAccAWSEc2CapacityReservation_instanceCount(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -257,7 +263,7 @@ func TestAccAWSEc2CapacityReservation_instanceMatchCriteria(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -282,7 +288,7 @@ func TestAccAWSEc2CapacityReservation_instanceType(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -314,7 +320,7 @@ func TestAccAWSEc2CapacityReservation_tags(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -359,7 +365,7 @@ func TestAccAWSEc2CapacityReservation_tenancy(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -439,6 +445,24 @@ func testAccCheckEc2CapacityReservationDestroy(s *terraform.State) error {
 
 	return nil
 
+}
+
+func testAccPreCheckAWSEc2CapacityReservation(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	input := &ec2.DescribeCapacityReservationsInput{
+		MaxResults: aws.Int64(1),
+	}
+
+	_, err := conn.DescribeCapacityReservations(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 const testAccEc2CapacityReservationConfig = `

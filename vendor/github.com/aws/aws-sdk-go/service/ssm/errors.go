@@ -2,6 +2,10 @@
 
 package ssm
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAlreadyExistsException for service response error code
@@ -105,7 +109,7 @@ const (
 	// ErrCodeDocumentLimitExceeded for service response error code
 	// "DocumentLimitExceeded".
 	//
-	// You can have at most 200 active Systems Manager documents.
+	// You can have at most 500 active Systems Manager documents.
 	ErrCodeDocumentLimitExceeded = "DocumentLimitExceeded"
 
 	// ErrCodeDocumentPermissionLimit for service response error code
@@ -126,11 +130,12 @@ const (
 	// ErrCodeDoesNotExistException for service response error code
 	// "DoesNotExistException".
 	//
-	// Error returned when the ID specified for a resource, such as a Maintenance
-	// Window or Patch baseline, doesn't exist.
+	// Error returned when the ID specified for a resource, such as a maintenance
+	// window or Patch baseline, doesn't exist.
 	//
-	// For information about resource limits in Systems Manager, see AWS Systems
-	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+	// For information about resource quotas in Systems Manager, see Systems Manager
+	// Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+	// in the AWS General Reference.
 	ErrCodeDoesNotExistException = "DoesNotExistException"
 
 	// ErrCodeDuplicateDocumentContent for service response error code
@@ -156,7 +161,7 @@ const (
 	// ErrCodeFeatureNotAvailableException for service response error code
 	// "FeatureNotAvailableException".
 	//
-	// You attempted to register a LAMBDA or STEP_FUNCTION task in a region where
+	// You attempted to register a LAMBDA or STEP_FUNCTIONS task in a region where
 	// the corresponding service is not available.
 	ErrCodeFeatureNotAvailableException = "FeatureNotAvailableException"
 
@@ -182,6 +187,14 @@ const (
 	// Error returned when an idempotent operation is retried and the parameters
 	// don't match the original call to the API with the same idempotency token.
 	ErrCodeIdempotentParameterMismatch = "IdempotentParameterMismatch"
+
+	// ErrCodeIncompatiblePolicyException for service response error code
+	// "IncompatiblePolicyException".
+	//
+	// There is a conflict in the policies specified for this parameter. You can't,
+	// for example, specify two Expiration policies for a parameter. Review your
+	// policies, and try again.
+	ErrCodeIncompatiblePolicyException = "IncompatiblePolicyException"
 
 	// ErrCodeInternalServerError for service response error code
 	// "InternalServerError".
@@ -264,7 +277,7 @@ const (
 	// ErrCodeInvalidDeletionIdException for service response error code
 	// "InvalidDeletionIdException".
 	//
-	// The ID specified for the delete operation does not exist or is not valide.
+	// The ID specified for the delete operation does not exist or is not valid.
 	// Verify the ID and try again.
 	ErrCodeInvalidDeletionIdException = "InvalidDeletionIdException"
 
@@ -292,6 +305,13 @@ const (
 	//
 	// The version of the document schema is not supported.
 	ErrCodeInvalidDocumentSchemaVersion = "InvalidDocumentSchemaVersion"
+
+	// ErrCodeInvalidDocumentType for service response error code
+	// "InvalidDocumentType".
+	//
+	// The document type is not valid. Valid document types are described in the
+	// DocumentType property.
+	ErrCodeInvalidDocumentType = "InvalidDocumentType"
 
 	// ErrCodeInvalidDocumentVersion for service response error code
 	// "InvalidDocumentVersion".
@@ -332,12 +352,9 @@ const (
 	//
 	// You do not have permission to access the instance.
 	//
-	// SSM Agent is not running. On managed instances and Linux instances, verify
-	// that the SSM Agent is running. On EC2 Windows instances, verify that the
-	// EC2Config service is running.
+	// SSM Agent is not running. Verify that SSM Agent is running.
 	//
-	// SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-	// reinstalling SSM Agent or EC2Config service.
+	// SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 	//
 	// The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 	// Stopping. Invalid states are: Shutting-down and Terminated.
@@ -433,6 +450,19 @@ const (
 	// The plugin name is not valid.
 	ErrCodeInvalidPluginName = "InvalidPluginName"
 
+	// ErrCodeInvalidPolicyAttributeException for service response error code
+	// "InvalidPolicyAttributeException".
+	//
+	// A policy attribute or its value is invalid.
+	ErrCodeInvalidPolicyAttributeException = "InvalidPolicyAttributeException"
+
+	// ErrCodeInvalidPolicyTypeException for service response error code
+	// "InvalidPolicyTypeException".
+	//
+	// The policy type is not supported. Parameter Store supports the following
+	// policy types: Expiration, ExpirationNotification, and NoChangeNotification.
+	ErrCodeInvalidPolicyTypeException = "InvalidPolicyTypeException"
+
 	// ErrCodeInvalidResourceId for service response error code
 	// "InvalidResourceId".
 	//
@@ -492,7 +522,7 @@ const (
 	// "InvocationDoesNotExist".
 	//
 	// The command ID and instance ID you specified did not match any invocations.
-	// Verify the command ID adn the instance ID and try again.
+	// Verify the command ID and the instance ID and try again.
 	ErrCodeInvocationDoesNotExist = "InvocationDoesNotExist"
 
 	// ErrCodeItemContentMismatchException for service response error code
@@ -512,6 +542,32 @@ const (
 	//
 	// The size limit of a document is 64 KB.
 	ErrCodeMaxDocumentSizeExceeded = "MaxDocumentSizeExceeded"
+
+	// ErrCodeOpsItemAlreadyExistsException for service response error code
+	// "OpsItemAlreadyExistsException".
+	//
+	// The OpsItem already exists.
+	ErrCodeOpsItemAlreadyExistsException = "OpsItemAlreadyExistsException"
+
+	// ErrCodeOpsItemInvalidParameterException for service response error code
+	// "OpsItemInvalidParameterException".
+	//
+	// A specified parameter argument isn't valid. Verify the available arguments
+	// and try again.
+	ErrCodeOpsItemInvalidParameterException = "OpsItemInvalidParameterException"
+
+	// ErrCodeOpsItemLimitExceededException for service response error code
+	// "OpsItemLimitExceededException".
+	//
+	// The request caused OpsItems to exceed one or more quotas. For information
+	// about OpsItem quotas, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+	ErrCodeOpsItemLimitExceededException = "OpsItemLimitExceededException"
+
+	// ErrCodeOpsItemNotFoundException for service response error code
+	// "OpsItemNotFoundException".
+	//
+	// The specified OpsItem ID doesn't exist. Verify the ID and try again.
+	ErrCodeOpsItemNotFoundException = "OpsItemNotFoundException"
 
 	// ErrCodeParameterAlreadyExists for service response error code
 	// "ParameterAlreadyExists".
@@ -557,11 +613,25 @@ const (
 	// and version, and try again.
 	ErrCodeParameterVersionNotFound = "ParameterVersionNotFound"
 
+	// ErrCodePoliciesLimitExceededException for service response error code
+	// "PoliciesLimitExceededException".
+	//
+	// You specified more than the maximum number of allowed policies for the parameter.
+	// The maximum is 10.
+	ErrCodePoliciesLimitExceededException = "PoliciesLimitExceededException"
+
 	// ErrCodeResourceDataSyncAlreadyExistsException for service response error code
 	// "ResourceDataSyncAlreadyExistsException".
 	//
 	// A sync configuration with the same name already exists.
 	ErrCodeResourceDataSyncAlreadyExistsException = "ResourceDataSyncAlreadyExistsException"
+
+	// ErrCodeResourceDataSyncConflictException for service response error code
+	// "ResourceDataSyncConflictException".
+	//
+	// Another UpdateResourceDataSync request is being processed. Wait a few minutes
+	// and try again.
+	ErrCodeResourceDataSyncConflictException = "ResourceDataSyncConflictException"
 
 	// ErrCodeResourceDataSyncCountExceededException for service response error code
 	// "ResourceDataSyncCountExceededException".
@@ -591,12 +661,20 @@ const (
 	// ErrCodeResourceLimitExceededException for service response error code
 	// "ResourceLimitExceededException".
 	//
-	// Error returned when the caller has exceeded the default resource limits.
-	// For example, too many Maintenance Windows or Patch baselines have been created.
+	// Error returned when the caller has exceeded the default resource quotas.
+	// For example, too many maintenance windows or patch baselines have been created.
 	//
-	// For information about resource limits in Systems Manager, see AWS Systems
-	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+	// For information about resource quotas in Systems Manager, see Systems Manager
+	// Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+	// in the AWS General Reference.
 	ErrCodeResourceLimitExceededException = "ResourceLimitExceededException"
+
+	// ErrCodeServiceSettingNotFound for service response error code
+	// "ServiceSettingNotFound".
+	//
+	// The specified service setting was not found. Either the service name or the
+	// setting has not been provisioned by the AWS service team.
+	ErrCodeServiceSettingNotFound = "ServiceSettingNotFound"
 
 	// ErrCodeStatusUnchanged for service response error code
 	// "StatusUnchanged".
@@ -646,6 +724,23 @@ const (
 	// The size of inventory data has exceeded the total size limit for the resource.
 	ErrCodeTotalSizeLimitExceededException = "TotalSizeLimitExceededException"
 
+	// ErrCodeUnsupportedCalendarException for service response error code
+	// "UnsupportedCalendarException".
+	//
+	// The calendar entry contained in the specified Systems Manager document is
+	// not supported.
+	ErrCodeUnsupportedCalendarException = "UnsupportedCalendarException"
+
+	// ErrCodeUnsupportedFeatureRequiredException for service response error code
+	// "UnsupportedFeatureRequiredException".
+	//
+	// Microsoft application patching is only available on EC2 instances and Advanced
+	// Instances. To patch Microsoft applications on on-premises servers and VMs,
+	// you must enable Advanced Instances. For more information, see Using the Advanced-Instances
+	// Tier (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances-advanced.html)
+	// in the AWS Systems Manager User Guide.
+	ErrCodeUnsupportedFeatureRequiredException = "UnsupportedFeatureRequiredException"
+
 	// ErrCodeUnsupportedInventoryItemContextException for service response error code
 	// "UnsupportedInventoryItemContextException".
 	//
@@ -683,3 +778,119 @@ const (
 	// For example, you sent an document for a Windows instance to a Linux instance.
 	ErrCodeUnsupportedPlatformType = "UnsupportedPlatformType"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AlreadyExistsException":                        newErrorAlreadyExistsException,
+	"AssociatedInstances":                           newErrorAssociatedInstances,
+	"AssociationAlreadyExists":                      newErrorAssociationAlreadyExists,
+	"AssociationDoesNotExist":                       newErrorAssociationDoesNotExist,
+	"AssociationExecutionDoesNotExist":              newErrorAssociationExecutionDoesNotExist,
+	"AssociationLimitExceeded":                      newErrorAssociationLimitExceeded,
+	"AssociationVersionLimitExceeded":               newErrorAssociationVersionLimitExceeded,
+	"AutomationDefinitionNotFoundException":         newErrorAutomationDefinitionNotFoundException,
+	"AutomationDefinitionVersionNotFoundException":  newErrorAutomationDefinitionVersionNotFoundException,
+	"AutomationExecutionLimitExceededException":     newErrorAutomationExecutionLimitExceededException,
+	"AutomationExecutionNotFoundException":          newErrorAutomationExecutionNotFoundException,
+	"AutomationStepNotFoundException":               newErrorAutomationStepNotFoundException,
+	"ComplianceTypeCountLimitExceededException":     newErrorComplianceTypeCountLimitExceededException,
+	"CustomSchemaCountLimitExceededException":       newErrorCustomSchemaCountLimitExceededException,
+	"DocumentAlreadyExists":                         newErrorDocumentAlreadyExists,
+	"DocumentLimitExceeded":                         newErrorDocumentLimitExceeded,
+	"DocumentPermissionLimit":                       newErrorDocumentPermissionLimit,
+	"DocumentVersionLimitExceeded":                  newErrorDocumentVersionLimitExceeded,
+	"DoesNotExistException":                         newErrorDoesNotExistException,
+	"DuplicateDocumentContent":                      newErrorDuplicateDocumentContent,
+	"DuplicateDocumentVersionName":                  newErrorDuplicateDocumentVersionName,
+	"DuplicateInstanceId":                           newErrorDuplicateInstanceId,
+	"FeatureNotAvailableException":                  newErrorFeatureNotAvailableException,
+	"HierarchyLevelLimitExceededException":          newErrorHierarchyLevelLimitExceededException,
+	"HierarchyTypeMismatchException":                newErrorHierarchyTypeMismatchException,
+	"IdempotentParameterMismatch":                   newErrorIdempotentParameterMismatch,
+	"IncompatiblePolicyException":                   newErrorIncompatiblePolicyException,
+	"InternalServerError":                           newErrorInternalServerError,
+	"InvalidActivation":                             newErrorInvalidActivation,
+	"InvalidActivationId":                           newErrorInvalidActivationId,
+	"InvalidAggregatorException":                    newErrorInvalidAggregatorException,
+	"InvalidAllowedPatternException":                newErrorInvalidAllowedPatternException,
+	"InvalidAssociation":                            newErrorInvalidAssociation,
+	"InvalidAssociationVersion":                     newErrorInvalidAssociationVersion,
+	"InvalidAutomationExecutionParametersException": newErrorInvalidAutomationExecutionParametersException,
+	"InvalidAutomationSignalException":              newErrorInvalidAutomationSignalException,
+	"InvalidAutomationStatusUpdateException":        newErrorInvalidAutomationStatusUpdateException,
+	"InvalidCommandId":                              newErrorInvalidCommandId,
+	"InvalidDeleteInventoryParametersException":     newErrorInvalidDeleteInventoryParametersException,
+	"InvalidDeletionIdException":                    newErrorInvalidDeletionIdException,
+	"InvalidDocument":                               newErrorInvalidDocument,
+	"InvalidDocumentContent":                        newErrorInvalidDocumentContent,
+	"InvalidDocumentOperation":                      newErrorInvalidDocumentOperation,
+	"InvalidDocumentSchemaVersion":                  newErrorInvalidDocumentSchemaVersion,
+	"InvalidDocumentType":                           newErrorInvalidDocumentType,
+	"InvalidDocumentVersion":                        newErrorInvalidDocumentVersion,
+	"InvalidFilter":                                 newErrorInvalidFilter,
+	"InvalidFilterKey":                              newErrorInvalidFilterKey,
+	"InvalidFilterOption":                           newErrorInvalidFilterOption,
+	"InvalidFilterValue":                            newErrorInvalidFilterValue,
+	"InvalidInstanceId":                             newErrorInvalidInstanceId,
+	"InvalidInstanceInformationFilterValue":         newErrorInvalidInstanceInformationFilterValue,
+	"InvalidInventoryGroupException":                newErrorInvalidInventoryGroupException,
+	"InvalidInventoryItemContextException":          newErrorInvalidInventoryItemContextException,
+	"InvalidInventoryRequestException":              newErrorInvalidInventoryRequestException,
+	"InvalidItemContentException":                   newErrorInvalidItemContentException,
+	"InvalidKeyId":                                  newErrorInvalidKeyId,
+	"InvalidNextToken":                              newErrorInvalidNextToken,
+	"InvalidNotificationConfig":                     newErrorInvalidNotificationConfig,
+	"InvalidOptionException":                        newErrorInvalidOptionException,
+	"InvalidOutputFolder":                           newErrorInvalidOutputFolder,
+	"InvalidOutputLocation":                         newErrorInvalidOutputLocation,
+	"InvalidParameters":                             newErrorInvalidParameters,
+	"InvalidPermissionType":                         newErrorInvalidPermissionType,
+	"InvalidPluginName":                             newErrorInvalidPluginName,
+	"InvalidPolicyAttributeException":               newErrorInvalidPolicyAttributeException,
+	"InvalidPolicyTypeException":                    newErrorInvalidPolicyTypeException,
+	"InvalidResourceId":                             newErrorInvalidResourceId,
+	"InvalidResourceType":                           newErrorInvalidResourceType,
+	"InvalidResultAttributeException":               newErrorInvalidResultAttributeException,
+	"InvalidRole":                                   newErrorInvalidRole,
+	"InvalidSchedule":                               newErrorInvalidSchedule,
+	"InvalidTarget":                                 newErrorInvalidTarget,
+	"InvalidTypeNameException":                      newErrorInvalidTypeNameException,
+	"InvalidUpdate":                                 newErrorInvalidUpdate,
+	"InvocationDoesNotExist":                        newErrorInvocationDoesNotExist,
+	"ItemContentMismatchException":                  newErrorItemContentMismatchException,
+	"ItemSizeLimitExceededException":                newErrorItemSizeLimitExceededException,
+	"MaxDocumentSizeExceeded":                       newErrorMaxDocumentSizeExceeded,
+	"OpsItemAlreadyExistsException":                 newErrorOpsItemAlreadyExistsException,
+	"OpsItemInvalidParameterException":              newErrorOpsItemInvalidParameterException,
+	"OpsItemLimitExceededException":                 newErrorOpsItemLimitExceededException,
+	"OpsItemNotFoundException":                      newErrorOpsItemNotFoundException,
+	"ParameterAlreadyExists":                        newErrorParameterAlreadyExists,
+	"ParameterLimitExceeded":                        newErrorParameterLimitExceeded,
+	"ParameterMaxVersionLimitExceeded":              newErrorParameterMaxVersionLimitExceeded,
+	"ParameterNotFound":                             newErrorParameterNotFound,
+	"ParameterPatternMismatchException":             newErrorParameterPatternMismatchException,
+	"ParameterVersionLabelLimitExceeded":            newErrorParameterVersionLabelLimitExceeded,
+	"ParameterVersionNotFound":                      newErrorParameterVersionNotFound,
+	"PoliciesLimitExceededException":                newErrorPoliciesLimitExceededException,
+	"ResourceDataSyncAlreadyExistsException":        newErrorResourceDataSyncAlreadyExistsException,
+	"ResourceDataSyncConflictException":             newErrorResourceDataSyncConflictException,
+	"ResourceDataSyncCountExceededException":        newErrorResourceDataSyncCountExceededException,
+	"ResourceDataSyncInvalidConfigurationException": newErrorResourceDataSyncInvalidConfigurationException,
+	"ResourceDataSyncNotFoundException":             newErrorResourceDataSyncNotFoundException,
+	"ResourceInUseException":                        newErrorResourceInUseException,
+	"ResourceLimitExceededException":                newErrorResourceLimitExceededException,
+	"ServiceSettingNotFound":                        newErrorServiceSettingNotFound,
+	"StatusUnchanged":                               newErrorStatusUnchanged,
+	"SubTypeCountLimitExceededException":            newErrorSubTypeCountLimitExceededException,
+	"TargetInUseException":                          newErrorTargetInUseException,
+	"TargetNotConnected":                            newErrorTargetNotConnected,
+	"TooManyTagsError":                              newErrorTooManyTagsError,
+	"TooManyUpdates":                                newErrorTooManyUpdates,
+	"TotalSizeLimitExceededException":               newErrorTotalSizeLimitExceededException,
+	"UnsupportedCalendarException":                  newErrorUnsupportedCalendarException,
+	"UnsupportedFeatureRequiredException":           newErrorUnsupportedFeatureRequiredException,
+	"UnsupportedInventoryItemContextException":      newErrorUnsupportedInventoryItemContextException,
+	"UnsupportedInventorySchemaVersionException":    newErrorUnsupportedInventorySchemaVersionException,
+	"UnsupportedOperatingSystem":                    newErrorUnsupportedOperatingSystem,
+	"UnsupportedParameterType":                      newErrorUnsupportedParameterType,
+	"UnsupportedPlatformType":                       newErrorUnsupportedPlatformType,
+}

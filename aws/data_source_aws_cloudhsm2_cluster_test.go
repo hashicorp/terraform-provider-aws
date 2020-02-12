@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceCloudHsm2Cluster_basic(t *testing.T) {
@@ -61,7 +61,7 @@ resource "aws_subnet" "cloudhsm2_test_subnets" {
 
 resource "aws_cloudhsm_v2_cluster" "cluster" {
   hsm_type = "hsm1.medium"  
-  subnet_ids = ["${aws_subnet.cloudhsm2_test_subnets.*.id}"]
+  subnet_ids = ["${aws_subnet.cloudhsm2_test_subnets.0.id}", "${aws_subnet.cloudhsm2_test_subnets.1.id}"]
   tags = {
     Name = "tf-acc-aws_cloudhsm_v2_cluster-data-source-basic-%d"
   }

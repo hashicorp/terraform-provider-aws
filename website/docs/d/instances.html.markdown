@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_instances"
-sidebar_current: "docs-aws-datasource-instances"
 description: |-
   Get information on an Amazon EC2 instances.
 ---
@@ -25,7 +25,7 @@ and you'd need to re-run `apply` every time an instance comes up or dies.
 
 ```hcl
 data "aws_instances" "test" {
-  instance_tags {
+  instance_tags = {
     Role = "HardWorker"
   }
 

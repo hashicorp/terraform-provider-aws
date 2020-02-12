@@ -1,12 +1,12 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_pool"
-sidebar_current: "docs-aws-resource-cognito-identity-pool"
 description: |-
   Provides an AWS Cognito Identity Pool.
 ---
 
-# aws_cognito_identity_pool
+# Resource: aws_cognito_identity_pool
 
 Provides an AWS Cognito Identity Pool.
 
@@ -34,7 +34,7 @@ resource "aws_cognito_identity_pool" "main" {
     server_side_token_check = false
   }
 
-  supported_login_providers {
+  supported_login_providers = {
     "graph.facebook.com"  = "7346241598935552"
     "accounts.google.com" = "123456789012.apps.googleusercontent.com"
   }
@@ -56,6 +56,7 @@ backend and the Cognito service to communicate about the developer provider.
 * `openid_connect_provider_arns` (Optional) - A list of OpendID Connect provider ARNs.
 * `saml_provider_arns` (Optional) - An array of Amazon Resource Names (ARNs) of the SAML provider for your identity.
 * `supported_login_providers` (Optional) - Key-Value pairs mapping provider names to provider app IDs.
+* `tags` - (Optional) A mapping of tags to assign to the Identity Pool.
 
 #### Cognito Identity Providers
 

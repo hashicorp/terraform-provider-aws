@@ -66,22 +66,22 @@ func (c *ServerlessApplicationRepository) CreateApplicationRequest(input *Create
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation CreateApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+// Returned Error Types:
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The resource already exists.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/CreateApplication
@@ -159,22 +159,22 @@ func (c *ServerlessApplicationRepository) CreateApplicationVersionRequest(input 
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation CreateApplicationVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+// Returned Error Types:
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The resource already exists.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/CreateApplicationVersion
@@ -252,19 +252,19 @@ func (c *ServerlessApplicationRepository) CreateCloudFormationChangeSetRequest(i
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation CreateCloudFormationChangeSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+// Returned Error Types:
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/CreateCloudFormationChangeSet
@@ -342,23 +342,23 @@ func (c *ServerlessApplicationRepository) CreateCloudFormationTemplateRequest(in
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation CreateCloudFormationTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource (for example, an access policy statement) specified in the request
 //   doesn't exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/CreateCloudFormationTemplate
@@ -437,26 +437,26 @@ func (c *ServerlessApplicationRepository) DeleteApplicationRequest(input *Delete
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation DeleteApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource (for example, an access policy statement) specified in the request
 //   doesn't exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The resource already exists.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/DeleteApplication
@@ -534,23 +534,23 @@ func (c *ServerlessApplicationRepository) GetApplicationRequest(input *GetApplic
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation GetApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource (for example, an access policy statement) specified in the request
 //   doesn't exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/GetApplication
@@ -628,23 +628,23 @@ func (c *ServerlessApplicationRepository) GetApplicationPolicyRequest(input *Get
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation GetApplicationPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource (for example, an access policy statement) specified in the request
 //   doesn't exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/GetApplicationPolicy
@@ -722,23 +722,23 @@ func (c *ServerlessApplicationRepository) GetCloudFormationTemplateRequest(input
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation GetCloudFormationTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource (for example, an access policy statement) specified in the request
 //   doesn't exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/GetCloudFormationTemplate
@@ -822,23 +822,23 @@ func (c *ServerlessApplicationRepository) ListApplicationDependenciesRequest(inp
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation ListApplicationDependencies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource (for example, an access policy statement) specified in the request
 //   doesn't exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/ListApplicationDependencies
@@ -874,7 +874,7 @@ func (c *ServerlessApplicationRepository) ListApplicationDependenciesWithContext
 //    // Example iterating over at most 3 pages of a ListApplicationDependencies operation.
 //    pageNum := 0
 //    err := client.ListApplicationDependenciesPages(params,
-//        func(page *ListApplicationDependenciesOutput, lastPage bool) bool {
+//        func(page *serverlessapplicationrepository.ListApplicationDependenciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -906,10 +906,12 @@ func (c *ServerlessApplicationRepository) ListApplicationDependenciesPagesWithCo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListApplicationDependenciesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListApplicationDependenciesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -972,23 +974,23 @@ func (c *ServerlessApplicationRepository) ListApplicationVersionsRequest(input *
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation ListApplicationVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource (for example, an access policy statement) specified in the request
 //   doesn't exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/ListApplicationVersions
@@ -1024,7 +1026,7 @@ func (c *ServerlessApplicationRepository) ListApplicationVersionsWithContext(ctx
 //    // Example iterating over at most 3 pages of a ListApplicationVersions operation.
 //    pageNum := 0
 //    err := client.ListApplicationVersionsPages(params,
-//        func(page *ListApplicationVersionsOutput, lastPage bool) bool {
+//        func(page *serverlessapplicationrepository.ListApplicationVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1056,10 +1058,12 @@ func (c *ServerlessApplicationRepository) ListApplicationVersionsPagesWithContex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListApplicationVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListApplicationVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1122,19 +1126,19 @@ func (c *ServerlessApplicationRepository) ListApplicationsRequest(input *ListApp
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation ListApplications for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource (for example, an access policy statement) specified in the request
 //   doesn't exist.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/ListApplications
@@ -1170,7 +1174,7 @@ func (c *ServerlessApplicationRepository) ListApplicationsWithContext(ctx aws.Co
 //    // Example iterating over at most 3 pages of a ListApplications operation.
 //    pageNum := 0
 //    err := client.ListApplicationsPages(params,
-//        func(page *ListApplicationsOutput, lastPage bool) bool {
+//        func(page *serverlessapplicationrepository.ListApplicationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1202,10 +1206,12 @@ func (c *ServerlessApplicationRepository) ListApplicationsPagesWithContext(ctx a
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListApplicationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListApplicationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1254,8 +1260,7 @@ func (c *ServerlessApplicationRepository) PutApplicationPolicyRequest(input *Put
 // PutApplicationPolicy API operation for AWSServerlessApplicationRepository.
 //
 // Sets the permission policy for an application. For the list of actions supported
-// for this operation, see Application Permissions (https://docs.aws.amazon.com/serverlessrepo/latest/devguide/access-control-resource-based.html#application-permissions)
-// .
+// for this operation, see Application Permissions (https://docs.aws.amazon.com/serverlessrepo/latest/devguide/access-control-resource-based.html#application-permissions) .
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1264,23 +1269,23 @@ func (c *ServerlessApplicationRepository) PutApplicationPolicyRequest(input *Put
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation PutApplicationPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource (for example, an access policy statement) specified in the request
 //   doesn't exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/PutApplicationPolicy
@@ -1358,26 +1363,26 @@ func (c *ServerlessApplicationRepository) UpdateApplicationRequest(input *Update
 // See the AWS API reference guide for AWSServerlessApplicationRepository's
 // API operation UpdateApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   One of the parameters in the request is invalid.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   The AWS Serverless Application Repository service encountered an internal
 //   error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   The client is not authenticated.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The resource (for example, an access policy statement) specified in the request
 //   doesn't exist.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   The client is sending more than the allowed number of requests per unit of
 //   time.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The resource already exists.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/serverlessrepo-2017-09-08/UpdateApplication
@@ -1449,7 +1454,7 @@ type ApplicationPolicyStatement struct {
 	// Actions is a required field
 	Actions []*string `locationName:"actions" type:"list" required:"true"`
 
-	// An AWS account ID, or * to make the application public.
+	// An array of AWS account IDs, or * to make the application public.
 	//
 	// Principals is a required field
 	Principals []*string `locationName:"principals" type:"list" required:"true"`
@@ -1612,6 +1617,126 @@ func (s *ApplicationSummary) SetSpdxLicenseId(v string) *ApplicationSummary {
 	return s
 }
 
+// One of the parameters in the request is invalid.
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// 400
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// One of the parameters in the request is invalid.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource already exists.
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// 409
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// The resource already exists.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type CreateApplicationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1625,6 +1750,8 @@ type CreateApplicationOutput struct {
 
 	HomePageUrl *string `locationName:"homePageUrl" type:"string"`
 
+	IsVerifiedAuthor *bool `locationName:"isVerifiedAuthor" type:"boolean"`
+
 	Labels []*string `locationName:"labels" type:"list"`
 
 	LicenseUrl *string `locationName:"licenseUrl" type:"string"`
@@ -1634,6 +1761,8 @@ type CreateApplicationOutput struct {
 	ReadmeUrl *string `locationName:"readmeUrl" type:"string"`
 
 	SpdxLicenseId *string `locationName:"spdxLicenseId" type:"string"`
+
+	VerifiedAuthorUrl *string `locationName:"verifiedAuthorUrl" type:"string"`
 
 	// Application version details.
 	Version *Version `locationName:"version" type:"structure"`
@@ -1679,6 +1808,12 @@ func (s *CreateApplicationOutput) SetHomePageUrl(v string) *CreateApplicationOut
 	return s
 }
 
+// SetIsVerifiedAuthor sets the IsVerifiedAuthor field's value.
+func (s *CreateApplicationOutput) SetIsVerifiedAuthor(v bool) *CreateApplicationOutput {
+	s.IsVerifiedAuthor = &v
+	return s
+}
+
 // SetLabels sets the Labels field's value.
 func (s *CreateApplicationOutput) SetLabels(v []*string) *CreateApplicationOutput {
 	s.Labels = v
@@ -1706,6 +1841,12 @@ func (s *CreateApplicationOutput) SetReadmeUrl(v string) *CreateApplicationOutpu
 // SetSpdxLicenseId sets the SpdxLicenseId field's value.
 func (s *CreateApplicationOutput) SetSpdxLicenseId(v string) *CreateApplicationOutput {
 	s.SpdxLicenseId = &v
+	return s
+}
+
+// SetVerifiedAuthorUrl sets the VerifiedAuthorUrl field's value.
+func (s *CreateApplicationOutput) SetVerifiedAuthorUrl(v string) *CreateApplicationOutput {
+	s.VerifiedAuthorUrl = &v
 	return s
 }
 
@@ -1740,6 +1881,8 @@ type CreateApplicationRequest struct {
 	ReadmeUrl *string `locationName:"readmeUrl" type:"string"`
 
 	SemanticVersion *string `locationName:"semanticVersion" type:"string"`
+
+	SourceCodeArchiveUrl *string `locationName:"sourceCodeArchiveUrl" type:"string"`
 
 	SourceCodeUrl *string `locationName:"sourceCodeUrl" type:"string"`
 
@@ -1839,6 +1982,12 @@ func (s *CreateApplicationRequest) SetSemanticVersion(v string) *CreateApplicati
 	return s
 }
 
+// SetSourceCodeArchiveUrl sets the SourceCodeArchiveUrl field's value.
+func (s *CreateApplicationRequest) SetSourceCodeArchiveUrl(v string) *CreateApplicationRequest {
+	s.SourceCodeArchiveUrl = &v
+	return s
+}
+
 // SetSourceCodeUrl sets the SourceCodeUrl field's value.
 func (s *CreateApplicationRequest) SetSourceCodeUrl(v string) *CreateApplicationRequest {
 	s.SourceCodeUrl = &v
@@ -1877,6 +2026,8 @@ type CreateApplicationVersionOutput struct {
 	ResourcesSupported *bool `locationName:"resourcesSupported" type:"boolean"`
 
 	SemanticVersion *string `locationName:"semanticVersion" type:"string"`
+
+	SourceCodeArchiveUrl *string `locationName:"sourceCodeArchiveUrl" type:"string"`
 
 	SourceCodeUrl *string `locationName:"sourceCodeUrl" type:"string"`
 
@@ -1929,6 +2080,12 @@ func (s *CreateApplicationVersionOutput) SetSemanticVersion(v string) *CreateApp
 	return s
 }
 
+// SetSourceCodeArchiveUrl sets the SourceCodeArchiveUrl field's value.
+func (s *CreateApplicationVersionOutput) SetSourceCodeArchiveUrl(v string) *CreateApplicationVersionOutput {
+	s.SourceCodeArchiveUrl = &v
+	return s
+}
+
 // SetSourceCodeUrl sets the SourceCodeUrl field's value.
 func (s *CreateApplicationVersionOutput) SetSourceCodeUrl(v string) *CreateApplicationVersionOutput {
 	s.SourceCodeUrl = &v
@@ -1949,6 +2106,8 @@ type CreateApplicationVersionRequest struct {
 
 	// SemanticVersion is a required field
 	SemanticVersion *string `location:"uri" locationName:"semanticVersion" type:"string" required:"true"`
+
+	SourceCodeArchiveUrl *string `locationName:"sourceCodeArchiveUrl" type:"string"`
 
 	SourceCodeUrl *string `locationName:"sourceCodeUrl" type:"string"`
 
@@ -1998,6 +2157,12 @@ func (s *CreateApplicationVersionRequest) SetApplicationId(v string) *CreateAppl
 // SetSemanticVersion sets the SemanticVersion field's value.
 func (s *CreateApplicationVersionRequest) SetSemanticVersion(v string) *CreateApplicationVersionRequest {
 	s.SemanticVersion = &v
+	return s
+}
+
+// SetSourceCodeArchiveUrl sets the SourceCodeArchiveUrl field's value.
+func (s *CreateApplicationVersionRequest) SetSourceCodeArchiveUrl(v string) *CreateApplicationVersionRequest {
+	s.SourceCodeArchiveUrl = &v
 	return s
 }
 
@@ -2402,6 +2567,66 @@ func (s DeleteApplicationOutput) GoString() string {
 	return s.String()
 }
 
+// The client is not authenticated.
+type ForbiddenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// 403
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// The client is not authenticated.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ForbiddenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForbiddenException) GoString() string {
+	return s.String()
+}
+
+func newErrorForbiddenException(v protocol.ResponseMetadata) error {
+	return &ForbiddenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ForbiddenException) Code() string {
+	return "ForbiddenException"
+}
+
+// Message returns the exception's message.
+func (s ForbiddenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ForbiddenException) OrigErr() error {
+	return nil
+}
+
+func (s ForbiddenException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ForbiddenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ForbiddenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type GetApplicationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2462,6 +2687,8 @@ type GetApplicationOutput struct {
 
 	HomePageUrl *string `locationName:"homePageUrl" type:"string"`
 
+	IsVerifiedAuthor *bool `locationName:"isVerifiedAuthor" type:"boolean"`
+
 	Labels []*string `locationName:"labels" type:"list"`
 
 	LicenseUrl *string `locationName:"licenseUrl" type:"string"`
@@ -2471,6 +2698,8 @@ type GetApplicationOutput struct {
 	ReadmeUrl *string `locationName:"readmeUrl" type:"string"`
 
 	SpdxLicenseId *string `locationName:"spdxLicenseId" type:"string"`
+
+	VerifiedAuthorUrl *string `locationName:"verifiedAuthorUrl" type:"string"`
 
 	// Application version details.
 	Version *Version `locationName:"version" type:"structure"`
@@ -2516,6 +2745,12 @@ func (s *GetApplicationOutput) SetHomePageUrl(v string) *GetApplicationOutput {
 	return s
 }
 
+// SetIsVerifiedAuthor sets the IsVerifiedAuthor field's value.
+func (s *GetApplicationOutput) SetIsVerifiedAuthor(v bool) *GetApplicationOutput {
+	s.IsVerifiedAuthor = &v
+	return s
+}
+
 // SetLabels sets the Labels field's value.
 func (s *GetApplicationOutput) SetLabels(v []*string) *GetApplicationOutput {
 	s.Labels = v
@@ -2543,6 +2778,12 @@ func (s *GetApplicationOutput) SetReadmeUrl(v string) *GetApplicationOutput {
 // SetSpdxLicenseId sets the SpdxLicenseId field's value.
 func (s *GetApplicationOutput) SetSpdxLicenseId(v string) *GetApplicationOutput {
 	s.SpdxLicenseId = &v
+	return s
+}
+
+// SetVerifiedAuthorUrl sets the VerifiedAuthorUrl field's value.
+func (s *GetApplicationOutput) SetVerifiedAuthorUrl(v string) *GetApplicationOutput {
+	s.VerifiedAuthorUrl = &v
 	return s
 }
 
@@ -2735,6 +2976,68 @@ func (s *GetCloudFormationTemplateOutput) SetTemplateId(v string) *GetCloudForma
 func (s *GetCloudFormationTemplateOutput) SetTemplateUrl(v string) *GetCloudFormationTemplateOutput {
 	s.TemplateUrl = &v
 	return s
+}
+
+// The AWS Serverless Application Repository service encountered an internal
+// error.
+type InternalServerErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// 500
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// The AWS Serverless Application Repository service encountered an internal
+	// error.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
+	return &InternalServerErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerErrorException) Code() string {
+	return "InternalServerErrorException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerErrorException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerErrorException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerErrorException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListApplicationDependenciesInput struct {
@@ -2992,6 +3295,68 @@ func (s *ListApplicationsOutput) SetApplications(v []*ApplicationSummary) *ListA
 func (s *ListApplicationsOutput) SetNextToken(v string) *ListApplicationsOutput {
 	s.NextToken = &v
 	return s
+}
+
+// The resource (for example, an access policy statement) specified in the request
+// doesn't exist.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// 404
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// The resource (for example, an access policy statement) specified in the request
+	// doesn't exist.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Parameters supported by the application.
@@ -3445,7 +3810,7 @@ type Tag struct {
 	Key *string `locationName:"key" type:"string" required:"true"`
 
 	// This property corresponds to the content of the same name for the AWS CloudFormation
-	//  Tag (https://docs.aws.amazon.com/goto/WebAPI/cloudformation-2010-05-15/Tag)
+	// Tag (https://docs.aws.amazon.com/goto/WebAPI/cloudformation-2010-05-15/Tag)
 	// Data Type.
 	//
 	// Value is a required field
@@ -3490,6 +3855,68 @@ func (s *Tag) SetValue(v string) *Tag {
 	return s
 }
 
+// The client is sending more than the allowed number of requests per unit of
+// time.
+type TooManyRequestsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// 429
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// The client is sending more than the allowed number of requests per unit of
+	// time.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyRequestsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyRequestsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type UpdateApplicationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3503,6 +3930,8 @@ type UpdateApplicationOutput struct {
 
 	HomePageUrl *string `locationName:"homePageUrl" type:"string"`
 
+	IsVerifiedAuthor *bool `locationName:"isVerifiedAuthor" type:"boolean"`
+
 	Labels []*string `locationName:"labels" type:"list"`
 
 	LicenseUrl *string `locationName:"licenseUrl" type:"string"`
@@ -3512,6 +3941,8 @@ type UpdateApplicationOutput struct {
 	ReadmeUrl *string `locationName:"readmeUrl" type:"string"`
 
 	SpdxLicenseId *string `locationName:"spdxLicenseId" type:"string"`
+
+	VerifiedAuthorUrl *string `locationName:"verifiedAuthorUrl" type:"string"`
 
 	// Application version details.
 	Version *Version `locationName:"version" type:"structure"`
@@ -3557,6 +3988,12 @@ func (s *UpdateApplicationOutput) SetHomePageUrl(v string) *UpdateApplicationOut
 	return s
 }
 
+// SetIsVerifiedAuthor sets the IsVerifiedAuthor field's value.
+func (s *UpdateApplicationOutput) SetIsVerifiedAuthor(v bool) *UpdateApplicationOutput {
+	s.IsVerifiedAuthor = &v
+	return s
+}
+
 // SetLabels sets the Labels field's value.
 func (s *UpdateApplicationOutput) SetLabels(v []*string) *UpdateApplicationOutput {
 	s.Labels = v
@@ -3584,6 +4021,12 @@ func (s *UpdateApplicationOutput) SetReadmeUrl(v string) *UpdateApplicationOutpu
 // SetSpdxLicenseId sets the SpdxLicenseId field's value.
 func (s *UpdateApplicationOutput) SetSpdxLicenseId(v string) *UpdateApplicationOutput {
 	s.SpdxLicenseId = &v
+	return s
+}
+
+// SetVerifiedAuthorUrl sets the VerifiedAuthorUrl field's value.
+func (s *UpdateApplicationOutput) SetVerifiedAuthorUrl(v string) *UpdateApplicationOutput {
+	s.VerifiedAuthorUrl = &v
 	return s
 }
 
@@ -3705,7 +4148,8 @@ type Version struct {
 	// (IAM) users. For those applications, you must explicitly acknowledge their
 	// capabilities by specifying this parameter.
 	//
-	// The only valid values are CAPABILITY_IAM, CAPABILITY_NAMED_IAM, and CAPABILITY_RESOURCE_POLICY.
+	// The only valid values are CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_RESOURCE_POLICY,
+	// and CAPABILITY_AUTO_EXPAND.
 	//
 	// The following resources require you to specify CAPABILITY_IAM or CAPABILITY_NAMED_IAM:
 	// AWS::IAM::Group (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-group.html),
@@ -3724,12 +4168,13 @@ type Version struct {
 	// AWS::SQS::QueuePolicy (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sqs-policy.html),
 	// and AWS::SNS::TopicPolicy (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sns-policy.html).
 	//
+	// Applications that contain one or more nested applications require you to
+	// specify CAPABILITY_AUTO_EXPAND.
+	//
 	// If your application template contains any of the above resources, we recommend
 	// that you review all permissions associated with the application before deploying.
 	// If you don't specify this parameter for an application that requires capabilities,
 	// the call will fail.
-	//
-	// Valid values: CAPABILITY_IAM | CAPABILITY_NAMED_IAM | CAPABILITY_RESOURCE_POLICY
 	//
 	// RequiredCapabilities is a required field
 	RequiredCapabilities []*string `locationName:"requiredCapabilities" type:"list" required:"true"`
@@ -3747,7 +4192,14 @@ type Version struct {
 	// SemanticVersion is a required field
 	SemanticVersion *string `locationName:"semanticVersion" type:"string" required:"true"`
 
-	// A link to a public repository for the source code of your application.
+	// A link to the S3 object that contains the ZIP archive of the source code
+	// for this version of your application.
+	//
+	// Maximum size 50 MB
+	SourceCodeArchiveUrl *string `locationName:"sourceCodeArchiveUrl" type:"string"`
+
+	// A link to a public repository for the source code of your application, for
+	// example the URL of a specific GitHub commit.
 	SourceCodeUrl *string `locationName:"sourceCodeUrl" type:"string"`
 
 	// A link to the packaged AWS SAM template of your application.
@@ -3802,6 +4254,12 @@ func (s *Version) SetSemanticVersion(v string) *Version {
 	return s
 }
 
+// SetSourceCodeArchiveUrl sets the SourceCodeArchiveUrl field's value.
+func (s *Version) SetSourceCodeArchiveUrl(v string) *Version {
+	s.SourceCodeArchiveUrl = &v
+	return s
+}
+
 // SetSourceCodeUrl sets the SourceCodeUrl field's value.
 func (s *Version) SetSourceCodeUrl(v string) *Version {
 	s.SourceCodeUrl = &v
@@ -3835,7 +4293,8 @@ type VersionSummary struct {
 	// SemanticVersion is a required field
 	SemanticVersion *string `locationName:"semanticVersion" type:"string" required:"true"`
 
-	// A link to a public repository for the source code of your application.
+	// A link to a public repository for the source code of your application, for
+	// example the URL of a specific GitHub commit.
 	SourceCodeUrl *string `locationName:"sourceCodeUrl" type:"string"`
 }
 

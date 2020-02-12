@@ -1,14 +1,15 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_rds_cluster_parameter_group"
-sidebar_current: "docs-aws-resource-rds-cluster-parameter-group"
 description: |-
   Provides an RDS DB cluster parameter group resource.
 ---
 
-# aws_rds_cluster_parameter_group
+# Resource: aws_rds_cluster_parameter_group
 
 Provides an RDS DB cluster parameter group resource. Documentation of the available parameters for various Aurora engines can be found at:
+
 * [Aurora MySQL Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Reference.html)
 * [Aurora PostgreSQL Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraPostgreSQL.Reference.html)
 

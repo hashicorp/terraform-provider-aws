@@ -7,10 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsSecretsManagerSecret() *schema.Resource {
@@ -117,6 +118,10 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		Name:        aws.String(secretName),
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SecretsmanagerTags()
+	}
+
 	if v, ok := d.GetOk("kms_key_id"); ok && v.(string) != "" {
 		input.KmsKeyId = aws.String(v.(string))
 	}
@@ -128,8 +133,10 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateSecret(input)
+		// Temporarily retry on these errors to support immediate secret recreation:
 		// InvalidRequestException: You can’t perform this operation on the secret because it was deleted.
-		if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
+		// InvalidRequestException: You can't create this secret because a secret with this name is already scheduled for deletion.
+		if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "scheduled for deletion") || isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -137,6 +144,9 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateSecret(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating Secrets Manager Secret: %s", err)
 	}
@@ -175,21 +185,11 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.RotateSecret(input)
+		}
 		if err != nil {
 			return fmt.Errorf("error enabling Secrets Manager Secret %q rotation: %s", d.Id(), err)
-		}
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		input := &secretsmanager.TagResourceInput{
-			SecretId: aws.String(d.Id()),
-			Tags:     tagsFromMapSecretsManager(v.(map[string]interface{})),
-		}
-
-		log.Printf("[DEBUG] Tagging Secrets Manager Secret: %s", input)
-		_, err := conn.TagResource(input)
-		if err != nil {
-			return fmt.Errorf("error tagging Secrets Manager Secret %q: %s", d.Id(), input)
 		}
 	}
 
@@ -248,7 +248,7 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 		d.Set("rotation_rules", []interface{}{})
 	}
 
-	if err := d.Set("tags", tagsToMapSecretsManager(output.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.SecretsmanagerKeyValueTags(output.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -324,6 +324,9 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 				}
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.RotateSecret(input)
+			}
 			if err != nil {
 				return fmt.Errorf("error updating Secrets Manager Secret %q rotation: %s", d.Id(), err)
 			}
@@ -341,35 +344,9 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	if d.HasChange("tags") {
-		oraw, nraw := d.GetChange("tags")
-		o := oraw.(map[string]interface{})
-		n := nraw.(map[string]interface{})
-		create, remove := diffTagsSecretsManager(tagsFromMapSecretsManager(o), tagsFromMapSecretsManager(n))
-
-		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing Secrets Manager Secret %q tags: %#v", d.Id(), remove)
-			k := make([]*string, len(remove), len(remove))
-			for i, t := range remove {
-				k[i] = t.Key
-			}
-
-			_, err := conn.UntagResource(&secretsmanager.UntagResourceInput{
-				SecretId: aws.String(d.Id()),
-				TagKeys:  k,
-			})
-			if err != nil {
-				return fmt.Errorf("error updating Secrets Manager Secrets %q tags: %s", d.Id(), err)
-			}
-		}
-		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating Secrets Manager Secret %q tags: %#v", d.Id(), create)
-			_, err := conn.TagResource(&secretsmanager.TagResourceInput{
-				SecretId: aws.String(d.Id()),
-				Tags:     create,
-			})
-			if err != nil {
-				return fmt.Errorf("error updating Secrets Manager Secrets %q tags: %s", d.Id(), err)
-			}
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.SecretsmanagerUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 

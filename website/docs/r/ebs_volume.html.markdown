@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_volume"
-sidebar_current: "docs-aws-resource-ebs-volume"
 description: |-
   Provides an elastic block storage resource.
 ---
 
-# aws_ebs_volume
+# Resource: aws_ebs_volume
 
 Manages a single EBS volume.
 
@@ -23,7 +23,7 @@ resource "aws_ebs_volume" "example" {
 }
 ```
 
-~> **NOTE**: One of `size` or `snapshot_id` is required when specifying an EBS volume 
+~> **NOTE**: One of `size` or `snapshot_id` is required when specifying an EBS volume
 
 ## Argument Reference
 
@@ -50,8 +50,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EBS Volumes can be imported using the `id`, e.g. 
+EBS Volumes can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_ebs_volume.data vol-049df61146c4d7901
+$ terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```

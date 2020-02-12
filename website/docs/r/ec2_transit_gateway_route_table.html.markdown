@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_route_table"
-sidebar_current: "docs-aws-resource-ec2-transit-gateway-route-table-x"
 description: |-
   Manages an EC2 Transit Gateway Route Table
 ---
 
-# aws_ec2_transit_gateway_route_table
+# Resource: aws_ec2_transit_gateway_route_table
 
 Manages an EC2 Transit Gateway Route Table.
 

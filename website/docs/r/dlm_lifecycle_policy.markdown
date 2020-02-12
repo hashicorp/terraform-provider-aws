@@ -1,12 +1,12 @@
 ---
+subcategory: "Data Lifecycle Manager (DLM)"
 layout: "aws"
 page_title: "AWS: aws_dlm_lifecycle_policy"
-sidebar_current: "docs-aws-resource-dlm-lifecycle-policy"
 description: |-
   Provides a Data Lifecycle Manager (DLM) lifecycle policy for managing snapshots.
 ---
 
-# aws_dlm_lifecycle_policy
+# Resource: aws_dlm_lifecycle_policy
 
 Provides a [Data Lifecycle Manager (DLM) lifecycle policy](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snapshot-lifecycle.html) for managing snapshots.
 
@@ -36,6 +36,7 @@ EOF
 resource "aws_iam_role_policy" "dlm_lifecycle" {
   name = "dlm-lifecycle-policy"
   role = "${aws_iam_role.dlm_lifecycle_role.id}"
+
   policy = <<EOF
 {
    "Version": "2012-10-17",
@@ -83,14 +84,14 @@ resource "aws_dlm_lifecycle_policy" "example" {
         count = 14
       }
 
-      tags_to_add {
+      tags_to_add = {
         SnapshotCreator = "DLM"
       }
 
       copy_tags = false
     }
 
-    target_tags {
+    target_tags = {
       Snapshot = "true"
     }
   }
@@ -105,6 +106,7 @@ The following arguments are supported:
 * `execution_role_arn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
 * `policy_details` - (Required) See the [`policy_details` configuration](#policy-details-arguments) block. Max of 1.
 * `state` - (Optional) Whether the lifecycle policy should be enabled or disabled. `ENABLED` or `DISABLED` are valid values. Defaults to `ENABLED`.
+* `tags` - (Optional) Key-value mapping of resource tags.
 
 #### Policy Details arguments
 
@@ -124,7 +126,7 @@ The following arguments are supported:
 
 #### Create Rule arguments
 
-* `interval` - (Required) How often this lifecycle policy should be evaluated. `12` or `24` are valid values.
+* `interval` - (Required) How often this lifecycle policy should be evaluated. `2`,`3`,`4`,`6`,`8`,`12` or `24` are valid values.
 * `interval_unit` - (Optional) The unit for how often the lifecycle policy should be evaluated. `HOURS` is currently the only allowed value and also the default value.
 * `times` - (Optional) A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1.
 
@@ -134,7 +136,10 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-All of the arguments above are exported as attributes.
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - Amazon Resource Name (ARN) of the DLM Lifecycle Policy.
+* `id` - Identifier of the DLM Lifecycle Policy.
 
 ## Import
 

@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsFlowLog() *schema.Resource {
@@ -86,6 +86,13 @@ func resourceAwsFlowLog() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+
+			"log_format": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -134,12 +141,19 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("log_group_name"); ok && v != "" {
 		opts.LogGroupName = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("log_format"); ok && v != "" {
+		opts.LogFormat = aws.String(v.(string))
+	}
 
 	log.Printf(
 		"[DEBUG] Flow Log Create configuration: %s", opts)
 	resp, err := conn.CreateFlowLogs(opts)
 	if err != nil {
 		return fmt.Errorf("Error creating Flow Log for (%s), error: %s", resourceId, err)
+	}
+
+	if len(resp.Unsuccessful) > 0 {
+		return fmt.Errorf("Error creating Flow Log for (%s), error: %s", resourceId, *resp.Unsuccessful[0].Error.Message)
 	}
 
 	if len(resp.FlowLogIds) > 1 {
@@ -177,7 +191,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
-
+	d.Set("log_format", fl.LogFormat)
 	var resourceKey string
 	if strings.HasPrefix(*fl.ResourceId, "vpc-") {
 		resourceKey = "vpc_id"

@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ami_from_instance"
-sidebar_current: "docs-aws-resource-ami-from-instance"
 description: |-
   Creates an Amazon Machine Image (AMI) from an EBS-backed EC2 instance
 ---
 
-# aws_ami_from_instance
+# Resource: aws_ami_from_instance
 
 The "AMI from instance" resource allows the creation of an Amazon Machine
 Image (AMI) modelled after an existing EBS-backed EC2 instance.
@@ -45,6 +45,7 @@ The following arguments are supported:
   the instance before snapshotting. This is risky since it may cause a snapshot of an
   inconsistent filesystem state, but can be used to avoid downtime if the user otherwise
   guarantees that no filesystem writes will be underway at the time of snapshot.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ### Timeouts
 

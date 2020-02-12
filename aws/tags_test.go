@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestDiffTags(t *testing.T) {
@@ -108,50 +108,6 @@ func TestIgnoringTags(t *testing.T) {
 	for _, tag := range ignoredTags {
 		if !tagIgnored(tag) {
 			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
-		}
-	}
-}
-
-func TestTagsMapToHash(t *testing.T) {
-	cases := []struct {
-		Left, Right map[string]interface{}
-		MustBeEqual bool
-	}{
-		{
-			Left:        map[string]interface{}{},
-			Right:       map[string]interface{}{},
-			MustBeEqual: true,
-		},
-		{
-			Left: map[string]interface{}{
-				"foo": "bar",
-				"bar": "baz",
-			},
-			Right: map[string]interface{}{
-				"bar": "baz",
-				"foo": "bar",
-			},
-			MustBeEqual: true,
-		},
-		{
-			Left: map[string]interface{}{
-				"foo": "bar",
-			},
-			Right: map[string]interface{}{
-				"bar": "baz",
-			},
-			MustBeEqual: false,
-		},
-	}
-
-	for i, tc := range cases {
-		l := tagsMapToHash(tc.Left)
-		r := tagsMapToHash(tc.Right)
-		if tc.MustBeEqual && (l != r) {
-			t.Fatalf("%d: Hashes don't match", i)
-		}
-		if !tc.MustBeEqual && (l == r) {
-			t.Logf("%d: Hashes match", i)
 		}
 	}
 }

@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -195,7 +195,7 @@ resource "aws_licensemanager_license_configuration" "example" {
     "#minimumSockets=3"
   ]
 
-  tags {
+  tags = {
     foo = "barr"
   }
 }
@@ -211,7 +211,7 @@ resource "aws_licensemanager_license_configuration" "example" {
     "#minimumSockets=3"
   ]
 
-  tags {
+  tags = {
     test = "test"
     abc = "def"
   }

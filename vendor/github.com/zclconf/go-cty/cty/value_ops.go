@@ -3,26 +3,26 @@ package cty
 import (
 	"fmt"
 	"math/big"
-
 	"reflect"
 
 	"github.com/zclconf/go-cty/cty/set"
 )
 
+// GoString is an implementation of fmt.GoStringer that produces concise
+// source-like representations of values suitable for use in debug messages.
 func (val Value) GoString() string {
 	if val == NilVal {
 		return "cty.NilVal"
 	}
 
-	if val.ty == DynamicPseudoType {
-		return "cty.DynamicValue"
-	}
-
-	if !val.IsKnown() {
-		return fmt.Sprintf("cty.Unknown(%#v)", val.ty)
-	}
 	if val.IsNull() {
-		return fmt.Sprintf("cty.Null(%#v)", val.ty)
+		return fmt.Sprintf("cty.NullVal(%#v)", val.ty)
+	}
+	if val == DynamicVal { // is unknown, so must be before the IsKnown check below
+		return "cty.DynamicVal"
+	}
+	if !val.IsKnown() {
+		return fmt.Sprintf("cty.UnknownVal(%#v)", val.ty)
 	}
 
 	// By the time we reach here we've dealt with all of the exceptions around
@@ -33,9 +33,8 @@ func (val Value) GoString() string {
 	case Bool:
 		if val.v.(bool) {
 			return "cty.True"
-		} else {
-			return "cty.False"
 		}
+		return "cty.False"
 	case Number:
 		fv := val.v.(*big.Float)
 		// We'll try to use NumberIntVal or NumberFloatVal if we can, since
@@ -46,19 +45,42 @@ func (val Value) GoString() string {
 		if rfv, accuracy := fv.Float64(); accuracy == big.Exact {
 			return fmt.Sprintf("cty.NumberFloatVal(%#v)", rfv)
 		}
-		return fmt.Sprintf("cty.NumberVal(new(big.Float).Parse(\"%#v\", 10))", fv)
+		return fmt.Sprintf("cty.MustParseNumberVal(%q)", fv.Text('f', -1))
 	case String:
 		return fmt.Sprintf("cty.StringVal(%#v)", val.v)
 	}
 
 	switch {
 	case val.ty.IsSetType():
-		vals := val.v.(set.Set).Values()
-		if vals == nil || len(vals) == 0 {
-			return fmt.Sprintf("cty.SetValEmpty()")
-		} else {
-			return fmt.Sprintf("cty.SetVal(%#v)", vals)
+		vals := val.AsValueSlice()
+		if len(vals) == 0 {
+			return fmt.Sprintf("cty.SetValEmpty(%#v)", val.ty.ElementType())
 		}
+		return fmt.Sprintf("cty.SetVal(%#v)", vals)
+	case val.ty.IsListType():
+		vals := val.AsValueSlice()
+		if len(vals) == 0 {
+			return fmt.Sprintf("cty.ListValEmpty(%#v)", val.ty.ElementType())
+		}
+		return fmt.Sprintf("cty.ListVal(%#v)", vals)
+	case val.ty.IsMapType():
+		vals := val.AsValueMap()
+		if len(vals) == 0 {
+			return fmt.Sprintf("cty.MapValEmpty(%#v)", val.ty.ElementType())
+		}
+		return fmt.Sprintf("cty.MapVal(%#v)", vals)
+	case val.ty.IsTupleType():
+		if val.ty.Equals(EmptyTuple) {
+			return "cty.EmptyTupleVal"
+		}
+		vals := val.AsValueSlice()
+		return fmt.Sprintf("cty.TupleVal(%#v)", vals)
+	case val.ty.IsObjectType():
+		if val.ty.Equals(EmptyObject) {
+			return "cty.EmptyObjectVal"
+		}
+		vals := val.AsValueMap()
+		return fmt.Sprintf("cty.ObjectVal(%#v)", vals)
 	case val.ty.IsCapsuleType():
 		return fmt.Sprintf("cty.CapsuleVal(%#v, %#v)", val.ty, val.v)
 	}
@@ -71,26 +93,67 @@ func (val Value) GoString() string {
 // Equals returns True if the receiver and the given other value have the
 // same type and are exactly equal in value.
 //
-// The usual short-circuit rules apply, so the result can be unknown or typed
-// as dynamic if either of the given values are. Use RawEquals to compare
-// if two values are equal *ignoring* the short-circuit rules.
+// As a special case, two null values are always equal regardless of type.
+//
+// The usual short-circuit rules apply, so the result will be unknown if
+// either of the given values are.
+//
+// Use RawEquals to compare if two values are equal *ignoring* the
+// short-circuit rules and the exception for null values.
 func (val Value) Equals(other Value) Value {
+	// Start by handling Unknown values before considering types.
+	// This needs to be done since Null values are always equal regardless of
+	// type.
+	switch {
+	case !val.IsKnown() && !other.IsKnown():
+		// both unknown
+		return UnknownVal(Bool)
+	case val.IsKnown() && !other.IsKnown():
+		switch {
+		case val.IsNull(), other.ty.HasDynamicTypes():
+			// If known is Null, we need to wait for the unkown value since
+			// nulls of any type are equal.
+			// An unkown with a dynamic type compares as unknown, which we need
+			// to check before the type comparison below.
+			return UnknownVal(Bool)
+		case !val.ty.Equals(other.ty):
+			// There is no null comparison or dynamic types, so unequal types
+			// will never be equal.
+			return False
+		default:
+			return UnknownVal(Bool)
+		}
+	case other.IsKnown() && !val.IsKnown():
+		switch {
+		case other.IsNull(), val.ty.HasDynamicTypes():
+			// If known is Null, we need to wait for the unkown value since
+			// nulls of any type are equal.
+			// An unkown with a dynamic type compares as unknown, which we need
+			// to check before the type comparison below.
+			return UnknownVal(Bool)
+		case !other.ty.Equals(val.ty):
+			// There's no null comparison or dynamic types, so unequal types
+			// will never be equal.
+			return False
+		default:
+			return UnknownVal(Bool)
+		}
+	}
+
+	switch {
+	case val.IsNull() && other.IsNull():
+		// Nulls are always equal, regardless of type
+		return BoolVal(true)
+	case val.IsNull() || other.IsNull():
+		// If only one is null then the result must be false
+		return BoolVal(false)
+	}
+
 	if val.ty.HasDynamicTypes() || other.ty.HasDynamicTypes() {
 		return UnknownVal(Bool)
 	}
 
 	if !val.ty.Equals(other.ty) {
-		return BoolVal(false)
-	}
-
-	if !(val.IsKnown() && other.IsKnown()) {
-		return UnknownVal(Bool)
-	}
-
-	if val.IsNull() || other.IsNull() {
-		if val.IsNull() && other.IsNull() {
-			return BoolVal(true)
-		}
 		return BoolVal(false)
 	}
 
@@ -540,6 +603,8 @@ func (val Value) GetAttr(name string) Value {
 	if !val.ty.IsObjectType() {
 		panic("value is not an object")
 	}
+
+	name = NormalizeString(name)
 	if !val.ty.HasAttribute(name) {
 		panic("value has no attribute of that name")
 	}
@@ -756,6 +821,9 @@ func (val Value) HasElement(elem Value) Value {
 	if val.IsNull() {
 		panic("can't call HasElement on a nil value")
 	}
+	if !ty.ElementType().Equals(elem.Type()) {
+		return False
+	}
 
 	s := val.v.(set.Set)
 	return BoolVal(s.Has(elem.v))
@@ -794,6 +862,10 @@ func (val Value) LengthInt() int {
 	if val.Type().IsTupleType() {
 		// For tuples, we can return the length even if the value is not known.
 		return val.Type().Length()
+	}
+	if val.Type().IsObjectType() {
+		// For objects, the length is the number of attributes associated with the type.
+		return len(val.Type().AttributeTypes())
 	}
 	if !val.IsKnown() {
 		panic("value is not known")
@@ -967,7 +1039,7 @@ func (val Value) AsString() string {
 // cty.Number value, or panics if called on any other value.
 //
 // For more convenient conversions to other native numeric types, use the
-// "convert" package.
+// "gocty" package.
 func (val Value) AsBigFloat() *big.Float {
 	if val.ty != Number {
 		panic("not a number")
@@ -983,6 +1055,72 @@ func (val Value) AsBigFloat() *big.Float {
 	ret := *(val.v.(*big.Float))
 
 	return &ret
+}
+
+// AsValueSlice returns a []cty.Value representation of a non-null, non-unknown
+// value of any type that CanIterateElements, or panics if called on
+// any other value.
+//
+// For more convenient conversions to slices of more specific types, use
+// the "gocty" package.
+func (val Value) AsValueSlice() []Value {
+	l := val.LengthInt()
+	if l == 0 {
+		return nil
+	}
+
+	ret := make([]Value, 0, l)
+	for it := val.ElementIterator(); it.Next(); {
+		_, v := it.Element()
+		ret = append(ret, v)
+	}
+	return ret
+}
+
+// AsValueMap returns a map[string]cty.Value representation of a non-null,
+// non-unknown value of any type that CanIterateElements, or panics if called
+// on any other value.
+//
+// For more convenient conversions to maps of more specific types, use
+// the "gocty" package.
+func (val Value) AsValueMap() map[string]Value {
+	l := val.LengthInt()
+	if l == 0 {
+		return nil
+	}
+
+	ret := make(map[string]Value, l)
+	for it := val.ElementIterator(); it.Next(); {
+		k, v := it.Element()
+		ret[k.AsString()] = v
+	}
+	return ret
+}
+
+// AsValueSet returns a ValueSet representation of a non-null,
+// non-unknown value of any collection type, or panics if called
+// on any other value.
+//
+// Unlike AsValueSlice and AsValueMap, this method requires specifically a
+// collection type (list, set or map) and does not allow structural types
+// (tuple or object), because the ValueSet type requires homogenous
+// element types.
+//
+// The returned ValueSet can store only values of the receiver's element type.
+func (val Value) AsValueSet() ValueSet {
+	if !val.Type().IsCollectionType() {
+		panic("not a collection type")
+	}
+
+	// We don't give the caller our own set.Set (assuming we're a cty.Set value)
+	// because then the caller could mutate our internals, which is forbidden.
+	// Instead, we will construct a new set and append our elements into it.
+	ret := NewValueSet(val.Type().ElementType())
+	for it := val.ElementIterator(); it.Next(); {
+		_, v := it.Element()
+		ret.Add(v)
+	}
+	return ret
 }
 
 // EncapsulatedValue returns the native value encapsulated in a non-null,

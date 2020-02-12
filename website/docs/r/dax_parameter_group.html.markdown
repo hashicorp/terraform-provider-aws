@@ -1,12 +1,12 @@
 ---
+subcategory: "DynamoDB Accelerator (DAX)"
 layout: "aws"
 page_title: "AWS: aws_dax_parameter_group"
-sidebar_current: "docs-aws-resource-dax-parameter-group"
 description: |-
   Provides an DAX Parameter Group resource.
 ---
 
-# aws_dax_parameter_group
+# Resource: aws_dax_parameter_group
 
 Provides a DAX Parameter Group resource.
 

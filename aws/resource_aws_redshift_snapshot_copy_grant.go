@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
@@ -17,10 +19,15 @@ func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 		// Instead changes to most fields will force a new resource
 		Create: resourceAwsRedshiftSnapshotCopyGrantCreate,
 		Read:   resourceAwsRedshiftSnapshotCopyGrantRead,
+		Update: resourceAwsRedshiftSnapshotCopyGrantUpdate,
 		Delete: resourceAwsRedshiftSnapshotCopyGrantDelete,
 		Exists: resourceAwsRedshiftSnapshotCopyGrantExists,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"snapshot_copy_grant_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -32,11 +39,7 @@ func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -54,7 +57,7 @@ func resourceAwsRedshiftSnapshotCopyGrantCreate(d *schema.ResourceData, meta int
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	input.Tags = tagsFromMapRedshift(d.Get("tags").(map[string]interface{}))
+	input.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RedshiftTags()
 
 	log.Printf("[DEBUG]: Adding new Redshift SnapshotCopyGrant: %s", input)
 
@@ -90,13 +93,43 @@ func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta inter
 		return nil
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "redshift",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("snapshotcopygrant:%s", grantName),
+	}.String()
+
+	d.Set("arn", arn)
+
 	d.Set("kms_key_id", grant.KmsKeyId)
 	d.Set("snapshot_copy_grant_name", grant.SnapshotCopyGrantName)
-	if err := d.Set("tags", tagsToMapRedshift(grant.Tags)); err != nil {
-		return fmt.Errorf("Error setting Redshift Snapshot Copy Grant Tags: %#v", err)
+	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(grant.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
+}
+
+func resourceAwsRedshiftSnapshotCopyGrantUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).redshiftconn
+
+	d.Partial(true)
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Redshift Snapshot Copy Grant (%s) tags: %s", d.Get("arn").(string), err)
+		}
+
+		d.SetPartial("tags")
+	}
+
+	d.Partial(false)
+
+	return resourceAwsRedshiftSnapshotCopyGrantRead(d, meta)
 }
 
 func resourceAwsRedshiftSnapshotCopyGrantDelete(d *schema.ResourceData, meta interface{}) error {
@@ -121,11 +154,7 @@ func resourceAwsRedshiftSnapshotCopyGrantDelete(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Checking if grant is deleted: %s", grantName)
 	err = waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn, grantName)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsRedshiftSnapshotCopyGrantExists(d *schema.ResourceData, meta interface{}) (bool, error) {
@@ -181,14 +210,21 @@ func findAwsRedshiftSnapshotCopyGrantWithRetry(conn *redshift.Redshift, grantNam
 
 		return nil
 	})
-
-	return grant, err
+	if isResourceTimeoutError(err) {
+		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("Error finding snapshot copy grant: %s", err)
+	}
+	return grant, nil
 }
 
 // Used by the tests as well
 func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName string) error {
+	var grant *redshift.SnapshotCopyGrant
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		grant, err := findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
+		var err error
+		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
 		if err != nil {
 			if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
 				return nil
@@ -203,8 +239,16 @@ func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, gra
 
 		return resource.NonRetryableError(err)
 	})
-
-	return err
+	if isResourceTimeoutError(err) {
+		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
+		if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error waiting for snapshot copy grant to be deleted: %s", err)
+	}
+	return nil
 }
 
 // The DescribeSnapshotCopyGrants API defaults to listing only 100 grants
@@ -236,6 +280,9 @@ func findAwsRedshiftSnapshotCopyGrant(conn *redshift.Redshift, grantName string,
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeSnapshotCopyGrants(&input)
+	}
 	if err != nil {
 		return nil, err
 	}

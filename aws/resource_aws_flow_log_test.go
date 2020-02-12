@@ -2,13 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSFlowLog_VPCID(t *testing.T) {
@@ -35,6 +36,38 @@ func TestAccAWSFlowLog_VPCID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:             testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName),
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func TestAccAWSFlowLog_LogFormat(t *testing.T) {
+	var flowLog ec2.FlowLog
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	logFormat := "${version} ${vpc-id} ${subnet-id}"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_LogFormat(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					testAccCheckAWSFlowLogAttributes(&flowLog),
+					resource.TestCheckResourceAttr(resourceName, "log_format", logFormat),
 				),
 			},
 			{
@@ -146,6 +179,22 @@ func TestAccAWSFlowLog_LogDestinationType_S3(t *testing.T) {
 	})
 }
 
+func TestAccAWSFlowLog_LogDestinationType_S3_Invalid(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test-flow-log-s3-invalid")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName),
+				ExpectError: regexp.MustCompile(`Access Denied for LogDestination`),
+			},
+		},
+	})
+}
+
 func testAccCheckFlowLogExists(n string, flowLog *ec2.FlowLog) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -211,6 +260,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -269,6 +319,25 @@ resource "aws_flow_log" "test" {
 `, rName, rName)
 }
 
+func testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = "arn:aws:s3:::does-not-exist"
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = "${aws_vpc.test.id}"
+}
+`, rName)
+}
+
 func testAccFlowLogConfig_SubnetID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -290,6 +359,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -335,6 +405,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -366,4 +437,57 @@ resource "aws_flow_log" "test" {
   vpc_id         = "${aws_vpc.test.id}"
 }
 `, rName, rName, rName)
+}
+func testAccFlowLogConfig_LogFormat(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %q
+}
+resource "aws_s3_bucket" "test" {
+	bucket        = %q
+	force_destroy = true
+  }
+  
+
+resource "aws_flow_log" "test" {
+  log_destination      = "${aws_s3_bucket.test.arn}"
+  log_destination_type = "s3"
+  iam_role_arn   = "${aws_iam_role.test.arn}"
+
+  traffic_type   = "ALL"
+  vpc_id         = "${aws_vpc.test.id}"
+  log_format     = "$${version} $${vpc-id} $${subnet-id}"
+}
+`, rName, rName, rName, rName)
 }

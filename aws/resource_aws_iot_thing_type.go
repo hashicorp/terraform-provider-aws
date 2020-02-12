@@ -1,13 +1,14 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingType.html
@@ -33,9 +34,10 @@ func resourceAwsIotThingType() *schema.Resource {
 				ValidateFunc: validateIotThingTypeName,
 			},
 			"properties": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"description": {
@@ -135,7 +137,10 @@ func resourceAwsIotThingTypeRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.Set("arn", out.ThingTypeArn)
-	d.Set("properties", flattenIotThingTypeProperties(out.ThingTypeProperties))
+
+	if err := d.Set("properties", flattenIotThingTypeProperties(out.ThingTypeProperties)); err != nil {
+		return fmt.Errorf("error setting properties: %s", err)
+	}
 
 	return nil
 }
@@ -180,7 +185,7 @@ func resourceAwsIotThingTypeDelete(d *schema.ResourceData, meta interface{}) err
 	}
 	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", deleteParams)
 
-	return resource.Retry(6*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(6*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteThingType(deleteParams)
 
 		if err != nil {
@@ -199,4 +204,14 @@ func resourceAwsIotThingTypeDelete(d *schema.ResourceData, meta interface{}) err
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteThingType(deleteParams)
+		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting IOT thing type: %s", err)
+	}
+	return nil
 }

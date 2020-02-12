@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 	rString := acctest.RandString(7)
-	prefix := "tf-acctest-d-mq-broker"
+	prefix := "tf-acc-test-d-mq-broker"
 	brokerName := fmt.Sprintf("%s-%s", prefix, rString)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,6 +35,12 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "configuration.#",
 						"aws_mq_broker.acctest", "configuration.#"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "encryption_options.#",
+						"aws_mq_broker.acctest", "encryption_options.#"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "encryption_options.0.use_aws_owned_key",
+						"aws_mq_broker.acctest", "encryption_options.0.use_aws_owned_key"),
 					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "engine_type",
 						"aws_mq_broker.acctest", "engine_type"),
@@ -62,6 +68,9 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "subnet_ids.#",
 						"aws_mq_broker.acctest", "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "tags.%",
+						"aws_mq_broker.acctest", "tags.%"),
 					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "user.#",
 						"aws_mq_broker.acctest", "user.#"),
@@ -168,8 +177,8 @@ resource "aws_mq_broker" "acctest" {
   }
 
   publicly_accessible = true
-  security_groups     = ["${aws_security_group.acctest.*.id}"]
-  subnet_ids          = ["${aws_subnet.acctest.*.id}"]
+  security_groups     = ["${aws_security_group.acctest.0.id}", "${aws_security_group.acctest.1.id}"]
+  subnet_ids          = ["${aws_subnet.acctest.0.id}", "${aws_subnet.acctest.1.id}"]
 
   user {
     username = "Ender"
