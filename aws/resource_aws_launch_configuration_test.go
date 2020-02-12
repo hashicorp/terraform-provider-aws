@@ -153,10 +153,12 @@ func TestAccAWSLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_updateRootBlockDevice(t *testing.T) {
+func TestAccAWSLaunchConfiguration_RootBlockDevice_AmiDisappears(t *testing.T) {
+	var ami ec2.Image
 	var conf autoscaling.LaunchConfiguration
+	amiCopyResourceName := "aws_ami_copy.test"
 	resourceName := "aws_launch_configuration.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -164,7 +166,36 @@ func TestAccAWSLaunchConfiguration_updateRootBlockDevice(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDevice(rInt),
+				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDeviceCopiedAmi(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckAmiExists(amiCopyResourceName, &ami),
+					testAccCheckAmiDisappears(&ami),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDeviceVolumeSize(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchConfiguration_RootBlockDevice_VolumeSize(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	resourceName := "aws_launch_configuration.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDeviceVolumeSize(rName, 11),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
@@ -177,7 +208,7 @@ func TestAccAWSLaunchConfiguration_updateRootBlockDevice(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "name_prefix"},
 			},
 			{
-				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDeviceUpdated(rInt),
+				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDeviceVolumeSize(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "20"),
@@ -575,6 +606,25 @@ data "aws_ami" "ubuntu" {
 `)
 }
 
+func testAccAWSLaunchConfigurationConfig_HvmEbsAmi() string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+`)
+}
+
 func testAccAWSLaunchConfigurationConfig_instanceStoreAMI() string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn-ami-minimal-pv" {
@@ -606,21 +656,40 @@ resource "aws_launch_configuration" "test" {
 `, rName)
 }
 
-func testAccAWSLaunchConfigurationConfigWithRootBlockDevice(rInt int) string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+func testAccAWSLaunchConfigurationConfigWithRootBlockDeviceCopiedAmi(rName string) string {
+	return testAccAWSLaunchConfigurationConfig_HvmEbsAmi() + fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_ami_copy" "test" {
+  name              = %[1]q
+  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  source_ami_region = data.aws_region.current.name
+}
+
 resource "aws_launch_configuration" "test" {
-  name_prefix = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.ubuntu.id}"
-  instance_type = "m1.small"
-  user_data = "testtest-user-data"
-  associate_public_ip_address = true
+  name          = %[1]q
+  image_id      = aws_ami_copy.test.id
+  instance_type = "t3.micro"
 
   root_block_device {
-    volume_type = "gp2"
-    volume_size = 11
+    volume_size = 10
   }
 }
-`, rInt)
+`, rName)
+}
+
+func testAccAWSLaunchConfigurationConfigWithRootBlockDeviceVolumeSize(rName string, volumeSize int) string {
+	return testAccAWSLaunchConfigurationConfig_HvmEbsAmi() + fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.micro"
+
+  root_block_device {
+    volume_size = %[2]d
+  }
+}
+`, rName, volumeSize)
 }
 
 func testAccAWSLaunchConfigurationConfigWithEncryptedRootBlockDevice(rInt int) string {
@@ -657,23 +726,6 @@ resource "aws_launch_configuration" "test" {
   }
 }
 `, rInt, rInt, rInt)
-}
-
-func testAccAWSLaunchConfigurationConfigWithRootBlockDeviceUpdated(rInt int) string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name_prefix = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.ubuntu.id}"
-  instance_type = "m1.small"
-  user_data = "testtest-user-data"
-  associate_public_ip_address = true
-
-  root_block_device {
-    volume_type = "gp2"
-    volume_size = 20
-  }
-}
-`, rInt)
 }
 
 func testAccAWSLaunchConfigurationConfig() string {
