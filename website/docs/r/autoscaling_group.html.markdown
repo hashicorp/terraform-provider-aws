@@ -335,7 +335,6 @@ been launched, creating unintended behavior. If you need hooks to run on all
 instances, add them with `initial_lifecycle_hook` here, but take
 care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 
-<a id="timeouts"></a>
 ## Timeouts
 
 `autoscaling_group` provides the following

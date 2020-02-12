@@ -39,7 +39,7 @@ explained below:
 - Shared credentials file
 - EC2 Role
 
-### Static credentials ###
+### Static credentials
 
 !> **Warning:** Hard-coding credentials into any Terraform configuration is not
 recommended, and risks secret leakage should this file ever be committed to a

@@ -45,6 +45,7 @@ If multiple, different Terraform AWS Provider configurations are required, see t
 
 The Terraform AWS Provider allows the following endpoints to be customized:
 
+<!-- markdownlint-disable MD033 -->
 <div style="column-width: 14em;">
 
 - `accessanalyzer`
@@ -184,6 +185,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `xray`
 
 </div>
+<!-- markdownlint-enable MD033 -->
 
 ## Connecting to Local AWS Compatible Solutions
 
