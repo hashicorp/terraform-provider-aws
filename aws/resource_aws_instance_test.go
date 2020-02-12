@@ -2497,6 +2497,25 @@ func TestAccAWSInstance_UserData_UnspecifiedToEmptyString(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_hibernation(t *testing.T) {
+	var instance ec2.Instance
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigHibernation,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists("aws_instance.foo", &instance),
+					resource.TestCheckResourceAttr("aws_instance.foo", "hibernation", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(t *testing.T,
 	before, after *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -4170,3 +4189,40 @@ resource "aws_subnet" "test" {
 }
 `, rName)
 }
+
+// must be >= m3 and have an encrypted root volume to eanble hibernation
+const testAccInstanceConfigHibernation = `
+resource "aws_vpc" "foo" {
+	cidr_block = "10.1.0.0/16"
+	tags = {
+		Name = "terraform-testacc-instance-hibernation"
+	}
+}
+
+resource "aws_subnet" "foo" {
+	cidr_block = "10.1.1.0/24"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags = {
+		Name = "tf-acc-instance-hibernation"
+	}
+}
+
+resource "aws_instance" "foo" {
+	ami = "${aws_ami_copy.encrypted_ami.id}"
+	instance_type = "m3.medium"
+	subnet_id = "${aws_subnet.foo.id}"
+	hibernation = "true"
+}
+
+resource "aws_ami_copy" "encrypted_ami" {
+  name              = "terraform-testacc-encrypted-ami"
+  description       = "An encrypted AMI for Terraform acceptance testing"
+  source_ami_id     = "ami-01e24be29428c15b2"
+  encrypted         = "true"
+  source_ami_region = "us-west-2"
+
+  tags {
+    Name = "terraform-testacc-instance-hibernation"
+  }
+}
+`
