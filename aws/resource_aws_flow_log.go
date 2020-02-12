@@ -101,6 +101,13 @@ func resourceAwsFlowLog() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+
+			"max_aggregation_interval": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -154,6 +161,10 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		opts.LogFormat = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("max_aggregation_interval"); ok {
+		opts.MaxAggregationInterval = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
 		opts.TagSpecifications = ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeVpcFlowLog)
 	}
@@ -205,6 +216,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
 	d.Set("log_format", fl.LogFormat)
+	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
 	var resourceKey string
 	if strings.HasPrefix(*fl.ResourceId, "vpc-") {
 		resourceKey = "vpc_id"
