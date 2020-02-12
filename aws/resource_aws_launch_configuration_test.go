@@ -129,7 +129,8 @@ func TestAccAWSLaunchConfiguration_withBlockDevices(t *testing.T) {
 
 func TestAccAWSLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -137,10 +138,16 @@ func TestAccAWSLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rInt),
+				Config: testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
+					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
 			},
 		},
 	})
@@ -570,31 +577,33 @@ data "aws_ami" "ubuntu" {
 
 func testAccAWSLaunchConfigurationConfig_instanceStoreAMI() string {
 	return fmt.Sprintf(`
-data "aws_ami" "ubuntu_instance_store" {
+data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical
+  owners      = ["amazon"]
 
-  # Latest Ubuntu 18.04 LTS amd64 instance-store HVM AMI
   filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-instance/ubuntu-bionic-18.04-amd64-server*"]
+    name = "name"
+    values = ["amzn-ami-minimal-pv-*"]
+  }
+
+  filter {
+    name = "root-device-type"
+    values = ["instance-store"]
   }
 }
 `)
 }
 
-func testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rInt int) string {
+func testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rName string) string {
 	return testAccAWSLaunchConfigurationConfig_instanceStoreAMI() + fmt.Sprintf(`
-resource "aws_launch_configuration" "bar" {
-  name_prefix = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.ubuntu_instance_store.id}"
+resource "aws_launch_configuration" "test" {
+  name     = %[1]q
+  image_id = data.aws_ami.amzn-ami-minimal-pv.id
 
-	# When the instance type is updated, the new type must support ephemeral storage.
+  # When the instance type is updated, the new type must support ephemeral storage.
   instance_type = "m1.small"
-  user_data = "foobar-user-data"
-  associate_public_ip_address = false
 }
-`, rInt)
+`, rName)
 }
 
 func testAccAWSLaunchConfigurationConfigWithRootBlockDevice(rInt int) string {
