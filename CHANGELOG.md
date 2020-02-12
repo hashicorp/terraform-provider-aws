@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_codestarnotifications_notification_rule` [GH-10991]
+* **New Resource:** `aws_s3_bucket_analytics_configuration` [GH-11874]
 
 ENHANCEMENTS:
 
