@@ -41,20 +41,20 @@ func S3BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, 
 	oldTags := New(oldTagsMap)
 	newTags := New(newTagsMap)
 
-	// We need to also consider any existing system tags.
+	// We need to also consider any existing ignored tags.
 	allTags, err := S3BucketListTags(conn, identifier)
 
 	if err != nil {
 		return fmt.Errorf("error listing resource tags (%s): %w", identifier, err)
 	}
 
-	sysTags := allTags.Removed(allTags.IgnoreAws())
+	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
 
-	if len(newTags)+len(sysTags) > 0 {
+	if len(newTags)+len(ignoredTags) > 0 {
 		input := &s3.PutBucketTaggingInput{
 			Bucket: aws.String(identifier),
 			Tagging: &s3.Tagging{
-				TagSet: newTags.Merge(sysTags).S3Tags(),
+				TagSet: newTags.Merge(ignoredTags).S3Tags(),
 			},
 		}
 
@@ -63,7 +63,7 @@ func S3BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, 
 		if err != nil {
 			return fmt.Errorf("error setting resource tags (%s): %w", identifier, err)
 		}
-	} else if len(oldTags) > 0 && len(sysTags) == 0 {
+	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
 		input := &s3.DeleteBucketTaggingInput{
 			Bucket: aws.String(identifier),
 		}
@@ -99,12 +99,21 @@ func S3ObjectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{},
 	oldTags := New(oldTagsMap)
 	newTags := New(newTagsMap)
 
-	if len(newTags) > 0 {
+	// We need to also consider any existing ignored tags.
+	allTags, err := S3ObjectListTags(conn, bucket, key)
+
+	if err != nil {
+		return fmt.Errorf("error listing resource tags (%s/%s): %w", bucket, key, err)
+	}
+
+	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
+
+	if len(newTags)+len(ignoredTags) > 0 {
 		input := &s3.PutObjectTaggingInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			Tagging: &s3.Tagging{
-				TagSet: newTags.IgnoreAws().S3Tags(),
+				TagSet: newTags.Merge(ignoredTags).IgnoreAws().S3Tags(),
 			},
 		}
 
@@ -113,7 +122,7 @@ func S3ObjectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{},
 		if err != nil {
 			return fmt.Errorf("error setting resource tags (%s/%s): %w", bucket, key, err)
 		}
-	} else if len(oldTags) > 0 {
+	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
 		input := &s3.DeleteObjectTaggingInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
