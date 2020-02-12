@@ -20,6 +20,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_route53_zone: Fixes regression from version 2.48.0 when filtering using `tags` [GH-11953]
+* resource/aws_cognito_user_pool: Allow `admin_create_user_config` configuration block `unused_account_validity_days` argument to be omitted [GH-12001]
 * resource/aws_launch_configuration: Fixes regression from version 2.22.0 with instance store AMIs returning an unexpected error [GH-9810]
 * resource/aws_route53_record: The artificial, hardcoded five minute timeouts for creation and deletions have been removed in preference of the default AWS Go SDK retrying logic [GH-11895]
 
