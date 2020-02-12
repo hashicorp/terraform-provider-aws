@@ -12,10 +12,14 @@ const (
 
 	// ErrCodeBatchTooLarge for service response error code
 	// "BatchTooLarge".
+	//
+	// Invalidation batch specified is too large.
 	ErrCodeBatchTooLarge = "BatchTooLarge"
 
 	// ErrCodeCNAMEAlreadyExists for service response error code
 	// "CNAMEAlreadyExists".
+	//
+	// The CNAME specified is already defined for CloudFront.
 	ErrCodeCNAMEAlreadyExists = "CNAMEAlreadyExists"
 
 	// ErrCodeCannotChangeImmutablePublicKeyFields for service response error code
@@ -33,6 +37,9 @@ const (
 
 	// ErrCodeDistributionNotDisabled for service response error code
 	// "DistributionNotDisabled".
+	//
+	// The specified CloudFront distribution is not disabled. You must disable the
+	// distribution before you can delete it.
 	ErrCodeDistributionNotDisabled = "DistributionNotDisabled"
 
 	// ErrCodeFieldLevelEncryptionConfigAlreadyExists for service response error code
@@ -98,6 +105,8 @@ const (
 
 	// ErrCodeInvalidErrorCode for service response error code
 	// "InvalidErrorCode".
+	//
+	// An invalid error code was specified.
 	ErrCodeInvalidErrorCode = "InvalidErrorCode"
 
 	// ErrCodeInvalidForwardCookies for service response error code
@@ -111,10 +120,14 @@ const (
 
 	// ErrCodeInvalidGeoRestrictionParameter for service response error code
 	// "InvalidGeoRestrictionParameter".
+	//
+	// The specified geo restriction parameter is not valid.
 	ErrCodeInvalidGeoRestrictionParameter = "InvalidGeoRestrictionParameter"
 
 	// ErrCodeInvalidHeadersForS3Origin for service response error code
 	// "InvalidHeadersForS3Origin".
+	//
+	// The headers specified are not valid for an Amazon S3 origin.
 	ErrCodeInvalidHeadersForS3Origin = "InvalidHeadersForS3Origin"
 
 	// ErrCodeInvalidIfMatchVersion for service response error code
@@ -131,10 +144,14 @@ const (
 
 	// ErrCodeInvalidLocationCode for service response error code
 	// "InvalidLocationCode".
+	//
+	// The location code specified is not valid.
 	ErrCodeInvalidLocationCode = "InvalidLocationCode"
 
 	// ErrCodeInvalidMinimumProtocolVersion for service response error code
 	// "InvalidMinimumProtocolVersion".
+	//
+	// The minimum protocol version specified is not valid.
 	ErrCodeInvalidMinimumProtocolVersion = "InvalidMinimumProtocolVersion"
 
 	// ErrCodeInvalidOrigin for service response error code
@@ -152,10 +169,14 @@ const (
 
 	// ErrCodeInvalidOriginKeepaliveTimeout for service response error code
 	// "InvalidOriginKeepaliveTimeout".
+	//
+	// The keep alive timeout specified for the origin is not valid.
 	ErrCodeInvalidOriginKeepaliveTimeout = "InvalidOriginKeepaliveTimeout"
 
 	// ErrCodeInvalidOriginReadTimeout for service response error code
 	// "InvalidOriginReadTimeout".
+	//
+	// The read timeout specified for the origin is not valid.
 	ErrCodeInvalidOriginReadTimeout = "InvalidOriginReadTimeout"
 
 	// ErrCodeInvalidProtocolSettings for service response error code
@@ -167,6 +188,8 @@ const (
 
 	// ErrCodeInvalidQueryStringParameters for service response error code
 	// "InvalidQueryStringParameters".
+	//
+	// Query string parameters specified in the response body are not valid.
 	ErrCodeInvalidQueryStringParameters = "InvalidQueryStringParameters"
 
 	// ErrCodeInvalidRelativePath for service response error code
@@ -186,22 +209,36 @@ const (
 
 	// ErrCodeInvalidResponseCode for service response error code
 	// "InvalidResponseCode".
+	//
+	// A response code specified in the response body is not valid.
 	ErrCodeInvalidResponseCode = "InvalidResponseCode"
 
 	// ErrCodeInvalidTTLOrder for service response error code
 	// "InvalidTTLOrder".
+	//
+	// TTL order specified in the response body is not valid.
 	ErrCodeInvalidTTLOrder = "InvalidTTLOrder"
 
 	// ErrCodeInvalidTagging for service response error code
 	// "InvalidTagging".
+	//
+	// Tagging specified in the response body is not valid.
 	ErrCodeInvalidTagging = "InvalidTagging"
 
 	// ErrCodeInvalidViewerCertificate for service response error code
 	// "InvalidViewerCertificate".
+	//
+	// A viewer certificate specified in the response body is not valid.
 	ErrCodeInvalidViewerCertificate = "InvalidViewerCertificate"
 
 	// ErrCodeInvalidWebACLId for service response error code
 	// "InvalidWebACLId".
+	//
+	// A web ACL ID specified in the response body is not valid. To specify a web
+	// ACL created using the latest version of AWS WAF, use the ACL ARN, for example
+	// arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+	// To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+	// 473e64fd-f30b-4765-81a0-62ad96dd167a.
 	ErrCodeInvalidWebACLId = "InvalidWebACLId"
 
 	// ErrCodeMissingBody for service response error code
@@ -255,6 +292,8 @@ const (
 
 	// ErrCodeNoSuchResource for service response error code
 	// "NoSuchResource".
+	//
+	// A resource that was specified is not valid.
 	ErrCodeNoSuchResource = "NoSuchResource"
 
 	// ErrCodeNoSuchStreamingDistribution for service response error code
@@ -274,6 +313,8 @@ const (
 
 	// ErrCodeOriginAccessIdentityInUse for service response error code
 	// "CloudFrontOriginAccessIdentityInUse".
+	//
+	// The Origin Access Identity specified is already in use.
 	ErrCodeOriginAccessIdentityInUse = "CloudFrontOriginAccessIdentityInUse"
 
 	// ErrCodePreconditionFailed for service response error code
@@ -303,10 +344,16 @@ const (
 
 	// ErrCodeStreamingDistributionAlreadyExists for service response error code
 	// "StreamingDistributionAlreadyExists".
+	//
+	// The caller reference you attempted to create the streaming distribution with
+	// is associated with another distribution
 	ErrCodeStreamingDistributionAlreadyExists = "StreamingDistributionAlreadyExists"
 
 	// ErrCodeStreamingDistributionNotDisabled for service response error code
 	// "StreamingDistributionNotDisabled".
+	//
+	// The specified CloudFront distribution is not disabled. You must disable the
+	// distribution before you can delete it.
 	ErrCodeStreamingDistributionNotDisabled = "StreamingDistributionNotDisabled"
 
 	// ErrCodeTooManyCacheBehaviors for service response error code
@@ -405,6 +452,8 @@ const (
 
 	// ErrCodeTooManyHeadersInForwardedValues for service response error code
 	// "TooManyHeadersInForwardedValues".
+	//
+	// Your request contains too many headers in forwarded values.
 	ErrCodeTooManyHeadersInForwardedValues = "TooManyHeadersInForwardedValues"
 
 	// ErrCodeTooManyInvalidationsInProgress for service response error code
@@ -423,6 +472,8 @@ const (
 
 	// ErrCodeTooManyOriginCustomHeaders for service response error code
 	// "TooManyOriginCustomHeaders".
+	//
+	// Your request contains too many origin custom headers.
 	ErrCodeTooManyOriginCustomHeaders = "TooManyOriginCustomHeaders"
 
 	// ErrCodeTooManyOriginGroupsPerDistribution for service response error code
@@ -447,10 +498,14 @@ const (
 
 	// ErrCodeTooManyQueryStringParameters for service response error code
 	// "TooManyQueryStringParameters".
+	//
+	// Your request contains too many query string parameters.
 	ErrCodeTooManyQueryStringParameters = "TooManyQueryStringParameters"
 
 	// ErrCodeTooManyStreamingDistributionCNAMEs for service response error code
 	// "TooManyStreamingDistributionCNAMEs".
+	//
+	// Your request contains more CNAMEs than are allowed per distribution.
 	ErrCodeTooManyStreamingDistributionCNAMEs = "TooManyStreamingDistributionCNAMEs"
 
 	// ErrCodeTooManyStreamingDistributions for service response error code

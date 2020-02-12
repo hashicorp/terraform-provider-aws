@@ -2,6 +2,10 @@
 
 package shield
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -98,3 +102,19 @@ const (
 	// Exception indicating the specified resource does not exist.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":              newErrorAccessDeniedException,
+	"AccessDeniedForDependencyException": newErrorAccessDeniedForDependencyException,
+	"InternalErrorException":             newErrorInternalErrorException,
+	"InvalidOperationException":          newErrorInvalidOperationException,
+	"InvalidPaginationTokenException":    newErrorInvalidPaginationTokenException,
+	"InvalidParameterException":          newErrorInvalidParameterException,
+	"InvalidResourceException":           newErrorInvalidResourceException,
+	"LimitsExceededException":            newErrorLimitsExceededException,
+	"LockedSubscriptionException":        newErrorLockedSubscriptionException,
+	"NoAssociatedRoleException":          newErrorNoAssociatedRoleException,
+	"OptimisticLockException":            newErrorOptimisticLockException,
+	"ResourceAlreadyExistsException":     newErrorResourceAlreadyExistsException,
+	"ResourceNotFoundException":          newErrorResourceNotFoundException,
+}

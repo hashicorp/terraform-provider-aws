@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsIamGroup() *schema.Resource {
@@ -112,6 +112,7 @@ func resourceAwsIamGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error updating IAM Group %s: %s", d.Id(), err)
 		}
+		d.SetId(nn.(string))
 		return resourceAwsIamGroupRead(d, meta)
 	}
 	return nil

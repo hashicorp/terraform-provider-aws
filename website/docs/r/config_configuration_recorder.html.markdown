@@ -1,12 +1,12 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_configuration_recorder"
-sidebar_current: "docs-aws-resource-config-configuration-recorder"
 description: |-
   Provides an AWS Config Configuration Recorder.
 ---
 
-# aws_config_configuration_recorder
+# Resource: aws_config_configuration_recorder
 
 Provides an AWS Config Configuration Recorder. Please note that this resource **does not start** the created recorder automatically.
 

@@ -9,9 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsAppmeshVirtualRouter() *schema.Resource {
@@ -110,6 +111,8 @@ func resourceAwsAppmeshVirtualRouter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -121,6 +124,7 @@ func resourceAwsAppmeshVirtualRouterCreate(d *schema.ResourceData, meta interfac
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		VirtualRouterName: aws.String(d.Get("name").(string)),
 		Spec:              expandAppmeshVirtualRouterSpec(d.Get("spec").([]interface{})),
+		Tags:              keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppmeshTags(),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh virtual router: %#v", req)
@@ -155,14 +159,25 @@ func resourceAwsAppmeshVirtualRouterRead(d *schema.ResourceData, meta interface{
 		return nil
 	}
 
+	arn := aws.StringValue(resp.VirtualRouter.Metadata.Arn)
 	d.Set("name", resp.VirtualRouter.VirtualRouterName)
 	d.Set("mesh_name", resp.VirtualRouter.MeshName)
-	d.Set("arn", resp.VirtualRouter.Metadata.Arn)
+	d.Set("arn", arn)
 	d.Set("created_date", resp.VirtualRouter.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.VirtualRouter.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	err = d.Set("spec", flattenAppmeshVirtualRouterSpec(resp.VirtualRouter.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
+	}
+
+	tags, err := keyvaluetags.AppmeshListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for App Mesh virtual router (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -183,6 +198,15 @@ func resourceAwsAppmeshVirtualRouterUpdate(d *schema.ResourceData, meta interfac
 		_, err := conn.UpdateVirtualRouter(req)
 		if err != nil {
 			return fmt.Errorf("error updating App Mesh virtual router: %s", err)
+		}
+	}
+
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating App Mesh virtual router (%s) tags: %s", arn, err)
 		}
 	}
 

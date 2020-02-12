@@ -5,6 +5,8 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"runtime/trace"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -30,6 +32,22 @@ func (e *Executor) persistentPreRun(_ *cobra.Command, _ []string) {
 			e.log.Fatalf("Can't start CPU profiling: %s", err)
 		}
 	}
+
+	if e.cfg.Run.MemProfilePath != "" {
+		if rate := os.Getenv("GL_MEMPROFILE_RATE"); rate != "" {
+			runtime.MemProfileRate, _ = strconv.Atoi(rate)
+		}
+	}
+
+	if e.cfg.Run.TracePath != "" {
+		f, err := os.Create(e.cfg.Run.TracePath)
+		if err != nil {
+			e.log.Fatalf("Can't create file %s: %s", e.cfg.Run.TracePath, err)
+		}
+		if err = trace.Start(f); err != nil {
+			e.log.Fatalf("Can't start tracing: %s", err)
+		}
+	}
 }
 
 func (e *Executor) persistentPostRun(_ *cobra.Command, _ []string) {
@@ -41,18 +59,57 @@ func (e *Executor) persistentPostRun(_ *cobra.Command, _ []string) {
 		if err != nil {
 			e.log.Fatalf("Can't create file %s: %s", e.cfg.Run.MemProfilePath, err)
 		}
-		runtime.GC() // get up-to-date statistics
+
+		var ms runtime.MemStats
+		runtime.ReadMemStats(&ms)
+		printMemStats(&ms, e.log)
+
 		if err := pprof.WriteHeapProfile(f); err != nil {
 			e.log.Fatalf("Can't write heap profile: %s", err)
 		}
+		f.Close()
+	}
+	if e.cfg.Run.TracePath != "" {
+		trace.Stop()
 	}
 
+	e.releaseFileLock()
 	os.Exit(e.exitCode)
+}
+
+func printMemStats(ms *runtime.MemStats, logger logutils.Log) {
+	logger.Infof("Mem stats: alloc=%s total_alloc=%s sys=%s "+
+		"heap_alloc=%s heap_sys=%s heap_idle=%s heap_released=%s heap_in_use=%s "+
+		"stack_in_use=%s stack_sys=%s "+
+		"mspan_sys=%s mcache_sys=%s buck_hash_sys=%s gc_sys=%s other_sys=%s "+
+		"mallocs_n=%d frees_n=%d heap_objects_n=%d gc_cpu_fraction=%.2f",
+		formatMemory(ms.Alloc), formatMemory(ms.TotalAlloc), formatMemory(ms.Sys),
+		formatMemory(ms.HeapAlloc), formatMemory(ms.HeapSys),
+		formatMemory(ms.HeapIdle), formatMemory(ms.HeapReleased), formatMemory(ms.HeapInuse),
+		formatMemory(ms.StackInuse), formatMemory(ms.StackSys),
+		formatMemory(ms.MSpanSys), formatMemory(ms.MCacheSys), formatMemory(ms.BuckHashSys),
+		formatMemory(ms.GCSys), formatMemory(ms.OtherSys),
+		ms.Mallocs, ms.Frees, ms.HeapObjects, ms.GCCPUFraction)
+}
+
+func formatMemory(memBytes uint64) string {
+	const Kb = 1024
+	const Mb = Kb * 1024
+
+	if memBytes < Kb {
+		return fmt.Sprintf("%db", memBytes)
+	}
+	if memBytes < Mb {
+		return fmt.Sprintf("%dkb", memBytes/Kb)
+	}
+	return fmt.Sprintf("%dmb", memBytes/Mb)
 }
 
 func getDefaultConcurrency() int {
 	if os.Getenv("HELP_RUN") == "1" {
-		return 8 // to make stable concurrency for README help generating builds
+		// Make stable concurrency for README help generating builds.
+		const prettyConcurrency = 8
+		return prettyConcurrency
 	}
 
 	return runtime.NumCPU()
@@ -99,8 +156,11 @@ func initRootFlagSet(fs *pflag.FlagSet, cfg *config.Config, needVersionOption bo
 
 	fs.StringVar(&cfg.Run.CPUProfilePath, "cpu-profile-path", "", wh("Path to CPU profile output file"))
 	fs.StringVar(&cfg.Run.MemProfilePath, "mem-profile-path", "", wh("Path to memory profile output file"))
+	fs.StringVar(&cfg.Run.TracePath, "trace-path", "", wh("Path to trace output file"))
 	fs.IntVarP(&cfg.Run.Concurrency, "concurrency", "j", getDefaultConcurrency(), wh("Concurrency (default NumCPU)"))
 	if needVersionOption {
 		fs.BoolVar(&cfg.Run.PrintVersion, "version", false, wh("Print version"))
 	}
+
+	fs.StringVar(&cfg.Output.Color, "color", "auto", wh("Use color when printing; can be 'always', 'auto', or 'never'"))
 }

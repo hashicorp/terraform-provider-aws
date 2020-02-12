@@ -1,12 +1,12 @@
 ---
+subcategory: "Global Accelerator"
 layout: "aws"
 page_title: "AWS: aws_globalaccelerator_listener"
-sidebar_current: "docs-aws-resource-globalaccelerator-listener"
 description: |-
   Provides a Global Accelerator listener.
 ---
 
-# aws_globalaccelerator_listener
+# Resource: aws_globalaccelerator_listener
 
 Provides a Global Accelerator listener.
 

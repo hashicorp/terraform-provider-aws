@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
@@ -36,6 +36,31 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "variables.%"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayDeployment_disappears_RestApi(t *testing.T) {
+	var deployment apigateway.Deployment
+	var restApi apigateway.RestApi
+	resourceName := "aws_api_gateway_deployment.test"
+	restApiResourceName := "aws_api_gateway_rest_api.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test-deployment")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayDeploymentConfigStageName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDeploymentExists(resourceName, &deployment),
+					testAccCheckAWSAPIGatewayRestAPIExists(restApiResourceName, &restApi),
+					testAccCheckAWSAPIGatewayRestAPIDisappears(&restApi),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -163,7 +188,7 @@ func TestAccAWSAPIGatewayDeployment_StageName_EmptyString(t *testing.T) {
 				Config: testAccAWSAPIGatewayDeploymentConfigStageName(""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDeploymentExists(resourceName, &deployment),
-					resource.TestCheckNoResourceAttr(resourceName, "stage_name"),
+					resource.TestCheckResourceAttr(resourceName, "stage_name", ""),
 				),
 			},
 		},
@@ -288,14 +313,14 @@ resource "aws_api_gateway_rest_api" "test" {
 
 resource "aws_api_gateway_resource" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  resource_id   = "${aws_api_gateway_resource.test.id}"
+  http_method   = "GET"
   authorization = "NONE"
 }
 
@@ -311,8 +336,8 @@ resource "aws_api_gateway_integration" "test" {
   resource_id = "${aws_api_gateway_resource.test.id}"
   http_method = "${aws_api_gateway_method.test.http_method}"
 
-  type = "HTTP"
-  uri = "%s"
+  type                    = "HTTP"
+  uri                     = "%s"
   integration_http_method = "GET"
 }
 

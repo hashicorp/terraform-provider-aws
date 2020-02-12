@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_volume_attachment"
-sidebar_current: "docs-aws-resource-volume-attachment"
 description: |-
   Provides an AWS EBS Volume Attachment
 ---
 
-# aws_volume_attachment
+# Resource: aws_volume_attachment
 
 Provides an AWS EBS Volume Attachment as a top level resource, to attach and
 detach volumes from AWS Instances.

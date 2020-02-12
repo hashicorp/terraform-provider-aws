@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSSsmDocumentDataSource_basic(t *testing.T) {
@@ -70,7 +70,7 @@ DOC
 }
 
 data "aws_ssm_document" "test" {
-  name = "${aws_ssm_document.test.name}"
+  name            = "${aws_ssm_document.test.name}"
   document_format = "%s"
 }
 `, name, documentFormat)

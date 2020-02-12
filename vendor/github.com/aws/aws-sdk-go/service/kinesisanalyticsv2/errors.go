@@ -2,6 +2,10 @@
 
 package kinesisanalyticsv2
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCodeValidationException for service response error code
@@ -70,6 +74,14 @@ const (
 	// The service cannot complete the request.
 	ErrCodeServiceUnavailableException = "ServiceUnavailableException"
 
+	// ErrCodeTooManyTagsException for service response error code
+	// "TooManyTagsException".
+	//
+	// Application created with too many tags, or too many tags added to an application.
+	// Note that the maximum number of application tags includes system tags. The
+	// maximum number of user-defined application tags is 50.
+	ErrCodeTooManyTagsException = "TooManyTagsException"
+
 	// ErrCodeUnableToDetectSchemaException for service response error code
 	// "UnableToDetectSchemaException".
 	//
@@ -84,3 +96,19 @@ const (
 	// a specified resource is not valid for this operation.
 	ErrCodeUnsupportedOperationException = "UnsupportedOperationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CodeValidationException":                        newErrorCodeValidationException,
+	"ConcurrentModificationException":                newErrorConcurrentModificationException,
+	"InvalidApplicationConfigurationException":       newErrorInvalidApplicationConfigurationException,
+	"InvalidArgumentException":                       newErrorInvalidArgumentException,
+	"InvalidRequestException":                        newErrorInvalidRequestException,
+	"LimitExceededException":                         newErrorLimitExceededException,
+	"ResourceInUseException":                         newErrorResourceInUseException,
+	"ResourceNotFoundException":                      newErrorResourceNotFoundException,
+	"ResourceProvisionedThroughputExceededException": newErrorResourceProvisionedThroughputExceededException,
+	"ServiceUnavailableException":                    newErrorServiceUnavailableException,
+	"TooManyTagsException":                           newErrorTooManyTagsException,
+	"UnableToDetectSchemaException":                  newErrorUnableToDetectSchemaException,
+	"UnsupportedOperationException":                  newErrorUnsupportedOperationException,
+}

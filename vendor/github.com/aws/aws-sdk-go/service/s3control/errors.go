@@ -4,10 +4,42 @@ package s3control
 
 const (
 
+	// ErrCodeBadRequestException for service response error code
+	// "BadRequestException".
+	ErrCodeBadRequestException = "BadRequestException"
+
+	// ErrCodeIdempotencyException for service response error code
+	// "IdempotencyException".
+	ErrCodeIdempotencyException = "IdempotencyException"
+
+	// ErrCodeInternalServiceException for service response error code
+	// "InternalServiceException".
+	ErrCodeInternalServiceException = "InternalServiceException"
+
+	// ErrCodeInvalidNextTokenException for service response error code
+	// "InvalidNextTokenException".
+	ErrCodeInvalidNextTokenException = "InvalidNextTokenException"
+
+	// ErrCodeInvalidRequestException for service response error code
+	// "InvalidRequestException".
+	ErrCodeInvalidRequestException = "InvalidRequestException"
+
+	// ErrCodeJobStatusException for service response error code
+	// "JobStatusException".
+	ErrCodeJobStatusException = "JobStatusException"
+
 	// ErrCodeNoSuchPublicAccessBlockConfiguration for service response error code
 	// "NoSuchPublicAccessBlockConfiguration".
 	//
-	// This exception is thrown if a GetPublicAccessBlock request is made against
-	// an account that does not have a PublicAccessBlockConfiguration set.
+	// Amazon S3 throws this exception if you make a GetPublicAccessBlock request
+	// against an account that doesn't have a PublicAccessBlockConfiguration set.
 	ErrCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
+
+	// ErrCodeNotFoundException for service response error code
+	// "NotFoundException".
+	ErrCodeNotFoundException = "NotFoundException"
+
+	// ErrCodeTooManyRequestsException for service response error code
+	// "TooManyRequestsException".
+	ErrCodeTooManyRequestsException = "TooManyRequestsException"
 )

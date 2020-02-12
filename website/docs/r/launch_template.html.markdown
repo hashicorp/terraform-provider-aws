@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_launch_template"
-sidebar_current: "docs-aws-resource-launch-template"
 description: |-
   Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
 ---
 
-# aws_launch_template
+# Resource: aws_launch_template
 
 Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
 
@@ -28,6 +28,11 @@ resource "aws_launch_template" "foo" {
     capacity_reservation_preference = "open"
   }
 
+  cpu_options {
+    core_count = 4
+    threads_per_core = 2
+  }
+
   credit_specification {
     cpu_credits = "standard"
   }
@@ -38,6 +43,10 @@ resource "aws_launch_template" "foo" {
 
   elastic_gpu_specifications {
     type = "test"
+  }
+
+  elastic_inference_accelerator {
+    type = "eia1.medium"
   }
 
   iam_instance_profile {
@@ -81,7 +90,7 @@ resource "aws_launch_template" "foo" {
   tag_specifications {
     resource_type = "instance"
 
-  tags = {
+    tags = {
       Name = "test"
     }
   }
@@ -100,6 +109,7 @@ The following arguments are supported:
 * `block_device_mappings` - Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
+* `cpu_options` - The CPU options for the instance. See [CPU Options](#cpu-options) below for more details.
 * `credit_specification` - Customize the credit specification of the instance. See [Credit
   Specification](#credit-specification) below for more details.
 * `disable_api_termination` - If `true`, enables [EC2 Instance
@@ -107,6 +117,7 @@ The following arguments are supported:
 * `ebs_optimized` - If `true`, the launched EC2 instance will be EBS-optimized.
 * `elastic_gpu_specifications` - The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
+* `elastic_inference_accelerator` - (Optional) Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
 * `iam_instance_profile` - The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
   below for more details.
 * `image_id` - The AMI from which to launch the instance.
@@ -149,7 +160,7 @@ Each `block_device_mappings` supports the following:
 
 The `ebs` block supports the following:
 
-* `delete_on_termination` - Whether the volume should be destroyed on instance termination (Default: `true`).
+* `delete_on_termination` - Whether the volume should be destroyed on instance termination (Default: `false`). See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
 * `encrypted` - Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
   on the volume (Default: `false`). Cannot be used with `snapshot_id`.
 * `iops` - The amount of provisioned
@@ -172,6 +183,16 @@ The `capacity_reservation_target` block supports the following:
 
 * `capacity_reservation_id` - The ID of the Capacity Reservation to target.
 
+### CPU Options
+
+The `cpu_options` block supports the following:
+
+* `core_count` - The number of CPU cores for the instance.
+* `threads_per_core` - The number of threads per CPU core. To disable Intel Hyper-Threading Technology for the instance, specify a value of 1.
+Otherwise, specify the default value of 2.
+
+Both number of CPU cores and threads per core must be specified. Valid number of CPU cores and threads per core for the instance type can be found in the [CPU Options Documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html?shortFooter=true#cpu-options-supported-instances-values)
+
 ### Credit Specification
 
 Credit specification can be applied/modified to the EC2 Instance at any time.
@@ -187,6 +208,14 @@ Attach an elastic GPU the instance.
 The `elastic_gpu_specifications` block supports the following:
 
 * `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-gpus.html#elastic-gpus-basics)
+
+### Elastic Inference Accelerator
+
+Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
+
+The `elastic_inference_accelerator` configuration block supports the following:
+
+* `type` - (Required) Accelerator type.
 
 ### Instance Profile
 

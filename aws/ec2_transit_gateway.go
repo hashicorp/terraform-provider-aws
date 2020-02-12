@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func decodeEc2TransitGatewayRouteID(id string) (string, string, error) {
@@ -394,45 +394,6 @@ func ec2TransitGatewayVpcAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtta
 	}
 }
 
-func expandEc2TransitGatewayTagSpecifications(m map[string]interface{}) []*ec2.TagSpecification {
-	if len(m) == 0 {
-		return nil
-	}
-
-	return []*ec2.TagSpecification{
-		{
-			ResourceType: aws.String("transit-gateway"),
-			Tags:         tagsFromMap(m),
-		},
-	}
-}
-
-func expandEc2TransitGatewayAttachmentTagSpecifications(m map[string]interface{}) []*ec2.TagSpecification {
-	if len(m) == 0 {
-		return nil
-	}
-
-	return []*ec2.TagSpecification{
-		{
-			ResourceType: aws.String("transit-gateway-attachment"),
-			Tags:         tagsFromMap(m),
-		},
-	}
-}
-
-func expandEc2TransitGatewayRouteTableTagSpecifications(m map[string]interface{}) []*ec2.TagSpecification {
-	if len(m) == 0 {
-		return nil
-	}
-
-	return []*ec2.TagSpecification{
-		{
-			ResourceType: aws.String("transit-gateway-route-table"),
-			Tags:         tagsFromMap(m),
-		},
-	}
-}
-
 func waitForEc2TransitGatewayCreation(conn *ec2.EC2, transitGatewayID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayStatePending},
@@ -541,7 +502,24 @@ func waitForEc2TransitGatewayRouteTableAssociationDeletion(conn *ec2.EC2, transi
 	return err
 }
 
-func waitForEc2TransitGatewayRouteTableAttachmentCreation(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+func waitForEc2TransitGatewayVpcAttachmentAcceptance(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.TransitGatewayAttachmentStatePending,
+			ec2.TransitGatewayAttachmentStatePendingAcceptance,
+		},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
+		Refresh: ec2TransitGatewayVpcAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
+		Timeout: 10 * time.Minute,
+	}
+
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway VPC Attachment (%s) availability", transitGatewayAttachmentID)
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForEc2TransitGatewayVpcAttachmentCreation(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayAttachmentStatePending},
 		Target: []string{
@@ -558,7 +536,7 @@ func waitForEc2TransitGatewayRouteTableAttachmentCreation(conn *ec2.EC2, transit
 	return err
 }
 
-func waitForEc2TransitGatewayRouteTableAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+func waitForEc2TransitGatewayVpcAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.TransitGatewayAttachmentStateAvailable,
@@ -580,7 +558,7 @@ func waitForEc2TransitGatewayRouteTableAttachmentDeletion(conn *ec2.EC2, transit
 	return err
 }
 
-func waitForEc2TransitGatewayRouteTableAttachmentUpdate(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+func waitForEc2TransitGatewayVpcAttachmentUpdate(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayAttachmentStateModifying},
 		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},

@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRedshiftCluster() *schema.Resource {
@@ -25,7 +26,18 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			State: resourceAwsRedshiftClusterImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(75 * time.Minute),
+			Update: schema.DefaultTimeout(40 * time.Minute),
+			Delete: schema.DefaultTimeout(40 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"database_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -321,7 +333,7 @@ func resourceAwsRedshiftClusterImport(
 
 func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
-	tags := tagsFromMapRedshift(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RedshiftTags()
 
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
 		restoreOpts := &redshift.RestoreFromClusterSnapshotInput{
@@ -478,10 +490,10 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "backing-up", "modifying", "restoring"},
+		Pending:    []string{"creating", "backing-up", "modifying", "restoring", "available, prep-for-resize"},
 		Target:     []string{"available"},
 		Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d.Id(), conn),
-		Timeout:    75 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 	}
 
@@ -604,20 +616,15 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
-	d.Set("tags", tagsToMapRedshift(rsc.Tags))
+	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(rsc.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	d.Set("snapshot_copy", flattenRedshiftSnapshotCopy(rsc.ClusterSnapshotCopyStatus))
 
 	if err := d.Set("logging", flattenRedshiftLogging(loggingStatus)); err != nil {
 		return fmt.Errorf("error setting logging: %s", err)
 	}
-
-	return nil
-}
-
-func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	d.Partial(true)
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -626,9 +633,23 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
 	}.String()
-	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
-		return tagErr
-	} else {
+
+	d.Set("arn", arn)
+
+	return nil
+}
+
+func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).redshiftconn
+	d.Partial(true)
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Redshift Cluster (%s) tags: %s", d.Get("arn").(string), err)
+		}
+
 		d.SetPartial("tags")
 	}
 
@@ -756,10 +777,10 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 	if requestUpdate || d.HasChange("iam_roles") {
 
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"creating", "deleting", "rebooting", "resizing", "renaming", "modifying"},
+			Pending:    []string{"creating", "deleting", "rebooting", "resizing", "renaming", "modifying", "available, prep-for-resize"},
 			Target:     []string{"available"},
 			Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(d.Id(), conn),
-			Timeout:    40 * time.Minute,
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 		}
 
@@ -872,7 +893,8 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", deleteOpts)
-	err := deleteAwsRedshiftCluster(&deleteOpts, conn)
+	log.Printf("[DEBUG] schema.TimeoutDelete: %+v", d.Timeout(schema.TimeoutDelete))
+	err := deleteAwsRedshiftCluster(&deleteOpts, conn, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return err
 	}
@@ -882,7 +904,7 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.Redshift) error {
+func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.Redshift, timeout time.Duration) error {
 	id := *opts.ClusterIdentifier
 	log.Printf("[INFO] Deleting Redshift Cluster %q", id)
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
@@ -893,6 +915,9 @@ func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCluster(opts)
+	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Redshift Cluster (%s): %s", id, err)
 	}
@@ -901,7 +926,7 @@ func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.
 		Pending:    []string{"available", "creating", "deleting", "rebooting", "resizing", "renaming", "final-snapshot"},
 		Target:     []string{"destroyed"},
 		Refresh:    resourceAwsRedshiftClusterStateRefreshFunc(id, conn),
-		Timeout:    40 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 5 * time.Second,
 	}
 

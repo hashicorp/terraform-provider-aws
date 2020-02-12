@@ -1,12 +1,12 @@
 ---
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_directory"
-sidebar_current: "docs-aws-resource-directory-service-directory"
 description: |-
   Provides a directory in AWS Directory Service.
 ---
 
-# aws_directory_service_directory
+# Resource: aws_directory_service_directory
 
 Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 

@@ -2,6 +2,10 @@
 
 package iot
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCertificateConflictException for service response error code
@@ -141,6 +145,13 @@ const (
 	// The Rule-SQL expression can't be parsed correctly.
 	ErrCodeSqlParseException = "SqlParseException"
 
+	// ErrCodeTaskAlreadyExistsException for service response error code
+	// "TaskAlreadyExistsException".
+	//
+	// This exception occurs if you attempt to start a task with the same task-id
+	// as an existing task but with a different clientRequestToken.
+	ErrCodeTaskAlreadyExistsException = "TaskAlreadyExistsException"
+
 	// ErrCodeThrottlingException for service response error code
 	// "ThrottlingException".
 	//
@@ -180,3 +191,35 @@ const (
 	// The number of policy versions exceeds the limit.
 	ErrCodeVersionsLimitExceededException = "VersionsLimitExceededException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CertificateConflictException":         newErrorCertificateConflictException,
+	"CertificateStateException":            newErrorCertificateStateException,
+	"CertificateValidationException":       newErrorCertificateValidationException,
+	"ConflictingResourceUpdateException":   newErrorConflictingResourceUpdateException,
+	"DeleteConflictException":              newErrorDeleteConflictException,
+	"IndexNotReadyException":               newErrorIndexNotReadyException,
+	"InternalException":                    newErrorInternalException,
+	"InternalFailureException":             newErrorInternalFailureException,
+	"InvalidAggregationException":          newErrorInvalidAggregationException,
+	"InvalidQueryException":                newErrorInvalidQueryException,
+	"InvalidRequestException":              newErrorInvalidRequestException,
+	"InvalidResponseException":             newErrorInvalidResponseException,
+	"InvalidStateTransitionException":      newErrorInvalidStateTransitionException,
+	"LimitExceededException":               newErrorLimitExceededException,
+	"MalformedPolicyException":             newErrorMalformedPolicyException,
+	"NotConfiguredException":               newErrorNotConfiguredException,
+	"RegistrationCodeValidationException":  newErrorRegistrationCodeValidationException,
+	"ResourceAlreadyExistsException":       newErrorResourceAlreadyExistsException,
+	"ResourceNotFoundException":            newErrorResourceNotFoundException,
+	"ResourceRegistrationFailureException": newErrorResourceRegistrationFailureException,
+	"ServiceUnavailableException":          newErrorServiceUnavailableException,
+	"SqlParseException":                    newErrorSqlParseException,
+	"TaskAlreadyExistsException":           newErrorTaskAlreadyExistsException,
+	"ThrottlingException":                  newErrorThrottlingException,
+	"TransferAlreadyCompletedException":    newErrorTransferAlreadyCompletedException,
+	"TransferConflictException":            newErrorTransferConflictException,
+	"UnauthorizedException":                newErrorUnauthorizedException,
+	"VersionConflictException":             newErrorVersionConflictException,
+	"VersionsLimitExceededException":       newErrorVersionsLimitExceededException,
+}

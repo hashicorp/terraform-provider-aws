@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_client_vpn_network_association"
-sidebar_current: "docs-aws-resource-ec2-client-vpn-network-association"
 description: |-
   Provides network associations for AWS Client VPN endpoints.
 ---
 
-# aws_ec2_client_vpn_network_association
+# Resource: aws_ec2_client_vpn_network_association
 
 Provides network associations for AWS Client VPN endpoints. For more information on usage, please see the 
 [AWS Client VPN Administrator's Guide](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html).
@@ -16,7 +16,7 @@ Provides network associations for AWS Client VPN endpoints. For more information
 ```hcl
 resource "aws_ec2_client_vpn_network_association" "example" {
   client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.example.id}"
-  subnet_id = "${aws_subnet.example.id}"
+  subnet_id              = "${aws_subnet.example.id}"
 }
 ```
 

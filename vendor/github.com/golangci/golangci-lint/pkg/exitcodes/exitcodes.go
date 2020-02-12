@@ -8,6 +8,7 @@ const (
 	Timeout              = 4
 	NoGoFiles            = 5
 	NoConfigFileDetected = 6
+	ErrorWasLogged       = 7
 )
 
 type ExitError struct {
@@ -24,4 +25,10 @@ var (
 		Message: "no go files to analyze",
 		Code:    NoGoFiles,
 	}
+	ErrFailure = &ExitError{
+		Message: "failed to analyze",
+		Code:    Failure,
+	}
 )
+
+// 1

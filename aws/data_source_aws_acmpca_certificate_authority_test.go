@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
@@ -17,7 +17,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
+				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
 				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN,
@@ -43,6 +43,8 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
 
 const testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN = `
 resource "aws_acmpca_certificate_authority" "wrong" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -54,6 +56,8 @@ resource "aws_acmpca_certificate_authority" "wrong" {
 }
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"

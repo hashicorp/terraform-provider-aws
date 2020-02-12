@@ -1,12 +1,12 @@
 ---
+subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_stack_set"
-sidebar_current: "docs-aws-resource-cloudformation-stack-set"
 description: |-
   Manages a CloudFormation Stack Set.
 ---
 
-# aws_cloudformation_stack_set
+# Resource: aws_cloudformation_stack_set
 
 Manages a CloudFormation Stack Set. Stack Sets allow CloudFormation templates to be easily deployed across multiple accounts and regions via Stack Set Instances ([`aws_cloudformation_stack_set_instance` resource](/docs/providers/aws/r/cloudformation_stack_set_instance.html)). Additional information about Stack Sets can be found in the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html).
 
@@ -102,6 +102,12 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the Stack Set.
 * `id` - Name of the Stack Set.
 * `stack_set_id` - Unique identifier of the Stack Set.
+
+## Timeouts
+
+`aws_cloudformation_stack_set` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+* `update` - (Default `30m`) How long to wait for a Stack Set to be updated.
 
 ## Import
 

@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -76,15 +76,16 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 			},
 
 			"deployment_style": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"deployment_option": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  codedeploy.DeploymentOptionWithoutTrafficControl,
 							ValidateFunc: validation.StringInSlice([]string{
 								codedeploy.DeploymentOptionWithTrafficControl,
 								codedeploy.DeploymentOptionWithoutTrafficControl,
@@ -93,6 +94,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 						"deployment_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  codedeploy.DeploymentTypeInPlace,
 							ValidateFunc: validation.StringInSlice([]string{
 								codedeploy.DeploymentTypeInPlace,
 								codedeploy.DeploymentTypeBlueGreen,
@@ -211,7 +213,6 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 			"load_balancer_info": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -555,8 +556,11 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 		return handleCreateError(err)
 	})
 
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateDeploymentGroup(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating CodeDeploy deployment group: %s", err)
 	}
 
 	d.SetId(*resp.DeploymentGroupId)
@@ -732,8 +736,11 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 		return handleUpdateError(err)
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateDeploymentGroup(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating CodeDeploy deployment group: %s", err)
 	}
 
 	return resourceAwsCodeDeployDeploymentGroupRead(d, meta)
@@ -1024,14 +1031,14 @@ func expandDeploymentStyle(list []interface{}) *codedeploy.DeploymentStyle {
 }
 
 // expandLoadBalancerInfo converts a raw schema list containing a map[string]interface{}
-// into a single codedeploy.LoadBalancerInfo object
+// into a single codedeploy.LoadBalancerInfo object. Returns an empty object if list is nil.
 func expandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
+	loadBalancerInfo := &codedeploy.LoadBalancerInfo{}
 	if len(list) == 0 || list[0] == nil {
-		return nil
+		return loadBalancerInfo
 	}
 
 	lbInfo := list[0].(map[string]interface{})
-	loadBalancerInfo := &codedeploy.LoadBalancerInfo{}
 
 	if attr, ok := lbInfo["elb_info"]; ok && attr.(*schema.Set).Len() > 0 {
 		loadBalancerInfo.ElbInfoList = expandCodeDeployElbInfo(attr.(*schema.Set).List())

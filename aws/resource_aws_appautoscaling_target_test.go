@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
@@ -55,6 +56,7 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 
 func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -63,7 +65,7 @@ func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppautoscalingTargetSpotFleetRequestConfig,
+				Config: testAccAWSAppautoscalingTargetSpotFleetRequestConfig(validUntil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingTargetExists("aws_appautoscaling_target.test", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.test", "service_namespace", "ec2"),
@@ -236,12 +238,13 @@ func testAccAWSAppautoscalingTargetConfig(
 	randClusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "foo" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "task" {
-	family = "foobar"
-	container_definitions = <<EOF
+  family = "foobar"
+
+  container_definitions = <<EOF
 [
     {
         "name": "busybox",
@@ -255,21 +258,21 @@ EOF
 }
 
 resource "aws_ecs_service" "service" {
-	name = "foobar"
-	cluster = "${aws_ecs_cluster.foo.id}"
-	task_definition = "${aws_ecs_task_definition.task.arn}"
-	desired_count = 1
+  name            = "foobar"
+  cluster         = "${aws_ecs_cluster.foo.id}"
+  task_definition = "${aws_ecs_task_definition.task.arn}"
+  desired_count   = 1
 
-	deployment_maximum_percent = 200
-	deployment_minimum_healthy_percent = 50
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 50
 }
 
 resource "aws_appautoscaling_target" "bar" {
-	service_namespace = "ecs"
-	resource_id = "service/${aws_ecs_cluster.foo.name}/${aws_ecs_service.service.name}"
-	scalable_dimension = "ecs:service:DesiredCount"
-	min_capacity = 1
-	max_capacity = 3
+  service_namespace  = "ecs"
+  resource_id        = "service/${aws_ecs_cluster.foo.name}/${aws_ecs_service.service.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  min_capacity       = 1
+  max_capacity       = 3
 }
 `, randClusterName)
 }
@@ -278,12 +281,13 @@ func testAccAWSAppautoscalingTargetConfigUpdate(
 	randClusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "foo" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_ecs_task_definition" "task" {
-	family = "foobar"
-	container_definitions = <<EOF
+  family = "foobar"
+
+  container_definitions = <<EOF
 [
     {
         "name": "busybox",
@@ -297,27 +301,35 @@ EOF
 }
 
 resource "aws_ecs_service" "service" {
-	name = "foobar"
-	cluster = "${aws_ecs_cluster.foo.id}"
-	task_definition = "${aws_ecs_task_definition.task.arn}"
-	desired_count = 2
+  name            = "foobar"
+  cluster         = "${aws_ecs_cluster.foo.id}"
+  task_definition = "${aws_ecs_task_definition.task.arn}"
+  desired_count   = 2
 
-	deployment_maximum_percent = 200
-	deployment_minimum_healthy_percent = 50
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 50
 }
 
 resource "aws_appautoscaling_target" "bar" {
-	service_namespace = "ecs"
-	resource_id = "service/${aws_ecs_cluster.foo.name}/${aws_ecs_service.service.name}"
-	scalable_dimension = "ecs:service:DesiredCount"
-	min_capacity = 2
-	max_capacity = 8
+  service_namespace  = "ecs"
+  resource_id        = "service/${aws_ecs_cluster.foo.name}/${aws_ecs_service.service.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  min_capacity       = 2
+  max_capacity       = 8
 }
 `, randClusterName)
 }
 
 func testAccAWSAppautoscalingTargetEmrClusterConfig(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # The requested instance type m3.xlarge is not supported in the requested availability zone.
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+}
+
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "emr-test-%d"
   release_label = "emr-4.6.0"
@@ -353,14 +365,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
 resource "aws_emr_instance_group" "task" {
-    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
-    instance_count = 1
-    instance_type  = "m3.xlarge"
+  cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+  instance_count = 1
+  instance_type  = "m3.xlarge"
 }
 
 resource "aws_security_group" "allow_all" {
@@ -369,10 +381,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -403,8 +415,9 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "main" {
-  vpc_id     = "${aws_vpc.main.id}"
-  cidr_block = "168.31.0.0/20"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "168.31.0.0/20"
+  vpc_id            = "${aws_vpc.main.id}"
 
   tags = {
     Name = "tf-acc-appautoscaling-target-emr-cluster"
@@ -440,7 +453,7 @@ resource "aws_iam_role" "iam_emr_default_role" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "elasticmapreduce.amazonaws.com"
+        "Service": "elasticmapreduce.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -535,7 +548,7 @@ resource "aws_iam_role" "iam_emr_profile_role" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -605,29 +618,46 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.${data.aws_partition.current.dns_suffix}", "application-autoscaling.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
 
 resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
 
 resource "aws_appautoscaling_target" "bar" {
-	service_namespace = "elasticmapreduce"
-	resource_id = "instancegroup/${aws_emr_cluster.tf-test-cluster.id}/${aws_emr_instance_group.task.id}"
-	scalable_dimension = "elasticmapreduce:instancegroup:InstanceCount"
-	role_arn = "${aws_iam_role.emr-autoscaling-role.arn}"
-	min_capacity = 1
-	max_capacity = 8
+  service_namespace  = "elasticmapreduce"
+  resource_id        = "instancegroup/${aws_emr_cluster.tf-test-cluster.id}/${aws_emr_instance_group.task.id}"
+  scalable_dimension = "elasticmapreduce:instancegroup:InstanceCount"
+  role_arn           = "${aws_iam_role.emr-autoscaling-role.arn}"
+  min_capacity       = 1
+  max_capacity       = 8
 }
-
 `, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt)
 }
 
-var testAccAWSAppautoscalingTargetSpotFleetRequestConfig = fmt.Sprintf(`
+func testAccAWSAppautoscalingTargetSpotFleetRequestConfig(validUntil string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "fleet_role" {
   assume_role_policy = <<EOF
 {
@@ -650,19 +680,19 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
   role = "${aws_iam_role.fleet_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role = "${aws_iam_role.fleet_role.arn}"
   spot_price = "0.005"
   target_capacity = 2
-  valid_until = "2019-11-04T20:44:20Z"
+  valid_until = %[1]q
   terminate_instances_with_expiration = true
 
   launch_specification {
     instance_type = "m3.medium"
-    ami = "ami-d06a90b0"
+    ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   }
 }
 
@@ -673,7 +703,8 @@ resource "aws_appautoscaling_target" "test" {
   min_capacity = 1
   max_capacity = 3
 }
-`)
+`, validUntil)
+}
 
 func testAccAWSAppautoscalingTarget_multipleTargets(tableName string) string {
 	return fmt.Sprintf(`
@@ -682,6 +713,7 @@ resource "aws_dynamodb_table" "dynamodb_table_test" {
   read_capacity  = 5
   write_capacity = 5
   hash_key       = "FooKey"
+
   attribute {
     name = "FooKey"
     type = "S"
@@ -689,19 +721,19 @@ resource "aws_dynamodb_table" "dynamodb_table_test" {
 }
 
 resource "aws_appautoscaling_target" "write" {
-  service_namespace = "dynamodb"
-  resource_id = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
+  service_namespace  = "dynamodb"
+  resource_id        = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
   scalable_dimension = "dynamodb:table:WriteCapacityUnits"
-  min_capacity = 1
-  max_capacity = 10
+  min_capacity       = 1
+  max_capacity       = 10
 }
 
 resource "aws_appautoscaling_target" "read" {
-  service_namespace = "dynamodb"
-  resource_id = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
+  service_namespace  = "dynamodb"
+  resource_id        = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
-  min_capacity = 2
-  max_capacity = 15
+  min_capacity       = 2
+  max_capacity       = 15
 }
 `, tableName)
 }
@@ -713,6 +745,7 @@ resource "aws_dynamodb_table" "dynamodb_table_test" {
   read_capacity  = 5
   write_capacity = 5
   hash_key       = "FooKey"
+
   attribute {
     name = "FooKey"
     type = "S"
@@ -720,11 +753,11 @@ resource "aws_dynamodb_table" "dynamodb_table_test" {
 }
 
 resource "aws_appautoscaling_target" "read" {
-  service_namespace = "dynamodb"
-  resource_id = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
+  service_namespace  = "dynamodb"
+  resource_id        = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
-  min_capacity = 2
-  max_capacity = 15
+  min_capacity       = 2
+  max_capacity       = 15
 }
 `, tableName)
 }

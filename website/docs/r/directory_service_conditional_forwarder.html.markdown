@@ -1,12 +1,12 @@
 ---
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_conditional_forwarder"
-sidebar_current: "docs-aws-resource-directory-service-conditional-forwarder"
 description: |-
   Provides a conditional forwarder for managed Microsoft AD in AWS Directory Service.
 ---
 
-# aws_directory_service_conditional_forwarder
+# Resource: aws_directory_service_conditional_forwarder
 
 Provides a conditional forwarder for managed Microsoft AD in AWS Directory Service.
 

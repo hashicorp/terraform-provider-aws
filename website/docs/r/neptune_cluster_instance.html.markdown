@@ -1,12 +1,12 @@
 ---
+subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_cluster_instance"
-sidebar_current: "docs-aws-resource-neptune-cluster-instance"
 description: |-
   Provides an Neptune Cluster Resource Instance
 ---
 
-# aws_neptune_cluster_instance
+# Resource: aws_neptune_cluster_instance
 
 A Cluster Instance Resource defines attributes that are specific to a single instance in a Neptune Cluster.
 

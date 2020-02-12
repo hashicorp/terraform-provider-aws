@@ -1,12 +1,12 @@
 ---
+subcategory: "SimpleDB"
 layout: "aws"
-page_title: "AWS: simpledb_domain"
-sidebar_current: "docs-aws-resource-simpledb-domain"
+page_title: "AWS: aws_simpledb_domain"
 description: |-
   Provides a SimpleDB domain resource.
 ---
 
-# aws_simpledb_domain
+# Resource: aws_simpledb_domain
 
 Provides a SimpleDB domain resource
 

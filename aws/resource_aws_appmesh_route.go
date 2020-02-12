@@ -10,9 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsAppmeshRoute() *schema.Resource {
@@ -55,10 +56,11 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http_route": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
+							Type:          schema.TypeList,
+							Optional:      true,
+							MinItems:      0,
+							MaxItems:      1,
+							ConflictsWith: []string{"spec.0.tcp_route"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"action": {
@@ -72,6 +74,7 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Type:     schema.TypeSet,
 													Required: true,
 													MinItems: 1,
+													MaxItems: 10,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"virtual_node": {
@@ -79,6 +82,7 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 255),
 															},
+
 															"weight": {
 																Type:         schema.TypeInt,
 																Required:     true,
@@ -110,6 +114,50 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 								},
 							},
 						},
+
+						"tcp_route": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							MinItems:      0,
+							MaxItems:      1,
+							ConflictsWith: []string{"spec.0.http_route"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"action": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"weighted_target": {
+													Type:     schema.TypeSet,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 10,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"virtual_node": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 255),
+															},
+
+															"weight": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(0, 100),
+															},
+														},
+													},
+													Set: appmeshRouteWeightedTargetHash,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -128,6 +176,8 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -140,6 +190,7 @@ func resourceAwsAppmeshRouteCreate(d *schema.ResourceData, meta interface{}) err
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 		Spec:              expandAppmeshRouteSpec(d.Get("spec").([]interface{})),
+		Tags:              keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppmeshTags(),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh route: %#v", req)
@@ -175,15 +226,26 @@ func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
+	arn := aws.StringValue(resp.Route.Metadata.Arn)
 	d.Set("name", resp.Route.RouteName)
 	d.Set("mesh_name", resp.Route.MeshName)
 	d.Set("virtual_router_name", resp.Route.VirtualRouterName)
-	d.Set("arn", resp.Route.Metadata.Arn)
+	d.Set("arn", arn)
 	d.Set("created_date", resp.Route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.Route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	err = d.Set("spec", flattenAppmeshRouteSpec(resp.Route.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
+	}
+
+	tags, err := keyvaluetags.AppmeshListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for App Mesh route (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -205,6 +267,15 @@ func resourceAwsAppmeshRouteUpdate(d *schema.ResourceData, meta interface{}) err
 		_, err := conn.UpdateRoute(req)
 		if err != nil {
 			return fmt.Errorf("error updating App Mesh route: %s", err)
+		}
+	}
+
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating App Mesh route (%s) tags: %s", arn, err)
 		}
 	}
 

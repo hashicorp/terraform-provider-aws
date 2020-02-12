@@ -1,12 +1,12 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_permission"
-sidebar_current: "docs-aws-resource-cloudwatch-event-permission"
 description: |-
   Provides a resource to create a CloudWatch Events permission to support cross-account events in the current account default event bus.
 ---
 
-# aws_cloudwatch_event_permission
+# Resource: aws_cloudwatch_event_permission
 
 Provides a resource to create a CloudWatch Events permission to support cross-account events in the current account default event bus.
 

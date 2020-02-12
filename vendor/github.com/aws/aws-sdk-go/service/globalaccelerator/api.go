@@ -62,6 +62,8 @@ func (c *GlobalAccelerator) CreateAcceleratorRequest(input *CreateAcceleratorInp
 // each of which includes endpoints, such as Network Load Balancers. To see
 // an AWS CLI example of creating an accelerator, scroll down to Example.
 //
+// You must specify the US-West-2 (Oregon) Region to create or update accelerators.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -69,14 +71,14 @@ func (c *GlobalAccelerator) CreateAcceleratorRequest(input *CreateAcceleratorInp
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation CreateAccelerator for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+// Returned Error Types:
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Processing your request would cause you to exceed an AWS Global Accelerator
 //   limit.
 //
@@ -157,25 +159,28 @@ func (c *GlobalAccelerator) CreateEndpointGroupRequest(input *CreateEndpointGrou
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation CreateEndpointGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAcceleratorNotFoundException "AcceleratorNotFoundException"
+// Returned Error Types:
+//   * AcceleratorNotFoundException
 //   The accelerator that you specified doesn't exist.
 //
-//   * ErrCodeEndpointGroupAlreadyExistsException "EndpointGroupAlreadyExistsException"
+//   * EndpointGroupAlreadyExistsException
 //   The endpoint group that you specified already exists.
 //
-//   * ErrCodeListenerNotFoundException "ListenerNotFoundException"
+//   * ListenerNotFoundException
 //   The listener that you specified doesn't exist.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Processing your request would cause you to exceed an AWS Global Accelerator
 //   limit.
+//
+//   * AccessDeniedException
+//   You don't have access permission.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/CreateEndpointGroup
 func (c *GlobalAccelerator) CreateEndpointGroup(input *CreateEndpointGroupInput) (*CreateEndpointGroupOutput, error) {
@@ -255,21 +260,21 @@ func (c *GlobalAccelerator) CreateListenerRequest(input *CreateListenerInput) (r
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation CreateListener for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
-//   * ErrCodeAcceleratorNotFoundException "AcceleratorNotFoundException"
+//   * AcceleratorNotFoundException
 //   The accelerator that you specified doesn't exist.
 //
-//   * ErrCodeInvalidPortRangeException "InvalidPortRangeException"
+//   * InvalidPortRangeException
 //   The port numbers that you specified are not valid numbers or are not unique
 //   for this accelerator.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Processing your request would cause you to exceed an AWS Global Accelerator
 //   limit.
 //
@@ -350,22 +355,22 @@ func (c *GlobalAccelerator) DeleteAcceleratorRequest(input *DeleteAcceleratorInp
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation DeleteAccelerator for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAcceleratorNotFoundException "AcceleratorNotFoundException"
+// Returned Error Types:
+//   * AcceleratorNotFoundException
 //   The accelerator that you specified doesn't exist.
 //
-//   * ErrCodeAcceleratorNotDisabledException "AcceleratorNotDisabledException"
+//   * AcceleratorNotDisabledException
 //   The accelerator that you specified could not be disabled.
 //
-//   * ErrCodeAssociatedListenerFoundException "AssociatedListenerFoundException"
+//   * AssociatedListenerFoundException
 //   The accelerator that you specified has a listener associated with it. You
 //   must remove all dependent resources from an accelerator before you can delete
 //   it.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/DeleteAccelerator
@@ -444,11 +449,14 @@ func (c *GlobalAccelerator) DeleteEndpointGroupRequest(input *DeleteEndpointGrou
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation DeleteEndpointGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEndpointGroupNotFoundException "EndpointGroupNotFoundException"
+// Returned Error Types:
+//   * InvalidArgumentException
+//   An argument that you specified is invalid.
+//
+//   * EndpointGroupNotFoundException
 //   The endpoint group that you specified doesn't exist.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/DeleteEndpointGroup
@@ -527,16 +535,19 @@ func (c *GlobalAccelerator) DeleteListenerRequest(input *DeleteListenerInput) (r
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation DeleteListener for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeListenerNotFoundException "ListenerNotFoundException"
+// Returned Error Types:
+//   * InvalidArgumentException
+//   An argument that you specified is invalid.
+//
+//   * ListenerNotFoundException
 //   The listener that you specified doesn't exist.
 //
-//   * ErrCodeAssociatedEndpointGroupFoundException "AssociatedEndpointGroupFoundException"
+//   * AssociatedEndpointGroupFoundException
 //   The listener that you specified has an endpoint group associated with it.
 //   You must remove all dependent resources from a listener before you can delete
 //   it.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/DeleteListener
@@ -615,14 +626,14 @@ func (c *GlobalAccelerator) DescribeAcceleratorRequest(input *DescribeAccelerato
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation DescribeAccelerator for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAcceleratorNotFoundException "AcceleratorNotFoundException"
+// Returned Error Types:
+//   * AcceleratorNotFoundException
 //   The accelerator that you specified doesn't exist.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/DescribeAccelerator
@@ -700,14 +711,14 @@ func (c *GlobalAccelerator) DescribeAcceleratorAttributesRequest(input *Describe
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation DescribeAcceleratorAttributes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAcceleratorNotFoundException "AcceleratorNotFoundException"
+// Returned Error Types:
+//   * AcceleratorNotFoundException
 //   The accelerator that you specified doesn't exist.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/DescribeAcceleratorAttributes
@@ -785,11 +796,14 @@ func (c *GlobalAccelerator) DescribeEndpointGroupRequest(input *DescribeEndpoint
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation DescribeEndpointGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEndpointGroupNotFoundException "EndpointGroupNotFoundException"
+// Returned Error Types:
+//   * InvalidArgumentException
+//   An argument that you specified is invalid.
+//
+//   * EndpointGroupNotFoundException
 //   The endpoint group that you specified doesn't exist.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/DescribeEndpointGroup
@@ -867,14 +881,14 @@ func (c *GlobalAccelerator) DescribeListenerRequest(input *DescribeListenerInput
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation DescribeListener for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
-//   * ErrCodeListenerNotFoundException "ListenerNotFoundException"
+//   * ListenerNotFoundException
 //   The listener that you specified doesn't exist.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/DescribeListener
@@ -952,11 +966,14 @@ func (c *GlobalAccelerator) ListAcceleratorsRequest(input *ListAcceleratorsInput
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation ListAccelerators for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidArgumentException
+//   An argument that you specified is invalid.
+//
+//   * InvalidNextTokenException
 //   There isn't another item to return.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/ListAccelerators
@@ -1034,17 +1051,17 @@ func (c *GlobalAccelerator) ListEndpointGroupsRequest(input *ListEndpointGroupsI
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation ListEndpointGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeListenerNotFoundException "ListenerNotFoundException"
+// Returned Error Types:
+//   * ListenerNotFoundException
 //   The listener that you specified doesn't exist.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   There isn't another item to return.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/ListEndpointGroups
@@ -1122,14 +1139,17 @@ func (c *GlobalAccelerator) ListListenersRequest(input *ListListenersInput) (req
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation ListListeners for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAcceleratorNotFoundException "AcceleratorNotFoundException"
+// Returned Error Types:
+//   * InvalidArgumentException
+//   An argument that you specified is invalid.
+//
+//   * AcceleratorNotFoundException
 //   The accelerator that you specified doesn't exist.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   There isn't another item to return.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/ListListeners
@@ -1198,7 +1218,10 @@ func (c *GlobalAccelerator) UpdateAcceleratorRequest(input *UpdateAcceleratorInp
 
 // UpdateAccelerator API operation for AWS Global Accelerator.
 //
-// Update an accelerator.
+// Update an accelerator. To see an AWS CLI example of updating an accelerator,
+// scroll down to Example.
+//
+// You must specify the US-West-2 (Oregon) Region to create or update accelerators.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1207,14 +1230,14 @@ func (c *GlobalAccelerator) UpdateAcceleratorRequest(input *UpdateAcceleratorInp
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation UpdateAccelerator for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAcceleratorNotFoundException "AcceleratorNotFoundException"
+// Returned Error Types:
+//   * AcceleratorNotFoundException
 //   The accelerator that you specified doesn't exist.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/UpdateAccelerator
@@ -1293,15 +1316,18 @@ func (c *GlobalAccelerator) UpdateAcceleratorAttributesRequest(input *UpdateAcce
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation UpdateAcceleratorAttributes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAcceleratorNotFoundException "AcceleratorNotFoundException"
+// Returned Error Types:
+//   * AcceleratorNotFoundException
 //   The accelerator that you specified doesn't exist.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
+//
+//   * AccessDeniedException
+//   You don't have access permission.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/UpdateAcceleratorAttributes
 func (c *GlobalAccelerator) UpdateAcceleratorAttributes(input *UpdateAcceleratorAttributesInput) (*UpdateAcceleratorAttributesOutput, error) {
@@ -1379,19 +1405,22 @@ func (c *GlobalAccelerator) UpdateEndpointGroupRequest(input *UpdateEndpointGrou
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation UpdateEndpointGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
-//   * ErrCodeEndpointGroupNotFoundException "EndpointGroupNotFoundException"
+//   * EndpointGroupNotFoundException
 //   The endpoint group that you specified doesn't exist.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Processing your request would cause you to exceed an AWS Global Accelerator
 //   limit.
+//
+//   * AccessDeniedException
+//   You don't have access permission.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/UpdateEndpointGroup
 func (c *GlobalAccelerator) UpdateEndpointGroup(input *UpdateEndpointGroupInput) (*UpdateEndpointGroupOutput, error) {
@@ -1468,21 +1497,21 @@ func (c *GlobalAccelerator) UpdateListenerRequest(input *UpdateListenerInput) (r
 // See the AWS API reference guide for AWS Global Accelerator's
 // API operation UpdateListener for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   An argument that you specified is invalid.
 //
-//   * ErrCodeInvalidPortRangeException "InvalidPortRangeException"
+//   * InvalidPortRangeException
 //   The port numbers that you specified are not valid numbers or are not unique
 //   for this accelerator.
 //
-//   * ErrCodeListenerNotFoundException "ListenerNotFoundException"
+//   * ListenerNotFoundException
 //   The listener that you specified doesn't exist.
 //
-//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
+//   * InternalServiceErrorException
 //   There was an internal error for AWS Global Accelerator.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Processing your request would cause you to exceed an AWS Global Accelerator
 //   limit.
 //
@@ -1520,7 +1549,19 @@ type Accelerator struct {
 	// The date and time that the accelerator was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
-	// Indicates whether theaccelerator is enabled. The value is true or false.
+	// The Domain Name System (DNS) name that Global Accelerator creates that points
+	// to your accelerator's static IP addresses.
+	//
+	// The naming convention for the DNS name is: a lower case letter a, followed
+	// by a 16-bit random hex string, followed by .awsglobalaccelerator.com. For
+	// example: a1234567890abcdef.awsglobalaccelerator.com.
+	//
+	// For more information about the default DNS name, see Support for DNS Addressing
+	// in Global Accelerator (https://docs.aws.amazon.com/global-accelerator/latest/dg/about-accelerators.html#about-accelerators.dns-addressing)
+	// in the AWS Global Accelerator Developer Guide.
+	DnsName *string `type:"string"`
+
+	// Indicates whether the accelerator is enabled. The value is true or false.
 	// The default value is true.
 	//
 	// If the value is set to true, the accelerator cannot be deleted. If set to
@@ -1530,15 +1571,14 @@ type Accelerator struct {
 	// The value for the address type must be IPv4.
 	IpAddressType *string `type:"string" enum:"IpAddressType"`
 
-	// IP address set associated with the accelerator.
+	// The static IP addresses that Global Accelerator associates with the accelerator.
 	IpSets []*IpSet `type:"list"`
 
 	// The date and time that the accelerator was last modified.
 	LastModifiedTime *time.Time `type:"timestamp"`
 
-	// The name of the accelerator. The name can have a maximum of 32 characters,
-	// must contain only alphanumeric characters or hyphens (-), and must not begin
-	// or end with a hyphen.
+	// The name of the accelerator. The name must contain only alphanumeric characters
+	// or hyphens (-), and must not begin or end with a hyphen.
 	Name *string `type:"string"`
 
 	// Describes the deployment status of the accelerator.
@@ -1564,6 +1604,12 @@ func (s *Accelerator) SetAcceleratorArn(v string) *Accelerator {
 // SetCreatedTime sets the CreatedTime field's value.
 func (s *Accelerator) SetCreatedTime(v time.Time) *Accelerator {
 	s.CreatedTime = &v
+	return s
+}
+
+// SetDnsName sets the DnsName field's value.
+func (s *Accelerator) SetDnsName(v string) *Accelerator {
+	s.DnsName = &v
 	return s
 }
 
@@ -1620,8 +1666,8 @@ type AcceleratorAttributes struct {
 	FlowLogsS3Bucket *string `type:"string"`
 
 	// The prefix for the location in the Amazon S3 bucket for the flow logs. Attribute
-	// is required if FlowLogsEnabled is true. If you don’t specify a prefix, the
-	// flow logs are stored in the root of the bucket.
+	// is required if FlowLogsEnabled is true. If you don’t specify a prefix,
+	// the flow logs are stored in the root of the bucket.
 	FlowLogsS3Prefix *string `type:"string"`
 }
 
@@ -1651,6 +1697,290 @@ func (s *AcceleratorAttributes) SetFlowLogsS3Bucket(v string) *AcceleratorAttrib
 func (s *AcceleratorAttributes) SetFlowLogsS3Prefix(v string) *AcceleratorAttributes {
 	s.FlowLogsS3Prefix = &v
 	return s
+}
+
+// The accelerator that you specified could not be disabled.
+type AcceleratorNotDisabledException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AcceleratorNotDisabledException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AcceleratorNotDisabledException) GoString() string {
+	return s.String()
+}
+
+func newErrorAcceleratorNotDisabledException(v protocol.ResponseMetadata) error {
+	return &AcceleratorNotDisabledException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AcceleratorNotDisabledException) Code() string {
+	return "AcceleratorNotDisabledException"
+}
+
+// Message returns the exception's message.
+func (s AcceleratorNotDisabledException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AcceleratorNotDisabledException) OrigErr() error {
+	return nil
+}
+
+func (s AcceleratorNotDisabledException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AcceleratorNotDisabledException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AcceleratorNotDisabledException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The accelerator that you specified doesn't exist.
+type AcceleratorNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AcceleratorNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AcceleratorNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorAcceleratorNotFoundException(v protocol.ResponseMetadata) error {
+	return &AcceleratorNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AcceleratorNotFoundException) Code() string {
+	return "AcceleratorNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s AcceleratorNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AcceleratorNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s AcceleratorNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AcceleratorNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AcceleratorNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You don't have access permission.
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The listener that you specified has an endpoint group associated with it.
+// You must remove all dependent resources from a listener before you can delete
+// it.
+type AssociatedEndpointGroupFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AssociatedEndpointGroupFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociatedEndpointGroupFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorAssociatedEndpointGroupFoundException(v protocol.ResponseMetadata) error {
+	return &AssociatedEndpointGroupFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AssociatedEndpointGroupFoundException) Code() string {
+	return "AssociatedEndpointGroupFoundException"
+}
+
+// Message returns the exception's message.
+func (s AssociatedEndpointGroupFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AssociatedEndpointGroupFoundException) OrigErr() error {
+	return nil
+}
+
+func (s AssociatedEndpointGroupFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AssociatedEndpointGroupFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AssociatedEndpointGroupFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The accelerator that you specified has a listener associated with it. You
+// must remove all dependent resources from an accelerator before you can delete
+// it.
+type AssociatedListenerFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AssociatedListenerFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociatedListenerFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorAssociatedListenerFoundException(v protocol.ResponseMetadata) error {
+	return &AssociatedListenerFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AssociatedListenerFoundException) Code() string {
+	return "AssociatedListenerFoundException"
+}
+
+// Message returns the exception's message.
+func (s AssociatedListenerFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AssociatedListenerFoundException) OrigErr() error {
+	return nil
+}
+
+func (s AssociatedListenerFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AssociatedListenerFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AssociatedListenerFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type CreateAcceleratorInput struct {
@@ -1948,10 +2278,11 @@ type CreateListenerInput struct {
 	// AWS Global Accelerator uses a consistent-flow hashing algorithm to choose
 	// the optimal endpoint for a connection. If client affinity is NONE, Global
 	// Accelerator uses the "five-tuple" (5-tuple) properties—source IP address,
-	// source port, destination IP address, destination port, and protocol—to select
-	// the hash value, and then chooses the best endpoint. However, with this setting,
-	// if someone uses different ports to connect to Global Accelerator, their connections
-	// might not be always routed to the same endpoint because the hash value changes.
+	// source port, destination IP address, destination port, and protocol—to
+	// select the hash value, and then chooses the best endpoint. However, with
+	// this setting, if someone uses different ports to connect to Global Accelerator,
+	// their connections might not be always routed to the same endpoint because
+	// the hash value changes.
 	//
 	// If you want a given client to always be routed to the same endpoint, set
 	// client affinity to SOURCE_IP instead. When you use the SOURCE_IP setting,
@@ -2236,8 +2567,10 @@ type DescribeAcceleratorAttributesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the accelerator with the attributes that
-	// you want to describe. Value is required.
-	AcceleratorArn *string `type:"string"`
+	// you want to describe.
+	//
+	// AcceleratorArn is a required field
+	AcceleratorArn *string `type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2248,6 +2581,19 @@ func (s DescribeAcceleratorAttributesInput) String() string {
 // GoString returns the string representation
 func (s DescribeAcceleratorAttributesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAcceleratorAttributesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAcceleratorAttributesInput"}
+	if s.AcceleratorArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AcceleratorArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAcceleratorArn sets the AcceleratorArn field's value.
@@ -2466,6 +2812,19 @@ func (s *DescribeListenerOutput) SetListener(v *Listener) *DescribeListenerOutpu
 type EndpointConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// Indicates whether client IP address preservation is enabled for an Application
+	// Load Balancer endpoint. The value is true or false. The default value is
+	// true for new accelerators.
+	//
+	// If the value is set to true, the client's IP address is preserved in the
+	// X-Forwarded-For request header as traffic travels to applications on the
+	// Application Load Balancer endpoint fronted by the accelerator.
+	//
+	// For more information, see Viewing Client IP Addresses in AWS Global Accelerator
+	// (https://docs.aws.amazon.com/global-accelerator/latest/dg/introduction-how-it-works-client-ip.html)
+	// in the AWS Global Accelerator Developer Guide.
+	ClientIPPreservationEnabled *bool `type:"boolean"`
+
 	// An ID for the endpoint. If the endpoint is a Network Load Balancer or Application
 	// Load Balancer, this is the Amazon Resource Name (ARN) of the resource. If
 	// the endpoint is an Elastic IP address, this is the Elastic IP address allocation
@@ -2493,6 +2852,12 @@ func (s EndpointConfiguration) GoString() string {
 	return s.String()
 }
 
+// SetClientIPPreservationEnabled sets the ClientIPPreservationEnabled field's value.
+func (s *EndpointConfiguration) SetClientIPPreservationEnabled(v bool) *EndpointConfiguration {
+	s.ClientIPPreservationEnabled = &v
+	return s
+}
+
 // SetEndpointId sets the EndpointId field's value.
 func (s *EndpointConfiguration) SetEndpointId(v string) *EndpointConfiguration {
 	s.EndpointId = &v
@@ -2510,10 +2875,23 @@ func (s *EndpointConfiguration) SetWeight(v int64) *EndpointConfiguration {
 type EndpointDescription struct {
 	_ struct{} `type:"structure"`
 
+	// Indicates whether client IP address preservation is enabled for an Application
+	// Load Balancer endpoint. The value is true or false. The default value is
+	// true for new accelerators.
+	//
+	// If the value is set to true, the client's IP address is preserved in the
+	// X-Forwarded-For request header as traffic travels to applications on the
+	// Application Load Balancer endpoint fronted by the accelerator.
+	//
+	// For more information, see Viewing Client IP Addresses in AWS Global Accelerator
+	// (https://docs.aws.amazon.com/global-accelerator/latest/dg/introduction-how-it-works-client-ip.html)
+	// in the AWS Global Accelerator Developer Guide.
+	ClientIPPreservationEnabled *bool `type:"boolean"`
+
 	// An ID for the endpoint. If the endpoint is a Network Load Balancer or Application
 	// Load Balancer, this is the Amazon Resource Name (ARN) of the resource. If
 	// the endpoint is an Elastic IP address, this is the Elastic IP address allocation
-	// ID.
+	// ID. An Application Load Balancer can be either internal or internet-facing.
 	EndpointId *string `type:"string"`
 
 	// The reason code associated with why the endpoint is not healthy. If the endpoint
@@ -2560,6 +2938,12 @@ func (s EndpointDescription) String() string {
 // GoString returns the string representation
 func (s EndpointDescription) GoString() string {
 	return s.String()
+}
+
+// SetClientIPPreservationEnabled sets the ClientIPPreservationEnabled field's value.
+func (s *EndpointDescription) SetClientIPPreservationEnabled(v bool) *EndpointDescription {
+	s.ClientIPPreservationEnabled = &v
+	return s
 }
 
 // SetEndpointId sets the EndpointId field's value.
@@ -2701,6 +3085,343 @@ func (s *EndpointGroup) SetTrafficDialPercentage(v float64) *EndpointGroup {
 	return s
 }
 
+// The endpoint group that you specified already exists.
+type EndpointGroupAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s EndpointGroupAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EndpointGroupAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorEndpointGroupAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &EndpointGroupAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EndpointGroupAlreadyExistsException) Code() string {
+	return "EndpointGroupAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s EndpointGroupAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EndpointGroupAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s EndpointGroupAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EndpointGroupAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EndpointGroupAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The endpoint group that you specified doesn't exist.
+type EndpointGroupNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s EndpointGroupNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EndpointGroupNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorEndpointGroupNotFoundException(v protocol.ResponseMetadata) error {
+	return &EndpointGroupNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EndpointGroupNotFoundException) Code() string {
+	return "EndpointGroupNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s EndpointGroupNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EndpointGroupNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s EndpointGroupNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EndpointGroupNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EndpointGroupNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// There was an internal error for AWS Global Accelerator.
+type InternalServiceErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServiceErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServiceErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServiceErrorException(v protocol.ResponseMetadata) error {
+	return &InternalServiceErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServiceErrorException) Code() string {
+	return "InternalServiceErrorException"
+}
+
+// Message returns the exception's message.
+func (s InternalServiceErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServiceErrorException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServiceErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServiceErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServiceErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An argument that you specified is invalid.
+type InvalidArgumentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidArgumentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidArgumentException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidArgumentException(v protocol.ResponseMetadata) error {
+	return &InvalidArgumentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidArgumentException) Code() string {
+	return "InvalidArgumentException"
+}
+
+// Message returns the exception's message.
+func (s InvalidArgumentException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidArgumentException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidArgumentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidArgumentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidArgumentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// There isn't another item to return.
+type InvalidNextTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidNextTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidNextTokenException) Code() string {
+	return "InvalidNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidNextTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidNextTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The port numbers that you specified are not valid numbers or are not unique
+// for this accelerator.
+type InvalidPortRangeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidPortRangeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPortRangeException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPortRangeException(v protocol.ResponseMetadata) error {
+	return &InvalidPortRangeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidPortRangeException) Code() string {
+	return "InvalidPortRangeException"
+}
+
+// Message returns the exception's message.
+func (s InvalidPortRangeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidPortRangeException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidPortRangeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidPortRangeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidPortRangeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // A complex type for the set of IP addresses for an accelerator.
 type IpSet struct {
 	_ struct{} `type:"structure"`
@@ -2733,6 +3454,63 @@ func (s *IpSet) SetIpAddresses(v []*string) *IpSet {
 func (s *IpSet) SetIpFamily(v string) *IpSet {
 	s.IpFamily = &v
 	return s
+}
+
+// Processing your request would cause you to exceed an AWS Global Accelerator
+// limit.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListAcceleratorsInput struct {
@@ -3016,10 +3794,11 @@ type Listener struct {
 	// AWS Global Accelerator uses a consistent-flow hashing algorithm to choose
 	// the optimal endpoint for a connection. If client affinity is NONE, Global
 	// Accelerator uses the "five-tuple" (5-tuple) properties—source IP address,
-	// source port, destination IP address, destination port, and protocol—to select
-	// the hash value, and then chooses the best endpoint. However, with this setting,
-	// if someone uses different ports to connect to Global Accelerator, their connections
-	// might not be always routed to the same endpoint because the hash value changes.
+	// source port, destination IP address, destination port, and protocol—to
+	// select the hash value, and then chooses the best endpoint. However, with
+	// this setting, if someone uses different ports to connect to Global Accelerator,
+	// their connections might not be always routed to the same endpoint because
+	// the hash value changes.
 	//
 	// If you want a given client to always be routed to the same endpoint, set
 	// client affinity to SOURCE_IP instead. When you use the SOURCE_IP setting,
@@ -3071,6 +3850,62 @@ func (s *Listener) SetPortRanges(v []*PortRange) *Listener {
 func (s *Listener) SetProtocol(v string) *Listener {
 	s.Protocol = &v
 	return s
+}
+
+// The listener that you specified doesn't exist.
+type ListenerNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ListenerNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorListenerNotFoundException(v protocol.ResponseMetadata) error {
+	return &ListenerNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ListenerNotFoundException) Code() string {
+	return "ListenerNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ListenerNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ListenerNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ListenerNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ListenerNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ListenerNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A complex type for a range of ports for a listener.
@@ -3126,8 +3961,9 @@ type UpdateAcceleratorAttributesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the accelerator that you want to update.
-	// Attribute is required.
-	AcceleratorArn *string `type:"string"`
+	//
+	// AcceleratorArn is a required field
+	AcceleratorArn *string `type:"string" required:"true"`
 
 	// Update whether flow logs are enabled. The default value is false. If the
 	// value is true, FlowLogsS3Bucket and FlowLogsS3Prefix must be specified.
@@ -3142,8 +3978,8 @@ type UpdateAcceleratorAttributesInput struct {
 	FlowLogsS3Bucket *string `type:"string"`
 
 	// Update the prefix for the location in the Amazon S3 bucket for the flow logs.
-	// Attribute is required if FlowLogsEnabled is true. If you don’t specify a
-	// prefix, the flow logs are stored in the root of the bucket.
+	// Attribute is required if FlowLogsEnabled is true. If you don’t specify
+	// a prefix, the flow logs are stored in the root of the bucket.
 	FlowLogsS3Prefix *string `type:"string"`
 }
 
@@ -3155,6 +3991,19 @@ func (s UpdateAcceleratorAttributesInput) String() string {
 // GoString returns the string representation
 func (s UpdateAcceleratorAttributesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateAcceleratorAttributesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateAcceleratorAttributesInput"}
+	if s.AcceleratorArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AcceleratorArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAcceleratorArn sets the AcceleratorArn field's value.
@@ -3457,10 +4306,11 @@ type UpdateListenerInput struct {
 	// AWS Global Accelerator uses a consistent-flow hashing algorithm to choose
 	// the optimal endpoint for a connection. If client affinity is NONE, Global
 	// Accelerator uses the "five-tuple" (5-tuple) properties—source IP address,
-	// source port, destination IP address, destination port, and protocol—to select
-	// the hash value, and then chooses the best endpoint. However, with this setting,
-	// if someone uses different ports to connect to Global Accelerator, their connections
-	// might not be always routed to the same endpoint because the hash value changes.
+	// source port, destination IP address, destination port, and protocol—to
+	// select the hash value, and then chooses the best endpoint. However, with
+	// this setting, if someone uses different ports to connect to Global Accelerator,
+	// their connections might not be always routed to the same endpoint because
+	// the hash value changes.
 	//
 	// If you want a given client to always be routed to the same endpoint, set
 	// client affinity to SOURCE_IP instead. When you use the SOURCE_IP setting,

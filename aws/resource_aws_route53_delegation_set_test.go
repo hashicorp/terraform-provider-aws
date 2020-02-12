@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -159,7 +159,7 @@ func testAccCheckRoute53NameServersMatch(delegationSetName, zoneName string) res
 func testAccRoute53DelegationSetConfig(refName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_delegation_set" "test" {
-	reference_name = "%s"
+  reference_name = "%s"
 }
 `, refName)
 }
@@ -167,17 +167,17 @@ resource "aws_route53_delegation_set" "test" {
 func testAccRoute53DelegationSetWithZonesConfig(refName, zoneName1, zoneName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_delegation_set" "test" {
-    reference_name = "%s"
+  reference_name = "%s"
 }
 
 resource "aws_route53_zone" "primary" {
-    name = "%s"
-    delegation_set_id = "${aws_route53_delegation_set.test.id}"
+  name              = "%s"
+  delegation_set_id = "${aws_route53_delegation_set.test.id}"
 }
 
 resource "aws_route53_zone" "secondary" {
-    name = "%s"
-    delegation_set_id = "${aws_route53_delegation_set.test.id}"
+  name              = "%s"
+  delegation_set_id = "${aws_route53_delegation_set.test.id}"
 }
 `, refName, zoneName1, zoneName2)
 }

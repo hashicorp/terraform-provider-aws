@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLambdaAlias_basic(t *testing.T) {
@@ -37,6 +37,12 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, aliasName)),
 					resource.TestMatchResourceAttr(resourceName, "invoke_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:apigateway:[^:]+:lambda:path/2015-03-31/functions/arn:[^:]+:lambda:[^:]+:[^:]+:function:%s:%s/invocations$", funcName, aliasName))),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, aliasName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -268,7 +274,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   function_name    = "%s"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "exports.example"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs12.x"
   source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
   publish          = "true"
 }
@@ -278,7 +284,8 @@ resource "aws_lambda_alias" "lambda_alias_test" {
   description      = "a sample description"
   function_name    = "${aws_lambda_function.lambda_function_test_create.arn}"
   function_version = "1"
-}`, roleName, policyName, attachmentName, funcName, aliasName)
+}
+`, roleName, policyName, attachmentName, funcName, aliasName)
 }
 
 func testAccAwsLambdaAliasConfigWithRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
@@ -335,7 +342,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   function_name    = "%s"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "exports.example"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs12.x"
   source_code_hash = "${filebase64sha256("test-fixtures/lambdatest_modified.zip")}"
   publish          = "true"
 }
@@ -351,5 +358,6 @@ resource "aws_lambda_alias" "lambda_alias_test" {
       "2" = 0.5
     }
   }
-}`, roleName, policyName, attachmentName, funcName, aliasName)
+}
+`, roleName, policyName, attachmentName, funcName, aliasName)
 }
