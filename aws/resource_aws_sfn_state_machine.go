@@ -113,7 +113,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 		if awserr, ok := err.(awserr.Error); ok {
 			if awserr.Code() == "NotFoundException" || awserr.Code() == "StateMachineDoesNotExist" {
 				d.SetId("")
-				return nila
+				return nil
 			}
 		}
 		return err
