@@ -330,7 +330,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 func testAccGlobalAcceleratorAccelerator_attributes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "example" {
-  bucket_prefix = "tf-globalaccelerator-accelerator-"
+  bucket_prefix = "tf-test-globalaccelerator-"
 }
 
 resource "aws_globalaccelerator_accelerator" "example" {
