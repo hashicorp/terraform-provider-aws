@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -316,6 +317,7 @@ func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
 			vs = append(vs, aws.StringValue(v))
 		}
 	}
+	sort.Strings(vs)
 	return vs
 
 }
