@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -50,16 +51,16 @@ func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}) error {
-	configurationSetExists, err := findConfigurationSet(d.Id(), nil, meta)
+	configurationSetExists, err := findConfigurationSet(d.Id(), meta)
+
+	if err != nil {
+		return err
+	}
 
 	if !configurationSetExists {
 		log.Printf("[WARN] SES Configuration Set (%s) not found", d.Id())
 		d.SetId("")
 		return nil
-	}
-
-	if err != nil {
-		return err
 	}
 
 	d.Set("name", d.Id())
@@ -78,28 +79,28 @@ func resourceAwsSesConfigurationSetDelete(d *schema.ResourceData, meta interface
 	return err
 }
 
-func findConfigurationSet(name string, token *string, meta interface{}) (bool, error) {
-	conn := meta.(*AWSClient).sesconn
+func findConfigurationSet(name string, meta interface{}) (bool, error) {
+	conn := meta.(*AWSClient).sesConn
 
 	configurationSetExists := false
 
-	listOpts := &ses.ListConfigurationSetsInput{
-		NextToken: token,
+	configSetInput := &ses.DescribeConfigurationSetInput{
+		ConfigurationSetName: aws.String(name),
 	}
 
-	response, err := conn.ListConfigurationSets(listOpts)
-	for _, element := range response.ConfigurationSets {
-		if *element.Name == name {
-			configurationSetExists = true
-		}
-	}
-
-	if err != nil && !configurationSetExists && response.NextToken != nil {
-		configurationSetExists, err = findConfigurationSet(name, response.NextToken, meta)
-	}
+	response, err := conn.DescribeConfigurationSet(configSetInput)
 
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == "ConfigurationSetDoesNotExist" {
+			return configurationSetExists, nil
+		}
 		return false, err
+	}
+
+	respString := *response.ConfigurationSet.Name
+
+	if respString == name {
+		configurationSetExists = true
 	}
 
 	return configurationSetExists, nil
