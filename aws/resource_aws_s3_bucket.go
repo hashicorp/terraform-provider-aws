@@ -1738,7 +1738,7 @@ func resourceAwsS3BucketAccelerationUpdate(s3conn *s3.S3, d *schema.ResourceData
 	_, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return s3conn.PutBucketAccelerateConfiguration(i)
 	})
-	if err != nil {
+	if err != nil && !isAWSErr(err, "MethodNotAllowed", "") && !isAWSErr(err, "UnsupportedArgument", "") {
 		return fmt.Errorf("Error putting S3 acceleration: %s", err)
 	}
 

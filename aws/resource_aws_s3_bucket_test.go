@@ -482,7 +482,6 @@ func TestAccAWSS3Bucket_acceleration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("cloudfront", t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
