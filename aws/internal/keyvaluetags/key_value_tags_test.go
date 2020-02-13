@@ -1871,20 +1871,29 @@ func TestKeyValueTagsString(t *testing.T) {
 			want: "map[]",
 		},
 		{
+			name: "no value",
+			tags: New(map[string]*string{
+				"key1": nil,
+			}),
+			want: "map[key1:]",
+		},
+		{
 			name: "single",
 			tags: New(map[string]string{
 				"key1": "value1",
 			}),
-			want: "map[key1:value1]",
+			want: "map[key1:TagData{Value: value1}]",
 		},
 		{
 			name: "multiple",
 			tags: New(map[string]string{
 				"key1": "value1",
-				"key2": "value2",
 				"key3": "value3",
+				"key2": "value2",
+				"key5": "value5",
+				"key4": "value4",
 			}),
-			want: "map[key1:value1 key2:value2 key3:value3]",
+			want: "map[key1:TagData{Value: value1} key2:TagData{Value: value2} key3:TagData{Value: value3} key4:TagData{Value: value4} key5:TagData{Value: value5}]",
 		},
 	}
 
