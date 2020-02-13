@@ -113,7 +113,7 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfigBasic(rName),
+				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
 					testAccCheckAWSSfnStateMachineDisappears(&sm),
@@ -192,7 +192,7 @@ func testAccCheckAWSSfnStateMachineDisappears(sm *sfn.DescribeStateMachineOutput
 			return err
 		}
 
-		return resource.Retry(5*time.Minute, func() *resource.RetryError {
+		return resource.Retry(1*time.Minute, func() *resource.RetryError {
 			opts := &sfn.DescribeStateMachineInput{
 				StateMachineArn: sm.StateMachineArn,
 			}
@@ -275,49 +275,6 @@ resource "aws_iam_role" "iam_for_sfn" {
       "Effect": "Allow",
       "Principal": {
         "Service": "states.${data.aws_region.current.name}.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-`, rName)
-}
-
-func testAccAWSSfnStateMachineConfigBasic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_sfn_state_machine" "test" {
-  name     = %[1]q
-  role_arn = "${aws_iam_role.test.arn}"
-
-  definition = <<EOF
-{
-  "Comment": "A Hello World example of the Amazon States Language using a Pass state",
-  "StartAt": "HelloWorld",
-  "States": {
-    "HelloWorld": {
-      "Type": "Pass",
-      "Result": "Hello World!",
-      "End": true
-    }
-  }
-}
-EOF
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "states.amazonaws.com"
       },
       "Action": "sts:AssumeRole",
       "Sid": ""
