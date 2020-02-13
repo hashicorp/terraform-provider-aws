@@ -580,7 +580,7 @@ func TestAccAWSLB_noSecurityGroup(t *testing.T) {
 
 func TestAccAWSLB_ALB_AccessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("testaccawslbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
 	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	resourceName := "aws_lb.test"
 
@@ -668,7 +668,7 @@ func TestAccAWSLB_ALB_AccessLogs(t *testing.T) {
 
 func TestAccAWSLB_ALB_AccessLogs_Prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("testaccawslbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
 	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	resourceName := "aws_lb.test"
 
@@ -738,7 +738,7 @@ func TestAccAWSLB_ALB_AccessLogs_Prefix(t *testing.T) {
 
 func TestAccAWSLB_NLB_AccessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("testaccawslbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
 	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	resourceName := "aws_lb.test"
 
@@ -826,7 +826,7 @@ func TestAccAWSLB_NLB_AccessLogs(t *testing.T) {
 
 func TestAccAWSLB_NLB_AccessLogs_Prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("testaccawslbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
 	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	resourceName := "aws_lb.test"
 
