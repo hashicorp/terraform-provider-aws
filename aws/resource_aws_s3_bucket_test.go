@@ -57,6 +57,7 @@ func testSweepS3Buckets(region string) error {
 		return nil
 	}
 
+	defaultNameRegexp := regexp.MustCompile(`^terraform-\d+$`)
 	for _, bucket := range output.Buckets {
 		name := aws.StringValue(bucket.Name)
 
@@ -70,7 +71,7 @@ func testSweepS3Buckets(region string) error {
 			}
 		}
 
-		if matched, _ := regexp.MatchString(`^terraform-\d+$`, name); matched == true {
+		if defaultNameRegexp.MatchString(name) {
 			sweepable = true
 		}
 
