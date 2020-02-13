@@ -1699,7 +1699,7 @@ resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}", "${aws_subnet.alb_test.*.id[2]}"]
 
   idle_timeout               = 30
   enable_deletion_protection = false
