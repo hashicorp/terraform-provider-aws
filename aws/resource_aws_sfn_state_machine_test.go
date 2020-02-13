@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sfn"
@@ -103,7 +104,6 @@ func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
 
 func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
-
 	resourceName := "aws_sfn_state_machine.test"
 	rName := acctest.RandomWithPrefix("tf-acc")
 
@@ -113,7 +113,7 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfig(rName, 5),
+				Config: testAccAWSSfnStateMachineConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
 					testAccCheckAWSSfnStateMachineDisappears(&sm),
@@ -174,10 +174,10 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 			return fmt.Errorf("Expected AWS Step Function State Machine to be destroyed, but was still found")
 		}
 
-		return nil
+		return err
 	}
 
-	return fmt.Errorf("Default error in Step Function Test")
+	return nil
 }
 
 func testAccCheckAWSSfnStateMachineDisappears(sm *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
@@ -188,9 +188,27 @@ func testAccCheckAWSSfnStateMachineDisappears(sm *sfn.DescribeStateMachineOutput
 			StateMachineArn: sm.StateMachineArn,
 		}
 
-		_, err := conn.DeleteStateMachine(input)
+		if _, err := conn.DeleteStateMachine(input); err != nil {
+			return err
+		}
 
-		return err
+		return resource.Retry(5*time.Minute, func() *resource.RetryError {
+			opts := &sfn.DescribeStateMachineInput{
+				StateMachineArn: sm.StateMachineArn,
+			}
+			resp, err := conn.DescribeStateMachine(opts)
+			if err != nil {
+				if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "") {
+					return nil
+				} else {
+					return resource.NonRetryableError(fmt.Errorf("Error While Deleting State Machine: %v", resp.StateMachineArn))
+				}
+			}
+			if aws.StringValue(resp.Status) == sfn.StateMachineStatusDeleting {
+				return resource.RetryableError(fmt.Errorf("Waiting for State Machine: %v Deletion", resp.StateMachineArn))
+			}
+			return nil
+		})
 	}
 }
 
@@ -268,10 +286,53 @@ EOF
 `, rName)
 }
 
+func testAccAWSSfnStateMachineConfigBasic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sfn_state_machine" "test" {
+  name     = %[1]q
+  role_arn = "${aws_iam_role.test.arn}"
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using a Pass state",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Pass",
+      "Result": "Hello World!",
+      "End": true
+    }
+  }
+}
+EOF
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "states.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+`, rName)
+}
+
 func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
 	return testAccAWSSfnStateMachineConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
-  name     = "%s"
+  name     = %q
   role_arn = "${aws_iam_role.iam_for_sfn.arn}"
 
   definition = <<EOF
@@ -326,9 +387,9 @@ resource "aws_sfn_state_machine" "test" {
   }
 }
 EOF
-tags = {
+  tags = {
 	%[2]q = %[3]q
-}
+  }
 }
 `, rName, tag1Key, tag1Value)
 }
@@ -360,10 +421,10 @@ resource "aws_sfn_state_machine" "test" {
   }
 }
 EOF
-tags = {
+  tags = {
 	%[2]q = %[3]q
 	%[4]q = %[5]q
-}
+  }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
