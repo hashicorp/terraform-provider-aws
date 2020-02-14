@@ -30,6 +30,7 @@ func TestAccAWSAMI_basic(t *testing.T) {
 					testAccCheckAmiExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestMatchResourceAttr(resourceName, "root_snapshot_id", regexp.MustCompile("^snap-")),
@@ -394,7 +395,7 @@ resource "aws_ami" "test" {
   name                = %[1]q
   root_device_name    = "/dev/sda1"
   virtualization_type = "hvm"
-  description         = %[1]q
+  description         = %[2]q
 
   ebs_block_device {
     device_name = "/dev/sda1"
