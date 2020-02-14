@@ -84,10 +84,21 @@ The following arguments are supported:
   current policy document.  Statements with non-blank `sid`s in the current
   policy document will overwrite statements with the same `sid` in the source
   json.  Statements without an `sid` cannot be overwritten.
+* `source_json_list` (Optional) - A list of IAM policy documents to import as
+  a base for the current policy document. Statements accross all policy documents
+  defined in this list or in the `source_json` attribute must be unique. Statements
+  with non-blank `sid`s in the current policy document will overwrite statements
+  with the same `sid` from any of the source json documents.
 * `override_json` (Optional) - An IAM policy document to import and override the
   current policy document.  Statements with non-blank `sid`s in the override
-  document will overwrite statements with the same `sid` in the current document.
+  document will overwrite statements with the same `sid` in the current document,
+  including any defined by the `override_json_list` attribute.
   Statements without an `sid` cannot be overwritten.
+* `override_json_list` (Optional) - A list of IAM policy documents to import and
+  override the current policy document. Documents in this list are merged
+  iteratively, overwriting previously defined statements with non-blank matching
+  `sid`s. Statements with non-blank `sid`s will overwrite statements with the same
+  `sid` in the current document. Statements without an `sid` cannot be overwritten.
 * `statement` (Optional) - A nested configuration block (described below)
   configuring one *statement* to be included in the policy document.
 * `version` (Optional) - IAM policy document version. Valid values: `2008-10-17`, `2012-10-17`. Defaults to `2012-10-17`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
@@ -347,6 +358,170 @@ data "aws_iam_policy_document" "politik" {
       "Action": "s3:GetObject",
       "Resource": "*"
     }
+  ]
+}
+```
+
+## Combining multiple documents
+
+Multiple documents can be combined using the `source_json_list` or
+`override_json_list` attributes. `source_json_list` requires all documents
+to have unique `sid`s, while `override_json_list` will iteratively overwrite
+matching `sid`s.
+
+Examble of `source_json_list`:
+
+```hcl
+data "aws_iam_policy_document" "source_one" {
+  statement {
+    actions   = ["ec2:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "UniqueSidOne"
+
+    actions   = ["s3:*"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "source_two" {
+  statement {
+    sid = "UniqueSidTwo"
+
+    actions   = ["iam:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    actions   = ["lambda:*"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "combined" {
+  source_json_list = [
+    data.aws_iam_policy_document.source_one.json,
+    data.aws_iam_policy_document.source_two.json
+  ]
+}
+```
+
+`data.aws_iam_policy_document.combined.json` will evaluate to:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "ec2:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "UniqueSidOne",
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "UniqueSidTwo",
+      "Effect": "Allow",
+      "Action": "iam:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "lambda:*",
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+Examble of `override_json_list`:
+
+```hcl
+data "aws_iam_policy_document" "policy_one" {
+  statement {
+    sid    = "OverridePlaceHolderOne"
+    effect = "Allow"
+
+    actions   = ["s3:*"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "policy_two" {
+  statement {
+    effect    = "Allow"
+    actions   = ["ec2:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "OverridePlaceHolderTwo"
+    effect = "Allow"
+
+    actions   = ["iam:*"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "policy_three" {
+  statement {
+    sid    = "OverridePlaceHolderOne"
+    effect = "Deny"
+
+    actions   = ["logs:*"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "combined" {
+  override_json_list = [
+    data.aws_iam_policy_document.policy_one.json,
+    data.aws_iam_policy_document.policy_two.json,
+    data.aws_iam_policy_document.policy_three.json
+  ]
+
+  statement {
+    sid    = "OverridePlaceHolderTwo"
+    effect = "Deny"
+
+    actions   = ["*"]
+    resources = ["*"]
+  }
+}
+```
+
+`data.aws_iam_policy_document.combined.json` will evaluate to:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OverridePlaceholderTwo",
+      "Effect": "Allow",
+      "Action": "iam:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "OverridePlaceholderOne",
+      "Effect": "Deny",
+      "Action": "logs:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "ec2:*",
+      "Resource": "*"
+    },
   ]
 }
 ```
