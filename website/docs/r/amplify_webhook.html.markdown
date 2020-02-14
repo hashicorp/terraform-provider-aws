@@ -18,13 +18,13 @@ resource "aws_amplify_app" "app" {
 }
 
 resource "aws_amplify_branch" "master" {
-  app_id      = aws_amplify_app.app.id
+  app_id      = "${aws_amplify_app.app.id}"
   branch_name = "master"
 }
 
 resource "aws_amplify_webhook" "master" {
-  app_id      = aws_amplify_app.app.id
-  branch_name = aws_amplify_branch.master.branch_name
+  app_id      = "${aws_amplify_app.app.id}"
+  branch_name = "${aws_amplify_branch.master.branch_name}"
   description = "triggermaster"
 }
 ```
