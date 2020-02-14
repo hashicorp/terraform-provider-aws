@@ -30,7 +30,10 @@ func TestAccAWSAMI_basic(t *testing.T) {
 					testAccCheckAmiExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestMatchResourceAttr(resourceName, "root_snapshot_id", regexp.MustCompile("^snap-")),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -40,6 +43,44 @@ func TestAccAWSAMI_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"manage_ebs_snapshots",
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSAMI_description(t *testing.T) {
+	var ami ec2.Image
+	resourceName := "aws_ami.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	desc := acctest.RandomWithPrefix("desc")
+	descUpdated := acctest.RandomWithPrefix("desc-updated")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAmiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAmiConfigDesc(rName, desc, 8),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAmiExists(resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "description", desc),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
+			{
+				Config: testAccAmiConfigDesc(rName, descUpdated, 8),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAmiExists(resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "description", descUpdated),
+				),
 			},
 		},
 	})
@@ -56,7 +97,7 @@ func TestAccAWSAMI_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAmiDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfig_basic(rName, 8),
+				Config: testAccAmiConfigBasic(rName, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAmiExists(resourceName, &ami),
 					testAccCheckAmiDisappears(&ami),
@@ -344,6 +385,23 @@ resource "aws_ami" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAmiConfigDesc(rName, desc string, size int) string {
+	return testAccAmiConfigBase(rName, size) + fmt.Sprintf(`
+resource "aws_ami" "test" {
+  ena_support         = true
+  name                = %[1]q
+  root_device_name    = "/dev/sda1"
+  virtualization_type = "hvm"
+  description         = %[1]q
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    snapshot_id = "${aws_ebs_snapshot.test.id}"
+  }
+}
+`, rName, desc)
 }
 
 func testAccAmiConfigTags1(rName, tagKey1, tagValue1 string, size int) string {
