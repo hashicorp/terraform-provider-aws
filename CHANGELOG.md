@@ -1,30 +1,30 @@
-## 2.49.0 (Unreleased)
+## 2.49.0 (February 14, 2020)
 
 FEATURES:
 
-* **New Resource:** `aws_codestarnotifications_notification_rule` [GH-10991]
-* **New Resource:** `aws_s3_bucket_analytics_configuration` [GH-11874]
+* **New Resource:** `aws_codestarnotifications_notification_rule` ([#10991](https://github.com/terraform-providers/terraform-provider-aws/issues/10991))
+* **New Resource:** `aws_s3_bucket_analytics_configuration` ([#11874](https://github.com/terraform-providers/terraform-provider-aws/issues/11874))
 
 ENHANCEMENTS:
 
-* data-source/aws_api_gateway_rest_api: Add `api_key_source`, `arn`, `binary_media_types`, `description`, `endpoint_configuration`, `execution_arn`, `minimum_compression_size`, `policy`, and `tags` attributes [GH-10971]
-* resource/aws_db_instance: Support `agent` value in `enable_cloudwatch_logs_exports` argument plan-time validation (Support MSSQL agent log) [GH-11472]
-* resource/aws_db_instance: Add `delete_automated_backups` argument [GH-8461]
-* resource/aws_gamelift_fleet: Add `tags` argument [GH-11559]
-* resource/aws_instance: Add `hibernation` argument [GH-6961]
-* resource/aws_launch_template: Add `cpu_options` configuration block (support disabling multithreading) [GH-6552]
-* resource/aws_neptune_cluster: Add `enable_cloudwatch_logs_exports` argument (support audit logging) [GH-11949]
-* resource/aws_neptune_cluster: Add `deletion_protection` argument [GH-11731]
-* resource/aws_rds_global_database: Support `aurora-mysql` value in `engine` argument plan-time validation (Support Aurora MySQL 5.7) [GH-11790]
+* data-source/aws_api_gateway_rest_api: Add `api_key_source`, `arn`, `binary_media_types`, `description`, `endpoint_configuration`, `execution_arn`, `minimum_compression_size`, `policy`, and `tags` attributes ([#10971](https://github.com/terraform-providers/terraform-provider-aws/issues/10971))
+* resource/aws_db_instance: Support `agent` value in `enable_cloudwatch_logs_exports` argument plan-time validation (Support MSSQL agent log) ([#11472](https://github.com/terraform-providers/terraform-provider-aws/issues/11472))
+* resource/aws_db_instance: Add `delete_automated_backups` argument ([#8461](https://github.com/terraform-providers/terraform-provider-aws/issues/8461))
+* resource/aws_gamelift_fleet: Add `tags` argument ([#11559](https://github.com/terraform-providers/terraform-provider-aws/issues/11559))
+* resource/aws_instance: Add `hibernation` argument ([#6961](https://github.com/terraform-providers/terraform-provider-aws/issues/6961))
+* resource/aws_launch_template: Add `cpu_options` configuration block (support disabling multithreading) ([#6552](https://github.com/terraform-providers/terraform-provider-aws/issues/6552))
+* resource/aws_neptune_cluster: Add `enable_cloudwatch_logs_exports` argument (support audit logging) ([#11949](https://github.com/terraform-providers/terraform-provider-aws/issues/11949))
+* resource/aws_neptune_cluster: Add `deletion_protection` argument ([#11731](https://github.com/terraform-providers/terraform-provider-aws/issues/11731))
+* resource/aws_rds_global_database: Support `aurora-mysql` value in `engine` argument plan-time validation (Support Aurora MySQL 5.7) ([#11790](https://github.com/terraform-providers/terraform-provider-aws/issues/11790))
 
 BUG FIXES:
 
-* data-source/aws_route53_zone: Fixes regression from version 2.48.0 when filtering using `tags` [GH-11953]
-* resource/aws_batch_job_definition: Prevent extraneous differences with `container_properties` argument missing `environment`, `mountPoints`, `ulimits`, and `volumes` configuration [GH-12000]
-* resource/aws_cognito_user_pool: Allow `admin_create_user_config` configuration block `unused_account_validity_days` argument to be omitted [GH-12001]
-* resource/aws_launch_configuration: Fixes regression from version 2.23.0 with instance store AMIs returning an unexpected error [GH-9810]
-* resource/aws_launch_configuration: Fixes regression from version 2.23.0 to allow missing EC2 Image during root block device lookup [GH-12009]
-* resource/aws_route53_record: The artificial, hardcoded five minute timeouts for creation and deletions have been removed in preference of the default AWS Go SDK retrying logic [GH-11895]
+* data-source/aws_route53_zone: Fixes regression from version 2.48.0 when filtering using `tags` ([#11953](https://github.com/terraform-providers/terraform-provider-aws/issues/11953))
+* resource/aws_batch_job_definition: Prevent extraneous differences with `container_properties` argument missing `environment`, `mountPoints`, `ulimits`, and `volumes` configuration ([#12000](https://github.com/terraform-providers/terraform-provider-aws/issues/12000))
+* resource/aws_cognito_user_pool: Allow `admin_create_user_config` configuration block `unused_account_validity_days` argument to be omitted ([#12001](https://github.com/terraform-providers/terraform-provider-aws/issues/12001))
+* resource/aws_launch_configuration: Fixes regression from version 2.23.0 with instance store AMIs returning an unexpected error ([#9810](https://github.com/terraform-providers/terraform-provider-aws/issues/9810))
+* resource/aws_launch_configuration: Fixes regression from version 2.23.0 to allow missing EC2 Image during root block device lookup ([#12009](https://github.com/terraform-providers/terraform-provider-aws/issues/12009))
+* resource/aws_route53_record: The artificial, hardcoded five minute timeouts for creation and deletions have been removed in preference of the default AWS Go SDK retrying logic ([#11895](https://github.com/terraform-providers/terraform-provider-aws/issues/11895))
 
 ## 2.48.0 (February 07, 2020)
 
