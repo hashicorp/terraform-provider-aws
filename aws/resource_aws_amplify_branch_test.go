@@ -49,6 +49,7 @@ func TestAccAWSAmplifyBranch_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_domains.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "destination_branch", ""),
 					resource.TestCheckResourceAttr(resourceName, "source_branch", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
