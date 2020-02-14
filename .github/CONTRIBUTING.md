@@ -25,6 +25,7 @@ ability to merge PRs and respond to issues.
         - [Documentation Update](#documentation-update)
         - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
         - [Adding Resource Import Support](#adding-resource-import-support)
+        - [Adding Resource Name Generation Support](#adding-resource-name-generation-support)
         - [Adding Resource Tagging Support](#adding-resource-tagging-support)
         - [New Resource](#new-resource)
         - [New Service](#new-service)
@@ -213,6 +214,136 @@ In addition to the below checklist and the items noted in the Extending Terrafor
 - [ ] _Resource Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `Importer` `State` function
 - [ ] _Resource Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of `TestStep`s with `ImportState: true`
 - [ ] _Resource Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `Import` documentation section at the bottom of the page
+
+#### Adding Resource Name Generation Support
+
+Terraform AWS Provider resources can use shared logic to support and test name generation, where the operator can choose between an expected naming value, a generated naming value with a prefix, or a fully generated name.
+
+Implementing name generation support for Terraform AWS Provider resources requires the following, each with its own section below:
+
+- [ ] _Resource Name Generation Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `name_prefix` attribute, along with handling in `Create` function.
+- [ ] _Resource Name Generation Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of new acceptance test functions and configurations to exercise new naming logic.
+- [ ] _Resource Name Generation Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `name_prefix` argument and update of `name` argument description.
+
+##### Resource Name Generation Code Implementation
+
+- In the resource Go file (e.g. `aws/resource_aws_service_thing.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"`
+- In the resource schema, add the new `name_prefix` attribute and adjust the `name` attribute to be `Optional`, `Computed`, and `ConflictsWith` the `name_prefix` attribute. Ensure to keep any existing schema fields on `name` such as `ValidateFunc`. e.g.
+
+```go
+"name": {
+  Type:          schema.TypeString,
+  Optional:      true,
+  Computed:      true,
+  ForceNew:      true,
+  ConflictsWith: []string{"name_prefix"},
+},
+"name_prefix": {
+  Type:          schema.TypeString,
+  Optional:      true,
+  ForceNew:      true,
+  ConflictsWith: []string{"name"},
+},
+```
+
+- In the resource `Create` function, switch any calls from `d.Get("name").(string)` to instead use the `naming.Generate()` function, e.g.
+
+```go
+name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+
+// ... in AWS Go SDK Input types, etc. use aws.String(name)
+```
+
+##### Resource Name Generation Testing Implementation
+
+- In the resource testing (e.g. `aws/resource_aws_service_thing_test.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"`
+- In the resource testing, implement two new tests named `_Name_Generated` and `_NamePrefix` with associated configurations, that verifies creating the resource without `name` and `name_prefix` arguments (for the former) and with only the `name_prefix` argument (for the latter). e.g.
+
+```go
+func TestAccAWSServiceThing_Name_Generated(t *testing.T) {
+  var thing service.ServiceThing
+  resourceName := "aws_service_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    Providers:    testAccProviders,
+    CheckDestroy: testAccCheckAWSServiceThingDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAWSServiceThingConfigNameGenerated(),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAWSServiceThingExists(resourceName, &thing),
+          naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+        ),
+      },
+      // If the resource supports import:
+      {
+        ResourceName:      resourceName,
+        ImportState:       true,
+        ImportStateVerify: true,
+      },
+    },
+  })
+}
+
+func TestAccAWSServiceThing_NamePrefix(t *testing.T) {
+  var thing service.ServiceThing
+  resourceName := "aws_service_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    Providers:    testAccProviders,
+    CheckDestroy: testAccCheckAWSServiceThingDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAWSServiceThingConfigNamePrefix("tf-acc-test-prefix-"),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAWSServiceThingExists(resourceName, &thing),
+          naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+        ),
+      },
+      // If the resource supports import:
+      {
+        ResourceName:      resourceName,
+        ImportState:       true,
+        ImportStateVerify: true,
+      },
+    },
+  })
+}
+
+func testAccAWSServiceThingConfigNameGenerated() string {
+  return fmt.Sprintf(`
+resource "aws_service_thing" "test" {
+  # ... other configuration ...
+}
+`)
+}
+
+func testAccAWSServiceThingConfigNamePrefix(namePrefix string) string {
+  return fmt.Sprintf(`
+resource "aws_service_thing" "test" {
+  # ... other configuration ...
+
+  name_prefix = %[1]q
+}
+`, namePrefix)
+}
+```
+
+##### Resource Code Generation Documentation Implementation
+
+- In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), add the following to the arguments reference:
+
+```markdown
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+```
+
+- Adjust the existing `name` argument reference to ensure its denoted as `Optional`, includes a mention that it can be generated, and that it conflicts with `name_prefix`:
+
+```markdown
+* `name` - (Optional) Name of the thing. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+```
 
 #### Adding Resource Tagging Support
 
