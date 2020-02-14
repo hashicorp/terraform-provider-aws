@@ -18,7 +18,7 @@ resource "aws_amplify_app" "app" {
 }
 
 resource "aws_amplify_branch" "master" {
-  app_id      = aws_amplify_app.app.id
+  app_id      = "${aws_amplify_app.app.id}"
   branch_name = "master"
 
   framework   = "React"
@@ -38,7 +38,7 @@ resource "aws_amplify_app" "app" {
 }
 
 resource "aws_amplify_branch" "master" {
-  app_id      = aws_amplify_app.app.id
+  app_id      = "${aws_amplify_app.app.id}"
   branch_name = "master"
 
   basic_auth_config {
@@ -61,7 +61,7 @@ resource "aws_amplify_app" "app" {
 }
 
 resource "aws_amplify_branch" "master" {
-  app_id      = aws_amplify_app.app.id
+  app_id      = "${aws_amplify_app.app.id}"
   branch_name = "master"
 
   // Enable SNS notifications.
@@ -77,10 +77,10 @@ resource "aws_cloudwatch_event_rule" "amplify_app_master" {
   event_pattern = jsonencode({
     "detail" = {
       "appId" = [
-        aws_amplify_app.app.id
+        "${aws_amplify_app.app.id}"
       ]
       "branchName" = [
-        aws_amplify_branch.master.branch_name
+        "${aws_amplify_branch.master.branch_name}"
       ],
       "jobStatus" = [
         "SUCCEED",
@@ -98,9 +98,9 @@ resource "aws_cloudwatch_event_rule" "amplify_app_master" {
 }
 
 resource "aws_cloudwatch_event_target" "amplify_app_master" {
-  rule      = aws_cloudwatch_event_rule.amplify_app_master.name
-  target_id = aws_amplify_branch.master.branch_name
-  arn       = aws_sns_topic.amplify_app_master.arn
+  rule      = "${aws_cloudwatch_event_rule.amplify_app_master.name}"
+  target_id = "${aws_amplify_branch.master.branch_name}"
+  arn       = "${aws_sns_topic.amplify_app_master.arn}"
 
   input_transformer {
     input_paths = {
@@ -139,14 +139,14 @@ data "aws_iam_policy_document" "amplify_app_master" {
     }
 
     resources = [
-      aws_sns_topic.amplify_app_master.arn,
+      "${aws_sns_topic.amplify_app_master.arn}",
     ]
   }
 }
 
 resource "aws_sns_topic_policy" "amplify_app_master" {
-  arn    = aws_sns_topic.amplify_app_master.arn
-  policy = data.aws_iam_policy_document.amplify_app_master.json
+  arn    = "${aws_sns_topic.amplify_app_master.arn}"
+  policy = "${data.aws_iam_policy_document.amplify_app_master.json}"
 }
 ```
 
