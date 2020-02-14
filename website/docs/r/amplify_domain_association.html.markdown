@@ -25,23 +25,23 @@ resource "aws_amplify_app" "app" {
 }
 
 resource "aws_amplify_branch" "master" {
-  app_id      = aws_amplify_app.app.id
+  app_id      = "${aws_amplify_app.app.id}"
   branch_name = "master"
 }
 
 resource "aws_amplify_domain_association" "app" {
-  app_id      = aws_amplify_app.app.id
+  app_id      = "${aws_amplify_app.app.id}"
   domain_name = "example.com"
 
   // https://example.com
   sub_domain_settings {
-    branch_name = aws_amplify_branch.master.branch_name
+    branch_name = "${aws_amplify_branch.master.branch_name}"
     prefix      = ""
   }
 
   // https://www.example.com
   sub_domain_settings {
-    branch_name = aws_amplify_branch.master.branch_name
+    branch_name = "${aws_amplify_branch.master.branch_name}"
     prefix      = "www"
   }
 }
