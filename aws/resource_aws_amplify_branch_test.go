@@ -247,7 +247,6 @@ func TestAccAWSAmplifyBranch_notification(t *testing.T) {
 				Config: testAccAWSAmplifyBranchConfigNotification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", "true"),
-					resource.TestMatchResourceAttr(resourceName, "sns_topic_name", regexp.MustCompile("^amplify-[a-z0-9]+_master")),
 				),
 			},
 			{
@@ -510,10 +509,6 @@ resource "aws_amplify_branch" "test" {
   branch_name = "master"
 
   enable_notification = true
-}
-
-resource "aws_sns_topic" "test" {
-  name = aws_amplify_branch.test.sns_topic_name
 }
 `, rName)
 }

@@ -53,7 +53,7 @@ resource "aws_amplify_branch" "master" {
 
 ### Notifications
 
-Amplify uses SNS for email notifications.  In order to enable notifications, you have to set `enable_notification` in a `aws_amplify_branch` resource, as well as creating a SNS topic and subscriptions.  Use `sns_topic_name` to get a SNS topic name.  You can select any subscription protocol, such as `lambda`.
+Amplify Console uses CloudWatch Events and SNS for email notifications.  To implement the same functionality, you need to set `enable_notification` in a `aws_amplify_branch` resource, as well as creating a CloudWatch Events Rule, a SNS topic, and SNS subscriptions.
 
 ```hcl
 resource "aws_amplify_app" "app" {
@@ -68,14 +68,85 @@ resource "aws_amplify_branch" "master" {
   enable_notification = true
 }
 
-resource "aws_sns_topic" "amplify_app_master" {
-  name = aws_amplify_branch.master.sns_topic_name
+// CloudWatch Events Rule for Amplify notifications
+
+resource "aws_cloudwatch_event_rule" "amplify_app_master" {
+  name        = "amplify-${aws_amplify_app.app.id}-${aws_amplify_branch.master.branch_name}-branch-notification"
+  description = "AWS Amplify build notifications for :  App: ${aws_amplify_app.app.id} Branch: ${aws_amplify_branch.master.branch_name}"
+
+  event_pattern = jsonencode({
+    "detail" = {
+      "appId" = [
+        aws_amplify_app.app.id
+      ]
+      "branchName" = [
+        aws_amplify_branch.master.branch_name
+      ],
+      "jobStatus" = [
+        "SUCCEED",
+        "FAILED",
+        "STARTED"
+      ]
+    }
+    "detail-type" = [
+      "Amplify Deployment Status Change"
+    ]
+    "source" = [
+      "aws.amplify"
+    ]
+  })
 }
 
-resource "aws_sns_topic_subscription" "amplify_app_master_lambda" {
-  topic_arn = aws_sns_topic.amplify_app_master.arn
-  protocol  = "lambda"
-  endpoint  = "arn:aws:lambda:..."
+resource "aws_cloudwatch_event_target" "amplify_app_master" {
+  rule      = aws_cloudwatch_event_rule.amplify_app_master.name
+  target_id = aws_amplify_branch.master.branch_name
+  arn       = aws_sns_topic.amplify_app_master.arn
+
+  input_transformer {
+    input_paths = {
+      jobId  = "$.detail.jobId"
+      appId  = "$.detail.appId"
+      region = "$.region"
+      branch = "$.detail.branchName"
+      status = "$.detail.jobStatus"
+    }
+
+    input_template = "\"Build notification from the AWS Amplify Console for app: https://<branch>.<appId>.amplifyapp.com/. Your build status is <status>. Go to https://console.aws.amazon.com/amplify/home?region=<region>#<appId>/<branch>/<jobId> to view details on your build. \""
+  }
+}
+
+// SNS Topic for Amplify notifications
+
+resource "aws_sns_topic" "amplify_app_master" {
+  name = "amplify-${aws_amplify_app.app.id}_${aws_amplify_branch.master.branch_name}"
+}
+
+data "aws_iam_policy_document" "amplify_app_master" {
+  statement {
+    sid = "Allow_Publish_Events ${aws_amplify_branch.master.arn}"
+
+    effect = "Allow"
+
+    actions = [
+      "SNS:Publish",
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = [
+        "events.amazonaws.com",
+      ]
+    }
+
+    resources = [
+      aws_sns_topic.amplify_app_master.arn,
+    ]
+  }
+}
+
+resource "aws_sns_topic_policy" "amplify_app_master" {
+  arn    = aws_sns_topic.amplify_app_master.arn
+  policy = data.aws_iam_policy_document.amplify_app_master.json
 }
 ```
 
@@ -114,7 +185,6 @@ The following attributes are exported:
 * `associated_resources` - List of custom resources that are linked to this branch.
 * `custom_domains` - Custom domains for a branch, part of an Amplify App.
 * `destination_branch` - The destination branch if the branch is a pull request branch.
-* `sns_topic_name` - SNS topic name for notifications.
 * `source_branch` - The source branch if the branch is a pull request branch.
 
 ## Import

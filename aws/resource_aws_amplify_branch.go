@@ -156,11 +156,6 @@ func resourceAwsAmplifyBranch() *schema.Resource {
 					return false
 				},
 			},
-			// non-API
-			"sns_topic_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -290,9 +285,6 @@ func resourceAwsAmplifyBranchRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("source_branch", resp.Branch.SourceBranch)
 	d.Set("stage", resp.Branch.Stage)
 	d.Set("ttl", resp.Branch.Ttl)
-
-	// Generate SNS topic name for notification
-	d.Set("sns_topic_name", fmt.Sprintf("amplify-%s_%s", app_id, branch_name))
 
 	if err := d.Set("tags", keyvaluetags.AmplifyKeyValueTags(resp.Branch.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
