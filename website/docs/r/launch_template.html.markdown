@@ -223,7 +223,7 @@ Attach an Elastic Inference Accelerator to the instance. Additional information 
 
 The `elastic_inference_accelerator` configuration block supports the following:
 
-* `type` - (Required) Accelerator type.
+* `type` - (Required) Accelerator type. can be `eia1.medium`, `eia1.large` or `eia1.xlarge`.
 
 ### Instance Profile
 
