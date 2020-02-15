@@ -385,9 +385,15 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	switch setTarget {
 	case "gateway_id":
 		replaceOpts = &ec2.ReplaceRouteInput{
-			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
-			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
-			GatewayId:            aws.String(d.Get("gateway_id").(string)),
+			RouteTableId: aws.String(d.Get("route_table_id").(string)),
+			GatewayId:    aws.String(d.Get("gateway_id").(string)),
+		}
+		if v, ok := d.GetOk("destination_cidr_block"); ok {
+			replaceOpts.DestinationCidrBlock = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
+			replaceOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
 		}
 	case "egress_only_gateway_id":
 		replaceOpts = &ec2.ReplaceRouteInput{
@@ -403,27 +409,51 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	case "instance_id":
 		replaceOpts = &ec2.ReplaceRouteInput{
-			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
-			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
-			InstanceId:           aws.String(d.Get("instance_id").(string)),
+			RouteTableId: aws.String(d.Get("route_table_id").(string)),
+			InstanceId:   aws.String(d.Get("instance_id").(string)),
+		}
+		if v, ok := d.GetOk("destination_cidr_block"); ok {
+			replaceOpts.DestinationCidrBlock = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
+			replaceOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
 		}
 	case "network_interface_id":
 		replaceOpts = &ec2.ReplaceRouteInput{
-			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
-			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
-			NetworkInterfaceId:   aws.String(d.Get("network_interface_id").(string)),
+			RouteTableId:       aws.String(d.Get("route_table_id").(string)),
+			NetworkInterfaceId: aws.String(d.Get("network_interface_id").(string)),
+		}
+		if v, ok := d.GetOk("destination_cidr_block"); ok {
+			replaceOpts.DestinationCidrBlock = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
+			replaceOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
 		}
 	case "transit_gateway_id":
 		replaceOpts = &ec2.ReplaceRouteInput{
-			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
-			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
-			TransitGatewayId:     aws.String(d.Get("transit_gateway_id").(string)),
+			RouteTableId:     aws.String(d.Get("route_table_id").(string)),
+			TransitGatewayId: aws.String(d.Get("transit_gateway_id").(string)),
+		}
+		if v, ok := d.GetOk("destination_cidr_block"); ok {
+			replaceOpts.DestinationCidrBlock = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
+			replaceOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
 		}
 	case "vpc_peering_connection_id":
 		replaceOpts = &ec2.ReplaceRouteInput{
 			RouteTableId:           aws.String(d.Get("route_table_id").(string)),
-			DestinationCidrBlock:   aws.String(d.Get("destination_cidr_block").(string)),
 			VpcPeeringConnectionId: aws.String(d.Get("vpc_peering_connection_id").(string)),
+		}
+		if v, ok := d.GetOk("destination_cidr_block"); ok {
+			replaceOpts.DestinationCidrBlock = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
+			replaceOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
 		}
 	default:
 		return fmt.Errorf("An invalid target type specified: %s", setTarget)
