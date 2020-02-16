@@ -116,9 +116,8 @@ func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
 		}
 
 		found := false
-		respString := *response.ConfigurationSet.Name
 
-		if respString == rs.Primary.ID {
+		if *response.ConfigurationSet.Name == rs.Primary.ID {
 			found = true
 		}
 

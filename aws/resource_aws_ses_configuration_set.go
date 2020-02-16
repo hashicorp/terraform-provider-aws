@@ -97,9 +97,7 @@ func findConfigurationSet(name string, meta interface{}) (bool, error) {
 		return false, err
 	}
 
-	respString := *response.ConfigurationSet.Name
-
-	if respString == name {
+	if *response.ConfigurationSet.Name == name {
 		configurationSetExists = true
 	}
 
