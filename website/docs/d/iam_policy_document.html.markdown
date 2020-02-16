@@ -85,7 +85,7 @@ The following arguments are supported:
   policy document will overwrite statements with the same `sid` in the source
   json.  Statements without an `sid` cannot be overwritten.
 * `source_json_list` (Optional) - A list of IAM policy documents to import as
-  a base for the current policy document. Statements accross all policy documents
+  a base for the current policy document. Statements across all policy documents
   defined in this list or in the `source_json` attribute must be unique. Statements
   with non-blank `sid`s in the current policy document will overwrite statements
   with the same `sid` from any of the source json documents.
