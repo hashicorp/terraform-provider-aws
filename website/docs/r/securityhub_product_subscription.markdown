@@ -1,4 +1,5 @@
 ---
+subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_product_subscription"
 description: |-

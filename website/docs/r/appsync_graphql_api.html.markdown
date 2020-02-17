@@ -1,4 +1,5 @@
 ---
+subcategory: "AppSync"
 layout: "aws"
 page_title: "AWS: aws_appsync_graphql_api"
 description: |-
@@ -45,6 +46,7 @@ resource "aws_appsync_graphql_api" "example" {
 ```
 
 ### With Schema
+
 ```hcl
 resource "aws_appsync_graphql_api" "example" {
   authentication_type = "AWS_IAM"

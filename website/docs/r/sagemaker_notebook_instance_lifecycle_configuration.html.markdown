@@ -1,4 +1,5 @@
 ---
+subcategory: "Sagemaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_notebook_instance_lifecycle_configuration"
 description: |-

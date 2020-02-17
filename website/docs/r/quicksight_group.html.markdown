@@ -1,4 +1,5 @@
 ---
+subcategory: "QuickSight"
 layout: "aws"
 page_title: "AWS: aws_quicksight_group"
 description: |-

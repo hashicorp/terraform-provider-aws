@@ -1,4 +1,5 @@
 ---
+subcategory: "Managed Streaming for Kafka (MSK)"
 layout: "aws"
 page_title: "AWS: aws_msk_cluster"
 description: |-
@@ -54,7 +55,7 @@ resource "aws_msk_cluster" "example" {
 
   broker_node_group_info {
     instance_type  = "kafka.m5.large"
-    ebs_volume_size = "1000"
+    ebs_volume_size = 1000
     client_subnets = [
       "${aws_subnet.subnet_az1.id}",
       "${aws_subnet.subnet_az2.id}",
