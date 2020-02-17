@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -53,10 +54,6 @@ func resourceAwsEc2TrafficMirrorinFilterCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error while creating traffic filter %s", err)
 	}
 
-	d.Partial(true)
-	d.SetPartial("description")
-	d.Partial(false)
-
 	d.SetId(*out.TrafficMirrorFilter.TrafficMirrorFilterId)
 
 	return resourceAwsEc2TrafficMirrorFilterUpdate(d, meta)
@@ -65,33 +62,27 @@ func resourceAwsEc2TrafficMirrorinFilterCreate(d *schema.ResourceData, meta inte
 func resourceAwsEc2TrafficMirrorFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	filterId := d.Id()
-
-	d.Partial(true)
 	if d.HasChange("network_services") {
 		input := &ec2.ModifyTrafficMirrorFilterNetworkServicesInput{
-			TrafficMirrorFilterId: aws.String(filterId),
+			TrafficMirrorFilterId: aws.String(d.Id()),
 		}
 
 		o, n := d.GetChange("network_services")
 		newServices := n.(*schema.Set).Difference(o.(*schema.Set)).List()
 		if len(newServices) > 0 {
-			input.SetAddNetworkServices(expandStringList(newServices))
+			input.AddNetworkServices = expandStringList(newServices)
 		}
 
 		removeServices := o.(*schema.Set).Difference(n.(*schema.Set)).List()
 		if len(removeServices) > 0 {
-			input.SetRemoveNetworkServices(expandStringList(removeServices))
+			input.RemoveNetworkServices = expandStringList(removeServices)
 		}
 
 		_, err := conn.ModifyTrafficMirrorFilterNetworkServices(input)
 		if err != nil {
-			return fmt.Errorf("Error modifying network services for traffic mirror filter %v", filterId)
+			return fmt.Errorf("Error modifying network services for traffic mirror filter %v", d.Id())
 		}
-
-		d.SetPartial("network_services")
 	}
-	d.Partial(false)
 
 	return resourceAwsEc2TrafficMirrorFilterRead(d, meta)
 }
@@ -99,31 +90,28 @@ func resourceAwsEc2TrafficMirrorFilterUpdate(d *schema.ResourceData, meta interf
 func resourceAwsEc2TrafficMirrorFilterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	filterId := d.Id()
-
-	var filterIds []*string
-	filterIds = append(filterIds, &filterId)
-
 	input := &ec2.DescribeTrafficMirrorFiltersInput{
-		TrafficMirrorFilterIds: filterIds,
+		TrafficMirrorFilterIds: aws.StringSlice([]string{d.Id()}),
 	}
 
 	out, err := conn.DescribeTrafficMirrorFilters(input)
 	if err != nil {
-		return fmt.Errorf("Error describing traffic mirror filter %v: %v", filterId, err)
+		return fmt.Errorf("Error describing traffic mirror filter %v: %v", d.Id(), err)
 	}
 
 	if len(out.TrafficMirrorFilters) == 0 {
-		return fmt.Errorf("Error finding traffic mirror filter %v", filterId)
+		log.Printf("[WARN] EC2 Traffic Mirror Filter (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	d.SetId(*out.TrafficMirrorFilters[0].TrafficMirrorFilterId)
 	d.Set("description", out.TrafficMirrorFilters[0].Description)
 
 	if len(out.TrafficMirrorFilters[0].NetworkServices) > 0 {
-		d.Set("network_services",
-			schema.NewSet(schema.HashString,
-				flattenStringList(out.TrafficMirrorFilters[0].NetworkServices)))
+		if err := d.Set("network_services", aws.StringValueSlice(out.TrafficMirrorFilters[0].NetworkServices)); err != nil {
+			return fmt.Errorf("error setting network_services for filter %v: %s", d.Id(), err)
+		}
 	}
 
 	return nil
@@ -132,19 +120,14 @@ func resourceAwsEc2TrafficMirrorFilterRead(d *schema.ResourceData, meta interfac
 func resourceAwsEc2TrafficMirrorFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	filterId := d.Id()
-
 	input := &ec2.DeleteTrafficMirrorFilterInput{
-		TrafficMirrorFilterId: &filterId,
+		TrafficMirrorFilterId: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeleteTrafficMirrorFilter(input)
 	if err != nil {
-		return fmt.Errorf("Error deleting traffic mirror filter %v: %v", filterId, err)
+		return fmt.Errorf("Error deleting traffic mirror filter %v: %v", d.Id(), err)
 	}
-
-	d.SetId("")
-	d.Set("description", "")
 
 	return nil
 }
