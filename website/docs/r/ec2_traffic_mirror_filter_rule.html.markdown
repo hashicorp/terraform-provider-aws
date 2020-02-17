@@ -69,6 +69,7 @@ The following arguments are supported:
 * `traffic_direction` - (Required) The direction of traffic to be captured. Valid values are `ingress` and `egress`
 
 Traffic mirror port range support following attributes:
+
 * `from_port` - (Optional) Starting port of the range
 * `to_port` - (Optional) Ending port of the range
 
