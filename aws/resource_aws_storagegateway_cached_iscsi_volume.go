@@ -90,10 +90,12 @@ func resourceAwsStorageGatewayCachedIscsiVolume() *schema.Resource {
 			"kms_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 			"kms_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 		},
