@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
 	"strings"
 	"time"
@@ -101,6 +102,10 @@ func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error
 		params.Description = aws.String(d.Get("description").(string))
 	}
 
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		params.Tags = keyvaluetags.New(v).IgnoreAws().Wafv2Tags()
+	}
+
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateIPSet(params)
@@ -161,11 +166,21 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting addresses: %s", err)
 	}
 
+	tags, err := keyvaluetags.Wafv2ListTags(conn, *resp.IPSet.ARN)
+	if err != nil {
+		return fmt.Errorf("error listing tags for WAFV2 IpSet (%s): %s", *resp.IPSet.ARN, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
 func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
+	//tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Wafv2Tags()
 	var resp *wafv2.GetIPSetOutput
 	params := &wafv2.GetIPSetInput{
 		Id:    aws.String(d.Id()),
@@ -223,6 +238,13 @@ func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if err != nil {
 		return fmt.Errorf("Error updating WAFV2 IPSet: %s", err)
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Wafv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsWafv2IPSetRead(d, meta)
