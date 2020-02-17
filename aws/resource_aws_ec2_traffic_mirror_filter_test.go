@@ -11,23 +11,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSTrafficMirrorFilter_basic(t *testing.T) {
-	resourceName := "aws_traffic_mirror_filter.filter"
+func TestAccAWSEc2TrafficMirrorFilter_basic(t *testing.T) {
+	resourceName := "aws_ec2_traffic_mirror_filter.filter"
 	description := "test filter"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPreCheckAWSTrafficMirrorFilter(t)
+			testAccPreCheckAWSEc2TrafficMirrorFilter(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsTrafficMirrorFilterDestroy,
+		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
 				Config: testAccTrafficMirrorFilterConfig(description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorFilterExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "network_services.#", "1"),
 				),
@@ -36,7 +36,7 @@ func TestAccAWSTrafficMirrorFilter_basic(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorFilterConfigWithoutDNS(description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorFilterExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "network_services"),
 				),
 			},
@@ -44,7 +44,7 @@ func TestAccAWSTrafficMirrorFilter_basic(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorFilterConfig(description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorFilterExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "network_services.#", "1"),
 				),
@@ -58,7 +58,7 @@ func TestAccAWSTrafficMirrorFilter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsTrafficMirrorFilterExists(name string) resource.TestCheckFunc {
+func testAccCheckAWSEc2TrafficMirrorFilterExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -89,7 +89,7 @@ func testAccCheckAwsTrafficMirrorFilterExists(name string) resource.TestCheckFun
 
 func testAccTrafficMirrorFilterConfig(description string) string {
 	return fmt.Sprintf(`
-resource "aws_traffic_mirror_filter" "filter" {
+resource "aws_ec2_traffic_mirror_filter" "filter" {
   description = "%s"
 
   network_services = ["amazon-dns"]
@@ -99,13 +99,13 @@ resource "aws_traffic_mirror_filter" "filter" {
 
 func testAccTrafficMirrorFilterConfigWithoutDNS(description string) string {
 	return fmt.Sprintf(`
-resource "aws_traffic_mirror_filter" "filter" {
+resource "aws_ec2_traffic_mirror_filter" "filter" {
   description = "%s"
 }
 `, description)
 }
 
-func testAccPreCheckAWSTrafficMirrorFilter(t *testing.T) {
+func testAccPreCheckAWSEc2TrafficMirrorFilter(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	_, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{})
@@ -119,11 +119,11 @@ func testAccPreCheckAWSTrafficMirrorFilter(t *testing.T) {
 	}
 }
 
-func testAccCheckAwsTrafficMirrorFilterDestroy(s *terraform.State) error {
+func testAccCheckAWSEc2TrafficMirrorFilterDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_traffic_mirror_filter" {
+		if rs.Type != "aws_ec2_traffic_mirror_filter" {
 			continue
 		}
 

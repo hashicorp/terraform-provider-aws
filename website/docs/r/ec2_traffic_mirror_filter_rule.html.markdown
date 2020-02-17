@@ -1,13 +1,13 @@
 ---
 subcategory: "Traffic Mirroring"
 layout: "aws"
-page_title: "AWS: aws_traffic_mirror_filter_rule"
+page_title: "AWS: aws_ec2_traffic_mirror_filter_rule"
 sidebar_current: "docs-aws-resource-traffic-mirror-filter-rule"
 description: |-
   Provides an Traffic mirror filter rule
 ---
 
-# Resource: aws_traffic_mirror_filter_rule
+# Resource: aws_ec2_traffic_mirror_filter_rule
 
 Provides an Traffic mirror filter rule.  
 Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirroring/traffic-mirroring-considerations.html) for traffic mirroring
@@ -17,14 +17,14 @@ Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirrorin
 To create a basic traffic mirror session
 
 ```hcl
-resource "aws_traffic_mirror_filter" "filter" {
+resource "aws_ec2_traffic_mirror_filter" "filter" {
   description                                 = "traffic mirror filter - terraform example"
   network_services                            = ["amazon-dns"]
 }
 
-resource "aws_traffic_mirror_filter_rule" "ruleout" {
+resource "aws_ec2_traffic_mirror_filter_rule" "ruleout" {
   description = "test rule"
-  traffic_mirror_filter_id = "${aws_traffic_mirror_filter.filter.id}"
+  traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.filter.id}"
   destination_cidr_block = "10.0.0.0/8"
   source_cidr_block = "10.0.0.0/8"
   rule_number = 1
@@ -32,9 +32,9 @@ resource "aws_traffic_mirror_filter_rule" "ruleout" {
   traffic_direction = "egress"
 }
 
-resource "aws_traffic_mirror_filter_rule" "rulein" {
+resource "aws_ec2_traffic_mirror_filter_rule" "rulein" {
   description = "test rule"
-  traffic_mirror_filter_id = "${aws_traffic_mirror_filter.filter.id}"
+  traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.filter.id}"
   destination_cidr_block = "10.0.0.0/8"
   source_cidr_block = "10.0.0.0/8"
   rule_number = 1
@@ -84,5 +84,5 @@ In addition to all arguments above, the following attributes are exported:
 Traffic mirror rules can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_traffic_mirror_filter_rule.rule tmfr-05a458f06445d0aee
+$ terraform import aws_ec2_traffic_mirror_filter_rule.rule tmfr-05a458f06445d0aee
 ```

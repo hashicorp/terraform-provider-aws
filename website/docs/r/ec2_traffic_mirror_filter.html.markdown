@@ -1,13 +1,13 @@
 ---
 subcategory: "Traffic Mirroring"
 layout: "aws"
-page_title: "AWS: aws_traffic_mirror_filter"
+page_title: "AWS: aws_ec2_traffic_mirror_filter"
 sidebar_current: "docs-aws-resource-traffic-mirror-filter"
 description: |-
   Provides an Traffic mirror filter
 ---
 
-# Resource: aws_traffic_mirror_filter
+# Resource: aws_ec2_traffic_mirror_filter
 
 Provides an Traffic mirror filter.  
 Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirroring/traffic-mirroring-considerations.html) for traffic mirroring
@@ -17,7 +17,7 @@ Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirrorin
 To create a basic traffic mirror filter
 
 ```hcl
-resource "aws_traffic_mirror_filter" "foo" {
+resource "aws_ec2_traffic_mirror_filter" "foo" {
   description                                 = "traffic mirror filter - terraform example"
   network_services                            = ["amazon-dns"]
 }
@@ -41,5 +41,5 @@ In addition to all arguments above, the following attributes are exported:
 Traffic mirror filter can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_traffic_mirror_filter.foo tmf-0fbb93ddf38198f64
+$ terraform import aws_ec2_traffic_mirror_filter.foo tmf-0fbb93ddf38198f64
 ```

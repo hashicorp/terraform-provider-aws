@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func resourceAwsTrafficMirrorFilter() *schema.Resource {
+func resourceAwsEc2TrafficMirrorFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsTrafficMirrorinFilterCreate,
-		Read:   resourceAwsTrafficMirrorFilterRead,
-		Update: resourceAwsTrafficMirrorFilterUpdate,
-		Delete: resourceAwsTrafficMirrorFilterDelete,
+		Create: resourceAwsEc2TrafficMirrorinFilterCreate,
+		Read:   resourceAwsEc2TrafficMirrorFilterRead,
+		Update: resourceAwsEc2TrafficMirrorFilterUpdate,
+		Delete: resourceAwsEc2TrafficMirrorFilterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -38,7 +39,7 @@ func resourceAwsTrafficMirrorFilter() *schema.Resource {
 	}
 }
 
-func resourceAwsTrafficMirrorinFilterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorinFilterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	input := &ec2.CreateTrafficMirrorFilterInput{}
@@ -58,10 +59,10 @@ func resourceAwsTrafficMirrorinFilterCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(*out.TrafficMirrorFilter.TrafficMirrorFilterId)
 
-	return resourceAwsTrafficMirrorFilterUpdate(d, meta)
+	return resourceAwsEc2TrafficMirrorFilterUpdate(d, meta)
 }
 
-func resourceAwsTrafficMirrorFilterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	filterId := d.Id()
@@ -92,10 +93,10 @@ func resourceAwsTrafficMirrorFilterUpdate(d *schema.ResourceData, meta interface
 	}
 	d.Partial(false)
 
-	return resourceAwsTrafficMirrorFilterRead(d, meta)
+	return resourceAwsEc2TrafficMirrorFilterRead(d, meta)
 }
 
-func resourceAwsTrafficMirrorFilterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorFilterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	filterId := d.Id()
@@ -128,7 +129,7 @@ func resourceAwsTrafficMirrorFilterRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsTrafficMirrorFilterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	filterId := d.Id()

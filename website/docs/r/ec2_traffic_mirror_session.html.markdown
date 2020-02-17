@@ -1,13 +1,13 @@
 ---
 subcategory: "Traffic Mirroring"
 layout: "aws"
-page_title: "AWS: aws_traffic_mirror_session"
+page_title: "AWS: aws_ec2_traffic_mirror_session"
 sidebar_current: "docs-aws-resource-traffic-mirror-session"
 description: |-
   Provides an Traffic mirror session
 ---
 
-# Resource: aws_traffic_mirror_session
+# Resource: aws_ec2_traffic_mirror_session
 
 Provides an Traffic mirror session.  
 Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirroring/traffic-mirroring-considerations.html) for traffic mirroring
@@ -17,20 +17,20 @@ Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirrorin
 To create a basic traffic mirror session
 
 ```hcl
-resource "aws_traffic_mirror_filter" "filter" {
+resource "aws_ec2_traffic_mirror_filter" "filter" {
   description                                 = "traffic mirror filter - terraform example"
   network_services                            = ["amazon-dns"]
 }
 
-resource "aws_traffic_mirror_target" "target" {
+resource "aws_ec2_traffic_mirror_target" "target" {
   network_load_balancer_arn = "${aws_lb.lb.arn}"
 }
 
-resource "aws_traffic_mirror_session" "session" {
+resource "aws_ec2_traffic_mirror_session" "session" {
   description                   = "traffic mirror session - terraform example"
   network_interface_id          = "${aws_instance.test.primary_network_interface_id}"
-  traffic_mirror_filter_id      = "${aws_traffic_mirror_filter.filter.id}"
-  traffic_mirror_target_id      = "${aws_traffic_mirror_target.target.id}"
+  traffic_mirror_filter_id      = "${aws_ec2_traffic_mirror_filter.filter.id}"
+  traffic_mirror_target_id      = "${aws_ec2_traffic_mirror_target.target.id}"
 }
 ```
 
@@ -57,5 +57,5 @@ In addition to all arguments above, the following attributes are exported:
 Traffic mirror sessions can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_traffic_mirror_session.session tms-0d8aa3ca35897b82e
+$ terraform import aws_ec2_traffic_mirror_session.session tms-0d8aa3ca35897b82e
 ```

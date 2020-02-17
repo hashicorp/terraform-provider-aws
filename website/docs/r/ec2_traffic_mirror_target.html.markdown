@@ -1,13 +1,13 @@
 ---
 subcategory: "Traffic Mirroring"
 layout: "aws"
-page_title: "AWS: aws_traffic_mirror_target"
+page_title: "AWS: aws_ec2_traffic_mirror_target"
 sidebar_current: "docs-aws-resource-traffic-mirror-target"
 description: |-
   Provides an Traffic mirror target
 ---
 
-# Resource: aws_traffic_mirror_target
+# Resource: aws_ec2_traffic_mirror_target
 
 Provides an Traffic mirror target.  
 Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirroring/traffic-mirroring-considerations.html) for traffic mirroring
@@ -17,12 +17,12 @@ Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirrorin
 To create a basic traffic mirror session
 
 ```hcl
-resource "aws_traffic_mirror_target" "nlb" {
+resource "aws_ec2_traffic_mirror_target" "nlb" {
   description = "NLB target"
   network_load_balancer_arn = "${aws_lb.lb.arn}"
 }
 
-resource "aws_traffic_mirror_target" "eni" {
+resource "aws_ec2_traffic_mirror_target" "eni" {
   description = "ENI target"
   network_interface_id = "${aws_instance.test.primary_network_interface_id}"
 }
@@ -50,5 +50,5 @@ In addition to all arguments above, the following attributes are exported:
 Traffic mirror targets can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_traffic_mirror_target.target tmt-0c13a005422b86606
+$ terraform import aws_ec2_traffic_mirror_target.target tmt-0c13a005422b86606
 ```

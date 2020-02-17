@@ -8,11 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func resourceAwsTrafficMirrorTarget() *schema.Resource {
+func resourceAwsEc2TrafficMirrorTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsTrafficMirrorTargetCreate,
-		Read:   resourceAwsTrafficMirrorTargetRead,
-		Delete: resourceAwsTrafficMirrorTargetDelete,
+		Create: resourceAwsEc2TrafficMirrorTargetCreate,
+		Read:   resourceAwsEc2TrafficMirrorTargetRead,
+		Delete: resourceAwsEc2TrafficMirrorTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -42,7 +42,7 @@ func resourceAwsTrafficMirrorTarget() *schema.Resource {
 	}
 }
 
-func resourceAwsTrafficMirrorTargetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	input := &ec2.CreateTrafficMirrorTargetInput{}
@@ -65,10 +65,10 @@ func resourceAwsTrafficMirrorTargetCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(*out.TrafficMirrorTarget.TrafficMirrorTargetId)
 
-	return resourceAwsTrafficMirrorTargetRead(d, meta)
+	return resourceAwsEc2TrafficMirrorTargetRead(d, meta)
 }
 
-func resourceAwsTrafficMirrorTargetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	targetId := d.Id()
@@ -102,7 +102,7 @@ func resourceAwsTrafficMirrorTargetRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsTrafficMirrorTargetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	targetId := d.Id()

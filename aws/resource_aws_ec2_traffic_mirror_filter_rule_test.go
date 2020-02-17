@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSTrafficMirrorFilterRule_basic(t *testing.T) {
-	resourceName := "aws_traffic_mirror_filter_rule.rule"
+func TestAccAWSEc2TrafficMirrorFilterRule_basic(t *testing.T) {
+	resourceName := "aws_ec2_traffic_mirror_filter_rule.rule"
 	dstCidr := "10.0.0.0/8"
 	srcCidr := "0.0.0.0/0"
 	ruleNum := 1
@@ -30,16 +30,16 @@ func TestAccAWSTrafficMirrorFilterRule_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPreCheckAWSTrafficMirrorFilterRule(t)
+			testAccPreCheckAWSEc2TrafficMirrorFilterRule(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsTrafficMirrorFilterRuleDestroy,
+		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterRuleDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
-				Config: testAccTrafficMirrorFilterRuleConfig(dstCidr, srcCidr, action, direction, ruleNum),
+				Config: testAccEc2TrafficMirrorFilterRuleConfig(dstCidr, srcCidr, action, direction, ruleNum),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorFilterRuleExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorFilterRuleExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
@@ -54,9 +54,9 @@ func TestAccAWSTrafficMirrorFilterRule_basic(t *testing.T) {
 			},
 			// Add all optionals
 			{
-				Config: testAccTrafficMirrorFilterRuleConfigFull(dstCidr, srcCidr, action, direction, description, ruleNum, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo, protocol),
+				Config: testAccEc2TrafficMirrorFilterRuleConfigFull(dstCidr, srcCidr, action, direction, description, ruleNum, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo, protocol),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorFilterRuleExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorFilterRuleExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
@@ -75,9 +75,9 @@ func TestAccAWSTrafficMirrorFilterRule_basic(t *testing.T) {
 			},
 			// remove optionals
 			{
-				Config: testAccTrafficMirrorFilterRuleConfig(dstCidr, srcCidr, action, direction, ruleNum),
+				Config: testAccEc2TrafficMirrorFilterRuleConfig(dstCidr, srcCidr, action, direction, ruleNum),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorFilterRuleExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorFilterRuleExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
@@ -99,7 +99,7 @@ func TestAccAWSTrafficMirrorFilterRule_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsTrafficMirrorFilterRuleExists(name string) resource.TestCheckFunc {
+func testAccCheckAWSEc2TrafficMirrorFilterRuleExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -148,13 +148,13 @@ func testAccCheckAwsTrafficMirrorFilterRuleExists(name string) resource.TestChec
 	}
 }
 
-func testAccTrafficMirrorFilterRuleConfig(dstCidr, srcCidr, action, dir string, num int) string {
+func testAccEc2TrafficMirrorFilterRuleConfig(dstCidr, srcCidr, action, dir string, num int) string {
 	return fmt.Sprintf(`
-resource "aws_traffic_mirror_filter" "filter" {
+resource "aws_ec2_traffic_mirror_filter" "filter" {
 }
 
-resource "aws_traffic_mirror_filter_rule" "rule" {
-	traffic_mirror_filter_id = "${aws_traffic_mirror_filter.filter.id}"
+resource "aws_ec2_traffic_mirror_filter_rule" "rule" {
+	traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.filter.id}"
 	destination_cidr_block = "%s"
 	rule_action = "%s"
 	rule_number = %d
@@ -164,13 +164,13 @@ resource "aws_traffic_mirror_filter_rule" "rule" {
 `, dstCidr, action, num, srcCidr, dir)
 }
 
-func testAccTrafficMirrorFilterRuleConfigFull(dstCidr, srcCidr, action, dir, description string, ruleNum, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo, protocol int) string {
+func testAccEc2TrafficMirrorFilterRuleConfigFull(dstCidr, srcCidr, action, dir, description string, ruleNum, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo, protocol int) string {
 	return fmt.Sprintf(`
-resource "aws_traffic_mirror_filter" "filter" {
+resource "aws_ec2_traffic_mirror_filter" "filter" {
 }
 
-resource "aws_traffic_mirror_filter_rule" "rule" {
-	traffic_mirror_filter_id = "${aws_traffic_mirror_filter.filter.id}"
+resource "aws_ec2_traffic_mirror_filter_rule" "rule" {
+	traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.filter.id}"
 	destination_cidr_block = "%s"
 	rule_action = "%s"
 	rule_number = %d
@@ -190,7 +190,7 @@ resource "aws_traffic_mirror_filter_rule" "rule" {
 `, dstCidr, action, ruleNum, srcCidr, dir, description, protocol, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo)
 }
 
-func testAccPreCheckAWSTrafficMirrorFilterRule(t *testing.T) {
+func testAccPreCheckAWSEc2TrafficMirrorFilterRule(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	_, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{})
@@ -204,11 +204,11 @@ func testAccPreCheckAWSTrafficMirrorFilterRule(t *testing.T) {
 	}
 }
 
-func testAccCheckAwsTrafficMirrorFilterRuleDestroy(s *terraform.State) error {
+func testAccCheckAWSEc2TrafficMirrorFilterRuleDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_traffic_mirror_filter_rule" {
+		if rs.Type != "aws_ec2_traffic_mirror_filter_rule" {
 			continue
 		}
 

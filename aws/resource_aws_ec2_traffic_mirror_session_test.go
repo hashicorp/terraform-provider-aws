@@ -2,9 +2,10 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"strconv"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -13,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSTrafficMirrorSession_basic(t *testing.T) {
-	resourceName := "aws_traffic_mirror_session.session"
+func TestAccAWSEc2TrafficMirrorSession_basic(t *testing.T) {
+	resourceName := "aws_ec2_traffic_mirror_session.session"
 	description := "test session"
 	session := acctest.RandIntRange(1, 32766)
 	lbName := acctest.RandString(31)
@@ -24,16 +25,16 @@ func TestAccAWSTrafficMirrorSession_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPreCheckAWSTrafficMirrorSession(t)
+			testAccPreCheckAWSEc2TrafficMirrorSession(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsTrafficMirrorSessionDestroy,
+		CheckDestroy: testAccCheckAWSEc2TrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
 				Config: testAccTrafficMirrorSessionConfig(lbName, session),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorSessionExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "packet_length", "0"),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
@@ -44,7 +45,7 @@ func TestAccAWSTrafficMirrorSession_basic(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorSessionConfigWithOptionals(description, lbName, session, pLen, vni),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorSessionExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "packet_length", strconv.Itoa(pLen)),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
@@ -55,7 +56,7 @@ func TestAccAWSTrafficMirrorSession_basic(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorSessionConfig(lbName, session),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorSessionExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "packet_length", "0"),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
@@ -73,7 +74,7 @@ func TestAccAWSTrafficMirrorSession_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsTrafficMirrorSessionExists(name string) resource.TestCheckFunc {
+func testAccCheckAWSEc2TrafficMirrorSessionExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -159,10 +160,10 @@ resource "aws_lb" "lb" {
   }
 }
 
-resource "aws_traffic_mirror_filter" "filter" {
+resource "aws_ec2_traffic_mirror_filter" "filter" {
 }
 
-resource "aws_traffic_mirror_target" "target" {
+resource "aws_ec2_traffic_mirror_target" "target" {
   network_load_balancer_arn = "${aws_lb.lb.arn}"
 }
 
@@ -173,9 +174,9 @@ func testAccTrafficMirrorSessionConfig(lbName string, session int) string {
 	return fmt.Sprintf(`
 %s
 
-resource "aws_traffic_mirror_session" "session" {
-  traffic_mirror_filter_id = "${aws_traffic_mirror_filter.filter.id}"
-  traffic_mirror_target_id = "${aws_traffic_mirror_target.target.id}"
+resource "aws_ec2_traffic_mirror_session" "session" {
+  traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.filter.id}"
+  traffic_mirror_target_id = "${aws_ec2_traffic_mirror_target.target.id}"
   network_interface_id = "${aws_instance.src.primary_network_interface_id}"
   session_number = %d
 }
@@ -186,10 +187,10 @@ func testAccTrafficMirrorSessionConfigWithOptionals(description string, lbName s
 	return fmt.Sprintf(`
 %s
 
-resource "aws_traffic_mirror_session" "session" {
+resource "aws_ec2_traffic_mirror_session" "session" {
   description = "%s"
-  traffic_mirror_filter_id = "${aws_traffic_mirror_filter.filter.id}"
-  traffic_mirror_target_id = "${aws_traffic_mirror_target.target.id}"
+  traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.filter.id}"
+  traffic_mirror_target_id = "${aws_ec2_traffic_mirror_target.target.id}"
   network_interface_id = "${aws_instance.src.primary_network_interface_id}"
   session_number = %d
   packet_length = %d
@@ -198,7 +199,7 @@ resource "aws_traffic_mirror_session" "session" {
 `, testAccTrafficMirrorSessionConfigBase(lbName), description, session, pLen, vni)
 }
 
-func testAccPreCheckAWSTrafficMirrorSession(t *testing.T) {
+func testAccPreCheckAWSEc2TrafficMirrorSession(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	_, err := conn.DescribeTrafficMirrorSessions(&ec2.DescribeTrafficMirrorSessionsInput{})
@@ -212,11 +213,11 @@ func testAccPreCheckAWSTrafficMirrorSession(t *testing.T) {
 	}
 }
 
-func testAccCheckAwsTrafficMirrorSessionDestroy(s *terraform.State) error {
+func testAccCheckAWSEc2TrafficMirrorSessionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_traffic_mirror_session" {
+		if rs.Type != "aws_ec2_traffic_mirror_session" {
 			continue
 		}
 

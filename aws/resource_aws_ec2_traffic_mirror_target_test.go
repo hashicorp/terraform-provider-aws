@@ -2,9 +2,10 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"regexp"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -13,24 +14,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSTrafficMirrorTarget_nlb(t *testing.T) {
-	resourceName := "aws_traffic_mirror_target.target"
+func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
+	resourceName := "aws_ec2_traffic_mirror_target.target"
 	description := "test nlb target"
 	lbName := acctest.RandString(32)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPreCheckAWSTrafficMirrorTarget(t)
+			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsTrafficMirrorTargetDestroy,
+		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
 				Config: testAccTrafficMirrorTargetConfigNlb(description, lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorTargetExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestMatchResourceAttr(resourceName, "network_load_balancer_arn", regexp.MustCompile("arn:aws:elasticloadbalancing:.*")),
 				),
@@ -44,23 +45,23 @@ func TestAccAWSTrafficMirrorTarget_nlb(t *testing.T) {
 	})
 }
 
-func TestAccAWSTrafficMirrorTarget_eni(t *testing.T) {
-	resourceName := "aws_traffic_mirror_target.target"
+func TestAccAWSEc2TrafficMirrorTarget_eni(t *testing.T) {
+	resourceName := "aws_ec2_traffic_mirror_target.target"
 	description := "test eni target"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPreCheckAWSTrafficMirrorTarget(t)
+			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsTrafficMirrorTargetDestroy,
+		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
 				Config: testAccTrafficMirrorTargetConfigEni(description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsTrafficMirrorTargetExists(resourceName),
+					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexp.MustCompile("eni-.*")),
 				),
@@ -74,7 +75,7 @@ func TestAccAWSTrafficMirrorTarget_eni(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsTrafficMirrorTargetExists(name string) resource.TestCheckFunc {
+func testAccCheckAWSEc2TrafficMirrorTargetExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -138,7 +139,7 @@ resource "aws_lb" "lb" {
   }
 }
 
-resource "aws_traffic_mirror_target" "target" {
+resource "aws_ec2_traffic_mirror_target" "target" {
   description = "%s"
   network_load_balancer_arn = "${aws_lb.lb.arn}"
 }
@@ -189,14 +190,14 @@ resource "aws_instance" "src" {
   subnet_id = "${aws_subnet.sub1.id}"
 }
 
-resource "aws_traffic_mirror_target" "target" {
+resource "aws_ec2_traffic_mirror_target" "target" {
   description = "%s"
   network_interface_id = "${aws_instance.src.primary_network_interface_id}"
 }
 `, description)
 }
 
-func testAccPreCheckAWSTrafficMirrorTarget(t *testing.T) {
+func testAccPreCheckAWSEc2TrafficMirrorTarget(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	_, err := conn.DescribeTrafficMirrorTargets(&ec2.DescribeTrafficMirrorTargetsInput{})
@@ -210,11 +211,11 @@ func testAccPreCheckAWSTrafficMirrorTarget(t *testing.T) {
 	}
 }
 
-func testAccCheckAwsTrafficMirrorTargetDestroy(s *terraform.State) error {
+func testAccCheckAWSEc2TrafficMirrorTargetDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_traffic_mirror_target" {
+		if rs.Type != "aws_ec2_traffic_mirror_target" {
 			continue
 		}
 

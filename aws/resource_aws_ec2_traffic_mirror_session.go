@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-func resourceAwsTrafficMirrorSession() *schema.Resource {
+func resourceAwsEc2TrafficMirrorSession() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsTrafficMirrorSessionCreate,
-		Update: resourceAwsTrafficMirrorSessionUpdate,
-		Read:   resourceAwsTrafficMirrorSessionRead,
-		Delete: resourceAwsTrafficMirrorSessionDelete,
+		Create: resourceAwsEc2TrafficMirrorSessionCreate,
+		Update: resourceAwsEc2TrafficMirrorSessionUpdate,
+		Read:   resourceAwsEc2TrafficMirrorSessionRead,
+		Delete: resourceAwsEc2TrafficMirrorSessionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -55,7 +55,7 @@ func resourceAwsTrafficMirrorSession() *schema.Resource {
 	}
 }
 
-func resourceAwsTrafficMirrorSessionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorSessionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	input := &ec2.CreateTrafficMirrorSessionInput{
@@ -86,10 +86,10 @@ func resourceAwsTrafficMirrorSessionCreate(d *schema.ResourceData, meta interfac
 	}
 
 	d.SetId(*out.TrafficMirrorSession.TrafficMirrorSessionId)
-	return resourceAwsTrafficMirrorSessionRead(d, meta)
+	return resourceAwsEc2TrafficMirrorSessionRead(d, meta)
 }
 
-func resourceAwsTrafficMirrorSessionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorSessionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	sessionId := d.Id()
@@ -152,10 +152,10 @@ func resourceAwsTrafficMirrorSessionUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error updating traffic mirror session %v", err)
 	}
 
-	return resourceAwsTrafficMirrorSessionRead(d, meta)
+	return resourceAwsEc2TrafficMirrorSessionRead(d, meta)
 }
 
-func resourceAwsTrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	sessionId := d.Id()
@@ -194,7 +194,7 @@ func resourceAwsTrafficMirrorSessionRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsTrafficMirrorSessionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2TrafficMirrorSessionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	sessionId := d.Id()
