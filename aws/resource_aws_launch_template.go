@@ -140,6 +140,24 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				},
 			},
 
+			"cpu_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"core_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"threads_per_core": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
+
 			"capacity_reservation_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -357,8 +375,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"associate_public_ip_address": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+							ValidateFunc:     validateTypeStringNullableBoolean,
 						},
 						"delete_on_termination": {
 							Type:     schema.TypeBool,
@@ -647,6 +667,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting capacity_reservation_specification: %s", err)
 	}
 
+	if err := d.Set("cpu_options", getCpuOptions(ltData.CpuOptions)); err != nil {
+		return err
+	}
+
 	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
 		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
 			return fmt.Errorf("error setting credit_specification: %s", err)
@@ -808,6 +832,17 @@ func getCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse) []
 	return s
 }
 
+func getCpuOptions(cs *ec2.LaunchTemplateCpuOptions) []interface{} {
+	s := []interface{}{}
+	if cs != nil {
+		s = append(s, map[string]interface{}{
+			"core_count":       aws.Int64Value(cs.CoreCount),
+			"threads_per_core": aws.Int64Value(cs.ThreadsPerCore),
+		})
+	}
+	return s
+}
+
 func getCreditSpecification(cs *ec2.CreditSpecification) []interface{} {
 	s := []interface{}{}
 	if cs != nil {
@@ -921,15 +956,17 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		var ipv4Addresses []string
 
 		networkInterface := map[string]interface{}{
-			"associate_public_ip_address": aws.BoolValue(v.AssociatePublicIpAddress),
-			"delete_on_termination":       aws.BoolValue(v.DeleteOnTermination),
-			"description":                 aws.StringValue(v.Description),
-			"device_index":                aws.Int64Value(v.DeviceIndex),
-			"ipv4_address_count":          aws.Int64Value(v.SecondaryPrivateIpAddressCount),
-			"ipv6_address_count":          aws.Int64Value(v.Ipv6AddressCount),
-			"network_interface_id":        aws.StringValue(v.NetworkInterfaceId),
-			"private_ip_address":          aws.StringValue(v.PrivateIpAddress),
-			"subnet_id":                   aws.StringValue(v.SubnetId),
+			"delete_on_termination": aws.BoolValue(v.DeleteOnTermination),
+			"description":           aws.StringValue(v.Description),
+			"device_index":          aws.Int64Value(v.DeviceIndex),
+			"ipv4_address_count":    aws.Int64Value(v.SecondaryPrivateIpAddressCount),
+			"ipv6_address_count":    aws.Int64Value(v.Ipv6AddressCount),
+			"network_interface_id":  aws.StringValue(v.NetworkInterfaceId),
+			"private_ip_address":    aws.StringValue(v.PrivateIpAddress),
+			"subnet_id":             aws.StringValue(v.SubnetId),
+		}
+		if v.AssociatePublicIpAddress != nil {
+			networkInterface["associate_public_ip_address"] = strconv.FormatBool(aws.BoolValue(v.AssociatePublicIpAddress))
 		}
 
 		if len(v.Ipv6Addresses) > 0 {
@@ -1074,6 +1111,14 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 		}
 	}
 
+	if v, ok := d.GetOk("cpu_options"); ok {
+		co := v.([]interface{})
+
+		if len(co) > 0 {
+			opts.CpuOptions = readCpuOptionsFromConfig(co[0].(map[string]interface{}))
+		}
+	}
+
 	if v, ok := d.GetOk("credit_specification"); ok && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3")) {
 		cs := v.([]interface{})
 
@@ -1149,7 +1194,10 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 				continue
 			}
 			niData := ni.(map[string]interface{})
-			networkInterface := readNetworkInterfacesFromConfig(niData)
+			networkInterface, err := readNetworkInterfacesFromConfig(niData)
+			if err != nil {
+				return nil, err
+			}
 			networkInterfaces = append(networkInterfaces, networkInterface)
 		}
 		opts.NetworkInterfaces = networkInterfaces
@@ -1256,7 +1304,7 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) (*ec2.LaunchTempla
 	return ebsDevice, nil
 }
 
-func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
+func readNetworkInterfacesFromConfig(ni map[string]interface{}) (*ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest, error) {
 	var ipv4Addresses []*ec2.PrivateIpAddressSpecification
 	var ipv6Addresses []*ec2.InstanceIpv6AddressRequest
 	var privateIpAddress string
@@ -1276,8 +1324,14 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
 		networkInterface.NetworkInterfaceId = aws.String(v)
-	} else if v, ok := ni["associate_public_ip_address"]; ok {
-		networkInterface.AssociatePublicIpAddress = aws.Bool(v.(bool))
+	}
+
+	if v, ok := ni["associate_public_ip_address"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting associate_public_ip_address %q from string to boolean: %s", v.(string), err)
+		}
+		networkInterface.AssociatePublicIpAddress = aws.Bool(vBool)
 	}
 
 	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
@@ -1320,7 +1374,7 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.PrivateIpAddresses = ipv4Addresses
 	}
 
-	return networkInterface
+	return networkInterface, nil
 }
 
 func readIamInstanceProfileFromConfig(iip map[string]interface{}) *ec2.LaunchTemplateIamInstanceProfileSpecificationRequest {
@@ -1363,6 +1417,20 @@ func readCapacityReservationTargetFromConfig(crt map[string]interface{}) *ec2.Ca
 	}
 
 	return capacityReservationTarget
+}
+
+func readCpuOptionsFromConfig(co map[string]interface{}) *ec2.LaunchTemplateCpuOptionsRequest {
+	cpuOptions := &ec2.LaunchTemplateCpuOptionsRequest{}
+
+	if v, ok := co["core_count"].(int); ok && v != 0 {
+		cpuOptions.CoreCount = aws.Int64(int64(v))
+	}
+
+	if v, ok := co["threads_per_core"].(int); ok && v != 0 {
+		cpuOptions.ThreadsPerCore = aws.Int64(int64(v))
+	}
+
+	return cpuOptions
 }
 
 func readCreditSpecificationFromConfig(cs map[string]interface{}) *ec2.CreditSpecificationRequest {

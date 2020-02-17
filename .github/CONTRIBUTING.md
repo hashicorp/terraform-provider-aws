@@ -231,7 +231,7 @@ See also a [full example pull request for implementing EKS tagging](https://gith
 
 This step is only necessary for the first implementation and may have been previously completed. If so, move on to the next section.
 
-More details about this code generation, including fixes for potential error messages in this process, can be found in the [keyvaluetags documentation](aws/internal/keyvaluetags/README.md).
+More details about this code generation, including fixes for potential error messages in this process, can be found in the [keyvaluetags documentation](../aws/internal/keyvaluetags/README.md).
 
 - Open the AWS Go SDK documentation for the service, e.g. for [`service/eks`](https://docs.aws.amazon.com/sdk-for-go/api/service/eks/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
 - Determine the "type" of tagging implementation. Some services will use a simple map style (`map[string]*string` in Go) while others will have a separate structure shape (`[]service.Tag` struct with `Key` and `Value` fields).
@@ -504,6 +504,7 @@ into Terraform.
   - In `aws/config.go`: Create the new service client in the `{SERVICE}conn`
     field in the `AWSClient` instantiation within `Client()`. e.g.
     `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
+  - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
   - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
     name in the list of customizable endpoints.
   - In `.hashibot.hcl`: Add the new service to automated issue and pull request labeling. e.g. with the `quicksight` service

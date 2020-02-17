@@ -173,13 +173,14 @@ func TestAccAWSInstanceDataSource_rootInstanceStore(t *testing.T) {
 func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_privateIP,
+				Config: testAccInstanceDataSourceConfig_privateIP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -215,13 +216,14 @@ func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_VPC,
+				Config: testAccInstanceDataSourceConfig_VPC(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -235,19 +237,18 @@ func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
-	rStr := acctest.RandString(5)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_PlacementGroup(rStr),
+				Config: testAccInstanceDataSourceConfig_PlacementGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "placement_group", resourceName, "placement_group"),
-					resource.TestCheckResourceAttr("data.aws_instance.test", "placement_group", fmt.Sprintf("testAccInstanceDataSourceConfig_PlacementGroup_%s", rStr)),
 				),
 			},
 		},
@@ -280,13 +281,14 @@ func TestAccAWSInstanceDataSource_SecurityGroups(t *testing.T) {
 func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_VPCSecurityGroups,
+				Config: testAccInstanceDataSourceConfig_VPCSecurityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -299,24 +301,25 @@ func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
-	rInt := acctest.RandInt()
+	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_getPasswordData(true, rInt),
+				Config: testAccInstanceDataSourceConfig_getPasswordData(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instance.test", "get_password_data", "true"),
-					resource.TestCheckResourceAttrSet("data.aws_instance.test", "password_data"),
+					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "true"),
+					resource.TestCheckResourceAttrSet(datasourceName, "password_data"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfig_getPasswordData(false, rInt),
+				Config: testAccInstanceDataSourceConfig_getPasswordData(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instance.test", "get_password_data", "false"),
-					resource.TestCheckNoResourceAttr("data.aws_instance.test", "password_data"),
+					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "false"),
+					resource.TestCheckNoResourceAttr(datasourceName, "password_data"),
 				),
 			},
 		},
@@ -324,24 +327,25 @@ func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
-	rInt := acctest.RandInt()
+	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_getPasswordData(false, rInt),
+				Config: testAccInstanceDataSourceConfig_getPasswordData(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instance.test", "get_password_data", "false"),
-					resource.TestCheckNoResourceAttr("data.aws_instance.test", "password_data"),
+					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "false"),
+					resource.TestCheckNoResourceAttr(datasourceName, "password_data"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfig_getPasswordData(true, rInt),
+				Config: testAccInstanceDataSourceConfig_getPasswordData(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instance.test", "get_password_data", "true"),
-					resource.TestCheckResourceAttrSet("data.aws_instance.test", "password_data"),
+					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "true"),
+					resource.TestCheckResourceAttrSet(datasourceName, "password_data"),
 				),
 			},
 		},
@@ -350,27 +354,28 @@ func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfigGetUserData(true),
+				Config: testAccInstanceDataSourceConfigGetUserData(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserData(false),
+				Config: testAccInstanceDataSourceConfigGetUserData(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserData(true),
+				Config: testAccInstanceDataSourceConfigGetUserData(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
@@ -383,13 +388,14 @@ func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
 func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(true),
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -397,7 +403,7 @@ func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(false),
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -405,7 +411,7 @@ func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(true),
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -419,6 +425,7 @@ func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -426,7 +433,7 @@ func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 
-				Config: testAccInstanceDataSourceConfig_creditSpecification,
+				Config: testAccInstanceDataSourceConfig_creditSpecification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "credit_specification.#", resourceName, "credit_specification.#"),
@@ -615,59 +622,42 @@ data "aws_instance" "test" {
 }
 `
 
-const testAccInstanceDataSourceConfig_privateIP = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-  tags = {
-    Name = "terraform-testacc-instance-ds-private-ip"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
-  tags = {
-    Name = "tf-acc-instance-ds-private-ip"
-  }
-}
-
+func testAccInstanceDataSourceConfig_privateIP(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami = "ami-c5eabbf5"
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.test.id}"
-  private_ip = "10.1.1.42"
+  subnet_id     = "${aws_subnet.test.id}"
+  private_ip    = "10.1.1.42"
 }
 
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`
-
-func testAccInstanceDataSourceConfig_keyPair(rName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
+`)
 }
 
-resource "aws_key_pair" "debugging" {
-  key_name   = "%s"
+func testAccInstanceDataSourceConfig_keyPair(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+resource "aws_key_pair" "test" {
+  key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-408c7f28"
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t1.micro"
-  key_name      = "${aws_key_pair.debugging.key_name}"
+  key_name      = "${aws_key_pair.test.key_name}"
 
   tags = {
-    Name = "testAccInstanceDataSourceConfigKeyPair_TestAMI"
+    Name = %[1]q
   }
 }
 
 data "aws_instance" "test" {
   filter {
     name   = "tag:Name"
-    values = ["testAccInstanceDataSourceConfigKeyPair_TestAMI"]
+    values = [%[1]q]
   }
 
   filter {
@@ -678,66 +668,34 @@ data "aws_instance" "test" {
 `, rName)
 }
 
-const testAccInstanceDataSourceConfig_VPC = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-  tags = {
-    Name = "terraform-testacc-instance-data-source-vpc"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
-  tags = {
-   Name = "tf-acc-instance-data-source-vpc"
-  }
-}
-
+func testAccInstanceDataSourceConfig_VPC(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
 resource "aws_instance" "test" {
-  # us-west-2
-  ami = "ami-4fccb37f"
-  instance_type = "m1.small"
-  subnet_id = "${aws_subnet.test.id}"
+  ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type               = "m1.small"
+  subnet_id                   = "${aws_subnet.test.id}"
   associate_public_ip_address = true
-  tenancy = "dedicated"
+  tenancy                     = "dedicated"
   # pre-encoded base64 data
-  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+  user_data                   = "3dc39dda39be1205215e776bad998da361a5955d"
 }
 
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`
-
-func testAccInstanceDataSourceConfig_PlacementGroup(rStr string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-instance-data-source-placement-group"
-  }
+`)
 }
 
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = "tf-acc-instance-data-source-placement-group"
-  }
-}
-
+func testAccInstanceDataSourceConfig_PlacementGroup(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
 resource "aws_placement_group" "test" {
-  name     = "testAccInstanceDataSourceConfig_PlacementGroup_%s"
+  name     = %[1]q
   strategy = "cluster"
 }
 
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
 resource "aws_instance" "test" {
-  # us-west-2
-  ami                         = "ami-55a7ea65"
+  ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type               = "c3.large"
   subnet_id                   = "${aws_subnet.test.id}"
   associate_public_ip_address = true
@@ -750,7 +708,7 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`, rStr)
+`, rName)
 }
 
 func testAccInstanceDataSourceConfig_SecurityGroups(rInt int) string {
@@ -784,127 +742,53 @@ data "aws_instance" "test" {
 `, rInt)
 }
 
-const testAccInstanceDataSourceConfig_VPCSecurityGroups = `
-resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.foo.id}"
- 
-  tags = {
-    Name = "terraform-testacc-instance-data-source-vpc-sgs"
-  }
-}
-
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-  tags = {
-    Name = "terraform-testacc-instance-data-source-vpc-sgs"
-  }
-}
-
-resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo"
-  description = "foo"
-  vpc_id="${aws_vpc.foo.id}"
-
-  ingress {
-    protocol = "icmp"
-    from_port = -1
-    to_port = -1
-    self = true
-  }
-}
-
-resource "aws_subnet" "foo" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
-  tags = {
-    Name = "tf-acc-instance-data-source-vpc-sgs"
-  }
-}
-
+func testAccInstanceDataSourceConfig_VPCSecurityGroups(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() +
+		testAccAwsInstanceVpcConfig(rName, false) +
+		testAccAwsInstanceVpcSecurityGroupConfig(rName) +
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami = "ami-21f78e11"
-  instance_type = "t1.micro"
-  vpc_security_group_ids = ["${aws_security_group.tf_test_foo.id}"]
-  subnet_id = "${aws_subnet.foo.id}"
-  depends_on = ["aws_internet_gateway.gw"]
+  ami                    = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type          = "t1.micro"
+  vpc_security_group_ids = ["${aws_security_group.test.id}"]
+  subnet_id              = "${aws_subnet.test.id}"
+  depends_on             = ["aws_internet_gateway.test"]
 }
 
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`
-
-func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string {
-	return fmt.Sprintf(`
-# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
-data "aws_ami" "win2016core" {
-  most_recent = true
-  owners      = ["amazon"]
-  
-  filter {
-    name   = "name"
-    values = ["Windows_Server-2016-English-Core-Base-*"]
-  }
+`)
 }
 
-resource "aws_key_pair" "foo" {
-  key_name   = "tf-acctest-%d"
+func testAccInstanceDataSourceConfig_getPasswordData(rName string, val bool) string {
+	return testAccLatestWindowsServer2016CoreAmiConfig() + fmt.Sprintf(`
+resource "aws_key_pair" "test" {
+  key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
 }
 
 resource "aws_instance" "test" {
-  ami           = "${data.aws_ami.win2016core.id}"
+  ami           = "${data.aws_ami.win2016core-ami.id}"
   instance_type = "t2.medium"
-  key_name      = "${aws_key_pair.foo.key_name}"
+  key_name      = "${aws_key_pair.test.key_name}"
 }
 
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
- 
-  get_password_data = %t
-}
-`, rInt, val)
-}
 
-func testAccInstanceDataSourceConfigGetUserData(getUserData bool) string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-  
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-  
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
+  get_password_data = %[2]t
+}
+`, rName, val)
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "172.16.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-instance-datasource-get-user-data"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "172.16.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = "tf-acc-test-instance-datasource-get-user-data"
-  }
-}
-
+func testAccInstanceDataSourceConfigGetUserData(rName string, getUserData bool) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.test.id}"
- 
+
   user_data = <<EUD
 #!/bin/bash
 
@@ -913,46 +797,14 @@ EUD
 }
 
 data "aws_instance" "test" {
-  get_user_data = %t
+  get_user_data = %[2]t
   instance_id   = "${aws_instance.test.id}"
 }
-`, getUserData)
+`, rName, getUserData)
 }
 
-func testAccInstanceDataSourceConfigGetUserDataNoUserData(getUserData bool) string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-  
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "172.16.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-instance-datasource-get-user-data"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "172.16.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = "tf-acc-test-instance-datasource-get-user-data"
-  }
-}
-
+func testAccInstanceDataSourceConfigGetUserDataNoUserData(rName string, getUserData bool) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
@@ -960,26 +812,19 @@ resource "aws_instance" "test" {
 }
 
 data "aws_instance" "test" {
-  get_user_data = %t
+  get_user_data = %[2]t
   instance_id   = "${aws_instance.test.id}"
 }
-`, getUserData)
+`, rName, getUserData)
 }
 
-const testAccInstanceDataSourceConfig_creditSpecification = `
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-}
-
-resource "aws_subnet" "foo" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
-}
-
+func testAccInstanceDataSourceConfig_creditSpecification(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami = "ami-bf4193c7"
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.foo.id}"
+  subnet_id     = "${aws_subnet.test.id}"
+
   credit_specification {
     cpu_credits = "unlimited"
   }
@@ -988,4 +833,5 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`
+`)
+}

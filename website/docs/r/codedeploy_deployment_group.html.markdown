@@ -258,8 +258,8 @@ You can configure how instances in the original environment are terminated when 
 
 You can configure the type of deployment, either in-place or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deployment_style` supports the following:
 
-* `deployment_option` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `WITH_TRAFFIC_CONTROL` or `WITHOUT_TRAFFIC_CONTROL`.
-* `deployment_type` - (Optional) Indicates whether to run an in-place deployment or a blue/green deployment. Valid Values are `IN_PLACE` or `BLUE_GREEN`.
+* `deployment_option` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `WITH_TRAFFIC_CONTROL` or `WITHOUT_TRAFFIC_CONTROL`. Default is `WITHOUT_TRAFFIC_CONTROL`.
+* `deployment_type` - (Optional) Indicates whether to run an in-place deployment or a blue/green deployment. Valid Values are `IN_PLACE` or `BLUE_GREEN`. Default is `IN_PLACE`.
 
 _Only one `deployment_style` is allowed_.
 

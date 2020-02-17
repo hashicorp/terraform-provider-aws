@@ -59,6 +59,7 @@ An `ebs_volume` block supports the following arguments:
 * `raid_level` - (Required) The RAID level to use for the volume.
 * `type` - (Optional) The type of volume to create. This may be `standard` (the default), `io1` or `gp2`.
 * `iops` - (Optional) For PIOPS volumes, the IOPS per disk.
+* `encrypted` - (Optional) Encrypt the volume.
 
 ## Attributes Reference
 

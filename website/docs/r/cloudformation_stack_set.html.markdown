@@ -103,6 +103,12 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Name of the Stack Set.
 * `stack_set_id` - Unique identifier of the Stack Set.
 
+## Timeouts
+
+`aws_cloudformation_stack_set` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+* `update` - (Default `30m`) How long to wait for a Stack Set to be updated.
+
 ## Import
 
 CloudFormation Stack Sets can be imported using the `name`, e.g.

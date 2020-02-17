@@ -69,11 +69,11 @@ func (c *EMR) AddInstanceFleetRequest(input *AddInstanceFleetInput) (req *reques
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation AddInstanceFleet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/AddInstanceFleet
@@ -151,8 +151,8 @@ func (c *EMR) AddInstanceGroupsRequest(input *AddInstanceGroupsInput) (req *requ
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation AddInstanceGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -253,8 +253,8 @@ func (c *EMR) AddJobFlowStepsRequest(input *AddJobFlowStepsInput) (req *request.
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation AddJobFlowSteps for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -336,11 +336,11 @@ func (c *EMR) AddTagsRequest(input *AddTagsInput) (req *request.Request, output 
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation AddTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/AddTags
@@ -422,12 +422,12 @@ func (c *EMR) CancelStepsRequest(input *CancelStepsInput) (req *request.Request,
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation CancelSteps for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/CancelSteps
@@ -506,11 +506,11 @@ func (c *EMR) CreateSecurityConfigurationRequest(input *CreateSecurityConfigurat
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation CreateSecurityConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/CreateSecurityConfiguration
@@ -589,11 +589,11 @@ func (c *EMR) DeleteSecurityConfigurationRequest(input *DeleteSecurityConfigurat
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation DeleteSecurityConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DeleteSecurityConfiguration
@@ -672,11 +672,11 @@ func (c *EMR) DescribeClusterRequest(input *DescribeClusterInput) (req *request.
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation DescribeCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DescribeCluster
@@ -778,8 +778,8 @@ func (c *EMR) DescribeJobFlowsRequest(input *DescribeJobFlowsInput) (req *reques
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation DescribeJobFlows for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -863,11 +863,11 @@ func (c *EMR) DescribeSecurityConfigurationRequest(input *DescribeSecurityConfig
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation DescribeSecurityConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DescribeSecurityConfiguration
@@ -945,11 +945,11 @@ func (c *EMR) DescribeStepRequest(input *DescribeStepInput) (req *request.Reques
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation DescribeStep for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DescribeStep
@@ -1030,11 +1030,11 @@ func (c *EMR) GetBlockPublicAccessConfigurationRequest(input *GetBlockPublicAcce
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation GetBlockPublicAccessConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/GetBlockPublicAccessConfiguration
@@ -1118,11 +1118,11 @@ func (c *EMR) ListBootstrapActionsRequest(input *ListBootstrapActionsInput) (req
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListBootstrapActions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListBootstrapActions
@@ -1262,11 +1262,11 @@ func (c *EMR) ListClustersRequest(input *ListClustersInput) (req *request.Reques
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListClusters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListClusters
@@ -1405,11 +1405,11 @@ func (c *EMR) ListInstanceFleetsRequest(input *ListInstanceFleetsInput) (req *re
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListInstanceFleets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListInstanceFleets
@@ -1545,11 +1545,11 @@ func (c *EMR) ListInstanceGroupsRequest(input *ListInstanceGroupsInput) (req *re
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListInstanceGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListInstanceGroups
@@ -1688,11 +1688,11 @@ func (c *EMR) ListInstancesRequest(input *ListInstancesInput) (req *request.Requ
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListInstances
@@ -1831,11 +1831,11 @@ func (c *EMR) ListSecurityConfigurationsRequest(input *ListSecurityConfiguration
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListSecurityConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListSecurityConfigurations
@@ -1973,11 +1973,11 @@ func (c *EMR) ListStepsRequest(input *ListStepsInput) (req *request.Request, out
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListSteps for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListSteps
@@ -2054,6 +2054,90 @@ func (c *EMR) ListStepsPagesWithContext(ctx aws.Context, input *ListStepsInput, 
 	return p.Err()
 }
 
+const opModifyCluster = "ModifyCluster"
+
+// ModifyClusterRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyCluster operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyCluster for more information on using the ModifyCluster
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyClusterRequest method.
+//    req, resp := client.ModifyClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ModifyCluster
+func (c *EMR) ModifyClusterRequest(input *ModifyClusterInput) (req *request.Request, output *ModifyClusterOutput) {
+	op := &request.Operation{
+		Name:       opModifyCluster,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyClusterInput{}
+	}
+
+	output = &ModifyClusterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyCluster API operation for Amazon Elastic MapReduce.
+//
+// Modifies the number of steps that can be executed concurrently for the cluster
+// specified using ClusterID.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation ModifyCluster for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerError
+//   Indicates that an error occurred while processing the request and that the
+//   request was not completed.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ModifyCluster
+func (c *EMR) ModifyCluster(input *ModifyClusterInput) (*ModifyClusterOutput, error) {
+	req, out := c.ModifyClusterRequest(input)
+	return out, req.Send()
+}
+
+// ModifyClusterWithContext is the same as ModifyCluster with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyCluster for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) ModifyClusterWithContext(ctx aws.Context, input *ModifyClusterInput, opts ...request.Option) (*ModifyClusterOutput, error) {
+	req, out := c.ModifyClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyInstanceFleet = "ModifyInstanceFleet"
 
 // ModifyInstanceFleetRequest generates a "aws/request.Request" representing the
@@ -2113,11 +2197,11 @@ func (c *EMR) ModifyInstanceFleetRequest(input *ModifyInstanceFleetInput) (req *
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ModifyInstanceFleet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ModifyInstanceFleet
@@ -2199,8 +2283,8 @@ func (c *EMR) ModifyInstanceGroupsRequest(input *ModifyInstanceGroupsInput) (req
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ModifyInstanceGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -2360,11 +2444,11 @@ func (c *EMR) PutBlockPublicAccessConfigurationRequest(input *PutBlockPublicAcce
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation PutBlockPublicAccessConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/PutBlockPublicAccessConfiguration
@@ -2523,11 +2607,11 @@ func (c *EMR) RemoveTagsRequest(input *RemoveTagsInput) (req *request.Request, o
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation RemoveTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/RemoveTags
@@ -2631,8 +2715,8 @@ func (c *EMR) RunJobFlowRequest(input *RunJobFlowInput) (req *request.Request, o
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation RunJobFlow for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -2728,8 +2812,8 @@ func (c *EMR) SetTerminationProtectionRequest(input *SetTerminationProtectionInp
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation SetTerminationProtection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -2817,8 +2901,8 @@ func (c *EMR) SetVisibleToAllUsersRequest(input *SetVisibleToAllUsersInput) (req
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation SetVisibleToAllUsers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -2907,8 +2991,8 @@ func (c *EMR) TerminateJobFlowsRequest(input *TerminateJobFlowsInput) (req *requ
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation TerminateJobFlows for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -3790,11 +3874,19 @@ type CancelStepsInput struct {
 
 	// The ClusterID for which specified steps will be canceled. Use RunJobFlow
 	// and ListClusters to get ClusterIDs.
-	ClusterId *string `type:"string"`
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+
+	// The option to choose for cancelling RUNNING steps. By default, the value
+	// is SEND_INTERRUPT.
+	StepCancellationOption *string `type:"string" enum:"StepCancellationOption"`
 
 	// The list of StepIDs to cancel. Use ListSteps to get steps and their states
 	// for the specified cluster.
-	StepIds []*string `type:"list"`
+	//
+	// StepIds is a required field
+	StepIds []*string `type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -3807,9 +3899,31 @@ func (s CancelStepsInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelStepsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelStepsInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+	if s.StepIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("StepIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetClusterId sets the ClusterId field's value.
 func (s *CancelStepsInput) SetClusterId(v string) *CancelStepsInput {
 	s.ClusterId = &v
+	return s
+}
+
+// SetStepCancellationOption sets the StepCancellationOption field's value.
+func (s *CancelStepsInput) SetStepCancellationOption(v string) *CancelStepsInput {
+	s.StepCancellationOption = &v
 	return s
 }
 
@@ -4050,6 +4164,9 @@ type Cluster struct {
 	// the actual billing rate.
 	NormalizedInstanceHours *int64 `type:"integer"`
 
+	// The Amazon Resource Name (ARN) of the Outpost where the cluster is launched.
+	OutpostArn *string `type:"string"`
+
 	// The Amazon EMR release label, which determines the version of open-source
 	// application packages installed on the cluster. Release labels are in the
 	// form emr-x.x.x, where x.x.x is an Amazon EMR release version such as emr-5.14.0.
@@ -4094,6 +4211,9 @@ type Cluster struct {
 
 	// The current status details about the cluster.
 	Status *ClusterStatus `type:"structure"`
+
+	// Specifies the number of steps that can be executed concurrently.
+	StepConcurrencyLevel *int64 `type:"integer"`
 
 	// A list of tags associated with a cluster.
 	Tags []*Tag `type:"list"`
@@ -4214,6 +4334,12 @@ func (s *Cluster) SetNormalizedInstanceHours(v int64) *Cluster {
 	return s
 }
 
+// SetOutpostArn sets the OutpostArn field's value.
+func (s *Cluster) SetOutpostArn(v string) *Cluster {
+	s.OutpostArn = &v
+	return s
+}
+
 // SetReleaseLabel sets the ReleaseLabel field's value.
 func (s *Cluster) SetReleaseLabel(v string) *Cluster {
 	s.ReleaseLabel = &v
@@ -4259,6 +4385,12 @@ func (s *Cluster) SetServiceRole(v string) *Cluster {
 // SetStatus sets the Status field's value.
 func (s *Cluster) SetStatus(v *ClusterStatus) *Cluster {
 	s.Status = v
+	return s
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *Cluster) SetStepConcurrencyLevel(v int64) *Cluster {
+	s.StepConcurrencyLevel = &v
 	return s
 }
 
@@ -4377,6 +4509,9 @@ type ClusterSummary struct {
 	// the actual billing rate.
 	NormalizedInstanceHours *int64 `type:"integer"`
 
+	// The Amazon Resource Name (ARN) of the Outpost where the cluster is launched.
+	OutpostArn *string `type:"string"`
+
 	// The details about the current status of the cluster.
 	Status *ClusterStatus `type:"structure"`
 }
@@ -4412,6 +4547,12 @@ func (s *ClusterSummary) SetName(v string) *ClusterSummary {
 // SetNormalizedInstanceHours sets the NormalizedInstanceHours field's value.
 func (s *ClusterSummary) SetNormalizedInstanceHours(v int64) *ClusterSummary {
 	s.NormalizedInstanceHours = &v
+	return s
+}
+
+// SetOutpostArn sets the OutpostArn field's value.
+func (s *ClusterSummary) SetOutpostArn(v string) *ClusterSummary {
+	s.OutpostArn = &v
 	return s
 }
 
@@ -7248,6 +7389,180 @@ func (s *InstanceTypeSpecification) SetWeightedCapacity(v int64) *InstanceTypeSp
 	return s
 }
 
+// Indicates that an error occurred while processing the request and that the
+// request was not completed.
+type InternalServerError struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerError) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerError(v protocol.ResponseMetadata) error {
+	return &InternalServerError{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerError) Code() string {
+	return "InternalServerError"
+}
+
+// Message returns the exception's message.
+func (s InternalServerError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerError) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerError) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerError) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerError) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// This exception occurs when there is an internal failure in the EMR service.
+type InternalServerException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message associated with the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerException(v protocol.ResponseMetadata) error {
+	return &InternalServerException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerException) Code() string {
+	return "InternalServerException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// This exception occurs when there is something wrong with user input.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The error code associated with the exception.
+	ErrorCode *string `min:"1" type:"string"`
+
+	// The message associated with the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // A description of a cluster (job flow).
 type JobFlowDetail struct {
 	_ struct{} `type:"structure"`
@@ -8655,6 +8970,77 @@ func (s *MetricDimension) SetValue(v string) *MetricDimension {
 	return s
 }
 
+type ModifyClusterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the cluster.
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+
+	// The number of steps that can be executed concurrently. You can specify a
+	// maximum of 256 steps.
+	StepConcurrencyLevel *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ModifyClusterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClusterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyClusterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyClusterInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterId sets the ClusterId field's value.
+func (s *ModifyClusterInput) SetClusterId(v string) *ModifyClusterInput {
+	s.ClusterId = &v
+	return s
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *ModifyClusterInput) SetStepConcurrencyLevel(v int64) *ModifyClusterInput {
+	s.StepConcurrencyLevel = &v
+	return s
+}
+
+type ModifyClusterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The number of steps that can be executed concurrently.
+	StepConcurrencyLevel *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ModifyClusterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClusterOutput) GoString() string {
+	return s.String()
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *ModifyClusterOutput) SetStepConcurrencyLevel(v int64) *ModifyClusterOutput {
+	s.StepConcurrencyLevel = &v
+	return s
+}
+
 type ModifyInstanceFleetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9349,6 +9735,10 @@ type RunJobFlowInput struct {
 	// resources on your behalf.
 	ServiceRole *string `type:"string"`
 
+	// Specifies the number of steps that can be executed concurrently. The default
+	// value is 1. The maximum value is 256.
+	StepConcurrencyLevel *int64 `type:"integer"`
+
 	// A list of steps to run.
 	Steps []*StepConfig `type:"list"`
 
@@ -9542,6 +9932,12 @@ func (s *RunJobFlowInput) SetSecurityConfiguration(v string) *RunJobFlowInput {
 // SetServiceRole sets the ServiceRole field's value.
 func (s *RunJobFlowInput) SetServiceRole(v string) *RunJobFlowInput {
 	s.ServiceRole = &v
+	return s
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *RunJobFlowInput) SetStepConcurrencyLevel(v int64) *RunJobFlowInput {
+	s.StepConcurrencyLevel = &v
 	return s
 }
 
@@ -11243,6 +11639,14 @@ const (
 
 	// StatisticMaximum is a Statistic enum value
 	StatisticMaximum = "MAXIMUM"
+)
+
+const (
+	// StepCancellationOptionSendInterrupt is a StepCancellationOption enum value
+	StepCancellationOptionSendInterrupt = "SEND_INTERRUPT"
+
+	// StepCancellationOptionTerminateProcess is a StepCancellationOption enum value
+	StepCancellationOptionTerminateProcess = "TERMINATE_PROCESS"
 )
 
 const (

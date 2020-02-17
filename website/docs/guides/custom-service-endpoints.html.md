@@ -45,8 +45,10 @@ If multiple, different Terraform AWS Provider configurations are required, see t
 
 The Terraform AWS Provider allows the following endpoints to be customized:
 
+<!-- markdownlint-disable MD033 -->
 <div style="column-width: 14em;">
 
+- `accessanalyzer`
 - `acm`
 - `acmpca`
 - `amplify`
@@ -75,10 +77,12 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `codecommit`
 - `codedeploy`
 - `codepipeline`
+- `codestarnotifications`
 - `cognitoidentity`
 - `cognitoidp`
 - `configservice`
 - `cur`
+- `dataexchange`
 - `datapipeline`
 - `datasync`
 - `dax`
@@ -111,6 +115,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `guardduty`
 - `greengrass`
 - `iam`
+- `imagebuilder`
 - `inspector`
 - `iot`
 - `iotanalytics`
@@ -128,6 +133,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `lightsail`
 - `macie`
 - `managedblockchain`
+- `marketplacecatalog`
 - `mediaconnect`
 - `mediaconvert`
 - `medialive`
@@ -172,11 +178,14 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `transfer`
 - `waf`
 - `wafregional`
+- `wafv2`
 - `worklink`
+- `workmail`
 - `workspaces`
 - `xray`
 
 </div>
+<!-- markdownlint-enable MD033 -->
 
 ## Connecting to Local AWS Compatible Solutions
 
