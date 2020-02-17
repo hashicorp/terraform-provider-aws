@@ -94,6 +94,35 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "volume_id", regexp.MustCompile(`^vol-.+$`)),
 					testAccMatchResourceAttrRegionalARN(resourceName, "volume_arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "5368709120"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSStorageGatewayCachedIscsiVolume_kms(t *testing.T) {
+	var cachedIscsiVolume storagegateway.CachediSCSIVolume
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
+	keyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayCachedIscsiVolumeConfigKMSEncrypted(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayCachedIscsiVolumeExists(resourceName, &cachedIscsiVolume),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key", keyResourceName, "arn"),
 				),
 			},
 			{
@@ -345,6 +374,76 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
   volume_size_in_bytes = 5368709120
 }
 `, rName))
+}
+
+func testAccAWSStorageGatewayCachedIscsiVolumeConfigKMSEncrypted(rName string) string {
+	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
+resource "aws_ebs_volume" "test" {
+  availability_zone = "${aws_instance.test.availability_zone}"
+  size              = 10
+  type              = "gp2"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_volume_attachment" "test" {
+  device_name  = "/dev/xvdc"
+  force_detach = true
+  instance_id  = "${aws_instance.test.id}"
+  volume_id    = "${aws_ebs_volume.test.id}"
+}
+
+data "aws_storagegateway_local_disk" "test" {
+  disk_path   = "${aws_volume_attachment.test.device_name}"
+  gateway_arn = "${aws_storagegateway_gateway.test.arn}"
+}
+
+resource "aws_storagegateway_cache" "test" {
+  # ACCEPTANCE TESTING WORKAROUND:
+  # Data sources are not refreshed before plan after apply in TestStep
+  # Step 0 error: After applying this step, the plan was not empty:
+  #   disk_id:     "0b68f77a-709b-4c79-ad9d-d7728014b291" => "/dev/xvdc" (forces new resource)
+  # We expect this data source value to change due to how Storage Gateway works.
+  lifecycle {
+    ignore_changes = ["disk_id"]
+  }
+
+  disk_id     = "${data.aws_storagegateway_local_disk.test.id}"
+  gateway_arn = "${aws_storagegateway_gateway.test.arn}"
+}
+
+ resource "aws_kms_key" "test" {
+     description = "Terraform acc test %[1]s"
+     policy = <<POLICY
+ {
+   "Version": "2012-10-17",
+   "Id": "kms-tf-1",
+   "Statement": [
+     {
+       "Sid": "Enable IAM User Permissions",
+       "Effect": "Allow",
+       "Principal": {
+         "AWS": "*"
+       },
+       "Action": "kms:*",
+       "Resource": "*"
+     }
+   ]
+ }
+ POLICY
+ }
+
+resource "aws_storagegateway_cached_iscsi_volume" "test" {
+  gateway_arn          = "${aws_storagegateway_cache.test.gateway_arn}"
+  network_interface_id = "${aws_instance.test.private_ip}"
+  target_name          = %[1]q
+  volume_size_in_bytes = 5368709120
+  kms_encrypted        = true
+  kms_key              = "${aws_kms_key.test.arn}"
+}
+`, rName)
 }
 
 func testAccAWSStorageGatewayCachedIscsiVolumeConfigTags1(rName, tagKey1, tagValue1 string) string {
