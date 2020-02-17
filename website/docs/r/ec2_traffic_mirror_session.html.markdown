@@ -2,7 +2,6 @@
 subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_traffic_mirror_session"
-sidebar_current: "docs-aws-resource-traffic-mirror-session"
 description: |-
   Provides an Traffic mirror session
 ---

@@ -2,7 +2,6 @@
 subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_traffic_mirror_filter"
-sidebar_current: "docs-aws-resource-traffic-mirror-filter"
 description: |-
   Provides an Traffic mirror filter
 ---
