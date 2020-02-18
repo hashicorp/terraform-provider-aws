@@ -1,4 +1,13 @@
 ## 2.50.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_ram_resource_share_accepter: The `status` attribute now reflects the status of the RAM Resource Share and not the RAM Resource Share Invitation (which expires after 7 days). [GH-11562]
+
+BUG FIXES:
+
+* resource/aws_ram_resource_share_accepter: Fix read operations after the RAM Resource Share Invitation is no longer present after 7 days [GH-11562]
+
 ## 2.49.0 (February 14, 2020)
 
 FEATURES:
