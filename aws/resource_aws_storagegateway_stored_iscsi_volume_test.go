@@ -151,7 +151,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_SnapshotId(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "volume_id", regexp.MustCompile(`^vol-.+$`)),
 					testAccMatchResourceAttrRegionalARN(resourceName, "volume_arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
-					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "5368709120"),
+					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "10737418240"),
 				),
 			},
 			{
