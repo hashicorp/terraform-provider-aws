@@ -256,6 +256,28 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_SourceVolumeArn(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayCachedIscsiVolume_disappears(t *testing.T) {
+	var storedIscsiVolume storagegateway.CachediSCSIVolume
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayCachedIscsiVolumeConfig_Basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayCachedIscsiVolumeExists(resourceName, &storedIscsiVolume),
+					testAccCheckAWSStorageGatewayCachedIscsiVolumeDisappears(&storedIscsiVolume),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSStorageGatewayCachedIscsiVolumeExists(resourceName string, cachedIscsiVolume *storagegateway.CachediSCSIVolume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -282,6 +304,20 @@ func testAccCheckAWSStorageGatewayCachedIscsiVolumeExists(resourceName string, c
 		*cachedIscsiVolume = *output.CachediSCSIVolumes[0]
 
 		return nil
+	}
+}
+
+func testAccCheckAWSStorageGatewayCachedIscsiVolumeDisappears(storedIscsiVolume *storagegateway.CachediSCSIVolume) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+
+		input := &storagegateway.DeleteVolumeInput{
+			VolumeARN: storedIscsiVolume.VolumeARN,
+		}
+
+		_, err := conn.DeleteVolume(input)
+
+		return err
 	}
 }
 
