@@ -2460,6 +2460,11 @@ func readS3ObjectLockConfiguration(conn *s3.S3, bucket string) ([]interface{}, e
 		if isAWSErr(err, "ObjectLockConfigurationNotFoundError", "") {
 			return nil, nil
 		}
+
+		// ignore object lock permissions errors for now
+		if isAWSErr(err, "AccessDeniedException", "") {
+			return nil, nil
+		}
 		return nil, err
 	}
 
