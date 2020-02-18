@@ -435,12 +435,12 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
-  gateway_arn          = "${data.aws_storagegateway_local_disk.test.gateway_arn}"
-  network_interface_id = "${aws_instance.test.private_ip}"
-  snapshot_id          = "${aws_ebs_snapshot.test.id}"
-  target_name          = %[1]q
+  gateway_arn            = "${data.aws_storagegateway_local_disk.test.gateway_arn}"
+  network_interface_id   = "${aws_instance.test.private_ip}"
+  snapshot_id            = "${aws_ebs_snapshot.test.id}"
+  target_name            = %[1]q
   preserve_existing_data = false
-  disk_id              = "${data.aws_storagegateway_local_disk.test.id}"
+  disk_id                = "${data.aws_storagegateway_local_disk.test.id}"
 }
 `, rName)
 }
