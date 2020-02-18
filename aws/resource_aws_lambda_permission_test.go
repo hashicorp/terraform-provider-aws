@@ -320,26 +320,20 @@ func TestAccAWSLambdaPermission_disappears(t *testing.T) {
 	var statement LambdaPolicyStatement
 
 	rString := acctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_perm_basic_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_basic_%s", rString)
+	funcName := fmt.Sprintf("tf_acc_lambda_perm_multi_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_multi_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSLambdaPermissionConfig(funcName, roleName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaPermissionExists("aws_lambda_permission.allow_cloudwatch", &statement),
-				),
-			},
 			// Here we delete the Lambda permission to verify the follow-on refresh after this step
 			// should not error.
 			{
-				Config: testAccAWSLambdaPermissionConfig(funcName, roleName),
+				Config: testAccAWSLambdaPermissionConfig_multiplePerms(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSLambdaPermissionDisappears("aws_lambda_permission.allow_cloudwatch", &statement),
+					testAccAWSLambdaPermissionDisappears("aws_lambda_permission.first", &statement),
 				),
 				ExpectNonEmptyPlan: true,
 			},
