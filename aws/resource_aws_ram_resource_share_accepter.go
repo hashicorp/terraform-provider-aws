@@ -78,13 +78,11 @@ func resourceAwsRamResourceShareAccepter() *schema.Resource {
 }
 
 func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-
-	client := meta.(*AWSClient)
-	conn := client.ramconn
+	conn := meta.(*AWSClient).ramconn
 
 	shareARN := d.Get("share_arn").(string)
 
-	invitation, err := resourceAwsRamResourceShareGetInvitation(client, shareARN, ram.ResourceShareInvitationStatusPending)
+	invitation, err := resourceAwsRamResourceShareGetInvitation(conn, shareARN, ram.ResourceShareInvitationStatusPending)
 
 	if err != nil {
 		return err
@@ -130,11 +128,10 @@ func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interface{}) error {
+	accountID := meta.(*AWSClient).accountid
+	conn := meta.(*AWSClient).ramconn
 
-	client := meta.(*AWSClient)
-	conn := client.ramconn
-
-	invitation, err := resourceAwsRamResourceShareGetInvitation(client, d.Id(), ram.ResourceShareInvitationStatusAccepted)
+	invitation, err := resourceAwsRamResourceShareGetInvitation(conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
 
 	if err != nil {
 		return fmt.Errorf("Error retrieving invitation for resource share %s: %s", d.Id(), err)
@@ -144,7 +141,7 @@ func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interf
 		d.Set("invitation_arn", invitation.ResourceShareInvitationArn)
 		d.Set("receiver_account_id", invitation.ReceiverAccountId)
 	} else {
-		d.Set("receiver_account_id", client.accountid)
+		d.Set("receiver_account_id", accountID)
 	}
 
 	listResourceSharesInput := &ram.GetResourceSharesInput{
@@ -237,13 +234,13 @@ func resourceAwsRamResourceShareAccepterDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsRamResourceShareGetInvitation(client *AWSClient, resourceShareARN, status string) (*ram.ResourceShareInvitation, error) {
+func resourceAwsRamResourceShareGetInvitation(conn *ram.RAM, resourceShareARN, status string) (*ram.ResourceShareInvitation, error) {
 	input := &ram.GetResourceShareInvitationsInput{
 		ResourceShareArns: []*string{aws.String(resourceShareARN)},
 	}
 
 	var invitation *ram.ResourceShareInvitation
-	err := client.ramconn.GetResourceShareInvitationsPages(input, func(page *ram.GetResourceShareInvitationsOutput, lastPage bool) bool {
+	err := conn.GetResourceShareInvitationsPages(input, func(page *ram.GetResourceShareInvitationsOutput, lastPage bool) bool {
 		for _, rsi := range page.ResourceShareInvitations {
 			if aws.StringValue(rsi.Status) == status {
 				invitation = rsi
@@ -260,12 +257,6 @@ func resourceAwsRamResourceShareGetInvitation(client *AWSClient, resourceShareAR
 
 	if err != nil {
 		return nil, fmt.Errorf("Error reading RAM resource share invitation %s: %s", resourceShareARN, err)
-	}
-
-	if *invitation.ReceiverAccountId != client.accountid {
-		// Report an error, this won't work on the long term since once the invitation has disappeared
-		// the receiver_account_id is populated with the account_id (and same during import)
-		return nil, fmt.Errorf("Unexpected behavior while reading RAM resource share invitation %s: receiver_account_id is %s while current account_id is %s", resourceShareARN, *invitation.ReceiverAccountId, client.accountid)
 	}
 
 	return invitation, nil
