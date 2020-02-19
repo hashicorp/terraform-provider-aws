@@ -63,7 +63,7 @@ func testSweepAPIGateway2Apis(region string) error {
 func TestAccAWSAPIGateway2Api_basic(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_api_gateway_v2_api.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -95,11 +95,33 @@ func TestAccAWSAPIGateway2Api_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGateway2Api_disappears(t *testing.T) {
+	var v apigatewayv2.GetApiOutput
+	resourceName := "aws_api_gateway_v2_api.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGateway2ApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGateway2ApiConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGateway2ApiExists(resourceName, &v),
+					testAccCheckAWSAPIGateway2Disappears(&v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGateway2Api_AllAttributes(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_api_gateway_v2_api.test"
-	rName1 := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlphaNum))
-	rName2 := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlphaNum))
+	rName1 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -171,7 +193,7 @@ func TestAccAWSAPIGateway2Api_AllAttributes(t *testing.T) {
 func TestAccAWSAPIGateway2Api_Tags(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_api_gateway_v2_api.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -240,6 +262,18 @@ func testAccCheckAWSAPIGateway2ApiDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSAPIGateway2Disappears(v *apigatewayv2.GetApiOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+
+		_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
+			ApiId: v.ApiId,
+		})
+
+		return err
+	}
 }
 
 func testAccCheckAWSAPIGateway2ApiExists(n string, v *apigatewayv2.GetApiOutput) resource.TestCheckFunc {
