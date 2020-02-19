@@ -6,6 +6,7 @@ NOTES:
 
 BUG FIXES:
 
+* resource/aws_lambda_permission: Fix error when Lambda permission is deleted out-of-band [GH-11924]
 * resource/aws_ram_resource_share_accepter: Fix read operations after the RAM Resource Share Invitation is no longer present after 7 days [GH-11562]
 
 ## 2.49.0 (February 14, 2020)
