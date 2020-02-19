@@ -55,7 +55,7 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -87,7 +87,7 @@ func TestAccAWSRoute53Zone_disappears(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -107,7 +107,7 @@ func TestAccAWSRoute53Zone_disappears(t *testing.T) {
 func TestAccAWSRoute53Zone_multiple(t *testing.T) {
 	var zone0, zone1, zone2, zone3, zone4 route53.GetHostedZoneOutput
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -138,7 +138,7 @@ func TestAccAWSRoute53Zone_Comment(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -175,7 +175,7 @@ func TestAccAWSRoute53Zone_DelegationSetID(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -204,7 +204,7 @@ func TestAccAWSRoute53Zone_ForceDestroy(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -229,7 +229,7 @@ func TestAccAWSRoute53Zone_ForceDestroy_TrailingPeriod(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -255,7 +255,7 @@ func TestAccAWSRoute53Zone_Tags(t *testing.T) {
 	resourceName := "aws_route53_zone.test"
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -310,7 +310,7 @@ func TestAccAWSRoute53Zone_VPC_Single(t *testing.T) {
 	vpcResourceName := "aws_vpc.test1"
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -342,7 +342,7 @@ func TestAccAWSRoute53Zone_VPC_Multiple(t *testing.T) {
 	vpcResourceName2 := "aws_vpc.test2"
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -375,7 +375,7 @@ func TestAccAWSRoute53Zone_VPC_Updates(t *testing.T) {
 	vpcResourceName2 := "aws_vpc.test2"
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,

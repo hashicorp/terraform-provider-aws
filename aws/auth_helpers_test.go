@@ -1,3 +1,5 @@
+// +build auth_helpers
+
 package aws
 
 import (

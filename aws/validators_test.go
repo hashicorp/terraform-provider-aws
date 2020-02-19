@@ -392,7 +392,8 @@ func TestValidateCIDRNetworkAddress(t *testing.T) {
 		ExpectedErrSubstr string
 	}{
 		{"notacidr", `must contain a valid CIDR`},
-		{"10.0.1.0/16", `must contain a valid network CIDR`},
+		// REMOVED: (eric-luminal) removed for being overly strict when validating
+		// {"10.0.1.0/16", `must contain a valid network CIDR`},
 		{"10.0.1.0/24", ``},
 	}
 

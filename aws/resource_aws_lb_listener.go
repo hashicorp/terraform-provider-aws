@@ -88,10 +88,11 @@ func resourceAwsLbListener() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
+								elbv2.ActionTypeEnumAuthenticateCognito,
+								elbv2.ActionTypeEnumAuthenticateOidc,
 								elbv2.ActionTypeEnumFixedResponse,
 								elbv2.ActionTypeEnumForward,
 								elbv2.ActionTypeEnumRedirect,
-								elbv2.ActionTypeEnumAuthenticateOidc,
 							}, true),
 						},
 
