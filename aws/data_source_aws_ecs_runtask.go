@@ -449,7 +449,7 @@ func expandEcsTaskEnvironment(e []interface{}) []*ecs.KeyValuePair {
 	for _, item := range e {
 		raw := item.(map[string]interface{})
 		te := &ecs.KeyValuePair{
-			Name: aws.String(raw["name"].(string)),
+			Name:  aws.String(raw["name"].(string)),
 			Value: aws.String(raw["value"].(string)),
 		}
 		tes = append(tes, te)
@@ -465,7 +465,7 @@ func expandEcsResourceRequirements(r []interface{}) []*ecs.ResourceRequirement {
 	for _, item := range r {
 		raw := item.(map[string]interface{})
 		rr := &ecs.ResourceRequirement{
-			Type: aws.String(raw["type"].(string)),
+			Type:  aws.String(raw["type"].(string)),
 			Value: aws.String(raw["value"].(string)),
 		}
 		rrs = append(rrs, rr)
