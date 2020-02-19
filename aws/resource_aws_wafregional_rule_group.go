@@ -29,10 +29,9 @@ func resourceAwsWafRegionalRuleGroup() *schema.Resource {
 				ForceNew: true,
 			},
 			"metric_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateWafMetricName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"activated_rule": {
 				Type:     schema.TypeSet,

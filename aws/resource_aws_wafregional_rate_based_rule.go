@@ -30,10 +30,9 @@ func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
 				ForceNew: true,
 			},
 			"metric_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateWafMetricName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"predicate": {
 				Type:     schema.TypeSet,
