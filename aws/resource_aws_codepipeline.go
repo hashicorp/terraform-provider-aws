@@ -15,6 +15,43 @@ import (
 )
 
 func resourceAwsCodePipeline() *schema.Resource {
+	var artifactStoreSchema = map[string]*schema.Schema{
+		"location": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+
+		"type": {
+			Type:     schema.TypeString,
+			Required: true,
+			ValidateFunc: validation.StringInSlice([]string{
+				codepipeline.ArtifactStoreTypeS3,
+			}, false),
+		},
+
+		"encryption_key": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"id": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+
+					"type": {
+						Type:     schema.TypeString,
+						Required: true,
+						ValidateFunc: validation.StringInSlice([]string{
+							codepipeline.EncryptionKeyTypeKms,
+						}, false),
+					},
+				},
+			},
+		},
+	}
+
 	return &schema.Resource{
 		Create: resourceAwsCodePipelineCreate,
 		Read:   resourceAwsCodePipelineRead,
@@ -44,96 +81,13 @@ func resourceAwsCodePipeline() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"location": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codepipeline.ArtifactStoreTypeS3,
-							}, false),
-						},
-
-						"encryption_key": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codepipeline.EncryptionKeyTypeKms,
-										}, false),
-									},
-								},
-							},
-						},
-					},
-				},
+				Elem:     artifactStoreSchema,
 			},
 			"artifact_stores": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"artifact_store": {
-							Type:     schema.TypeList,
-							Required: false,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"location": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codepipeline.ArtifactStoreTypeS3,
-										}, false),
-									},
-									"encryption_key": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"id": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-
-												"type": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														codepipeline.EncryptionKeyTypeKms,
-													}, false),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"region": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+					Schema: artifactStoreSchema,
 				},
 			},
 			"stage": {
