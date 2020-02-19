@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.28.9
 	github.com/beevik/etree v1.1.0
 	github.com/bflad/tfproviderdocs v0.5.0
-	github.com/bflad/tfproviderlint v0.9.0
+	github.com/bflad/tfproviderlint v0.10.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.23.6
 	github.com/hashicorp/aws-sdk-go-base v0.4.0
@@ -19,6 +19,6 @@ require (
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pquerna/otp v1.2.0
-	golang.org/x/tools v0.0.0-20200204192400-7124308813f3
+	golang.org/x/tools v0.0.0-20200216192241-b320d3a0f5a2
 	gopkg.in/yaml.v2 v2.2.8
 )
