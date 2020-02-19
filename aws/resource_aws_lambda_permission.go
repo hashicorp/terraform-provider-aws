@@ -225,6 +225,16 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 		if err == nil {
 			var psErr error
 			statement, psErr = getLambdaPolicyStatement(out, d.Id())
+
+			// handle the resource not existing
+			if awsErr, ok := psErr.(awserr.Error); ok {
+				if awsErr.Code() == "ResourceNotFoundException" {
+					log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
+					d.SetId("")
+					return nil
+				}
+			}
+
 			if psErr != nil {
 				return psErr
 			}
@@ -385,7 +395,6 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 
 	return nil
 }
-
 func getLambdaPolicyStatement(out *lambda.GetPolicyOutput, statemendId string) (statement *LambdaPolicyStatement, err error) {
 	policyInBytes := []byte(*out.Policy)
 	policy := LambdaPolicy{}
@@ -394,11 +403,7 @@ func getLambdaPolicyStatement(out *lambda.GetPolicyOutput, statemendId string) (
 		return nil, fmt.Errorf("Error unmarshalling Lambda policy: %s", err)
 	}
 
-	statement, psErr := findLambdaPolicyStatementById(&policy, statemendId)
-	if psErr != nil {
-		return nil, fmt.Errorf("Error finding Lambda policy statement: %s", psErr)
-	}
-	return statement, nil
+	return findLambdaPolicyStatementById(&policy, statemendId)
 }
 
 func findLambdaPolicyStatementById(policy *LambdaPolicy, id string) (
