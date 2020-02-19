@@ -1,8 +1,7 @@
 ---
-subcategory: "API Gateway v2 (WebSocket APIs)"
+subcategory: "API Gateway v2"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_v2_api"
-sidebar_current: "docs-aws-resource-api-gateway-v2-api"
 description: |-
   Manages an Amazon API Gateway Version 2 API.
 ---
