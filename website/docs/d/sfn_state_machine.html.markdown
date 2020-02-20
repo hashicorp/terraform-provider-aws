@@ -27,6 +27,7 @@ data "aws_sfn_state_machine" "example" {
 ## Attributes Reference
 
 * `id` - Set to the ARN of the found state machine, suitable for referencing in other resources that support State Machines.
+* `arn` - Set to the arn of the state function.
 * `role_arn` - Set to the role_arn used by the state function.
 * `definition` - Set to the state machine definition.
 * `creation_date` - The date the state machine was created.
