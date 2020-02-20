@@ -207,6 +207,5 @@ func resourceAwsEc2TrafficMirrorSessionDelete(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error deleting traffic mirror session %v", sessionId)
 	}
 
-	d.SetId("")
 	return nil
 }
