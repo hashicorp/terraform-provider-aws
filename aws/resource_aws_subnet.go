@@ -111,11 +111,14 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		AvailabilityZoneId: aws.String(d.Get("availability_zone_id").(string)),
 		CidrBlock:          aws.String(d.Get("cidr_block").(string)),
 		VpcId:              aws.String(d.Get("vpc_id").(string)),
-		OutpostArn:         aws.String(d.Get("outpost_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
 		createOpts.Ipv6CidrBlock = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("outpost_arn"); ok {
+		createOpts.OutpostArn = aws.String(v.(string))
 	}
 
 	var err error
