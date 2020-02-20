@@ -252,7 +252,7 @@ func expandAwsCodePipelineArtifactStore(d *schema.ResourceData) *codepipeline.Ar
 }
 
 func expandAwsCodePipelineArtifactStores(d *schema.ResourceData) map[string]*codepipeline.ArtifactStore {
-	configs := d.Get("artifact_stores").([]interface{})
+	configs := d.Get("artifact_stores").(map[string]*schema.ResourceData)
 
 	if configs == nil {
 		return nil
@@ -260,23 +260,8 @@ func expandAwsCodePipelineArtifactStores(d *schema.ResourceData) map[string]*cod
 
 	pipelineArtifactStores := make(map[string]*codepipeline.ArtifactStore)
 
-	for _, config := range configs {
-		data := config.(map[string]interface{})
-		pipelineArtifactStores[data["region"].(string)] = &codepipeline.ArtifactStore{
-			Location: aws.String(data["location"].(string)),
-			Type:     aws.String(data["type"].(string)),
-		}
-
-		tek := data["encryption_key"].([]interface{})
-
-		if len(tek) > 0 {
-			vk := tek[0].(map[string]interface{})
-			ek := codepipeline.EncryptionKey{
-				Type: aws.String(vk["type"].(string)),
-				Id:   aws.String(vk["id"].(string)),
-			}
-			pipelineArtifactStores[data["region"].(string)].EncryptionKey = &ek
-		}
+	for region, config := range configs {
+		pipelineArtifactStores[region] = expandAwsCodePipelineArtifactStore(config)
 	}
 
 	return pipelineArtifactStores
