@@ -72,6 +72,11 @@ func resourceAwsSubnet() *schema.Resource {
 				Default:  false,
 			},
 
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"assign_ipv6_address_on_creation": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -106,6 +111,7 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		AvailabilityZoneId: aws.String(d.Get("availability_zone_id").(string)),
 		CidrBlock:          aws.String(d.Get("cidr_block").(string)),
 		VpcId:              aws.String(d.Get("vpc_id").(string)),
+		OutpostArn:         aws.String(d.Get("outpost_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
