@@ -1,12 +1,12 @@
 ---
+subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_alias"
-sidebar_current: "docs-aws-datasource-lambda-alias"
 description: |-
   Provides a Lambda Alias data source.
 ---
 
-# aws_lambda_alias
+# Data Source: aws_lambda_alias
 
 Provides information about a Lambda Alias.
 
@@ -15,7 +15,7 @@ Provides information about a Lambda Alias.
 ```hcl
 data "aws_lambda_alias" "production" {
   function_name = "my-lambda-func"
-  alias_name    = "production"
+  name          = "production"
 }
 ```
 
@@ -24,7 +24,7 @@ data "aws_lambda_alias" "production" {
 The following arguments are supported:
 
 * `function_name` - (Required) Name of the aliased Lambda function.
-* `alias_name` - (Required) Name of the Lambda alias.
+* `name` - (Required) Name of the Lambda alias.
 
 ## Attributes Reference
 

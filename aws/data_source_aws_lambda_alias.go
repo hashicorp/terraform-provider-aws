@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsLambdaAlias() *schema.Resource {
@@ -18,7 +18,7 @@ func dataSourceAwsLambdaAlias() *schema.Resource {
 				Required: true,
 			},
 
-			"alias_name": {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -50,11 +50,11 @@ func dataSourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).lambdaconn
 
 	functionName := d.Get("function_name").(string)
-	aliasName := d.Get("alias_name").(string)
+	name := d.Get("name").(string)
 
 	params := &lambda.GetAliasInput{
 		FunctionName: aws.String(functionName),
-		Name:         aws.String(aliasName),
+		Name:         aws.String(name),
 	}
 
 	aliasConfiguration, err := conn.GetAlias(params)
