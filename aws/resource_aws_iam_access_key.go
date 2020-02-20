@@ -22,8 +22,6 @@ func resourceAwsIamAccessKey() *schema.Resource {
 		Update: resourceAwsIamAccessKeyUpdate,
 		Delete: resourceAwsIamAccessKeyDelete,
 
-		DeprecationMessage: "AWS SigV2 for SES SMTP passwords is deprecated and 'ses_smtp_password' will be removed.\nUse 'ses_smtp_regions' and 'ses_smtp_passwords' for region-specific AWS SigV4 signed SES SMTP passwords instead.",
-
 		Schema: map[string]*schema.Schema{
 			"user": {
 				Type:     schema.TypeString,
@@ -45,43 +43,15 @@ func resourceAwsIamAccessKey() *schema.Resource {
 				Sensitive: true,
 			},
 			"ses_smtp_password": {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Sensitive:  true,
+				Deprecated: "AWS SigV2 for SES SMTP passwords isy deprecated.\nUse 'ses_smtp_password_v4' for region-specific AWS SigV4 signed SES SMTP password instead.",
+			},
+			"ses_smtp_password_v4": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
-			},
-			"ses_smtp_passwords": {
-				Type:      schema.TypeList,
-				Computed:  true,
-				Sensitive: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"secret": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"ses_smtp_regions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					// https://docs.aws.amazon.com/general/latest/gr/rande.html#ses_region
-					ValidateFunc: validation.StringInSlice([]string{
-						"ap-south-1",
-						"ap-southeast-2",
-						"eu-central-1",
-						"eu-west-1",
-						"us-east-1",
-						"us-west-2",
-					}, true),
-				},
 			},
 			"pgp_key": {
 				Type:     schema.TypeString,
@@ -144,30 +114,16 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 	// AWS SigV2
 	sesSMTPPassword, err := sesSmtpPasswordFromSecretKeySigV2(createResp.AccessKey.SecretAccessKey)
 	if err != nil {
-		return fmt.Errorf("error getting SES SMTP Password from Secret Access Key: %s", err)
+		return fmt.Errorf("error getting SES SigV2 SMTP Password from Secret Access Key: %s", err)
 	}
 	d.Set("ses_smtp_password", sesSMTPPassword)
 
 	// AWS SigV4
-	if v, ok := d.GetOk("ses_smtp_regions"); ok && len(v.([]interface{})) > 0 {
-		var sesSmtpPasswords []map[string]string
-
-		for _, region := range v.([]interface{}) {
-			password, err := sesSmtpPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, region.(string))
-			if err != nil {
-				return fmt.Errorf("error getting SES SMTP Password from Secret Access Key: %s", err)
-			}
-			sesSmtpPasswords = append(
-				sesSmtpPasswords,
-				map[string]string{
-					"region": region.(string),
-					"secret": password,
-				})
-		}
-		d.Set("ses_smtp_passwords", sesSmtpPasswords)
-	} else {
-		d.Set("ses_smtp_passwords", nil)
+	sesSMTPPasswordV4, err := sesSmtpPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*AWSClient).region)
+	if err != nil {
+		return fmt.Errorf("error getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
 	}
+	d.Set("ses_smtp_password_v4", sesSMTPPasswordV4)
 
 	return resourceAwsIamAccessKeyReadResult(d, &iam.AccessKeyMetadata{
 		AccessKeyId: createResp.AccessKey.AccessKeyId,
