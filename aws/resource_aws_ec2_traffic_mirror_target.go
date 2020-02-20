@@ -115,6 +115,5 @@ func resourceAwsEc2TrafficMirrorTargetDelete(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error deleting traffic mirror target %v", targetId)
 	}
 
-	d.SetId("")
 	return nil
 }
