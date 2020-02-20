@@ -2,6 +2,7 @@
 
 NOTES:
 
+* resource/aws_lambda_function: The `publish` argument now will also publish versions for configuration updates. This is accomplished via a separate `PublishVersion` API call, where before the publishing only occured via the `Publish` parameter of the `UpdateFunctionCode` API call. Restrictive IAM permissions for Terraform may require updates. [GH-11211]
 * resource/aws_ram_resource_share_accepter: The `status` attribute now reflects the status of the RAM Resource Share and not the RAM Resource Share Invitation (which expires after 7 days). [GH-11562]
 
 FEATURES:
@@ -15,6 +16,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_lambda_function: If `publish` argument is enabled, also publish new versions on function configuration-only updates in addition to function code updates [GH-11211]
 * resource/aws_lambda_permission: Fix error when Lambda permission is deleted out-of-band [GH-11924]
 * resource/aws_ram_resource_share_accepter: Fix read operations after the RAM Resource Share Invitation is no longer present after 7 days [GH-11562]
 
