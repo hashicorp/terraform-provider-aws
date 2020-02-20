@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "Provider: AWS"
-sidebar_current: "docs-aws-index"
 description: |-
   The Amazon Web Services (AWS) provider is used to interact with the many resources supported by AWS. The provider needs to be configured with the proper credentials before it can be used.
 ---
@@ -40,7 +39,7 @@ explained below:
 - Shared credentials file
 - EC2 Role
 
-### Static credentials ###
+### Static credentials
 
 !> **Warning:** Hard-coding credentials into any Terraform configuration is not
 recommended, and risks secret leakage should this file ever be committed to a

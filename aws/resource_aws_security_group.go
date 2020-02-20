@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func resourceAwsSecurityGroup() *schema.Resource {
@@ -244,14 +245,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		securityGroupOpts.Description = aws.String(v.(string))
 	}
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = resource.UniqueId()
-	}
+	groupName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 	securityGroupOpts.GroupName = aws.String(groupName)
 
 	var err error

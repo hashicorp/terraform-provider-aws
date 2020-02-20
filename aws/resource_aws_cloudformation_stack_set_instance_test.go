@@ -2,15 +2,100 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cloudformation_stack_set_instance", &resource.Sweeper{
+		Name: "aws_cloudformation_stack_set_instance",
+		F:    testSweepCloudformationStackSetInstances,
+	})
+}
+
+func testSweepCloudformationStackSetInstances(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).cfconn
+	stackSets, err := listCloudFormationStackSets(conn)
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFormation Stack Set Instance sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFormation Stack Sets: %s", err)
+	}
+
+	var sweeperErrs *multierror.Error
+
+	for _, stackSet := range stackSets {
+		stackSetName := aws.StringValue(stackSet.StackSetName)
+		instances, err := listCloudFormationStackSetInstances(conn, stackSetName)
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error listing CloudFormation Stack Set (%s) Instances: %w", stackSetName, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+
+		for _, instance := range instances {
+			accountID := aws.StringValue(instance.Account)
+			region := aws.StringValue(instance.Region)
+			id := fmt.Sprintf("%s / %s / %s", stackSetName, accountID, region)
+
+			input := &cloudformation.DeleteStackInstancesInput{
+				Accounts:     aws.StringSlice([]string{accountID}),
+				OperationId:  aws.String(resource.UniqueId()),
+				Regions:      aws.StringSlice([]string{region}),
+				RetainStacks: aws.Bool(false),
+				StackSetName: aws.String(stackSetName),
+			}
+
+			log.Printf("[INFO] Deleting CloudFormation Stack Set Instance: %s", id)
+			output, err := conn.DeleteStackInstances(input)
+
+			if isAWSErr(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
+				continue
+			}
+
+			if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+				continue
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting CloudFormation Stack Set Instance (%s): %s", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			if err := waitForCloudFormationStackSetOperation(conn, stackSetName, aws.StringValue(output.OperationId), 30*time.Minute); err != nil {
+				sweeperErr := fmt.Errorf("error waiting for CloudFormation Stack Set Instance (%s) deletion: %s", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSCloudFormationStackSetInstance_basic(t *testing.T) {
 	var stackInstance1 cloudformation.StackInstance

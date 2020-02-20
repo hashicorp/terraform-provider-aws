@@ -630,9 +630,9 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
 				),
 			},
 			{
@@ -694,9 +694,9 @@ func TestAccAWSS3BucketObject_tagsLeadingSlash(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
 				),
 			},
 			{
@@ -1341,9 +1341,9 @@ resource "aws_s3_bucket_object" "object" {
 
   tags = {
     Key2 = "BBB"
-    Key3 = "XXX"
+    Key3 = "X X"
     Key4 = "DDD"
-    Key5 = "EEE"
+    Key5 = "E:/"
   }
 }
 `, randInt, key, content)

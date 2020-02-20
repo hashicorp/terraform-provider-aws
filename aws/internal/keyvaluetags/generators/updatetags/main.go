@@ -17,6 +17,7 @@ import (
 const filename = `update_tags_gen.go`
 
 var serviceNames = []string{
+	"accessanalyzer",
 	"acm",
 	"acmpca",
 	"amplify",
@@ -27,17 +28,21 @@ var serviceNames = []string{
 	"appsync",
 	"athena",
 	"backup",
+	"cloudfront",
 	"cloudhsmv2",
+	"cloudtrail",
 	"cloudwatch",
 	"cloudwatchevents",
 	"cloudwatchlogs",
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
+	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
 	"configservice",
 	"databasemigrationservice",
+	"dataexchange",
 	"datapipeline",
 	"datasync",
 	"dax",
@@ -53,17 +58,24 @@ var serviceNames = []string{
 	"efs",
 	"eks",
 	"elasticache",
+	"elasticbeanstalk",
 	"elasticsearchservice",
+	"elb",
 	"elbv2",
 	"emr",
 	"firehose",
 	"fsx",
+	"gamelift",
+	"glacier",
 	"glue",
 	"guardduty",
+	"greengrass",
+	"imagebuilder",
 	"iot",
 	"iotanalytics",
 	"iotevents",
 	"kafka",
+	"kinesis",
 	"kinesisanalytics",
 	"kinesisanalyticsv2",
 	"kms",
@@ -79,11 +91,13 @@ var serviceNames = []string{
 	"neptune",
 	"opsworks",
 	"organizations",
+	"pinpoint",
 	"qldb",
 	"ram",
 	"rds",
 	"redshift",
 	"resourcegroups",
+	"route53",
 	"route53resolver",
 	"sagemaker",
 	"secretsmanager",
@@ -97,6 +111,7 @@ var serviceNames = []string{
 	"transfer",
 	"waf",
 	"wafregional",
+	"wafv2",
 	"workspaces",
 }
 
@@ -114,6 +129,8 @@ func main() {
 	templateFuncMap := template.FuncMap{
 		"ClientType":                      keyvaluetags.ServiceClientType,
 		"TagFunction":                     ServiceTagFunction,
+		"TagFunctionBatchSize":            ServiceTagFunctionBatchSize,
+		"TagInputCustomValue":             ServiceTagInputCustomValue,
 		"TagInputIdentifierField":         ServiceTagInputIdentifierField,
 		"TagInputIdentifierRequiresSlice": ServiceTagInputIdentifierRequiresSlice,
 		"TagInputResourceTypeField":       ServiceTagInputResourceTypeField,
@@ -121,6 +138,8 @@ func main() {
 		"TagPackage":                      keyvaluetags.ServiceTagPackage,
 		"Title":                           strings.Title,
 		"UntagFunction":                   ServiceUntagFunction,
+		"UntagInputCustomValue":           ServiceUntagInputCustomValue,
+		"UntagInputRequiresTagKeyType":    ServiceUntagInputRequiresTagKeyType,
 		"UntagInputRequiresTagType":       ServiceUntagInputRequiresTagType,
 		"UntagInputTagsField":             ServiceUntagInputTagsField,
 	}
@@ -180,8 +199,54 @@ import (
 func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if . | TagInputResourceTypeField }}, resourceType string{{ end }}, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := New(oldTagsMap)
 	newTags := New(newTagsMap)
+	{{- if eq (. | TagFunction) (. | UntagFunction) }}
+	removedTags := oldTags.Removed(newTags)
+	updatedTags := oldTags.Updated(newTags)
+
+	// Ensure we do not send empty requests
+	if len(removedTags) == 0 && len(updatedTags) == 0 {
+		return nil
+	}
+
+	input := &{{ . | TagPackage }}.{{ . | TagFunction }}Input{
+		{{- if . | TagInputIdentifierRequiresSlice }}
+		{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
+		{{- else }}
+		{{ . | TagInputIdentifierField }}:   aws.String(identifier),
+		{{- end }}
+		{{- if . | TagInputResourceTypeField }}
+		{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
+		{{- end }}
+	}
+
+	if len(updatedTags) > 0 {
+		input.{{ . | TagInputTagsField }} = updatedTags.IgnoreAws().{{ . | Title }}Tags()
+	}
+
+	if len(removedTags) > 0 {
+		{{- if . | UntagInputRequiresTagType }}
+		input.{{ . | UntagInputTagsField }} = removedTags.IgnoreAws().{{ . | Title }}Tags()
+		{{- else if . | UntagInputRequiresTagKeyType }}
+		input.{{ . | UntagInputTagsField }} = removedTags.IgnoreAws().{{ . | Title }}TagKeys()
+		{{- else if . | UntagInputCustomValue }}
+		input.{{ . | UntagInputTagsField }} = {{ . | UntagInputCustomValue }}
+		{{- else }}
+		input.{{ . | UntagInputTagsField }} = aws.StringSlice(removedTags.Keys())
+		{{- end }}
+	}
+
+	_, err := conn.{{ . | TagFunction }}(input)
+
+	if err != nil {
+		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+	}
+
+	{{- else }}
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		{{- if . | TagFunctionBatchSize }}
+		for _, removedTags := range removedTags.Chunks({{ . | TagFunctionBatchSize }}) {
+		{{- end }}
 		input := &{{ . | TagPackage }}.{{ . | UntagFunction }}Input{
 			{{- if . | TagInputIdentifierRequiresSlice }}
 			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
@@ -193,8 +258,12 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{- end }}
 			{{- if . | UntagInputRequiresTagType }}
 			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}Tags(),
+			{{- else if . | UntagInputRequiresTagKeyType }}
+			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}TagKeys(),
+			{{- else if . | UntagInputCustomValue }}
+			{{ . | UntagInputTagsField }}:       {{ . | UntagInputCustomValue }},
 			{{- else }}
-			{{ . | UntagInputTagsField }}:       aws.StringSlice(removedTags.Keys()),
+			{{ . | UntagInputTagsField }}:       aws.StringSlice(removedTags.IgnoreAws().Keys()),
 			{{- end }}
 		}
 
@@ -203,9 +272,15 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 		if err != nil {
 			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
+		{{- if . | TagFunctionBatchSize }}
+		}
+		{{- end }}
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		{{- if . | TagFunctionBatchSize }}
+		for _, updatedTags := range updatedTags.Chunks({{ . | TagFunctionBatchSize }}) {
+		{{- end }}
 		input := &{{ . | TagPackage }}.{{ . | TagFunction }}Input{
 			{{- if . | TagInputIdentifierRequiresSlice }}
 			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
@@ -215,7 +290,11 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{- if . | TagInputResourceTypeField }}
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
+			{{- if . | TagInputCustomValue }}
+			{{ . | TagInputTagsField }}:         {{ . | TagInputCustomValue }},
+			{{- else }}
 			{{ . | TagInputTagsField }}:         updatedTags.IgnoreAws().{{ . | Title }}Tags(),
+			{{- end }}
 		}
 
 		_, err := conn.{{ . | TagFunction }}(input)
@@ -223,7 +302,12 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
+		{{- if . | TagFunctionBatchSize }}
+		}
+		{{- end }}
 	}
+
+	{{- end }}
 
 	return nil
 }
@@ -237,6 +321,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToCertificate"
 	case "acmpca":
 		return "TagCertificateAuthority"
+	case "cloudtrail":
+		return "AddTags"
 	case "cloudwatchlogs":
 		return "TagLogGroup"
 	case "databasemigrationservice":
@@ -249,11 +335,13 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "ec2":
 		return "CreateTags"
-	case "efs":
-		return "CreateTags"
 	case "elasticache":
 		return "AddTagsToResource"
+	case "elasticbeanstalk":
+		return "UpdateTagsForResource"
 	case "elasticsearchservice":
+		return "AddTags"
+	case "elb":
 		return "AddTags"
 	case "elbv2":
 		return "AddTags"
@@ -261,6 +349,10 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTags"
 	case "firehose":
 		return "TagDeliveryStream"
+	case "glacier":
+		return "AddTagsToVault"
+	case "kinesis":
+		return "AddTagsToStream"
 	case "medialive":
 		return "CreateTags"
 	case "mq":
@@ -273,6 +365,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "CreateTags"
 	case "resourcegroups":
 		return "Tag"
+	case "route53":
+		return "ChangeTagsForResource"
 	case "sagemaker":
 		return "AddTags"
 	case "sqs":
@@ -288,6 +382,16 @@ func ServiceTagFunction(serviceName string) string {
 	}
 }
 
+// ServiceTagFunctionBatchSize determines the batch size (if any) for tagging and untagging.
+func ServiceTagFunctionBatchSize(serviceName string) string {
+	switch serviceName {
+	case "kinesis":
+		return "10"
+	default:
+		return ""
+	}
+}
+
 // ServiceTagInputIdentifierField determines the service tag identifier field.
 func ServiceTagInputIdentifierField(serviceName string) string {
 	switch serviceName {
@@ -297,7 +401,11 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "CertificateAuthorityArn"
 	case "athena":
 		return "ResourceARN"
+	case "cloudfront":
+		return "Resource"
 	case "cloudhsmv2":
+		return "ResourceId"
+	case "cloudtrail":
 		return "ResourceId"
 	case "cloudwatch":
 		return "ResourceARN"
@@ -305,6 +413,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "cloudwatchlogs":
 		return "LogGroupName"
+	case "codestarnotifications":
+		return "Arn"
 	case "datapipeline":
 		return "PipelineId"
 	case "dax":
@@ -318,11 +428,13 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	case "ec2":
 		return "Resources"
 	case "efs":
-		return "FileSystemId"
+		return "ResourceId"
 	case "elasticache":
 		return "ResourceName"
 	case "elasticsearchservice":
 		return "ARN"
+	case "elb":
+		return "LoadBalancerNames"
 	case "elbv2":
 		return "ResourceArns"
 	case "emr":
@@ -331,6 +443,12 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "DeliveryStreamName"
 	case "fsx":
 		return "ResourceARN"
+	case "gamelift":
+		return "ResourceARN"
+	case "glacier":
+		return "VaultName"
+	case "kinesis":
+		return "StreamName"
 	case "kinesisanalytics":
 		return "ResourceARN"
 	case "kinesisanalyticsv2":
@@ -357,6 +475,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "resourcegroups":
 		return "Arn"
+	case "route53":
+		return "ResourceId"
 	case "secretsmanager":
 		return "SecretId"
 	case "sqs":
@@ -371,6 +491,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "wafregional":
 		return "ResourceARN"
+	case "wafv2":
+		return "ResourceARN"
 	case "workspaces":
 		return "ResourceId"
 	default:
@@ -382,6 +504,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 func ServiceTagInputIdentifierRequiresSlice(serviceName string) string {
 	switch serviceName {
 	case "ec2":
+		return "yes"
+	case "elb":
 		return "yes"
 	case "elbv2":
 		return "yes"
@@ -395,18 +519,42 @@ func ServiceTagInputTagsField(serviceName string) string {
 	switch serviceName {
 	case "cloudhsmv2":
 		return "TagList"
+	case "cloudtrail":
+		return "TagsList"
+	case "elasticbeanstalk":
+		return "TagsToAdd"
 	case "elasticsearchservice":
 		return "TagList"
 	case "glue":
 		return "TagsToAdd"
+	case "pinpoint":
+		return "TagsModel"
+	case "route53":
+		return "AddTags"
 	default:
 		return "Tags"
+	}
+}
+
+// ServiceTagInputCustomValue determines any custom value for the service tagging tags field.
+func ServiceTagInputCustomValue(serviceName string) string {
+	switch serviceName {
+	case "cloudfront":
+		return "&cloudfront.Tags{Items: updatedTags.IgnoreAws().CloudfrontTags()}"
+	case "kinesis":
+		return "aws.StringMap(updatedTags.IgnoreAws().Map())"
+	case "pinpoint":
+		return "&pinpoint.TagsModel{Tags: updatedTags.IgnoreAws().PinpointTags()}"
+	default:
+		return ""
 	}
 }
 
 // ServiceTagInputResourceTypeField determines the service tagging resource type field.
 func ServiceTagInputResourceTypeField(serviceName string) string {
 	switch serviceName {
+	case "route53":
+		return "ResourceType"
 	case "ssm":
 		return "ResourceType"
 	default:
@@ -421,6 +569,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromCertificate"
 	case "acmpca":
 		return "UntagCertificateAuthority"
+	case "cloudtrail":
+		return "RemoveTags"
 	case "cloudwatchlogs":
 		return "UntagLogGroup"
 	case "databasemigrationservice":
@@ -433,11 +583,13 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromResource"
 	case "ec2":
 		return "DeleteTags"
-	case "efs":
-		return "DeleteTags"
 	case "elasticache":
 		return "RemoveTagsFromResource"
+	case "elasticbeanstalk":
+		return "UpdateTagsForResource"
 	case "elasticsearchservice":
+		return "RemoveTags"
+	case "elb":
 		return "RemoveTags"
 	case "elbv2":
 		return "RemoveTags"
@@ -445,6 +597,10 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTags"
 	case "firehose":
 		return "UntagDeliveryStream"
+	case "glacier":
+		return "RemoveTagsFromVault"
+	case "kinesis":
+		return "RemoveTagsFromStream"
 	case "medialive":
 		return "DeleteTags"
 	case "mq":
@@ -457,6 +613,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "DeleteTags"
 	case "resourcegroups":
 		return "Untag"
+	case "route53":
+		return "ChangeTagsForResource"
 	case "sagemaker":
 		return "DeleteTags"
 	case "sqs":
@@ -479,7 +637,19 @@ func ServiceUntagInputRequiresTagType(serviceName string) string {
 		return "yes"
 	case "acmpca":
 		return "yes"
+	case "cloudtrail":
+		return "yes"
 	case "ec2":
+		return "yes"
+	default:
+		return ""
+	}
+}
+
+// ServiceUntagInputRequiresTagKeyType determines if a special type for the untagging function tag key field is needed.
+func ServiceUntagInputRequiresTagKeyType(serviceName string) string {
+	switch serviceName {
+	case "elb":
 		return "yes"
 	default:
 		return ""
@@ -497,17 +667,35 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "TagKeyList"
 	case "cloudhsmv2":
 		return "TagKeyList"
+	case "cloudtrail":
+		return "TagsList"
 	case "cloudwatchlogs":
 		return "Tags"
 	case "datasync":
 		return "Keys"
 	case "ec2":
 		return "Tags"
+	case "elasticbeanstalk":
+		return "TagsToRemove"
+	case "elb":
+		return "Tags"
 	case "glue":
 		return "TagsToRemove"
 	case "resourcegroups":
 		return "Keys"
+	case "route53":
+		return "RemoveTagKeys"
 	default:
 		return "TagKeys"
+	}
+}
+
+// ServiceUntagInputCustomValue determines any custom value for the service untagging tags field.
+func ServiceUntagInputCustomValue(serviceName string) string {
+	switch serviceName {
+	case "cloudfront":
+		return "&cloudfront.TagKeys{Items: aws.StringSlice(removedTags.IgnoreAws().Keys())}"
+	default:
+		return ""
 	}
 }
