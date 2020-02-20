@@ -16,6 +16,11 @@ func resourceAwsIotProvisioningTemplate() *schema.Resource {
 		Read:   resourceAwsIotProvisioningTemplateRead,
 		Update: resourceAwsIotProvisioningTemplateUpdate,
 		Delete: resourceAwsIotProvisioningTemplateDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"default_version_id": {
 				Type:     schema.TypeInt,
