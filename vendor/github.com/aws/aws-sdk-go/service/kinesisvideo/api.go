@@ -68,25 +68,25 @@ func (c *KinesisVideo) CreateSignalingChannelRequest(input *CreateSignalingChann
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation CreateSignalingChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeAccountChannelLimitExceededException "AccountChannelLimitExceededException"
+//   * AccountChannelLimitExceededException
 //   You have reached the maximum limit of active signaling channels for this
 //   AWS account in this region.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The stream is currently not available for this operation.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
 //
-//   * ErrCodeTagsPerResourceExceededLimitException "TagsPerResourceExceededLimitException"
+//   * TagsPerResourceExceededLimitException
 //   You have exceeded the limit of tags that you can associate with the resource.
 //   Kinesis video streams support up to 50 tags.
 //
@@ -175,27 +175,27 @@ func (c *KinesisVideo) CreateStreamRequest(input *CreateStreamInput) (req *reque
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation CreateStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccountStreamLimitExceededException "AccountStreamLimitExceededException"
+// Returned Error Types:
+//   * AccountStreamLimitExceededException
 //   The number of streams created for the account is too high.
 //
-//   * ErrCodeDeviceStreamLimitExceededException "DeviceStreamLimitExceededException"
+//   * DeviceStreamLimitExceededException
 //   Not implemented.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The stream is currently not available for this operation.
 //
-//   * ErrCodeInvalidDeviceException "InvalidDeviceException"
+//   * InvalidDeviceException
 //   Not implemented.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeTagsPerResourceExceededLimitException "TagsPerResourceExceededLimitException"
+//   * TagsPerResourceExceededLimitException
 //   You have exceeded the limit of tags that you can associate with the resource.
 //   Kinesis video streams support up to 50 tags.
 //
@@ -277,21 +277,21 @@ func (c *KinesisVideo) DeleteSignalingChannelRequest(input *DeleteSignalingChann
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation DeleteSignalingChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
 //
-//   * ErrCodeVersionMismatchException "VersionMismatchException"
+//   * VersionMismatchException
 //   The stream version that you specified is not the latest version. To get the
 //   latest version, use the DescribeStream (https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_DescribeStream.html)
 //   API.
@@ -383,21 +383,21 @@ func (c *KinesisVideo) DeleteStreamRequest(input *DeleteStreamInput) (req *reque
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation DeleteStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+// Returned Error Types:
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeNotAuthorizedException "NotAuthorizedException"
+//   * NotAuthorizedException
 //   The caller is not authorized to perform this operation.
 //
-//   * ErrCodeVersionMismatchException "VersionMismatchException"
+//   * VersionMismatchException
 //   The stream version that you specified is not the latest version. To get the
 //   latest version, use the DescribeStream (https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_DescribeStream.html)
 //   API.
@@ -478,18 +478,18 @@ func (c *KinesisVideo) DescribeSignalingChannelRequest(input *DescribeSignalingC
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation DescribeSignalingChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DescribeSignalingChannel
@@ -568,18 +568,18 @@ func (c *KinesisVideo) DescribeStreamRequest(input *DescribeStreamInput) (req *r
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation DescribeStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeNotAuthorizedException "NotAuthorizedException"
+//   * NotAuthorizedException
 //   The caller is not authorized to perform this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DescribeStream
@@ -665,18 +665,18 @@ func (c *KinesisVideo) GetDataEndpointRequest(input *GetDataEndpointInput) (req 
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation GetDataEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeNotAuthorizedException "NotAuthorizedException"
+//   * NotAuthorizedException
 //   The caller is not authorized to perform this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/GetDataEndpoint
@@ -766,21 +766,21 @@ func (c *KinesisVideo) GetSignalingChannelEndpointRequest(input *GetSignalingCha
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation GetSignalingChannelEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The stream is currently not available for this operation.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/GetSignalingChannelEndpoint
@@ -866,15 +866,15 @@ func (c *KinesisVideo) ListSignalingChannelsRequest(input *ListSignalingChannels
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation ListSignalingChannels for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/ListSignalingChannels
@@ -1012,12 +1012,12 @@ func (c *KinesisVideo) ListStreamsRequest(input *ListStreamsInput) (req *request
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation ListStreams for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+// Returned Error Types:
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/ListStreams
@@ -1147,18 +1147,18 @@ func (c *KinesisVideo) ListTagsForResourceRequest(input *ListTagsForResourceInpu
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/ListTagsForResource
@@ -1238,21 +1238,21 @@ func (c *KinesisVideo) ListTagsForStreamRequest(input *ListTagsForStreamInput) (
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation ListTagsForStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+// Returned Error Types:
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeNotAuthorizedException "NotAuthorizedException"
+//   * NotAuthorizedException
 //   The caller is not authorized to perform this operation.
 //
-//   * ErrCodeInvalidResourceFormatException "InvalidResourceFormatException"
+//   * InvalidResourceFormatException
 //   The format of the StreamARN is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/ListTagsForStream
@@ -1336,21 +1336,21 @@ func (c *KinesisVideo) TagResourceRequest(input *TagResourceInput) (req *request
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
 //
-//   * ErrCodeTagsPerResourceExceededLimitException "TagsPerResourceExceededLimitException"
+//   * TagsPerResourceExceededLimitException
 //   You have exceeded the limit of tags that you can associate with the resource.
 //   Kinesis video streams support up to 50 tags.
 //
@@ -1441,24 +1441,24 @@ func (c *KinesisVideo) TagStreamRequest(input *TagStreamInput) (req *request.Req
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation TagStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+// Returned Error Types:
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeNotAuthorizedException "NotAuthorizedException"
+//   * NotAuthorizedException
 //   The caller is not authorized to perform this operation.
 //
-//   * ErrCodeInvalidResourceFormatException "InvalidResourceFormatException"
+//   * InvalidResourceFormatException
 //   The format of the StreamARN is invalid.
 //
-//   * ErrCodeTagsPerResourceExceededLimitException "TagsPerResourceExceededLimitException"
+//   * TagsPerResourceExceededLimitException
 //   You have exceeded the limit of tags that you can associate with the resource.
 //   Kinesis video streams support up to 50 tags.
 //
@@ -1540,18 +1540,18 @@ func (c *KinesisVideo) UntagResourceRequest(input *UntagResourceInput) (req *req
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/UntagResource
@@ -1634,21 +1634,21 @@ func (c *KinesisVideo) UntagStreamRequest(input *UntagStreamInput) (req *request
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation UntagStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+// Returned Error Types:
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeNotAuthorizedException "NotAuthorizedException"
+//   * NotAuthorizedException
 //   The caller is not authorized to perform this operation.
 //
-//   * ErrCodeInvalidResourceFormatException "InvalidResourceFormatException"
+//   * InvalidResourceFormatException
 //   The format of the StreamARN is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/UntagStream
@@ -1747,24 +1747,24 @@ func (c *KinesisVideo) UpdateDataRetentionRequest(input *UpdateDataRetentionInpu
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation UpdateDataRetention for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+// Returned Error Types:
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The stream is currently not available for this operation.
 //
-//   * ErrCodeNotAuthorizedException "NotAuthorizedException"
+//   * NotAuthorizedException
 //   The caller is not authorized to perform this operation.
 //
-//   * ErrCodeVersionMismatchException "VersionMismatchException"
+//   * VersionMismatchException
 //   The stream version that you specified is not the latest version. To get the
 //   latest version, use the DescribeStream (https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_DescribeStream.html)
 //   API.
@@ -1851,24 +1851,24 @@ func (c *KinesisVideo) UpdateSignalingChannelRequest(input *UpdateSignalingChann
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation UpdateSignalingChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The stream is currently not available for this operation.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
 //
-//   * ErrCodeVersionMismatchException "VersionMismatchException"
+//   * VersionMismatchException
 //   The stream version that you specified is not the latest version. To get the
 //   latest version, use the DescribeStream (https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_DescribeStream.html)
 //   API.
@@ -1960,24 +1960,24 @@ func (c *KinesisVideo) UpdateStreamRequest(input *UpdateStreamInput) (req *reque
 // See the AWS API reference guide for Amazon Kinesis Video Streams's
 // API operation UpdateStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+// Returned Error Types:
+//   * ClientLimitExceededException
 //   Kinesis Video Streams has throttled the request because you have exceeded
 //   the limit of allowed client calls. Try making the call later.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   The value for this input parameter is invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The stream is currently not available for this operation.
 //
-//   * ErrCodeNotAuthorizedException "NotAuthorizedException"
+//   * NotAuthorizedException
 //   The caller is not authorized to perform this operation.
 //
-//   * ErrCodeVersionMismatchException "VersionMismatchException"
+//   * VersionMismatchException
 //   The stream version that you specified is not the latest version. To get the
 //   latest version, use the DescribeStream (https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_DescribeStream.html)
 //   API.
@@ -2002,6 +2002,175 @@ func (c *KinesisVideo) UpdateStreamWithContext(ctx aws.Context, input *UpdateStr
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// You do not have required permissions to perform this operation.
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have reached the maximum limit of active signaling channels for this
+// AWS account in this region.
+type AccountChannelLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccountChannelLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountChannelLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccountChannelLimitExceededException(v protocol.ResponseMetadata) error {
+	return &AccountChannelLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccountChannelLimitExceededException) Code() string {
+	return "AccountChannelLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s AccountChannelLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccountChannelLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s AccountChannelLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccountChannelLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccountChannelLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The number of streams created for the account is too high.
+type AccountStreamLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccountStreamLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountStreamLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccountStreamLimitExceededException(v protocol.ResponseMetadata) error {
+	return &AccountStreamLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccountStreamLimitExceededException) Code() string {
+	return "AccountStreamLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s AccountStreamLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccountStreamLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s AccountStreamLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccountStreamLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccountStreamLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A structure that encapsulates a signaling channel's metadata and properties.
@@ -2130,6 +2299,63 @@ func (s *ChannelNameCondition) SetComparisonOperator(v string) *ChannelNameCondi
 func (s *ChannelNameCondition) SetComparisonValue(v string) *ChannelNameCondition {
 	s.ComparisonValue = &v
 	return s
+}
+
+// Kinesis Video Streams has throttled the request because you have exceeded
+// the limit of allowed client calls. Try making the call later.
+type ClientLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ClientLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorClientLimitExceededException(v protocol.ResponseMetadata) error {
+	return &ClientLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClientLimitExceededException) Code() string {
+	return "ClientLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s ClientLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClientLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ClientLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClientLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClientLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type CreateSignalingChannelInput struct {
@@ -2674,6 +2900,62 @@ func (s *DescribeStreamOutput) SetStreamInfo(v *StreamInfo) *DescribeStreamOutpu
 	return s
 }
 
+// Not implemented.
+type DeviceStreamLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s DeviceStreamLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeviceStreamLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorDeviceStreamLimitExceededException(v protocol.ResponseMetadata) error {
+	return &DeviceStreamLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DeviceStreamLimitExceededException) Code() string {
+	return "DeviceStreamLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s DeviceStreamLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DeviceStreamLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s DeviceStreamLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DeviceStreamLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DeviceStreamLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type GetDataEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2839,6 +3121,174 @@ func (s GetSignalingChannelEndpointOutput) GoString() string {
 func (s *GetSignalingChannelEndpointOutput) SetResourceEndpointList(v []*ResourceEndpointListItem) *GetSignalingChannelEndpointOutput {
 	s.ResourceEndpointList = v
 	return s
+}
+
+// The value for this input parameter is invalid.
+type InvalidArgumentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidArgumentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidArgumentException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidArgumentException(v protocol.ResponseMetadata) error {
+	return &InvalidArgumentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidArgumentException) Code() string {
+	return "InvalidArgumentException"
+}
+
+// Message returns the exception's message.
+func (s InvalidArgumentException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidArgumentException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidArgumentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidArgumentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidArgumentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Not implemented.
+type InvalidDeviceException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidDeviceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidDeviceException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidDeviceException(v protocol.ResponseMetadata) error {
+	return &InvalidDeviceException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidDeviceException) Code() string {
+	return "InvalidDeviceException"
+}
+
+// Message returns the exception's message.
+func (s InvalidDeviceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidDeviceException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidDeviceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidDeviceException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidDeviceException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The format of the StreamARN is invalid.
+type InvalidResourceFormatException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidResourceFormatException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidResourceFormatException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidResourceFormatException(v protocol.ResponseMetadata) error {
+	return &InvalidResourceFormatException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidResourceFormatException) Code() string {
+	return "InvalidResourceFormatException"
+}
+
+// Message returns the exception's message.
+func (s InvalidResourceFormatException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidResourceFormatException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidResourceFormatException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidResourceFormatException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidResourceFormatException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListSignalingChannelsInput struct {
@@ -3210,6 +3660,62 @@ func (s *ListTagsForStreamOutput) SetTags(v map[string]*string) *ListTagsForStre
 	return s
 }
 
+// The caller is not authorized to perform this operation.
+type NotAuthorizedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotAuthorizedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotAuthorizedException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotAuthorizedException(v protocol.ResponseMetadata) error {
+	return &NotAuthorizedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotAuthorizedException) Code() string {
+	return "NotAuthorizedException"
+}
+
+// Message returns the exception's message.
+func (s NotAuthorizedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotAuthorizedException) OrigErr() error {
+	return nil
+}
+
+func (s NotAuthorizedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotAuthorizedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotAuthorizedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // An object that describes the endpoint of the signaling channel returned by
 // the GetSignalingChannelEndpoint API.
 type ResourceEndpointListItem struct {
@@ -3244,6 +3750,118 @@ func (s *ResourceEndpointListItem) SetProtocol(v string) *ResourceEndpointListIt
 func (s *ResourceEndpointListItem) SetResourceEndpoint(v string) *ResourceEndpointListItem {
 	s.ResourceEndpoint = &v
 	return s
+}
+
+// The stream is currently not available for this operation.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Amazon Kinesis Video Streams can't find the stream that you specified.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // An object that contains the endpoint configuration for the SINGLE_MASTER
@@ -3704,6 +4322,63 @@ func (s TagStreamOutput) String() string {
 // GoString returns the string representation
 func (s TagStreamOutput) GoString() string {
 	return s.String()
+}
+
+// You have exceeded the limit of tags that you can associate with the resource.
+// Kinesis video streams support up to 50 tags.
+type TagsPerResourceExceededLimitException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s TagsPerResourceExceededLimitException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagsPerResourceExceededLimitException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagsPerResourceExceededLimitException(v protocol.ResponseMetadata) error {
+	return &TagsPerResourceExceededLimitException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TagsPerResourceExceededLimitException) Code() string {
+	return "TagsPerResourceExceededLimitException"
+}
+
+// Message returns the exception's message.
+func (s TagsPerResourceExceededLimitException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TagsPerResourceExceededLimitException) OrigErr() error {
+	return nil
+}
+
+func (s TagsPerResourceExceededLimitException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TagsPerResourceExceededLimitException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TagsPerResourceExceededLimitException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -4170,6 +4845,64 @@ func (s UpdateStreamOutput) String() string {
 // GoString returns the string representation
 func (s UpdateStreamOutput) GoString() string {
 	return s.String()
+}
+
+// The stream version that you specified is not the latest version. To get the
+// latest version, use the DescribeStream (https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_DescribeStream.html)
+// API.
+type VersionMismatchException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s VersionMismatchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VersionMismatchException) GoString() string {
+	return s.String()
+}
+
+func newErrorVersionMismatchException(v protocol.ResponseMetadata) error {
+	return &VersionMismatchException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s VersionMismatchException) Code() string {
+	return "VersionMismatchException"
+}
+
+// Message returns the exception's message.
+func (s VersionMismatchException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s VersionMismatchException) OrigErr() error {
+	return nil
+}
+
+func (s VersionMismatchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s VersionMismatchException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s VersionMismatchException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 const (

@@ -650,6 +650,89 @@ func (c *RDS) BacktrackDBClusterWithContext(ctx aws.Context, input *BacktrackDBC
 	return out, req.Send()
 }
 
+const opCancelExportTask = "CancelExportTask"
+
+// CancelExportTaskRequest generates a "aws/request.Request" representing the
+// client's request for the CancelExportTask operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelExportTask for more information on using the CancelExportTask
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelExportTaskRequest method.
+//    req, resp := client.CancelExportTaskRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/CancelExportTask
+func (c *RDS) CancelExportTaskRequest(input *CancelExportTaskInput) (req *request.Request, output *CancelExportTaskOutput) {
+	op := &request.Operation{
+		Name:       opCancelExportTask,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CancelExportTaskInput{}
+	}
+
+	output = &CancelExportTaskOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CancelExportTask API operation for Amazon Relational Database Service.
+//
+// Cancels an export task in progress that is exporting a snapshot to Amazon
+// S3. Any data that has already been written to the S3 bucket isn't removed.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Relational Database Service's
+// API operation CancelExportTask for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeExportTaskNotFoundFault "ExportTaskNotFound"
+//   The export task doesn't exist.
+//
+//   * ErrCodeInvalidExportTaskStateFault "InvalidExportTaskStateFault"
+//   You can't cancel an export task that has completed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/CancelExportTask
+func (c *RDS) CancelExportTask(input *CancelExportTaskInput) (*CancelExportTaskOutput, error) {
+	req, out := c.CancelExportTaskRequest(input)
+	return out, req.Send()
+}
+
+// CancelExportTaskWithContext is the same as CancelExportTask with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelExportTask for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) CancelExportTaskWithContext(ctx aws.Context, input *CancelExportTaskInput, opts ...request.Option) (*CancelExportTaskOutput, error) {
+	req, out := c.CancelExportTaskRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCopyDBClusterParameterGroup = "CopyDBClusterParameterGroup"
 
 // CopyDBClusterParameterGroupRequest generates a "aws/request.Request" representing the
@@ -808,7 +891,7 @@ func (c *RDS) CopyDBClusterSnapshotRequest(input *CopyDBClusterSnapshotInput) (r
 //    Region. This is the same identifier for both the CopyDBClusterSnapshot
 //    action that is called in the destination AWS Region, and the action contained
 //    in the pre-signed URL. DestinationRegion - The name of the AWS Region
-//    that the DB cluster snapshot will be created in. SourceDBClusterSnapshotIdentifier
+//    that the DB cluster snapshot is to be created in. SourceDBClusterSnapshotIdentifier
 //    - The DB cluster snapshot identifier for the encrypted DB cluster snapshot
 //    to be copied. This identifier must be in the Amazon Resource Name (ARN)
 //    format for the source AWS Region. For example, if you are copying an encrypted
@@ -1029,7 +1112,7 @@ func (c *RDS) CopyDBSnapshotRequest(input *CopyDBSnapshotInput) (req *request.Re
 // AWS Region where you call the CopyDBSnapshot action is the destination AWS
 // Region for the DB snapshot copy.
 //
-// For more information about copying snapshots, see Copying a DB Snapshot (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_CopyDBSnapshot.html)
+// For more information about copying snapshots, see Copying a DB Snapshot (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_CopySnapshot.html#USER_CopyDBSnapshot)
 // in the Amazon RDS User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2513,7 +2596,7 @@ func (c *RDS) CreateEventSubscriptionRequest(input *CreateEventSubscriptionInput
 // CreateEventSubscription API operation for Amazon Relational Database Service.
 //
 // Creates an RDS event notification subscription. This action requires a topic
-// ARN (Amazon Resource Name) created by either the RDS console, the SNS console,
+// Amazon Resource Name (ARN) created by either the RDS console, the SNS console,
 // or the SNS API. To obtain an ARN with SNS, you must create a topic in Amazon
 // SNS and subscribe to the topic. The ARN is displayed in the SNS console.
 //
@@ -2527,8 +2610,8 @@ func (c *RDS) CreateEventSubscriptionRequest(input *CreateEventSubscriptionInput
 // and SourceIdentifier = myDBInstance1, you are notified of all the db-instance
 // events for the specified source. If you specify a SourceType but do not specify
 // a SourceIdentifier, you receive notice of the events for that source type
-// for all your RDS sources. If you do not specify either the SourceType nor
-// the SourceIdentifier, you are notified of events generated from all RDS sources
+// for all your RDS sources. If you don't specify either the SourceType or the
+// SourceIdentifier, you are notified of events generated from all RDS sources
 // belonging to your customer account.
 //
 // RDS event notification is only available for unencrypted SNS topics. If you
@@ -3275,9 +3358,9 @@ func (c *RDS) DeleteDBInstanceRequest(input *DeleteDBInstanceInput) (req *reques
 // is used to monitor the status of this operation. The action can't be canceled
 // or reverted once submitted.
 //
-// Note that when a DB instance is in a failure state and has a status of failed,
-// incompatible-restore, or incompatible-network, you can only delete it when
-// you skip creation of the final snapshot with the SkipFinalSnapshot parameter.
+// When a DB instance is in a failure state and has a status of failed, incompatible-restore,
+// or incompatible-network, you can only delete it when you skip creation of
+// the final snapshot with the SkipFinalSnapshot parameter.
 //
 // If the specified DB instance is part of an Amazon Aurora DB cluster, you
 // can't delete the DB instance if both of the following conditions are true:
@@ -5153,7 +5236,8 @@ func (c *RDS) DescribeDBClustersRequest(input *DescribeDBClustersInput) (req *re
 // For more information on Amazon Aurora, see What Is Amazon Aurora? (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html)
 // in the Amazon Aurora User Guide.
 //
-// This action only applies to Aurora DB clusters.
+// This operation can also return information for Amazon Neptune DB instances
+// and Amazon DocumentDB instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5566,6 +5650,9 @@ func (c *RDS) DescribeDBInstancesRequest(input *DescribeDBInstancesInput) (req *
 // DescribeDBInstances API operation for Amazon Relational Database Service.
 //
 // Returns information about provisioned RDS instances. This API supports pagination.
+//
+// This operation can also return information for Amazon Neptune DB instances
+// and Amazon DocumentDB instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7571,6 +7658,144 @@ func (c *RDS) DescribeEventsPagesWithContext(ctx aws.Context, input *DescribeEve
 	return p.Err()
 }
 
+const opDescribeExportTasks = "DescribeExportTasks"
+
+// DescribeExportTasksRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeExportTasks operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeExportTasks for more information on using the DescribeExportTasks
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeExportTasksRequest method.
+//    req, resp := client.DescribeExportTasksRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/DescribeExportTasks
+func (c *RDS) DescribeExportTasksRequest(input *DescribeExportTasksInput) (req *request.Request, output *DescribeExportTasksOutput) {
+	op := &request.Operation{
+		Name:       opDescribeExportTasks,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeExportTasksInput{}
+	}
+
+	output = &DescribeExportTasksOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeExportTasks API operation for Amazon Relational Database Service.
+//
+// Returns information about a snapshot export to Amazon S3. This API operation
+// supports pagination.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Relational Database Service's
+// API operation DescribeExportTasks for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeExportTaskNotFoundFault "ExportTaskNotFound"
+//   The export task doesn't exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/DescribeExportTasks
+func (c *RDS) DescribeExportTasks(input *DescribeExportTasksInput) (*DescribeExportTasksOutput, error) {
+	req, out := c.DescribeExportTasksRequest(input)
+	return out, req.Send()
+}
+
+// DescribeExportTasksWithContext is the same as DescribeExportTasks with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeExportTasks for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) DescribeExportTasksWithContext(ctx aws.Context, input *DescribeExportTasksInput, opts ...request.Option) (*DescribeExportTasksOutput, error) {
+	req, out := c.DescribeExportTasksRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeExportTasksPages iterates over the pages of a DescribeExportTasks operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeExportTasks method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeExportTasks operation.
+//    pageNum := 0
+//    err := client.DescribeExportTasksPages(params,
+//        func(page *rds.DescribeExportTasksOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *RDS) DescribeExportTasksPages(input *DescribeExportTasksInput, fn func(*DescribeExportTasksOutput, bool) bool) error {
+	return c.DescribeExportTasksPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeExportTasksPagesWithContext same as DescribeExportTasksPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) DescribeExportTasksPagesWithContext(ctx aws.Context, input *DescribeExportTasksInput, fn func(*DescribeExportTasksOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeExportTasksInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeExportTasksRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeExportTasksOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeGlobalClusters = "DescribeGlobalClusters"
 
 // DescribeGlobalClustersRequest generates a "aws/request.Request" representing the
@@ -9180,6 +9405,111 @@ func (c *RDS) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsFor
 	return out, req.Send()
 }
 
+const opModifyCertificates = "ModifyCertificates"
+
+// ModifyCertificatesRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyCertificates operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyCertificates for more information on using the ModifyCertificates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyCertificatesRequest method.
+//    req, resp := client.ModifyCertificatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ModifyCertificates
+func (c *RDS) ModifyCertificatesRequest(input *ModifyCertificatesInput) (req *request.Request, output *ModifyCertificatesOutput) {
+	op := &request.Operation{
+		Name:       opModifyCertificates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyCertificatesInput{}
+	}
+
+	output = &ModifyCertificatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyCertificates API operation for Amazon Relational Database Service.
+//
+// Override the system-default Secure Sockets Layer/Transport Layer Security
+// (SSL/TLS) certificate for Amazon RDS for new DB instances temporarily, or
+// remove the override.
+//
+// By using this operation, you can specify an RDS-approved SSL/TLS certificate
+// for new DB instances that is different from the default certificate provided
+// by RDS. You can also use this operation to remove the override, so that new
+// DB instances use the default certificate provided by RDS.
+//
+// You might need to override the default certificate in the following situations:
+//
+//    * You already migrated your applications to support the latest certificate
+//    authority (CA) certificate, but the new CA certificate is not yet the
+//    RDS default CA certificate for the specified AWS Region.
+//
+//    * RDS has already moved to a new default CA certificate for the specified
+//    AWS Region, but you are still in the process of supporting the new CA
+//    certificate. In this case, you temporarily need additional time to finish
+//    your application changes.
+//
+// For more information about rotating your SSL/TLS certificate for RDS DB engines,
+// see Rotating Your SSL/TLS Certificate (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL-certificate-rotation.html)
+// in the Amazon RDS User Guide.
+//
+// For more information about rotating your SSL/TLS certificate for Aurora DB
+// engines, see Rotating Your SSL/TLS Certificate (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.SSL-certificate-rotation.html)
+// in the Amazon Aurora User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Relational Database Service's
+// API operation ModifyCertificates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeCertificateNotFoundFault "CertificateNotFound"
+//   CertificateIdentifier doesn't refer to an existing certificate.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ModifyCertificates
+func (c *RDS) ModifyCertificates(input *ModifyCertificatesInput) (*ModifyCertificatesOutput, error) {
+	req, out := c.ModifyCertificatesRequest(input)
+	return out, req.Send()
+}
+
+// ModifyCertificatesWithContext is the same as ModifyCertificates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyCertificates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) ModifyCertificatesWithContext(ctx aws.Context, input *ModifyCertificatesInput, opts ...request.Option) (*ModifyCertificatesOutput, error) {
+	req, out := c.ModifyCertificatesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyCurrentDBClusterCapacity = "ModifyCurrentDBClusterCapacity"
 
 // ModifyCurrentDBClusterCapacityRequest generates a "aws/request.Request" representing the
@@ -10458,9 +10788,9 @@ func (c *RDS) ModifyEventSubscriptionRequest(input *ModifyEventSubscriptionInput
 
 // ModifyEventSubscription API operation for Amazon Relational Database Service.
 //
-// Modifies an existing RDS event notification subscription. Note that you can't
-// modify the source identifiers using this call; to change source identifiers
-// for a subscription, use the AddSourceIdentifierToSubscription and RemoveSourceIdentifierFromSubscription
+// Modifies an existing RDS event notification subscription. You can't modify
+// the source identifiers using this call. To change source identifiers for
+// a subscription, use the AddSourceIdentifierToSubscription and RemoveSourceIdentifierFromSubscription
 // calls.
 //
 // You can see a list of the event categories for a given SourceType in the
@@ -13087,6 +13417,113 @@ func (c *RDS) StartDBInstanceWithContext(ctx aws.Context, input *StartDBInstance
 	return out, req.Send()
 }
 
+const opStartExportTask = "StartExportTask"
+
+// StartExportTaskRequest generates a "aws/request.Request" representing the
+// client's request for the StartExportTask operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartExportTask for more information on using the StartExportTask
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartExportTaskRequest method.
+//    req, resp := client.StartExportTaskRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/StartExportTask
+func (c *RDS) StartExportTaskRequest(input *StartExportTaskInput) (req *request.Request, output *StartExportTaskOutput) {
+	op := &request.Operation{
+		Name:       opStartExportTask,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartExportTaskInput{}
+	}
+
+	output = &StartExportTaskOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartExportTask API operation for Amazon Relational Database Service.
+//
+// Starts an export of a snapshot to Amazon S3. The provided IAM role must have
+// access to the S3 bucket.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Relational Database Service's
+// API operation StartExportTask for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDBSnapshotNotFoundFault "DBSnapshotNotFound"
+//   DBSnapshotIdentifier doesn't refer to an existing DB snapshot.
+//
+//   * ErrCodeDBClusterSnapshotNotFoundFault "DBClusterSnapshotNotFoundFault"
+//   DBClusterSnapshotIdentifier doesn't refer to an existing DB cluster snapshot.
+//
+//   * ErrCodeExportTaskAlreadyExistsFault "ExportTaskAlreadyExists"
+//   You can't start an export task that's already running.
+//
+//   * ErrCodeInvalidS3BucketFault "InvalidS3BucketFault"
+//   The specified Amazon S3 bucket name can't be found or Amazon RDS isn't authorized
+//   to access the specified Amazon S3 bucket. Verify the SourceS3BucketName and
+//   S3IngestionRoleArn values and try again.
+//
+//   * ErrCodeIamRoleNotFoundFault "IamRoleNotFound"
+//   The IAM role is missing for exporting to an Amazon S3 bucket.
+//
+//   * ErrCodeIamRoleMissingPermissionsFault "IamRoleMissingPermissions"
+//   The IAM role requires additional permissions to export to an Amazon S3 bucket.
+//
+//   * ErrCodeInvalidExportOnlyFault "InvalidExportOnly"
+//   The export is invalid for exporting to an Amazon S3 bucket.
+//
+//   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
+//   An error occurred accessing an AWS KMS key.
+//
+//   * ErrCodeInvalidExportSourceStateFault "InvalidExportSourceState"
+//   The state of the export snapshot is invalid for exporting to an Amazon S3
+//   bucket.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/StartExportTask
+func (c *RDS) StartExportTask(input *StartExportTaskInput) (*StartExportTaskOutput, error) {
+	req, out := c.StartExportTaskRequest(input)
+	return out, req.Send()
+}
+
+// StartExportTaskWithContext is the same as StartExportTask with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartExportTask for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) StartExportTaskWithContext(ctx aws.Context, input *StartExportTaskInput, opts ...request.Option) (*StartExportTaskOutput, error) {
+	req, out := c.StartExportTaskRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStopActivityStream = "StopActivityStream"
 
 // StopActivityStreamRequest generates a "aws/request.Request" representing the
@@ -13411,7 +13848,9 @@ func (c *RDS) StopDBInstanceWithContext(ctx aws.Context, input *StopDBInstanceIn
 //    a lower number of associated IAM roles.
 //
 //    * DBInstances - The number of DB instances per account. The used value
-//    is the count of the DB instances in the account.
+//    is the count of the DB instances in the account. Amazon RDS DB instances,
+//    Amazon Aurora DB instances, Amazon Neptune instances, and Amazon DocumentDB
+//    instances apply to this quota.
 //
 //    * DBParameterGroups - The number of DB parameter groups per account, excluding
 //    default parameter groups. The used value is the count of nondefault DB
@@ -13448,8 +13887,8 @@ func (c *RDS) StopDBInstanceWithContext(ctx aws.Context, input *StopDBInstanceIn
 //    account. Other DB subnet groups in the account might have a lower number
 //    of subnets.
 //
-// For more information, see Limits (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html)
-// in the Amazon RDS User Guide and Limits (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_Limits.html)
+// For more information, see Quotas for Amazon RDS (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html)
+// in the Amazon RDS User Guide and Quotas for Amazon Aurora (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_Limits.html)
 // in the Amazon Aurora User Guide.
 type AccountQuota struct {
 	_ struct{} `type:"structure"`
@@ -14278,6 +14717,214 @@ func (s *BacktrackDBClusterOutput) SetStatus(v string) *BacktrackDBClusterOutput
 	return s
 }
 
+type CancelExportTaskInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the snapshot export task to cancel.
+	//
+	// ExportTaskIdentifier is a required field
+	ExportTaskIdentifier *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CancelExportTaskInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelExportTaskInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelExportTaskInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelExportTaskInput"}
+	if s.ExportTaskIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ExportTaskIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExportTaskIdentifier sets the ExportTaskIdentifier field's value.
+func (s *CancelExportTaskInput) SetExportTaskIdentifier(v string) *CancelExportTaskInput {
+	s.ExportTaskIdentifier = &v
+	return s
+}
+
+// Contains the details of a snapshot export to Amazon S3.
+//
+// This data type is used as a response element in the DescribeExportTasks action.
+type CancelExportTaskOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The data exported from the snapshot. Valid values are the following:
+	//
+	//    * database - Export all the data of the snapshot.
+	//
+	//    * database.table [table-name] - Export a table of the snapshot.
+	//
+	//    * database.schema [schema-name] - Export a database schema of the snapshot.
+	//    This value isn't valid for RDS for MySQL, RDS for MariaDB, or Aurora MySQL.
+	//
+	//    * database.schema.table [table-name] - Export a table of the database
+	//    schema. This value isn't valid for RDS for MySQL, RDS for MariaDB, or
+	//    Aurora MySQL.
+	ExportOnly []*string `type:"list"`
+
+	// A unique identifier for the snapshot export task. This ID isn't an identifier
+	// for the Amazon S3 bucket where the snapshot is exported to.
+	ExportTaskIdentifier *string `type:"string"`
+
+	// The reason the export failed, if it failed.
+	FailureCause *string `type:"string"`
+
+	// The name of the IAM role that is used to write to Amazon S3 when exporting
+	// a snapshot.
+	IamRoleArn *string `type:"string"`
+
+	// The ID of the AWS KMS key that is used to encrypt the snapshot when it's
+	// exported to Amazon S3. The KMS key ID is the Amazon Resource Name (ARN),
+	// the KMS key identifier, or the KMS key alias for the KMS encryption key.
+	// The IAM role used for the snapshot export must have encryption and decryption
+	// permissions to use this KMS key.
+	KmsKeyId *string `type:"string"`
+
+	// The progress of the snapshot export task as a percentage.
+	PercentProgress *int64 `type:"integer"`
+
+	// The Amazon S3 bucket that the snapshot is exported to.
+	S3Bucket *string `type:"string"`
+
+	// The Amazon S3 bucket prefix that is the file name and path of the exported
+	// snapshot.
+	S3Prefix *string `type:"string"`
+
+	// The time that the snapshot was created.
+	SnapshotTime *time.Time `type:"timestamp"`
+
+	// The Amazon Resource Name (ARN) of the snapshot exported to Amazon S3.
+	SourceArn *string `type:"string"`
+
+	// The progress status of the export task.
+	Status *string `type:"string"`
+
+	// The time that the snapshot export task completed.
+	TaskEndTime *time.Time `type:"timestamp"`
+
+	// The time that the snapshot export task started.
+	TaskStartTime *time.Time `type:"timestamp"`
+
+	// The total amount of data exported, in gigabytes.
+	TotalExtractedDataInGB *int64 `type:"integer"`
+
+	// A warning about the snapshot export task.
+	WarningMessage *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CancelExportTaskOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelExportTaskOutput) GoString() string {
+	return s.String()
+}
+
+// SetExportOnly sets the ExportOnly field's value.
+func (s *CancelExportTaskOutput) SetExportOnly(v []*string) *CancelExportTaskOutput {
+	s.ExportOnly = v
+	return s
+}
+
+// SetExportTaskIdentifier sets the ExportTaskIdentifier field's value.
+func (s *CancelExportTaskOutput) SetExportTaskIdentifier(v string) *CancelExportTaskOutput {
+	s.ExportTaskIdentifier = &v
+	return s
+}
+
+// SetFailureCause sets the FailureCause field's value.
+func (s *CancelExportTaskOutput) SetFailureCause(v string) *CancelExportTaskOutput {
+	s.FailureCause = &v
+	return s
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *CancelExportTaskOutput) SetIamRoleArn(v string) *CancelExportTaskOutput {
+	s.IamRoleArn = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *CancelExportTaskOutput) SetKmsKeyId(v string) *CancelExportTaskOutput {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetPercentProgress sets the PercentProgress field's value.
+func (s *CancelExportTaskOutput) SetPercentProgress(v int64) *CancelExportTaskOutput {
+	s.PercentProgress = &v
+	return s
+}
+
+// SetS3Bucket sets the S3Bucket field's value.
+func (s *CancelExportTaskOutput) SetS3Bucket(v string) *CancelExportTaskOutput {
+	s.S3Bucket = &v
+	return s
+}
+
+// SetS3Prefix sets the S3Prefix field's value.
+func (s *CancelExportTaskOutput) SetS3Prefix(v string) *CancelExportTaskOutput {
+	s.S3Prefix = &v
+	return s
+}
+
+// SetSnapshotTime sets the SnapshotTime field's value.
+func (s *CancelExportTaskOutput) SetSnapshotTime(v time.Time) *CancelExportTaskOutput {
+	s.SnapshotTime = &v
+	return s
+}
+
+// SetSourceArn sets the SourceArn field's value.
+func (s *CancelExportTaskOutput) SetSourceArn(v string) *CancelExportTaskOutput {
+	s.SourceArn = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *CancelExportTaskOutput) SetStatus(v string) *CancelExportTaskOutput {
+	s.Status = &v
+	return s
+}
+
+// SetTaskEndTime sets the TaskEndTime field's value.
+func (s *CancelExportTaskOutput) SetTaskEndTime(v time.Time) *CancelExportTaskOutput {
+	s.TaskEndTime = &v
+	return s
+}
+
+// SetTaskStartTime sets the TaskStartTime field's value.
+func (s *CancelExportTaskOutput) SetTaskStartTime(v time.Time) *CancelExportTaskOutput {
+	s.TaskStartTime = &v
+	return s
+}
+
+// SetTotalExtractedDataInGB sets the TotalExtractedDataInGB field's value.
+func (s *CancelExportTaskOutput) SetTotalExtractedDataInGB(v int64) *CancelExportTaskOutput {
+	s.TotalExtractedDataInGB = &v
+	return s
+}
+
+// SetWarningMessage sets the WarningMessage field's value.
+func (s *CancelExportTaskOutput) SetWarningMessage(v string) *CancelExportTaskOutput {
+	s.WarningMessage = &v
+	return s
+}
+
 // A CA certificate for an AWS account.
 type Certificate struct {
 	_ struct{} `type:"structure"`
@@ -14290,6 +14937,13 @@ type Certificate struct {
 
 	// The type of the certificate.
 	CertificateType *string `type:"string"`
+
+	// Whether there is an override for the default certificate identifier.
+	CustomerOverride *bool `type:"boolean"`
+
+	// If there is an override for the default certificate identifier, when the
+	// override expires.
+	CustomerOverrideValidTill *time.Time `type:"timestamp"`
 
 	// The thumbprint of the certificate.
 	Thumbprint *string `type:"string"`
@@ -14326,6 +14980,18 @@ func (s *Certificate) SetCertificateIdentifier(v string) *Certificate {
 // SetCertificateType sets the CertificateType field's value.
 func (s *Certificate) SetCertificateType(v string) *Certificate {
 	s.CertificateType = &v
+	return s
+}
+
+// SetCustomerOverride sets the CustomerOverride field's value.
+func (s *Certificate) SetCustomerOverride(v bool) *Certificate {
+	s.CustomerOverride = &v
+	return s
+}
+
+// SetCustomerOverrideValidTill sets the CustomerOverrideValidTill field's value.
+func (s *Certificate) SetCustomerOverrideValidTill(v time.Time) *Certificate {
+	s.CustomerOverrideValidTill = &v
 	return s
 }
 
@@ -14738,9 +15404,9 @@ type CopyDBClusterSnapshotInput struct {
 	// DestinationRegion is used for presigning the request to a given region.
 	DestinationRegion *string `type:"string"`
 
-	// The AWS AWS KMS key ID for an encrypted DB cluster snapshot. The KMS key
-	// ID is the Amazon Resource Name (ARN), KMS key identifier, or the KMS key
-	// alias for the KMS encryption key.
+	// The AWS KMS key ID for an encrypted DB cluster snapshot. The KMS key ID is
+	// the Amazon Resource Name (ARN), KMS key identifier, or the KMS key alias
+	// for the KMS encryption key.
 	//
 	// If you copy an encrypted DB cluster snapshot from your AWS account, you can
 	// specify a value for KmsKeyId to encrypt the copy with a new KMS encryption
@@ -14778,7 +15444,7 @@ type CopyDBClusterSnapshotInput struct {
 	//    pre-signed URL.
 	//
 	//    * DestinationRegion - The name of the AWS Region that the DB cluster snapshot
-	//    will be created in.
+	//    is to be created in.
 	//
 	//    * SourceDBClusterSnapshotIdentifier - The DB cluster snapshot identifier
 	//    for the encrypted DB cluster snapshot to be copied. This identifier must
@@ -15823,8 +16489,8 @@ type CreateDBClusterInput struct {
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
 
-	// The name for your database of up to 64 alpha-numeric characters. If you do
-	// not provide a name, Amazon RDS will not create a database in the DB cluster
+	// The name for your database of up to 64 alphanumeric characters. If you do
+	// not provide a name, Amazon RDS doesn't create a database in the DB cluster
 	// you are creating.
 	DatabaseName *string `type:"string"`
 
@@ -15870,6 +16536,17 @@ type CreateDBClusterInput struct {
 
 	// The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery,
 	// global, or multimaster.
+	//
+	// Limitations and requirements apply to some DB engine modes. For more information,
+	// see the following sections in the Amazon Aurora User Guide:
+	//
+	//    * Limitations of Aurora Serverless (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html#aurora-serverless.limitations)
+	//
+	//    * Limitations of Parallel Query (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-mysql-parallel-query.html#aurora-mysql-parallel-query-limitations)
+	//
+	//    * Requirements for Aurora Global Databases (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html#aurora-global-database.limitations)
+	//
+	//    * Limitations of Multi-Master Clusters (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-multi-master.html#aurora-multi-master-limitations)
 	EngineMode *string `type:"string"`
 
 	// The version number of the database engine to use.
@@ -17080,7 +17757,7 @@ type CreateDBInstanceInput struct {
 	// group.
 	//
 	// Permanent options, such as the TDE option for Oracle Advanced Security TDE,
-	// can't be removed from an option group, and that option group can't be removed
+	// can't be removed from an option group. Also, that option group can't be removed
 	// from a DB instance once it is associated with a DB instance
 	OptionGroupName *string `type:"string"`
 
@@ -18788,7 +19465,7 @@ type CreateEventSubscriptionInput struct {
 	// The list of identifiers of the event sources for which events are returned.
 	// If not specified, then all sources are included in the response. An identifier
 	// must begin with a letter and must contain only ASCII letters, digits, and
-	// hyphens; it can't end with a hyphen or contain two consecutive hyphens.
+	// hyphens. It can't end with a hyphen or contain two consecutive hyphens.
 	//
 	// Constraints:
 	//
@@ -21853,7 +22530,7 @@ type DBProxyTarget struct {
 	TargetArn *string `type:"string"`
 
 	// The DB cluster identifier when the target represents an Aurora DB cluster.
-	// This field is blank when the target represents an
+	// This field is blank when the target represents an RDS DB instance.
 	TrackedClusterId *string `type:"string"`
 
 	// Specifies the kind of database, such as an RDS DB instance or an Aurora DB
@@ -23136,9 +23813,8 @@ type DeleteDBInstanceInput struct {
 	// instance is deleted. By default, skip isn't specified, and the DB snapshot
 	// is created.
 	//
-	// Note that when a DB instance is in a failure state and has a status of 'failed',
-	// 'incompatible-restore', or 'incompatible-network', it can only be deleted
-	// when skip is specified.
+	// When a DB instance is in a failure state and has a status of 'failed', 'incompatible-restore',
+	// or 'incompatible-network', it can only be deleted when skip is specified.
 	//
 	// Specify skip when deleting a Read Replica.
 	//
@@ -24313,7 +24989,7 @@ type DescribeDBClusterBacktracksOutput struct {
 	// Contains a list of backtracks for the user.
 	DBClusterBacktracks []*BacktrackDBClusterOutput `locationNameList:"DBClusterBacktrack" type:"list"`
 
-	// A pagination token that can be used in a subsequent DescribeDBClusterBacktracks
+	// A pagination token that can be used in a later DescribeDBClusterBacktracks
 	// request.
 	Marker *string `type:"string"`
 }
@@ -25103,7 +25779,7 @@ type DescribeDBClustersOutput struct {
 	// Contains a list of DB clusters for the user.
 	DBClusters []*DBCluster `locationNameList:"DBCluster" type:"list"`
 
-	// A pagination token that can be used in a subsequent DescribeDBClusters request.
+	// A pagination token that can be used in a later DescribeDBClusters request.
 	Marker *string `type:"string"`
 }
 
@@ -25758,7 +26434,7 @@ type DescribeDBLogFilesOutput struct {
 	// The DB log files returned.
 	DescribeDBLogFiles []*DescribeDBLogFilesDetails `locationNameList:"DescribeDBLogFilesDetails" type:"list"`
 
-	// A pagination token that can be used in a subsequent DescribeDBLogFiles request.
+	// A pagination token that can be used in a later DescribeDBLogFiles request.
 	Marker *string `type:"string"`
 }
 
@@ -27525,6 +28201,140 @@ func (s *DescribeEventsOutput) SetMarker(v string) *DescribeEventsOutput {
 	return s
 }
 
+type DescribeExportTasksInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the snapshot export task to be described.
+	ExportTaskIdentifier *string `type:"string"`
+
+	// Filters specify one or more snapshot exports to describe. The filters are
+	// specified as name-value pairs that define what to include in the output.
+	//
+	// Supported filters include the following:
+	//
+	//    * export-task-identifier - An identifier for the snapshot export task.
+	//
+	//    * s3-bucket - The Amazon S3 bucket the snapshot is exported to.
+	//
+	//    * source-arn - The Amazon Resource Name (ARN) of the snapshot exported
+	//    to Amazon S3
+	//
+	//    * status - The status of the export task.
+	Filters []*Filter `locationNameList:"Filter" type:"list"`
+
+	// An optional pagination token provided by a previous DescribeExportTasks request.
+	// If you specify this parameter, the response includes only records beyond
+	// the marker, up to the value specified by the MaxRecords parameter.
+	Marker *string `type:"string"`
+
+	// The maximum number of records to include in the response. If more records
+	// exist than the specified value, a pagination token called a marker is included
+	// in the response. You can use the marker in a later DescribeExportTasks request
+	// to retrieve the remaining results.
+	//
+	// Default: 100
+	//
+	// Constraints: Minimum 20, maximum 100.
+	MaxRecords *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the snapshot exported to Amazon S3.
+	SourceArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeExportTasksInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeExportTasksInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeExportTasksInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeExportTasksInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExportTaskIdentifier sets the ExportTaskIdentifier field's value.
+func (s *DescribeExportTasksInput) SetExportTaskIdentifier(v string) *DescribeExportTasksInput {
+	s.ExportTaskIdentifier = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeExportTasksInput) SetFilters(v []*Filter) *DescribeExportTasksInput {
+	s.Filters = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeExportTasksInput) SetMarker(v string) *DescribeExportTasksInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeExportTasksInput) SetMaxRecords(v string) *DescribeExportTasksInput {
+	s.MaxRecords = &v
+	return s
+}
+
+// SetSourceArn sets the SourceArn field's value.
+func (s *DescribeExportTasksInput) SetSourceArn(v string) *DescribeExportTasksInput {
+	s.SourceArn = &v
+	return s
+}
+
+type DescribeExportTasksOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about an export of a snapshot to Amazon S3.
+	ExportTasks []*ExportTask `locationNameList:"ExportTask" type:"list"`
+
+	// A pagination token that can be used in a later DescribeExportTasks request.
+	// A marker is used for pagination to identify the location to begin output
+	// for the next response of DescribeExportTasks.
+	Marker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeExportTasksOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeExportTasksOutput) GoString() string {
+	return s.String()
+}
+
+// SetExportTasks sets the ExportTasks field's value.
+func (s *DescribeExportTasksOutput) SetExportTasks(v []*ExportTask) *DescribeExportTasksOutput {
+	s.ExportTasks = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeExportTasksOutput) SetMarker(v string) *DescribeExportTasksOutput {
+	s.Marker = &v
+	return s
+}
+
 type DescribeGlobalClustersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -29052,8 +29862,7 @@ type DownloadDBLogFilePortionOutput struct {
 	// Entries from the specified log file.
 	LogFileData *string `type:"string"`
 
-	// A pagination token that can be used in a subsequent DownloadDBLogFilePortion
-	// request.
+	// A pagination token that can be used in a later DownloadDBLogFilePortion request.
 	Marker *string `type:"string"`
 }
 
@@ -29459,6 +30268,176 @@ func (s *EventSubscription) SetStatus(v string) *EventSubscription {
 // SetSubscriptionCreationTime sets the SubscriptionCreationTime field's value.
 func (s *EventSubscription) SetSubscriptionCreationTime(v string) *EventSubscription {
 	s.SubscriptionCreationTime = &v
+	return s
+}
+
+// Contains the details of a snapshot export to Amazon S3.
+//
+// This data type is used as a response element in the DescribeExportTasks action.
+type ExportTask struct {
+	_ struct{} `type:"structure"`
+
+	// The data exported from the snapshot. Valid values are the following:
+	//
+	//    * database - Export all the data of the snapshot.
+	//
+	//    * database.table [table-name] - Export a table of the snapshot.
+	//
+	//    * database.schema [schema-name] - Export a database schema of the snapshot.
+	//    This value isn't valid for RDS for MySQL, RDS for MariaDB, or Aurora MySQL.
+	//
+	//    * database.schema.table [table-name] - Export a table of the database
+	//    schema. This value isn't valid for RDS for MySQL, RDS for MariaDB, or
+	//    Aurora MySQL.
+	ExportOnly []*string `type:"list"`
+
+	// A unique identifier for the snapshot export task. This ID isn't an identifier
+	// for the Amazon S3 bucket where the snapshot is exported to.
+	ExportTaskIdentifier *string `type:"string"`
+
+	// The reason the export failed, if it failed.
+	FailureCause *string `type:"string"`
+
+	// The name of the IAM role that is used to write to Amazon S3 when exporting
+	// a snapshot.
+	IamRoleArn *string `type:"string"`
+
+	// The ID of the AWS KMS key that is used to encrypt the snapshot when it's
+	// exported to Amazon S3. The KMS key ID is the Amazon Resource Name (ARN),
+	// the KMS key identifier, or the KMS key alias for the KMS encryption key.
+	// The IAM role used for the snapshot export must have encryption and decryption
+	// permissions to use this KMS key.
+	KmsKeyId *string `type:"string"`
+
+	// The progress of the snapshot export task as a percentage.
+	PercentProgress *int64 `type:"integer"`
+
+	// The Amazon S3 bucket that the snapshot is exported to.
+	S3Bucket *string `type:"string"`
+
+	// The Amazon S3 bucket prefix that is the file name and path of the exported
+	// snapshot.
+	S3Prefix *string `type:"string"`
+
+	// The time that the snapshot was created.
+	SnapshotTime *time.Time `type:"timestamp"`
+
+	// The Amazon Resource Name (ARN) of the snapshot exported to Amazon S3.
+	SourceArn *string `type:"string"`
+
+	// The progress status of the export task.
+	Status *string `type:"string"`
+
+	// The time that the snapshot export task completed.
+	TaskEndTime *time.Time `type:"timestamp"`
+
+	// The time that the snapshot export task started.
+	TaskStartTime *time.Time `type:"timestamp"`
+
+	// The total amount of data exported, in gigabytes.
+	TotalExtractedDataInGB *int64 `type:"integer"`
+
+	// A warning about the snapshot export task.
+	WarningMessage *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ExportTask) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExportTask) GoString() string {
+	return s.String()
+}
+
+// SetExportOnly sets the ExportOnly field's value.
+func (s *ExportTask) SetExportOnly(v []*string) *ExportTask {
+	s.ExportOnly = v
+	return s
+}
+
+// SetExportTaskIdentifier sets the ExportTaskIdentifier field's value.
+func (s *ExportTask) SetExportTaskIdentifier(v string) *ExportTask {
+	s.ExportTaskIdentifier = &v
+	return s
+}
+
+// SetFailureCause sets the FailureCause field's value.
+func (s *ExportTask) SetFailureCause(v string) *ExportTask {
+	s.FailureCause = &v
+	return s
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *ExportTask) SetIamRoleArn(v string) *ExportTask {
+	s.IamRoleArn = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *ExportTask) SetKmsKeyId(v string) *ExportTask {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetPercentProgress sets the PercentProgress field's value.
+func (s *ExportTask) SetPercentProgress(v int64) *ExportTask {
+	s.PercentProgress = &v
+	return s
+}
+
+// SetS3Bucket sets the S3Bucket field's value.
+func (s *ExportTask) SetS3Bucket(v string) *ExportTask {
+	s.S3Bucket = &v
+	return s
+}
+
+// SetS3Prefix sets the S3Prefix field's value.
+func (s *ExportTask) SetS3Prefix(v string) *ExportTask {
+	s.S3Prefix = &v
+	return s
+}
+
+// SetSnapshotTime sets the SnapshotTime field's value.
+func (s *ExportTask) SetSnapshotTime(v time.Time) *ExportTask {
+	s.SnapshotTime = &v
+	return s
+}
+
+// SetSourceArn sets the SourceArn field's value.
+func (s *ExportTask) SetSourceArn(v string) *ExportTask {
+	s.SourceArn = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ExportTask) SetStatus(v string) *ExportTask {
+	s.Status = &v
+	return s
+}
+
+// SetTaskEndTime sets the TaskEndTime field's value.
+func (s *ExportTask) SetTaskEndTime(v time.Time) *ExportTask {
+	s.TaskEndTime = &v
+	return s
+}
+
+// SetTaskStartTime sets the TaskStartTime field's value.
+func (s *ExportTask) SetTaskStartTime(v time.Time) *ExportTask {
+	s.TaskStartTime = &v
+	return s
+}
+
+// SetTotalExtractedDataInGB sets the TotalExtractedDataInGB field's value.
+func (s *ExportTask) SetTotalExtractedDataInGB(v int64) *ExportTask {
+	s.TotalExtractedDataInGB = &v
+	return s
+}
+
+// SetWarningMessage sets the WarningMessage field's value.
+func (s *ExportTask) SetWarningMessage(v string) *ExportTask {
+	s.WarningMessage = &v
 	return s
 }
 
@@ -30243,6 +31222,65 @@ func (s *MinimumEngineVersionPerAllowedValue) SetAllowedValue(v string) *Minimum
 // SetMinimumEngineVersion sets the MinimumEngineVersion field's value.
 func (s *MinimumEngineVersionPerAllowedValue) SetMinimumEngineVersion(v string) *MinimumEngineVersionPerAllowedValue {
 	s.MinimumEngineVersion = &v
+	return s
+}
+
+type ModifyCertificatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The new default certificate identifier to override the current one with.
+	//
+	// To determine the valid values, use the describe-certificates AWS CLI command
+	// or the DescribeCertificates API operation.
+	CertificateIdentifier *string `type:"string"`
+
+	// A value that indicates whether to remove the override for the default certificate.
+	// If the override is removed, the default certificate is the system default.
+	RemoveCustomerOverride *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s ModifyCertificatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyCertificatesInput) GoString() string {
+	return s.String()
+}
+
+// SetCertificateIdentifier sets the CertificateIdentifier field's value.
+func (s *ModifyCertificatesInput) SetCertificateIdentifier(v string) *ModifyCertificatesInput {
+	s.CertificateIdentifier = &v
+	return s
+}
+
+// SetRemoveCustomerOverride sets the RemoveCustomerOverride field's value.
+func (s *ModifyCertificatesInput) SetRemoveCustomerOverride(v bool) *ModifyCertificatesInput {
+	s.RemoveCustomerOverride = &v
+	return s
+}
+
+type ModifyCertificatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A CA certificate for an AWS account.
+	Certificate *Certificate `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyCertificatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyCertificatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificate sets the Certificate field's value.
+func (s *ModifyCertificatesOutput) SetCertificate(v *Certificate) *ModifyCertificatesOutput {
+	s.Certificate = v
 	return s
 }
 
@@ -31221,6 +32259,27 @@ type ModifyDBInstanceInput struct {
 	// Indicates the certificate that needs to be associated with the instance.
 	CACertificateIdentifier *string `type:"string"`
 
+	// A value that indicates whether the DB instance is restarted when you rotate
+	// your SSL/TLS certificate.
+	//
+	// By default, the DB instance is restarted when you rotate your SSL/TLS certificate.
+	// The certificate is not updated until the DB instance is restarted.
+	//
+	// Set this parameter only if you are not using SSL/TLS to connect to the DB
+	// instance.
+	//
+	// If you are using SSL/TLS to connect to the DB instance, follow the appropriate
+	// instructions for your DB engine to rotate your SSL/TLS certificate:
+	//
+	//    * For more information about rotating your SSL/TLS certificate for RDS
+	//    DB engines, see Rotating Your SSL/TLS Certificate. (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL-certificate-rotation.html)
+	//    in the Amazon RDS User Guide.
+	//
+	//    * For more information about rotating your SSL/TLS certificate for Aurora
+	//    DB engines, see Rotating Your SSL/TLS Certificate (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.SSL-certificate-rotation.html)
+	//    in the Amazon Aurora User Guide.
+	CertificateRotationRestart *bool `type:"boolean"`
+
 	// The configuration setting for the log types to be enabled for export to CloudWatch
 	// Logs for a specific DB instance.
 	//
@@ -31722,6 +32781,12 @@ func (s *ModifyDBInstanceInput) SetCACertificateIdentifier(v string) *ModifyDBIn
 	return s
 }
 
+// SetCertificateRotationRestart sets the CertificateRotationRestart field's value.
+func (s *ModifyDBInstanceInput) SetCertificateRotationRestart(v bool) *ModifyDBInstanceInput {
+	s.CertificateRotationRestart = &v
+	return s
+}
+
 // SetCloudwatchLogsExportConfiguration sets the CloudwatchLogsExportConfiguration field's value.
 func (s *ModifyDBInstanceInput) SetCloudwatchLogsExportConfiguration(v *CloudwatchLogsExportConfiguration) *ModifyDBInstanceInput {
 	s.CloudwatchLogsExportConfiguration = v
@@ -31971,7 +33036,7 @@ type ModifyDBParameterGroupInput struct {
 
 	// An array of parameter names, values, and the apply method for the parameter
 	// update. At least one parameter name, value, and apply method must be supplied;
-	// subsequent arguments are optional. A maximum of 20 parameters can be modified
+	// later arguments are optional. A maximum of 20 parameters can be modified
 	// in a single request.
 	//
 	// Valid Values (for the application method): immediate | pending-reboot
@@ -38977,6 +40042,307 @@ func (s StartDBInstanceOutput) GoString() string {
 // SetDBInstance sets the DBInstance field's value.
 func (s *StartDBInstanceOutput) SetDBInstance(v *DBInstance) *StartDBInstanceOutput {
 	s.DBInstance = v
+	return s
+}
+
+type StartExportTaskInput struct {
+	_ struct{} `type:"structure"`
+
+	// The data to be exported from the snapshot. If this parameter is not provided,
+	// all the snapshot data is exported. Valid values are the following:
+	//
+	//    * database - Export all the data of the snapshot.
+	//
+	//    * database.table [table-name] - Export a table of the snapshot.
+	//
+	//    * database.schema [schema-name] - Export a database schema of the snapshot.
+	//    This value isn't valid for RDS for MySQL, RDS for MariaDB, or Aurora MySQL.
+	//
+	//    * database.schema.table [table-name] - Export a table of the database
+	//    schema. This value isn't valid for RDS for MySQL, RDS for MariaDB, or
+	//    Aurora MySQL.
+	ExportOnly []*string `type:"list"`
+
+	// A unique identifier for the snapshot export task. This ID isn't an identifier
+	// for the Amazon S3 bucket where the snapshot is to be exported to.
+	//
+	// ExportTaskIdentifier is a required field
+	ExportTaskIdentifier *string `type:"string" required:"true"`
+
+	// The name of the IAM role to use for writing to the Amazon S3 bucket when
+	// exporting a snapshot.
+	//
+	// IamRoleArn is a required field
+	IamRoleArn *string `type:"string" required:"true"`
+
+	// The ID of the AWS KMS key to use to encrypt the snapshot exported to Amazon
+	// S3. The KMS key ID is the Amazon Resource Name (ARN), the KMS key identifier,
+	// or the KMS key alias for the KMS encryption key. The IAM role used for the
+	// snapshot export must have encryption and decryption permissions to use this
+	// KMS key.
+	//
+	// KmsKeyId is a required field
+	KmsKeyId *string `type:"string" required:"true"`
+
+	// The name of the Amazon S3 bucket to export the snapshot to.
+	//
+	// S3BucketName is a required field
+	S3BucketName *string `type:"string" required:"true"`
+
+	// The Amazon S3 bucket prefix to use as the file name and path of the exported
+	// snapshot.
+	S3Prefix *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the snapshot to export to Amazon S3.
+	//
+	// SourceArn is a required field
+	SourceArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartExportTaskInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartExportTaskInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartExportTaskInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartExportTaskInput"}
+	if s.ExportTaskIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ExportTaskIdentifier"))
+	}
+	if s.IamRoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("IamRoleArn"))
+	}
+	if s.KmsKeyId == nil {
+		invalidParams.Add(request.NewErrParamRequired("KmsKeyId"))
+	}
+	if s.S3BucketName == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3BucketName"))
+	}
+	if s.SourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("SourceArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExportOnly sets the ExportOnly field's value.
+func (s *StartExportTaskInput) SetExportOnly(v []*string) *StartExportTaskInput {
+	s.ExportOnly = v
+	return s
+}
+
+// SetExportTaskIdentifier sets the ExportTaskIdentifier field's value.
+func (s *StartExportTaskInput) SetExportTaskIdentifier(v string) *StartExportTaskInput {
+	s.ExportTaskIdentifier = &v
+	return s
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *StartExportTaskInput) SetIamRoleArn(v string) *StartExportTaskInput {
+	s.IamRoleArn = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *StartExportTaskInput) SetKmsKeyId(v string) *StartExportTaskInput {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetS3BucketName sets the S3BucketName field's value.
+func (s *StartExportTaskInput) SetS3BucketName(v string) *StartExportTaskInput {
+	s.S3BucketName = &v
+	return s
+}
+
+// SetS3Prefix sets the S3Prefix field's value.
+func (s *StartExportTaskInput) SetS3Prefix(v string) *StartExportTaskInput {
+	s.S3Prefix = &v
+	return s
+}
+
+// SetSourceArn sets the SourceArn field's value.
+func (s *StartExportTaskInput) SetSourceArn(v string) *StartExportTaskInput {
+	s.SourceArn = &v
+	return s
+}
+
+// Contains the details of a snapshot export to Amazon S3.
+//
+// This data type is used as a response element in the DescribeExportTasks action.
+type StartExportTaskOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The data exported from the snapshot. Valid values are the following:
+	//
+	//    * database - Export all the data of the snapshot.
+	//
+	//    * database.table [table-name] - Export a table of the snapshot.
+	//
+	//    * database.schema [schema-name] - Export a database schema of the snapshot.
+	//    This value isn't valid for RDS for MySQL, RDS for MariaDB, or Aurora MySQL.
+	//
+	//    * database.schema.table [table-name] - Export a table of the database
+	//    schema. This value isn't valid for RDS for MySQL, RDS for MariaDB, or
+	//    Aurora MySQL.
+	ExportOnly []*string `type:"list"`
+
+	// A unique identifier for the snapshot export task. This ID isn't an identifier
+	// for the Amazon S3 bucket where the snapshot is exported to.
+	ExportTaskIdentifier *string `type:"string"`
+
+	// The reason the export failed, if it failed.
+	FailureCause *string `type:"string"`
+
+	// The name of the IAM role that is used to write to Amazon S3 when exporting
+	// a snapshot.
+	IamRoleArn *string `type:"string"`
+
+	// The ID of the AWS KMS key that is used to encrypt the snapshot when it's
+	// exported to Amazon S3. The KMS key ID is the Amazon Resource Name (ARN),
+	// the KMS key identifier, or the KMS key alias for the KMS encryption key.
+	// The IAM role used for the snapshot export must have encryption and decryption
+	// permissions to use this KMS key.
+	KmsKeyId *string `type:"string"`
+
+	// The progress of the snapshot export task as a percentage.
+	PercentProgress *int64 `type:"integer"`
+
+	// The Amazon S3 bucket that the snapshot is exported to.
+	S3Bucket *string `type:"string"`
+
+	// The Amazon S3 bucket prefix that is the file name and path of the exported
+	// snapshot.
+	S3Prefix *string `type:"string"`
+
+	// The time that the snapshot was created.
+	SnapshotTime *time.Time `type:"timestamp"`
+
+	// The Amazon Resource Name (ARN) of the snapshot exported to Amazon S3.
+	SourceArn *string `type:"string"`
+
+	// The progress status of the export task.
+	Status *string `type:"string"`
+
+	// The time that the snapshot export task completed.
+	TaskEndTime *time.Time `type:"timestamp"`
+
+	// The time that the snapshot export task started.
+	TaskStartTime *time.Time `type:"timestamp"`
+
+	// The total amount of data exported, in gigabytes.
+	TotalExtractedDataInGB *int64 `type:"integer"`
+
+	// A warning about the snapshot export task.
+	WarningMessage *string `type:"string"`
+}
+
+// String returns the string representation
+func (s StartExportTaskOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartExportTaskOutput) GoString() string {
+	return s.String()
+}
+
+// SetExportOnly sets the ExportOnly field's value.
+func (s *StartExportTaskOutput) SetExportOnly(v []*string) *StartExportTaskOutput {
+	s.ExportOnly = v
+	return s
+}
+
+// SetExportTaskIdentifier sets the ExportTaskIdentifier field's value.
+func (s *StartExportTaskOutput) SetExportTaskIdentifier(v string) *StartExportTaskOutput {
+	s.ExportTaskIdentifier = &v
+	return s
+}
+
+// SetFailureCause sets the FailureCause field's value.
+func (s *StartExportTaskOutput) SetFailureCause(v string) *StartExportTaskOutput {
+	s.FailureCause = &v
+	return s
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *StartExportTaskOutput) SetIamRoleArn(v string) *StartExportTaskOutput {
+	s.IamRoleArn = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *StartExportTaskOutput) SetKmsKeyId(v string) *StartExportTaskOutput {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetPercentProgress sets the PercentProgress field's value.
+func (s *StartExportTaskOutput) SetPercentProgress(v int64) *StartExportTaskOutput {
+	s.PercentProgress = &v
+	return s
+}
+
+// SetS3Bucket sets the S3Bucket field's value.
+func (s *StartExportTaskOutput) SetS3Bucket(v string) *StartExportTaskOutput {
+	s.S3Bucket = &v
+	return s
+}
+
+// SetS3Prefix sets the S3Prefix field's value.
+func (s *StartExportTaskOutput) SetS3Prefix(v string) *StartExportTaskOutput {
+	s.S3Prefix = &v
+	return s
+}
+
+// SetSnapshotTime sets the SnapshotTime field's value.
+func (s *StartExportTaskOutput) SetSnapshotTime(v time.Time) *StartExportTaskOutput {
+	s.SnapshotTime = &v
+	return s
+}
+
+// SetSourceArn sets the SourceArn field's value.
+func (s *StartExportTaskOutput) SetSourceArn(v string) *StartExportTaskOutput {
+	s.SourceArn = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *StartExportTaskOutput) SetStatus(v string) *StartExportTaskOutput {
+	s.Status = &v
+	return s
+}
+
+// SetTaskEndTime sets the TaskEndTime field's value.
+func (s *StartExportTaskOutput) SetTaskEndTime(v time.Time) *StartExportTaskOutput {
+	s.TaskEndTime = &v
+	return s
+}
+
+// SetTaskStartTime sets the TaskStartTime field's value.
+func (s *StartExportTaskOutput) SetTaskStartTime(v time.Time) *StartExportTaskOutput {
+	s.TaskStartTime = &v
+	return s
+}
+
+// SetTotalExtractedDataInGB sets the TotalExtractedDataInGB field's value.
+func (s *StartExportTaskOutput) SetTotalExtractedDataInGB(v int64) *StartExportTaskOutput {
+	s.TotalExtractedDataInGB = &v
+	return s
+}
+
+// SetWarningMessage sets the WarningMessage field's value.
+func (s *StartExportTaskOutput) SetWarningMessage(v string) *StartExportTaskOutput {
+	s.WarningMessage = &v
 	return s
 }
 

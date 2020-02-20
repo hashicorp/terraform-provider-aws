@@ -187,7 +187,7 @@ func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerRuleConfig_fixedResponse(lbName),
+				Config: testAccAWSLBListenerRuleConfig_fixedResponse(lbName, "Fixed response content"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
@@ -205,6 +205,35 @@ func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.authenticate_cognito.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.authenticate_oidc.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+// Updating Action breaks Condition change logic GH-11323 and GH-11362
+func TestAccAWSLBListenerRule_updateFixedResponse(t *testing.T) {
+	var rule elbv2.Rule
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_listener_rule.static",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleConfig_fixedResponse(lbName, "Fixed Response 1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &rule),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.0.message_body", "Fixed Response 1"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_fixedResponse(lbName, "Fixed Response 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &rule),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.0.message_body", "Fixed Response 2"),
 				),
 			},
 		},
@@ -785,6 +814,63 @@ func TestAccAWSLBListenerRule_conditionPathPattern_deprecated(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBListenerRule_conditionUpdatePathPattern_deprecated(t *testing.T) {
+	var conf elbv2.Rule
+	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_listener_rule.static",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecated(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.field", "path-pattern"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecatedUpdated(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.path_pattern.0.values.1764929539", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.values.0", "/cgi-bin/*"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern_migrated(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.path_pattern.0.values.1764929539", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.values.0", "/cgi-bin/*"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.0.values.1764929539", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.values.0", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.values.1", "/public/*"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-queryString-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
@@ -870,6 +956,74 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
+	var conf elbv2.Rule
+	lbName := fmt.Sprintf("testrule-mixed-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_listener_rule.static",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleConfig_conditionMixed(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.field", "path-pattern"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.field", "source-ip"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.0.values.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.0.values.3901788224", "192.168.0.0/16"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_conditionMixed_updated(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.field", "path-pattern"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.field", "source-ip"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.source_ip.0.values.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.source_ip.0.values.1567875353", "dead:cafe::/64"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_conditionMixed_updated2(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.field", "path-pattern"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.path_pattern.0.values.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.path_pattern.0.values.1764929539", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.values.0", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.field", "source-ip"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.source_ip.0.values.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.source_ip.0.values.1567875353", "dead:cafe::/64"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
@@ -942,6 +1096,66 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.source_ip.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.values.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.values.0", "example.com"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBListenerRule_conditionUpdateMultiple(t *testing.T) {
+	var conf elbv2.Rule
+	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_listener_rule.static",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleConfig_conditionMultiple(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "5"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.field", "http-header"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.http_header_name", "X-Forwarded-For"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.values.35666611", "192.168.1.*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.field", "source-ip"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.0.values.3901788224", "192.168.0.0/16"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.field", "http-request-method"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_request_method.0.values.1805413626", "GET"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.field", "path-pattern"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.field", "host-header"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.0.values.3069857465", "example.com"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.values.0", "example.com"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_conditionMultiple_updated(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "arn"),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "5"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.451778491.field", "http-header"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.451778491.http_header.0.http_header_name", "X-Forwarded-For"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.451778491.http_header.0.values.6718698", "192.168.2.*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2188908858.field", "source-ip"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2188908858.source_ip.0.values.766747311", "192.168.0.0/24"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.736971867.field", "http-request-method"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.736971867.http_request_method.0.values.1814004025", "POST"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.941005625.field", "path-pattern"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.941005625.path_pattern.0.values.188114058", "/public/2/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.941005625.values.0", "/public/2/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.923495315.field", "host-header"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.923495315.host_header.0.values.854267206", "foobar.com"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.923495315.values.0", "foobar.com"),
 				),
 			},
 		},
@@ -1491,7 +1705,7 @@ resource "aws_security_group" "alb_test" {
 `, lbName)
 }
 
-func testAccAWSLBListenerRuleConfig_fixedResponse(lbName string) string {
+func testAccAWSLBListenerRuleConfig_fixedResponse(lbName, response string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
@@ -1502,7 +1716,7 @@ resource "aws_lb_listener_rule" "static" {
 
     fixed_response {
       content_type = "text/plain"
-      message_body = "Fixed response content"
+      message_body = "%s"
       status_code  = "200"
     }
   }
@@ -1593,7 +1807,7 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_fixedresponse"
   }
 }
-`, lbName)
+`, response, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_updateRulePriority(lbName, targetGroupName string) string {
@@ -2607,7 +2821,7 @@ condition {
     values = ["example.com"]
   }
   field  = "host-header"
-  values = ["example.com"]
+  values = ["example2.com"]
 }`)
 }
 
@@ -2802,7 +3016,26 @@ condition {
   field = "path-pattern"
   values = ["/public/*"]
 }
-`, "PathPatternDep", lbName)
+`, "PathPattern", lbName)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecatedUpdated(lbName string) string {
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field = "path-pattern"
+  values = ["/cgi-bin/*"]
+}
+`, "PathPattern", lbName)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionPathPattern_migrated(lbName string) string {
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  path_pattern {
+    values = ["/cgi-bin/*"]
+  }
+}
+`, "PathPattern", lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionQueryString(lbName string) string {
@@ -2843,6 +3076,59 @@ condition {
 `, "SourceIp", lbName)
 }
 
+func testAccAWSLBListenerRuleConfig_conditionMixed(lbName string) string {
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field  = "path-pattern"
+  values = ["/public/*"]
+}
+
+condition {
+  source_ip {
+    values = [
+      "192.168.0.0/16",
+    ]
+  }
+}
+`, "Mixed", lbName)
+}
+
+// Update new style condition without modifying deprecated. Issue GH-11323
+func testAccAWSLBListenerRuleConfig_conditionMixed_updated(lbName string) string {
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field  = "path-pattern"
+  values = ["/public/*"]
+}
+
+condition {
+  source_ip {
+    values = [
+      "dead:cafe::/64",
+    ]
+  }
+}
+`, "Mixed", lbName)
+}
+
+// Then update deprecated syntax without touching new. Issue GH-11362
+func testAccAWSLBListenerRuleConfig_conditionMixed_updated2(lbName string) string {
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field  = "path-pattern"
+  values = ["/cgi-bin/*"]
+}
+
+condition {
+  source_ip {
+    values = [
+      "dead:cafe::/64",
+    ]
+  }
+}
+`, "Mixed", lbName)
+}
+
 // Currently a maximum of 5 condition values per rule
 func testAccAWSLBListenerRuleConfig_conditionMultiple(lbName string) string {
 	return testAccAWSLBListenerRuleConfig_condition_base(`
@@ -2874,6 +3160,41 @@ condition {
 condition {
   source_ip {
     values = ["192.168.0.0/16"]
+  }
+}
+`, "Multiple", lbName)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionMultiple_updated(lbName string) string {
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  host_header {
+    values = ["foobar.com"]
+  }
+}
+
+condition {
+  http_header {
+    http_header_name = "X-Forwarded-For"
+    values           = ["192.168.2.*"]
+  }
+}
+
+condition {
+  http_request_method {
+    values = ["POST"]
+  }
+}
+
+condition {
+  path_pattern {
+    values = ["/public/2/*"]
+  }
+}
+
+condition {
+  source_ip {
+    values = ["192.168.0.0/24"]
   }
 }
 `, "Multiple", lbName)

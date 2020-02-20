@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsIamRole() *schema.Resource {
@@ -162,8 +163,8 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 		request.PermissionsBoundary = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		request.Tags = tagsFromMapIAM(v.(map[string]interface{}))
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		request.Tags = keyvaluetags.New(v).IgnoreAws().IamTags()
 	}
 
 	var createResp *iam.CreateRoleOutput
@@ -224,7 +225,8 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("unique_id", role.RoleId)
-	if err := d.Set("tags", tagsToMapIAM(role.Tags)); err != nil {
+
+	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(role.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -309,31 +311,10 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("tags") {
-		// Reset all tags to empty set
-		oraw, nraw := d.GetChange("tags")
-		o := oraw.(map[string]interface{})
-		n := nraw.(map[string]interface{})
-		c, r := diffTagsIAM(tagsFromMapIAM(o), tagsFromMapIAM(n))
+		o, n := d.GetChange("tags")
 
-		if len(r) > 0 {
-			_, err := iamconn.UntagRole(&iam.UntagRoleInput{
-				RoleName: aws.String(d.Id()),
-				TagKeys:  tagKeysIam(r),
-			})
-			if err != nil {
-				return fmt.Errorf("error deleting IAM role tags: %s", err)
-			}
-		}
-
-		if len(c) > 0 {
-			input := &iam.TagRoleInput{
-				RoleName: aws.String(d.Id()),
-				Tags:     c,
-			}
-			_, err := iamconn.TagRole(input)
-			if err != nil {
-				return fmt.Errorf("error update IAM role tags: %s", err)
-			}
+		if err := keyvaluetags.IamRoleUpdateTags(iamconn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating IAM Role (%s) tags: %s", d.Id(), err)
 		}
 	}
 

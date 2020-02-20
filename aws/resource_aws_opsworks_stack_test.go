@@ -130,10 +130,9 @@ func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"tags"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsOpsworksStackConfigNoVpcUpdateTags(stackName),

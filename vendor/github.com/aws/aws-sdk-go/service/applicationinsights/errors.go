@@ -2,6 +2,10 @@
 
 package applicationinsights
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeBadRequestException for service response error code
@@ -47,3 +51,13 @@ const (
 	// The parameter is not valid.
 	ErrCodeValidationException = "ValidationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"BadRequestException":       newErrorBadRequestException,
+	"InternalServerException":   newErrorInternalServerException,
+	"ResourceInUseException":    newErrorResourceInUseException,
+	"ResourceNotFoundException": newErrorResourceNotFoundException,
+	"TagsAlreadyExistException": newErrorTagsAlreadyExistException,
+	"TooManyTagsException":      newErrorTooManyTagsException,
+	"ValidationException":       newErrorValidationException,
+}

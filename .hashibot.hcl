@@ -182,6 +182,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/codestar" = [
       "aws_codestar_",
     ],
+    "service/codestarnotifications" = [
+      "aws_codestarnotifications_",
+    ],
     "service/cognito" = [
       "aws_cognito_",
     ],
@@ -240,6 +243,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_placement_group",
       "aws_spot",
       "aws_route(\"|`|$)",
+      "aws_vpn_",
     ],
     "service/ecr" = [
       "aws_ecr_",
@@ -337,7 +341,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_kinesis_([^f]|f[^i]|fi[^r]|fir[^e]|fire[^h]|fireh[^o]|fireho[^s]|firehos[^e]|firehose[^_])",
     ],
     "service/kinesisanalytics" = [
-      "aws_kinesisanalytics_",
+      "aws_kinesis_analytics_",
     ],
     "service/kms" = [
       "aws_kms_",
@@ -504,6 +508,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/waf" = [
       "aws_waf_",
       "aws_wafregional_",
+    ],
+    "service/wafv2" = [
+      "aws_wafv2_",
     ],
     "service/workdocs" = [
       "aws_workdocs_",
@@ -691,6 +698,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_codestar_*",
       "**/codestar_*"
     ]
+    "service/codestarnotifications" = [
+      "**/*_codestarnotifications_*",
+      "**/codestarnotifications_*"
+    ]
     "service/cognito" = [
       "**/*_cognito_*",
       "**/cognito_*"
@@ -824,6 +835,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/eks_*"
     ]
     "service/elastic-transcoder" = [
+      "**/*_elastictranscoder_*",
+      "**/elastictranscoder_*",
       "**/*_elastic_transcoder_*",
       "**/elastic_transcoder_*"
     ]
@@ -935,8 +948,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/kinesis_stream*"
     ]
     "service/kinesisanalytics" = [
-      "**/*_kinesisanalytics_*",
-      "**/kinesisanalytics_*"
+      "**/*_kinesis_analytics_*",
+      "**/kinesis_analytics_*"
     ]
     "service/kms" = [
       "**/*_kms_*",
@@ -1163,6 +1176,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/waf_*",
       "**/*_wafregional_*",
       "**/wafregional_*"
+    ]
+    "service/wafv2" = [
+      "**/*_wafv2_*",
+      "**/wafv2_*",
     ]
     "service/workdocs" = [
       "**/*_workdocs_*",

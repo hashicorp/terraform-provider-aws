@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -16,6 +17,11 @@ func dataSourceAwsElb() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"access_logs": {
@@ -207,6 +213,15 @@ func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(resp.LoadBalancerDescriptions))
 	}
 	d.SetId(*resp.LoadBalancerDescriptions[0].LoadBalancerName)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "elasticloadbalancing",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("loadbalancer/%s", *resp.LoadBalancerDescriptions[0].LoadBalancerName),
+	}
+	d.Set("arn", arn.String())
 
 	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, resp.LoadBalancerDescriptions[0])
 }

@@ -55,6 +55,7 @@ var sliceServiceNames = []string{
 	"firehose",
 	"fms",
 	"fsx",
+	"gamelift",
 	"iam",
 	"inspector",
 	"iot",
@@ -87,6 +88,7 @@ var sliceServiceNames = []string{
 	"transfer",
 	"waf",
 	"wafregional",
+	"wafv2",
 	"workspaces",
 }
 
@@ -101,6 +103,7 @@ var mapServiceNames = []string{
 	"batch",
 	"cloudwatchlogs",
 	"codecommit",
+	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
 	"dataexchange",
@@ -141,6 +144,7 @@ func main() {
 		SliceServiceNames: sliceServiceNames,
 	}
 	templateFuncMap := template.FuncMap{
+		"TagKeyType":        ServiceTagKeyType,
 		"TagPackage":        keyvaluetags.ServiceTagPackage,
 		"TagType":           ServiceTagType,
 		"TagTypeKeyField":   ServiceTagTypeKeyField,
@@ -213,6 +217,23 @@ func {{ . | Title }}KeyValueTags(tags map[string]*string) KeyValueTags {
 // []*SERVICE.Tag handling
 {{- range .SliceServiceNames }}
 
+{{- if . | TagKeyType }}
+// {{ . | Title }}TagKeys returns {{ . }} service tag keys.
+func (tags KeyValueTags) {{ . | Title }}TagKeys() []*{{ . | TagPackage }}.{{ . | TagKeyType }} {
+	result := make([]*{{ . | TagPackage }}.{{ . | TagKeyType }}, 0, len(tags))
+
+	for k := range tags.Map() {
+		tagKey := &{{ . | TagPackage }}.{{ . | TagKeyType }}{
+			{{ . | TagTypeKeyField }}: aws.String(k),
+		}
+
+		result = append(result, tagKey)
+	}
+
+	return result
+}
+{{- end }}
+
 // {{ . | Title }}Tags returns {{ . }} service tags.
 func (tags KeyValueTags) {{ . | Title }}Tags() []*{{ . | TagPackage }}.{{ . | TagType }} {
 	result := make([]*{{ . | TagPackage }}.{{ . | TagType }}, 0, len(tags))
@@ -241,6 +262,16 @@ func {{ . | Title }}KeyValueTags(tags []*{{ . | TagPackage }}.{{ . | TagType }})
 }
 {{- end }}
 `
+
+// ServiceTagKeyType determines the service tagging tag key type.
+func ServiceTagKeyType(serviceName string) string {
+	switch serviceName {
+	case "elb":
+		return "TagKeyOnly"
+	default:
+		return ""
+	}
+}
 
 // ServiceTagType determines the service tagging tag type.
 func ServiceTagType(serviceName string) string {
