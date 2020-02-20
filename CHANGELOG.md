@@ -4,6 +4,10 @@ NOTES:
 
 * resource/aws_ram_resource_share_accepter: The `status` attribute now reflects the status of the RAM Resource Share and not the RAM Resource Share Invitation (which expires after 7 days). [GH-11562]
 
+FEATURES:
+
+* **New Data Source:** `aws_lambda_alias` [GH-9490]
+
 ENHANCEMENTS:
 
 * resource/aws_security_group: Support import of `name_prefix` argument [GH-12052]
