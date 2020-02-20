@@ -124,7 +124,7 @@ func resourceAwsEc2TrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("destination_port_range"); ok {
-		input.SetDestinationPortRange(buildTrafficMirrorPortRangeRequest(v.([]interface{})))
+		input.DestinationPortRange = buildTrafficMirrorPortRangeRequest(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("source_port_range"); ok {
