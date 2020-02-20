@@ -10,6 +10,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_appmesh_route: Add `priority` and `header` attributes to support route priorities and HTTP header-based routing [GH-10402]
 * resource/aws_security_group: Support import of `name_prefix` argument [GH-12052]
 
 BUG FIXES:
