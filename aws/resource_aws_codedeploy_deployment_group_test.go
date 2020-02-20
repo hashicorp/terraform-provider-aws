@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -2242,52 +2241,6 @@ func testAccCheckAWSCodeDeployDeploymentGroupExists(name string, group *codedepl
 		*group = *resp.DeploymentGroupInfo
 
 		return nil
-	}
-}
-
-func TestAWSCodeDeployDeploymentGroup_handleCodeDeployApiError(t *testing.T) {
-	notAnAwsError := errors.New("Not an awserr")
-	invalidRoleException := awserr.New("InvalidRoleException", "Invalid role exception", nil)
-	invalidTriggerConfigExceptionNoMatch := awserr.New("InvalidTriggerConfigException", "Some other error message", nil)
-	invalidTriggerConfigExceptionMatch := awserr.New("InvalidTriggerConfigException", "Topic ARN INVALID_ARN is not valid", nil)
-	fakeAwsError := awserr.New("FakeAwsException", "Not a real AWS error", nil)
-
-	testCases := []struct {
-		Input    error
-		Expected *resource.RetryError
-	}{
-		{
-			Input:    nil,
-			Expected: nil,
-		},
-		{
-			Input:    notAnAwsError,
-			Expected: resource.NonRetryableError(notAnAwsError),
-		},
-		{
-			Input:    invalidRoleException,
-			Expected: resource.RetryableError(invalidRoleException),
-		},
-		{
-			Input:    invalidTriggerConfigExceptionNoMatch,
-			Expected: resource.NonRetryableError(invalidTriggerConfigExceptionNoMatch),
-		},
-		{
-			Input:    invalidTriggerConfigExceptionMatch,
-			Expected: resource.RetryableError(invalidTriggerConfigExceptionMatch),
-		},
-		{
-			Input:    fakeAwsError,
-			Expected: resource.NonRetryableError(fakeAwsError),
-		},
-	}
-
-	for _, tc := range testCases {
-		actual := handleCodeDeployApiError(tc.Input, "test")
-		if !reflect.DeepEqual(actual, tc.Expected) {
-			t.Fatalf(`handleCodeDeployApiError output is not correct. Expected: %v, Actual: %v.`,
-				tc.Expected, actual)
-		}
 	}
 }
 
