@@ -2462,7 +2462,7 @@ func readS3ObjectLockConfiguration(conn *s3.S3, bucket string) ([]interface{}, e
 		}
 
 		// ignore object lock permissions errors for now
-		if isAWSErr(err, "AccessDeniedException", "") {
+		if isAWSErr(err, "AccessDenied", "") {
 			return nil, nil
 		}
 		return nil, err

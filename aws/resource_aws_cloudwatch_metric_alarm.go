@@ -320,9 +320,9 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 	d.Set("treat_missing_data", a.TreatMissingData)
 	d.Set("evaluate_low_sample_count_percentiles", a.EvaluateLowSampleCountPercentile)
 
-	if err := saveTagsCloudWatch(meta.(*AWSClient).cloudwatchconn, d, aws.StringValue(a.AlarmArn)); err != nil && !isAWSErr(err, "AccessDeniedException", "") {
+	if err := saveTagsCloudWatch(meta.(*AWSClient).cloudwatchconn, d, aws.StringValue(a.AlarmArn)); err != nil {
 		// ignore tag permissions errors for now
-		return fmt.Errorf("error setting tags: %s", err)
+		// return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil

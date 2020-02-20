@@ -253,9 +253,9 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := keyvaluetags.SnsListTags(snsconn, d.Id())
 
-	if err != nil && !isAWSErr(err, "AccessDeniedException", "") {
+	if err != nil {
 		// ignore tag permissions errors for now
-		return fmt.Errorf("error listing tags for resource (%s): %s", d.Id(), err)
+		// return fmt.Errorf("error listing tags for resource (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {

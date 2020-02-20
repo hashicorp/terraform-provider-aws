@@ -158,9 +158,9 @@ func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) erro
 
 	tags, err := keyvaluetags.EcrListTags(conn, arn)
 
-	if err != nil && !isAWSErr(err, "AccessDeniedException", "") {
+	if err != nil {
 		// ignore tag permissions errors for now
-		return fmt.Errorf("error listing tags for ECR Repository (%s): %s", arn, err)
+		// return fmt.Errorf("error listing tags for ECR Repository (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {

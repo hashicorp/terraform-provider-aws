@@ -130,9 +130,9 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 
 	tags, err := keyvaluetags.SfnListTags(conn, d.Id())
 
-	if err != nil && !isAWSErr(err, "UnknownOperationException", "") && !isAWSErr(err, "AccessDeniedException", "") {
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
 		// ignore tag permissions errors for now
-		return fmt.Errorf("error listing tags for SFN State Machine (%s): %s", d.Id(), err)
+		// return fmt.Errorf("error listing tags for SFN State Machine (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
