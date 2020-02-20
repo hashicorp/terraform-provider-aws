@@ -73,9 +73,10 @@ func resourceAwsSubnet() *schema.Resource {
 			},
 
 			"outpost_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"assign_ipv6_address_on_creation": {
@@ -245,6 +246,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
+	d.Set("outpost_arn", subnet.OutpostArn)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop
 	d.Set("ipv6_cidr_block_association_id", "")

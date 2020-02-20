@@ -162,6 +162,8 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 						resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttr(
+						resourceName, "outpost_arn", ""),
 				),
 			},
 			{
