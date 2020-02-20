@@ -75,6 +75,7 @@ func resourceAwsSubnet() *schema.Resource {
 			"outpost_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 
 			"assign_ipv6_address_on_creation": {
