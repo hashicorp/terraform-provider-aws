@@ -233,6 +233,7 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	d.Set("client_cidr_block", result.ClientVpnEndpoints[0].ClientCidrBlock)
 	d.Set("server_certificate_arn", result.ClientVpnEndpoints[0].ServerCertificateArn)
 	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
+	d.Set("vpn_port", result.ClientVpnEndpoints[0].VpnPort)
 	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
 	d.Set("dns_servers", result.ClientVpnEndpoints[0].DnsServers)
 
@@ -313,6 +314,10 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 
 	if d.HasChange("split_tunnel") {
 		req.SplitTunnel = aws.Bool(d.Get("split_tunnel").(bool))
+	}
+
+	if d.HasChange("vpn_port") {
+		req.VpnPort = aws.Int64(int64(d.Get("vpn_port").(int)))
 	}
 
 	if d.HasChange("connection_log_options") {
