@@ -128,5 +128,21 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test depscheck docscheck
-
+.PHONY: default \
+        build \
+        gen \
+        sweep \
+        test \
+        testacc \
+        fmt \
+        fmtcheck \
+        gencheck \
+        websitefmtcheck \
+        depscheck \
+        docscheck \
+        lint \
+        tools \
+        test-compile \
+        website \
+        website-lint \
+        website-test
