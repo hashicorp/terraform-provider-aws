@@ -2,16 +2,15 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataSourceAwsSfnStateMachine(t *testing.T) {
 	rName := acctest.RandString(5)
+	dataSourceName := "data.aws_sfn_state_machine.test"
 	resourceName := "data.aws_sfn_state_machine.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -21,42 +20,16 @@ func TestAccDataSourceAwsSfnStateMachine(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsSfnStateMachineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSfnStateMachineCheck(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "definition"),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
-					resource.TestMatchResourceAttr(resourceName, "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrPair(resourceName, "definition", dataSourceName, "definition"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceName, "role_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
 				),
 			},
 		},
 	})
-}
-
-func testAccDataSourceAwsSfnStateMachineCheck(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
-		}
-
-		sfnStateMachineRs, ok := s.RootModule().Resources["aws_sfn_state_machine.foo"]
-		if !ok {
-			return fmt.Errorf("can't find aws_sfn_state_machine.foo in state")
-		}
-
-		attr := rs.Primary.Attributes
-
-		if attr["name"] != sfnStateMachineRs.Primary.Attributes["name"] {
-			return fmt.Errorf(
-				"name is %s; want %s",
-				attr["name"],
-				sfnStateMachineRs.Primary.Attributes["name"],
-			)
-		}
-
-		return nil
-	}
 }
 
 func testAccDataSourceAwsSfnStateMachineConfig(rName string) string {
