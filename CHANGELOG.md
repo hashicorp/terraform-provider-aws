@@ -4,6 +4,10 @@ NOTES:
 
 * resource/aws_ram_resource_share_accepter: The `status` attribute now reflects the status of the RAM Resource Share and not the RAM Resource Share Invitation (which expires after 7 days). [GH-11562]
 
+ENHANCEMENTS:
+
+* resource/aws_security_group: Support import of `name_prefix` argument [GH-12052]
+
 BUG FIXES:
 
 * resource/aws_lambda_permission: Fix error when Lambda permission is deleted out-of-band [GH-11924]
