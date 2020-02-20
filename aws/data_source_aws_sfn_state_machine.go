@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -75,17 +74,12 @@ func dataSourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) 
 		StateMachineArn: aws.String(arns[0]),
 	})
 	if err != nil {
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() == "NotFoundException" || awserr.Code() == "StateMachineDoesNotExist" {
-				d.SetId("")
-				return nil
-			}
-		}
-		return err
+		return fmt.Errorf("error describing SFN State Machine (%s): %w", arns[0], err)
 	}
 
 	d.Set("definition", sm.Definition)
 	d.Set("name", sm.Name)
+	d.Set("arn", sm.StateMachineArn)
 	d.Set("role_arn", sm.RoleArn)
 	d.Set("status", sm.Status)
 	if err := d.Set("creation_date", sm.CreationDate.Format(time.RFC3339)); err != nil {
