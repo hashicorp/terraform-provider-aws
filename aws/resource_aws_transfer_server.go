@@ -70,8 +70,10 @@ func resourceAwsTransferServer() *schema.Resource {
 			},
 
 			"host_key": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 
 			"host_key_fingerprint": {
