@@ -93,6 +93,7 @@ func TestAccAWSEc2TrafficMirrorFilterRule_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEc2TrafficMirrorFilterRuleImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -246,4 +247,15 @@ func testAccCheckAWSEc2TrafficMirrorFilterRuleDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+func testAccAWSEc2TrafficMirrorFilterRuleImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["traffic_mirror_filter_id"], rs.Primary.ID), nil
+	}
 }

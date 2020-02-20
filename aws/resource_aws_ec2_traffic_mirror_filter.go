@@ -108,10 +108,8 @@ func resourceAwsEc2TrafficMirrorFilterRead(d *schema.ResourceData, meta interfac
 	d.SetId(*out.TrafficMirrorFilters[0].TrafficMirrorFilterId)
 	d.Set("description", out.TrafficMirrorFilters[0].Description)
 
-	if len(out.TrafficMirrorFilters[0].NetworkServices) > 0 {
-		if err := d.Set("network_services", aws.StringValueSlice(out.TrafficMirrorFilters[0].NetworkServices)); err != nil {
-			return fmt.Errorf("error setting network_services for filter %v: %s", d.Id(), err)
-		}
+	if err := d.Set("network_services", aws.StringValueSlice(out.TrafficMirrorFilters[0].NetworkServices)); err != nil {
+		return fmt.Errorf("error setting network_services for filter %v: %s", d.Id(), err)
 	}
 
 	return nil

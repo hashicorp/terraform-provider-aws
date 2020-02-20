@@ -49,6 +49,7 @@ func resourceAwsEc2TrafficMirrorSession() *schema.Resource {
 			"virtual_network_id": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(1, 16777216),
 			},
 		},
@@ -98,23 +99,23 @@ func resourceAwsEc2TrafficMirrorSessionUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("session_number") {
-		_, n := d.GetChange("session_number")
+		n := d.Get("session_number")
 		input.SessionNumber = aws.Int64(int64(n.(int)))
 	}
 
 	if d.HasChange("traffic_mirror_filter_id") {
-		_, n := d.GetChange("traffic_mirror_filter_id")
+		n := d.Get("traffic_mirror_filter_id")
 		input.TrafficMirrorFilterId = aws.String(n.(string))
 	}
 
 	if d.HasChange("traffic_mirror_target_id") {
-		_, n := d.GetChange("traffic_mirror_target_id")
+		n := d.Get("traffic_mirror_target_id")
 		input.TrafficMirrorTargetId = aws.String(n.(string))
 	}
 
 	var removeFields []*string
 	if d.HasChange("description") {
-		_, n := d.GetChange("description")
+		n := d.Get("description")
 		if "" != n {
 			input.Description = aws.String(n.(string))
 		} else {
@@ -123,7 +124,7 @@ func resourceAwsEc2TrafficMirrorSessionUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("packet_length") {
-		_, n := d.GetChange("packet_length")
+		n := d.Get("packet_length")
 		if nil != n && n.(int) > 0 {
 			input.PacketLength = aws.Int64(int64(n.(int)))
 		} else {
@@ -133,7 +134,7 @@ func resourceAwsEc2TrafficMirrorSessionUpdate(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] removeFields %v", removeFields)
 
 	if d.HasChange("virtual_network_id") {
-		_, n := d.GetChange("virtual_network_id")
+		n := d.Get("virtual_network_id")
 		log.Printf("[DEBUG] VNI has change %v", n)
 		if nil != n && n.(int) > 0 {
 			input.VirtualNetworkId = aws.Int64(int64(n.(int)))
@@ -167,13 +168,13 @@ func resourceAwsEc2TrafficMirrorSessionRead(d *schema.ResourceData, meta interfa
 
 	out, err := conn.DescribeTrafficMirrorSessions(input)
 	if nil != err {
-		d.SetId("")
 		return fmt.Errorf("Error describing traffic mirror session %v", sessionId)
 	}
 
 	if 0 == len(out.TrafficMirrorSessions) {
+		log.Printf("[WARN] EC2 Traffic Mirror Session (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return fmt.Errorf("Unable to find traffic mirrir session %v", sessionId)
+		return nil
 	}
 
 	session := out.TrafficMirrorSessions[0]
@@ -183,13 +184,7 @@ func resourceAwsEc2TrafficMirrorSessionRead(d *schema.ResourceData, meta interfa
 	d.Set("traffic_mirror_target_id", session.TrafficMirrorTargetId)
 	d.Set("description", session.Description)
 	d.Set("packet_length", session.PacketLength)
-
-	// AWS returns a value for VNI even if nothing is set in config. To avoid further plan
-	// showing a change, using a workaround - set this in state only if it was set in config
-	_, vniSet := d.GetOk("virtual_network_id")
-	if vniSet && nil != session.VirtualNetworkId {
-		d.Set("virtual_network_id", *session.VirtualNetworkId)
-	}
+	d.Set("virtual_network_id", *session.VirtualNetworkId)
 
 	return nil
 }

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -26,7 +27,8 @@ func resourceAwsEc2TrafficMirrorTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				ConflictsWith: []string{
+				ExactlyOneOf: []string{
+					"network_interface_id",
 					"network_load_balancer_arn",
 				},
 			},
@@ -34,8 +36,9 @@ func resourceAwsEc2TrafficMirrorTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				ConflictsWith: []string{
+				ExactlyOneOf: []string{
 					"network_interface_id",
+					"network_load_balancer_arn",
 				},
 			},
 		},
@@ -77,27 +80,25 @@ func resourceAwsEc2TrafficMirrorTargetRead(d *schema.ResourceData, meta interfac
 	}
 
 	out, err := conn.DescribeTrafficMirrorTargets(input)
-	if err != nil {
+	if isAWSErr(err, "InvalidTrafficMirrorTargetId.NotFound", "") {
+		log.Printf("[WARN] EC2 Traffic Mirror Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
 		return fmt.Errorf("Error describing traffic mirror target %v", targetId)
 	}
 
-	if 1 != len(out.TrafficMirrorTargets) {
+	if nil == out || 0 == len(out.TrafficMirrorTargets) {
+		log.Printf("[WARN] EC2 Traffic Mirror Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return fmt.Errorf("Not able to find find target %v", targetId)
 	}
 
 	target := out.TrafficMirrorTargets[0]
-	if nil != target.Description {
-		d.Set("description", *target.Description)
-	}
-
-	switch *target.Type {
-	case "network-interface":
-		d.Set("network_interface_id", target.NetworkInterfaceId)
-	case "network-load-balancer":
-		d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
-	}
+	d.Set("description", *target.Description)
+	d.Set("network_interface_id", target.NetworkInterfaceId)
+	d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
 
 	return nil
 }

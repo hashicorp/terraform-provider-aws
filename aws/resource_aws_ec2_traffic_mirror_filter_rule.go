@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -17,7 +18,7 @@ func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 		Update: resourceAwsEc2TrafficMirrorFilterRuleUpdate,
 		Delete: resourceAwsEc2TrafficMirrorFilterRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsEc2TrafficMirrorFilterRuleImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"description": {
@@ -59,8 +60,8 @@ func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"accept",
-					"reject",
+					ec2.TrafficMirrorRuleActionAccept,
+					ec2.TrafficMirrorRuleActionReject,
 				}, false),
 			},
 			"rule_number": {
@@ -93,8 +94,8 @@ func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"ingress",
-					"egress",
+					ec2.TrafficDirectionIngress,
+					ec2.TrafficDirectionEgress,
 				}, false),
 			},
 		},
@@ -128,7 +129,7 @@ func resourceAwsEc2TrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("source_port_range"); ok {
-		input.SetSourcePortRange(buildTrafficMirrorPortRangeRequest(v.([]interface{})))
+		input.SourcePortRange = buildTrafficMirrorPortRangeRequest(v.([]interface{}))
 	}
 
 	out, err := conn.CreateTrafficMirrorFilterRule(input)
@@ -148,79 +149,68 @@ func resourceAwsEc2TrafficMirrorFilterRuleRead(d *schema.ResourceData, meta inte
 	filterId, filterIdSet := d.GetOk("traffic_mirror_filter_id")
 	input := &ec2.DescribeTrafficMirrorFiltersInput{}
 	if filterIdSet {
-		input.TrafficMirrorFilterIds = []*string{aws.String(filterId.(string))}
-		awsMutexKV.Lock(filterId.(string))
-		defer awsMutexKV.Unlock(filterId.(string))
-	} else {
-		awsMutexKV.Lock("DescribeTrafficMirrorFilters")
-		defer awsMutexKV.Unlock("DescribeTrafficMirrorFilters")
+		input.TrafficMirrorFilterIds = aws.StringSlice([]string{filterId.(string)})
 	}
 
-	found := false
-	for !found {
-		out, err := conn.DescribeTrafficMirrorFilters(input)
-		if err != nil {
-			return fmt.Errorf("Error listing traffic mirror filters in the account")
-		}
+	err := conn.DescribeTrafficMirrorFiltersPages(input, func(page *ec2.DescribeTrafficMirrorFiltersOutput, lastPage bool) bool {
+		rule = findEc2TrafficMirrorFilterRule(ruleId, page.TrafficMirrorFilters)
+		return nil == rule
+	})
 
-		if 0 == len(out.TrafficMirrorFilters) {
-			return fmt.Errorf("No traffir mirror filters found")
-		}
-
-		_, rule, err = findRuleInFilters(ruleId, out.TrafficMirrorFilters)
-		if nil == err {
-			found = true
-			break
-		} else {
-			if out.NextToken == nil {
-				break
-			} else {
-				input.NextToken = out.NextToken
-			}
-		}
+	if err != nil {
+		return fmt.Errorf("Error while describing filters: %v", err)
 	}
 
-	if !found {
+	if nil == rule {
+		log.Printf("[WARN] EC2 Traffic Mirror Filter (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return fmt.Errorf("Rule %s not found", ruleId)
+		return nil
 	}
 
-	return populateTrafficMirrorFilterRuleResource(d, rule)
+	d.SetId(*rule.TrafficMirrorFilterRuleId)
+	d.Set("traffic_mirror_filter_id", rule.TrafficMirrorFilterId)
+	d.Set("destination_cidr_block", rule.DestinationCidrBlock)
+	d.Set("source_cidr_block", rule.SourceCidrBlock)
+	d.Set("rule_action", rule.RuleAction)
+	d.Set("rule_number", rule.RuleNumber)
+	d.Set("traffic_direction", rule.TrafficDirection)
+	d.Set("description", rule.Description)
+	d.Set("protocol", rule.Protocol)
+
+	if err := d.Set("destination_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.DestinationPortRange)); err != nil {
+		return fmt.Errorf("error setting destination_port_range: %s", err)
+	}
+
+	if err := d.Set("source_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.SourcePortRange)); err != nil {
+		return fmt.Errorf("error setting source_port_range: %s", err)
+	}
+
+	return nil
 }
 
-func findRuleInFilters(ruleId string, filters []*ec2.TrafficMirrorFilter) (filter *ec2.TrafficMirrorFilter, rule *ec2.TrafficMirrorFilterRule, err error) {
+func findEc2TrafficMirrorFilterRule(ruleId string, filters []*ec2.TrafficMirrorFilter) (rule *ec2.TrafficMirrorFilterRule) {
 	log.Printf("[DEBUG] searching %s in %d filters", ruleId, len(filters))
-	err = nil
-	found := false
 	for _, v := range filters {
 		log.Printf("[DEBUG]: searching filter %s, ingress rule count = %d, egress rule count = %d", *v.TrafficMirrorFilterId, len(v.IngressFilterRules), len(v.EgressFilterRules))
 		for _, r := range v.IngressFilterRules {
 			if *r.TrafficMirrorFilterRuleId == ruleId {
 				rule = r
-				filter = v
-				found = true
 				break
 			}
 		}
 		for _, r := range v.EgressFilterRules {
 			if *r.TrafficMirrorFilterRuleId == ruleId {
 				rule = r
-				filter = v
-				found = true
 				break
 			}
 		}
-		if found {
-			break
-		}
 	}
 
-	if !found {
-		err = fmt.Errorf("Rule %s not found", ruleId)
+	if nil != rule {
+		log.Printf("[DEBUG]: Found %s in %s", ruleId, *rule.TrafficDirection)
 	}
 
-	log.Printf("[DEBUG]: Found %s in %s %s", ruleId, *filter.TrafficMirrorFilterId, *rule.TrafficDirection)
-	return filter, rule, err
+	return rule
 }
 
 func resourceAwsEc2TrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -233,20 +223,20 @@ func resourceAwsEc2TrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta in
 
 	var removeFields []*string
 	if d.HasChange("protocol") {
-		_, n := d.GetChange("protocol")
+		n := d.Get("protocol")
 		if n == "0" {
-			removeFields = append(removeFields, aws.String("protocol"))
+			removeFields = append(removeFields, aws.String(ec2.TrafficMirrorFilterRuleFieldProtocol))
 		} else {
 			input.Protocol = aws.Int64(int64(d.Get("protocol").(int)))
 		}
 	}
 
 	if d.HasChange("description") {
-		_, n := d.GetChange("description")
+		n := d.Get("description")
 		if n != "" {
 			input.Description = aws.String(n.(string))
 		} else {
-			removeFields = append(removeFields, aws.String("description"))
+			removeFields = append(removeFields, aws.String(ec2.TrafficMirrorFilterRuleFieldDescription))
 		}
 	}
 
@@ -259,26 +249,26 @@ func resourceAwsEc2TrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("destination_port_range") {
-		_, v := d.GetChange("destination_port_range")
+		v := d.Get("destination_port_range")
 		n := v.([]interface{})
 		if 0 == len(n) {
-			removeFields = append(removeFields, aws.String("destination-port-range"))
+			removeFields = append(removeFields, aws.String(ec2.TrafficMirrorFilterRuleFieldDestinationPortRange))
 		} else {
 			//Modify request that adds port range seems to fail if protocol is not set in the request
 			input.Protocol = aws.Int64(int64(d.Get("protocol").(int)))
-			input.SetDestinationPortRange(buildTrafficMirrorPortRangeRequest(n))
+			input.DestinationPortRange = buildTrafficMirrorPortRangeRequest(n)
 		}
 	}
 
 	if d.HasChange("source_port_range") {
-		_, v := d.GetChange("source_port_range")
+		v := d.Get("source_port_range")
 		n := v.([]interface{})
 		if 0 == len(n) {
-			removeFields = append(removeFields, aws.String("source-port-range"))
+			removeFields = append(removeFields, aws.String(ec2.TrafficMirrorFilterRuleFieldSourcePortRange))
 		} else {
 			//Modify request that adds port range seems to fail if protocol is not set in the request
 			input.Protocol = aws.Int64(int64(d.Get("protocol").(int)))
-			input.SetSourcePortRange(buildTrafficMirrorPortRangeRequest(n))
+			input.SourcePortRange = buildTrafficMirrorPortRangeRequest(n)
 		}
 	}
 
@@ -339,22 +329,6 @@ func buildTrafficMirrorPortRangeRequest(p []interface{}) (out *ec2.TrafficMirror
 	return out
 }
 
-func populateTrafficMirrorFilterRuleResource(d *schema.ResourceData, rule *ec2.TrafficMirrorFilterRule) error {
-	d.SetId(*rule.TrafficMirrorFilterRuleId)
-	d.Set("traffic_mirror_filter_id", rule.TrafficMirrorFilterId)
-	d.Set("destination_cidr_block", rule.DestinationCidrBlock)
-	d.Set("source_cidr_block", rule.SourceCidrBlock)
-	d.Set("rule_action", rule.RuleAction)
-	d.Set("rule_number", rule.RuleNumber)
-	d.Set("traffic_direction", rule.TrafficDirection)
-	d.Set("description", rule.Description)
-	d.Set("protocol", rule.Protocol)
-	d.Set("destination_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.DestinationPortRange))
-	d.Set("source_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.SourcePortRange))
-
-	return nil
-}
-
 func buildTrafficMirrorFilterRulePortRangeSchema(portRange *ec2.TrafficMirrorPortRange) interface{} {
 	if nil == portRange {
 		return nil
@@ -367,4 +341,16 @@ func buildTrafficMirrorFilterRulePortRangeSchema(portRange *ec2.TrafficMirrorPor
 	out[0] = elem
 
 	return out
+}
+
+func resourceAwsEc2TrafficMirrorFilterRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	parts := strings.SplitN(d.Id(), ":", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <filter-id>:<rule-id>", d.Id())
+	}
+
+	d.Set("traffic_mirror_filter_id", parts[0])
+	d.SetId(parts[1])
+
+	return []*schema.ResourceData{d}, nil
 }

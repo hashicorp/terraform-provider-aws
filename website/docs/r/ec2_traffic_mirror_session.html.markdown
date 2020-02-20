@@ -17,8 +17,8 @@ To create a basic traffic mirror session
 
 ```hcl
 resource "aws_ec2_traffic_mirror_filter" "filter" {
-  description                                 = "traffic mirror filter - terraform example"
-  network_services                            = ["amazon-dns"]
+  description      = "traffic mirror filter - terraform example"
+  network_services = ["amazon-dns"]
 }
 
 resource "aws_ec2_traffic_mirror_target" "target" {
