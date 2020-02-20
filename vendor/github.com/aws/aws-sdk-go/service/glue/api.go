@@ -16932,6 +16932,9 @@ type CreateJobInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
+	// Non-overridable arguments for this job, specified as name-value pairs.
+	NonOverridableArguments map[string]*string `type:"map"`
+
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
@@ -17086,6 +17089,12 @@ func (s *CreateJobInput) SetMaxRetries(v int64) *CreateJobInput {
 // SetName sets the Name field's value.
 func (s *CreateJobInput) SetName(v string) *CreateJobInput {
 	s.Name = &v
+	return s
+}
+
+// SetNonOverridableArguments sets the NonOverridableArguments field's value.
+func (s *CreateJobInput) SetNonOverridableArguments(v map[string]*string) *CreateJobInput {
+	s.NonOverridableArguments = v
 	return s
 }
 
@@ -25242,6 +25251,9 @@ type Job struct {
 	// The name you assign to this job definition.
 	Name *string `min:"1" type:"string"`
 
+	// Non-overridable arguments for this job, specified as name-value pairs.
+	NonOverridableArguments map[string]*string `type:"map"`
+
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
@@ -25365,6 +25377,12 @@ func (s *Job) SetMaxRetries(v int64) *Job {
 // SetName sets the Name field's value.
 func (s *Job) SetName(v string) *Job {
 	s.Name = &v
+	return s
+}
+
+// SetNonOverridableArguments sets the NonOverridableArguments field's value.
+func (s *Job) SetNonOverridableArguments(v map[string]*string) *Job {
+	s.NonOverridableArguments = v
 	return s
 }
 
@@ -25939,6 +25957,9 @@ type JobUpdate struct {
 	// The maximum number of times to retry this job if it fails.
 	MaxRetries *int64 `type:"integer"`
 
+	// Non-overridable arguments for this job, specified as name-value pairs.
+	NonOverridableArguments map[string]*string `type:"map"`
+
 	// Specifies the configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
@@ -26068,6 +26089,12 @@ func (s *JobUpdate) SetMaxCapacity(v float64) *JobUpdate {
 // SetMaxRetries sets the MaxRetries field's value.
 func (s *JobUpdate) SetMaxRetries(v int64) *JobUpdate {
 	s.MaxRetries = &v
+	return s
+}
+
+// SetNonOverridableArguments sets the NonOverridableArguments field's value.
+func (s *JobUpdate) SetNonOverridableArguments(v map[string]*string) *JobUpdate {
+	s.NonOverridableArguments = v
 	return s
 }
 
