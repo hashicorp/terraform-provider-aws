@@ -5,6 +5,7 @@ package dynamodb
 import (
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -1661,6 +1662,7 @@ type discovererDescribeEndpoints struct {
 	EndpointCache *crr.EndpointCache
 	Params        map[string]*string
 	Key           string
+	req           *request.Request
 }
 
 func (d *discovererDescribeEndpoints) Discover() (crr.Endpoint, error) {
@@ -1680,8 +1682,19 @@ func (d *discovererDescribeEndpoints) Discover() (crr.Endpoint, error) {
 			continue
 		}
 
+		address := *e.Address
+
+		var scheme string
+		if idx := strings.Index(address, "://"); idx != -1 {
+			scheme = address[:idx]
+		}
+
+		if len(scheme) == 0 {
+			address = fmt.Sprintf("%s://%s", d.req.HTTPRequest.URL.Scheme, address)
+		}
+
 		cachedInMinutes := aws.Int64Value(e.CachePeriodInMinutes)
-		u, err := url.Parse(*e.Address)
+		u, err := url.Parse(address)
 		if err != nil {
 			continue
 		}
@@ -1702,6 +1715,7 @@ func (d *discovererDescribeEndpoints) Discover() (crr.Endpoint, error) {
 func (d *discovererDescribeEndpoints) Handler(r *request.Request) {
 	endpointKey := crr.BuildEndpointKey(d.Params)
 	d.Key = endpointKey
+	d.req = r
 
 	endpoint, err := d.EndpointCache.Get(d, endpointKey, d.Required)
 	if err != nil {
@@ -12238,7 +12252,13 @@ type ListGlobalTablesInput struct {
 	// The first global table name that this operation will evaluate.
 	ExclusiveStartGlobalTableName *string `min:"3" type:"string"`
 
-	// The maximum number of table names to return.
+	// The maximum number of table names to return, if the parameter is not specified
+	// DynamoDB defaults to 100.
+	//
+	// If the number of global tables DynamoDB finds reaches this limit, it stops
+	// the operation and returns the table names collected up to that point, with
+	// a table name in the LastEvaluatedGlobalTableName to apply in a subsequent
+	// operation to the ExclusiveStartGlobalTableName parameter.
 	Limit *int64 `min:"1" type:"integer"`
 
 	// Lists the global tables in a specific Region.
@@ -15490,6 +15510,9 @@ type RestoreTableFromBackupInput struct {
 	// Provisioned throughput settings for the restored table.
 	ProvisionedThroughputOverride *ProvisionedThroughput `type:"structure"`
 
+	// The new server-side encryption settings for the restored table.
+	SSESpecificationOverride *SSESpecification `type:"structure"`
+
 	// The name of the new table to which the backup must be restored.
 	//
 	// TargetTableName is a required field
@@ -15583,6 +15606,12 @@ func (s *RestoreTableFromBackupInput) SetProvisionedThroughputOverride(v *Provis
 	return s
 }
 
+// SetSSESpecificationOverride sets the SSESpecificationOverride field's value.
+func (s *RestoreTableFromBackupInput) SetSSESpecificationOverride(v *SSESpecification) *RestoreTableFromBackupInput {
+	s.SSESpecificationOverride = v
+	return s
+}
+
 // SetTargetTableName sets the TargetTableName field's value.
 func (s *RestoreTableFromBackupInput) SetTargetTableName(v string) *RestoreTableFromBackupInput {
 	s.TargetTableName = &v
@@ -15634,10 +15663,15 @@ type RestoreTableToPointInTimeInput struct {
 	// Time in the past to restore the table to.
 	RestoreDateTime *time.Time `type:"timestamp"`
 
+	// The new server-side encryption settings for the restored table.
+	SSESpecificationOverride *SSESpecification `type:"structure"`
+
+	// The DynamoDB table that will be restored. This value is an Amazon Resource
+	// Name (ARN).
+	SourceTableArn *string `type:"string"`
+
 	// Name of the source table that is being restored.
-	//
-	// SourceTableName is a required field
-	SourceTableName *string `min:"3" type:"string" required:"true"`
+	SourceTableName *string `min:"3" type:"string"`
 
 	// The name of the new table to which it must be restored to.
 	//
@@ -15662,9 +15696,6 @@ func (s RestoreTableToPointInTimeInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *RestoreTableToPointInTimeInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "RestoreTableToPointInTimeInput"}
-	if s.SourceTableName == nil {
-		invalidParams.Add(request.NewErrParamRequired("SourceTableName"))
-	}
 	if s.SourceTableName != nil && len(*s.SourceTableName) < 3 {
 		invalidParams.Add(request.NewErrParamMinLen("SourceTableName", 3))
 	}
@@ -15733,6 +15764,18 @@ func (s *RestoreTableToPointInTimeInput) SetProvisionedThroughputOverride(v *Pro
 // SetRestoreDateTime sets the RestoreDateTime field's value.
 func (s *RestoreTableToPointInTimeInput) SetRestoreDateTime(v time.Time) *RestoreTableToPointInTimeInput {
 	s.RestoreDateTime = &v
+	return s
+}
+
+// SetSSESpecificationOverride sets the SSESpecificationOverride field's value.
+func (s *RestoreTableToPointInTimeInput) SetSSESpecificationOverride(v *SSESpecification) *RestoreTableToPointInTimeInput {
+	s.SSESpecificationOverride = v
+	return s
+}
+
+// SetSourceTableArn sets the SourceTableArn field's value.
+func (s *RestoreTableToPointInTimeInput) SetSourceTableArn(v string) *RestoreTableToPointInTimeInput {
+	s.SourceTableArn = &v
 	return s
 }
 
