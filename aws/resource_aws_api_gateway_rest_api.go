@@ -107,6 +107,14 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 								}, false),
 							},
 						},
+						"vpc_endpoint_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 					},
 				},
 			},
@@ -361,6 +369,30 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 		}
 	}
 
+	if d.HasChange("endpoint_configuration.0.vpc_endpoint_ids") {
+		o, n := d.GetChange("endpoint_configuration.0.vpc_endpoint_ids")
+		prefix := "/endpointConfiguration/vpcEndpointIds"
+
+		old := o.([]interface{})
+		new := n.([]interface{})
+
+		for _, v := range old {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("remove"),
+				Path:  aws.String(prefix),
+				Value: aws.String(v.(string)),
+			})
+		}
+
+		for _, v := range new {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("add"),
+				Path:  aws.String(prefix),
+				Value: aws.String(v.(string)),
+			})
+		}
+	}
+
 	return operations
 }
 
@@ -434,6 +466,10 @@ func expandApiGatewayEndpointConfiguration(l []interface{}) *apigateway.Endpoint
 		Types: expandStringList(m["types"].([]interface{})),
 	}
 
+	if endpointIds, ok := m["vpc_endpoint_ids"]; ok {
+		endpointConfiguration.VpcEndpointIds = expandStringList(endpointIds.([]interface{}))
+	}
+
 	return endpointConfiguration
 }
 
@@ -444,6 +480,10 @@ func flattenApiGatewayEndpointConfiguration(endpointConfiguration *apigateway.En
 
 	m := map[string]interface{}{
 		"types": flattenStringList(endpointConfiguration.Types),
+	}
+
+	if len(endpointConfiguration.VpcEndpointIds) > 0 {
+		m["vpc_endpoint_ids"] = flattenStringList(endpointConfiguration.VpcEndpointIds)
 	}
 
 	return []interface{}{m}

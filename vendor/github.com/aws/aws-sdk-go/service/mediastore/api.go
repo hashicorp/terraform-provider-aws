@@ -67,15 +67,15 @@ func (c *MediaStore) CreateContainerRequest(input *CreateContainerInput) (req *r
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation CreateContainer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit has been exceeded.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainer
@@ -156,15 +156,15 @@ func (c *MediaStore) DeleteContainerRequest(input *DeleteContainerInput) (req *r
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation DeleteContainer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainer
@@ -243,18 +243,18 @@ func (c *MediaStore) DeleteContainerPolicyRequest(input *DeleteContainerPolicyIn
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation DeleteContainerPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
+//   * PolicyNotFoundException
 //   The policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicy
@@ -338,18 +338,18 @@ func (c *MediaStore) DeleteCorsPolicyRequest(input *DeleteCorsPolicyInput) (req 
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation DeleteCorsPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeCorsPolicyNotFoundException "CorsPolicyNotFoundException"
+//   * CorsPolicyNotFoundException
 //   The CORS policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteCorsPolicy
@@ -429,18 +429,18 @@ func (c *MediaStore) DeleteLifecyclePolicyRequest(input *DeleteLifecyclePolicyIn
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation DeleteLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
+//   * PolicyNotFoundException
 //   The policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteLifecyclePolicy
@@ -523,11 +523,11 @@ func (c *MediaStore) DescribeContainerRequest(input *DescribeContainerInput) (re
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation DescribeContainer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+// Returned Error Types:
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainer
@@ -607,18 +607,18 @@ func (c *MediaStore) GetContainerPolicyRequest(input *GetContainerPolicyInput) (
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation GetContainerPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
+//   * PolicyNotFoundException
 //   The policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicy
@@ -701,18 +701,18 @@ func (c *MediaStore) GetCorsPolicyRequest(input *GetCorsPolicyInput) (req *reque
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation GetCorsPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeCorsPolicyNotFoundException "CorsPolicyNotFoundException"
+//   * CorsPolicyNotFoundException
 //   The CORS policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetCorsPolicy
@@ -790,18 +790,18 @@ func (c *MediaStore) GetLifecyclePolicyRequest(input *GetLifecyclePolicyInput) (
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation GetLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
+//   * PolicyNotFoundException
 //   The policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetLifecyclePolicy
@@ -894,8 +894,8 @@ func (c *MediaStore) ListContainersRequest(input *ListContainersInput) (req *req
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation ListContainers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainers
@@ -1025,15 +1025,15 @@ func (c *MediaStore) ListTagsForResourceRequest(input *ListTagsForResourceInput)
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListTagsForResource
@@ -1119,15 +1119,15 @@ func (c *MediaStore) PutContainerPolicyRequest(input *PutContainerPolicyInput) (
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation PutContainerPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+// Returned Error Types:
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicy
@@ -1219,15 +1219,15 @@ func (c *MediaStore) PutCorsPolicyRequest(input *PutCorsPolicyInput) (req *reque
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation PutCorsPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+// Returned Error Types:
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutCorsPolicy
@@ -1311,15 +1311,15 @@ func (c *MediaStore) PutLifecyclePolicyRequest(input *PutLifecyclePolicyInput) (
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation PutLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutLifecyclePolicy
@@ -1400,15 +1400,15 @@ func (c *MediaStore) StartAccessLoggingRequest(input *StartAccessLoggingInput) (
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation StartAccessLogging for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StartAccessLogging
@@ -1489,15 +1489,15 @@ func (c *MediaStore) StopAccessLoggingRequest(input *StopAccessLoggingInput) (re
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation StopAccessLogging for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StopAccessLogging
@@ -1581,15 +1581,15 @@ func (c *MediaStore) TagResourceRequest(input *TagResourceInput) (req *request.R
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/TagResource
@@ -1669,15 +1669,15 @@ func (c *MediaStore) UntagResourceRequest(input *UntagResourceInput) (req *reque
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/UntagResource
@@ -1785,6 +1785,175 @@ func (s *Container) SetName(v string) *Container {
 func (s *Container) SetStatus(v string) *Container {
 	s.Status = &v
 	return s
+}
+
+// The container that you specified in the request already exists or is being
+// updated.
+type ContainerInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ContainerInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContainerInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorContainerInUseException(v protocol.ResponseMetadata) error {
+	return &ContainerInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ContainerInUseException) Code() string {
+	return "ContainerInUseException"
+}
+
+// Message returns the exception's message.
+func (s ContainerInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ContainerInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ContainerInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ContainerInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ContainerInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The container that you specified in the request does not exist.
+type ContainerNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ContainerNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContainerNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorContainerNotFoundException(v protocol.ResponseMetadata) error {
+	return &ContainerNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ContainerNotFoundException) Code() string {
+	return "ContainerNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ContainerNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ContainerNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ContainerNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ContainerNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ContainerNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The CORS policy that you specified in the request does not exist.
+type CorsPolicyNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CorsPolicyNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CorsPolicyNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorCorsPolicyNotFoundException(v protocol.ResponseMetadata) error {
+	return &CorsPolicyNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CorsPolicyNotFoundException) Code() string {
+	return "CorsPolicyNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s CorsPolicyNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CorsPolicyNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s CorsPolicyNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CorsPolicyNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CorsPolicyNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A rule for a CORS policy. You can add up to 100 rules to a CORS policy. If
@@ -2479,6 +2648,118 @@ func (s *GetLifecyclePolicyOutput) SetLifecyclePolicy(v string) *GetLifecyclePol
 	return s
 }
 
+// The service is temporarily unavailable.
+type InternalServerError struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerError) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerError(v protocol.ResponseMetadata) error {
+	return &InternalServerError{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerError) Code() string {
+	return "InternalServerError"
+}
+
+// Message returns the exception's message.
+func (s InternalServerError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerError) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerError) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerError) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerError) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A service limit has been exceeded.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ListContainersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2629,6 +2910,62 @@ func (s ListTagsForResourceOutput) GoString() string {
 func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput {
 	s.Tags = v
 	return s
+}
+
+// The policy that you specified in the request does not exist.
+type PolicyNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s PolicyNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PolicyNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorPolicyNotFoundException(v protocol.ResponseMetadata) error {
+	return &PolicyNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PolicyNotFoundException) Code() string {
+	return "PolicyNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s PolicyNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PolicyNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s PolicyNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PolicyNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PolicyNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type PutContainerPolicyInput struct {

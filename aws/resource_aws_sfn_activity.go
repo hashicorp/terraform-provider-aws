@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -114,20 +113,12 @@ func resourceAwsSfnActivityDelete(d *schema.ResourceData, meta interface{}) erro
 	input := &sfn.DeleteActivityInput{
 		ActivityArn: aws.String(d.Id()),
 	}
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteActivity(input)
 
-		if err == nil {
-			return nil
-		}
+	_, err := conn.DeleteActivity(input)
 
-		return resource.NonRetryableError(err)
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteActivity(input)
-	}
 	if err != nil {
 		return fmt.Errorf("Error deleting SFN Activity: %s", err)
 	}
+
 	return nil
 }

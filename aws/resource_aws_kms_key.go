@@ -44,11 +44,6 @@ func resourceAwsKmsKey() *schema.Resource {
 			"origin": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
-			},
-			"key_usage": {
-				Type:     schema.TypeString,
-				Optional: true,
 				Default:  kms.KeyUsageTypeEncryptDecrypt,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -207,7 +202,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		out, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
 			return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
-				KeyId: metadata.KeyId,
+				KeyId: aws.String(d.Id()),
 			})
 		})
 		if err != nil {

@@ -27,6 +27,7 @@ The following arguments are supported:
 * `dhcp_options_id` - (Required) The ID of the DHCP Options Set to associate to the VPC.
 
 ## Remarks
+
 * You can only associate one DHCP Options Set to a given VPC ID.
 * Removing the DHCP Options Association automatically sets AWS's `default` DHCP Options Set to the VPC.
 

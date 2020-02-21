@@ -55,11 +55,11 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 						cognitoidentityprovider.ExplicitAuthFlowsTypeAdminNoSrpAuth,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeCustomAuthFlowOnly,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeUserPasswordAuth,
-						"ALLOW_ADMIN_USER_PASSWORD_AUTH",
-						"ALLOW_CUSTOM_AUTH",
-						"ALLOW_USER_PASSWORD_AUTH",
-						"ALLOW_USER_SRP_AUTH",
-						"ALLOW_REFRESH_TOKEN_AUTH",
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowAdminUserPasswordAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowCustomAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowUserPasswordAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowUserSrpAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowRefreshTokenAuth,
 					}, false),
 				},
 			},
@@ -109,7 +109,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 			"allowed_oauth_scopes": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 25,
+				MaxItems: 50,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					// https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html
