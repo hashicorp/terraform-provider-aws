@@ -281,6 +281,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_secretsmanager_secret_version":             dataSourceAwsSecretsManagerSecretVersion(),
 			"aws_servicequotas_service":                     dataSourceAwsServiceQuotasService(),
 			"aws_servicequotas_service_quota":               dataSourceAwsServiceQuotasServiceQuota(),
+			"aws_sfn_state_machine":                         dataSourceAwsSfnStateMachine(),
 			"aws_sns_topic":                                 dataSourceAwsSnsTopic(),
 			"aws_sqs_queue":                                 dataSourceAwsSqsQueue(),
 			"aws_ssm_document":                              dataSourceAwsSsmDocument(),
