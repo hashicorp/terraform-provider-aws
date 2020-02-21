@@ -244,10 +244,11 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := keyvaluetags.WafListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for WAF ACL (%s): %s", arn, err)
+		// ignore tag permissions errors for now
+		// return fmt.Errorf("error listing tags for WAF ACL (%s): %s", arn, err)
 	}
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		// return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	if err := d.Set("rules", flattenWafWebAclRules(resp.WebACL.Rules)); err != nil {
