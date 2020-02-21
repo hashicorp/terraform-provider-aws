@@ -1062,7 +1062,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 	}
 
 	if v, ok := d.GetOk("vpc_security_group_ids"); ok {
-		opts.SecurityGroups = nil  // See: RM-3123
+		opts.SecurityGroups = nil // See: RM-3123
 		opts.SecurityGroupIds = expandStringList(v.(*schema.Set).List())
 	}
 

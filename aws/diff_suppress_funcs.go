@@ -132,3 +132,10 @@ func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.Resour
 	}
 	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
 }
+
+// Hide the diff when it is an "upgrade" from the empty string to a default.
+func suppressEmptyToDefault(def string) func(k, old, new string, d *schema.ResourceData) bool {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		return old == "" && new == def
+	}
+}

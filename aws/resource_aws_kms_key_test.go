@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/jen20/awspolicyequivalence"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func init() {
@@ -114,10 +114,6 @@ func TestAccAWSKmsKey_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
 				),
-			},
-			{
-				Config:             testAccAWSKmsKey_other_region(rName),
-				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -136,7 +132,7 @@ func TestAccAWSKmsKey_policy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsKey(rName),
+				Config: testAccAWSKmsKey_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
 					testAccCheckAWSKmsKeyHasPolicy(resourceName, expectedPolicyText),
@@ -328,6 +324,19 @@ func testAccCheckAWSKmsKeyIsEnabled(key *kms.KeyMetadata, isEnabled bool) resour
 	}
 }
 
+func testAccCheckAWSKmsKeyDisappears(key *kms.KeyMetadata) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+
+		_, err := conn.ScheduleKeyDeletion(&kms.ScheduleKeyDeletionInput{
+			KeyId:               key.KeyId,
+			PendingWindowInDays: aws.Int64(int64(7)),
+		})
+
+		return err
+	}
+}
+
 func testAccAWSKmsKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
@@ -359,7 +368,7 @@ POLICY
 `, rName, rName)
 }
 
-func testAccAWSKmsKey_other_region(rName string) string {
+func testAccAWSKmsKey_asymmetric(rName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
