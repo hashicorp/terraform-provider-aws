@@ -1526,6 +1526,10 @@ func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface
 }
 
 func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}) *lambda.DestinationConfig {
+	if len(vDest) == 0 {
+		return nil
+	}
+
 	dest := &lambda.DestinationConfig{}
 	onFailure := &lambda.OnFailure{}
 

@@ -528,8 +528,7 @@ func TestAccAWSLambdaEventSourceMapping_KinesisDestinationConfig(t *testing.T) {
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
-					testAccCheckLambdaEventSourceMappingOnFailureDestinationArnHasSuffix(&conf, ":"+streamName),
-					testAccCheckLambdaEventSourceMappingOnFailureDestinationArnHasSuffix(&conf, ":"+streamName),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination_arn", "aws_sqs_queue.sqs_queue_test", "arn"),
 				),
 			},
 			{
@@ -547,7 +546,7 @@ func TestAccAWSLambdaEventSourceMapping_KinesisDestinationConfig(t *testing.T) {
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
-					testAccCheckLambdaEventSourceMappingOnFailureDestinationArnHasSuffix(&conf, ":"+streamNameUpdated),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination_arn", "aws_sqs_queue.sqs_queue_test", "arn"),
 				),
 			},
 		},
@@ -887,27 +886,6 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 }
 `, streamName)
-}
-
-func testAccCheckLambdaEventSourceMappingOnFailureDestinationArnHasSuffix(mapping *lambda.EventSourceMappingConfiguration, arnSuffix string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		var d string
-		vDest := mapping.DestinationConfig
-		if vDest != nil {
-			vOnFailure := vDest.OnFailure
-			if vOnFailure != nil {
-				if vOnFailure.Destination != nil {
-					d = *vOnFailure.Destination
-				}
-			}
-		}
-
-		if !strings.HasSuffix(d, arnSuffix) {
-			return fmt.Errorf("Expected on_failure destination ARN %s to have suffix %s", d, arnSuffix)
-		}
-
-		return nil
-	}
 }
 
 func testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName,

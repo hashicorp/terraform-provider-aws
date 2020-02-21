@@ -104,39 +104,41 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 10),
-				Default:      1,
+				Computed:     true,
 			},
 			"maximum_retry_attempts": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 10000),
-				Default:      10000,
+				Computed:     true,
 			},
 			"maximum_record_age_in_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(60, 604800),
-				Default:      604800,
+				Computed:     true,
 			},
 			"bisect_batch_on_function_error": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"destination_config": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MinItems: 1,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"on_failure": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"destination_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
 									},
 								},
 							},
@@ -177,13 +179,8 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
-	esArn, err := arn.Parse(d.Get("event_source_arn").(string))
-	if err != nil {
-		return fmt.Errorf("Error creating event source mapping: %s", err)
-	}
-
 	functionName := d.Get("function_name").(string)
-	eventSourceArn := esArn.String()
+	eventSourceArn := d.Get("event_source_arn").(string)
 
 	log.Printf("[DEBUG] Creating Lambda event source mapping: source %s to function %s", eventSourceArn, functionName)
 
@@ -209,26 +206,24 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		t, _ := time.Parse(time.RFC3339, startingPositionTimestamp.(string))
 		params.StartingPositionTimestamp = aws.Time(t)
 	}
-	if esArn.Service != "sqs" {
-		if parallelizationFactor, ok := d.GetOk("parallelization_factor"); ok {
-			params.SetParallelizationFactor(int64(parallelizationFactor.(int)))
-		}
+	if parallelizationFactor, ok := d.GetOk("parallelization_factor"); ok {
+		params.ParallelizationFactor = aws.Int64(int64(parallelizationFactor.(int)))
+	}
 
-		if maximumRetryAttempts, ok := d.GetOk("maximum_retry_attempts"); ok {
-			params.SetMaximumRetryAttempts(int64(maximumRetryAttempts.(int)))
-		}
+	if maximumRetryAttempts, ok := d.GetOk("maximum_retry_attempts"); ok {
+		params.MaximumRetryAttempts = aws.Int64(int64(maximumRetryAttempts.(int)))
+	}
 
-		if maximumRecordAgeInSeconds, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
-			params.SetMaximumRecordAgeInSeconds(int64(maximumRecordAgeInSeconds.(int)))
-		}
+	if maximumRecordAgeInSeconds, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
+		params.MaximumRecordAgeInSeconds = aws.Int64(int64(maximumRecordAgeInSeconds.(int)))
+	}
 
-		if bisectBatchOnFunctionError, ok := d.GetOk("bisect_batch_on_function_error"); ok {
-			params.SetBisectBatchOnFunctionError(bisectBatchOnFunctionError.(bool))
-		}
+	if bisectBatchOnFunctionError, ok := d.GetOk("bisect_batch_on_function_error"); ok {
+		params.BisectBatchOnFunctionError = aws.Bool(bisectBatchOnFunctionError.(bool))
+	}
 
-		if vDest, ok := d.GetOk("destination_config"); ok {
-			params.SetDestinationConfig(expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{})))
-		}
+	if vDest, ok := d.GetOk("destination_config"); ok {
+		params.SetDestinationConfig(expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{})))
 	}
 
 	// IAM profiles and roles can take some time to propagate in AWS:
@@ -286,11 +281,6 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	esArn, err := arn.Parse(*eventSourceMappingConfiguration.EventSourceArn)
-	if err != nil {
-		return fmt.Errorf("Error reading event source mapping from state: %s", err)
-	}
-
 	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
 	d.Set("maximum_batching_window_in_seconds", eventSourceMappingConfiguration.MaximumBatchingWindowInSeconds)
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
@@ -301,21 +291,12 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	d.Set("state_transition_reason", eventSourceMappingConfiguration.StateTransitionReason)
 	d.Set("uuid", eventSourceMappingConfiguration.UUID)
 	d.Set("function_name", eventSourceMappingConfiguration.FunctionArn)
-
-	if esArn.Service != "sqs" {
-		d.Set("parallelization_factor", eventSourceMappingConfiguration.ParallelizationFactor)
-		d.Set("maximum_retry_attempts", eventSourceMappingConfiguration.MaximumRetryAttempts)
-		d.Set("maximum_record_age_in_seconds", eventSourceMappingConfiguration.MaximumRecordAgeInSeconds)
-		d.Set("bisect_batch_on_function_error", eventSourceMappingConfiguration.BisectBatchOnFunctionError)
-		dest := flattenLambdaEventSourceMappingDestinationConfig(eventSourceMappingConfiguration.DestinationConfig)
-		if dest != nil {
-			d.Set("destination_config", dest)
-		}
-	} else {
-		d.Set("parallelization_factor", 1)
-		d.Set("maximum_retry_attempts", 10000)
-		d.Set("maximum_record_age_in_seconds", 604800)
-		d.Set("bisect_batch_on_function_error", false)
+	d.Set("parallelization_factor", eventSourceMappingConfiguration.ParallelizationFactor)
+	d.Set("maximum_retry_attempts", eventSourceMappingConfiguration.MaximumRetryAttempts)
+	d.Set("maximum_record_age_in_seconds", eventSourceMappingConfiguration.MaximumRecordAgeInSeconds)
+	d.Set("bisect_batch_on_function_error", eventSourceMappingConfiguration.BisectBatchOnFunctionError)
+	if err := d.Set("destination_config", flattenLambdaEventSourceMappingDestinationConfig(eventSourceMappingConfiguration.DestinationConfig)); err != nil {
+		return fmt.Errorf("error setting destination_config: %s", err)
 	}
 
 	state := aws.StringValue(eventSourceMappingConfiguration.State)
@@ -394,9 +375,7 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 			params.SetMaximumRetryAttempts(int64(maximumRetryAttempts.(int)))
 		}
 
-		if maximumRecordAgeInSeconds, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
-			params.SetMaximumRecordAgeInSeconds(int64(maximumRecordAgeInSeconds.(int)))
-		}
+		params.MaximumRecordAgeInSeconds = aws.Int64(int64(d.Get("maximum_record_age_in_seconds").(int)))
 
 		if bisectBatchOnFunctionError, ok := d.GetOk("bisect_batch_on_function_error"); ok {
 			params.SetBisectBatchOnFunctionError(bisectBatchOnFunctionError.(bool))
