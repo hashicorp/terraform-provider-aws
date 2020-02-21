@@ -1,4 +1,12 @@
 ## 2.51.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_traffic_mirror_filter` [GH-9372]
+* **New Resource:** `aws_ec2_traffic_mirror_filter_rule` [GH-9372]
+* **New Resource:** `aws_ec2_traffic_mirror_filter_session` [GH-9372]
+* **New Resource:** `aws_ec2_traffic_mirror_filter_target` [GH-9372]
+
 ## 2.50.0 (February 20, 2020)
 
 NOTES:
