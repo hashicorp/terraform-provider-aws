@@ -599,12 +599,14 @@ func xmlConfigToTunnelInfo(xmlConfig string, tunnel1_inside_cidr string) (*Tunne
 	}
 
 	// don't expect consistent ordering
-	_, ipnet1, _ := net.ParseCIDR(tunnel1_inside_cidr)
-	if !(ipnet1.Contains(net.ParseIP(vpnConfig.Tunnels[0].VgwInsideAddress))) {
-		var vpnConfigRev XmlVpnConnectionConfig
-		vpnConfigRev.Tunnels = append(vpnConfigRev.Tunnels, vpnConfig.Tunnels[1])
-		vpnConfigRev.Tunnels = append(vpnConfigRev.Tunnels, vpnConfig.Tunnels[0])
-		vpnConfig = vpnConfigRev
+	if tunnel1_inside_cidr != "" {
+		_, ipnet1, _ := net.ParseCIDR(tunnel1_inside_cidr)
+		if !(ipnet1.Contains(net.ParseIP(vpnConfig.Tunnels[0].VgwInsideAddress))) {
+			var vpnConfigRev XmlVpnConnectionConfig
+			vpnConfigRev.Tunnels = append(vpnConfigRev.Tunnels, vpnConfig.Tunnels[1])
+			vpnConfigRev.Tunnels = append(vpnConfigRev.Tunnels, vpnConfig.Tunnels[0])
+			vpnConfig = vpnConfigRev
+		}
 	}
 
 	tunnelInfo := TunnelInfo{
