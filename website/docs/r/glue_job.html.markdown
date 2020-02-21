@@ -82,6 +82,7 @@ be removed in future releases, please use `max_capacity` instead.
 * `max_capacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs.
 * `max_retries` – (Optional) The maximum number of times to retry this job if it fails.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.
+* `notification_property` - (Optional) Notification property of the job. Defined below.
 * `role_arn` – (Required) The ARN of the IAM role associated with this job.
 * `tags` - (Optional) Key-value mapping of resource tags
 * `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours).
@@ -98,6 +99,10 @@ be removed in future releases, please use `max_capacity` instead.
 ### execution_property Argument Reference
 
 * `max_concurrent_runs` - (Optional) The maximum number of concurrent runs allowed for a job. The default is 1.
+
+### notification_property Argument Reference
+
+* `notify_delay_after` - (Optional) After a job run starts, the number of minutes to wait before sending a job run delay notification.
 
 ## Attributes Reference
 
