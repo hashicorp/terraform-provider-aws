@@ -1,4 +1,21 @@
 ## 2.51.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_sfn_state_machine` [GH-10932]
+* **New Resource:** `aws_ec2_traffic_mirror_filter` [GH-9372]
+* **New Resource:** `aws_ec2_traffic_mirror_filter_rule` [GH-9372]
+* **New Resource:** `aws_ec2_traffic_mirror_session` [GH-9372]
+* **New Resource:** `aws_ec2_traffic_mirror_target` [GH-9372]
+
+ENHANCEMENTS:
+
+* resource/aws_glub_job: Add `notification_property` configuration block [GH-12115]
+* resource/aws_lambda_event_source_mapping: Add `bisect_batch_on_function_error`, `maximum_record_age_in_seconds`, `maximum_retry_attempts`, and `parallelization_factor` arguments [GH-11100]
+* resource/aws_lambda_event_source_mapping: Add `destination_config` configuration block [GH-11100]
+* resource/aws_msk_cluster: Support in-place updates to `enhanced_monitoring` and `number_of_broker_nodes` arguments [GH-11451]
+* resource/aws_msk_cluster: Add `open_monitoring` configuration block (support Prometheus monitoring configuration) [GH-11451]
+
 ## 2.50.0 (February 20, 2020)
 
 NOTES:

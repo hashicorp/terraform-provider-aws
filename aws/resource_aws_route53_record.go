@@ -584,7 +584,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if record.MultiValueAnswer != nil {
-		if err := d.Set("multivalue_answer_routing_policy", *record.MultiValueAnswer); err != nil {
+		if err := d.Set("multivalue_answer_routing_policy", record.MultiValueAnswer); err != nil {
 			return fmt.Errorf("Error setting multivalue answer records for: %s, error: %#v", d.Id(), err)
 		}
 	}

@@ -19,7 +19,7 @@ const (
 	// "AccessDeniedForDependencyException".
 	//
 	// In order to grant the necessary access to the DDoS Response Team, the user
-	// submitting AssociateDRTRole must have the iam:PassRole permission. This error
+	// submitting the request must have the iam:PassRole permission. This error
 	// indicates the user did not have the appropriate permissions. For more information,
 	// see Granting a User Permissions to Pass a Role to an AWS Service (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html).
 	ErrCodeAccessDeniedForDependencyException = "AccessDeniedForDependencyException"
