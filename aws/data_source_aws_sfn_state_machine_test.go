@@ -20,7 +20,7 @@ func TestAccDataSourceAwsSfnStateMachine(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsSfnStateMachineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSourceName, "creation_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "definition", dataSourceName, "definition"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -55,7 +55,7 @@ resource "aws_iam_role" "iam_for_sfn" {
 EOF
 }
 
-resource "aws_sfn_state_machine" "foo" {
+resource "aws_sfn_state_machine" "test" {
   name     = "test_sfn_%s"
   role_arn = "${aws_iam_role.iam_for_sfn.arn}"
 
@@ -72,7 +72,7 @@ EOF
 }
 
 data "aws_sfn_state_machine" "test" {
-  name = "${aws_sfn_state_machine.foo.name}"
+  name = "${aws_sfn_state_machine.test.name}"
 }
 `, rName, rName)
 }
