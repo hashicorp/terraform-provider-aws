@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -38,7 +39,7 @@ func TestAccAWSEc2TrafficMirrorSession_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "packet_length", "0"),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
-					resource.TestCheckNoResourceAttr(resourceName, "virtual_network_id"),
+					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexp.MustCompile(`\d+`)),
 				),
 			},
 			// update of description, packet length and VNI
@@ -60,15 +61,14 @@ func TestAccAWSEc2TrafficMirrorSession_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "packet_length", "0"),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
-					resource.TestCheckResourceAttr(resourceName, "virtual_network_id", "0"),
+					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexp.MustCompile(`\d+`)),
 				),
 			},
 			// import test without VNI
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"virtual_network_id"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
