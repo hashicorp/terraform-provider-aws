@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_sfn_state_machine` [GH-10932]
 * **New Resource:** `aws_ec2_traffic_mirror_filter` [GH-9372]
 * **New Resource:** `aws_ec2_traffic_mirror_filter_rule` [GH-9372]
 * **New Resource:** `aws_ec2_traffic_mirror_session` [GH-9372]
