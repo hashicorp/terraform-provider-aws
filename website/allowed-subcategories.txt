@@ -105,6 +105,7 @@ Transfer
 VPC
 WAF Regional
 WAF
+WAFv2
 WorkLink
 WorkMail
 WorkSpaces
