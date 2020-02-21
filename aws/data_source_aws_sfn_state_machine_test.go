@@ -11,7 +11,7 @@ import (
 func TestAccDataSourceAwsSfnStateMachine(t *testing.T) {
 	rName := acctest.RandString(5)
 	dataSourceName := "data.aws_sfn_state_machine.test"
-	resourceName := "data.aws_sfn_state_machine.test"
+	resourceName := "aws_sfn_state_machine.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
