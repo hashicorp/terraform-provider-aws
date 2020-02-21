@@ -234,6 +234,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	// The role may exist, but the permissions may not have propagated, so we
 	// retry
 	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
+	var err error
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(params)
 		if err != nil {
