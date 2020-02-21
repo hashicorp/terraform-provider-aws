@@ -33,6 +33,7 @@ func resourceAwsVpcPeeringConnectionOptions() *schema.Resource {
 
 func resourceAwsVpcPeeringConnectionOptionsCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("vpc_peering_connection_id").(string))
+
 	return resourceAwsVpcPeeringConnectionOptionsUpdate(d, meta)
 }
 
@@ -78,14 +79,24 @@ func resourceAwsVpcPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta i
 		return nil
 	}
 
-	pc := pcRaw.(*ec2.VpcPeeringConnection)
+	if d.HasChanges("accepter", "requester") {
+		pc := pcRaw.(*ec2.VpcPeeringConnection)
+		crossRegionPeering := aws.StringValue(pc.RequesterVpcInfo.Region) != aws.StringValue(pc.AccepterVpcInfo.Region)
 
-	crossRegionPeering := false
-	if aws.StringValue(pc.RequesterVpcInfo.Region) != aws.StringValue(pc.AccepterVpcInfo.Region) {
-		crossRegionPeering = true
-	}
-	if err := resourceAwsVpcPeeringConnectionModifyOptions(d, meta, crossRegionPeering); err != nil {
-		return fmt.Errorf("error modifying VPC Peering Connection (%s) Options: %s", d.Id(), err)
+		req := &ec2.ModifyVpcPeeringConnectionOptionsInput{
+			VpcPeeringConnectionId: aws.String(d.Id()),
+		}
+		if d.HasChange("accepter") {
+			req.AccepterPeeringConnectionOptions = expandVpcPeeringConnectionOptions(d.Get("accepter").(*schema.Set).List(), crossRegionPeering)
+		}
+		if d.HasChange("requester") {
+			req.RequesterPeeringConnectionOptions = expandVpcPeeringConnectionOptions(d.Get("requester").(*schema.Set).List(), crossRegionPeering)
+		}
+
+		log.Printf("[DEBUG] Modifying VPC Peering Connection options: %#v", req)
+		if _, err := conn.ModifyVpcPeeringConnectionOptions(req); err != nil {
+			return fmt.Errorf("error modifying VPC Peering Connection (%s) Options: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsVpcPeeringConnectionOptionsRead(d, meta)
