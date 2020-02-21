@@ -8,6 +8,11 @@ FEATURES:
 * **New Resource:** `aws_ec2_traffic_mirror_session` [GH-9372]
 * **New Resource:** `aws_ec2_traffic_mirror_target` [GH-9372]
 
+ENHANCEMENTS:
+
+* resource/aws_lambda_event_source_mapping: Add `bisect_batch_on_function_error`, `maximum_record_age_in_seconds`, `maximum_retry_attempts`, and `parallelization_factor` arguments [GH-11100]
+* resource/aws_lambda_event_source_mapping: Add `destination_config` configuration block [GH-11100]
+
 ## 2.50.0 (February 20, 2020)
 
 NOTES:
