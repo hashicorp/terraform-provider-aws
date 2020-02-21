@@ -62,8 +62,8 @@ The following arguments are supported:
     provided as a single valid JSON document. This parameter is required if the `type` parameter is `container`.
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
 * `retry_strategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition.
-    Maximum number of `retry_strategy` is `1`.  Defined below.
-* `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Maximum number of `timeout` is `1`. Defined below.
+    Minimum number of `retry_strategy` is `1`.  Defined below.
+* `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Minimum number of `timeout` is `60`. Defined below.
 * `type` - (Required) The type of job definition.  Must be `container`
 
 ## retry_strategy
