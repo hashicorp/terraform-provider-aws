@@ -1,13 +1,27 @@
-## 2.50.0 (Unreleased)
+## 2.51.0 (Unreleased)
+## 2.50.0 (February 20, 2020)
 
 NOTES:
 
-* resource/aws_ram_resource_share_accepter: The `status` attribute now reflects the status of the RAM Resource Share and not the RAM Resource Share Invitation (which expires after 7 days). [GH-11562]
+* resource/aws_lambda_function: The `publish` argument now will also publish versions for configuration updates. This is accomplished via a separate `PublishVersion` API call, where before the publishing only occured via the `Publish` parameter of the `UpdateFunctionCode` API call. Restrictive IAM permissions for Terraform may require updates. ([#11211](https://github.com/terraform-providers/terraform-provider-aws/issues/11211))
+* resource/aws_ram_resource_share_accepter: The `status` attribute now reflects the status of the RAM Resource Share and not the RAM Resource Share Invitation (which expires after 7 days). ([#11562](https://github.com/terraform-providers/terraform-provider-aws/issues/11562))
+
+FEATURES:
+
+* **New Data Source:** `aws_lambda_alias` ([#9490](https://github.com/terraform-providers/terraform-provider-aws/issues/9490))
+
+ENHANCEMENTS:
+
+* resource/aws_appmesh_route: Add `priority` and `header` attributes to support route priorities and HTTP header-based routing ([#10402](https://github.com/terraform-providers/terraform-provider-aws/issues/10402))
+* resource/aws_iam_access_key: Add `ses_smtp_password_v4` attribute (add per-region SigV4 support) ([#11144](https://github.com/terraform-providers/terraform-provider-aws/issues/11144))
+* resource/aws_security_group: Support import of `name_prefix` argument ([#12052](https://github.com/terraform-providers/terraform-provider-aws/issues/12052))
+* resource/aws_transfer_server: Add `host_key` argument and `host_key_fingerprint` attribute ([#8913](https://github.com/terraform-providers/terraform-provider-aws/issues/8913))
 
 BUG FIXES:
 
-* resource/aws_lambda_permission: Fix error when Lambda permission is deleted out-of-band [GH-11924]
-* resource/aws_ram_resource_share_accepter: Fix read operations after the RAM Resource Share Invitation is no longer present after 7 days [GH-11562]
+* resource/aws_lambda_function: If `publish` argument is enabled, also publish new versions on function configuration-only updates in addition to function code updates ([#11211](https://github.com/terraform-providers/terraform-provider-aws/issues/11211))
+* resource/aws_lambda_permission: Fix error when Lambda permission is deleted out-of-band ([#11924](https://github.com/terraform-providers/terraform-provider-aws/issues/11924))
+* resource/aws_ram_resource_share_accepter: Fix read operations after the RAM Resource Share Invitation is no longer present after 7 days ([#11562](https://github.com/terraform-providers/terraform-provider-aws/issues/11562))
 
 ## 2.49.0 (February 14, 2020)
 
