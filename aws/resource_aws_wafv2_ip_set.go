@@ -180,7 +180,6 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
-	//tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Wafv2Tags()
 	var resp *wafv2.GetIPSetOutput
 	params := &wafv2.GetIPSetInput{
 		Id:    aws.String(d.Id()),
