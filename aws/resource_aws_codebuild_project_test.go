@@ -308,6 +308,32 @@ func TestAccAWSCodeBuildProject_Description(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_FileSystemLocations(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	iName := acctest.RandomWithPrefix("tf-acc-test-identifier")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID, "efs"), //using efs.EndpointsID will import efs and make linters sad
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_FileSystemLocations(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", iName),
+					testAccMatchResourceAttrRegionalHostname(resourceName, "file_system_locations.0.location", "efs", regexp.MustCompile(`[^.]+`)),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.type", codebuild.FileSystemTypeEfs),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_SourceVersion(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -4395,7 +4421,7 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodeBuildProjectConfig_SecondarySources_CodeCommit(rName string) string {
 	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         = %q
+  name         = %[1]q
   service_role = aws_iam_role.test.arn
 
   artifacts {
@@ -4431,7 +4457,7 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodeBuildProjectConfig_Source_BuildStatusConfig_GitHubEnterprise(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         = "%s"
+  name         = %[1]q
   service_role = aws_iam_role.test.arn
 
   artifacts {
@@ -4460,8 +4486,8 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodeBuildProjectConfig_ConcurrentBuildLimit(rName string, concurrentBuildLimit int) string {
 	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  concurrent_build_limit = %d
-  name                   = "%s"
+  concurrent_build_limit = %[1]d
+  name                   = %[2]q
   service_role           = aws_iam_role.test.arn
 
   artifacts {
@@ -4480,4 +4506,36 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, concurrentBuildLimit, rName))
+}
+
+func testAccAWSCodeBuildProjectConfig_FileSystemLocations(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {}
+
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+
+  file_system_locations {
+    identifier = "test"
+    location   = aws_efs_file_system.test.dns_name
+    type       = "EFS"
+  }
+}
+`, rName)
 }

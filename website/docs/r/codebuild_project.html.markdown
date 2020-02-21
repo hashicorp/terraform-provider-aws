@@ -235,6 +235,7 @@ The following arguments are optional:
 * `cache` - (Optional) Configuration block. Detailed below.
 * `concurrent_build_limit` - (Optional) Specify a maximum number of concurrent builds for the project. The value specified must be greater than 0 and less than the account concurrent running builds limit.
 * `description` - (Optional) Short description of the project.
+* `file_system_locations` - (Optional) A set of file system locations to to mount inside the build. File system locations are documented below.
 * `encryption_key` - (Optional) AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration block. Detailed below.
 * `queued_timeout` - (Optional) Number of minutes, from 5 to 480 (8 hours), a build is allowed to be queued before it times out. The default is 8 hours.
@@ -367,6 +368,16 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_EN
 * `location` - (Optional) Location of the source code from git or s3.
 * `report_build_status` - (Optional) Whether to report the status of a build's start and finish to your source provider. This option is only valid when the `type` is `BITBUCKET` or `GITHUB`.
 * `type` - (Required) Type of repository that contains the source code to be built. Valid values: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET`, `S3`, `NO_SOURCE`.
+
+`file_system_locations` supports the following:
+
+See [ProjectFileSystemLocation](https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ProjectFileSystemLocation.html) for more details of the fields.
+
+* `identifier` - (Optional) The name used to access a file system created by Amazon EFS. CodeBuild creates an environment variable by appending the identifier in all capital letters to CODEBUILD\_. For example, if you specify my-efs for identifier, a new environment variable is create named CODEBUILD_MY-EFS.
+* `location` - (Optional) A string that specifies the location of the file system created by Amazon EFS. Its format is `efs-dns-name:/directory-path`.
+* `mount_options` - (Optional) The mount options for a file system created by AWS EFS.
+* `mount_point` - (Optional) The location in the container where you mount the file system.
+* `type` - (Optional) The type of the file system. The one supported type is `EFS`.
 
 #### source: auth
 
