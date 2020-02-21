@@ -134,7 +134,7 @@ func resourceAwsEc2TrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta in
 
 	out, err := conn.CreateTrafficMirrorFilterRule(input)
 	if err != nil {
-		return fmt.Errorf("Error creating traffic mirror filter rule for %v", filterId)
+		return fmt.Errorf("error creating EC2 Traffic Mirror Filter Rule (%s): %w", filterId, err)
 	}
 
 	d.SetId(*out.TrafficMirrorFilterRule.TrafficMirrorFilterRuleId)
@@ -290,7 +290,7 @@ func resourceAwsEc2TrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta in
 
 	_, err := conn.ModifyTrafficMirrorFilterRule(input)
 	if err != nil {
-		return fmt.Errorf("Error modifying rule %v", ruleId)
+		return fmt.Errorf("error modifying EC2 Traffic Mirror Filter Rule (%s): %w", ruleId, err)
 	}
 
 	return resourceAwsEc2TrafficMirrorFilterRuleRead(d, meta)
@@ -306,7 +306,7 @@ func resourceAwsEc2TrafficMirrorFilterRuleDelete(d *schema.ResourceData, meta in
 
 	_, err := conn.DeleteTrafficMirrorFilterRule(input)
 	if err != nil {
-		return fmt.Errorf("Error deleting traffic mirror filter rule %v", ruleId)
+		return fmt.Errorf("error deleting EC2 Traffic Mirror Filter Rule (%s): %w", ruleId, err)
 	}
 
 	return nil

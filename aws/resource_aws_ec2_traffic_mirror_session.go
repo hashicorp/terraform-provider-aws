@@ -168,7 +168,7 @@ func resourceAwsEc2TrafficMirrorSessionRead(d *schema.ResourceData, meta interfa
 
 	out, err := conn.DescribeTrafficMirrorSessions(input)
 	if nil != err {
-		return fmt.Errorf("Error describing traffic mirror session %v", sessionId)
+		return fmt.Errorf("error describing EC2 Traffic Mirror Session (%s): %w", sessionId, err)
 	}
 
 	if 0 == len(out.TrafficMirrorSessions) {
@@ -184,7 +184,7 @@ func resourceAwsEc2TrafficMirrorSessionRead(d *schema.ResourceData, meta interfa
 	d.Set("traffic_mirror_target_id", session.TrafficMirrorTargetId)
 	d.Set("description", session.Description)
 	d.Set("packet_length", session.PacketLength)
-	d.Set("virtual_network_id", *session.VirtualNetworkId)
+	d.Set("virtual_network_id", session.VirtualNetworkId)
 
 	return nil
 }
@@ -199,7 +199,7 @@ func resourceAwsEc2TrafficMirrorSessionDelete(d *schema.ResourceData, meta inter
 
 	_, err := conn.DeleteTrafficMirrorSession(input)
 	if nil != err {
-		return fmt.Errorf("Error deleting traffic mirror session %v", sessionId)
+		return fmt.Errorf("error deleting EC2 Traffic Mirror Session (%s): %w", sessionId, err)
 	}
 
 	return nil

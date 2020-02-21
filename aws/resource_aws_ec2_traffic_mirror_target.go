@@ -87,16 +87,17 @@ func resourceAwsEc2TrafficMirrorTargetRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error describing traffic mirror target %v", targetId)
+		return fmt.Errorf("error describing EC2 Traffic Mirror Target (%s): %w", targetId, err)
 	}
 
 	if nil == out || 0 == len(out.TrafficMirrorTargets) {
 		log.Printf("[WARN] EC2 Traffic Mirror Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
+		return nil
 	}
 
 	target := out.TrafficMirrorTargets[0]
-	d.Set("description", *target.Description)
+	d.Set("description", target.Description)
 	d.Set("network_interface_id", target.NetworkInterfaceId)
 	d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
 
@@ -113,7 +114,7 @@ func resourceAwsEc2TrafficMirrorTargetDelete(d *schema.ResourceData, meta interf
 
 	_, err := conn.DeleteTrafficMirrorTarget(input)
 	if nil != err {
-		return fmt.Errorf("Error deleting traffic mirror target %v", targetId)
+		return fmt.Errorf("error deleting EC2 Traffic Mirror Target (%s): %w", targetId, err)
 	}
 
 	return nil

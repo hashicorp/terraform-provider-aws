@@ -80,7 +80,7 @@ func resourceAwsEc2TrafficMirrorFilterUpdate(d *schema.ResourceData, meta interf
 
 		_, err := conn.ModifyTrafficMirrorFilterNetworkServices(input)
 		if err != nil {
-			return fmt.Errorf("Error modifying network services for traffic mirror filter %v", d.Id())
+			return fmt.Errorf("error modifying EC2 Traffic Mirror Filter (%s) network services: %w", d.Id(), err)
 		}
 	}
 
