@@ -30,7 +30,7 @@ func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
 		Steps: []resource.TestStep{
 			//create
 			{
-				Config: testAccTrafficMirrorTargetConfigNlb(description, rName),
+				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -80,6 +80,54 @@ func TestAccAWSEc2TrafficMirrorTarget_eni(t *testing.T) {
 	})
 }
 
+func TestAccAWSEc2TrafficMirrorTarget_tags(t *testing.T) {
+	var v ec2.TrafficMirrorTarget
+	resourceName := "aws_ec2_traffic_mirror_target.test"
+	description := "test nlb target"
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrafficMirrorTargetConfigTags1(rName, description, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTrafficMirrorTargetConfigTags2(rName, description, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccTrafficMirrorTargetConfigTags1(rName, description, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
@@ -95,7 +143,7 @@ func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficMirrorTargetConfigNlb(description, rName),
+				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
 					testAccCheckAWSEc2TrafficMirrorTargetDisappears(&v),
@@ -184,7 +232,7 @@ resource "aws_subnet" "sub2" {
 `, rName)
 }
 
-func testAccTrafficMirrorTargetConfigNlb(description string, rName string) string {
+func testAccTrafficMirrorTargetConfigNlb(rName, description string) string {
 	return testAccTrafficMirrorTargetConfigBase(rName) + fmt.Sprintf(`
 resource "aws_lb" "lb" {
   name               = %[1]q
@@ -201,7 +249,7 @@ resource "aws_lb" "lb" {
 }
 
 resource "aws_ec2_traffic_mirror_target" "test" {
-  description = %[1]q
+  description = %[2]q
   network_load_balancer_arn = "${aws_lb.lb.arn}"
 }
 `, rName, description)
@@ -235,11 +283,66 @@ resource "aws_instance" "src" {
   }
 }
 
-resource "aws_ec2_traffic_mirror_target" "target" {
+resource "aws_ec2_traffic_mirror_target" "test" {
   description = %[2]q
   network_interface_id = "${aws_instance.src.primary_network_interface_id}"
 }
 `, rName, description)
+}
+
+func testAccTrafficMirrorTargetConfigTags1(rName, description, tagKey1, tagValue1 string) string {
+	return testAccTrafficMirrorTargetConfigBase(rName) + fmt.Sprintf(`
+resource "aws_lb" "lb" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "network"
+  subnets            = ["${aws_subnet.sub1.id}", "${aws_subnet.sub2.id}"]
+
+  enable_deletion_protection  = false
+
+  tags = {
+    Name        = %[1]q
+    Environment = "production"
+  }
+}
+
+resource "aws_ec2_traffic_mirror_target" "test" {
+  description = %[2]q
+  network_load_balancer_arn = "${aws_lb.lb.arn}"
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, description, tagKey1, tagValue1)
+}
+
+func testAccTrafficMirrorTargetConfigTags2(rName, description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccTrafficMirrorTargetConfigBase(rName) + fmt.Sprintf(`
+resource "aws_lb" "lb" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "network"
+  subnets            = ["${aws_subnet.sub1.id}", "${aws_subnet.sub2.id}"]
+
+  enable_deletion_protection  = false
+
+  tags = {
+    Name        = %[1]q
+    Environment = "production"
+  }
+}
+
+resource "aws_ec2_traffic_mirror_target" "test" {
+  description = %[2]q
+  network_load_balancer_arn = "${aws_lb.lb.arn}"
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, description, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccPreCheckAWSEc2TrafficMirrorTarget(t *testing.T) {
