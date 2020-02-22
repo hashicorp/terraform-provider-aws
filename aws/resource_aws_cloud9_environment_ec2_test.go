@@ -235,7 +235,7 @@ func testAccCheckAWSCloud9EnvironmentEc2Disappears(res *cloud9.Environment) reso
 			if len(out.Environments) == 0 {
 				return nil
 			}
-			return resource.RetryableError(fmt.Errorf("Cloud9 EC2 Environment %q still exists", &res.Id))
+			return resource.RetryableError(fmt.Errorf("Cloud9 EC2 Environment %q still exists", aws.StringValue(res.Id)))
 		})
 
 		return err
