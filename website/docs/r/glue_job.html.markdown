@@ -101,6 +101,7 @@ be removed in future releases, please use `max_capacity` instead.
 You can specify arguments here that your own job-execution script consumes, as well as arguments that AWS Glue itself consumes.
 
 #### Reserved Key-Pairs
+
 * `"--job-language"` - (Optional) The script programming language. This must be either `scala` or `python`. If this parameter is not present, the default is python.
 * `"--class"` - (Optional) The Scala class that serves as the entry point for your Scala script. This only applies if your `--job-language` is set to `scala`.
 * `"--extra-py-files"` - (Optional) The Amazon S3 paths to additional Python modules that AWS Glue adds to the Python path before executing your script. Multiple values must be complete paths separated by a comma (,). Only individual files are supported, not a directory path. Currently, only pure Python modules work. Extension modules written in C or other languages are not supported.
@@ -116,6 +117,7 @@ You can specify arguments here that your own job-execution script consumes, as w
     The job bookmark state is not updated when this option set is specified.
     
     The suboptions are optional. However, when used, both suboptions must be provided.
+    
 * `"--TempDir"` - (Optional) Specifies an Amazon S3 path to a bucket that can be used as a temporary directory for the Job.
 * `"--enable-metrics"` - (Optional) Enables the collection of metrics for job profiling for this job run. These metrics are available on the AWS Glue console and the Amazon CloudWatch console. To enable metrics, only specify the key; no value is needed.
 * `"--enable-glue-datacatalog"` - (Optional) Enables you to use the AWS Glue Data Catalog as an Apache Spark Hive metastore.
@@ -129,6 +131,7 @@ For information about the key-value pairs that AWS Glue consumes to set up your 
 
 #### Passing Job Arguments
 Any non-reserved key can be used to pass your own Job arguments, e.g.
+
 * `"--myFirstArgKey" = "myFirstArgValue"`
 * `"--mySecondArgKey" = "mySecondArgValue"`
 
