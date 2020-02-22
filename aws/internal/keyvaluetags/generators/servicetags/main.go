@@ -23,6 +23,7 @@ var sliceServiceNames = []string{
 	"appmesh",
 	"athena",
 	/* "autoscaling", // includes extra PropagateAtLaunch, skip for now */
+	"cloud9",
 	"cloudformation",
 	"cloudfront",
 	"cloudhsmv2",
