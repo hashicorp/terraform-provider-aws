@@ -253,7 +253,7 @@ resource "aws_instance" "src" {
 }
 
 resource "aws_lb" "lb" {
-  name               = "%s"
+  name               = %[1]q
   internal           = true
   load_balancer_type = "network"
   subnets            = ["${aws_subnet.sub1.id}", "${aws_subnet.sub2.id}"]
@@ -261,6 +261,7 @@ resource "aws_lb" "lb" {
   enable_deletion_protection  = false
 
   tags = {
+	Name = %[1]q
     Environment = "production"
   }
 }
