@@ -7,6 +7,7 @@ FEATURES:
 * **New Resource:** `aws_ec2_traffic_mirror_filter_rule` [GH-9372]
 * **New Resource:** `aws_ec2_traffic_mirror_session` [GH-9372]
 * **New Resource:** `aws_ec2_traffic_mirror_target` [GH-9372]
+* **New Resource:** `aws_s3_access_point` [GH-11276]
 
 ENHANCEMENTS:
 
