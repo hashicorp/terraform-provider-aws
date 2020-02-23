@@ -195,6 +195,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ebs_snapshot":                              dataSourceAwsEbsSnapshot(),
 			"aws_ebs_snapshot_ids":                          dataSourceAwsEbsSnapshotIds(),
 			"aws_ebs_volume":                                dataSourceAwsEbsVolume(),
+			"aws_ec2_instance_type_offering":                dataSourceAwsEc2InstanceTypeOffering(),
 			"aws_ec2_instance_type_offerings":               dataSourceAwsEc2InstanceTypeOfferings(),
 			"aws_ec2_transit_gateway":                       dataSourceAwsEc2TransitGateway(),
 			"aws_ec2_transit_gateway_dx_gateway_attachment": dataSourceAwsEc2TransitGatewayDxGatewayAttachment(),
