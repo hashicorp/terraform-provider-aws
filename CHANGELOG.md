@@ -16,6 +16,10 @@ ENHANCEMENTS:
 * resource/aws_msk_cluster: Support in-place updates to `enhanced_monitoring` and `number_of_broker_nodes` arguments [GH-11451]
 * resource/aws_msk_cluster: Add `open_monitoring` configuration block (support Prometheus monitoring configuration) [GH-11451]
 
+BUG FIXES:
+
+* resource/aws_workspaces_directory: Prevent panic and remove resource from Terraform state if removed outside Terraform [GH-11837]
+
 ## 2.50.0 (February 20, 2020)
 
 NOTES:
