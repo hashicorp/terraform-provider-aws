@@ -37,25 +37,48 @@ resource "aws_iam_role_policy_attachment" "iot_fleet_provisioning_registration" 
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration"
 }
 
-resource "aws_iot_provisioning_template" "fleet" {
-  template_name         = "FleetProvisioningTemplate"
-  description           = "My fleet provisioning template"
-  provisioning_role_arn = aws_iam_role.iot_fleet_provisioning
-
-  template_body = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "iot:*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
+data "aws_iam_policy_document" "device_policy" {
+  statement {
+    actions   = ["iot:Subscribe"]
+    resources = ["*"]
+  }
 }
-EOF
+
+resource "aws_iot_policy" "device_policy" {
+  name   = "DevicePolicy"
+  policy = data.aws_iam_policy_document.device_policy.json
+}
+
+resource "aws_iot_provisioning_template" "fleet" {
+	template_name         = "FleetTemplate"
+	description           = "My provisioning template"
+	provisioning_role_arn = aws_iam_role.iot_fleet_provisioning.arn
+
+  template_body = jsonencode({
+    Parameters = {
+      "AWS::IoT::Certificate::Id" = { Type = "String" }
+      SerialNumber                = { Type = "String" }
+		}
+
+    Resources = {
+      certificate = {
+        Properties = {
+          CertificateId = { Ref = "AWS::IoT::Certificate::Id" }
+          Status        = "Active"
+        }
+
+        Type = "AWS::IoT::Certificate"
+      }
+
+      policy = {
+        Properties = {
+          PolicyName = aws_iot_policy.device_policy.name
+        }
+
+        Type = "AWS::IoT::Policy"
+      }
+    }
+  })
 }
 ```
 
