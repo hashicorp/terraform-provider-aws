@@ -57,7 +57,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket to read the object from
+* `bucket` - (Required) The name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `key` - (Required) The full path to the object inside the bucket
 * `version_id` - (Optional) Specific version ID of the object returned (defaults to latest version)
 

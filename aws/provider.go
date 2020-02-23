@@ -730,6 +730,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ses_event_destination":                               resourceAwsSesEventDestination(),
 			"aws_ses_identity_notification_topic":                     resourceAwsSesNotificationTopic(),
 			"aws_ses_template":                                        resourceAwsSesTemplate(),
+			"aws_s3_access_point":                                     resourceAwsS3AccessPoint(),
 			"aws_s3_account_public_access_block":                      resourceAwsS3AccountPublicAccessBlock(),
 			"aws_s3_bucket":                                           resourceAwsS3Bucket(),
 			"aws_s3_bucket_analytics_configuration":                   resourceAwsS3BucketAnalyticsConfiguration(),
