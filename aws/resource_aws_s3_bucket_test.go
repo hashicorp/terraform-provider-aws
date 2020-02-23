@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -28,6 +27,7 @@ func init() {
 		Name: "aws_s3_bucket",
 		F:    testSweepS3Buckets,
 		Dependencies: []string{
+			"aws_s3_access_point",
 			"aws_s3_bucket_object",
 		},
 	})
@@ -91,45 +91,6 @@ func testSweepS3Buckets(region string) error {
 		if bucketRegion != region {
 			log.Printf("[INFO] Skipping S3 Bucket (%s) in different region: %s", name, bucketRegion)
 			continue
-		}
-
-		// "Before you can delete this bucket, you must first delete all access points associated with this bucket."
-		s3controlconn := client.(*AWSClient).s3controlconn
-
-		accountId := client.(*AWSClient).accountid
-		listAccessPointsInput := &s3control.ListAccessPointsInput{
-			AccountId: aws.String(accountId),
-			Bucket:    aws.String(name),
-		}
-		err = s3controlconn.ListAccessPointsPages(listAccessPointsInput, func(page *s3control.ListAccessPointsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, accessPoint := range page.AccessPointList {
-				accessPointName := aws.StringValue(accessPoint.Name)
-
-				log.Printf("[INFO] Deleting (%s) S3 Access Point: %s", name, accessPointName)
-				_, err := s3controlconn.DeleteAccessPoint(&s3control.DeleteAccessPointInput{
-					AccountId: aws.String(accountId),
-					Name:      aws.String(accessPointName),
-				})
-
-				if isAWSErr(err, "NoSuchAccessPoint", "") {
-					continue
-				}
-
-				if err != nil {
-					log.Printf("[ERROR] error deleting (%s) S3 Access Point (%s): %s", name, accessPointName, err)
-					continue
-				}
-			}
-
-			return !lastPage
-		})
-
-		if err != nil {
-			return fmt.Errorf("error listing S3 Access Points: %s", err)
 		}
 
 		input := &s3.DeleteBucketInput{

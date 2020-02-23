@@ -2,15 +2,81 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/jen20/awspolicyequivalence"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_s3_access_point", &resource.Sweeper{
+		Name: "aws_s3_access_point",
+		F:    testSweepS3AccessPoints,
+	})
+}
+
+func testSweepS3AccessPoints(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	accountId := client.(*AWSClient).accountid
+	conn := client.(*AWSClient).s3controlconn
+
+	input := &s3control.ListAccessPointsInput{
+		AccountId: aws.String(accountId),
+	}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListAccessPointsPages(input, func(page *s3control.ListAccessPointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, accessPoint := range page.AccessPointList {
+			input := &s3control.DeleteAccessPointInput{
+				AccountId: aws.String(accountId),
+				Name:      accessPoint.Name,
+			}
+			name := aws.StringValue(accessPoint.Name)
+
+			log.Printf("[INFO] Deleting S3 Access Point: %s", name)
+			_, err := conn.DeleteAccessPoint(input)
+
+			if isAWSErr(err, "NoSuchAccessPoint", "") {
+				continue
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting S3 Access Point (%s): %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping S3 Access Point sweep for %s: %w", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing S3 Access Points: %w", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSS3AccessPoint_basic(t *testing.T) {
 	var v s3control.GetAccessPointOutput
@@ -30,7 +96,7 @@ func TestAccAWSS3AccessPoint_basic(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("accesspoint/%s", accessPointName)),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
-					testAccCheckAWSS3AccessPointDomainName(resourceName, "domain_name"),
+					testAccMatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexp.MustCompile(fmt.Sprintf("^%s-\\d{12}", accessPointName))),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", accessPointName),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "Internet"),
@@ -342,28 +408,6 @@ func testAccCheckAWSS3AccessPointExists(n string, output *s3control.GetAccessPoi
 		*output = *resp
 
 		return nil
-	}
-}
-
-func testAccCheckAWSS3AccessPointDomainName(n string, key string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Access Point ID is set")
-		}
-
-		accountId, name, err := s3AccessPointParseId(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		value := fmt.Sprintf("%s-%s.s3-accesspoint.%s.amazonaws.com", name, accountId, testAccGetRegion())
-
-		return resource.TestCheckResourceAttr(n, key, value)(s)
 	}
 }
 

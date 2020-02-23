@@ -17,14 +17,11 @@ Provides a resource to manage an S3 Access Point.
 ### Basic Usage
 
 ```hcl
-data "aws_caller_identity" "current" {}
-
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
 
 resource "aws_s3_access_point" "example" {
-  account_id = data.aws_caller_identity.current.account_id
   bucket     = aws_s3_bucket.example.id
   name       = "example"
 }
@@ -33,14 +30,11 @@ resource "aws_s3_access_point" "example" {
 ### Access Point Restricted to a VPC
 
 ```hcl
-data "aws_caller_identity" "current" {}
-
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
 
 resource "aws_s3_access_point" "example" {
-  account_id = data.aws_caller_identity.current.account_id
   bucket     = aws_s3_bucket.example.id
   name       = "example"
 
