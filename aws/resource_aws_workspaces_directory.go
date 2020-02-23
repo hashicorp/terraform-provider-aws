@@ -141,17 +141,22 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
 
-	resp, err := conn.DescribeWorkspaceDirectories(&workspaces.DescribeWorkspaceDirectoriesInput{
-		DirectoryIds: []*string{aws.String(d.Id())},
-	})
+	raw, state, err := workspacesDirectoryRefreshStateFunc(conn, d.Id())()
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting workspaces directory (%s): %s", d.Id(), err)
 	}
-	dir := resp.Directories[0]
+	if state == workspaces.WorkspaceDirectoryStateDeregistered {
+		log.Printf("[WARN] workspaces directory (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
+	dir := raw.(*workspaces.WorkspaceDirectory)
 	d.Set("directory_id", dir.DirectoryId)
 	d.Set("subnet_ids", dir.SubnetIds)
-	d.Set("self_service_permissions", flattenSelfServicePermissions(dir.SelfservicePermissions))
+	if err := d.Set("self_service_permissions", flattenSelfServicePermissions(dir.SelfservicePermissions)); err != nil {
+		return fmt.Errorf("error setting self_service_permissions: %s", err)
+	}
 
 	tags, err := keyvaluetags.WorkspacesListTags(conn, d.Id())
 	if err != nil {
@@ -205,7 +210,7 @@ func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface
 
 	err := workspacesDirectoryDelete(d.Id(), conn)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting workspaces directory (%s): %s", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Workspaces directory %q is deregistered", d.Id())
 
@@ -255,7 +260,8 @@ func workspacesDirectoryRefreshStateFunc(conn *workspaces.WorkSpaces, directoryI
 		if len(resp.Directories) == 0 {
 			return resp, workspaces.WorkspaceDirectoryStateDeregistered, nil
 		}
-		return resp, *resp.Directories[0].State, nil
+		directory := resp.Directories[0]
+		return directory, aws.StringValue(directory.State), nil
 	}
 }
 
