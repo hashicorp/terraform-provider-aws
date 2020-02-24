@@ -67,7 +67,7 @@ func testSweepS3AccessPoints(region string) error {
 	})
 
 	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping S3 Access Point sweep for %s: %w", region, err)
+		log.Printf("[WARN] Skipping S3 Access Point sweep for %s: %s", region, err)
 		return nil
 	}
 
