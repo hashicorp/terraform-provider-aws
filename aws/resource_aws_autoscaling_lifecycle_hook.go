@@ -49,8 +49,9 @@ func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"CONTINUE", "ABANDON"}, false),
 			},
 			"heartbeat_timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(30, 7200),
 			},
 			"lifecycle_transition": {
 				Type:         schema.TypeString,
