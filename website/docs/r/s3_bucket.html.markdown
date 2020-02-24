@@ -315,16 +315,18 @@ resource "aws_s3_bucket" "mybucket" {
 data "aws_canonical_user_id" "current_user" {}
 
 resource "aws_s3_bucket" "bucket" {
-	bucket = "mybucket"
-	grant {
-    id = "${data.aws_canonical_user_id.current_user.id}"
-    type = "CanonicalUser"
+  bucket = "mybucket"
+
+  grant {
+    id         = "${data.aws_canonical_user_id.current_user.id}"
+    type       = "CanonicalUser"
     permission = ["FULL_ACCESS"]
   }
+
   grant {
-    type = "Group"
+    type       = "Group"
     permission = ["READ", "WRITE"]
-    uri = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+    uri        = "http://acs.amazonaws.com/groups/s3/LogDelivery"
   }
 }
 ```
@@ -482,7 +484,7 @@ The `apply_server_side_encryption_by_default` object supports the following:
 The `grant` object supports the following:
 
 * `id` - (optional) Canonical user id to grant for. Used only when `type` is `CanonicalUser`.  
-* `type` - (required) - Type of grantee to apply for. Valid values are `CanonicalUser` and `Group`.
+* `type` - (required) - Type of grantee to apply for. Valid values are `CanonicalUser` and `Group`. `AmazonCustomerByEmail` is not supported.
 * `permissions` - (required) List of permissions to apply for grantee. Valid values are `READ`, `WRITE`, `READ_ACP`, `WRITE_ACP`, `FULL_ACCESS`.
 * `uri` - (optional) Uri address to grant for. Used only when `type` is `Group`.
 

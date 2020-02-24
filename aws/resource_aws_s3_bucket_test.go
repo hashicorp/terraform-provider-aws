@@ -627,8 +627,6 @@ func TestAccAWSS3Bucket_Policy(t *testing.T) {
 
 func TestAccAWSS3Bucket_UpdateAcl(t *testing.T) {
 	ri := acctest.RandInt()
-	preConfig := fmt.Sprintf(testAccAWSS3BucketConfigWithAcl, ri)
-	postConfig := fmt.Sprintf(testAccAWSS3BucketConfigWithAclUpdate, ri)
 	resourceName := "aws_s3_bucket.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -637,7 +635,7 @@ func TestAccAWSS3Bucket_UpdateAcl(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: preConfig,
+				Config: testAccAWSS3BucketConfigWithAcl(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
 					resource.TestCheckResourceAttr(
@@ -649,10 +647,10 @@ func TestAccAWSS3Bucket_UpdateAcl(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy", "acl"},
+					"force_destroy", "acl", "grant"},
 			},
 			{
-				Config: postConfig,
+				Config: testAccAWSS3BucketConfigWithAclUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
 					resource.TestCheckResourceAttr(
@@ -664,8 +662,9 @@ func TestAccAWSS3Bucket_UpdateAcl(t *testing.T) {
 }
 
 func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
 	ri := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
@@ -673,33 +672,145 @@ func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketConfigWithGrants(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.#", "1"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2524447860.permissions.#", "2"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2524447860.permissions.3535167073", "FULL_CONTROL"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2524447860.permissions.2319431919", "WRITE"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2524447860.type", "CanonicalUser"),
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
+					func(s *terraform.State) error {
+						id := s.RootModule().Resources["data.aws_canonical_user_id.current"].Primary.ID
+						gh := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
+							"id":   id,
+							"type": "CanonicalUser",
+							"uri":  "",
+							"permissions": schema.NewSet(
+								schema.HashString,
+								[]interface{}{"FULL_CONTROL", "WRITE"},
+							),
+						}))
+						for _, t := range []resource.TestCheckFunc{
+							resource.TestCheckResourceAttr(resourceName, gh+".permissions.#", "2"),
+							resource.TestCheckResourceAttr(resourceName, gh+".permissions.3535167073", "FULL_CONTROL"),
+							resource.TestCheckResourceAttr(resourceName, gh+".permissions.2319431919", "WRITE"),
+							resource.TestCheckResourceAttr(resourceName, gh+".type", "CanonicalUser"),
+						} {
+							if err := t(s); err != nil {
+								return err
+							}
+						}
+						return nil
+					},
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy", "acl"},
 			},
 			{
 				Config: testAccAWSS3BucketConfigWithGrantsUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.#", "2"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2344010500.permissions.#", "1"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2344010500.permissions.2931993811", "READ"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2344010500.type", "CanonicalUser"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.986027168.permissions.#", "1"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.986027168.permissions.1600971645", "READ_ACP"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.986027168.type", "Group"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.986027168.uri", "http://acs.amazonaws.com/groups/s3/LogDelivery"),
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "2"),
+					func(s *terraform.State) error {
+						id := s.RootModule().Resources["data.aws_canonical_user_id.current"].Primary.ID
+						gh1 := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
+							"id":   id,
+							"type": "CanonicalUser",
+							"uri":  "",
+							"permissions": schema.NewSet(
+								schema.HashString,
+								[]interface{}{"READ"},
+							),
+						}))
+						gh2 := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
+							"id":   "",
+							"type": "Group",
+							"uri":  "http://acs.amazonaws.com/groups/s3/LogDelivery",
+							"permissions": schema.NewSet(
+								schema.HashString,
+								[]interface{}{"READ_ACP"},
+							),
+						}))
+						for _, t := range []resource.TestCheckFunc{
+							resource.TestCheckResourceAttr(resourceName, gh1+".permissions.#", "1"),
+							resource.TestCheckResourceAttr(resourceName, gh1+".permissions.2931993811", "READ"),
+							resource.TestCheckResourceAttr(resourceName, gh1+".type", "CanonicalUser"),
+							resource.TestCheckResourceAttr(resourceName, gh2+".permissions.#", "1"),
+							resource.TestCheckResourceAttr(resourceName, gh2+".permissions.1600971645", "READ_ACP"),
+							resource.TestCheckResourceAttr(resourceName, gh2+".type", "Group"),
+							resource.TestCheckResourceAttr(resourceName, gh2+".uri", "http://acs.amazonaws.com/groups/s3/LogDelivery"),
+						} {
+							if err := t(s); err != nil {
+								return err
+							}
+						}
+						return nil
+					},
 				),
 			},
 			{
 				Config: testAccAWSS3BucketBasic(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.#", "0"),
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_AclToGrant(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	ri := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigWithAcl(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(
+						resourceName, "acl", "public-read"),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketConfigWithGrants(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
+					// check removed ACLs
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_GrantToAcl(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	ri := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigWithGrants(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketConfigWithAcl(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(
+						resourceName, "acl", "public-read"),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
+					// check removed grants
 				),
 			},
 		},
@@ -731,7 +842,7 @@ func TestAccAWSS3Bucket_Website_Simple(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy", "acl"},
+					"force_destroy", "acl", "grant"},
 			},
 			{
 				Config: testAccAWSS3BucketWebsiteConfigWithError(rInt),
@@ -782,7 +893,7 @@ func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy", "acl"},
+					"force_destroy", "acl", "grant"},
 			},
 			{
 				Config: testAccAWSS3BucketWebsiteConfigWithHttpsRedirect(rInt),
@@ -846,7 +957,7 @@ func TestAccAWSS3Bucket_WebsiteRoutingRules(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy", "acl"},
+					"force_destroy", "acl", "grant"},
 			},
 			{
 				Config: testAccAWSS3BucketConfig(rInt),
@@ -2689,7 +2800,6 @@ func testAccAWSS3BucketConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%d"
-  acl    = "public-read"
 }
 `, randInt)
 }
@@ -2910,7 +3020,6 @@ func testAccAWSS3BucketConfigWithAcceleration(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket              = "tf-test-bucket-%d"
-  acl                 = "public-read"
   acceleration_status = "Enabled"
 }
 `, randInt)
@@ -2920,7 +3029,6 @@ func testAccAWSS3BucketConfigWithoutAcceleration(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket              = "tf-test-bucket-%d"
-  acl                 = "public-read"
   acceleration_status = "Suspended"
 }
 `, randInt)
@@ -2930,7 +3038,6 @@ func testAccAWSS3BucketConfigRequestPayerBucketOwner(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket        = "tf-test-bucket-%d"
-  acl           = "public-read"
   request_payer = "BucketOwner"
 }
 `, randInt)
@@ -2940,7 +3047,6 @@ func testAccAWSS3BucketConfigRequestPayerRequester(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket        = "tf-test-bucket-%d"
-  acl           = "public-read"
   request_payer = "Requester"
 }
 `, randInt)
@@ -3041,7 +3147,6 @@ func testAccAWSS3BucketConfigWithVersioning(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%d"
-  acl    = "public-read"
 
   versioning {
     enabled = true
@@ -3054,7 +3159,6 @@ func testAccAWSS3BucketConfigWithDisableVersioning(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%d"
-  acl    = "public-read"
 
   versioning {
     enabled = false
@@ -3067,7 +3171,6 @@ func testAccAWSS3BucketConfigWithCORS(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%d"
-  acl    = "public-read"
 
   cors_rule {
     allowed_headers = ["*"]
@@ -3084,7 +3187,6 @@ func testAccAWSS3BucketConfigWithCORSEmptyOrigin(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%d"
-  acl    = "public-read"
 
   cors_rule {
     allowed_headers = ["*"]
@@ -3097,19 +3199,23 @@ resource "aws_s3_bucket" "bucket" {
 `, randInt)
 }
 
-var testAccAWSS3BucketConfigWithAcl = `
+func testAccAWSS3BucketConfigWithAcl(randInt int) string {
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
 	bucket = "tf-test-bucket-%d"
 	acl = "public-read"
 }
-`
+`, randInt)
+}
 
-var testAccAWSS3BucketConfigWithAclUpdate = `
+func testAccAWSS3BucketConfigWithAclUpdate(randInt int) string {
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
 	bucket = "tf-test-bucket-%d"
 	acl = "private"
 }
-`
+`, randInt)
+}
 
 func testAccAWSS3BucketConfigWithGrants(randInt int) string {
 	return fmt.Sprintf(`
