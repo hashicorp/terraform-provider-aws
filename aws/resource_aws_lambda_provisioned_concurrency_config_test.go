@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,9 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
+func TestAccAWSLambdaProvisionedConcurrencyConfig_QualifierFunctionName(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	lambdaFunctionResourceName := "aws_lambda_function.test"
+	qualifierAddress := fmt.Sprintf("%s.version", lambdaFunctionResourceName)
+	createAlias := false
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -22,10 +25,28 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaProvisionedConcurrencyConfigQualifierFunctionVersion(rName),
+				Config: testAccAWSLambdaProvisionedConcurrencyConfigRefByFunctionName(rName, qualifierAddress, createAlias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaProvisionedConcurrencyConfigExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, "version"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaProvisionedConcurrencyConfigRefByFunctionArn(rName, qualifierAddress, createAlias),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaProvisionedConcurrencyConfigExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "function_name", regexp.MustCompile(fmt.Sprintf(`(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)%s`, rName))),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, "version"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaProvisionedConcurrencyConfigRefByPartialFunctionArn(rName, qualifierAddress, createAlias),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaProvisionedConcurrencyConfigExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "function_name", regexp.MustCompile(fmt.Sprintf(`(\d{12}:)(function:)%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, "version"),
 				),
@@ -123,6 +144,8 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_ProvisionedConcurrentExecution
 func TestAccAWSLambdaProvisionedConcurrencyConfig_Qualifier_AliasName(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	lambdaAliasResourceName := "aws_lambda_alias.test"
+	qualifierAddress := fmt.Sprintf("%s[0].name", lambdaAliasResourceName)
+	createAlias := true
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -131,9 +154,29 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_Qualifier_AliasName(t *testing
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaProvisionedConcurrencyConfigQualifierAliasName(rName),
+				Config: testAccAWSLambdaProvisionedConcurrencyConfigRefByFunctionName(rName, qualifierAddress, createAlias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaProvisionedConcurrencyConfigExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaAliasResourceName, "function_name"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaAliasResourceName, "name"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaProvisionedConcurrencyConfigRefByFunctionArn(rName, qualifierAddress, createAlias),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaProvisionedConcurrencyConfigExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "function_name", regexp.MustCompile(fmt.Sprintf(`(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)%s`, rName))),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaAliasResourceName, "name"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaProvisionedConcurrencyConfigRefByPartialFunctionArn(rName, qualifierAddress, createAlias),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaProvisionedConcurrencyConfigExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "function_name", regexp.MustCompile(fmt.Sprintf(`(\d{12}:)(function:)%s`, rName))),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaAliasResourceName, "name"),
 				),
 			},
@@ -304,28 +347,56 @@ resource "aws_lambda_provisioned_concurrency_config" "test" {
 `, provisionedConcurrentExecutions)
 }
 
-func testAccAWSLambdaProvisionedConcurrencyConfigQualifierAliasName(rName string) string {
-	return testAccAWSLambdaProvisionedConcurrencyConfigBase(rName) + `
+func testAccAWSLambdaProvisionedConcurrencyConfigRefByFunctionArn(rName, qualifierAddress string, createAlias bool) string {
+	return testAccAWSLambdaProvisionedConcurrencyConfigBase(rName) + fmt.Sprintf(`
+
+	resource "aws_lambda_alias" "test" {
+		count = %t ? 1 : 0
+		function_name    = aws_lambda_function.test.function_name
+		function_version = aws_lambda_function.test.version
+		name             = "test"
+	}
+
+	resource "aws_lambda_provisioned_concurrency_config" "test" {
+		function_name                     = aws_lambda_function.test.arn
+		provisioned_concurrent_executions = 1
+		qualifier                         = %s
+	  }	
+	`, createAlias, qualifierAddress)
+}
+
+func testAccAWSLambdaProvisionedConcurrencyConfigRefByPartialFunctionArn(rName, qualifierAddress string, createAlias bool) string {
+	return testAccAWSLambdaProvisionedConcurrencyConfigBase(rName) + fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_lambda_alias" "test" {
-  function_name    = aws_lambda_function.test.function_name
-  function_version = aws_lambda_function.test.version
-  name             = "test"
+	count = %t ? 1 : 0
+	function_name    = aws_lambda_function.test.function_name
+	function_version = aws_lambda_function.test.version
+	name             = "test"
 }
 
 resource "aws_lambda_provisioned_concurrency_config" "test" {
-  function_name                     = aws_lambda_alias.test.function_name
+  function_name                     = "${data.aws_caller_identity.current.account_id}:function:%s"
   provisioned_concurrent_executions = 1
-  qualifier                         = aws_lambda_alias.test.name
+  qualifier                         = %s
 }
-`
+`, createAlias, rName, qualifierAddress)
 }
 
-func testAccAWSLambdaProvisionedConcurrencyConfigQualifierFunctionVersion(rName string) string {
-	return testAccAWSLambdaProvisionedConcurrencyConfigBase(rName) + `
+func testAccAWSLambdaProvisionedConcurrencyConfigRefByFunctionName(rName, qualifierAddress string, createAlias bool) string {
+	return testAccAWSLambdaProvisionedConcurrencyConfigBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_alias" "test" {
+	count = %t ? 1 : 0
+	function_name    = aws_lambda_function.test.function_name
+	function_version = aws_lambda_function.test.version
+	name             = "test"
+}
+
 resource "aws_lambda_provisioned_concurrency_config" "test" {
   function_name                     = aws_lambda_function.test.function_name
   provisioned_concurrent_executions = 1
-  qualifier                         = aws_lambda_function.test.version
+  qualifier                         = %s
 }
-`
+`, createAlias, qualifierAddress)
 }
