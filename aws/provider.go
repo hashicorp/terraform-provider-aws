@@ -490,6 +490,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_capacity_reservation":                            resourceAwsEc2CapacityReservation(),
 			"aws_ec2_client_vpn_endpoint":                             resourceAwsEc2ClientVpnEndpoint(),
 			"aws_ec2_client_vpn_network_association":                  resourceAwsEc2ClientVpnNetworkAssociation(),
+			"aws_ec2_client_vpn_authorization":                        resourceAwsEc2ClientVpnAuthorization(),
 			"aws_ec2_fleet":                                           resourceAwsEc2Fleet(),
 			"aws_ec2_traffic_mirror_filter":                           resourceAwsEc2TrafficMirrorFilter(),
 			"aws_ec2_traffic_mirror_filter_rule":                      resourceAwsEc2TrafficMirrorFilterRule(),

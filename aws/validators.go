@@ -2407,3 +2407,13 @@ func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors [
 
 	return
 }
+
+func validateAccessGroupId(v interface{}, k string) (ws []string, errors []error) {
+        value := v.(string)
+        if !regexp.MustCompile(`^S-1-[0-59]-[0-9]{1,2}-[0-9]{8,10}-[0-9]{8,10}-[0-9]{8,10}-[1-9][0-9]{3}$`).MatchString(value) {
+                errors = append(errors, fmt.Errorf(
+                        "%q must be 'S-1-XX-XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXX' comprised of numbers", k))
+        }
+
+        return
+}
