@@ -264,7 +264,8 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 	getLoggingConfigurationOutput, err := conn.GetLoggingConfiguration(getLoggingConfigurationInput)
 
 	if err != nil && !isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
-		return fmt.Errorf("error getting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+		// ignore logging config errors for now
+		// return fmt.Errorf("error getting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), err)
 	}
 
 	if getLoggingConfigurationOutput != nil {
