@@ -2,6 +2,10 @@
 
 package configservice
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeConformancePackTemplateValidationException for service response error code
@@ -32,9 +36,8 @@ const (
 	//    a service linked role.
 	//
 	//    * For PutConformancePack and PutOrganizationConformancePack, a conformance
-	//    pack cannot be created becuase you do not have permissions: To call IAM
+	//    pack cannot be created because you do not have permissions: To call IAM
 	//    GetRole action or create a service linked role. To read Amazon S3 bucket.
-	//    To create a rule and a stack.
 	ErrCodeInsufficientPermissionsException = "InsufficientPermissionsException"
 
 	// ErrCodeInvalidConfigurationRecorderNameException for service response error code
@@ -131,6 +134,13 @@ const (
 	// of accounts and aggregators exceeds the limit.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
+	// ErrCodeMaxActiveResourcesExceededException for service response error code
+	// "MaxActiveResourcesExceededException".
+	//
+	// You have reached the limit (100,000) of active custom resource types in your
+	// account. Delete unused resources using DeleteResourceConfig.
+	ErrCodeMaxActiveResourcesExceededException = "MaxActiveResourcesExceededException"
+
 	// ErrCodeMaxNumberOfConfigRulesExceededException for service response error code
 	// "MaxNumberOfConfigRulesExceededException".
 	//
@@ -148,8 +158,8 @@ const (
 	// ErrCodeMaxNumberOfConformancePacksExceededException for service response error code
 	// "MaxNumberOfConformancePacksExceededException".
 	//
-	// You have reached the limit (20) of the number of conformance packs in an
-	// account.
+	// You have reached the limit (6) of the number of conformance packs in an account
+	// (6 conformance pack with 25 AWS Config rules per pack).
 	ErrCodeMaxNumberOfConformancePacksExceededException = "MaxNumberOfConformancePacksExceededException"
 
 	// ErrCodeMaxNumberOfDeliveryChannelsExceededException for service response error code
@@ -168,8 +178,9 @@ const (
 	// ErrCodeMaxNumberOfOrganizationConformancePacksExceededException for service response error code
 	// "MaxNumberOfOrganizationConformancePacksExceededException".
 	//
-	// You have reached the limit (10) of the number of organization conformance
-	// packs in an account.
+	// You have reached the limit (6) of the number of organization conformance
+	// packs in an account (6 conformance pack with 25 AWS Config rules per pack
+	// per account).
 	ErrCodeMaxNumberOfOrganizationConformancePacksExceededException = "MaxNumberOfOrganizationConformancePacksExceededException"
 
 	// ErrCodeMaxNumberOfRetentionConfigurationsExceededException for service response error code
@@ -373,3 +384,57 @@ const (
 	// The requested action is not valid.
 	ErrCodeValidationException = "ValidationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ConformancePackTemplateValidationException":               newErrorConformancePackTemplateValidationException,
+	"InsufficientDeliveryPolicyException":                      newErrorInsufficientDeliveryPolicyException,
+	"InsufficientPermissionsException":                         newErrorInsufficientPermissionsException,
+	"InvalidConfigurationRecorderNameException":                newErrorInvalidConfigurationRecorderNameException,
+	"InvalidDeliveryChannelNameException":                      newErrorInvalidDeliveryChannelNameException,
+	"InvalidExpressionException":                               newErrorInvalidExpressionException,
+	"InvalidLimitException":                                    newErrorInvalidLimitException,
+	"InvalidNextTokenException":                                newErrorInvalidNextTokenException,
+	"InvalidParameterValueException":                           newErrorInvalidParameterValueException,
+	"InvalidRecordingGroupException":                           newErrorInvalidRecordingGroupException,
+	"InvalidResultTokenException":                              newErrorInvalidResultTokenException,
+	"InvalidRoleException":                                     newErrorInvalidRoleException,
+	"InvalidS3KeyPrefixException":                              newErrorInvalidS3KeyPrefixException,
+	"InvalidSNSTopicARNException":                              newErrorInvalidSNSTopicARNException,
+	"InvalidTimeRangeException":                                newErrorInvalidTimeRangeException,
+	"LastDeliveryChannelDeleteFailedException":                 newErrorLastDeliveryChannelDeleteFailedException,
+	"LimitExceededException":                                   newErrorLimitExceededException,
+	"MaxActiveResourcesExceededException":                      newErrorMaxActiveResourcesExceededException,
+	"MaxNumberOfConfigRulesExceededException":                  newErrorMaxNumberOfConfigRulesExceededException,
+	"MaxNumberOfConfigurationRecordersExceededException":       newErrorMaxNumberOfConfigurationRecordersExceededException,
+	"MaxNumberOfConformancePacksExceededException":             newErrorMaxNumberOfConformancePacksExceededException,
+	"MaxNumberOfDeliveryChannelsExceededException":             newErrorMaxNumberOfDeliveryChannelsExceededException,
+	"MaxNumberOfOrganizationConfigRulesExceededException":      newErrorMaxNumberOfOrganizationConfigRulesExceededException,
+	"MaxNumberOfOrganizationConformancePacksExceededException": newErrorMaxNumberOfOrganizationConformancePacksExceededException,
+	"MaxNumberOfRetentionConfigurationsExceededException":      newErrorMaxNumberOfRetentionConfigurationsExceededException,
+	"NoAvailableConfigurationRecorderException":                newErrorNoAvailableConfigurationRecorderException,
+	"NoAvailableDeliveryChannelException":                      newErrorNoAvailableDeliveryChannelException,
+	"NoAvailableOrganizationException":                         newErrorNoAvailableOrganizationException,
+	"NoRunningConfigurationRecorderException":                  newErrorNoRunningConfigurationRecorderException,
+	"NoSuchBucketException":                                    newErrorNoSuchBucketException,
+	"NoSuchConfigRuleException":                                newErrorNoSuchConfigRuleException,
+	"NoSuchConfigRuleInConformancePackException":               newErrorNoSuchConfigRuleInConformancePackException,
+	"NoSuchConfigurationAggregatorException":                   newErrorNoSuchConfigurationAggregatorException,
+	"NoSuchConfigurationRecorderException":                     newErrorNoSuchConfigurationRecorderException,
+	"NoSuchConformancePackException":                           newErrorNoSuchConformancePackException,
+	"NoSuchDeliveryChannelException":                           newErrorNoSuchDeliveryChannelException,
+	"NoSuchOrganizationConfigRuleException":                    newErrorNoSuchOrganizationConfigRuleException,
+	"NoSuchOrganizationConformancePackException":               newErrorNoSuchOrganizationConformancePackException,
+	"NoSuchRemediationConfigurationException":                  newErrorNoSuchRemediationConfigurationException,
+	"NoSuchRemediationExceptionException":                      newErrorNoSuchRemediationExceptionException,
+	"NoSuchRetentionConfigurationException":                    newErrorNoSuchRetentionConfigurationException,
+	"OrganizationAccessDeniedException":                        newErrorOrganizationAccessDeniedException,
+	"OrganizationAllFeaturesNotEnabledException":               newErrorOrganizationAllFeaturesNotEnabledException,
+	"OrganizationConformancePackTemplateValidationException":   newErrorOrganizationConformancePackTemplateValidationException,
+	"OversizedConfigurationItemException":                      newErrorOversizedConfigurationItemException,
+	"RemediationInProgressException":                           newErrorRemediationInProgressException,
+	"ResourceInUseException":                                   newErrorResourceInUseException,
+	"ResourceNotDiscoveredException":                           newErrorResourceNotDiscoveredException,
+	"ResourceNotFoundException":                                newErrorResourceNotFoundException,
+	"TooManyTagsException":                                     newErrorTooManyTagsException,
+	"ValidationException":                                      newErrorValidationException,
+}

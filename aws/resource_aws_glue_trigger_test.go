@@ -71,11 +71,13 @@ func TestAccAWSGlueTrigger_Basic(t *testing.T) {
 					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
 					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("trigger/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, "workflow_name", ""),
 				),
@@ -281,6 +283,51 @@ func TestAccAWSGlueTrigger_Schedule(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueTrigger_Tags(t *testing.T) {
+	var trigger1, trigger2, trigger3 glue.Trigger
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueTriggerConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSGlueTriggerConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSGlueTriggerConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -505,6 +552,41 @@ resource "aws_glue_trigger" "test" {
   }
 }
 `, testAccAWSGlueJobConfig_Required(rName), rName, schedule)
+}
+
+func testAccAWSGlueTriggerConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return testAccAWSGlueJobConfig_Required(rName) + fmt.Sprintf(`
+resource "aws_glue_trigger" "test" {
+  name     = %[1]q
+  type     = "ON_DEMAND"
+
+  actions {
+    job_name = "${aws_glue_job.test.name}"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSGlueTriggerConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSGlueJobConfig_Required(rName) + fmt.Sprintf(`
+resource "aws_glue_trigger" "test" {
+  name     = %[1]q
+  type     = "ON_DEMAND"
+
+  actions {
+    job_name = "${aws_glue_job.test.name}"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSGlueTriggerConfig_WorkflowName(rName string) string {
