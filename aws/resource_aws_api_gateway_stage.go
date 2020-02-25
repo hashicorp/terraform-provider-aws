@@ -221,6 +221,16 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading API Gateway Stage %s", d.Id())
 	restApiId := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
+
+	// avoid GetStage API request.
+	// Because when GetStageInput.RestApiId or GetStageInput.StageName in terraform.state is null,
+	// API call always returns below exception:
+	// - minimum field size of 1, GetStageInput.RestApiId.
+	// - minimum field size of 1, GetStageInput.StageName.
+	if restApiId == "" && stageName == "" {
+		return nil
+	}
+
 	input := apigateway.GetStageInput{
 		RestApiId: aws.String(restApiId),
 		StageName: aws.String(stageName),
@@ -483,6 +493,16 @@ func apiGatewayStageCacheRefreshFunc(conn *apigateway.APIGateway, apiId, stageNa
 func resourceAwsApiGatewayStageDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting API Gateway Stage: %s", d.Id())
+	restApiId := d.Get("rest_api_id").(string)
+
+	// avoid GetStage API request.
+	// Because when GetStageInput.RestApiId or GetStageInput.StageName in terraform.state is null,
+	// API call always returns below exception:
+	// - minimum field size of 1, GetStageInput.RestApiId.
+	if restApiId == "" {
+		return nil
+	}
+
 	input := apigateway.DeleteStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 		StageName: aws.String(d.Get("stage_name").(string)),
