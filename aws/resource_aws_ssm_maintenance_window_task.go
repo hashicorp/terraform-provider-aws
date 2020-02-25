@@ -210,6 +210,24 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"cloudwatch_output_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cloudwatch_log_group_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"cloudwatch_output_enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
+
 									"comment": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -500,6 +518,10 @@ func expandAwsSsmTaskInvocationRunCommandParameters(config []interface{}) *ssm.M
 
 	params := &ssm.MaintenanceWindowRunCommandParameters{}
 	configParam := config[0].(map[string]interface{})
+
+	if attr, ok := configParam["cloudwatch_output_config"]; ok && len(attr.([]interface{})) > 0 {
+		params.CloudWatchOutputConfig = expandAwsSsmTaskInvocationRunCommandParametersCloudwatchOutputConfig(attr.([]interface{}))
+	}
 	if attr, ok := configParam["comment"]; ok && len(attr.(string)) != 0 {
 		params.Comment = aws.String(attr.(string))
 	}
@@ -533,6 +555,9 @@ func expandAwsSsmTaskInvocationRunCommandParameters(config []interface{}) *ssm.M
 func flattenAwsSsmTaskInvocationRunCommandParameters(parameters *ssm.MaintenanceWindowRunCommandParameters) []interface{} {
 	result := make(map[string]interface{})
 
+	if parameters.CloudWatchOutputConfig != nil {
+		result["cloudwatch_output_config"] = flattenAwsSsmTaskInvocationRunCommandParametersCloudwatchOutputConfig(parameters.CloudWatchOutputConfig)
+	}
 	if parameters.Comment != nil {
 		result["comment"] = aws.StringValue(parameters.Comment)
 	}
@@ -594,6 +619,24 @@ func flattenAwsSsmTaskInvocationStepFunctionsParameters(parameters *ssm.Maintena
 	return []interface{}{result}
 }
 
+func expandAwsSsmTaskInvocationRunCommandParametersCloudwatchOutputConfig(config []interface{}) *ssm.CloudWatchOutputConfig {
+	if len(config) == 0 || config[0] == nil {
+		return nil
+	}
+
+	params := &ssm.CloudWatchOutputConfig{}
+	configParam := config[0].(map[string]interface{})
+
+	if attr, ok := configParam["cloudwatch_log_group_name"]; ok && len(attr.(string)) != 0 {
+		params.CloudWatchLogGroupName = aws.String(attr.(string))
+	}
+	if attr, ok := configParam["cloudwatch_output_enabled"]; ok {
+		params.CloudWatchOutputEnabled = aws.Bool(attr.(bool))
+	}
+
+	return params
+}
+
 func expandAwsSsmTaskInvocationRunCommandParametersNotificationConfig(config []interface{}) *ssm.NotificationConfig {
 	if len(config) == 0 || config[0] == nil {
 		return nil
@@ -613,6 +656,19 @@ func expandAwsSsmTaskInvocationRunCommandParametersNotificationConfig(config []i
 	}
 
 	return params
+}
+
+func flattenAwsSsmTaskInvocationRunCommandParametersCloudwatchOutputConfig(config *ssm.CloudWatchOutputConfig) []interface{} {
+	result := make(map[string]interface{})
+
+	if config.CloudWatchLogGroupName != nil {
+		result["cloudwatch_log_group_name"] = aws.StringValue(config.CloudWatchLogGroupName)
+	}
+	if config.CloudWatchOutputEnabled != nil {
+		result["cloudwatch_output_enabled"] = aws.BoolValue(config.CloudWatchOutputEnabled)
+	}
+
+	return []interface{}{result}
 }
 
 func flattenAwsSsmTaskInvocationRunCommandParametersNotificationConfig(config *ssm.NotificationConfig) []interface{} {

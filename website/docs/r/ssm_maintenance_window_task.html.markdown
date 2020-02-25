@@ -182,6 +182,7 @@ The following arguments are supported:
 
 `run_command_parameters` supports the following:
 
+* `cloudwatch_output_config` - (Optional) Configuration for sending command execution logs to CloudWatch Logs. Documented below.
 * `comment` - (Optional) Information about the command(s) to execute.
 * `document_hash` - (Optional) The SHA-256 or SHA-1 hash created by the system when the document was created. SHA-1 hashes have been deprecated.
 * `document_hash_type` - (Optional) SHA-256 or SHA-1. SHA-1 hashes have been deprecated. Valid values: `Sha256` and `Sha1`
@@ -196,6 +197,11 @@ The following arguments are supported:
 
 * `input` - (Optional) The inputs for the STEP_FUNCTION task.
 * `name` - (Optional) The name of the STEP_FUNCTION task.
+
+`cloudwatch_output_config` supports the following:
+
+* `cloudwatch_log_group_name` - (Optional) The name of the CloudWatch log group to send command output. If you don't specify a group name, Systems Manager automatically creates a log group for you.
+* `cloudwatch_output_enabled` - (Required) Enable logging command output to CloudWatch Logs.
 
 `notification_config` supports the following:
 

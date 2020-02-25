@@ -158,6 +158,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 	resourceName := "aws_ssm_maintenance_window_task.test"
 	serviceRoleResourceName := "aws_iam_role.test"
 	s3BucketResourceName := "aws_s3_bucket.foo"
+	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.foo"
 
 	name := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
@@ -182,6 +183,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.comment", "test comment update"),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", "60"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.output_s3_bucket", s3BucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_output_config.0.cloudwatch_log_group_name", cloudwatchLogGroupResourceName, "name"),
 				),
 			},
 			{
@@ -704,6 +706,10 @@ resource "aws_s3_bucket" "foo" {
     force_destroy = true
 }
 
+resource "aws_cloudwatch_log_group" "foo" {
+    name = "foo"
+}
+
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "RUN_COMMAND"
@@ -725,6 +731,10 @@ resource "aws_ssm_maintenance_window_task" "test" {
       timeout_seconds      = %[3]d
       output_s3_bucket     = "${aws_s3_bucket.foo.id}"
       output_s3_key_prefix = "foo"
+      cloudwatch_output_config {
+        cloudwatch_log_group_name = "${aws_cloudwatch_log_group.foo.name}"
+        cloudwatch_output_enabled = true
+      }
       parameter {
         name = "commands"
         values = ["date"]
