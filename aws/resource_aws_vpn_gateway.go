@@ -117,7 +117,7 @@ func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
 		// Gateway exists but not attached to the VPC
 		d.Set("vpc_id", "")
 	} else {
-		d.Set("vpc_id", *vpnAttachment.VpcId)
+		d.Set("vpc_id", vpnAttachment.VpcId)
 	}
 
 	if vpnGateway.AvailabilityZone != nil && *vpnGateway.AvailabilityZone != "" {

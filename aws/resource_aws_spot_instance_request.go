@@ -264,10 +264,10 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 		return nil
 	}
 
-	d.Set("spot_bid_status", *request.Status.Code)
+	d.Set("spot_bid_status", request.Status.Code)
 	// Instance ID is not set if the request is still pending
 	if request.InstanceId != nil {
-		d.Set("spot_instance_id", *request.InstanceId)
+		d.Set("spot_instance_id", request.InstanceId)
 		// Read the instance data, setting up connection information
 		if err := readInstance(d, meta); err != nil {
 			return fmt.Errorf("Error reading Spot Instance Data: %s", err)
