@@ -190,8 +190,8 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 						resourceName, "arn", arnRegexp),
 					resource.TestCheckResourceAttr(
 						resourceName, "bucket", testAccBucketName(rInt)),
-					resource.TestCheckResourceAttr(
-						resourceName, "bucket_domain_name", testAccBucketDomainName(rInt)),
+					testAccCheckS3BucketDomainName(
+						resourceName, "bucket_domain_name", testAccBucketName(rInt)),
 					resource.TestCheckResourceAttr(
 						resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rInt, region)),
 				),
@@ -685,8 +685,8 @@ func TestAccAWSS3Bucket_Website_Simple(t *testing.T) {
 					testAccCheckAWSS3BucketExists(resourceName),
 					testAccCheckAWSS3BucketWebsite(
 						resourceName, "index.html", "", "", ""),
-					resource.TestCheckResourceAttr(
-						resourceName, "website_endpoint", testAccWebsiteEndpoint(rInt, region)),
+					testAccCheckS3BucketWebsiteEndpoint(
+						resourceName, "website_endpoint", testAccBucketName(rInt), region),
 				),
 			},
 			{
@@ -702,8 +702,8 @@ func TestAccAWSS3Bucket_Website_Simple(t *testing.T) {
 					testAccCheckAWSS3BucketExists(resourceName),
 					testAccCheckAWSS3BucketWebsite(
 						resourceName, "index.html", "error.html", "", ""),
-					resource.TestCheckResourceAttr(
-						resourceName, "website_endpoint", testAccWebsiteEndpoint(rInt, region)),
+					testAccCheckS3BucketWebsiteEndpoint(
+						resourceName, "website_endpoint", testAccBucketName(rInt), region),
 				),
 			},
 			{
@@ -736,8 +736,8 @@ func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 					testAccCheckAWSS3BucketExists(resourceName),
 					testAccCheckAWSS3BucketWebsite(
 						resourceName, "", "", "", "hashicorp.com?my=query"),
-					resource.TestCheckResourceAttr(
-						resourceName, "website_endpoint", testAccWebsiteEndpoint(rInt, region)),
+					testAccCheckS3BucketWebsiteEndpoint(
+						resourceName, "website_endpoint", testAccBucketName(rInt), region),
 				),
 			},
 			{
@@ -753,8 +753,8 @@ func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 					testAccCheckAWSS3BucketExists(resourceName),
 					testAccCheckAWSS3BucketWebsite(
 						resourceName, "", "", "https", "hashicorp.com?my=query"),
-					resource.TestCheckResourceAttr(
-						resourceName, "website_endpoint", testAccWebsiteEndpoint(rInt, region)),
+					testAccCheckS3BucketWebsiteEndpoint(
+						resourceName, "website_endpoint", testAccBucketName(rInt), region),
 				),
 			},
 			{
@@ -800,8 +800,8 @@ func TestAccAWSS3Bucket_WebsiteRoutingRules(t *testing.T) {
 							},
 						},
 					),
-					resource.TestCheckResourceAttr(
-						resourceName, "website_endpoint", testAccWebsiteEndpoint(rInt, region)),
+					testAccCheckS3BucketWebsiteEndpoint(
+						resourceName, "website_endpoint", testAccBucketName(rInt), region),
 				),
 			},
 			{
@@ -2092,6 +2092,166 @@ func TestBucketRegionalDomainName(t *testing.T) {
 	}
 }
 
+func TestWebsiteEndpoint(t *testing.T) {
+	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
+	testCases := []struct {
+		AWSClient          *AWSClient
+		LocationConstraint string
+		Expected           string
+	}{
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "us-east-1",
+			},
+			LocationConstraint: "",
+			Expected:           "bucket-name.s3-website-us-east-1.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "us-west-2",
+			},
+			LocationConstraint: "us-west-2",
+			Expected:           "bucket-name.s3-website-us-west-2.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "us-west-1",
+			},
+			LocationConstraint: "us-west-1",
+			Expected:           "bucket-name.s3-website-us-west-1.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "eu-west-1",
+			},
+			LocationConstraint: "eu-west-1",
+			Expected:           "bucket-name.s3-website-eu-west-1.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "eu-west-3",
+			},
+			LocationConstraint: "eu-west-3",
+			Expected:           "bucket-name.s3-website.eu-west-3.amazonaws.com"},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "eu-central-1",
+			},
+			LocationConstraint: "eu-central-1",
+			Expected:           "bucket-name.s3-website.eu-central-1.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "ap-south-1",
+			},
+			LocationConstraint: "ap-south-1",
+			Expected:           "bucket-name.s3-website.ap-south-1.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "ap-southeast-1",
+			},
+			LocationConstraint: "ap-southeast-1",
+			Expected:           "bucket-name.s3-website-ap-southeast-1.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "ap-northeast-1",
+			},
+			LocationConstraint: "ap-northeast-1",
+			Expected:           "bucket-name.s3-website-ap-northeast-1.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "ap-southeast-2",
+			},
+			LocationConstraint: "ap-southeast-2",
+			Expected:           "bucket-name.s3-website-ap-southeast-2.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "ap-northeast-2",
+			},
+			LocationConstraint: "ap-northeast-2",
+			Expected:           "bucket-name.s3-website.ap-northeast-2.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "sa-east-1",
+			},
+			LocationConstraint: "sa-east-1",
+			Expected:           "bucket-name.s3-website-sa-east-1.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "us-gov-east-1",
+			},
+			LocationConstraint: "us-gov-east-1",
+			Expected:           "bucket-name.s3-website.us-gov-east-1.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "us-gov-west-1",
+			},
+			LocationConstraint: "us-gov-west-1",
+			Expected:           "bucket-name.s3-website-us-gov-west-1.amazonaws.com",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "c2s.ic.gov",
+				region:    "us-iso-east-1",
+			},
+			LocationConstraint: "us-iso-east-1",
+			Expected:           "bucket-name.s3-website.us-iso-east-1.c2s.ic.gov",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "sc2s.sgov.gov",
+				region:    "us-isob-east-1",
+			},
+			LocationConstraint: "us-isob-east-1",
+			Expected:           "bucket-name.s3-website.us-isob-east-1.sc2s.sgov.gov",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com.cn",
+				region:    "cn-northwest-1",
+			},
+			LocationConstraint: "cn-northwest-1",
+			Expected:           "bucket-name.s3-website.cn-northwest-1.amazonaws.com.cn",
+		},
+		{
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com.cn",
+				region:    "cn-north-1",
+			},
+			LocationConstraint: "cn-north-1",
+			Expected:           "bucket-name.s3-website.cn-north-1.amazonaws.com.cn",
+		},
+	}
+
+	for _, testCase := range testCases {
+		got := WebsiteEndpoint(testCase.AWSClient, "bucket-name", testCase.LocationConstraint)
+		if got.Endpoint != testCase.Expected {
+			t.Errorf("WebsiteEndpointUrl(\"bucket-name\", %q) => %q, want %q", testCase.LocationConstraint, got.Endpoint, testCase.Expected)
+		}
+	}
+}
+
 func testAccCheckAWSS3BucketDestroy(s *terraform.State) error {
 	return testAccCheckAWSS3BucketDestroyWithProvider(s, testAccProvider)
 }
@@ -2615,8 +2775,12 @@ func testAccBucketName(randInt int) string {
 	return fmt.Sprintf("tf-test-bucket-%d", randInt)
 }
 
-func testAccBucketDomainName(randInt int) string {
-	return fmt.Sprintf("tf-test-bucket-%d.s3.amazonaws.com", randInt)
+func testAccCheckS3BucketDomainName(resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		expectedValue := testAccProvider.Meta().(*AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", bucketName))
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
+	}
 }
 
 func testAccBucketRegionalDomainName(randInt int, region string) string {
@@ -2628,8 +2792,13 @@ func testAccBucketRegionalDomainName(randInt int, region string) string {
 	return regionalEndpoint
 }
 
-func testAccWebsiteEndpoint(randInt int, region string) string {
-	return fmt.Sprintf("tf-test-bucket-%d.s3-website-%s.amazonaws.com", randInt, region)
+func testAccCheckS3BucketWebsiteEndpoint(resourceName string, attributeName string, bucketName string, region string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		website := WebsiteEndpoint(testAccProvider.Meta().(*AWSClient), bucketName, region)
+		expectedValue := website.Endpoint
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
+	}
 }
 
 func testAccAWSS3BucketPolicy(randInt int, partition string) string {
