@@ -48,7 +48,10 @@ func resourceAwsMediaStoreContainerCreate(d *schema.ResourceData, meta interface
 
 	input := &mediastore.CreateContainerInput{
 		ContainerName: aws.String(d.Get("name").(string)),
-		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().MediastoreTags(),
+	}
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		input.Tags = keyvaluetags.New(v).IgnoreAws().MediastoreTags()
 	}
 
 	resp, err := conn.CreateContainer(input)
