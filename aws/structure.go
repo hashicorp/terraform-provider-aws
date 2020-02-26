@@ -1213,6 +1213,41 @@ func expandTxtEntry(s string) string {
 	return s
 }
 
+func expandAdvancedSecurityOptions(m map[string]interface{}) *elasticsearch.AdvancedSecurityOptionsInput {
+	config := elasticsearch.AdvancedSecurityOptionsInput{}
+
+	if v, ok := m["enabled"]; ok {
+		isEnabled := v.(bool)
+		config.Enabled = aws.Bool(isEnabled)
+	}
+
+	if v, ok := m["internal_user_database_enabled"]; ok {
+		isDBEnabled := v.(bool)
+		config.InternalUserDatabaseEnabled = aws.Bool(isDBEnabled)
+	}
+
+	if v, ok := m["master_user_options"]; ok {
+		muo := elasticsearch.MasterUserOptions{}
+		masterUserOptions := v.(map[string]string)
+
+		if v, ok := masterUserOptions["master_user_arn"]; ok {
+			muo.MasterUserARN = aws.String(v)
+		}
+
+		if v, ok := masterUserOptions["master_user_name"]; ok {
+			muo.MasterUserName = aws.String(v)
+		}
+
+		if v, ok := masterUserOptions["master_user_password"]; ok {
+			muo.MasterUserPassword = aws.String(v)
+		}
+
+		config.SetMasterUserOptions(&muo)
+	}
+
+	return &config
+}
+
 func expandESClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchClusterConfig {
 	config := elasticsearch.ElasticsearchClusterConfig{}
 

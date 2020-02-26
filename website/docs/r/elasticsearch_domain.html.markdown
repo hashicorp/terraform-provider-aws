@@ -217,6 +217,7 @@ The following arguments are supported:
    Note that the values for these configuration options must be strings (wrapped in quotes) or they
    may be wrong and cause a perpetual diff, causing Terraform to want to recreate your Elasticsearch
    domain on every apply.
+* `advanced_security_options` - (Optional) Options for [fine-grained access control](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/fgac.html)
 * `ebs_options` - (Optional) EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/elasticsearch-service/pricing/). See below.
 * `encrypt_at_rest` - (Optional) Encrypt at rest options. Only available for [certain instance types](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html). See below.
 * `node_to_node_encryption` - (Optional) Node-to-node encryption options. See below.
@@ -227,6 +228,18 @@ The following arguments are supported:
 * `elasticsearch_version` - (Optional) The version of Elasticsearch to deploy. Defaults to `1.5`
 * `domain_endpoint_options` - (Optional) Domain endpoint HTTP(S) related options. See below.
 * `tags` - (Optional) A mapping of tags to assign to the resource
+
+**advanced_security_options** supports the following attributes:
+
+* `enabled` - (Required) Whether advanced security is enabled
+* `internal_user_database_enabled` - (Required) Whether the internal user database is enabled
+* `master_user_options` - (Optional) Credentials for the master user: username and password, ARN, or both
+
+**master_user_options** supports the following attributes:
+
+* `master_user_arn` - (Optional) ARN for the master user (if IAM is enabled)
+* `master_user_name` - (Optional) The master user's username, which is stored in the Amazon Elasticsearch Service domain's internal database
+* `master_user_password` - (Optional) The master user's password, which is stored in the Amazon Elasticsearch Service domain's internal database
 
 **ebs_options** supports the following attributes:
 
