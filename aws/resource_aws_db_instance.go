@@ -26,6 +26,15 @@ func resourceAwsDbInstance() *schema.Resource {
 			State: resourceAwsDbInstanceImport,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAwsDbInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAwsDbInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(80 * time.Minute),
@@ -434,6 +443,7 @@ func resourceAwsDbInstance() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
+						"agent",
 						"alert",
 						"audit",
 						"error",
@@ -474,6 +484,12 @@ func resourceAwsDbInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+			},
+
+			"delete_automated_backups": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 
 			"tags": tagsSchema(),
@@ -1410,6 +1426,9 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	deleteAutomatedBackups := d.Get("delete_automated_backups").(bool)
+	opts.DeleteAutomatedBackups = aws.Bool(deleteAutomatedBackups)
+
 	log.Printf("[DEBUG] DB Instance destroy configuration: %v", opts)
 	_, err := conn.DeleteDBInstance(&opts)
 
@@ -1750,6 +1769,7 @@ func resourceAwsDbInstanceImport(
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required
 	d.Set("skip_final_snapshot", true)
+	d.Set("delete_automated_backups", true)
 	return []*schema.ResourceData{d}, nil
 }
 

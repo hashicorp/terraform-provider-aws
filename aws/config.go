@@ -39,6 +39,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -141,6 +142,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/worklink"
+	"github.com/aws/aws-sdk-go/service/workmail"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
@@ -212,6 +214,7 @@ type AWSClient struct {
 	codecommitconn                      *codecommit.CodeCommit
 	codedeployconn                      *codedeploy.CodeDeploy
 	codepipelineconn                    *codepipeline.CodePipeline
+	codestarnotificationsconn           *codestarnotifications.CodeStarNotifications
 	cognitoconn                         *cognitoidentity.CognitoIdentity
 	cognitoidpconn                      *cognitoidentityprovider.CognitoIdentityProvider
 	configconn                          *configservice.ConfigService
@@ -323,6 +326,7 @@ type AWSClient struct {
 	wafregionalconn                     *wafregional.WAFRegional
 	wafv2conn                           *wafv2.WAFV2
 	worklinkconn                        *worklink.WorkLink
+	workmailconn                        *workmail.WorkMail
 	workspacesconn                      *workspaces.WorkSpaces
 	xrayconn                            *xray.XRay
 }
@@ -415,6 +419,7 @@ func (c *Config) Client() (interface{}, error) {
 		codecommitconn:                      codecommit.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codecommit"])})),
 		codedeployconn:                      codedeploy.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codedeploy"])})),
 		codepipelineconn:                    codepipeline.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codepipeline"])})),
+		codestarnotificationsconn:           codestarnotifications.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codestarnotifications"])})),
 		cognitoconn:                         cognitoidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidentity"])})),
 		cognitoidpconn:                      cognitoidentityprovider.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidp"])})),
 		configconn:                          configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["configservice"])})),
@@ -519,6 +524,7 @@ func (c *Config) Client() (interface{}, error) {
 		wafregionalconn:                     wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafregional"])})),
 		wafv2conn:                           wafv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafv2"])})),
 		worklinkconn:                        worklink.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["worklink"])})),
+		workmailconn:                        workmail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["workmail"])})),
 		workspacesconn:                      workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["workspaces"])})),
 		xrayconn:                            xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["xray"])})),
 	}

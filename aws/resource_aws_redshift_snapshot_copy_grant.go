@@ -267,27 +267,13 @@ func findAwsRedshiftSnapshotCopyGrant(conn *redshift.Redshift, grantName string,
 		input.SnapshotCopyGrantName = aws.String(grantName)
 	}
 
-	var out *redshift.DescribeSnapshotCopyGrantsOutput
-	var err error
-	var grant *redshift.SnapshotCopyGrant
+	out, err := conn.DescribeSnapshotCopyGrants(&input)
 
-	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
-		out, err = conn.DescribeSnapshotCopyGrants(&input)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.DescribeSnapshotCopyGrants(&input)
-	}
 	if err != nil {
 		return nil, err
 	}
 
-	grant = getAwsRedshiftSnapshotCopyGrant(out.SnapshotCopyGrants, grantName)
+	grant := getAwsRedshiftSnapshotCopyGrant(out.SnapshotCopyGrants, grantName)
 	if grant != nil {
 		return grant, nil
 	} else if out.Marker != nil {

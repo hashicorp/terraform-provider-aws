@@ -109,6 +109,19 @@ func testAccCheckResourceAttrRegionalARN(resourceName, attributeName, arnService
 	}
 }
 
+// testAccCheckResourceAttrRegionalARNNoAccount ensures the Terraform state exactly matches a formatted ARN with region but without account ID
+func testAccCheckResourceAttrRegionalARNNoAccount(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
+			Partition: testAccGetPartition(),
+			Region:    testAccGetRegion(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
 // testAccMatchResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region
 func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -147,6 +160,21 @@ func testAccMatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, a
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// testAccMatchResourceAttrRegionalHostname ensures the Terraform state regexp matches a formatted DNS hostname with region and partition DNS suffix
+func testAccMatchResourceAttrRegionalHostname(resourceName, attributeName, serviceName string, hostnamePrefixRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		hostnameRegexpPattern := fmt.Sprintf("%s\\.%s\\.%s\\.%s$", hostnamePrefixRegexp.String(), serviceName, testAccGetRegion(), testAccGetPartitionDNSSuffix())
+
+		hostnameRegexp, err := regexp.Compile(hostnameRegexpPattern)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile hostname regexp (%s): %s", hostnameRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, hostnameRegexp)(s)
 	}
 }
 
@@ -289,6 +317,13 @@ func testAccGetPartition() string {
 		return partition.ID()
 	}
 	return "aws"
+}
+
+func testAccGetPartitionDNSSuffix() string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
+		return partition.DNSSuffix()
+	}
+	return "amazonaws.com"
 }
 
 func testAccGetAlternateRegionPartition() string {

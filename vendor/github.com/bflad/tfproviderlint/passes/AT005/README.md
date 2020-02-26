@@ -27,3 +27,14 @@ func TestAccExampleWidget_basic(t *testing.T) {
   resource.ParallelTest(/* ... */)
 }
 ```
+
+## Ignoring Reports
+
+Singular reports can be ignored by adding the a `//lintignore:AT005` Go code comment at the end of the offending line or on the line immediately proceding, e.g.
+
+```go
+//lintignore:AT005
+func TestExampleThing_basic(t *testing.T) {
+  resource.Test(/* ... */)
+}
+```

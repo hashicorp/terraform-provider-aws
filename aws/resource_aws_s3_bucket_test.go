@@ -27,6 +27,7 @@ func init() {
 		Name: "aws_s3_bucket",
 		F:    testSweepS3Buckets,
 		Dependencies: []string{
+			"aws_s3_access_point",
 			"aws_s3_bucket_object",
 		},
 	})
@@ -57,20 +58,25 @@ func testSweepS3Buckets(region string) error {
 		return nil
 	}
 
+	defaultNameRegexp := regexp.MustCompile(`^terraform-\d+$`)
 	for _, bucket := range output.Buckets {
 		name := aws.StringValue(bucket.Name)
 
-		hasPrefix := false
-		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
+		sweepable := false
+		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap", "terraform-remote-s3-test"}
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(name, prefix) {
-				hasPrefix = true
+				sweepable = true
 				break
 			}
 		}
 
-		if !hasPrefix {
+		if defaultNameRegexp.MatchString(name) {
+			sweepable = true
+		}
+
+		if !sweepable {
 			log.Printf("[INFO] Skipping S3 Bucket: %s", name)
 			continue
 		}

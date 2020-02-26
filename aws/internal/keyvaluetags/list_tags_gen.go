@@ -22,6 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -47,6 +48,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -396,6 +398,23 @@ func CodepipelineListTags(conn *codepipeline.CodePipeline, identifier string) (K
 	}
 
 	return CodepipelineKeyValueTags(output.Tags), nil
+}
+
+// CodestarnotificationsListTags lists codestarnotifications service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CodestarnotificationsListTags(conn *codestarnotifications.CodeStarNotifications, identifier string) (KeyValueTags, error) {
+	input := &codestarnotifications.ListTagsForResourceInput{
+		Arn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CodestarnotificationsKeyValueTags(output.Tags), nil
 }
 
 // CognitoidentityListTags lists cognitoidentity service tags.
@@ -821,6 +840,23 @@ func GameliftListTags(conn *gamelift.GameLift, identifier string) (KeyValueTags,
 	}
 
 	return GameliftKeyValueTags(output.Tags), nil
+}
+
+// GlacierListTags lists glacier service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GlacierListTags(conn *glacier.Glacier, identifier string) (KeyValueTags, error) {
+	input := &glacier.ListTagsForVaultInput{
+		VaultName: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForVault(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GlacierKeyValueTags(output.Tags), nil
 }
 
 // GlueListTags lists glue service tags.

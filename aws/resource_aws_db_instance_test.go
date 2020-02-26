@@ -119,6 +119,7 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 					"final_snapshot_identifier",
 					"password",
 					"skip_final_snapshot",
+					"delete_automated_backups",
 				},
 			},
 		},
@@ -331,6 +332,7 @@ func TestAccAWSDBInstance_DeletionProtection(t *testing.T) {
 					"final_snapshot_identifier",
 					"password",
 					"skip_final_snapshot",
+					"delete_automated_backups",
 				},
 			},
 			{
@@ -2003,6 +2005,7 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfiguration(t *testing.T) {
 					"final_snapshot_identifier",
 					"password",
 					"skip_final_snapshot",
+					"delete_automated_backups",
 				},
 			},
 		},
@@ -2065,6 +2068,39 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfigurationUpdate(t *testing.T) 
 	})
 }
 
+func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MSSQL(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_MSSQL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Oracle(t *testing.T) {
 	var dbInstance rds.DBInstance
 
@@ -2092,6 +2128,7 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Oracle(t *testing.T) {
 					"final_snapshot_identifier",
 					"password",
 					"skip_final_snapshot",
+					"delete_automated_backups",
 				},
 			},
 		},
@@ -2125,10 +2162,66 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Postgresql(t *testing.T) 
 					"final_snapshot_identifier",
 					"password",
 					"skip_final_snapshot",
+					"delete_automated_backups",
 				},
 			},
 		},
 	})
+}
+
+func TestAccAWSDBInstance_NoDeleteAutomatedBackups(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-testacc-nodelautobak")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceAutomatedBackups,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_NoDeleteAutomatedBackups(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckAWSDBInstanceAutomatedBackups(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_db_instance" {
+			continue
+		}
+
+		log.Printf("[INFO] Trying to locate the DBInstance Automated Backup")
+		describeOutput, err := conn.DescribeDBInstanceAutomatedBackups(
+			&rds.DescribeDBInstanceAutomatedBackupsInput{
+				DBInstanceIdentifier: aws.String(rs.Primary.ID),
+			})
+		if err != nil {
+			return err
+		}
+
+		if describeOutput == nil || len(describeOutput.DBInstanceAutomatedBackups) == 0 {
+			return fmt.Errorf("Automated backup for %s not found", rs.Primary.ID)
+		}
+
+		log.Printf("[INFO] Deleting automated backup for %s", rs.Primary.ID)
+		_, err = conn.DeleteDBInstanceAutomatedBackup(
+			&rds.DeleteDBInstanceAutomatedBackupInput{
+				DbiResourceId: describeOutput.DBInstanceAutomatedBackups[0].DbiResourceId,
+			})
+		if err != nil {
+			return err
+		}
+	}
+
+	return testAccCheckAWSDBInstanceDestroy(s)
 }
 
 func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
@@ -4275,6 +4368,22 @@ resource "aws_db_instance" "test" {
 `, rName)
 }
 
+func testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_MSSQL(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage               = 20
+  enabled_cloudwatch_logs_exports = ["agent", "error"]
+  engine                          = "sqlserver-se"
+  identifier                      = %q
+  instance_class                  = "db.m4.large"
+  license_model                   = "license-included"
+  password                        = "avoid-plaintext-passwords"
+  username                        = "tfacctest"
+  skip_final_snapshot             = true
+}
+`, rName)
+}
+
 func testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_Postgresql(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -5644,4 +5753,21 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot                   = true
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSDBInstanceConfig_NoDeleteAutomatedBackups(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage               = 10
+  engine                          = "mariadb"
+  identifier                      = "%s"
+  instance_class                  = "db.t2.micro"
+  password                        = "avoid-plaintext-passwords"
+  username                        = "tfacctest"
+  skip_final_snapshot             = true
+
+  backup_retention_period         = 1
+  delete_automated_backups        = false
+}
+`, rName)
 }

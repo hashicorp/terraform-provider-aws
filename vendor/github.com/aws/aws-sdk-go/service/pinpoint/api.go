@@ -13159,9 +13159,7 @@ type CampaignEmailMessage struct {
 	HtmlBody *string `type:"string"`
 
 	// The subject line, or title, of the email.
-	//
-	// Title is a required field
-	Title *string `type:"string" required:"true"`
+	Title *string `type:"string"`
 }
 
 // String returns the string representation
@@ -13172,19 +13170,6 @@ func (s CampaignEmailMessage) String() string {
 // GoString returns the string representation
 func (s CampaignEmailMessage) GoString() string {
 	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *CampaignEmailMessage) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "CampaignEmailMessage"}
-	if s.Title == nil {
-		invalidParams.Add(request.NewErrParamRequired("Title"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
 }
 
 // SetBody sets the Body field's value.
@@ -24860,21 +24845,6 @@ func (s MessageConfiguration) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *MessageConfiguration) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "MessageConfiguration"}
-	if s.EmailMessage != nil {
-		if err := s.EmailMessage.Validate(); err != nil {
-			invalidParams.AddNested("EmailMessage", err.(request.ErrInvalidParams))
-		}
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
 // SetADMMessage sets the ADMMessage field's value.
 func (s *MessageConfiguration) SetADMMessage(v *Message) *MessageConfiguration {
 	s.ADMMessage = v
@@ -32079,11 +32049,6 @@ func (s *WriteCampaignRequest) Validate() error {
 			}
 		}
 	}
-	if s.MessageConfiguration != nil {
-		if err := s.MessageConfiguration.Validate(); err != nil {
-			invalidParams.AddNested("MessageConfiguration", err.(request.ErrInvalidParams))
-		}
-	}
 	if s.Schedule != nil {
 		if err := s.Schedule.Validate(); err != nil {
 			invalidParams.AddNested("Schedule", err.(request.ErrInvalidParams))
@@ -32557,11 +32522,6 @@ func (s *WriteTreatmentResource) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "WriteTreatmentResource"}
 	if s.SizePercent == nil {
 		invalidParams.Add(request.NewErrParamRequired("SizePercent"))
-	}
-	if s.MessageConfiguration != nil {
-		if err := s.MessageConfiguration.Validate(); err != nil {
-			invalidParams.AddNested("MessageConfiguration", err.(request.ErrInvalidParams))
-		}
 	}
 	if s.Schedule != nil {
 		if err := s.Schedule.Validate(); err != nil {

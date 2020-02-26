@@ -199,10 +199,9 @@ func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 			},
 
 			{
-				ResourceName:            "aws_ec2_client_vpn_endpoint.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"dns_servers"},
+				ResourceName:      "aws_ec2_client_vpn_endpoint.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

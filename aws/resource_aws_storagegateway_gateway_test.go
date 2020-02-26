@@ -283,6 +283,34 @@ func TestAccAWSStorageGatewayGateway_GatewayName(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayGateway_CloudWatchLogs(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName1 := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+	resourceName2 := "aws_cloudwatch_log_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_Log_Group(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", resourceName2, "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewayGateway_GatewayTimezone(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -591,6 +619,22 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_name       = %q
   gateway_timezone   = "GMT"
   gateway_type       = "FILE_S3"
+}
+`, rName)
+}
+
+func testAccAWSStorageGatewayGatewayConfig_Log_Group(rName string) string {
+	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address 		= "${aws_instance.test.public_ip}"
+  gateway_name       		= %[1]q
+  gateway_timezone   		= "GMT"
+  gateway_type       		= "FILE_S3"
+  cloudwatch_log_group_arn	= "${aws_cloudwatch_log_group.test.arn}"
 }
 `, rName)
 }

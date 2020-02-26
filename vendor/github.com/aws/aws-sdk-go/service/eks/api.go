@@ -6642,6 +6642,9 @@ const (
 	// NodegroupIssueCodeAutoScalingGroupNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeAutoScalingGroupNotFound = "AutoScalingGroupNotFound"
 
+	// NodegroupIssueCodeAutoScalingGroupInvalidConfiguration is a NodegroupIssueCode enum value
+	NodegroupIssueCodeAutoScalingGroupInvalidConfiguration = "AutoScalingGroupInvalidConfiguration"
+
 	// NodegroupIssueCodeEc2securityGroupNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeEc2securityGroupNotFound = "Ec2SecurityGroupNotFound"
 
@@ -6653,6 +6656,9 @@ const (
 
 	// NodegroupIssueCodeEc2launchTemplateVersionMismatch is a NodegroupIssueCode enum value
 	NodegroupIssueCodeEc2launchTemplateVersionMismatch = "Ec2LaunchTemplateVersionMismatch"
+
+	// NodegroupIssueCodeEc2subnetNotFound is a NodegroupIssueCode enum value
+	NodegroupIssueCodeEc2subnetNotFound = "Ec2SubnetNotFound"
 
 	// NodegroupIssueCodeIamInstanceProfileNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeIamInstanceProfileNotFound = "IamInstanceProfileNotFound"

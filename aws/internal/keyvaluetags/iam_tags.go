@@ -1,3 +1,5 @@
+// +build !generate
+
 package keyvaluetags
 
 import (

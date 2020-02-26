@@ -1,28 +1,156 @@
-## 2.47.0 (Unreleased)
+## 2.51.0 (Unreleased)
 
-NOTES:
+FEATURES:
 
-* resource/aws_efs_file_system: Tagging API calls have been refactored to the AWS standardized `TagResource` and `UntagResource` API calls (from `CreateTags` and `DeleteTags` respectively). Restrictive IAM Policies for Terraform execution may require updates. [GH-11654]
+* **New Data Source:** `aws_sfn_state_machine` [GH-10932]
+* **New Resource:** `aws_ec2_traffic_mirror_filter` [GH-9372]
+* **New Resource:** `aws_ec2_traffic_mirror_filter_rule` [GH-9372]
+* **New Resource:** `aws_ec2_traffic_mirror_session` [GH-9372]
+* **New Resource:** `aws_ec2_traffic_mirror_target` [GH-9372]
+* **New Resource:** `aws_s3_access_point` [GH-11276]
 
 ENHANCEMENTS:
 
-* data-source/aws_efs_file_system: Add `lifecycle_policy`, `provisioned_throughput_in_mibps`, and `throughput_mode` attributes [GH-11647]
-* data-source/aws_dynamodb_table: Add `server_side_encryption` `kms_key_arn` attribute [GH-11081]
-* resource/aws_dynamodb_table: Add `server_side_encryption` configuration block `kms_key_arn` argument (support customer managed CMKs for server-side encryption) [GH-11081]
-* resource/aws_dynamodb_table: Support in-place updates for `server_side_encryption` configurations [GH-11081]
-* resource/aws_elasticsearch_domain: Add `domain_endpoint_options` configuration block (support enforcing HTTPS) [GH-10430]
-* resource/aws_gamelift_fleet: Add `fleet_type` argument (support Spot Fleets) [GH-8234]
-* resource/aws_sagemaker_notebook_instance: Add `direct_internet_access` argument [GH-8618]
-* resource/aws_ssm_maintenance_window: Add `description` argument [GH-11478]
+* resource/aws_dx_hosted_private_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_dx_hosted_public_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_dx_hosted_transit_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_dx_private_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_dx_public_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_dx_transit_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_glub_job: Add `notification_property` configuration block [GH-12115]
+* resource/aws_lambda_event_source_mapping: Add `bisect_batch_on_function_error`, `maximum_record_age_in_seconds`, `maximum_retry_attempts`, and `parallelization_factor` arguments [GH-11100]
+* resource/aws_lambda_event_source_mapping: Add `destination_config` configuration block [GH-11100]
+* resource/aws_msk_cluster: Support in-place updates to `enhanced_monitoring` and `number_of_broker_nodes` arguments [GH-11451]
+* resource/aws_msk_cluster: Add `open_monitoring` configuration block (support Prometheus monitoring configuration) [GH-11451]
 
 BUG FIXES:
 
-* service/efs: Generate proper `dns_name` attribute hostname suffix in AWS China, AWS C2S, and AWS SC2S partitions [GH-11746]
-* resource/aws_cognito_user_pool: Deprecate `unused_account_validity_days` argument and add support for `temporary_password_validity_days` argument [GH-10890]
-* resource/aws_elasticsearch_domain: Automatically retry resource creation on additional error messages relating to eventual consistency [GH-11663]
-* resource/aws_emr_instance_group: Wait for `RUNNING` status on creation [GH-11688]
-* resource/aws_ssm_activation: Properly trigger resource recreation when deleted outside Terraform [GH-11658]
-* resource/aws_ssm_parameter: Prevent `KeyId` error when switching `type` value from `SecureString` to `String` [GH-10819]
+* resource/aws_workspaces_directory: Prevent panic and remove resource from Terraform state if removed outside Terraform [GH-11837]
+
+## 2.50.0 (February 20, 2020)
+
+NOTES:
+
+* resource/aws_lambda_function: The `publish` argument now will also publish versions for configuration updates. This is accomplished via a separate `PublishVersion` API call, where before the publishing only occured via the `Publish` parameter of the `UpdateFunctionCode` API call. Restrictive IAM permissions for Terraform may require updates. ([#11211](https://github.com/terraform-providers/terraform-provider-aws/issues/11211))
+* resource/aws_ram_resource_share_accepter: The `status` attribute now reflects the status of the RAM Resource Share and not the RAM Resource Share Invitation (which expires after 7 days). ([#11562](https://github.com/terraform-providers/terraform-provider-aws/issues/11562))
+
+FEATURES:
+
+* **New Data Source:** `aws_lambda_alias` ([#9490](https://github.com/terraform-providers/terraform-provider-aws/issues/9490))
+
+ENHANCEMENTS:
+
+* resource/aws_appmesh_route: Add `priority` and `header` attributes to support route priorities and HTTP header-based routing ([#10402](https://github.com/terraform-providers/terraform-provider-aws/issues/10402))
+* resource/aws_iam_access_key: Add `ses_smtp_password_v4` attribute (add per-region SigV4 support) ([#11144](https://github.com/terraform-providers/terraform-provider-aws/issues/11144))
+* resource/aws_security_group: Support import of `name_prefix` argument ([#12052](https://github.com/terraform-providers/terraform-provider-aws/issues/12052))
+* resource/aws_transfer_server: Add `host_key` argument and `host_key_fingerprint` attribute ([#8913](https://github.com/terraform-providers/terraform-provider-aws/issues/8913))
+
+BUG FIXES:
+
+* resource/aws_lambda_function: If `publish` argument is enabled, also publish new versions on function configuration-only updates in addition to function code updates ([#11211](https://github.com/terraform-providers/terraform-provider-aws/issues/11211))
+* resource/aws_lambda_permission: Fix error when Lambda permission is deleted out-of-band ([#11924](https://github.com/terraform-providers/terraform-provider-aws/issues/11924))
+* resource/aws_ram_resource_share_accepter: Fix read operations after the RAM Resource Share Invitation is no longer present after 7 days ([#11562](https://github.com/terraform-providers/terraform-provider-aws/issues/11562))
+
+## 2.49.0 (February 14, 2020)
+
+FEATURES:
+
+* **New Resource:** `aws_codestarnotifications_notification_rule` ([#10991](https://github.com/terraform-providers/terraform-provider-aws/issues/10991))
+* **New Resource:** `aws_s3_bucket_analytics_configuration` ([#11874](https://github.com/terraform-providers/terraform-provider-aws/issues/11874))
+
+ENHANCEMENTS:
+
+* data-source/aws_api_gateway_rest_api: Add `api_key_source`, `arn`, `binary_media_types`, `description`, `endpoint_configuration`, `execution_arn`, `minimum_compression_size`, `policy`, and `tags` attributes ([#10971](https://github.com/terraform-providers/terraform-provider-aws/issues/10971))
+* resource/aws_db_instance: Support `agent` value in `enable_cloudwatch_logs_exports` argument plan-time validation (Support MSSQL agent log) ([#11472](https://github.com/terraform-providers/terraform-provider-aws/issues/11472))
+* resource/aws_db_instance: Add `delete_automated_backups` argument ([#8461](https://github.com/terraform-providers/terraform-provider-aws/issues/8461))
+* resource/aws_gamelift_fleet: Add `tags` argument ([#11559](https://github.com/terraform-providers/terraform-provider-aws/issues/11559))
+* resource/aws_instance: Add `hibernation` argument ([#6961](https://github.com/terraform-providers/terraform-provider-aws/issues/6961))
+* resource/aws_launch_template: Add `cpu_options` configuration block (support disabling multithreading) ([#6552](https://github.com/terraform-providers/terraform-provider-aws/issues/6552))
+* resource/aws_neptune_cluster: Add `enable_cloudwatch_logs_exports` argument (support audit logging) ([#11949](https://github.com/terraform-providers/terraform-provider-aws/issues/11949))
+* resource/aws_neptune_cluster: Add `deletion_protection` argument ([#11731](https://github.com/terraform-providers/terraform-provider-aws/issues/11731))
+* resource/aws_rds_global_database: Support `aurora-mysql` value in `engine` argument plan-time validation (Support Aurora MySQL 5.7) ([#11790](https://github.com/terraform-providers/terraform-provider-aws/issues/11790))
+
+BUG FIXES:
+
+* data-source/aws_route53_zone: Fixes regression from version 2.48.0 when filtering using `tags` ([#11953](https://github.com/terraform-providers/terraform-provider-aws/issues/11953))
+* resource/aws_batch_job_definition: Prevent extraneous differences with `container_properties` argument missing `environment`, `mountPoints`, `ulimits`, and `volumes` configuration ([#12000](https://github.com/terraform-providers/terraform-provider-aws/issues/12000))
+* resource/aws_cognito_user_pool: Allow `admin_create_user_config` configuration block `unused_account_validity_days` argument to be omitted ([#12001](https://github.com/terraform-providers/terraform-provider-aws/issues/12001))
+* resource/aws_launch_configuration: Fixes regression from version 2.23.0 with instance store AMIs returning an unexpected error ([#9810](https://github.com/terraform-providers/terraform-provider-aws/issues/9810))
+* resource/aws_launch_configuration: Fixes regression from version 2.23.0 to allow missing EC2 Image during root block device lookup ([#12009](https://github.com/terraform-providers/terraform-provider-aws/issues/12009))
+* resource/aws_route53_record: The artificial, hardcoded five minute timeouts for creation and deletions have been removed in preference of the default AWS Go SDK retrying logic ([#11895](https://github.com/terraform-providers/terraform-provider-aws/issues/11895))
+
+## 2.48.0 (February 07, 2020)
+
+NOTES:
+
+* resource/aws_organizations_policy_attachment: The underlying API calls have switched from `ListPoliciesForTarget` to `ListTargetsForPolicy`. Restrictive IAM Policies for Terraform execution may require updates. ([#11612](https://github.com/terraform-providers/terraform-provider-aws/issues/11612))
+
+FEATURES:
+
+* **New Data Source:** `aws_ssm_patch_baseline` ([#9486](https://github.com/terraform-providers/terraform-provider-aws/issues/9486))
+* **New Resource:** `aws_datasync_location_smb` ([#10381](https://github.com/terraform-providers/terraform-provider-aws/issues/10381))
+
+ENHANCEMENTS:
+
+* resource/aws_batch_job_definition: Support resource import ([#11407](https://github.com/terraform-providers/terraform-provider-aws/issues/11407))
+* resource/aws_codebuild_project: Add `source` and `secondary_source` configuration block `git_submodules_config` configuration block ([#10952](https://github.com/terraform-providers/terraform-provider-aws/issues/10952))
+* resource/aws_codebuild_project: Add `source_version` argument ([#9877](https://github.com/terraform-providers/terraform-provider-aws/issues/9877))
+* resource/aws_elasticache_cluster: Add `computed` flag for `port` property and set to true ([#10017](https://github.com/terraform-providers/terraform-provider-aws/issues/10017))
+* resource/aws_fsx_lustre_file_system: Lower minimum `storage_capacity` argument validation to 1200 to match API updates ([#11847](https://github.com/terraform-providers/terraform-provider-aws/issues/11847))
+* resource/aws_organizations_policy: Support `type` argument `TAG_POLICY` value in plan-time validation ([#11612](https://github.com/terraform-providers/terraform-provider-aws/issues/11612))
+* resource/aws_organizations_policy_attachment: Support tag policies ([#11612](https://github.com/terraform-providers/terraform-provider-aws/issues/11612))
+
+BUG FIXES:
+
+* resource/aws_appautoscaling_target: Prevent state removal of resource immediately after creation due to eventual consistency ([#11819](https://github.com/terraform-providers/terraform-provider-aws/issues/11819))
+* resource/aws_appautoscaling_target: Automatically retry creation on `ValidationException: ECS service doesn't exist` for ECS eventual consistency ([#11693](https://github.com/terraform-providers/terraform-provider-aws/issues/11693))
+* resource/aws_batch_job_definition: Properly set `container_properties` and `name` into Terraform state and perform drift detection ([#11488](https://github.com/terraform-providers/terraform-provider-aws/issues/11488))
+* resource/aws_cloudformation_stack_set: Wait for update operation completion (default timeout of 30 minutes) and report any errors ([#11726](https://github.com/terraform-providers/terraform-provider-aws/issues/11726))
+* resource/aws_cloudwatch_log_stream: Prevent state removal of resource immediately after creation due to eventual consistency ([#11617](https://github.com/terraform-providers/terraform-provider-aws/issues/11617))
+* resource/aws_codedeploy_deployment_group: Fixes unexpected behaviour when removing block attributes ([#11648](https://github.com/terraform-providers/terraform-provider-aws/issues/11648))
+* resource/aws_default_security_group: Ensure `description` attribute is written into Terraform state ([#11650](https://github.com/terraform-providers/terraform-provider-aws/issues/11650))
+* resource/aws_dynamodb_table: Skip `ResourceNotFoundException` error during deletion ([#11692](https://github.com/terraform-providers/terraform-provider-aws/issues/11692))
+* resource/aws_ec2_client_vpn_endpoint: Ensure `dns_servers` attribute is refreshed in Terraform state ([#11889](https://github.com/terraform-providers/terraform-provider-aws/issues/11889))
+* resource/aws_ecs_cluster: Delay check of ECS Cluster status during creation for ECS eventual consistency ([#11701](https://github.com/terraform-providers/terraform-provider-aws/issues/11701))
+* resource/aws_kinesis_firehose_delivery_stream: Allow processors to be cleared from extended S3 configuration ([#11649](https://github.com/terraform-providers/terraform-provider-aws/issues/11649))
+* resource/aws_network_acl_rule: Trigger resource recreation instead of error when same number rule (but opposite ingress/egress) is removed ([#11544](https://github.com/terraform-providers/terraform-provider-aws/issues/11544))
+* resource/aws_placement_group: Additional handling for creation and deletion eventual consistency ([#11671](https://github.com/terraform-providers/terraform-provider-aws/issues/11671))
+* resource/aws_s3_bucket: Retry read after creation for 404 status code and prevent 2 minute delay for triggering recreation on existing resources deleted outside Terraform ([#11894](https://github.com/terraform-providers/terraform-provider-aws/issues/11894))
+
+## 2.47.0 (January 30, 2020)
+
+NOTES:
+
+* resource/aws_efs_file_system: Tagging API calls have been refactored to the AWS standardized `TagResource` and `UntagResource` API calls (from `CreateTags` and `DeleteTags` respectively). Restrictive IAM Policies for Terraform execution may require updates. ([#11654](https://github.com/terraform-providers/terraform-provider-aws/issues/11654))
+
+ENHANCEMENTS:
+
+* data-source/aws_api_gateway_vpc_link: Add `description`, `status`, `status_message`, `tags`, and `target_arns` attributes ([#10822](https://github.com/terraform-providers/terraform-provider-aws/issues/10822))
+* data-source/aws_dynamodb_table: Add `server_side_encryption` `kms_key_arn` attribute ([#11081](https://github.com/terraform-providers/terraform-provider-aws/issues/11081))
+* data-source/aws_efs_file_system: Add `lifecycle_policy`, `provisioned_throughput_in_mibps`, and `throughput_mode` attributes ([#11647](https://github.com/terraform-providers/terraform-provider-aws/issues/11647))
+* data-source/aws_kms_key: Add `customer_master_key_spec` attribute ([#11062](https://github.com/terraform-providers/terraform-provider-aws/issues/11062))
+* resource/aws_dynamodb_table: Add `server_side_encryption` configuration block `kms_key_arn` argument (support customer managed CMKs for server-side encryption) ([#11081](https://github.com/terraform-providers/terraform-provider-aws/issues/11081))
+* resource/aws_dynamodb_table: Support in-place updates for `server_side_encryption` configurations ([#11081](https://github.com/terraform-providers/terraform-provider-aws/issues/11081))
+* resource/aws_elasticsearch_domain: Add `domain_endpoint_options` configuration block (support enforcing HTTPS) ([#10430](https://github.com/terraform-providers/terraform-provider-aws/issues/10430))
+* resource/aws_gamelift_fleet: Add `fleet_type` argument (support Spot Fleets) ([#8234](https://github.com/terraform-providers/terraform-provider-aws/issues/8234))
+* resource/aws_kms_key: Add `customer_master_key_spec` argument and plan-time validation support for `key_usage` value `SIGN_VERIFY` (support asymmetric keys) ([#11062](https://github.com/terraform-providers/terraform-provider-aws/issues/11062))
+* resource/aws_sagemaker_notebook_instance: Add `direct_internet_access` argument ([#8618](https://github.com/terraform-providers/terraform-provider-aws/issues/8618))
+* resource/aws_ssm_activation: Add `automation_target_parameter_name` argument ([#11755](https://github.com/terraform-providers/terraform-provider-aws/issues/11755))
+* resource/aws_ssm_document: Add `target_type` argument ([#11479](https://github.com/terraform-providers/terraform-provider-aws/issues/11479))
+* resource/aws_ssm_maintenance_window: Add `description` argument ([#11478](https://github.com/terraform-providers/terraform-provider-aws/issues/11478))
+* resource/aws_storagegateway_gateway: Add `cloudwatch_log_group_arn` argument ([#10939](https://github.com/terraform-providers/terraform-provider-aws/issues/10939))
+
+BUG FIXES:
+
+* data-source/aws_api_gateway_rest_api: Fixes `root_resource_id` not being set on correctly when REST API contains more than 25 resources ([#11705](https://github.com/terraform-providers/terraform-provider-aws/issues/11705))
+* resource/aws_cloudwatch_log_subscription_filter: Perform eventual consistency retries on update ([#11739](https://github.com/terraform-providers/terraform-provider-aws/issues/11739))
+* resource/aws_cognito_user_pool: Deprecate `unused_account_validity_days` argument and add support for `temporary_password_validity_days` argument ([#10890](https://github.com/terraform-providers/terraform-provider-aws/issues/10890))
+* resource/aws_elasticsearch_domain: Automatically retry resource creation on additional error messages relating to eventual consistency ([#11663](https://github.com/terraform-providers/terraform-provider-aws/issues/11663))
+* resource/aws_elasticsearch_domain: Ensure in-place version upgrade is fully successful before returning ([#11793](https://github.com/terraform-providers/terraform-provider-aws/issues/11793))
+* resource/aws_emr_instance_group: Wait for `RUNNING` status on creation ([#11688](https://github.com/terraform-providers/terraform-provider-aws/issues/11688))
+* resource/aws_ssm_activation: Properly trigger resource recreation when deleted outside Terraform ([#11658](https://github.com/terraform-providers/terraform-provider-aws/issues/11658))
+* resource/aws_ssm_parameter: Prevent `KeyId` error when switching `type` value from `SecureString` to `String` ([#10819](https://github.com/terraform-providers/terraform-provider-aws/issues/10819))
+* service/efs: Generate proper `dns_name` attribute hostname suffix in AWS China, AWS C2S, and AWS SC2S partitions ([#11746](https://github.com/terraform-providers/terraform-provider-aws/issues/11746))
 
 ## 2.46.0 (January 23, 2020)
 
