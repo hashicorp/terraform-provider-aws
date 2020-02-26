@@ -1392,6 +1392,19 @@ func flattenESSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []
 	return []map[string]interface{}{m}
 }
 
+func flattenAdvancedSecurityOptions(advancedSecurityOptions *elasticsearch.AdvancedSecurityOptions) []map[string]interface{} {
+	if advancedSecurityOptions == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enabled":                        *advancedSecurityOptions.Enabled,
+		"internal_user_database_enabled": *advancedSecurityOptions.InternalUserDatabaseEnabled,
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenESEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
