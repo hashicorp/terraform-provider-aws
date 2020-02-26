@@ -1,5 +1,5 @@
 ---
-subcategory: "SFN"
+subcategory: "Step Function (SFN)"
 layout: "aws"
 page_title: "AWS: aws_sfn_activity"
 description: |-
