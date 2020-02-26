@@ -1669,6 +1669,38 @@ func TestAccAWSLambdaFunction_runtimeValidation_ruby25(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_runtimeValidation_ruby27(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rString := acctest.RandString(8)
+	resourceName := "aws_lambda_function.test"
+	funcName := fmt.Sprintf("tf_acc_lambda_func_runtime_valid_r27_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_runtime_valid_r27_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_r27_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_r27_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigRuby27Runtime(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "runtime", lambda.RuntimeRuby27),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+		},
+	})
+}
+
 func testAccCheckLambdaFunctionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
 
@@ -2724,6 +2756,18 @@ resource "aws_lambda_function" "test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "ruby2.5"
+}
+`, funcName)
+}
+
+func testAccAWSLambdaConfigRuby27Runtime(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "ruby2.7"
 }
 `, funcName)
 }
