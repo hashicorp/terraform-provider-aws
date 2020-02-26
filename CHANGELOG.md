@@ -11,6 +11,12 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_dx_hosted_private_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_dx_hosted_public_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_dx_hosted_transit_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_dx_private_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_dx_public_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
+* resource/aws_dx_transit_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
 * resource/aws_glub_job: Add `notification_property` configuration block [GH-12115]
 * resource/aws_lambda_event_source_mapping: Add `bisect_batch_on_function_error`, `maximum_record_age_in_seconds`, `maximum_retry_attempts`, and `parallelization_factor` arguments [GH-11100]
 * resource/aws_lambda_event_source_mapping: Add `destination_config` configuration block [GH-11100]
