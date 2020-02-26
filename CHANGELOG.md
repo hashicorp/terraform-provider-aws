@@ -11,6 +11,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_lambda_layer_version: Support plan-time validation for `compatible_runtime` argument `ruby2.7` value [GH-12116]
 * resource/aws_dx_hosted_private_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
 * resource/aws_dx_hosted_public_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
 * resource/aws_dx_hosted_transit_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
@@ -20,6 +21,8 @@ ENHANCEMENTS:
 * resource/aws_glub_job: Add `notification_property` configuration block [GH-12115]
 * resource/aws_lambda_event_source_mapping: Add `bisect_batch_on_function_error`, `maximum_record_age_in_seconds`, `maximum_retry_attempts`, and `parallelization_factor` arguments [GH-11100]
 * resource/aws_lambda_event_source_mapping: Add `destination_config` configuration block [GH-11100]
+* resource/aws_lambda_function: Support plan-time validation for `runtime` argument `ruby2.7` value [GH-12116]
+* resource/aws_lambda_layer_version: Support plan-time validation for `compatible_runtimes` argument `ruby2.7` value [GH-12116]
 * resource/aws_msk_cluster: Support in-place updates to `enhanced_monitoring` and `number_of_broker_nodes` arguments [GH-11451]
 * resource/aws_msk_cluster: Add `open_monitoring` configuration block (support Prometheus monitoring configuration) [GH-11451]
 
