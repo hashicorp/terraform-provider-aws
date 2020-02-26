@@ -39,5 +39,8 @@ data "aws_secretsmanager_secret" "by-name" {
 * `description` - A description of the secret.
 * `kms_key_id` - The Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.
 * `id` - The Amazon Resource Name (ARN) of the secret.
+* `rotation_enabled` - Whether rotation is enabled or not.
+* `rotation_lambda_arn` - Rotation Lambda function Amazon Resource Name (ARN) if rotation is enabled.
+* `rotation_rules` - Rotation rules if rotation is enabled.
 * `tags` - Tags of the secret.
 * `policy` - The resource-based policy document that's attached to the secret.

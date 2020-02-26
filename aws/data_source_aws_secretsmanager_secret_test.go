@@ -106,6 +106,9 @@ func testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName 
 			"kms_key_id",
 			"name",
 			"policy",
+			"rotation_enabled",
+			"rotation_lambda_arn",
+			"rotation_rules.#",
 			"tags.#",
 		}
 

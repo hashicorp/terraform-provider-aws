@@ -40,6 +40,26 @@ func dataSourceAwsSecretsManagerSecret() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"rotation_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"rotation_lambda_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"rotation_rules": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"automatically_after_days": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"tags": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -87,6 +107,8 @@ func dataSourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interfac
 	d.Set("description", output.Description)
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("name", output.Name)
+	d.Set("rotation_enabled", output.RotationEnabled)
+	d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 	d.Set("policy", "")
 
 	pIn := &secretsmanager.GetResourcePolicyInput{
