@@ -37,7 +37,7 @@ func TestAccAwsEc2AuthorizeClientVpnIngress_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders, 
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2RevokeClientVpnIngress,
 		Steps: []resource.TestStep{
 			{
@@ -86,9 +86,9 @@ func testAccCheckAwsEc2AuthorizeClientVpnIngressDisappears(authorizationRule *ec
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 		req := &ec2.RevokeClientVpnIngressInput{
-			ClientVpnEndpointId:  authorizationRule.ClientVpnEndpointId,
-			TargetNetworkCidr: authorizationRule.DestinationCidr,
-		} 
+			ClientVpnEndpointId: authorizationRule.ClientVpnEndpointId,
+			TargetNetworkCidr:   authorizationRule.DestinationCidr,
+		}
 		_, err := conn.RevokeClientVpnIngress(req)
 		if err != nil {
 			return err

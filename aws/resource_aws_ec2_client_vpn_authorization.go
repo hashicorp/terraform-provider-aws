@@ -35,13 +35,13 @@ func resourceAwsEc2ClientVpnAuthorization() *schema.Resource {
 			"authorize_all_groups": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default: true,
+				Default:  true,
 				ForceNew: true,
 			},
 			"access_group_id": {
-				Type:  schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validateAccessGroupId,
 			},
 		},
@@ -51,11 +51,11 @@ func resourceAwsEc2ClientVpnAuthorization() *schema.Resource {
 func resourceAwsEc2AuthorizeClientVpnIngress(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	var err error
-	
+
 	req := &ec2.AuthorizeClientVpnIngressInput{
-		ClientVpnEndpointId:  aws.String(d.Get("client_vpn_endpoint_id").(string)),
-		TargetNetworkCidr:    aws.String(d.Get("target_network_cidr").(string)),
-		Description:          aws.String(d.Get("description").(string)),
+		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
+		TargetNetworkCidr:   aws.String(d.Get("target_network_cidr").(string)),
+		Description:         aws.String(d.Get("description").(string)),
 	}
 
 	if v, ok := d.GetOk("access_group_id"); ok {
@@ -90,13 +90,13 @@ func resourceAwsEc2AuthorizeClientVpnIngress(d *schema.ResourceData, meta interf
 func resourceAwsEc2ReadClientVpnIngress(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	filter := &ec2.Filter {
+	filter := &ec2.Filter{
 		Name:   aws.String("destination-cidr"),
 		Values: []*string{aws.String(d.Get("target_network_cidr").(string))},
 	}
 	req := &ec2.DescribeClientVpnAuthorizationRulesInput{
 		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
-		Filters: []*ec2.Filter{filter},
+		Filters:             []*ec2.Filter{filter},
 	}
 
 	result, err := conn.DescribeClientVpnAuthorizationRules(req)
@@ -118,8 +118,8 @@ func resourceAwsEc2RevokeClientVpnIngress(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.RevokeClientVpnIngressInput{
-		ClientVpnEndpointId:  aws.String(d.Get("client_vpn_endpoint_id").(string)),
-		TargetNetworkCidr:    aws.String(d.Get("target_network_cidr").(string)),
+		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
+		TargetNetworkCidr:   aws.String(d.Get("target_network_cidr").(string)),
 	}
 
 	if v, ok := d.GetOk("access_group_id"); ok {
@@ -150,13 +150,13 @@ func resourceAwsEc2RevokeClientVpnIngress(d *schema.ResourceData, meta interface
 
 func clientVpnAuthorizationRefreshFunc(conn *ec2.EC2, cidrBlock string, cvepID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		filter := &ec2.Filter {
+		filter := &ec2.Filter{
 			Name:   aws.String("destination-cidr"),
 			Values: []*string{aws.String(cidrBlock)},
 		}
 		req := &ec2.DescribeClientVpnAuthorizationRulesInput{
 			ClientVpnEndpointId: aws.String(cvepID),
-			Filters: []*ec2.Filter{filter},
+			Filters:             []*ec2.Filter{filter},
 		}
 
 		resp, err := conn.DescribeClientVpnAuthorizationRules(req)
