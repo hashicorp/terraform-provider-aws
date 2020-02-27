@@ -67,35 +67,39 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Computed: true,
 			},
 			"advanced_security_options": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
+							ForceNew: true,
 						},
 						"internal_user_database_enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
+							ForceNew: true,
 						},
 						"master_user_options": {
-							Type:     schema.TypeMap,
-							Optional: true,
+							Type:     schema.TypeList,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"master_user_arn": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"master_user_name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"master_user_password": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -423,7 +427,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.(map[string]interface{}))
+		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("ebs_options"); ok {

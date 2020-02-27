@@ -1213,22 +1213,21 @@ func expandTxtEntry(s string) string {
 	return s
 }
 
-func expandAdvancedSecurityOptions(m map[string]interface{}) *elasticsearch.AdvancedSecurityOptionsInput {
+func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecurityOptionsInput {
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
+	group := m[0].(map[string]interface{})
 
-	if v, ok := m["enabled"]; ok {
-		isEnabled := v.(bool)
-		config.Enabled = aws.Bool(isEnabled)
+	if v, ok := group["enabled"].(bool); ok {
+		config.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := m["internal_user_database_enabled"]; ok {
-		isDBEnabled := v.(bool)
-		config.InternalUserDatabaseEnabled = aws.Bool(isDBEnabled)
+	if v, ok := group["internal_user_database_enabled"].(bool); ok {
+		config.InternalUserDatabaseEnabled = aws.Bool(v)
 	}
 
-	if v, ok := m["master_user_options"]; ok {
+	if v, ok := group["master_user_options"].([]map[string]string); ok {
 		muo := elasticsearch.MasterUserOptions{}
-		masterUserOptions := v.(map[string]string)
+		masterUserOptions := v[0]
 
 		if v, ok := masterUserOptions["master_user_arn"]; ok {
 			muo.MasterUserARN = aws.String(v)
