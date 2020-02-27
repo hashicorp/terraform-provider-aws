@@ -124,6 +124,11 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"admin_user_list": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -146,6 +151,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                 aws.String(d.Get("role_arn").(string)),
 		ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
+		AdminUserList:        expandStringSet(d.Get("admin_user_list").(*schema.Set)),
 		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
 	}
 
@@ -228,6 +234,10 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error setting valid_user_list: %s", err)
 	}
 
+	if err := d.Set("admin_user_list", schema.NewSet(schema.HashString, flattenStringList(fileshare.AdminUserList))); err != nil {
+		return fmt.Errorf("error setting admin_user_list: %s", err)
+	}
+
 	tags, err := keyvaluetags.StoragegatewayListTags(conn, *arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", *arn, err)
@@ -259,6 +269,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 		ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 		ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
+		AdminUserList:        expandStringSet(d.Get("admin_user_list").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
