@@ -54,7 +54,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 
 			"service_role_arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 
 			"targets": {
@@ -680,9 +680,12 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 		MaxConcurrency: aws.String(d.Get("max_concurrency").(string)),
 		MaxErrors:      aws.String(d.Get("max_errors").(string)),
 		TaskType:       aws.String(d.Get("task_type").(string)),
-		ServiceRoleArn: aws.String(d.Get("service_role_arn").(string)),
 		TaskArn:        aws.String(d.Get("task_arn").(string)),
 		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("service_role_arn"); ok {
+		params.ServiceRoleArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -781,10 +784,13 @@ func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta inte
 		WindowTaskId:   aws.String(d.Id()),
 		MaxConcurrency: aws.String(d.Get("max_concurrency").(string)),
 		MaxErrors:      aws.String(d.Get("max_errors").(string)),
-		ServiceRoleArn: aws.String(d.Get("service_role_arn").(string)),
 		TaskArn:        aws.String(d.Get("task_arn").(string)),
 		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
 		Replace:        aws.Bool(true),
+	}
+
+	if v, ok := d.GetOk("service_role_arn"); ok {
+		params.ServiceRoleArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("name"); ok {

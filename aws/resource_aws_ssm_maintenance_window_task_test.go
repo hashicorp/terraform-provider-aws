@@ -52,6 +52,27 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMMaintenanceWindowTask_noRole(t *testing.T) {
+	var task ssm.MaintenanceWindowTask
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_maintenance_window_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskNoRoleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
 	name := acctest.RandString(10)
@@ -378,45 +399,49 @@ resource "aws_ssm_maintenance_window_target" "test" {
     values = ["tf-acc-test"]
   }
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-  assume_role_policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-                "Service": "events.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
-    ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = "${aws_iam_role.test.name}"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "ssm:*",
-    "Resource": "*"
-  }
-}
-POLICY
-}
 `, rName)
 }
 
+func testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName string) string {
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+resource "aws_iam_role" "test" {
+    name = %[1]q
+    assume_role_policy = <<POLICY
+{
+      "Version": "2012-10-17",
+      "Statement": [
+          {
+              "Action": "sts:AssumeRole",
+              "Principal": {
+                  "Service": "events.amazonaws.com"
+              },
+              "Effect": "Allow",
+              "Sid": ""
+          }
+      ]
+}
+POLICY
+}
+  
+resource "aws_iam_role_policy" "test" {
+    name = %[1]q
+    role = "${aws_iam_role.test.name}"
+    policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": {
+      "Effect": "Allow",
+      "Action": "ssm:*",
+      "Resource": "*"
+    }
+}
+POLICY
+}
+  `, rName)
+}
+
 func testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName string) string {
-	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName) + `
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id   = "${aws_ssm_maintenance_window.test.id}"
@@ -442,7 +467,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(rName, description, taskType, taskArn string, priority, maxConcurrency, maxErrors int) string {
-	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id   = "${aws_ssm_maintenance_window.test.id}"
@@ -505,7 +530,7 @@ EOF
 }
 
 func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(rName string) string {
-	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName) + `
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id   = "${aws_ssm_maintenance_window.test.id}"
@@ -533,7 +558,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskConfigEmptyNotifcationConfig(rName string) string {
-	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName) + `
 
 resource "aws_ssm_maintenance_window_task" "test" {
     window_id = "${aws_ssm_maintenance_window.test.id}"
@@ -561,8 +586,33 @@ resource "aws_ssm_maintenance_window_task" "test" {
 `)
 }
 
+func testAccAWSSSMMaintenanceWindowTaskNoRoleConfig(rName string) string {
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
+  resource "aws_ssm_maintenance_window_task" "test" {
+    window_id   = "${aws_ssm_maintenance_window.test.id}"
+    task_type   = "RUN_COMMAND"
+    task_arn    = "AWS-RunShellScript"
+    priority    = 1
+    max_concurrency  = "2"
+    max_errors  = "1"
+    name      = "TestMaintenanceWindowTask"
+    description    = "This resource is for test purpose only"  
+  
+    targets {
+      key    = "WindowTargetIds"
+      values = ["${aws_ssm_maintenance_window_target.test.id}"]
+    }
+  
+    task_parameters {
+      name   = "commands"
+      values = ["pwd"]
+    }
+  }  
+  `)
+}
+
 func testAccAWSSSMMaintenanceWindowTaskAutomationConfig(rName, version string) string {
-	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
@@ -595,7 +645,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskAutomationConfigUpdate(rName, version string) string {
-	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName)+`
 resource "aws_s3_bucket" "foo" {
     bucket = "tf-s3-%[1]s"
     acl = "private"
@@ -633,7 +683,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
 func testAccAWSSSMMaintenanceWindowTaskLambdaConfig(funcName, policyName, roleName, sgName, rName string, rInt int) string {
 	return fmt.Sprintf(testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName)+
-		testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+		testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
@@ -664,7 +714,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskRunCommandConfig(rName, comment string, timeoutSeconds int) string {
-	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
@@ -697,7 +747,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(rName, comment string, timeoutSeconds int) string {
-	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName)+`
 resource "aws_s3_bucket" "foo" {
     bucket = "tf-s3-%[1]s"
     acl = "private"
@@ -738,7 +788,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskStepFunctionConfig(rName string) string {
-	return testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + fmt.Sprintf(`
+	return testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName) + fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
   name = %[1]q
 }
@@ -770,59 +820,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskConfigTaskParametersMultiple(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_maintenance_window" "test" {
-  cutoff   = 1
-  duration = 3
-  name     = %[1]q
-  schedule = "cron(0 16 ? * TUE *)"
-}
-
-resource "aws_ssm_maintenance_window_target" "test" {
-  name          = %[1]q
-  resource_type = "INSTANCE"
-  window_id     = "${aws_ssm_maintenance_window.test.id}"
-
-  targets {
-    key    = "tag:Name"
-    values = ["tf-acc-test"]
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-  assume_role_policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-                "Service": "events.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
-    ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = "${aws_iam_role.test.name}"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "ssm:*",
-    "Resource": "*"
-  }
-}
-POLICY
-}
-
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBaseIAM(rName) + `
 resource "aws_ssm_maintenance_window_task" "test" {
   max_concurrency  = 1
   max_errors       = 1
@@ -852,5 +850,5 @@ resource "aws_ssm_maintenance_window_task" "test" {
     values = ["date"]
   }
 }
-`, rName)
+`)
 }

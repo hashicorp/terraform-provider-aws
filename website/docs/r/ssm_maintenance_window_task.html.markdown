@@ -19,7 +19,6 @@ resource "aws_ssm_maintenance_window_task" "example" {
   max_concurrency  = 2
   max_errors       = 1
   priority         = 1
-  service_role_arn = "${aws_iam_role.example.arn}"
   task_arn         = "AWS-RestartEC2Instance"
   task_type        = "AUTOMATION"
   window_id        = "${aws_ssm_maintenance_window.example.id}"
@@ -49,7 +48,6 @@ resource "aws_ssm_maintenance_window_task" "example" {
   max_concurrency  = 2
   max_errors       = 1
   priority         = 1
-  service_role_arn = "${aws_iam_role.example.arn}"
   task_arn         = "${aws_lambda_function.example.arn}"
   task_type        = "LAMBDA"
   window_id        = "${aws_ssm_maintenance_window.example.id}"
@@ -75,7 +73,6 @@ resource "aws_ssm_maintenance_window_task" "example" {
   max_concurrency  = 2
   max_errors       = 1
   priority         = 1
-  service_role_arn = "${aws_iam_role.example.arn}"
   task_arn         = "AWS-RunShellScript"
   task_type        = "RUN_COMMAND"
   window_id        = "${aws_ssm_maintenance_window.example.id}"
@@ -114,7 +111,6 @@ resource "aws_ssm_maintenance_window_task" "example" {
   max_concurrency  = 2
   max_errors       = 1
   priority         = 1
-  service_role_arn = "${aws_iam_role.example.arn}"
   task_arn         = "${aws_sfn_activity.example.id}"
   task_type        = "STEP_FUNCTIONS"
   window_id        = "${aws_ssm_maintenance_window.example.id}"
@@ -142,7 +138,7 @@ The following arguments are supported:
 * `max_errors` - (Required) The maximum number of errors allowed before this task stops being scheduled.
 * `task_type` - (Required) The type of task being registered. The only allowed value is `RUN_COMMAND`.
 * `task_arn` - (Required) The ARN of the task to execute.
-* `service_role_arn` - (Required) The role that should be assumed when executing the task.
+* `service_role_arn` - (Optional) The role that should be assumed when executing the task. If a role is not provided, Systems Manager uses your account's service-linked role. If no service-linked role for Systems Manager exists in your account, it is created for you.
 * `name` - (Optional) The name of the maintenance window task.
 * `description` - (Optional) The description of the maintenance window task.
 * `targets` - (Required) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
