@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 * `ip_addresses` - A list of IP addresses in the IP address set.
 * `ip_family` - The types of IP addresses included in this IP set.
 
-[1]: http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html
+[1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html
 
 ## Import
 
