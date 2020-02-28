@@ -407,10 +407,6 @@ boot an example EMR Cluster. It is not meant to display best practices. Please
 use at your own risk.
 
 ```hcl
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_emr_cluster" "cluster" {
   name          = "emr-test-arn"
   release_label = "emr-4.6.0"
@@ -478,13 +474,10 @@ resource "aws_security_group" "allow_access" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    # these ports should be locked down
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-
-    # we do not recommend opening your cluster to 0.0.0.0/0
-    cidr_blocks = # add your IP address here
+    cidr_blocks = aws_vpc.main.cidr_block
   }
 
   egress {
