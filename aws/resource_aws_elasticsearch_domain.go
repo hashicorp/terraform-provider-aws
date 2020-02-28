@@ -69,17 +69,20 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			"advanced_security_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
 							ForceNew: true,
+							Default:  false,
 						},
 						"internal_user_database_enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
 							ForceNew: true,
+							Default:  false,
 						},
 						"master_user_options": {
 							Type:     schema.TypeList,
@@ -674,6 +677,10 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 	err = d.Set("node_to_node_encryption", flattenESNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions))
+	if err != nil {
+		return err
+	}
+	err = d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions))
 	if err != nil {
 		return err
 	}

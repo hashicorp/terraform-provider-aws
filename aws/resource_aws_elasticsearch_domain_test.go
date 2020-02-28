@@ -418,6 +418,62 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_UserDB(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_AdvancedSecurityOptions(ri, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(true, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_IAM(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_AdvancedSecurityOptions(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(true, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
@@ -870,6 +926,16 @@ func testAccCheckESNodetoNodeEncrypted(encrypted bool, status *elasticsearch.Ela
 		options := status.NodeToNodeEncryptionOptions
 		if aws.BoolValue(options.Enabled) != encrypted {
 			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.BoolValue(options.Enabled), encrypted)
+		}
+		return nil
+	}
+}
+
+func testAccCheckAdvancedSecurityOptions(enabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.AdvancedSecurityOptions
+		if *conf.Enabled != enabled {
+			return fmt.Errorf("Advanced security options not set properly. Given: %t, Expected: %t", *conf.Enabled, enabled)
 		}
 		return nil
 	}
@@ -1590,6 +1656,70 @@ resource "aws_elasticsearch_domain" "test" {
   }
 }
 `, randInt)
+}
+
+func testAccESDomainConfig_AdvancedSecurityOptions(randInt int, userDb bool) string {
+	var user string
+	var options string
+
+	if userDb {
+		user = ""
+		options = `
+advanced_security_options {
+	enabled = true
+	internal_user_database_enabled = true
+	master_user_options {
+		master_user_name = "testmasteruser"
+		master_user_password = "Barbarbarbar1!"
+	}
+}`
+	} else {
+		user = fmt.Sprintf(`
+resource "aws_iam_user" "es_master_user" {
+	name = "esmasteruser%d"
+}`, randInt)
+		options = `
+advanced_security_options {
+	enabled = true
+	internal_user_database_enabled = false
+	master_user_options {
+		master_user_arn = "${aws_iam_user.es_master_user.arn}"
+	}
+}`
+	}
+
+	return fmt.Sprintf(`
+%s
+
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = "tf-test-%d"
+  elasticsearch_version = "7.1"
+
+  cluster_config {
+    instance_type = "r5.large.elasticsearch"
+  }
+
+	%s
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, user, randInt, options)
 }
 
 func testAccESDomainConfig_LogPublishingOptions(randInt int) string {

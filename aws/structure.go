@@ -1225,23 +1225,31 @@ func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecur
 		config.InternalUserDatabaseEnabled = aws.Bool(v)
 	}
 
-	if v, ok := group["master_user_options"].([]map[string]string); ok {
-		muo := elasticsearch.MasterUserOptions{}
-		masterUserOptions := v[0]
+	if v, ok := group["master_user_options"].([]interface{}); ok {
+		if v[0] != nil {
+			muo := elasticsearch.MasterUserOptions{}
+			masterUserOptions := v[0].(map[string]interface{})
 
-		if v, ok := masterUserOptions["master_user_arn"]; ok {
-			muo.MasterUserARN = aws.String(v)
+			if v, ok := masterUserOptions["master_user_arn"].(string); ok {
+				if v != "" {
+					muo.MasterUserARN = aws.String(v)
+				}
+			}
+
+			if v, ok := masterUserOptions["master_user_name"].(string); ok {
+				if v != "" {
+					muo.MasterUserName = aws.String(v)
+				}
+			}
+
+			if v, ok := masterUserOptions["master_user_password"].(string); ok {
+				if v != "" {
+					muo.MasterUserPassword = aws.String(v)
+				}
+			}
+
+			config.SetMasterUserOptions(&muo)
 		}
-
-		if v, ok := masterUserOptions["master_user_name"]; ok {
-			muo.MasterUserName = aws.String(v)
-		}
-
-		if v, ok := masterUserOptions["master_user_password"]; ok {
-			muo.MasterUserPassword = aws.String(v)
-		}
-
-		config.SetMasterUserOptions(&muo)
 	}
 
 	return &config
