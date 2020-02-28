@@ -40,12 +40,7 @@ resource "aws_elasticsearch_domain" "test" {
             "AWS": "*"
           },
           "Action": "es:*",
-          "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*",
-          "Condition": {
-            "IpAddress": {
-              "aws:SourceIp": "127.0.0.1"
-            }
-          }
+          "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"
         }
     ]
 }
