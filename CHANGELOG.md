@@ -1,4 +1,9 @@
 ## 2.52.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_globalaccelerator_accelerator: Add `dns_name` and `hosted_zone_id` attributes [GH-11670]
+
 ## 2.51.0 (February 28, 2020)
 
 FEATURES:
