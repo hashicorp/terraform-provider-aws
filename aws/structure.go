@@ -1447,6 +1447,23 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *elasticsearch.Advan
 	return []map[string]interface{}{m}
 }
 
+// func flattenAdvancedSecurityOptionsInput(advancedSecurityOptions *elasticsearch.AdvancedSecurityOptionsInput) []map[string]interface{} {
+// 	if advancedSecurityOptions == nil {
+// 		return []map[string]interface{}{}
+// 	}
+//
+// 	m := map[string]interface{}{
+// 		"enabled":                        *advancedSecurityOptions.Enabled,
+// 		"internal_user_database_enabled": *advancedSecurityOptions.InternalUserDatabaseEnabled,
+// 	}
+//
+// 	if advancedSecurityOptions.MasterUserOptions != nil {
+// 		m["master_user_options"] = *advancedSecurityOptions.MasterUserOptions
+// 	}
+//
+// 	return []map[string]interface{}{m}
+// }
+
 func flattenESEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 

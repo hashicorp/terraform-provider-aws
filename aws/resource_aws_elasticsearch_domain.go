@@ -76,33 +76,28 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 							ForceNew: true,
-							Default:  false,
 						},
 						"internal_user_database_enabled": {
 							Type:     schema.TypeBool,
-							Required: true,
-							ForceNew: true,
-							Default:  false,
+							Optional: true,
 						},
 						"master_user_options": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"master_user_arn": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"master_user_name": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"master_user_password": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
+										Type:      schema.TypeString,
+										Optional:  true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -680,9 +675,12 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	err = d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions))
-	if err != nil {
-		return err
+
+	if len(d.Get("advanced_security_options").([]interface{})) == 0 {
+		err = d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions))
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("snapshot_options", flattenESSnapshotOptions(ds.SnapshotOptions)); err != nil {
@@ -767,6 +765,10 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("advanced_options") {
 		input.AdvancedOptions = stringMapToPointers(d.Get("advanced_options").(map[string]interface{}))
+	}
+
+	if d.HasChange("advanced_security_options") {
+		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
 	}
 
 	if d.HasChange("domain_endpoint_options") {

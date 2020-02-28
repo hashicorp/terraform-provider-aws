@@ -433,7 +433,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_UserDB(t *testing.T) 
 				Config: testAccESDomainConfig_AdvancedSecurityOptions(ri, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
-					testAccCheckAdvancedSecurityOptions(true, &domain),
+					testAccCheckAdvancedSecurityOptions(true, true, &domain),
 				),
 			},
 			{
@@ -441,6 +441,10 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_UserDB(t *testing.T) 
 				ImportState:       true,
 				ImportStateId:     resourceId,
 				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options.0.master_user_options",
+				},
 			},
 		},
 	})
@@ -461,7 +465,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_IAM(t *testing.T) {
 				Config: testAccESDomainConfig_AdvancedSecurityOptions(ri, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
-					testAccCheckAdvancedSecurityOptions(true, &domain),
+					testAccCheckAdvancedSecurityOptions(true, false, &domain),
 				),
 			},
 			{
@@ -469,6 +473,10 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_IAM(t *testing.T) {
 				ImportState:       true,
 				ImportStateId:     resourceId,
 				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options.0.master_user_options",
+				},
 			},
 		},
 	})
@@ -931,12 +939,26 @@ func testAccCheckESNodetoNodeEncrypted(encrypted bool, status *elasticsearch.Ela
 	}
 }
 
-func testAccCheckAdvancedSecurityOptions(enabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.AdvancedSecurityOptions
+
 		if *conf.Enabled != enabled {
-			return fmt.Errorf("Advanced security options not set properly. Given: %t, Expected: %t", *conf.Enabled, enabled)
+			return fmt.Errorf(
+				"AdvancedSecurityOptions.Enabled not set properly. Given: %t, Expected: %t",
+				*conf.Enabled,
+				enabled,
+			)
 		}
+
+		if *conf.InternalUserDatabaseEnabled != userDbEnabled {
+			return fmt.Errorf(
+				"AdvancedSecurityOptions.InternalUserDatabaseEnabled not set properly. Given: %t, Expected: %t",
+				*conf.InternalUserDatabaseEnabled,
+				userDbEnabled,
+			)
+		}
+
 		return nil
 	}
 }
