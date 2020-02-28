@@ -33844,9 +33844,9 @@ func (c *EC2) RequestSpotFleetRequest(input *RequestSpotFleetInput) (req *reques
 // ensuring that the Spot Instances in your Spot Fleet are in different Spot
 // pools, you can improve the availability of your fleet.
 //
-// You can specify tags for the Spot Fleet and Spot Instances. You cannot tag
-// other resource types in a Spot Fleet request because only the spot-fleet-request
-// and instance resource types are supported.
+// You can specify tags for the Spot Fleet request and instances launched by
+// the fleet. You cannot tag other resource types in a Spot Fleet request because
+// only the spot-fleet-request and instance resource types are supported.
 //
 // For more information, see Spot Fleet Requests (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html)
 // in the Amazon EC2 User Guide for Linux Instances.
@@ -59049,7 +59049,8 @@ type DescribeInstancesInput struct {
 	//    * host-id - The ID of the Dedicated Host on which the instance is running,
 	//    if applicable.
 	//
-	//    * hypervisor - The hypervisor type of the instance (ovm | xen).
+	//    * hypervisor - The hypervisor type of the instance (ovm | xen). The value
+	//    xen is used for both Xen and Nitro hypervisors.
 	//
 	//    * iam-instance-profile.arn - The instance profile associated with the
 	//    instance. Specified as an ARN.
@@ -77978,7 +77979,8 @@ type Instance struct {
 	// Indicates whether the instance is enabled for hibernation.
 	HibernationOptions *HibernationOptions `locationName:"hibernationOptions" type:"structure"`
 
-	// The hypervisor type of the instance.
+	// The hypervisor type of the instance. The value xen is used for both Xen and
+	// Nitro hypervisors.
 	Hypervisor *string `locationName:"hypervisor" type:"string" enum:"HypervisorType"`
 
 	// The IAM instance profile associated with the instance, if applicable.
@@ -96334,10 +96336,13 @@ type RunInstancesInput struct {
 	CapacityReservationSpecification *CapacityReservationSpecification `type:"structure"`
 
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// the request. If you do not specify a client token, a randomly generated token
+	// is used for the request to ensure idempotency.
+	//
+	// For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	//
 	// Constraints: Maximum 64 ASCII characters
-	ClientToken *string `locationName:"clientToken" type:"string"`
+	ClientToken *string `locationName:"clientToken" type:"string" idempotencyToken:"true"`
 
 	// The CPU options for the instance. For more information, see Optimizing CPU
 	// Options (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html)
@@ -100057,8 +100062,11 @@ type SpotFleetRequestConfigData struct {
 	// The key-value pair for tagging the Spot Fleet request on creation. The value
 	// for ResourceType must be spot-fleet-request, otherwise the Spot Fleet request
 	// fails. To tag instances at launch, specify the tags in the launch template
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#create-launch-template).
-	// For information about tagging after launch, see Tagging Your Resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html#tag-resources).
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#create-launch-template)
+	// (valid only if you use LaunchTemplateConfigs) or in the SpotFleetTagSpecification
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html)
+	// (valid only if you use LaunchSpecifications). For information about tagging
+	// after launch, see Tagging Your Resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html#tag-resources).
 	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
 	// The number of units to request for the Spot Fleet. You can choose to set
@@ -100278,8 +100286,9 @@ func (s *SpotFleetRequestConfigData) SetValidUntil(v time.Time) *SpotFleetReques
 type SpotFleetTagSpecification struct {
 	_ struct{} `type:"structure"`
 
-	// The type of resource. Currently, the only resource types that are supported
-	// are spot-fleet-request and instance.
+	// The type of resource. Currently, the only resource type that is supported
+	// is instance. To tag the Spot Fleet request on creation, use the TagSpecifications
+	// parameter in SpotFleetRequestConfigData (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetRequestConfigData.html).
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 
 	// The tags.
