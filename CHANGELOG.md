@@ -1,35 +1,35 @@
-## 2.51.0 (Unreleased)
+## 2.51.0 (February 28, 2020)
 
 FEATURES:
 
-* **New Data Source:** `aws_sfn_activity` [GH-11080]
-* **New Data Source:** `aws_sfn_state_machine` [GH-10932]
-* **New Resource:** `aws_ec2_traffic_mirror_filter` [GH-9372]
-* **New Resource:** `aws_ec2_traffic_mirror_filter_rule` [GH-9372]
-* **New Resource:** `aws_ec2_traffic_mirror_session` [GH-9372]
-* **New Resource:** `aws_ec2_traffic_mirror_target` [GH-9372]
-* **New Resource:** `aws_s3_access_point` [GH-11276]
+* **New Data Source:** `aws_sfn_activity` ([#11080](https://github.com/terraform-providers/terraform-provider-aws/issues/11080))
+* **New Data Source:** `aws_sfn_state_machine` ([#10932](https://github.com/terraform-providers/terraform-provider-aws/issues/10932))
+* **New Resource:** `aws_ec2_traffic_mirror_filter` ([#9372](https://github.com/terraform-providers/terraform-provider-aws/issues/9372))
+* **New Resource:** `aws_ec2_traffic_mirror_filter_rule` ([#9372](https://github.com/terraform-providers/terraform-provider-aws/issues/9372))
+* **New Resource:** `aws_ec2_traffic_mirror_session` ([#9372](https://github.com/terraform-providers/terraform-provider-aws/issues/9372))
+* **New Resource:** `aws_ec2_traffic_mirror_target` ([#9372](https://github.com/terraform-providers/terraform-provider-aws/issues/9372))
+* **New Resource:** `aws_s3_access_point` ([#11276](https://github.com/terraform-providers/terraform-provider-aws/issues/11276))
 
 ENHANCEMENTS:
 
-* data-source/aws_lambda_layer_version: Support plan-time validation for `compatible_runtime` argument `ruby2.7` value [GH-12116]
-* resource/aws_dx_hosted_private_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
-* resource/aws_dx_hosted_public_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
-* resource/aws_dx_hosted_transit_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
-* resource/aws_dx_private_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
-* resource/aws_dx_public_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
-* resource/aws_dx_transit_virtual_interface: Add `amazon_side_asn` attribute [GH-11415]
-* resource/aws_glub_job: Add `notification_property` configuration block [GH-12115]
-* resource/aws_lambda_event_source_mapping: Add `bisect_batch_on_function_error`, `maximum_record_age_in_seconds`, `maximum_retry_attempts`, and `parallelization_factor` arguments [GH-11100]
-* resource/aws_lambda_event_source_mapping: Add `destination_config` configuration block [GH-11100]
-* resource/aws_lambda_function: Support plan-time validation for `runtime` argument `ruby2.7` value [GH-12116]
-* resource/aws_lambda_layer_version: Support plan-time validation for `compatible_runtimes` argument `ruby2.7` value [GH-12116]
-* resource/aws_msk_cluster: Support in-place updates to `enhanced_monitoring` and `number_of_broker_nodes` arguments [GH-11451]
-* resource/aws_msk_cluster: Add `open_monitoring` configuration block (support Prometheus monitoring configuration) [GH-11451]
+* data-source/aws_lambda_layer_version: Support plan-time validation for `compatible_runtime` argument `ruby2.7` value ([#12116](https://github.com/terraform-providers/terraform-provider-aws/issues/12116))
+* resource/aws_dx_hosted_private_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_dx_hosted_public_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_dx_hosted_transit_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_dx_private_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_dx_public_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_dx_transit_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_glub_job: Add `notification_property` configuration block ([#12115](https://github.com/terraform-providers/terraform-provider-aws/issues/12115))
+* resource/aws_lambda_event_source_mapping: Add `bisect_batch_on_function_error`, `maximum_record_age_in_seconds`, `maximum_retry_attempts`, and `parallelization_factor` arguments ([#11100](https://github.com/terraform-providers/terraform-provider-aws/issues/11100))
+* resource/aws_lambda_event_source_mapping: Add `destination_config` configuration block ([#11100](https://github.com/terraform-providers/terraform-provider-aws/issues/11100))
+* resource/aws_lambda_function: Support plan-time validation for `runtime` argument `ruby2.7` value ([#12116](https://github.com/terraform-providers/terraform-provider-aws/issues/12116))
+* resource/aws_lambda_layer_version: Support plan-time validation for `compatible_runtimes` argument `ruby2.7` value ([#12116](https://github.com/terraform-providers/terraform-provider-aws/issues/12116))
+* resource/aws_msk_cluster: Support in-place updates to `enhanced_monitoring` and `number_of_broker_nodes` arguments ([#11451](https://github.com/terraform-providers/terraform-provider-aws/issues/11451))
+* resource/aws_msk_cluster: Add `open_monitoring` configuration block (support Prometheus monitoring configuration) ([#11451](https://github.com/terraform-providers/terraform-provider-aws/issues/11451))
 
 BUG FIXES:
 
-* resource/aws_workspaces_directory: Prevent panic and remove resource from Terraform state if removed outside Terraform [GH-11837]
+* resource/aws_workspaces_directory: Prevent panic and remove resource from Terraform state if removed outside Terraform ([#11837](https://github.com/terraform-providers/terraform-provider-aws/issues/11837))
 
 ## 2.50.0 (February 20, 2020)
 
