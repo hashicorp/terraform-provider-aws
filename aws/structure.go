@@ -2496,9 +2496,9 @@ func flattenApiGatewayUsagePlanQuota(s *apigateway.QuotaSettings) []map[string]i
 	return []map[string]interface{}{settings}
 }
 
-func buildApiGatewayInvokeURL(restApiId, region, stageName string) string {
-	return fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/%s",
-		restApiId, region, stageName)
+func buildApiGatewayInvokeURL(client *AWSClient, restApiId, stageName string) string {
+	hostname := client.RegionalHostname(fmt.Sprintf("%s.execute-api", restApiId))
+	return fmt.Sprintf("https://%s/%s", hostname, stageName)
 }
 
 func expandCognitoSupportedLoginProviders(config map[string]interface{}) map[string]*string {
