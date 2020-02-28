@@ -676,6 +676,8 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
+	// Use AdvancedSecurityOptions from resource if possible
+	// because DescribeElasticsearchDomainConfig does not return MasterUserOptions
 	if len(d.Get("advanced_security_options").([]interface{})) == 0 {
 		err = d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions))
 		if err != nil {
