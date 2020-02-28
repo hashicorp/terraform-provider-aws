@@ -232,8 +232,8 @@ The following arguments are supported:
 **advanced_security_options** supports the following attributes:
 
 * `enabled` - (Required) Whether advanced security is enabled
-* `internal_user_database_enabled` - (Required) Whether the internal user database is enabled
-* `master_user_options` - (Required) Credentials for the master user: username and password, ARN, or both
+* `internal_user_database_enabled` - (Optional) Whether the internal user database is enabled
+* `master_user_options` - (Optional) Credentials for the master user: username and password, ARN, or both
 
 **master_user_options** supports the following attributes:
 
