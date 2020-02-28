@@ -233,13 +233,10 @@ The following arguments are supported:
 
 * `enabled` - (Required) Whether advanced security is enabled
 * `internal_user_database_enabled` - (Optional) Whether the internal user database is enabled
-* `master_user_options` - (Optional) Credentials for the master user: username and password, ARN, or both
-
-**master_user_options** supports the following attributes:
-
-* `master_user_arn` - (Optional) ARN for the master user (if IAM is enabled)
-* `master_user_name` - (Optional) The master user's username, which is stored in the Amazon Elasticsearch Service domain's internal database
-* `master_user_password` - (Optional) The master user's password, which is stored in the Amazon Elasticsearch Service domain's internal database
+* `master_user_options` - (Optional) Credentials for the master user: username and password, or ARN
+  * `master_user_arn` - (Optional) ARN for the master user (if IAM is enabled)
+  * `master_user_name` - (Optional) The master user's username, which is stored in the Amazon Elasticsearch Service domain's internal database
+  * `master_user_password` - (Optional) The master user's password, which is stored in the Amazon Elasticsearch Service domain's internal database
 
 **ebs_options** supports the following attributes:
 
