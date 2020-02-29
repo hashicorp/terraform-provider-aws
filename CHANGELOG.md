@@ -25,7 +25,7 @@ ENHANCEMENTS:
 * resource/aws_dx_private_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
 * resource/aws_dx_public_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
 * resource/aws_dx_transit_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
-* resource/aws_glub_job: Add `notification_property` configuration block ([#12115](https://github.com/terraform-providers/terraform-provider-aws/issues/12115))
+* resource/aws_glue_job: Add `notification_property` configuration block ([#12115](https://github.com/terraform-providers/terraform-provider-aws/issues/12115))
 * resource/aws_lambda_event_source_mapping: Add `bisect_batch_on_function_error`, `maximum_record_age_in_seconds`, `maximum_retry_attempts`, and `parallelization_factor` arguments ([#11100](https://github.com/terraform-providers/terraform-provider-aws/issues/11100))
 * resource/aws_lambda_event_source_mapping: Add `destination_config` configuration block ([#11100](https://github.com/terraform-providers/terraform-provider-aws/issues/11100))
 * resource/aws_lambda_function: Support plan-time validation for `runtime` argument `ruby2.7` value ([#12116](https://github.com/terraform-providers/terraform-provider-aws/issues/12116))
