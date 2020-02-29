@@ -10,10 +10,10 @@ import (
 	"log"
 )
 
-func resourceAwsIotThingGroup() *schema.Resource{
+func resourceAwsIotThingGroup() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsIotThingGroupCreate,
-		Read: resourceAwsIotThingGroupRead,
+		Read:   resourceAwsIotThingGroupRead,
 		Update: resourceAwsIotThingGroupUpdate,
 		Delete: resourceAwsIotThingGroupDelete,
 
@@ -37,7 +37,7 @@ func resourceAwsIotThingGroup() *schema.Resource{
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				MaxItems: 2,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attributes": {
@@ -52,9 +52,38 @@ func resourceAwsIotThingGroup() *schema.Resource{
 				},
 			},
 			"tags": tagsSchema(),
-			"default_client_id": {
-				Type:     schema.TypeString,
+			"metadata": {
+				Type:     schema.TypeList,
 				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"creation_date": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"parent_group_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"root_to_parent_groups": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"group_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"group_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"version": {
 				Type:     schema.TypeInt,
@@ -108,18 +137,27 @@ func resourceAwsIotThingGroupRead(d *schema.ResourceData, meta interface{}) erro
 		}
 		return err
 	}
-
 	log.Printf("[DEBUG] Received IoT Thing Group: %s", out)
 
 	d.Set("arn", out.ThingGroupArn)
 	d.Set("name", out.ThingGroupName)
+
 	if err := d.Set("metadata", flattenIotThingGroupMetadata(out.ThingGroupMetadata)); err != nil {
-		return fmt.Errorf("error setting metadata #{err}")
+		return fmt.Errorf("error setting metadata: %s", err)
 	}
 	if err := d.Set("properties", flattenIotThingGroupProperties(out.ThingGroupProperties)); err != nil {
-		return fmt.Errorf("error setting properties #{err}")
+		return fmt.Errorf("error setting properties: %s", err)
 	}
 	d.Set("version", out.Version)
+
+	tags, err := keyvaluetags.IotListTags(conn, *out.ThingGroupArn)
+	if err != nil {
+		return fmt.Errorf("error listing tags for Iot Thing Group (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -131,9 +169,17 @@ func resourceAwsIotThingGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		ThingGroupName: aws.String(d.Get("name").(string)),
 	}
 
-	if d.HasChange("properties") {
-		if v, ok := d.GetOk("properties"); ok {
-			input.ThingGroupProperties = expandIotThingsGroupProperties(v.([]interface{}))
+	if v, ok := d.GetOk("properties"); ok {
+		input.ThingGroupProperties = expandIotThingsGroupProperties(v.([]interface{}))
+	}
+
+	if d.HasChange("tags") {
+		oldTags, newTags := d.GetChange("tags")
+
+		if v, ok := d.GetOk("arn"); ok {
+			if err := keyvaluetags.IotUpdateTags(conn, v.(string), oldTags, newTags); err != nil {
+				return fmt.Errorf("error updating Iot Thing Group (%s) tags: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -188,8 +234,11 @@ func flattenIotThingGroupProperties(properties *iot.ThingGroupProperties) []map[
 	}
 
 	props := map[string]interface{}{
-		"attributes": aws.StringValueMap(properties.AttributePayload.Attributes),
 		"description": aws.StringValue(properties.ThingGroupDescription),
+	}
+
+	if properties.AttributePayload != nil {
+		props["attributes"] = aws.StringValueMap(properties.AttributePayload.Attributes)
 	}
 
 	return []map[string]interface{}{props}
@@ -201,8 +250,8 @@ func flattenIotThingGroupMetadata(metadata *iot.ThingGroupMetadata) []map[string
 	}
 
 	meta := map[string]interface{}{
-		"creation_date": aws.TimeValue(metadata.CreationDate),
-		"parent_group_name": aws.StringValue(metadata.ParentGroupName),
+		"creation_date":         aws.TimeValue(metadata.CreationDate).Unix(),
+		"parent_group_name":     aws.StringValue(metadata.ParentGroupName),
 		"root_to_parent_groups": expandIotGroupNameAndArnList(metadata.RootToParentThingGroups),
 	}
 
@@ -216,7 +265,7 @@ func expandIotGroupNameAndArnList(lgn []*iot.GroupNameAndArn) []*iot.GroupNameAn
 		if ok && &val != nil {
 			vs = append(vs, &iot.GroupNameAndArn{
 				GroupName: val.GroupName,
-				GroupArn: val.GroupArn,
+				GroupArn:  val.GroupArn,
 			})
 		}
 	}
