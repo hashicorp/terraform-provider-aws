@@ -62,7 +62,6 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 			"lifecycle_policy": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"transition_to_ia": {

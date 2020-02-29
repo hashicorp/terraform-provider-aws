@@ -63,7 +63,6 @@ func resourceAwsCloudHsm2Cluster() *schema.Resource {
 
 			"cluster_certificates": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
