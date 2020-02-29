@@ -5705,6 +5705,29 @@ func expandAppmeshTcpRoute(vTcpRoute []interface{}) *appmesh.TcpRoute {
 		}
 	}
 
+	if vTcpRouteTimeout, ok := mTcpRoute["timeout"].([]interface{}); ok && len(vTcpRouteTimeout) > 0 && vTcpRouteTimeout[0] != nil {
+		tcpRouteTimeout := &appmesh.TcpTimeout{}
+
+		mTcpRouteTimeout := vTcpRouteTimeout[0].(map[string]interface{})
+
+		if vIdleTimeout, ok := mTcpRouteTimeout["idle"].([]interface{}); ok && len(vIdleTimeout) > 0 && vIdleTimeout[0] != nil {
+			idleTimeout := &appmesh.Duration{}
+
+			mIdleTimeout := vIdleTimeout[0].(map[string]interface{})
+
+			if vUnit, ok := mIdleTimeout["unit"].(string); ok && vUnit != "" {
+				idleTimeout.Unit = aws.String(vUnit)
+			}
+			if vValue, ok := mIdleTimeout["value"].(int); ok {
+				idleTimeout.Value = aws.Int64(int64(vValue))
+			}
+
+			tcpRouteTimeout.Idle = idleTimeout
+		}
+
+		tcpRoute.Timeout = tcpRouteTimeout
+	}
+
 	return tcpRoute
 }
 
@@ -5934,6 +5957,21 @@ func flattenAppmeshTcpRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 				},
 			}
 		}
+	}
+
+	if tcpRouteTimeout := tcpRoute.Timeout; tcpRouteTimeout != nil {
+		mTcpRouteTimeout := map[string]interface{}{}
+
+		if idleTimeout := tcpRouteTimeout.Idle; idleTimeout != nil {
+			mIdleTimeout := map[string]interface{}{
+				"unit":  aws.StringValue(idleTimeout.Unit),
+				"value": int(aws.Int64Value(idleTimeout.Value)),
+			}
+
+			mTcpRouteTimeout["idle"] = []interface{}{mIdleTimeout}
+		}
+
+		mTcpRoute["timeout"] = []interface{}{mTcpRouteTimeout}
 	}
 
 	return []interface{}{mTcpRoute}

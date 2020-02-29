@@ -170,6 +170,7 @@ The `http2_route` and `http_route` objects supports the following:
 The `tcp_route` object supports the following:
 
 * `action` - (Required) The action to take if a match is determined.
+* `timeout` - (Optional) The route timeout.
 
 The `action` object supports the following:
 
@@ -252,6 +253,15 @@ The `range` object supports the following:
 
 * `end` - (Required) The end of the range.
 * `start` - (Requited) The start of the range.
+
+The `tcp_route`'s `timeout` object supports the following:
+
+* `idle` - (Optional) Bounds the amount of time a connection may be idle. The default value is none.
+
+The `idle` object supports the following:
+
+* `unit` - (Required) A time unit. Valid values: `s`, `ms`.
+* `value` - (Required) The number of time units. Specifying `0` disables the timeout.
 
 ## Attributes Reference
 
