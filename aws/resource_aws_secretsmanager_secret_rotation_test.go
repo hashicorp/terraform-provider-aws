@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsSecretsManagerSecretRotation(t *testing.T) {
@@ -125,7 +125,7 @@ resource "aws_lambda_function" "test1" {
   function_name = "%[1]s-1"
   handler       = "exports.example"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_permission" "test1" {
@@ -141,7 +141,7 @@ resource "aws_lambda_function" "test2" {
   function_name = "%[1]s-2"
   handler       = "exports.example"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_permission" "test2" {
@@ -151,12 +151,12 @@ resource "aws_lambda_permission" "test2" {
   statement_id   = "AllowExecutionFromSecretsManager2"
 }
 
-resource "aws_secretsmanager_secret" "test" {
+resource "aws_secretsmanager_secret" "test-rotation" {
   name = "%[1]s"
 }
 
 resource "aws_secretsmanager_secret_rotation" "test" {
-	secret_id 					= "${aws_secretsmanager_secret.test.id}"
+	secret_id 					= "${aws_secretsmanager_secret.test-rotation.id}"
 	rotation_lambda_arn = "${aws_lambda_function.test1.arn}"
 
 	rotation_rules {
