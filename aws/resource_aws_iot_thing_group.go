@@ -139,16 +139,21 @@ func resourceAwsIotThingGroupRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	log.Printf("[DEBUG] Received IoT Thing Group: %s", out)
 
-	d.Set("arn", out.ThingGroupArn)
-	d.Set("name", out.ThingGroupName)
-
+	if err := d.Set("arn", out.ThingGroupArn); err != nil {
+		return fmt.Errorf("error setting arn: %s", err)
+	}
+	if err := d.Set("name", out.ThingGroupName); err != nil {
+		return fmt.Errorf("error setting name: %s", err)
+	}
 	if err := d.Set("metadata", flattenIotThingGroupMetadata(out.ThingGroupMetadata)); err != nil {
 		return fmt.Errorf("error setting metadata: %s", err)
 	}
 	if err := d.Set("properties", flattenIotThingGroupProperties(out.ThingGroupProperties)); err != nil {
 		return fmt.Errorf("error setting properties: %s", err)
 	}
-	d.Set("version", out.Version)
+	if err := d.Set("arn", out.Version); err != nil {
+		return fmt.Errorf("error setting version: %s", err)
+	}
 
 	tags, err := keyvaluetags.IotListTags(conn, *out.ThingGroupArn)
 	if err != nil {
