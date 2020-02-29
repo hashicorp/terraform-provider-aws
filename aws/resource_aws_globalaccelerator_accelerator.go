@@ -14,7 +14,7 @@ import (
 )
 
 // Global Route53 Zone ID for Global Accelerators, exported as a
-// convenience attribute for Route53 aliases (see 
+// convenience attribute for Route53 aliases (see
 // https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html).
 const globalAcceleratorRoute53ZoneID = "Z2BJ6XQ5FK7U4H"
 
