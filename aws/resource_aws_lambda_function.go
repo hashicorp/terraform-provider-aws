@@ -42,6 +42,7 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimePython37,
 	lambda.RuntimePython38,
 	lambda.RuntimeRuby25,
+	lambda.RuntimeRuby27,
 }
 
 func resourceAwsLambdaFunction() *schema.Resource {

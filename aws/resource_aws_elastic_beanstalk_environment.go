@@ -589,7 +589,7 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 		return err
 	}
 
-	if err := d.Set("tier", *env.Tier.Name); err != nil {
+	if err := d.Set("tier", env.Tier.Name); err != nil {
 		return err
 	}
 
