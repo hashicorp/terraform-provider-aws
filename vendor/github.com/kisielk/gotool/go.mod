@@ -1,1 +1,3 @@
-module "github.com/kisielk/gotool"
+module github.com/kisielk/gotool
+
+go 1.13
