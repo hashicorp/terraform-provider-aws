@@ -9,5 +9,3 @@ require (
 	github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e
 	golang.org/x/tools v0.0.0-20181117154741-2ddaf7f79a09
 )
-
-go 1.13

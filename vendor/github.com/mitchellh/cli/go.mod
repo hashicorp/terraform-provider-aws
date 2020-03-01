@@ -10,5 +10,3 @@ require (
 	github.com/posener/complete v1.1.1
 	golang.org/x/sys v0.0.0-20180823144017-11551d06cbcc // indirect
 )
-
-go 1.13

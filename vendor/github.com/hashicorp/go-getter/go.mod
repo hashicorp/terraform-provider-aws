@@ -21,5 +21,3 @@ require (
 	google.golang.org/api v0.9.0
 	gopkg.in/cheggaaa/pb.v1 v1.0.27 // indirect
 )
-
-go 1.13
