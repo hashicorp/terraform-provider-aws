@@ -75,7 +75,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/qldb"
-	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -1300,23 +1299,6 @@ func QldbListTags(conn *qldb.QLDB, identifier string) (KeyValueTags, error) {
 	}
 
 	return QldbKeyValueTags(output.Tags), nil
-}
-
-// QuicksightListTags lists quicksight service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func QuicksightListTags(conn *quicksight.QuickSight, identifier string) (KeyValueTags, error) {
-	input := &quicksight.ListTagsForResourceInput{
-		ResourceArn: aws.String(identifier),
-	}
-
-	output, err := conn.ListTagsForResource(input)
-
-	if err != nil {
-		return New(nil), err
-	}
-
-	return QuicksightKeyValueTags(output.Tags), nil
 }
 
 // RdsListTags lists rds service tags.
