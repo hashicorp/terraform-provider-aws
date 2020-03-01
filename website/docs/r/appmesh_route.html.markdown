@@ -160,12 +160,14 @@ The `grpc_route` object supports the following:
 * `action` - (Required) The action to take if a match is determined.
 * `match` - (Required) The criteria for determining an gRPC request match.
 * `rety_policy` - (Optional) The retry policy.
+* `timeout` - (Optional) The route timeout.
 
 The `http2_route` and `http_route` objects supports the following:
 
 * `action` - (Required) The action to take if a match is determined.
 * `match` - (Required) The criteria for determining an HTTP request match.
 * `retry_policy` - (Optional) The retry policy.
+* `timeout` - (Optional) The route timeout.
 
 The `tcp_route` object supports the following:
 
@@ -206,6 +208,16 @@ Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP statu
 * `max_retries` - (Required) The maximum number of retries.
 * `per_retry_timeout` - (Required) The per-retry timeout.
 * `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
+
+The `grpc_route`'s `timeout` object supports the following:
+
+* `idle` - (Optional) Bounds the amount of time a connection may be idle. The default value is none.
+* `per_request` - (Optional) The amount of time that a requester will wait for an upstream target to complete a response. The default value is 15 seconds.
+
+The `idle` and `per_request` objects support the following:
+
+* `unit` - (Required) A time unit. Valid values: `s`, `ms`.
+* `value` - (Required) The number of time units. Specifying `0` disables the timeout.
 
 The `http2_route` and `http_route`'s `match` object supports the following:
 
@@ -253,6 +265,16 @@ The `range` object supports the following:
 
 * `end` - (Required) The end of the range.
 * `start` - (Requited) The start of the range.
+
+The `http2_route` and `http_route`'s `timeout` object supports the following:
+
+* `idle` - (Optional) Bounds the amount of time a connection may be idle. The default value is none.
+* `per_request` - (Optional) The amount of time that a requester will wait for an upstream target to complete a response. The default value is 15 seconds.
+
+The `idle` and `per_request` objects support the following:
+
+* `unit` - (Required) A time unit. Valid values: `s`, `ms`.
+* `value` - (Required) The number of time units. Specifying `0` disables the timeout.
 
 The `tcp_route`'s `timeout` object supports the following:
 

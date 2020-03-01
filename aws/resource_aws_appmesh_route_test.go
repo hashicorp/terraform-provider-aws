@@ -142,6 +142,11 @@ func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.per_retry_timeout.0.unit", "s"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.per_retry_timeout.0.value", "15"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.tcp_retry_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.timeout.0.idle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.timeout.0.idle.0.unit", "ms"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.timeout.0.idle.0.value", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.timeout.0.per_request.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
@@ -191,6 +196,11 @@ func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.per_retry_timeout.0.value", "250000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.tcp_retry_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.tcp_retry_events.3724400910", "connection-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.timeout.0.idle.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.timeout.0.per_request.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.timeout.0.per_request.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.timeout.0.per_request.0.value", "20"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
@@ -252,6 +262,11 @@ func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.per_retry_timeout.0.unit", "s"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.per_retry_timeout.0.value", "15"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.tcp_retry_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.idle.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.per_request.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.per_request.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.per_request.0.value", "20"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -300,6 +315,11 @@ func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.per_retry_timeout.0.value", "250000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.tcp_retry_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.tcp_retry_events.3724400910", "connection-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.idle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.idle.0.unit", "ms"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.idle.0.value", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.per_request.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -352,6 +372,7 @@ func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -381,6 +402,13 @@ func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/path"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.idle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.idle.0.unit", "ms"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.idle.0.value", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.per_request.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.per_request.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.per_request.0.value", "20"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -560,6 +588,7 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", "http"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -600,6 +629,7 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/path"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", "https"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -651,6 +681,7 @@ func testAccAwsAppmeshRoute_routePriority(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "42"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -678,6 +709,7 @@ func testAccAwsAppmeshRoute_routePriority(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -736,6 +768,7 @@ func testAccAwsAppmeshRoute_httpRetryPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.per_retry_timeout.0.unit", "s"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.per_retry_timeout.0.value", "15"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.tcp_retry_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
@@ -771,6 +804,7 @@ func testAccAwsAppmeshRoute_httpRetryPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.per_retry_timeout.0.value", "250000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.tcp_retry_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.tcp_retry_events.3724400910", "connection-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
@@ -926,6 +960,13 @@ resource "aws_appmesh_route" "test" {
           weight       = 100
         }
       }
+
+      timeout {
+        idle {
+          unit = "ms"
+          value = 10000
+        }
+      }
     }
   }
 }
@@ -991,6 +1032,13 @@ resource "aws_appmesh_route" "test" {
           weight       = 100
         }
       }
+
+      timeout {
+        per_request {
+          unit = "s"
+          value = 20
+        }
+      }
     }
   }
 }
@@ -1033,6 +1081,13 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = "${aws_appmesh_virtual_node.foo.name}"
           weight       = 100
+        }
+      }
+
+      timeout {
+        per_request {
+          unit = "s"
+          value = 20
         }
       }
     }
@@ -1097,6 +1152,13 @@ resource "aws_appmesh_route" "test" {
           weight       = 100
         }
       }
+
+      timeout {
+        idle {
+          unit = "ms"
+          value = 10000
+        }
+      }
     }
   }
 }
@@ -1150,6 +1212,18 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = "${aws_appmesh_virtual_node.bar.name}"
           weight       = 10
+        }
+      }
+
+      timeout {
+        idle {
+          unit = "ms"
+          value = 10000
+        }
+
+        per_request {
+          unit = "s"
+          value = 20
         }
       }
     }
