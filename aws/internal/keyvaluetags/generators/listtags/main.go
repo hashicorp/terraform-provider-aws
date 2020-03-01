@@ -88,6 +88,7 @@ var serviceNames = []string{
 	"organizations",
 	"pinpoint",
 	"qldb",
+	"quicksight",
 	"rds",
 	"resourcegroups",
 	"route53",
