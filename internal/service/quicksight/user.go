@@ -17,6 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+const (
+	DefaultUserNamespace = "default"
+)
+
 // @SDKResource("aws_quicksight_user", name="User")
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
@@ -64,7 +68,7 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  "default",
+				Default:  DefaultUserNamespace,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),

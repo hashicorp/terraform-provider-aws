@@ -42,6 +42,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_quicksight_data_set",
 			Name:     "Data Set",
 		},
+		{
+			Factory:  DataSourceAwsQuickSightUser,
+			TypeName: "aws_quicksight_user",
+			Name:     "User",
+		},
 	}
 }
 
