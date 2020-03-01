@@ -75,6 +75,7 @@ One of the following arguments is required:
 
 Other arguments:
 
+* `enable_acceleration` - (Optional, Default `false`) Whether the VPN connection uses acceleration.  Acceleration can only be enabled on VPNs terminated on a Transit Gateway.
 * `static_routes_only` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `tags` - (Optional) Tags to apply to the connection.
 * `tunnel1_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel.

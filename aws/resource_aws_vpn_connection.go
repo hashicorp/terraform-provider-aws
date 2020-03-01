@@ -109,6 +109,13 @@ func resourceAwsVpnConnection() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"enable_acceleration": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
 			"tunnel1_inside_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -291,8 +298,9 @@ func resourceAwsVpnConnectionCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	connectOpts := &ec2.VpnConnectionOptionsSpecification{
-		StaticRoutesOnly: aws.Bool(d.Get("static_routes_only").(bool)),
-		TunnelOptions:    options,
+		EnableAcceleration: aws.Bool(d.Get("enable_acceleration").(bool)),
+		StaticRoutesOnly:   aws.Bool(d.Get("static_routes_only").(bool)),
+		TunnelOptions:      options,
 	}
 
 	createOpts := &ec2.CreateVpnConnectionInput{
@@ -303,6 +311,11 @@ func resourceAwsVpnConnectionCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("transit_gateway_id"); ok {
 		createOpts.TransitGatewayId = aws.String(v.(string))
+	} else {
+		// VPN Acceleration can't be enabled unless the connection's to a Transit Gateway
+		if d.Get("enable_acceleration").(bool) {
+			return fmt.Errorf("Error creating vpn connection: Accelerated VPN is only available for VPN connections to a Transit Gateway")
+		}
 	}
 
 	if v, ok := d.GetOk("vpn_gateway_id"); ok {
@@ -436,9 +449,15 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 		if err := d.Set("static_routes_only", vpnConnection.Options.StaticRoutesOnly); err != nil {
 			return err
 		}
+
+		if err := d.Set("enable_acceleration", vpnConnection.Options.EnableAcceleration); err != nil {
+			return err
+		}
 	} else {
 		//If there no Options on the connection then we do not support *static_routes*
 		d.Set("static_routes_only", false)
+		//If there no Options on the connection then *enable_acceleration* is not set
+		d.Set("enable_acceleration", false)
 	}
 
 	// Set read only attributes.

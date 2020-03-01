@@ -90,6 +90,7 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
 				),
 			},
 			{
@@ -246,6 +247,34 @@ func TestAccAWSVpnConnection_withoutStaticRoutes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSVpnConnection_withEnableAcceleration(t *testing.T) {
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccAwsVpnConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsVpnConnectionConfigEnableAcceleration(rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "true"),
 				),
 			},
 			{
@@ -486,8 +515,33 @@ resource "aws_vpn_connection" "test" {
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
   type                = "ipsec.1"
   static_routes_only  = false
+  enable_acceleration = false
 }
 `, rBgpAsn, rInt)
+}
+
+func testAccAwsVpnConnectionConfigEnableAcceleration(rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {}
+
+resource "aws_customer_gateway" "customer_gateway" {
+  bgp_asn    = %d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = "tf-acc-test-ec2-vpn-connection-enable-acceleration"
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
+  transit_gateway_id  = "${aws_ec2_transit_gateway.test.id}"
+  type                = "ipsec.1"
+  static_routes_only  = false
+  enable_acceleration = true
+}
+`, rBgpAsn)
 }
 
 func testAccAwsVpnConnectionConfigSingleTunnelOptions(rBgpAsn int, psk string, tunnelCidr string) string {
