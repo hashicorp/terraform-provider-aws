@@ -336,8 +336,8 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"idle": {
 													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
+													Optional: true,
+													MinItems: 0,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
