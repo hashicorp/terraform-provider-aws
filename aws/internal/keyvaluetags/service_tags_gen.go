@@ -55,7 +55,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -1804,33 +1803,6 @@ func (tags KeyValueTags) OrganizationsTags() []*organizations.Tag {
 
 // OrganizationsKeyValueTags creates KeyValueTags from organizations service tags.
 func OrganizationsKeyValueTags(tags []*organizations.Tag) KeyValueTags {
-	m := make(map[string]*string, len(tags))
-
-	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
-	}
-
-	return New(m)
-}
-
-// QuicksightTags returns quicksight service tags.
-func (tags KeyValueTags) QuicksightTags() []*quicksight.Tag {
-	result := make([]*quicksight.Tag, 0, len(tags))
-
-	for k, v := range tags.Map() {
-		tag := &quicksight.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v),
-		}
-
-		result = append(result, tag)
-	}
-
-	return result
-}
-
-// QuicksightKeyValueTags creates KeyValueTags from quicksight service tags.
-func QuicksightKeyValueTags(tags []*quicksight.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
