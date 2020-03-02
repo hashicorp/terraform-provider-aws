@@ -32,7 +32,11 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 					return false
 				}
 
-				return proposal != nil && aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateRequested
+				if proposal == nil {
+					return true
+				}
+
+				return aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateRequested
 			}),
 		),
 
@@ -104,8 +108,7 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 	}
 
 	if proposal == nil {
-		log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) not found, removing from state", d.Id())
-		d.SetId("")
+		//The resource may have expired, return the last known state
 		return nil
 	}
 
