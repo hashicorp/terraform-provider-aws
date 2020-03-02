@@ -1,5 +1,6 @@
 SWEEP?=us-east-1,us-west-2
 TEST?=./...
+SWEEP_DIR?=./aws
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 PKG_NAME=aws
 WEBSITE_REPO=github.com/hashicorp/terraform-website
@@ -16,7 +17,7 @@ gen:
 
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	go test $(TEST) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
+	go test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
 test: fmtcheck
 	go test $(TEST) $(TESTARGS) -timeout=120s -parallel=4
