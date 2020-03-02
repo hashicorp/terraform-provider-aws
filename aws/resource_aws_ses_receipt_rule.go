@@ -447,10 +447,10 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	d.Set("enabled", *response.Rule.Enabled)
+	d.Set("enabled", response.Rule.Enabled)
 	d.Set("recipients", flattenStringList(response.Rule.Recipients))
-	d.Set("scan_enabled", *response.Rule.ScanEnabled)
-	d.Set("tls_policy", *response.Rule.TlsPolicy)
+	d.Set("scan_enabled", response.Rule.ScanEnabled)
+	d.Set("tls_policy", response.Rule.TlsPolicy)
 
 	addHeaderActionList := []map[string]interface{}{}
 	bounceActionList := []map[string]interface{}{}

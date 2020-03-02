@@ -13,6 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
+// Global Route53 Zone ID for Global Accelerators, exported as a
+// convenience attribute for Route53 aliases (see
+// https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html).
+const globalAcceleratorRoute53ZoneID = "Z2BJ6XQ5FK7U4H"
+
 func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsGlobalAcceleratorAcceleratorCreate,
@@ -41,6 +46,14 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+			},
+			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"hosted_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"ip_sets": {
 				Type:     schema.TypeList,
@@ -113,7 +126,7 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 
 	d.SetId(*resp.Accelerator.AcceleratorArn)
 
-	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, d.Id())
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 	if err != nil {
 		return err
 	}
@@ -146,6 +159,8 @@ func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta in
 	d.Set("name", accelerator.Name)
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	d.Set("enabled", accelerator.Enabled)
+	d.Set("dns_name", accelerator.DnsName)
+	d.Set("hosted_zone_id", globalAcceleratorRoute53ZoneID)
 	if err := d.Set("ip_sets", resourceAwsGlobalAcceleratorAcceleratorFlattenIpSets(accelerator.IpSets)); err != nil {
 		return fmt.Errorf("Error setting Global Accelerator accelerator ip_sets: %s", err)
 	}
@@ -258,7 +273,7 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 		d.SetPartial("ip_address_type")
 		d.SetPartial("enabled")
 
-		err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, d.Id())
+		err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 		if err != nil {
 			return err
 		}
@@ -281,7 +296,7 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 	return resourceAwsGlobalAcceleratorAcceleratorRead(d, meta)
 }
 
-func resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn *globalaccelerator.GlobalAccelerator, acceleratorArn string) error {
+func resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn *globalaccelerator.GlobalAccelerator, acceleratorArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
@@ -338,7 +353,7 @@ func resourceAwsGlobalAcceleratorAcceleratorDelete(d *schema.ResourceData, meta 
 			return fmt.Errorf("Error disabling Global Accelerator accelerator: %s", err)
 		}
 
-		err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, d.Id())
+		err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 		if err != nil {
 			return err
 		}

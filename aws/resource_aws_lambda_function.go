@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const awsMutexLambdaKey = `aws_lambda_function`
@@ -41,6 +42,7 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimePython37,
 	lambda.RuntimePython38,
 	lambda.RuntimeRuby25,
+	lambda.RuntimeRuby27,
 }
 
 func resourceAwsLambdaFunction() *schema.Resource {
@@ -242,9 +244,12 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"mode": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Active", "PassThrough"}, true),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								lambda.TracingModeActive,
+								lambda.TracingModePassThrough},
+								true),
 						},
 					},
 				},
@@ -388,7 +393,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, exists := d.GetOk("tags"); exists {
-		params.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
+		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().LambdaTags()
 	}
 
 	// IAM changes can take 1 minute to propagate in AWS
@@ -501,7 +506,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 
 	getFunctionOutput, err := conn.GetFunction(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" && !d.IsNewResource() {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == lambda.ErrCodeResourceNotFoundException && !d.IsNewResource() {
 			d.SetId("")
 			return nil
 		}
@@ -517,7 +522,9 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// Tagging operations are permitted on Lambda functions only.
 	// Tags on aliases and versions are not supported.
 	if !qualifierExistance {
-		d.Set("tags", tagsToMapGeneric(getFunctionOutput.Tags))
+		if err := d.Set("tags", keyvaluetags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().Map()); err != nil {
+			return fmt.Errorf("error setting tags: %s", err)
+		}
 	}
 
 	// getFunctionOutput.Code.Location is a pre-signed URL pointing at the zip
@@ -666,10 +673,13 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	d.Partial(true)
 
 	arn := d.Get("arn").(string)
-	if tagErr := setTagsLambda(conn, d, arn); tagErr != nil {
-		return tagErr
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.LambdaUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Lambda Function (%s) tags: %s", arn, err)
+		}
 	}
-	d.SetPartial("tags")
 
 	configReq := &lambda.UpdateFunctionConfigurationInput{
 		FunctionName: aws.String(d.Id()),
@@ -834,10 +844,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		d.SetPartial("timeout")
 	}
 
-	if needsFunctionCodeUpdate(d) {
+	codeUpdate := needsFunctionCodeUpdate(d)
+	if codeUpdate {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
-			Publish:      aws.Bool(d.Get("publish").(bool)),
 		}
 
 		if v, ok := d.GetOk("filename"); ok {
@@ -902,6 +912,18 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			if err != nil {
 				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
 			}
+		}
+	}
+
+	publish := d.Get("publish").(bool)
+	if publish && (codeUpdate || configUpdate) {
+		versionReq := &lambda.PublishVersionInput{
+			FunctionName: aws.String(d.Id()),
+		}
+
+		_, err := conn.PublishVersion(versionReq)
+		if err != nil {
+			return fmt.Errorf("Error publishing Lambda Function Version %s: %s", d.Id(), err)
 		}
 	}
 

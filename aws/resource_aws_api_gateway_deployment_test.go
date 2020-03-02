@@ -188,7 +188,7 @@ func TestAccAWSAPIGatewayDeployment_StageName_EmptyString(t *testing.T) {
 				Config: testAccAWSAPIGatewayDeploymentConfigStageName(""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDeploymentExists(resourceName, &deployment),
-					resource.TestCheckNoResourceAttr(resourceName, "stage_name"),
+					resource.TestCheckResourceAttr(resourceName, "stage_name", ""),
 				),
 			},
 		},

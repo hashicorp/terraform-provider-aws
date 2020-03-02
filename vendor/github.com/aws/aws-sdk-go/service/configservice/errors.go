@@ -2,6 +2,10 @@
 
 package configservice
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeConformancePackTemplateValidationException for service response error code
@@ -380,3 +384,57 @@ const (
 	// The requested action is not valid.
 	ErrCodeValidationException = "ValidationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ConformancePackTemplateValidationException":               newErrorConformancePackTemplateValidationException,
+	"InsufficientDeliveryPolicyException":                      newErrorInsufficientDeliveryPolicyException,
+	"InsufficientPermissionsException":                         newErrorInsufficientPermissionsException,
+	"InvalidConfigurationRecorderNameException":                newErrorInvalidConfigurationRecorderNameException,
+	"InvalidDeliveryChannelNameException":                      newErrorInvalidDeliveryChannelNameException,
+	"InvalidExpressionException":                               newErrorInvalidExpressionException,
+	"InvalidLimitException":                                    newErrorInvalidLimitException,
+	"InvalidNextTokenException":                                newErrorInvalidNextTokenException,
+	"InvalidParameterValueException":                           newErrorInvalidParameterValueException,
+	"InvalidRecordingGroupException":                           newErrorInvalidRecordingGroupException,
+	"InvalidResultTokenException":                              newErrorInvalidResultTokenException,
+	"InvalidRoleException":                                     newErrorInvalidRoleException,
+	"InvalidS3KeyPrefixException":                              newErrorInvalidS3KeyPrefixException,
+	"InvalidSNSTopicARNException":                              newErrorInvalidSNSTopicARNException,
+	"InvalidTimeRangeException":                                newErrorInvalidTimeRangeException,
+	"LastDeliveryChannelDeleteFailedException":                 newErrorLastDeliveryChannelDeleteFailedException,
+	"LimitExceededException":                                   newErrorLimitExceededException,
+	"MaxActiveResourcesExceededException":                      newErrorMaxActiveResourcesExceededException,
+	"MaxNumberOfConfigRulesExceededException":                  newErrorMaxNumberOfConfigRulesExceededException,
+	"MaxNumberOfConfigurationRecordersExceededException":       newErrorMaxNumberOfConfigurationRecordersExceededException,
+	"MaxNumberOfConformancePacksExceededException":             newErrorMaxNumberOfConformancePacksExceededException,
+	"MaxNumberOfDeliveryChannelsExceededException":             newErrorMaxNumberOfDeliveryChannelsExceededException,
+	"MaxNumberOfOrganizationConfigRulesExceededException":      newErrorMaxNumberOfOrganizationConfigRulesExceededException,
+	"MaxNumberOfOrganizationConformancePacksExceededException": newErrorMaxNumberOfOrganizationConformancePacksExceededException,
+	"MaxNumberOfRetentionConfigurationsExceededException":      newErrorMaxNumberOfRetentionConfigurationsExceededException,
+	"NoAvailableConfigurationRecorderException":                newErrorNoAvailableConfigurationRecorderException,
+	"NoAvailableDeliveryChannelException":                      newErrorNoAvailableDeliveryChannelException,
+	"NoAvailableOrganizationException":                         newErrorNoAvailableOrganizationException,
+	"NoRunningConfigurationRecorderException":                  newErrorNoRunningConfigurationRecorderException,
+	"NoSuchBucketException":                                    newErrorNoSuchBucketException,
+	"NoSuchConfigRuleException":                                newErrorNoSuchConfigRuleException,
+	"NoSuchConfigRuleInConformancePackException":               newErrorNoSuchConfigRuleInConformancePackException,
+	"NoSuchConfigurationAggregatorException":                   newErrorNoSuchConfigurationAggregatorException,
+	"NoSuchConfigurationRecorderException":                     newErrorNoSuchConfigurationRecorderException,
+	"NoSuchConformancePackException":                           newErrorNoSuchConformancePackException,
+	"NoSuchDeliveryChannelException":                           newErrorNoSuchDeliveryChannelException,
+	"NoSuchOrganizationConfigRuleException":                    newErrorNoSuchOrganizationConfigRuleException,
+	"NoSuchOrganizationConformancePackException":               newErrorNoSuchOrganizationConformancePackException,
+	"NoSuchRemediationConfigurationException":                  newErrorNoSuchRemediationConfigurationException,
+	"NoSuchRemediationExceptionException":                      newErrorNoSuchRemediationExceptionException,
+	"NoSuchRetentionConfigurationException":                    newErrorNoSuchRetentionConfigurationException,
+	"OrganizationAccessDeniedException":                        newErrorOrganizationAccessDeniedException,
+	"OrganizationAllFeaturesNotEnabledException":               newErrorOrganizationAllFeaturesNotEnabledException,
+	"OrganizationConformancePackTemplateValidationException":   newErrorOrganizationConformancePackTemplateValidationException,
+	"OversizedConfigurationItemException":                      newErrorOversizedConfigurationItemException,
+	"RemediationInProgressException":                           newErrorRemediationInProgressException,
+	"ResourceInUseException":                                   newErrorResourceInUseException,
+	"ResourceNotDiscoveredException":                           newErrorResourceNotDiscoveredException,
+	"ResourceNotFoundException":                                newErrorResourceNotFoundException,
+	"TooManyTagsException":                                     newErrorTooManyTagsException,
+	"ValidationException":                                      newErrorValidationException,
+}

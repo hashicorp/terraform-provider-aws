@@ -2,6 +2,10 @@
 
 package kms
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAlreadyExistsException for service response error code
@@ -275,6 +279,14 @@ const (
 	// in the AWS Key Management Service Developer Guide .
 	ErrCodeInvalidStateException = "KMSInvalidStateException"
 
+	// ErrCodeKMSInvalidSignatureException for service response error code
+	// "KMSInvalidSignatureException".
+	//
+	// The request was rejected because the signature verification failed. Signature
+	// verification fails when it cannot confirm that signature was produced by
+	// signing the specified message with the specified CMK and signing algorithm.
+	ErrCodeKMSInvalidSignatureException = "KMSInvalidSignatureException"
+
 	// ErrCodeKeyUnavailableException for service response error code
 	// "KeyUnavailableException".
 	//
@@ -285,8 +297,8 @@ const (
 	// ErrCodeLimitExceededException for service response error code
 	// "LimitExceededException".
 	//
-	// The request was rejected because a limit was exceeded. For more information,
-	// see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
+	// The request was rejected because a quota was exceeded. For more information,
+	// see Quotas (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html)
 	// in the AWS Key Management Service Developer Guide.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
@@ -317,3 +329,39 @@ const (
 	// a specified resource is not valid for this operation.
 	ErrCodeUnsupportedOperationException = "UnsupportedOperationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AlreadyExistsException":                       newErrorAlreadyExistsException,
+	"CloudHsmClusterInUseException":                newErrorCloudHsmClusterInUseException,
+	"CloudHsmClusterInvalidConfigurationException": newErrorCloudHsmClusterInvalidConfigurationException,
+	"CloudHsmClusterNotActiveException":            newErrorCloudHsmClusterNotActiveException,
+	"CloudHsmClusterNotFoundException":             newErrorCloudHsmClusterNotFoundException,
+	"CloudHsmClusterNotRelatedException":           newErrorCloudHsmClusterNotRelatedException,
+	"CustomKeyStoreHasCMKsException":               newErrorCustomKeyStoreHasCMKsException,
+	"CustomKeyStoreInvalidStateException":          newErrorCustomKeyStoreInvalidStateException,
+	"CustomKeyStoreNameInUseException":             newErrorCustomKeyStoreNameInUseException,
+	"CustomKeyStoreNotFoundException":              newErrorCustomKeyStoreNotFoundException,
+	"DependencyTimeoutException":                   newErrorDependencyTimeoutException,
+	"DisabledException":                            newErrorDisabledException,
+	"ExpiredImportTokenException":                  newErrorExpiredImportTokenException,
+	"IncorrectKeyException":                        newErrorIncorrectKeyException,
+	"IncorrectKeyMaterialException":                newErrorIncorrectKeyMaterialException,
+	"IncorrectTrustAnchorException":                newErrorIncorrectTrustAnchorException,
+	"KMSInternalException":                         newErrorInternalException,
+	"InvalidAliasNameException":                    newErrorInvalidAliasNameException,
+	"InvalidArnException":                          newErrorInvalidArnException,
+	"InvalidCiphertextException":                   newErrorInvalidCiphertextException,
+	"InvalidGrantIdException":                      newErrorInvalidGrantIdException,
+	"InvalidGrantTokenException":                   newErrorInvalidGrantTokenException,
+	"InvalidImportTokenException":                  newErrorInvalidImportTokenException,
+	"InvalidKeyUsageException":                     newErrorInvalidKeyUsageException,
+	"InvalidMarkerException":                       newErrorInvalidMarkerException,
+	"KMSInvalidStateException":                     newErrorInvalidStateException,
+	"KMSInvalidSignatureException":                 newErrorKMSInvalidSignatureException,
+	"KeyUnavailableException":                      newErrorKeyUnavailableException,
+	"LimitExceededException":                       newErrorLimitExceededException,
+	"MalformedPolicyDocumentException":             newErrorMalformedPolicyDocumentException,
+	"NotFoundException":                            newErrorNotFoundException,
+	"TagException":                                 newErrorTagException,
+	"UnsupportedOperationException":                newErrorUnsupportedOperationException,
+}
