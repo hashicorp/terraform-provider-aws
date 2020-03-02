@@ -887,7 +887,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	volumeTags, err := readVolumeTags(conn, d.Id())
+	volumeTags, err := readRootVolumeTags(instance, conn)
 	if err != nil {
 		return err
 	}
@@ -993,16 +993,16 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
-		volumeIds, err := getAwsInstanceVolumeIds(conn, d.Id())
+		rootVolumeId, err := getAwsInstanceRootVolumeId(d, conn)
 		if err != nil {
 			return err
 		}
 
 		o, n := d.GetChange("volume_tags")
 
-		for _, volumeId := range volumeIds {
-			if err := keyvaluetags.Ec2UpdateTags(conn, volumeId, o, n); err != nil {
-				return fmt.Errorf("error updating volume_tags (%s): %s", volumeId, err)
+		if rootVolumeId != "" {
+			if err := keyvaluetags.Ec2UpdateTags(conn, rootVolumeId, o, n); err != nil {
+				return fmt.Errorf("error updating volume_tags (%s): %s", rootVolumeId, err)
 			}
 		}
 	}
@@ -2007,22 +2007,36 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 	return blockDevices, nil
 }
 
-func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
-	volumeIds, err := getAwsInstanceVolumeIds(conn, instanceId)
-	if err != nil {
-		return nil, err
+func readRootVolumeTags(instance *ec2.Instance, conn *ec2.EC2) ([]*ec2.Tag, error) {
+	rootVolumeId := getRootVolumeId(instance)
+	if rootVolumeId == "" {
+		return nil, nil
 	}
 
 	resp, err := conn.DescribeTags(&ec2.DescribeTagsInput{
-		Filters: ec2AttributeFiltersFromMultimap(map[string][]string{
-			"resource-id": volumeIds,
+		Filters: buildEC2AttributeFilterList(map[string]string{
+			"resource-id": rootVolumeId,
 		}),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting tags for volumes (%s): %s", volumeIds, err)
+		return nil, fmt.Errorf("error getting tags for volume (%s): %s", rootVolumeId, err)
 	}
 
 	return ec2TagsFromTagDescriptions(resp.Tags), nil
+}
+
+func getRootVolumeId(instance *ec2.Instance) string {
+	rootVolumeId := ""
+	for _, bd := range instance.BlockDeviceMappings {
+		if bd.Ebs != nil && blockDeviceIsRoot(bd, instance) {
+			if bd.Ebs.VolumeId != nil {
+				rootVolumeId = *bd.Ebs.VolumeId
+			}
+			break
+		}
+	}
+
+	return rootVolumeId
 }
 
 // Determine whether we're referring to security groups with
@@ -2402,23 +2416,21 @@ func userDataHashSum(user_data string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func getAwsInstanceVolumeIds(conn *ec2.EC2, instanceId string) ([]string, error) {
-	volumeIds := []string{}
-
-	resp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
-			"attachment.instance-id": instanceId,
-		}),
+func getAwsInstanceRootVolumeId(d *schema.ResourceData, conn *ec2.EC2) (string, error) {
+	resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
+		InstanceIds: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting volumes for instance (%s): %s", instanceId, err)
+		return "", err
 	}
 
-	for _, v := range resp.Volumes {
-		volumeIds = append(volumeIds, aws.StringValue(v.VolumeId))
+	if len(resp.Reservations) == 0 {
+		return "", errors.New("EC2 instance not found.")
 	}
 
-	return volumeIds, nil
+	instance := resp.Reservations[0].Instances[0]
+
+	return getRootVolumeId(instance), nil
 }
 
 func getCreditSpecifications(conn *ec2.EC2, instanceId string) ([]map[string]interface{}, error) {

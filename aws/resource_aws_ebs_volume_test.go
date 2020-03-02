@@ -497,6 +497,35 @@ func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckVolumeTagsNotChanged(volOld, volNew *ec2.Volume) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		create := make(map[string]string)
+		newTags := make(map[string]string)
+		for _, t := range volNew.Tags {
+			create[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
+			newTags[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
+		}
+
+		remove := make(map[string]string)
+		oldTags := make(map[string]string)
+		for _, t := range volOld.Tags {
+			oldTags[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
+			old, ok := create[aws.StringValue(t.Key)]
+			if !ok || old != aws.StringValue(t.Value) {
+				remove[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
+			} else if ok {
+				delete(create, aws.StringValue(t.Key))
+			}
+		}
+
+		if len(create)+len(remove) != 0 {
+			return fmt.Errorf("Volume tags changed. Old tags: %+v, new tags: %+v", oldTags, newTags)
+		}
+		return nil
+	}
+}
+
 const testAccAwsEbsVolumeConfig = `
 data "aws_availability_zones" "available" {
   state = "available"

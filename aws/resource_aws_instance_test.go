@@ -1123,8 +1123,10 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 }
 
 func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
+	var inst ec2.Instance
+	var vol1, vol2 ec2.Volume
+	instanceName := "aws_instance.test"
+	volumeName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1134,11 +1136,27 @@ func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
 			{
 				Config: testAccCheckInstanceConfigWithAttachedVolume(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
+					testAccCheckInstanceExists(instanceName, &inst),
+					testAccCheckVolumeExists(volumeName, &vol1),
+					resource.TestCheckResourceAttr(
+						instanceName, "volume_tags.Name", "test-terraform-instance"),
+					resource.TestCheckResourceAttr(
+						volumeName, "tags.Name", "test-terraform-volume"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				Config: testAccCheckInstanceConfigWithAttachedVolume(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(volumeName, &vol2),
+					resource.TestCheckResourceAttr(
+						instanceName, "volume_tags.Name", "test-terraform-instance"),
+					resource.TestCheckResourceAttr(
+						volumeName, "tags.Name", "test-terraform-volume"),
+					testAccCheckVolumeTagsNotChanged(&vol1, &vol2),
+				),
+			},
+			{
+				ResourceName:      instanceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -3935,6 +3953,11 @@ resource "aws_instance" "test" {
   tags = {
     Name = "test-terraform"
   }
+
+  volume_tags = {
+    Name     = "test-terraform-instance"
+    instance = "test"
+  }
 }
 
 resource "aws_ebs_volume" "test" {
@@ -3943,7 +3966,8 @@ resource "aws_ebs_volume" "test" {
   type              = "gp2"
 
   tags = {
-    Name = "test-terraform"
+    Name   = "test-terraform-volume"
+    volume = "test"
   }
 }
 
