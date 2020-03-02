@@ -28,19 +28,19 @@ func testSweepCloudformationStackSets(region string) error {
 	client, err := sharedClientForRegion(region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).cfconn
 	stackSets, err := listCloudFormationStackSets(conn)
 
-	if testSweepSkipSweepError(err) {
+	if testSweepSkipSweepError(err) || isAWSErr(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
 		log.Printf("[WARN] Skipping CloudFormation Stack Set sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing CloudFormation Stack Sets: %s", err)
+		return fmt.Errorf("error listing CloudFormation Stack Sets: %w", err)
 	}
 
 	var sweeperErrs *multierror.Error
