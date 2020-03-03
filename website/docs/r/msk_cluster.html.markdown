@@ -142,7 +142,7 @@ The following arguments are supported:
 
 #### encryption_info encryption_in_transit Argument Reference
 
-* `client_broker` - (Optional) Encryption setting for data in transit between clients and brokers. Valid values: `TLS`, `TLS_PLAINTEXT`, and `PLAINTEXT`. Default value: `TLS`.
+* `client_broker` - (Optional) Encryption setting for data in transit between clients and brokers. Valid values: `TLS`, `TLS_PLAINTEXT`, and `PLAINTEXT`. Default value is `TLS_PLAINTEXT` when `encryption_in_transit` block defined, but `TLS` when `encryption_in_transit` block omitted.
 * `in_cluster` - (Optional) Whether data communication among broker nodes is encrypted. Default value: `true`.
 
 #### open_monitoring Argument Reference
