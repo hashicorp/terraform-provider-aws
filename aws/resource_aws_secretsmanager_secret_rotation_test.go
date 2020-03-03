@@ -151,12 +151,12 @@ resource "aws_lambda_permission" "test2" {
   statement_id   = "AllowExecutionFromSecretsManager2"
 }
 
-resource "aws_secretsmanager_secret" "test-rotation" {
+resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
 }
 
 resource "aws_secretsmanager_secret_rotation" "test" {
-	secret_id 					= "${aws_secretsmanager_secret.test-rotation.id}"
+	secret_id 					= "${aws_secretsmanager_secret.test.id}"
 	rotation_lambda_arn = "${aws_lambda_function.test1.arn}"
 
 	rotation_rules {
