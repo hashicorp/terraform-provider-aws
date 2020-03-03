@@ -2,17 +2,32 @@ package a
 
 import (
 	"fmt"
-	"regexp"
 )
-
-const resourceName = `aws_example_thing.test`
-
-var testRegexp = regexp.MustCompile(`.*`)
 
 func f() {
 	/* Passing cases */
 
 	fmt.Sprintf("%s.notamazonaws.com", "test")
+
+	fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+  name = %q
+}`, "test")
 
 	/* Comment ignored cases */
 

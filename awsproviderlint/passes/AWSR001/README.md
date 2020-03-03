@@ -2,7 +2,7 @@
 
 The `AWSR001` analyzer reports when a fmt.Sprintf() call contains the format string ending `.amazonaws.com`. This domain suffix is only valid in the AWS Commercial and GovCloud (US) partitions.
 
-To ensure the correct domain suffix is used in all partitions, the `*AWSClient` available to all resources provides he `PartitionHostname()` and `RegionalHostname()` receiver methods.
+To ensure the correct domain suffix is used in all partitions, the `*AWSClient` available to all resources provides the `PartitionHostname()` and `RegionalHostname()` receiver methods.
 
 ## Flagged Code
 
