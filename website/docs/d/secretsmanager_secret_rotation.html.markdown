@@ -1,9 +1,9 @@
 ---
+subcategory: "Secrets Manager"
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_secret_rotation"
-sidebar_current: "docs-aws-datasource-secretsmanager-secret-rotation"
 description: |-
-  Retrieve information about a Secrets Manager secret rotation
+  Retrieve information about a Secrets Manager secret rotation configuration
 ---
 
 # Data Source: aws_secretsmanager_secret_rotation
