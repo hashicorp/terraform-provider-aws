@@ -76,17 +76,20 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 				},
 			},
 			"rotation_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
+				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
+				Type:       schema.TypeBool,
+				Computed:   true,
 			},
 			"rotation_lambda_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
+				Type:       schema.TypeString,
+				Optional:   true,
 			},
 			"rotation_rules": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
+				Type:       schema.TypeList,
+				Optional:   true,
+				MaxItems:   1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"automatically_after_days": {
