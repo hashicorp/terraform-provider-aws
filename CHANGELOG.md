@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_globalaccelerator_accelerator: Add `dns_name` and `hosted_zone_id` attributes [GH-11670]
 
+BUG FIXES:
+
+* resource/aws_iam_service_linked_role: Allow `aws_service_name` argument validation to accept values in AWS partitions outside AWS Commercial and AWS GovCloud (US) [GH-11919]
+
 ## 2.51.0 (February 28, 2020)
 
 FEATURES:
