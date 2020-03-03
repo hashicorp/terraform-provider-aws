@@ -79,6 +79,8 @@ func testSweepEmrClusters(region string) error {
 }
 
 func TestAccAWSEMRCluster_basic(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,14 +91,16 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "step.#", "0"),
-					resource.TestCheckResourceAttrSet("aws_emr_cluster.tf-test-cluster", "arn"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "additional_info"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "1"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -106,6 +110,15 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+	expectedJSON := `
+{
+  "instanceAwsClientConfiguration": {
+    "proxyPort": 8099,
+    "proxyHost": "myproxy.example.com"
+  }
+}`
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -116,13 +129,14 @@ func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfigAdditionalInfo(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "step.#", "0"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
+					testAccCheckResourceAttrEquivalentJSON(resourceName, "additional_info", expectedJSON),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps", "additional_info"},
@@ -132,6 +146,8 @@ func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_disappears(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -142,7 +158,7 @@ func TestAccAWSEMRCluster_disappears(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 					testAccCheckAWSEmrClusterDisappears(&cluster),
 				),
 				ExpectNonEmptyPlan: true,
@@ -152,6 +168,8 @@ func TestAccAWSEMRCluster_disappears(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_configurationsJson(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -162,13 +180,13 @@ func TestAccAWSEMRCluster_configurationsJson(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfigConfigurationsJson(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestMatchResourceAttr("aws_emr_cluster.tf-test-cluster", "configurations_json",
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestMatchResourceAttr(resourceName, "configurations_json",
 						regexp.MustCompile("{\"JAVA_HOME\":\"/usr/lib/jvm/java-1.8.0\".+")),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -258,17 +276,14 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_AutoscalingPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "core_instance_group.0.autoscaling_policy", regexp.MustCompile(`"MaxCapacity": ?2`)),
+					testAccCheckResourceAttrEquivalentJSON(resourceName, "core_instance_group.0.autoscaling_policy", autoscalingPolicy1),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupAutoscalingPolicy(rName, autoscalingPolicy2),
@@ -276,7 +291,7 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_AutoscalingPolicy(t *testing.T) {
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
 					testAccCheckAWSEmrClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "core_instance_group.0.autoscaling_policy", regexp.MustCompile(`"MaxCapacity": ?3`)),
+					testAccCheckResourceAttrEquivalentJSON(resourceName, "core_instance_group.0.autoscaling_policy", autoscalingPolicy2),
 				),
 			},
 			{
@@ -311,13 +326,10 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_BidPrice(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupBidPrice(rName, "0.51"),
@@ -351,13 +363,10 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_InstanceCount(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupInstanceCount(rName, 1),
@@ -400,13 +409,10 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_InstanceType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupInstanceType(rName, "m4.xlarge"),
@@ -439,13 +445,10 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_Migration_CoreInstanceType(t *testin
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupInstanceType(rName, "m4.large"),
@@ -478,13 +481,10 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_Migration_InstanceGroup(t *testing.T
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupInstanceType(rName, "m4.large"),
@@ -518,13 +518,10 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_Name(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupName(rName, "name2"),
@@ -540,6 +537,8 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_Name(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_instance_group(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -550,13 +549,12 @@ func TestAccAWSEMRCluster_instance_group(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfigInstanceGroups(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "instance_group.#", "2"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "2"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -566,6 +564,8 @@ func TestAccAWSEMRCluster_instance_group(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_instance_group_names(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -576,13 +576,12 @@ func TestAccAWSEMRCluster_instance_group_names(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfigInstanceGroupsName(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "instance_group.#", "3"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "3"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -592,6 +591,8 @@ func TestAccAWSEMRCluster_instance_group_names(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_instance_group_update(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -602,21 +603,19 @@ func TestAccAWSEMRCluster_instance_group_update(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfigInstanceGroups(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "instance_group.#", "2"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "2"),
 				),
 			},
 			{
 				Config: testAccAWSEmrClusterConfigInstanceGroupsUpdate(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "instance_group.#", "2"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "2"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -626,6 +625,8 @@ func TestAccAWSEMRCluster_instance_group_update(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_instance_group_EBSVolumeType_st1(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -636,13 +637,12 @@ func TestAccAWSEMRCluster_instance_group_EBSVolumeType_st1(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfigInstanceGroups_st1(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "instance_group.#", "2"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "2"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -652,6 +652,8 @@ func TestAccAWSEMRCluster_instance_group_EBSVolumeType_st1(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_updateAutoScalingPolicy(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -662,17 +664,17 @@ func TestAccAWSEMRCluster_updateAutoScalingPolicy(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfigInstanceGroups_st1(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 				),
 			},
 			{
 				Config: testAccAWSEmrClusterConfigInstanceGroups_updateAutoScalingPolicy(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -724,6 +726,8 @@ func TestAccAWSEMRCluster_Ec2Attributes_DefaultManagedSecurityGroups(t *testing.
 }
 
 func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	password := fmt.Sprintf("NeverKeepPasswordsInPlainText%d!", r)
@@ -736,14 +740,14 @@ func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfig_Kerberos_ClusterDedicatedKdc(r, password),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "kerberos_attributes.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "kerberos_attributes.0.kdc_admin_password", password),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "kerberos_attributes.0.realm", "EC2.INTERNAL"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.0.kdc_admin_password", password),
+					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.0.realm", "EC2.INTERNAL"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps", "kerberos_attributes.0.kdc_admin_password"},
@@ -771,13 +775,10 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_BidPrice(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigMasterInstanceGroupBidPrice(rName, "0.51"),
@@ -811,13 +812,10 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceCount(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigMasterInstanceGroupInstanceCount(rName, 1),
@@ -851,13 +849,10 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigMasterInstanceGroupInstanceType(rName, "m4.xlarge"),
@@ -890,13 +885,10 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_Migration_InstanceGroup(t *testing
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigMasterInstanceGroupInstanceType(rName, "m4.large"),
@@ -929,13 +921,10 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_Migration_MasterInstanceType(t *te
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigMasterInstanceGroupInstanceType(rName, "m4.large"),
@@ -969,13 +958,10 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_Name(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigMasterInstanceGroupName(rName, "name2"),
@@ -991,6 +977,8 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_Name(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_security_config(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -1000,10 +988,10 @@ func TestAccAWSEMRCluster_security_config(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrClusterConfig_SecurityConfiguration(r),
-				Check:  testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+				Check:  testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -1036,7 +1024,7 @@ func TestAccAWSEMRCluster_Step_Basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -1126,7 +1114,7 @@ func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -1167,6 +1155,7 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 					testAccCheck_bootstrap_order(&cluster, argsInts, argsStrings),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "2"),
 				),
 			},
 			{
@@ -1180,6 +1169,8 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -1190,40 +1181,33 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfigTerminationPolicy(r, "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "termination_protection", "false"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection", "false"),
 				),
 			},
 			{
 				Config: testAccAWSEmrClusterConfigTerminationPolicy(r, "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "termination_protection", "true"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection", "true"),
 				),
 			},
 			{
-				ResourceName:      "aws_emr_cluster.tf-test-cluster",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"kerberos_attributes.0.kdc_admin_password",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				//Need to turn off termination_protection to allow the job to be deleted
 				Config: testAccAWSEmrClusterConfigTerminationPolicy(r, "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "termination_protection", "false"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection", "false"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -1233,6 +1217,8 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_keepJob(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -1243,13 +1229,12 @@ func TestAccAWSEMRCluster_keepJob(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfig_keepJob(r, "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "keep_job_flow_alive_when_no_steps", "false"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "keep_job_flow_alive_when_no_steps", "false"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -1259,6 +1244,8 @@ func TestAccAWSEMRCluster_keepJob(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -1269,31 +1256,25 @@ func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "visible_to_all_users", "true"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", "true"),
 				),
 			},
 			{
-				ResourceName:      "aws_emr_cluster.tf-test-cluster",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"configurations",
-					"kerberos_attributes.0.kdc_admin_password",
-					"keep_job_flow_alive_when_no_steps",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigVisibleToAllUsersUpdated(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "visible_to_all_users", "false"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", "false"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -1303,6 +1284,8 @@ func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	bucketName := fmt.Sprintf("s3n://tf-acc-test-%d/", r)
@@ -1315,12 +1298,12 @@ func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfigS3Logging(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "log_uri", bucketName),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "log_uri", bucketName),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -1330,6 +1313,8 @@ func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_tags(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -1340,32 +1325,25 @@ func TestAccAWSEMRCluster_tags(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "tags.%", "4"),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "tags.role", "rolename"),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "tags.dns_zone", "env_zone"),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "tags.env", "env"),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "tags.name", "name-env")),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.role", "rolename"),
+					resource.TestCheckResourceAttr(resourceName, "tags.dns_zone", "env_zone"),
+					resource.TestCheckResourceAttr(resourceName, "tags.env", "env"),
+					resource.TestCheckResourceAttr(resourceName, "tags.name", "name-env")),
 			},
 			{
 				Config: testAccAWSEmrClusterConfigUpdatedTags(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "tags.%", "3"),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "tags.dns_zone", "new_zone"),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "tags.Env", "production"),
-					resource.TestCheckResourceAttr(
-						"aws_emr_cluster.tf-test-cluster", "tags.name", "name-env"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.dns_zone", "new_zone"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Env", "production"),
+					resource.TestCheckResourceAttr(resourceName, "tags.name", "name-env"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -1375,6 +1353,8 @@ func TestAccAWSEMRCluster_tags(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_root_volume_size(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -1385,19 +1365,19 @@ func TestAccAWSEMRCluster_root_volume_size(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "ebs_root_volume_size", "21"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "ebs_root_volume_size", "21"),
 				),
 			},
 			{
 				Config: testAccAWSEmrClusterConfigUpdatedRootVolumeSize(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "ebs_root_volume_size", "48"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "ebs_root_volume_size", "48"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
@@ -1440,6 +1420,8 @@ func TestAccAWSEMRCluster_step_concurrency_level(t *testing.T) {
 }
 
 func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
 	var cluster emr.Cluster
 	r := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -1450,12 +1432,12 @@ func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfigCustomAmiID(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
-					resource.TestCheckResourceAttrSet("aws_emr_cluster.tf-test-cluster", "custom_ami_id"),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttrSet(resourceName, "custom_ami_id"),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
