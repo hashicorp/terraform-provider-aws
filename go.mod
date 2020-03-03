@@ -16,6 +16,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
 	github.com/hashicorp/vault v0.10.4
 	github.com/jen20/awspolicyequivalence v1.1.0
+	github.com/katbyte/terrafmt v0.2.1-0.20200303174203-e6a3e82cb21b
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pquerna/otp v1.2.0
