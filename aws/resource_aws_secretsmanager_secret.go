@@ -84,10 +84,12 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
 				Type:       schema.TypeString,
 				Optional:   true,
+				Computed:   true,
 			},
 			"rotation_rules": {
 				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
 				Type:       schema.TypeList,
+				Computed:   true,
 				Optional:   true,
 				MaxItems:   1,
 				Elem: &schema.Resource{
