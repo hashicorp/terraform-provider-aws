@@ -70,6 +70,7 @@ var sliceServiceNames = []string{
 	"mediastore",
 	"neptune",
 	"organizations",
+	"quicksight",
 	"ram",
 	"rds",
 	"redshift",
