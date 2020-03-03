@@ -1157,7 +1157,20 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 					testAccCheck_bootstrap_order(&cluster, argsInts, argsStrings),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.0", "instance.isMaster=true"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.name", "runif-2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.0", "instance.isMaster=true"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.1", "echo also running on master node"),
 				),
 			},
 			{
@@ -1772,6 +1785,12 @@ resource "aws_emr_cluster" "test" {
       "9",
       "10",
     ]
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif-2"
+    args = ["instance.isMaster=true", "echo also running on master node"]
   }
 }
 
