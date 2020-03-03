@@ -179,6 +179,8 @@ func (c *AppMesh) CreateRouteRequest(input *CreateRouteInput) (req *request.Requ
 // If your route matches a request, you can distribute traffic to one or more
 // target virtual nodes with relative weighting.
 //
+// For more information about routes, see Routes (https://docs.aws.amazon.com//app-mesh/latest/userguide/routes.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -305,6 +307,8 @@ func (c *AppMesh) CreateVirtualNodeRequest(input *CreateVirtualNodeInput) (req *
 // override the node.cluster value that is set by APPMESH_VIRTUAL_NODE_NAME
 // with the APPMESH_VIRTUAL_NODE_CLUSTER environment variable.
 //
+// For more information about virtual nodes, see Virtual Nodes (https://docs.aws.amazon.com//app-mesh/latest/userguide/virtual_nodes.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -419,6 +423,8 @@ func (c *AppMesh) CreateVirtualRouterRequest(input *CreateVirtualRouterInput) (r
 // mesh. After you create your virtual router, create and associate routes for
 // your virtual router that direct incoming requests to different virtual nodes.
 //
+// For more information about virtual routers, see Virtual Routers (https://docs.aws.amazon.com//app-mesh/latest/userguide/virtual_routers.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -531,6 +537,8 @@ func (c *AppMesh) CreateVirtualServiceRequest(input *CreateVirtualServiceInput) 
 // services call your virtual service by its virtualServiceName, and those requests
 // are routed to the virtual node or virtual router that is specified as the
 // provider for the virtual service.
+//
+// For more information about virtual services, see Virtual Services (https://docs.aws.amazon.com//app-mesh/latest/userguide/virtual_services.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3461,6 +3469,45 @@ func (s *Backend) SetVirtualService(v *VirtualServiceBackend) *Backend {
 	return s
 }
 
+// An object that represents the default properties for a backend.
+type BackendDefaults struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a client policy.
+	ClientPolicy *ClientPolicy `locationName:"clientPolicy" type:"structure"`
+}
+
+// String returns the string representation
+func (s BackendDefaults) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BackendDefaults) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BackendDefaults) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BackendDefaults"}
+	if s.ClientPolicy != nil {
+		if err := s.ClientPolicy.Validate(); err != nil {
+			invalidParams.AddNested("ClientPolicy", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientPolicy sets the ClientPolicy field's value.
+func (s *BackendDefaults) SetClientPolicy(v *ClientPolicy) *BackendDefaults {
+	s.ClientPolicy = v
+	return s
+}
+
 // The request syntax was malformed. Check your request syntax and try again.
 type BadRequestException struct {
 	_            struct{} `type:"structure"`
@@ -3515,6 +3562,105 @@ func (s BadRequestException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s BadRequestException) RequestID() string {
 	return s.respMetadata.RequestID
+}
+
+// An object that represents a client policy.
+type ClientPolicy struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a Transport Layer Security (TLS) client policy.
+	Tls *ClientPolicyTls `locationName:"tls" type:"structure"`
+}
+
+// String returns the string representation
+func (s ClientPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientPolicy) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ClientPolicy) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ClientPolicy"}
+	if s.Tls != nil {
+		if err := s.Tls.Validate(); err != nil {
+			invalidParams.AddNested("Tls", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTls sets the Tls field's value.
+func (s *ClientPolicy) SetTls(v *ClientPolicyTls) *ClientPolicy {
+	s.Tls = v
+	return s
+}
+
+// An object that represents a Transport Layer Security (TLS) client policy.
+type ClientPolicyTls struct {
+	_ struct{} `type:"structure"`
+
+	Enforce *bool `locationName:"enforce" type:"boolean"`
+
+	Ports []*int64 `locationName:"ports" type:"list"`
+
+	// An object that represents a Transport Layer Security (TLS) validation context.
+	//
+	// Validation is a required field
+	Validation *TlsValidationContext `locationName:"validation" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s ClientPolicyTls) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientPolicyTls) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ClientPolicyTls) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ClientPolicyTls"}
+	if s.Validation == nil {
+		invalidParams.Add(request.NewErrParamRequired("Validation"))
+	}
+	if s.Validation != nil {
+		if err := s.Validation.Validate(); err != nil {
+			invalidParams.AddNested("Validation", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnforce sets the Enforce field's value.
+func (s *ClientPolicyTls) SetEnforce(v bool) *ClientPolicyTls {
+	s.Enforce = &v
+	return s
+}
+
+// SetPorts sets the Ports field's value.
+func (s *ClientPolicyTls) SetPorts(v []*int64) *ClientPolicyTls {
+	s.Ports = v
+	return s
+}
+
+// SetValidation sets the Validation field's value.
+func (s *ClientPolicyTls) SetValidation(v *TlsValidationContext) *ClientPolicyTls {
+	s.Validation = v
+	return s
 }
 
 // The request contains a client token that was used for a previous update resource
@@ -5265,7 +5411,7 @@ func (s *GrpcRetryPolicy) SetTcpRetryEvents(v []*string) *GrpcRetryPolicy {
 	return s
 }
 
-// An object that represents a GRPC route type.
+// An object that represents a gRPC route type.
 type GrpcRoute struct {
 	_ struct{} `type:"structure"`
 
@@ -5885,7 +6031,7 @@ func (s *HttpRetryPolicy) SetTcpRetryEvents(v []*string) *HttpRetryPolicy {
 	return s
 }
 
-// An object that represents an HTTP or HTTP2 route type.
+// An object that represents an HTTP or HTTP/2 route type.
 type HttpRoute struct {
 	_ struct{} `type:"structure"`
 
@@ -6810,6 +6956,10 @@ type Listener struct {
 	//
 	// PortMapping is a required field
 	PortMapping *PortMapping `locationName:"portMapping" type:"structure" required:"true"`
+
+	// An object that represents the Transport Layer Security (TLS) properties for
+	// a listener.
+	Tls *ListenerTls `locationName:"tls" type:"structure"`
 }
 
 // String returns the string representation
@@ -6838,6 +6988,11 @@ func (s *Listener) Validate() error {
 			invalidParams.AddNested("PortMapping", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tls != nil {
+		if err := s.Tls.Validate(); err != nil {
+			invalidParams.AddNested("Tls", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6854,6 +7009,218 @@ func (s *Listener) SetHealthCheck(v *HealthCheckPolicy) *Listener {
 // SetPortMapping sets the PortMapping field's value.
 func (s *Listener) SetPortMapping(v *PortMapping) *Listener {
 	s.PortMapping = v
+	return s
+}
+
+// SetTls sets the Tls field's value.
+func (s *Listener) SetTls(v *ListenerTls) *Listener {
+	s.Tls = v
+	return s
+}
+
+// An object that represents the Transport Layer Security (TLS) properties for
+// a listener.
+type ListenerTls struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a listener's Transport Layer Security (TLS) certificate.
+	//
+	// Certificate is a required field
+	Certificate *ListenerTlsCertificate `locationName:"certificate" type:"structure" required:"true"`
+
+	// Mode is a required field
+	Mode *string `locationName:"mode" type:"string" required:"true" enum:"ListenerTlsMode"`
+}
+
+// String returns the string representation
+func (s ListenerTls) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTls) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTls) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTls"}
+	if s.Certificate == nil {
+		invalidParams.Add(request.NewErrParamRequired("Certificate"))
+	}
+	if s.Mode == nil {
+		invalidParams.Add(request.NewErrParamRequired("Mode"))
+	}
+	if s.Certificate != nil {
+		if err := s.Certificate.Validate(); err != nil {
+			invalidParams.AddNested("Certificate", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificate sets the Certificate field's value.
+func (s *ListenerTls) SetCertificate(v *ListenerTlsCertificate) *ListenerTls {
+	s.Certificate = v
+	return s
+}
+
+// SetMode sets the Mode field's value.
+func (s *ListenerTls) SetMode(v string) *ListenerTls {
+	s.Mode = &v
+	return s
+}
+
+// An object that represents an AWS Certicate Manager (ACM) certificate.
+type ListenerTlsAcmCertificate struct {
+	_ struct{} `type:"structure"`
+
+	// CertificateArn is a required field
+	CertificateArn *string `locationName:"certificateArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListenerTlsAcmCertificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTlsAcmCertificate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTlsAcmCertificate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTlsAcmCertificate"}
+	if s.CertificateArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *ListenerTlsAcmCertificate) SetCertificateArn(v string) *ListenerTlsAcmCertificate {
+	s.CertificateArn = &v
+	return s
+}
+
+// An object that represents a listener's Transport Layer Security (TLS) certificate.
+type ListenerTlsCertificate struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents an AWS Certicate Manager (ACM) certificate.
+	Acm *ListenerTlsAcmCertificate `locationName:"acm" type:"structure"`
+
+	// An object that represents a local file certificate. The certificate must
+	// meet specific requirements and you must have proxy authorization enabled.
+	// For more information, see TLS Encryption (https://docs.aws.amazon.com//app-mesh/latest/userguide/virtual-node-tls.html#virtual-node-tls-prerequisites).
+	File *ListenerTlsFileCertificate `locationName:"file" type:"structure"`
+}
+
+// String returns the string representation
+func (s ListenerTlsCertificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTlsCertificate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTlsCertificate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTlsCertificate"}
+	if s.Acm != nil {
+		if err := s.Acm.Validate(); err != nil {
+			invalidParams.AddNested("Acm", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.File != nil {
+		if err := s.File.Validate(); err != nil {
+			invalidParams.AddNested("File", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcm sets the Acm field's value.
+func (s *ListenerTlsCertificate) SetAcm(v *ListenerTlsAcmCertificate) *ListenerTlsCertificate {
+	s.Acm = v
+	return s
+}
+
+// SetFile sets the File field's value.
+func (s *ListenerTlsCertificate) SetFile(v *ListenerTlsFileCertificate) *ListenerTlsCertificate {
+	s.File = v
+	return s
+}
+
+// An object that represents a local file certificate. The certificate must
+// meet specific requirements and you must have proxy authorization enabled.
+// For more information, see TLS Encryption (https://docs.aws.amazon.com//app-mesh/latest/userguide/virtual-node-tls.html#virtual-node-tls-prerequisites).
+type ListenerTlsFileCertificate struct {
+	_ struct{} `type:"structure"`
+
+	// CertificateChain is a required field
+	CertificateChain *string `locationName:"certificateChain" min:"1" type:"string" required:"true"`
+
+	// PrivateKey is a required field
+	PrivateKey *string `locationName:"privateKey" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListenerTlsFileCertificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTlsFileCertificate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTlsFileCertificate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTlsFileCertificate"}
+	if s.CertificateChain == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateChain"))
+	}
+	if s.CertificateChain != nil && len(*s.CertificateChain) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CertificateChain", 1))
+	}
+	if s.PrivateKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("PrivateKey"))
+	}
+	if s.PrivateKey != nil && len(*s.PrivateKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PrivateKey", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateChain sets the CertificateChain field's value.
+func (s *ListenerTlsFileCertificate) SetCertificateChain(v string) *ListenerTlsFileCertificate {
+	s.CertificateChain = &v
+	return s
+}
+
+// SetPrivateKey sets the PrivateKey field's value.
+func (s *ListenerTlsFileCertificate) SetPrivateKey(v string) *ListenerTlsFileCertificate {
+	s.PrivateKey = &v
 	return s
 }
 
@@ -7455,13 +7822,13 @@ func (s *RouteRef) SetVirtualRouterName(v string) *RouteRef {
 type RouteSpec struct {
 	_ struct{} `type:"structure"`
 
-	// An object that represents a GRPC route type.
+	// An object that represents a gRPC route type.
 	GrpcRoute *GrpcRoute `locationName:"grpcRoute" type:"structure"`
 
-	// An object that represents an HTTP or HTTP2 route type.
+	// An object that represents an HTTP or HTTP/2 route type.
 	Http2Route *HttpRoute `locationName:"http2Route" type:"structure"`
 
-	// An object that represents an HTTP or HTTP2 route type.
+	// An object that represents an HTTP or HTTP/2 route type.
 	HttpRoute *HttpRoute `locationName:"httpRoute" type:"structure"`
 
 	Priority *int64 `locationName:"priority" type:"integer"`
@@ -7890,6 +8257,189 @@ func (s *TcpRouteAction) Validate() error {
 // SetWeightedTargets sets the WeightedTargets field's value.
 func (s *TcpRouteAction) SetWeightedTargets(v []*WeightedTarget) *TcpRouteAction {
 	s.WeightedTargets = v
+	return s
+}
+
+// An object that represents a Transport Layer Security (TLS) validation context.
+type TlsValidationContext struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a Transport Layer Security (TLS) validation context
+	// trust.
+	//
+	// Trust is a required field
+	Trust *TlsValidationContextTrust `locationName:"trust" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s TlsValidationContext) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsValidationContext) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TlsValidationContext) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TlsValidationContext"}
+	if s.Trust == nil {
+		invalidParams.Add(request.NewErrParamRequired("Trust"))
+	}
+	if s.Trust != nil {
+		if err := s.Trust.Validate(); err != nil {
+			invalidParams.AddNested("Trust", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTrust sets the Trust field's value.
+func (s *TlsValidationContext) SetTrust(v *TlsValidationContextTrust) *TlsValidationContext {
+	s.Trust = v
+	return s
+}
+
+// An object that represents a TLS validation context trust for an AWS Certicate
+// Manager (ACM) certificate.
+type TlsValidationContextAcmTrust struct {
+	_ struct{} `type:"structure"`
+
+	// CertificateAuthorityArns is a required field
+	CertificateAuthorityArns []*string `locationName:"certificateAuthorityArns" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TlsValidationContextAcmTrust) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsValidationContextAcmTrust) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TlsValidationContextAcmTrust) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TlsValidationContextAcmTrust"}
+	if s.CertificateAuthorityArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateAuthorityArns"))
+	}
+	if s.CertificateAuthorityArns != nil && len(s.CertificateAuthorityArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CertificateAuthorityArns", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateAuthorityArns sets the CertificateAuthorityArns field's value.
+func (s *TlsValidationContextAcmTrust) SetCertificateAuthorityArns(v []*string) *TlsValidationContextAcmTrust {
+	s.CertificateAuthorityArns = v
+	return s
+}
+
+// An object that represents a Transport Layer Security (TLS) validation context
+// trust for a local file.
+type TlsValidationContextFileTrust struct {
+	_ struct{} `type:"structure"`
+
+	// CertificateChain is a required field
+	CertificateChain *string `locationName:"certificateChain" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TlsValidationContextFileTrust) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsValidationContextFileTrust) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TlsValidationContextFileTrust) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TlsValidationContextFileTrust"}
+	if s.CertificateChain == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateChain"))
+	}
+	if s.CertificateChain != nil && len(*s.CertificateChain) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CertificateChain", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateChain sets the CertificateChain field's value.
+func (s *TlsValidationContextFileTrust) SetCertificateChain(v string) *TlsValidationContextFileTrust {
+	s.CertificateChain = &v
+	return s
+}
+
+// An object that represents a Transport Layer Security (TLS) validation context
+// trust.
+type TlsValidationContextTrust struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a TLS validation context trust for an AWS Certicate
+	// Manager (ACM) certificate.
+	Acm *TlsValidationContextAcmTrust `locationName:"acm" type:"structure"`
+
+	// An object that represents a Transport Layer Security (TLS) validation context
+	// trust for a local file.
+	File *TlsValidationContextFileTrust `locationName:"file" type:"structure"`
+}
+
+// String returns the string representation
+func (s TlsValidationContextTrust) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsValidationContextTrust) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TlsValidationContextTrust) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TlsValidationContextTrust"}
+	if s.Acm != nil {
+		if err := s.Acm.Validate(); err != nil {
+			invalidParams.AddNested("Acm", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.File != nil {
+		if err := s.File.Validate(); err != nil {
+			invalidParams.AddNested("File", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcm sets the Acm field's value.
+func (s *TlsValidationContextTrust) SetAcm(v *TlsValidationContextAcmTrust) *TlsValidationContextTrust {
+	s.Acm = v
+	return s
+}
+
+// SetFile sets the File field's value.
+func (s *TlsValidationContextTrust) SetFile(v *TlsValidationContextFileTrust) *TlsValidationContextTrust {
+	s.File = v
 	return s
 }
 
@@ -8748,6 +9298,9 @@ func (s *VirtualNodeServiceProvider) SetVirtualNodeName(v string) *VirtualNodeSe
 type VirtualNodeSpec struct {
 	_ struct{} `type:"structure"`
 
+	// An object that represents the default properties for a backend.
+	BackendDefaults *BackendDefaults `locationName:"backendDefaults" type:"structure"`
+
 	Backends []*Backend `locationName:"backends" type:"list"`
 
 	Listeners []*Listener `locationName:"listeners" type:"list"`
@@ -8773,6 +9326,11 @@ func (s VirtualNodeSpec) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *VirtualNodeSpec) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "VirtualNodeSpec"}
+	if s.BackendDefaults != nil {
+		if err := s.BackendDefaults.Validate(); err != nil {
+			invalidParams.AddNested("BackendDefaults", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Backends != nil {
 		for i, v := range s.Backends {
 			if v == nil {
@@ -8808,6 +9366,12 @@ func (s *VirtualNodeSpec) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetBackendDefaults sets the BackendDefaults field's value.
+func (s *VirtualNodeSpec) SetBackendDefaults(v *BackendDefaults) *VirtualNodeSpec {
+	s.BackendDefaults = v
+	return s
 }
 
 // SetBackends sets the Backends field's value.
@@ -9124,6 +9688,9 @@ func (s *VirtualRouterStatus) SetStatus(v string) *VirtualRouterStatus {
 type VirtualServiceBackend struct {
 	_ struct{} `type:"structure"`
 
+	// An object that represents a client policy.
+	ClientPolicy *ClientPolicy `locationName:"clientPolicy" type:"structure"`
+
 	// VirtualServiceName is a required field
 	VirtualServiceName *string `locationName:"virtualServiceName" type:"string" required:"true"`
 }
@@ -9144,11 +9711,22 @@ func (s *VirtualServiceBackend) Validate() error {
 	if s.VirtualServiceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualServiceName"))
 	}
+	if s.ClientPolicy != nil {
+		if err := s.ClientPolicy.Validate(); err != nil {
+			invalidParams.AddNested("ClientPolicy", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetClientPolicy sets the ClientPolicy field's value.
+func (s *VirtualServiceBackend) SetClientPolicy(v *ClientPolicy) *VirtualServiceBackend {
+	s.ClientPolicy = v
+	return s
 }
 
 // SetVirtualServiceName sets the VirtualServiceName field's value.
@@ -9505,6 +10083,17 @@ const (
 
 	// HttpSchemeHttps is a HttpScheme enum value
 	HttpSchemeHttps = "https"
+)
+
+const (
+	// ListenerTlsModeDisabled is a ListenerTlsMode enum value
+	ListenerTlsModeDisabled = "DISABLED"
+
+	// ListenerTlsModePermissive is a ListenerTlsMode enum value
+	ListenerTlsModePermissive = "PERMISSIVE"
+
+	// ListenerTlsModeStrict is a ListenerTlsMode enum value
+	ListenerTlsModeStrict = "STRICT"
 )
 
 const (
