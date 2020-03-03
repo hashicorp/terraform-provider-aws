@@ -269,6 +269,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_redshift_cluster":                          dataSourceAwsRedshiftCluster(),
 			"aws_redshift_service_account":                  dataSourceAwsRedshiftServiceAccount(),
 			"aws_region":                                    dataSourceAwsRegion(),
+			"aws_regions":                                   dataSourceAwsRegions(),
 			"aws_route":                                     dataSourceAwsRoute(),
 			"aws_route_table":                               dataSourceAwsRouteTable(),
 			"aws_route_tables":                              dataSourceAwsRouteTables(),
