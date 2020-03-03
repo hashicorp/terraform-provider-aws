@@ -412,6 +412,7 @@ The `rules` object supports the following:
 * `prefix` - (Optional) Object keyname prefix identifying one or more objects to which the rule applies.
 * `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
 * `filter` - (Optional) Filter that identifies subset of objects to which the replication rule applies (documented below).
+* `existing_object_replication` - (Optional) Specifies configuration to replicate existing source bucket objects (documented below).
 
 ~> **NOTE on `prefix` and `filter`:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
 With the `filter` attribute, you can specify object filters based on the object key prefix, tags, or both to scope the objects that the rule applies to.
@@ -444,6 +445,10 @@ The `filter` object supports the following:
 * `prefix` - (Optional) Object keyname prefix that identifies subset of objects to which the rule applies.
 * `tags` - (Optional)  A mapping of tags that identifies subset of objects to which the rule applies.
 The rule applies only to objects having all the tags in its tagset.
+
+The `existing_object_replication` object supports the following:
+
+* `enabled` - (Required) Boolean which indicates if existing objects should be replicated.
 
 The `server_side_encryption_configuration` object supports the following:
 

@@ -1868,6 +1868,63 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_Replication_ExistingObjectReplication(t *testing.T) {
+	rInt := acctest.RandInt()
+	region := testAccGetRegion()
+	partition := testAccGetPartition()
+	resourceName := "aws_s3_bucket.bucket"
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigReplicationWithExistingObjectReplication(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider(resourceName, testAccAwsRegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "replication_configuration.0.role", regexp.MustCompile(fmt.Sprintf("^arn:aws[\\w-]*:iam::[\\d+]+:role/tf-iam-role-replication-%d", rInt))),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
+					testAccCheckAWSS3BucketReplicationRules(
+						resourceName,
+						testAccAwsRegionProviderFunc(region, &providers),
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("foobar"),
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									StorageClass: aws.String(s3.StorageClassStandard),
+								},
+								Prefix: aws.String("foo"),
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+								ExistingObjectReplication: &s3.ExistingObjectReplication{
+									Status: aws.String(s3.ExistingObjectReplicationStatusEnabled),
+								},
+							},
+						},
+					),
+				),
+			},
+			{
+				Config:            testAccAWSS3BucketConfigReplicationWithExistingObjectReplication(rInt),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_objectLock(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_s3_bucket.arbitrary"
@@ -3795,6 +3852,48 @@ resource "aws_s3_bucket" "destination" {
     versioning {
         enabled = true
     }
+}
+`, randInt, randInt, randInt)
+}
+
+func testAccAWSS3BucketConfigReplicationWithExistingObjectReplication(randInt int) string {
+	return fmt.Sprintf(testAccAWSS3BucketConfigReplicationBasic+`
+resource "aws_s3_bucket" "bucket" {
+  provider = "aws.uswest2"
+  bucket   = "tf-test-bucket-%d"
+  acl      = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = "${aws_iam_role.role.arn}"
+    rules {
+      id     = "foobar"
+      prefix = "foo"
+      status = "Enabled"
+
+      destination {
+        bucket        = "${aws_s3_bucket.destination.arn}"
+        storage_class = "STANDARD"
+      }
+
+      existing_object_replication {
+        enabled = true
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket" "destination" {
+  provider = "aws.euwest"
+  bucket   = "tf-test-bucket-destination-%d"
+  region   = "eu-west-1"
+
+  versioning {
+    enabled = true
+  }
 }
 `, randInt, randInt, randInt)
 }

@@ -491,6 +491,20 @@ func resourceAwsS3Bucket() *schema.Resource {
 											},
 										},
 									},
+									"existing_object_replication": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -1960,6 +1974,20 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			rcRule.Prefix = aws.String(rr["prefix"].(string))
 		}
 
+		if vExistingObjectReplication, ok := rr["existing_object_replication"].([]interface{}); ok && len(vExistingObjectReplication) > 0 && vExistingObjectReplication[0] != nil {
+			mExistingObjectReplication := vExistingObjectReplication[0].(map[string]interface{})
+
+			existingObjectReplication := &s3.ExistingObjectReplication{}
+
+			if mExistingObjectReplication["enabled"].(bool) {
+				existingObjectReplication.Status = aws.String(s3.ExistingObjectReplicationStatusEnabled)
+			} else {
+				existingObjectReplication.Status = aws.String(s3.ExistingObjectReplicationStatusDisabled)
+			}
+
+			rcRule.ExistingObjectReplication = existingObjectReplication
+		}
+
 		rules = append(rules, rcRule)
 	}
 
@@ -2243,6 +2271,14 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 			t["filter"] = []interface{}{m}
 		}
 
+		if existingObjectReplication := v.ExistingObjectReplication; existingObjectReplication != nil {
+			mExistingObjectReplication := map[string]interface{}{
+				"enabled": aws.StringValue(existingObjectReplication.Status) == s3.ExistingObjectReplicationStatusEnabled,
+			}
+
+			t["existing_object_replication"] = []interface{}{mExistingObjectReplication}
+		}
+
 		rules = append(rules, t)
 	}
 	m["rules"] = schema.NewSet(rulesHash, rules)
@@ -2393,6 +2429,10 @@ func rulesHash(v interface{}) int {
 	}
 	if v, ok := m["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", replicationRuleFilterHash(v[0])))
+	}
+	if v, ok := m["existing_object_replication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		m := v[0].(map[string]interface{})
+		buf.WriteString(fmt.Sprintf("%t-", m["enabled"].(bool)))
 	}
 	return hashcode.String(buf.String())
 }
