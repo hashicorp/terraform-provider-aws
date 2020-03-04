@@ -5498,6 +5498,161 @@ func (c *QuickSight) RegisterUserWithContext(ctx aws.Context, input *RegisterUse
 	return out, req.Send()
 }
 
+const opSearchDashboards = "SearchDashboards"
+
+// SearchDashboardsRequest generates a "aws/request.Request" representing the
+// client's request for the SearchDashboards operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See SearchDashboards for more information on using the SearchDashboards
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the SearchDashboardsRequest method.
+//    req, resp := client.SearchDashboardsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/SearchDashboards
+func (c *QuickSight) SearchDashboardsRequest(input *SearchDashboardsInput) (req *request.Request, output *SearchDashboardsOutput) {
+	op := &request.Operation{
+		Name:       opSearchDashboards,
+		HTTPMethod: "POST",
+		HTTPPath:   "/accounts/{AwsAccountId}/search/dashboards",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &SearchDashboardsInput{}
+	}
+
+	output = &SearchDashboardsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// SearchDashboards API operation for Amazon QuickSight.
+//
+// Searchs for dashboards that belong to a user.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation SearchDashboards for usage and error information.
+//
+// Returned Error Types:
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InvalidNextTokenException
+//   The NextToken value isn't valid.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/SearchDashboards
+func (c *QuickSight) SearchDashboards(input *SearchDashboardsInput) (*SearchDashboardsOutput, error) {
+	req, out := c.SearchDashboardsRequest(input)
+	return out, req.Send()
+}
+
+// SearchDashboardsWithContext is the same as SearchDashboards with the addition of
+// the ability to pass a context and additional request options.
+//
+// See SearchDashboards for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) SearchDashboardsWithContext(ctx aws.Context, input *SearchDashboardsInput, opts ...request.Option) (*SearchDashboardsOutput, error) {
+	req, out := c.SearchDashboardsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// SearchDashboardsPages iterates over the pages of a SearchDashboards operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See SearchDashboards method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a SearchDashboards operation.
+//    pageNum := 0
+//    err := client.SearchDashboardsPages(params,
+//        func(page *quicksight.SearchDashboardsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *QuickSight) SearchDashboardsPages(input *SearchDashboardsInput, fn func(*SearchDashboardsOutput, bool) bool) error {
+	return c.SearchDashboardsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// SearchDashboardsPagesWithContext same as SearchDashboardsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) SearchDashboardsPagesWithContext(ctx aws.Context, input *SearchDashboardsInput, fn func(*SearchDashboardsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *SearchDashboardsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.SearchDashboardsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*SearchDashboardsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opTagResource = "TagResource"
 
 // TagResourceRequest generates a "aws/request.Request" representing the
@@ -10078,6 +10233,66 @@ func (s *DashboardPublishOptions) SetExportToCSVOption(v *ExportToCSVOption) *Da
 // SetSheetControlsOption sets the SheetControlsOption field's value.
 func (s *DashboardPublishOptions) SetSheetControlsOption(v *SheetControlsOption) *DashboardPublishOptions {
 	s.SheetControlsOption = v
+	return s
+}
+
+// A filter that you apply when searching for dashboards.
+type DashboardSearchFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the value that you want to use as a filter. For example, "Name":
+	// "QUICKSIGHT_USER".
+	Name *string `type:"string" enum:"DashboardFilterAttribute"`
+
+	// The comparison operator that you want to use as a filter. For example, "Operator":
+	// "StringEquals".
+	//
+	// Operator is a required field
+	Operator *string `type:"string" required:"true" enum:"FilterOperator"`
+
+	// The value of the named item, in this case QUICKSIGHT_USER, that you want
+	// to use as a filter. For example, "Value": "arn:aws:quicksight:us-east-1:1:user/default/UserName1".
+	Value *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DashboardSearchFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DashboardSearchFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DashboardSearchFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DashboardSearchFilter"}
+	if s.Operator == nil {
+		invalidParams.Add(request.NewErrParamRequired("Operator"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *DashboardSearchFilter) SetName(v string) *DashboardSearchFilter {
+	s.Name = &v
+	return s
+}
+
+// SetOperator sets the Operator field's value.
+func (s *DashboardSearchFilter) SetOperator(v string) *DashboardSearchFilter {
+	s.Operator = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *DashboardSearchFilter) SetValue(v string) *DashboardSearchFilter {
+	s.Value = &v
 	return s
 }
 
@@ -18926,6 +19141,146 @@ func (s *S3Source) SetUploadSettings(v *UploadSettings) *S3Source {
 	return s
 }
 
+type SearchDashboardsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that contains the user whose dashboards you're
+	// searching for.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The filters to apply to the search. Currently, you can search only by user
+	// name. For example, "Filters": [ { "Name": "QUICKSIGHT_USER", "Operator":
+	// "StringEquals", "Value": "arn:aws:quicksight:us-east-1:1:user/default/UserName1"
+	// } ]
+	//
+	// Filters is a required field
+	Filters []*DashboardSearchFilter `type:"list" required:"true"`
+
+	// The maximum number of results to be returned per request.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next set of results, or null if there are no more results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SearchDashboardsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SearchDashboardsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SearchDashboardsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SearchDashboardsInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.Filters == nil {
+		invalidParams.Add(request.NewErrParamRequired("Filters"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *SearchDashboardsInput) SetAwsAccountId(v string) *SearchDashboardsInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *SearchDashboardsInput) SetFilters(v []*DashboardSearchFilter) *SearchDashboardsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *SearchDashboardsInput) SetMaxResults(v int64) *SearchDashboardsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *SearchDashboardsInput) SetNextToken(v string) *SearchDashboardsInput {
+	s.NextToken = &v
+	return s
+}
+
+type SearchDashboardsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of dashboards owned by the user specified in Filters in your request.
+	DashboardSummaryList []*DashboardSummary `type:"list"`
+
+	// The token for the next set of results, or null if there are no more results.
+	NextToken *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s SearchDashboardsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SearchDashboardsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDashboardSummaryList sets the DashboardSummaryList field's value.
+func (s *SearchDashboardsOutput) SetDashboardSummaryList(v []*DashboardSummary) *SearchDashboardsOutput {
+	s.DashboardSummaryList = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *SearchDashboardsOutput) SetNextToken(v string) *SearchDashboardsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *SearchDashboardsOutput) SetRequestId(v string) *SearchDashboardsOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *SearchDashboardsOutput) SetStatus(v int64) *SearchDashboardsOutput {
+	s.Status = &v
+	return s
+}
+
 // ServiceNow parameters.
 type ServiceNowParameters struct {
 	_ struct{} `type:"structure"`
@@ -23068,6 +23423,11 @@ const (
 )
 
 const (
+	// DashboardFilterAttributeQuicksightUser is a DashboardFilterAttribute enum value
+	DashboardFilterAttributeQuicksightUser = "QUICKSIGHT_USER"
+)
+
+const (
 	// DashboardUIStateExpanded is a DashboardUIState enum value
 	DashboardUIStateExpanded = "EXPANDED"
 
@@ -23215,6 +23575,11 @@ const (
 
 	// FileFormatJson is a FileFormat enum value
 	FileFormatJson = "JSON"
+)
+
+const (
+	// FilterOperatorStringEquals is a FilterOperator enum value
+	FilterOperatorStringEquals = "StringEquals"
 )
 
 const (
