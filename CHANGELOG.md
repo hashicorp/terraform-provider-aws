@@ -1,5 +1,10 @@
 ## 2.52.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_ec2_instance_type_offering` [GH-12139]
+* **New Data Source:** `aws_ec2_instance_type_offerings` [GH-12139]
+
 ENHANCEMENTS:
 
 * resource/aws_globalaccelerator_accelerator: Add `dns_name` and `hosted_zone_id` attributes [GH-11670]
