@@ -12,6 +12,7 @@ Provides a Step Function State Machine resource
 
 ## Example Usage
 ### Basic (Standard Workflow)
+
 ```hcl
 # ...
 
