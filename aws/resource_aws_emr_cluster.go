@@ -1237,32 +1237,27 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 			// RemoveAutoScalingPolicy seems to have eventual consistency.
 			// Retry reading Instance Group configuration until the policy is removed.
-			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-				autoscalingPolicy, err := getEmrCoreInstanceGroupAutoscalingPolicy(conn, d.Id())
-
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-
-				if autoscalingPolicy != nil {
-					return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy still exists", d.Id(), instanceGroupID))
-				}
-
-				return nil
-			})
-
-			if isResourceTimeoutError(err) {
-				var autoscalingPolicy *emr.AutoScalingPolicyDescription
-
-				autoscalingPolicy, err = getEmrCoreInstanceGroupAutoscalingPolicy(conn, d.Id())
-
-				if autoscalingPolicy != nil {
-					err = fmt.Errorf("EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy still exists", d.Id(), instanceGroupID)
-				}
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{"found"},
+				Target:  []string{},
+				Refresh: func() (interface{}, string, error) {
+					autoscalingPolicy, err := getEmrCoreInstanceGroupAutoscalingPolicy(conn, d.Id())
+					if err != nil {
+						log.Printf("[ERROR] Failed to retrieve EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy: %s", d.Id(), instanceGroupID, err)
+						return nil, "", err
+					}
+					if autoscalingPolicy != nil {
+						return autoscalingPolicy, "found", nil
+					}
+					return nil, "", nil
+				},
+				Timeout: 2 * time.Minute,
 			}
 
+			log.Printf("[INFO] Waiting to remove EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy", d.Id(), instanceGroupID)
+			_, err := stateConf.WaitForState()
 			if err != nil {
-				return fmt.Errorf("error waiting for EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy removal: %s", d.Id(), instanceGroupID, err)
+				return fmt.Errorf("error waiting to remove EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy: %w", d.Id(), instanceGroupID, err)
 			}
 		}
 	}
