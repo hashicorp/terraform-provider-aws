@@ -62,7 +62,7 @@ EOF
 
 ### Logging
 
-~> *NOTE:* Logging is only accepted for EXPRESS Workflows. See the [AWS Step Functions Developer Guide](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html) for more information about enabling Step Function logging.
+~> *NOTE:* See the [AWS Step Functions Developer Guide](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html) for more information about enabling Step Function logging.
 
 ```hcl
 # ...
@@ -70,7 +70,6 @@ EOF
 resource "aws_sfn_state_machine" "sfn_state_machine" {
   name     = "my-state-machine"
   role_arn = "${aws_iam_role.iam_for_sfn.arn}"
-  type     = "EXPRESS"
 
   definition = <<EOF
 {

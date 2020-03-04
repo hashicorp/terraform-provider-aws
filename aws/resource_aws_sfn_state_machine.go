@@ -205,7 +205,15 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sfnconn
 
-	if d.HasChange("logging_configuration") && d.Get("type").(string) == sfn.StateMachineTypeExpress {
+	params := &sfn.UpdateStateMachineInput{
+		StateMachineArn: aws.String(d.Id()),
+		Definition:      aws.String(d.Get("definition").(string)),
+		RoleArn:         aws.String(d.Get("role_arn").(string)),
+	}
+
+	log.Printf("[DEBUG] Updating Step Function State Machine: %#v", params)
+
+	if d.HasChange("logging_configuration") {
 		params.LoggingConfiguration = expandAwsSfnLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
 	}
 
