@@ -281,6 +281,9 @@ func testAccCheckListHasSomeElementAttrPair(nameFirst string, resourceAttr strin
 func testAccCheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		is, err := primaryInstanceState(s, resourceName)
+		if err != nil {
+			return err
+		}
 
 		v, ok := is.Attributes[attributeName]
 		if !ok {
