@@ -1,8 +1,20 @@
 ## 2.52.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_ec2_instance_type_offering` [GH-12139]
+* **New Data Source:** `aws_ec2_instance_type_offerings` [GH-12139]
+
 ENHANCEMENTS:
 
 * resource/aws_globalaccelerator_accelerator: Add `dns_name` and `hosted_zone_id` attributes [GH-11670]
+* resource/aws_lb_target_group: Add `load_balancing_algorithm_type` argument (support Least Outstanding Requests algorithm for Application Load Balancers) [GH-11141]
+
+BUG FIXES:
+
+* resource/aws_iam_service_linked_role: Allow `aws_service_name` argument validation to accept values in AWS partitions outside AWS Commercial and AWS GovCloud (US) [GH-11919]
+* resource/aws_lambda_function_event_invoke_config: Retry on additional IAM eventual consistency error with SNS Topic destinations [GH-12171]
+* resource/aws_media_store_container: Prevent `ValidationException` error on creation when no tags are configured [GH-12170]
 
 ## 2.51.0 (February 28, 2020)
 
