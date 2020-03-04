@@ -13,6 +13,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_iam_service_linked_role: Allow `aws_service_name` argument validation to accept values in AWS partitions outside AWS Commercial and AWS GovCloud (US) [GH-11919]
+* resource/aws_lambda_function_event_invoke_config: Retry on additional IAM eventual consistency error with SNS Topic destinations [GH-12171]
 * resource/aws_media_store_container: Prevent `ValidationException` error on creation when no tags are configured [GH-12170]
 
 ## 2.51.0 (February 28, 2020)
