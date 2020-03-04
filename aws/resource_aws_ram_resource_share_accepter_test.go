@@ -5,10 +5,10 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
@@ -34,7 +34,7 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "share_arn", regexp.MustCompile(`^arn\:aws\:ram\:.*resource-share/.+$`)),
 					resource.TestMatchResourceAttr(resourceName, "invitation_arn", regexp.MustCompile(`^arn\:aws\:ram\:.*resource-share-invitation/.+$`)),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexp.MustCompile(`^rs-.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareInvitationStatusAccepted),
+					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareStatusActive),
 					resource.TestMatchResourceAttr(resourceName, "receiver_account_id", regexp.MustCompile(`\d{12}`)),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexp.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", shareName),

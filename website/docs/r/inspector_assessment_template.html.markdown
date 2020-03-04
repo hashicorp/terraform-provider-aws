@@ -1,7 +1,7 @@
 ---
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector_assessment_template"
-sidebar_current: "docs-aws-resource-inspector-assessment-template"
 description: |-
   Provides a Inspector assessment template.
 ---

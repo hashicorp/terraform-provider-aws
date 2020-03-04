@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway_attachment"
-sidebar_current: "docs-aws-resource-vpn-gateway-attachment"
 description: |-
   Provides a Virtual Private Gateway attachment resource.
 ---

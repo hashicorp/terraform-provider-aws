@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_subscription_filter"
-sidebar_current: "docs-aws-resource-cloudwatch-log-subscription-filter"
 description: |-
   Provides a CloudWatch Logs subscription filter.
 ---

@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -84,7 +84,7 @@ func TestValidateRedshiftClusterDbName(t *testing.T) {
 		"/slash-at-the-beginning",
 		"slash-at-the-end/",
 		"",
-		randomString(100),
+		acctest.RandStringFromCharSet(100, acctest.CharSetAlpha),
 		"TestDBname",
 	}
 	for _, v := range invalidNames {
@@ -256,7 +256,7 @@ func TestAccAWSRedshiftCluster_loggingEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "logging.0.enable", "true"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "logging.0.bucket_name", fmt.Sprintf("tf-redshift-logging-%d", rInt)),
+						"aws_redshift_cluster.default", "logging.0.bucket_name", fmt.Sprintf("tf-test-redshift-logging-%d", rInt)),
 				),
 			},
 			{
@@ -801,7 +801,7 @@ func TestResourceAWSRedshiftClusterFinalSnapshotIdentifierValidation(t *testing.
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(256),
+			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -829,7 +829,7 @@ func TestResourceAWSRedshiftClusterMasterUsernameValidation(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(129),
+			Value:    acctest.RandStringFromCharSet(129, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 		{
@@ -1153,7 +1153,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 data "aws_redshift_service_account" "main" {}
 
 resource "aws_s3_bucket" "bucket" {
-  bucket        = "tf-redshift-logging-%d"
+  bucket        = "tf-test-redshift-logging-%d"
   force_destroy = true
 
   policy = <<EOF
@@ -1167,7 +1167,7 @@ resource "aws_s3_bucket" "bucket" {
 			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:PutObject",
-		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d/*"
+		 "Resource": "arn:aws:s3:::tf-test-redshift-logging-%d/*"
 	 },
 	 {
 		 "Sid": "Stmt137652664067",
@@ -1176,7 +1176,7 @@ resource "aws_s3_bucket" "bucket" {
 			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:GetBucketAcl",
-		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d"
+		 "Resource": "arn:aws:s3:::tf-test-redshift-logging-%d"
 	 }
  ]
 }

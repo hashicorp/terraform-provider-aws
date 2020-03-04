@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCognitoUserPoolClient() *schema.Resource {
@@ -55,6 +55,11 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 						cognitoidentityprovider.ExplicitAuthFlowsTypeAdminNoSrpAuth,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeCustomAuthFlowOnly,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeUserPasswordAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowAdminUserPasswordAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowCustomAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowUserPasswordAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowUserSrpAuth,
+						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowRefreshTokenAuth,
 					}, false),
 				},
 			},
@@ -104,7 +109,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 			"allowed_oauth_scopes": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 25,
+				MaxItems: 50,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					// https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html
@@ -243,8 +248,8 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(*resp.UserPoolClient.ClientId)
-	d.Set("user_pool_id", *resp.UserPoolClient.UserPoolId)
-	d.Set("name", *resp.UserPoolClient.ClientName)
+	d.Set("user_pool_id", resp.UserPoolClient.UserPoolId)
+	d.Set("name", resp.UserPoolClient.ClientName)
 	d.Set("explicit_auth_flows", flattenStringList(resp.UserPoolClient.ExplicitAuthFlows))
 	d.Set("read_attributes", flattenStringList(resp.UserPoolClient.ReadAttributes))
 	d.Set("write_attributes", flattenStringList(resp.UserPoolClient.WriteAttributes))

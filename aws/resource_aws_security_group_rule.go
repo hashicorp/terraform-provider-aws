@@ -12,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSecurityGroupRule() *schema.Resource {
@@ -759,9 +759,9 @@ func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPe
 		s := rule.UserIdGroupPairs[0]
 
 		if isVPC {
-			d.Set("source_security_group_id", *s.GroupId)
+			d.Set("source_security_group_id", s.GroupId)
 		} else {
-			d.Set("source_security_group_id", *s.GroupName)
+			d.Set("source_security_group_id", s.GroupName)
 		}
 	}
 

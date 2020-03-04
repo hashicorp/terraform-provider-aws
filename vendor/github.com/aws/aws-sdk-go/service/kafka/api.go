@@ -66,26 +66,26 @@ func (c *Kafka) CreateClusterRequest(input *CreateClusterInput) (req *request.Re
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation CreateCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   Returns information about an error.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Returns information about an error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/CreateCluster
@@ -163,26 +163,26 @@ func (c *Kafka) CreateConfigurationRequest(input *CreateConfigurationInput) (req
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation CreateConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   Returns information about an error.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Returns information about an error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/CreateConfiguration
@@ -261,17 +261,17 @@ func (c *Kafka) DeleteClusterRequest(input *DeleteClusterInput) (req *request.Re
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation DeleteCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DeleteCluster
@@ -350,20 +350,20 @@ func (c *Kafka) DescribeClusterRequest(input *DescribeClusterInput) (req *reques
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation DescribeCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DescribeCluster
@@ -441,20 +441,20 @@ func (c *Kafka) DescribeClusterOperationRequest(input *DescribeClusterOperationI
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation DescribeClusterOperation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DescribeClusterOperation
@@ -532,23 +532,23 @@ func (c *Kafka) DescribeConfigurationRequest(input *DescribeConfigurationInput) 
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation DescribeConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DescribeConfiguration
@@ -626,23 +626,23 @@ func (c *Kafka) DescribeConfigurationRevisionRequest(input *DescribeConfiguratio
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation DescribeConfigurationRevision for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DescribeConfigurationRevision
@@ -720,20 +720,20 @@ func (c *Kafka) GetBootstrapBrokersRequest(input *GetBootstrapBrokersInput) (req
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation GetBootstrapBrokers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/GetBootstrapBrokers
@@ -818,17 +818,17 @@ func (c *Kafka) ListClusterOperationsRequest(input *ListClusterOperationsInput) 
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation ListClusterOperations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListClusterOperations
@@ -896,10 +896,12 @@ func (c *Kafka) ListClusterOperationsPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListClusterOperationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListClusterOperationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -962,17 +964,17 @@ func (c *Kafka) ListClustersRequest(input *ListClustersInput) (req *request.Requ
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation ListClusters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListClusters
@@ -1040,10 +1042,12 @@ func (c *Kafka) ListClustersPagesWithContext(ctx aws.Context, input *ListCluster
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1097,7 +1101,7 @@ func (c *Kafka) ListConfigurationRevisionsRequest(input *ListConfigurationRevisi
 
 // ListConfigurationRevisions API operation for Managed Streaming for Kafka.
 //
-// Returns a list of all the MSK configurations in this Region.
+// Returns a list of all the revisions of an MSK configuration.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1106,23 +1110,23 @@ func (c *Kafka) ListConfigurationRevisionsRequest(input *ListConfigurationRevisi
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation ListConfigurationRevisions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListConfigurationRevisions
@@ -1190,10 +1194,12 @@ func (c *Kafka) ListConfigurationRevisionsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListConfigurationRevisionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListConfigurationRevisionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1256,20 +1262,20 @@ func (c *Kafka) ListConfigurationsRequest(input *ListConfigurationsInput) (req *
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation ListConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+// Returned Error Types:
+//   * ServiceUnavailableException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListConfigurations
@@ -1337,10 +1343,158 @@ func (c *Kafka) ListConfigurationsPagesWithContext(ctx aws.Context, input *ListC
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListConfigurationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListConfigurationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
+	return p.Err()
+}
+
+const opListKafkaVersions = "ListKafkaVersions"
+
+// ListKafkaVersionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListKafkaVersions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListKafkaVersions for more information on using the ListKafkaVersions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListKafkaVersionsRequest method.
+//    req, resp := client.ListKafkaVersionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListKafkaVersions
+func (c *Kafka) ListKafkaVersionsRequest(input *ListKafkaVersionsInput) (req *request.Request, output *ListKafkaVersionsOutput) {
+	op := &request.Operation{
+		Name:       opListKafkaVersions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/kafka-versions",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListKafkaVersionsInput{}
+	}
+
+	output = &ListKafkaVersionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListKafkaVersions API operation for Managed Streaming for Kafka.
+//
+// Returns a list of Kafka versions.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation ListKafkaVersions for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListKafkaVersions
+func (c *Kafka) ListKafkaVersions(input *ListKafkaVersionsInput) (*ListKafkaVersionsOutput, error) {
+	req, out := c.ListKafkaVersionsRequest(input)
+	return out, req.Send()
+}
+
+// ListKafkaVersionsWithContext is the same as ListKafkaVersions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListKafkaVersions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) ListKafkaVersionsWithContext(ctx aws.Context, input *ListKafkaVersionsInput, opts ...request.Option) (*ListKafkaVersionsOutput, error) {
+	req, out := c.ListKafkaVersionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListKafkaVersionsPages iterates over the pages of a ListKafkaVersions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListKafkaVersions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListKafkaVersions operation.
+//    pageNum := 0
+//    err := client.ListKafkaVersionsPages(params,
+//        func(page *kafka.ListKafkaVersionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Kafka) ListKafkaVersionsPages(input *ListKafkaVersionsInput, fn func(*ListKafkaVersionsOutput, bool) bool) error {
+	return c.ListKafkaVersionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListKafkaVersionsPagesWithContext same as ListKafkaVersionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) ListKafkaVersionsPagesWithContext(ctx aws.Context, input *ListKafkaVersionsInput, fn func(*ListKafkaVersionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListKafkaVersionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListKafkaVersionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListKafkaVersionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
 	return p.Err()
 }
 
@@ -1403,17 +1557,17 @@ func (c *Kafka) ListNodesRequest(input *ListNodesInput) (req *request.Request, o
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation ListNodes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListNodes
@@ -1481,10 +1635,12 @@ func (c *Kafka) ListNodesPagesWithContext(ctx aws.Context, input *ListNodesInput
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNodesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNodesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1541,14 +1697,14 @@ func (c *Kafka) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListTagsForResource
@@ -1627,14 +1783,14 @@ func (c *Kafka) TagResourceRequest(input *TagResourceInput) (req *request.Reques
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/TagResource
@@ -1713,14 +1869,14 @@ func (c *Kafka) UntagResourceRequest(input *UntagResourceInput) (req *request.Re
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UntagResource
@@ -1740,6 +1896,99 @@ func (c *Kafka) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, 
 // for more information on using Contexts.
 func (c *Kafka) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
 	req, out := c.UntagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateBrokerCount = "UpdateBrokerCount"
+
+// UpdateBrokerCountRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateBrokerCount operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateBrokerCount for more information on using the UpdateBrokerCount
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateBrokerCountRequest method.
+//    req, resp := client.UpdateBrokerCountRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateBrokerCount
+func (c *Kafka) UpdateBrokerCountRequest(input *UpdateBrokerCountInput) (req *request.Request, output *UpdateBrokerCountOutput) {
+	op := &request.Operation{
+		Name:       opUpdateBrokerCount,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/clusters/{clusterArn}/nodes/count",
+	}
+
+	if input == nil {
+		input = &UpdateBrokerCountInput{}
+	}
+
+	output = &UpdateBrokerCountOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateBrokerCount API operation for Managed Streaming for Kafka.
+//
+// Updates the number of broker nodes in the cluster. You can use this operation
+// to increase the number of brokers in an existing cluster. You can't decrease
+// the number of brokers.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation UpdateBrokerCount for usage and error information.
+//
+// Returned Error Types:
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateBrokerCount
+func (c *Kafka) UpdateBrokerCount(input *UpdateBrokerCountInput) (*UpdateBrokerCountOutput, error) {
+	req, out := c.UpdateBrokerCountRequest(input)
+	return out, req.Send()
+}
+
+// UpdateBrokerCountWithContext is the same as UpdateBrokerCount with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateBrokerCount for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) UpdateBrokerCountWithContext(ctx aws.Context, input *UpdateBrokerCountInput, opts ...request.Option) (*UpdateBrokerCountOutput, error) {
+	req, out := c.UpdateBrokerCountRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1798,20 +2047,20 @@ func (c *Kafka) UpdateBrokerStorageRequest(input *UpdateBrokerStorageInput) (req
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation UpdateBrokerStorage for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+// Returned Error Types:
+//   * ServiceUnavailableException
 //   Returns information about an error.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateBrokerStorage
@@ -1890,23 +2139,23 @@ func (c *Kafka) UpdateClusterConfigurationRequest(input *UpdateClusterConfigurat
 // See the AWS API reference guide for Managed Streaming for Kafka's
 // API operation UpdateClusterConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Returns information about an error.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   Returns information about an error.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Returns information about an error.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Returns information about an error.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Returns information about an error.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   Returns information about an error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateClusterConfiguration
@@ -1929,6 +2178,157 @@ func (c *Kafka) UpdateClusterConfigurationWithContext(ctx aws.Context, input *Up
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opUpdateMonitoring = "UpdateMonitoring"
+
+// UpdateMonitoringRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateMonitoring operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateMonitoring for more information on using the UpdateMonitoring
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateMonitoringRequest method.
+//    req, resp := client.UpdateMonitoringRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateMonitoring
+func (c *Kafka) UpdateMonitoringRequest(input *UpdateMonitoringInput) (req *request.Request, output *UpdateMonitoringOutput) {
+	op := &request.Operation{
+		Name:       opUpdateMonitoring,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/clusters/{clusterArn}/monitoring",
+	}
+
+	if input == nil {
+		input = &UpdateMonitoringInput{}
+	}
+
+	output = &UpdateMonitoringOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateMonitoring API operation for Managed Streaming for Kafka.
+//
+// Updates the monitoring settings for the cluster. You can use this operation
+// to specify which Apache Kafka metrics you want Amazon MSK to send to Amazon
+// CloudWatch. You can also specify settings for open monitoring with Prometheus.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation UpdateMonitoring for usage and error information.
+//
+// Returned Error Types:
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateMonitoring
+func (c *Kafka) UpdateMonitoring(input *UpdateMonitoringInput) (*UpdateMonitoringOutput, error) {
+	req, out := c.UpdateMonitoringRequest(input)
+	return out, req.Send()
+}
+
+// UpdateMonitoringWithContext is the same as UpdateMonitoring with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateMonitoring for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) UpdateMonitoringWithContext(ctx aws.Context, input *UpdateMonitoringInput, opts ...request.Option) (*UpdateMonitoringOutput, error) {
+	req, out := c.UpdateMonitoringRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// Returns information about an error.
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Specifies the EBS volume upgrade information. The broker identifier must
@@ -1986,6 +2386,74 @@ func (s *BrokerEBSVolumeInfo) SetVolumeSizeGB(v int64) *BrokerEBSVolumeInfo {
 	return s
 }
 
+// The broker logs configuration for this MSK cluster.
+type BrokerLogs struct {
+	_ struct{} `type:"structure"`
+
+	// Details of the CloudWatch Logs destination for broker logs.
+	CloudWatchLogs *CloudWatchLogs `locationName:"cloudWatchLogs" type:"structure"`
+
+	// Details of the Kinesis Data Firehose delivery stream that is the destination
+	// for broker logs.
+	Firehose *Firehose `locationName:"firehose" type:"structure"`
+
+	// Details of the Amazon S3 destination for broker logs.
+	S3 *S3 `locationName:"s3" type:"structure"`
+}
+
+// String returns the string representation
+func (s BrokerLogs) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BrokerLogs) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BrokerLogs) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BrokerLogs"}
+	if s.CloudWatchLogs != nil {
+		if err := s.CloudWatchLogs.Validate(); err != nil {
+			invalidParams.AddNested("CloudWatchLogs", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Firehose != nil {
+		if err := s.Firehose.Validate(); err != nil {
+			invalidParams.AddNested("Firehose", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.S3 != nil {
+		if err := s.S3.Validate(); err != nil {
+			invalidParams.AddNested("S3", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCloudWatchLogs sets the CloudWatchLogs field's value.
+func (s *BrokerLogs) SetCloudWatchLogs(v *CloudWatchLogs) *BrokerLogs {
+	s.CloudWatchLogs = v
+	return s
+}
+
+// SetFirehose sets the Firehose field's value.
+func (s *BrokerLogs) SetFirehose(v *Firehose) *BrokerLogs {
+	s.Firehose = v
+	return s
+}
+
+// SetS3 sets the S3 field's value.
+func (s *BrokerLogs) SetS3(v *S3) *BrokerLogs {
+	s.S3 = v
+	return s
+}
+
 // Describes the setup to be used for Kafka broker nodes in the cluster.
 type BrokerNodeGroupInfo struct {
 	_ struct{} `type:"structure"`
@@ -2002,8 +2470,8 @@ type BrokerNodeGroupInfo struct {
 	ClientSubnets []*string `locationName:"clientSubnets" type:"list" required:"true"`
 
 	// The type of Amazon EC2 instances to use for Kafka brokers. The following
-	// instance types are allowed: kafka.m5.large, kafka.m5.xlarge, kafka.m5.2xlarge,kafka.m5.4xlarge,
-	// kafka.m5.12xlarge, and kafka.m5.24xlarge.
+	// instance types are allowed: kafka.m5.large, kafka.m5.xlarge, kafka.m5.2xlarge,
+	// kafka.m5.4xlarge, kafka.m5.12xlarge, and kafka.m5.24xlarge.
 	//
 	// InstanceType is a required field
 	InstanceType *string `locationName:"instanceType" min:"5" type:"string" required:"true"`
@@ -2011,7 +2479,9 @@ type BrokerNodeGroupInfo struct {
 	// The AWS security groups to associate with the elastic network interfaces
 	// in order to specify who can connect to and communicate with the Amazon MSK
 	// cluster. If you don't specify a security group, Amazon MSK uses the default
-	// security group associated with the VPC.
+	// security group associated with the VPC. If you specify security groups that
+	// were shared with you, you must ensure that you have permissions to them.
+	// Specifically, you need the ec2:DescribeSecurityGroups permission.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
 	// Contains information about storage volumes attached to MSK broker nodes.
@@ -2220,6 +2690,54 @@ func (s *ClientAuthentication) SetTls(v *Tls) *ClientAuthentication {
 	return s
 }
 
+// Details of the CloudWatch Logs destination for broker logs.
+type CloudWatchLogs struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies whether broker logs get sent to the specified CloudWatch Logs destination.
+	//
+	// Enabled is a required field
+	Enabled *bool `locationName:"enabled" type:"boolean" required:"true"`
+
+	// The CloudWatch log group that is the destination for broker logs.
+	LogGroup *string `locationName:"logGroup" type:"string"`
+}
+
+// String returns the string representation
+func (s CloudWatchLogs) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudWatchLogs) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CloudWatchLogs) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CloudWatchLogs"}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *CloudWatchLogs) SetEnabled(v bool) *CloudWatchLogs {
+	s.Enabled = &v
+	return s
+}
+
+// SetLogGroup sets the LogGroup field's value.
+func (s *CloudWatchLogs) SetLogGroup(v string) *CloudWatchLogs {
+	s.LogGroup = &v
+	return s
+}
+
 // Returns information about a cluster.
 type ClusterInfo struct {
 	_ struct{} `type:"structure"`
@@ -2246,7 +2764,9 @@ type ClusterInfo struct {
 	// brokers in the cluster.
 	CurrentBrokerSoftwareInfo *BrokerSoftwareInfo `locationName:"currentBrokerSoftwareInfo" type:"structure"`
 
-	// The current version of the MSK cluster.
+	// The current version of the MSK cluster. Cluster versions aren't simple integers.
+	// You can obtain the current version by describing the cluster. An example
+	// version is KTVPDKIKX0DER.
 	CurrentVersion *string `locationName:"currentVersion" type:"string"`
 
 	// Includes all encryption-related information.
@@ -2258,8 +2778,16 @@ type ClusterInfo struct {
 	// see Monitoring (https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html).
 	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
 
+	// You can configure your MSK cluster to send broker logs to different destination
+	// types. This is a container for the configuration details related to broker
+	// logs.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
+
 	// The number of broker nodes in the cluster.
 	NumberOfBrokerNodes *int64 `locationName:"numberOfBrokerNodes" type:"integer"`
+
+	// Settings for open monitoring using Prometheus.
+	OpenMonitoring *OpenMonitoring `locationName:"openMonitoring" type:"structure"`
 
 	// The state of the cluster. The possible states are CREATING, ACTIVE, and FAILED.
 	State *string `locationName:"state" type:"string" enum:"ClusterState"`
@@ -2341,9 +2869,21 @@ func (s *ClusterInfo) SetEnhancedMonitoring(v string) *ClusterInfo {
 	return s
 }
 
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *ClusterInfo) SetLoggingInfo(v *LoggingInfo) *ClusterInfo {
+	s.LoggingInfo = v
+	return s
+}
+
 // SetNumberOfBrokerNodes sets the NumberOfBrokerNodes field's value.
 func (s *ClusterInfo) SetNumberOfBrokerNodes(v int64) *ClusterInfo {
 	s.NumberOfBrokerNodes = &v
+	return s
+}
+
+// SetOpenMonitoring sets the OpenMonitoring field's value.
+func (s *ClusterInfo) SetOpenMonitoring(v *OpenMonitoring) *ClusterInfo {
+	s.OpenMonitoring = v
 	return s
 }
 
@@ -2499,7 +3039,8 @@ type Configuration struct {
 	// LatestRevision is a required field
 	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure" required:"true"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
@@ -2650,6 +3191,64 @@ func (s *ConfigurationRevision) SetRevision(v int64) *ConfigurationRevision {
 	return s
 }
 
+// Returns information about an error.
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Creates a cluster.
 type CreateClusterInput struct {
 	_ struct{} `type:"structure"`
@@ -2667,8 +3266,7 @@ type CreateClusterInput struct {
 	// ClusterName is a required field
 	ClusterName *string `locationName:"clusterName" min:"1" type:"string" required:"true"`
 
-	// Represents the configuration that you want MSK to use for the brokers in
-	// a cluster.
+	// Represents the configuration that you want MSK to use for the cluster.
 	ConfigurationInfo *ConfigurationInfo `locationName:"configurationInfo" type:"structure"`
 
 	// Includes all encryption-related information.
@@ -2683,10 +3281,16 @@ type CreateClusterInput struct {
 	// KafkaVersion is a required field
 	KafkaVersion *string `locationName:"kafkaVersion" min:"1" type:"string" required:"true"`
 
+	// LoggingInfo details.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
+
 	// The number of Kafka broker nodes in the Amazon MSK cluster.
 	//
 	// NumberOfBrokerNodes is a required field
 	NumberOfBrokerNodes *int64 `locationName:"numberOfBrokerNodes" min:"1" type:"integer" required:"true"`
+
+	// The settings for open monitoring.
+	OpenMonitoring *OpenMonitoringInfo `locationName:"openMonitoring" type:"structure"`
 
 	// Create tags when creating the cluster.
 	Tags map[string]*string `locationName:"tags" type:"map"`
@@ -2741,6 +3345,16 @@ func (s *CreateClusterInput) Validate() error {
 			invalidParams.AddNested("EncryptionInfo", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.LoggingInfo != nil {
+		if err := s.LoggingInfo.Validate(); err != nil {
+			invalidParams.AddNested("LoggingInfo", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.OpenMonitoring != nil {
+		if err := s.OpenMonitoring.Validate(); err != nil {
+			invalidParams.AddNested("OpenMonitoring", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2790,9 +3404,21 @@ func (s *CreateClusterInput) SetKafkaVersion(v string) *CreateClusterInput {
 	return s
 }
 
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *CreateClusterInput) SetLoggingInfo(v *LoggingInfo) *CreateClusterInput {
+	s.LoggingInfo = v
+	return s
+}
+
 // SetNumberOfBrokerNodes sets the NumberOfBrokerNodes field's value.
 func (s *CreateClusterInput) SetNumberOfBrokerNodes(v int64) *CreateClusterInput {
 	s.NumberOfBrokerNodes = &v
+	return s
+}
+
+// SetOpenMonitoring sets the OpenMonitoring field's value.
+func (s *CreateClusterInput) SetOpenMonitoring(v *OpenMonitoringInfo) *CreateClusterInput {
+	s.OpenMonitoring = v
 	return s
 }
 
@@ -2856,7 +3482,8 @@ type CreateConfigurationInput struct {
 	// KafkaVersions is a required field
 	KafkaVersions []*string `locationName:"kafkaVersions" type:"list" required:"true"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
@@ -2933,7 +3560,8 @@ type CreateConfigurationOutput struct {
 	// Latest revision of the configuration.
 	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	Name *string `locationName:"name" type:"string"`
 }
 
@@ -3235,7 +3863,8 @@ type DescribeConfigurationOutput struct {
 	// Latest revision of the configuration.
 	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	Name *string `locationName:"name" type:"string"`
 }
 
@@ -3479,7 +4108,7 @@ type EncryptionInTransit struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates the encryption setting for data in transit between clients and
-	// brokers. The following are the possible values.
+	// brokers. You must set it to one of the following values.
 	//
 	// TLS means that client-broker communication is enabled with TLS only.
 	//
@@ -3489,7 +4118,7 @@ type EncryptionInTransit struct {
 	// PLAINTEXT means that client-broker communication is enabled in plaintext
 	// only.
 	//
-	// The default value is TLS_PLAINTEXT.
+	// The default value is TLS.
 	ClientBroker *string `locationName:"clientBroker" type:"string" enum:"ClientBroker"`
 
 	// When set to true, it indicates that data communication among the broker nodes
@@ -3605,6 +4234,114 @@ func (s *ErrorInfo) SetErrorString(v string) *ErrorInfo {
 	return s
 }
 
+// Firehose details for BrokerLogs.
+type Firehose struct {
+	_ struct{} `type:"structure"`
+
+	// The Kinesis Data Firehose delivery stream that is the destination for broker
+	// logs.
+	DeliveryStream *string `locationName:"deliveryStream" type:"string"`
+
+	// Specifies whether broker logs get sent to the specified Kinesis Data Firehose
+	// delivery stream.
+	//
+	// Enabled is a required field
+	Enabled *bool `locationName:"enabled" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s Firehose) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Firehose) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Firehose) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Firehose"}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDeliveryStream sets the DeliveryStream field's value.
+func (s *Firehose) SetDeliveryStream(v string) *Firehose {
+	s.DeliveryStream = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *Firehose) SetEnabled(v bool) *Firehose {
+	s.Enabled = &v
+	return s
+}
+
+// Returns information about an error.
+type ForbiddenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ForbiddenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForbiddenException) GoString() string {
+	return s.String()
+}
+
+func newErrorForbiddenException(v protocol.ResponseMetadata) error {
+	return &ForbiddenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ForbiddenException) Code() string {
+	return "ForbiddenException"
+}
+
+// Message returns the exception's message.
+func (s ForbiddenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ForbiddenException) OrigErr() error {
+	return nil
+}
+
+func (s ForbiddenException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ForbiddenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ForbiddenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type GetBootstrapBrokersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3651,7 +4388,9 @@ type GetBootstrapBrokersOutput struct {
 	// A string containing one or more hostname:port pairs.
 	BootstrapBrokerString *string `locationName:"bootstrapBrokerString" type:"string"`
 
-	// A string containing one or more DNS names (or IP) and TLS port pairs.
+	// A string containing one or more DNS names (or IP) and TLS port pairs. The
+	// following is an example.
+	//  { "BootstrapBrokerStringTls": "b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094"}
 	BootstrapBrokerStringTls *string `locationName:"bootstrapBrokerStringTls" type:"string"`
 }
 
@@ -3674,6 +4413,162 @@ func (s *GetBootstrapBrokersOutput) SetBootstrapBrokerString(v string) *GetBoots
 // SetBootstrapBrokerStringTls sets the BootstrapBrokerStringTls field's value.
 func (s *GetBootstrapBrokersOutput) SetBootstrapBrokerStringTls(v string) *GetBootstrapBrokersOutput {
 	s.BootstrapBrokerStringTls = &v
+	return s
+}
+
+// Returns information about an error.
+type InternalServerErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
+	return &InternalServerErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerErrorException) Code() string {
+	return "InternalServerErrorException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerErrorException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerErrorException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Indicates whether you want to enable or disable the JMX Exporter.
+type JmxExporter struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether you want to enable or disable the JMX Exporter.
+	//
+	// EnabledInBroker is a required field
+	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s JmxExporter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s JmxExporter) GoString() string {
+	return s.String()
+}
+
+// SetEnabledInBroker sets the EnabledInBroker field's value.
+func (s *JmxExporter) SetEnabledInBroker(v bool) *JmxExporter {
+	s.EnabledInBroker = &v
+	return s
+}
+
+// Indicates whether you want to enable or disable the JMX Exporter.
+type JmxExporterInfo struct {
+	_ struct{} `type:"structure"`
+
+	// JMX Exporter being enabled in broker.
+	//
+	// EnabledInBroker is a required field
+	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s JmxExporterInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s JmxExporterInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *JmxExporterInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "JmxExporterInfo"}
+	if s.EnabledInBroker == nil {
+		invalidParams.Add(request.NewErrParamRequired("EnabledInBroker"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnabledInBroker sets the EnabledInBroker field's value.
+func (s *JmxExporterInfo) SetEnabledInBroker(v bool) *JmxExporterInfo {
+	s.EnabledInBroker = &v
+	return s
+}
+
+// Information about a Kafka version.
+type KafkaVersion struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the Apache Kafka version.
+	Status *string `locationName:"status" type:"string" enum:"KafkaVersionStatus"`
+
+	// The Kafka version.
+	Version *string `locationName:"version" type:"string"`
+}
+
+// String returns the string representation
+func (s KafkaVersion) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KafkaVersion) GoString() string {
+	return s.String()
+}
+
+// SetStatus sets the Status field's value.
+func (s *KafkaVersion) SetStatus(v string) *KafkaVersion {
+	s.Status = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *KafkaVersion) SetVersion(v string) *KafkaVersion {
+	s.Version = &v
 	return s
 }
 
@@ -4028,6 +4923,82 @@ func (s *ListConfigurationsOutput) SetNextToken(v string) *ListConfigurationsOut
 	return s
 }
 
+type ListKafkaVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListKafkaVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListKafkaVersionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListKafkaVersionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListKafkaVersionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListKafkaVersionsInput) SetMaxResults(v int64) *ListKafkaVersionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListKafkaVersionsInput) SetNextToken(v string) *ListKafkaVersionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// Response for ListKafkaVersions.
+type ListKafkaVersionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of Kafka version objects.
+	KafkaVersions []*KafkaVersion `locationName:"kafkaVersions" type:"list"`
+
+	// Paginated results marker.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListKafkaVersionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListKafkaVersionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetKafkaVersions sets the KafkaVersions field's value.
+func (s *ListKafkaVersionsOutput) SetKafkaVersions(v []*KafkaVersion) *ListKafkaVersionsOutput {
+	s.KafkaVersions = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListKafkaVersionsOutput) SetNextToken(v string) *ListKafkaVersionsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListNodesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4184,6 +5155,53 @@ func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForRe
 	return s
 }
 
+// You can configure your MSK cluster to send broker logs to different destination
+// types. This is a container for the configuration details related to broker
+// logs.
+type LoggingInfo struct {
+	_ struct{} `type:"structure"`
+
+	// You can configure your MSK cluster to send broker logs to different destination
+	// types. This configuration specifies the details of these destinations.
+	//
+	// BrokerLogs is a required field
+	BrokerLogs *BrokerLogs `locationName:"brokerLogs" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s LoggingInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoggingInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LoggingInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LoggingInfo"}
+	if s.BrokerLogs == nil {
+		invalidParams.Add(request.NewErrParamRequired("BrokerLogs"))
+	}
+	if s.BrokerLogs != nil {
+		if err := s.BrokerLogs.Validate(); err != nil {
+			invalidParams.AddNested("BrokerLogs", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBrokerLogs sets the BrokerLogs field's value.
+func (s *LoggingInfo) SetBrokerLogs(v *BrokerLogs) *LoggingInfo {
+	s.BrokerLogs = v
+	return s
+}
+
 // Information about cluster attributes that can be updated via update APIs.
 type MutableClusterInfo struct {
 	_ struct{} `type:"structure"`
@@ -4194,8 +5212,18 @@ type MutableClusterInfo struct {
 	// Information about the changes in the configuration of the brokers.
 	ConfigurationInfo *ConfigurationInfo `locationName:"configurationInfo" type:"structure"`
 
+	// Specifies which Apache Kafka metrics Amazon MSK gathers and sends to Amazon
+	// CloudWatch for this cluster.
+	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
+
+	// LoggingInfo details.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
+
 	// The number of broker nodes in the cluster.
 	NumberOfBrokerNodes *int64 `locationName:"numberOfBrokerNodes" type:"integer"`
+
+	// Settings for open monitoring using Prometheus.
+	OpenMonitoring *OpenMonitoring `locationName:"openMonitoring" type:"structure"`
 }
 
 // String returns the string representation
@@ -4220,9 +5248,92 @@ func (s *MutableClusterInfo) SetConfigurationInfo(v *ConfigurationInfo) *Mutable
 	return s
 }
 
+// SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
+func (s *MutableClusterInfo) SetEnhancedMonitoring(v string) *MutableClusterInfo {
+	s.EnhancedMonitoring = &v
+	return s
+}
+
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *MutableClusterInfo) SetLoggingInfo(v *LoggingInfo) *MutableClusterInfo {
+	s.LoggingInfo = v
+	return s
+}
+
 // SetNumberOfBrokerNodes sets the NumberOfBrokerNodes field's value.
 func (s *MutableClusterInfo) SetNumberOfBrokerNodes(v int64) *MutableClusterInfo {
 	s.NumberOfBrokerNodes = &v
+	return s
+}
+
+// SetOpenMonitoring sets the OpenMonitoring field's value.
+func (s *MutableClusterInfo) SetOpenMonitoring(v *OpenMonitoring) *MutableClusterInfo {
+	s.OpenMonitoring = v
+	return s
+}
+
+// Indicates whether you want to enable or disable the Node Exporter.
+type NodeExporter struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether you want to enable or disable the Node Exporter.
+	//
+	// EnabledInBroker is a required field
+	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s NodeExporter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeExporter) GoString() string {
+	return s.String()
+}
+
+// SetEnabledInBroker sets the EnabledInBroker field's value.
+func (s *NodeExporter) SetEnabledInBroker(v bool) *NodeExporter {
+	s.EnabledInBroker = &v
+	return s
+}
+
+// Indicates whether you want to enable or disable the Node Exporter.
+type NodeExporterInfo struct {
+	_ struct{} `type:"structure"`
+
+	// Node Exporter being enabled in broker.
+	//
+	// EnabledInBroker is a required field
+	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s NodeExporterInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeExporterInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NodeExporterInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NodeExporterInfo"}
+	if s.EnabledInBroker == nil {
+		invalidParams.Add(request.NewErrParamRequired("EnabledInBroker"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnabledInBroker sets the EnabledInBroker field's value.
+func (s *NodeExporterInfo) SetEnabledInBroker(v bool) *NodeExporterInfo {
+	s.EnabledInBroker = &v
 	return s
 }
 
@@ -4293,6 +5404,335 @@ func (s *NodeInfo) SetNodeType(v string) *NodeInfo {
 func (s *NodeInfo) SetZookeeperNodeInfo(v *ZookeeperNodeInfo) *NodeInfo {
 	s.ZookeeperNodeInfo = v
 	return s
+}
+
+// Returns information about an error.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// JMX and Node monitoring for the MSK cluster.
+type OpenMonitoring struct {
+	_ struct{} `type:"structure"`
+
+	// Prometheus settings.
+	//
+	// Prometheus is a required field
+	Prometheus *Prometheus `locationName:"prometheus" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s OpenMonitoring) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpenMonitoring) GoString() string {
+	return s.String()
+}
+
+// SetPrometheus sets the Prometheus field's value.
+func (s *OpenMonitoring) SetPrometheus(v *Prometheus) *OpenMonitoring {
+	s.Prometheus = v
+	return s
+}
+
+// JMX and Node monitoring for the MSK cluster.
+type OpenMonitoringInfo struct {
+	_ struct{} `type:"structure"`
+
+	// Prometheus settings.
+	//
+	// Prometheus is a required field
+	Prometheus *PrometheusInfo `locationName:"prometheus" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s OpenMonitoringInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpenMonitoringInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OpenMonitoringInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OpenMonitoringInfo"}
+	if s.Prometheus == nil {
+		invalidParams.Add(request.NewErrParamRequired("Prometheus"))
+	}
+	if s.Prometheus != nil {
+		if err := s.Prometheus.Validate(); err != nil {
+			invalidParams.AddNested("Prometheus", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPrometheus sets the Prometheus field's value.
+func (s *OpenMonitoringInfo) SetPrometheus(v *PrometheusInfo) *OpenMonitoringInfo {
+	s.Prometheus = v
+	return s
+}
+
+// Prometheus settings for open monitoring.
+type Prometheus struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether you want to enable or disable the JMX Exporter.
+	JmxExporter *JmxExporter `locationName:"jmxExporter" type:"structure"`
+
+	// Indicates whether you want to enable or disable the Node Exporter.
+	NodeExporter *NodeExporter `locationName:"nodeExporter" type:"structure"`
+}
+
+// String returns the string representation
+func (s Prometheus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Prometheus) GoString() string {
+	return s.String()
+}
+
+// SetJmxExporter sets the JmxExporter field's value.
+func (s *Prometheus) SetJmxExporter(v *JmxExporter) *Prometheus {
+	s.JmxExporter = v
+	return s
+}
+
+// SetNodeExporter sets the NodeExporter field's value.
+func (s *Prometheus) SetNodeExporter(v *NodeExporter) *Prometheus {
+	s.NodeExporter = v
+	return s
+}
+
+// Prometheus settings.
+type PrometheusInfo struct {
+	_ struct{} `type:"structure"`
+
+	// JMX Exporter settings.
+	JmxExporter *JmxExporterInfo `locationName:"jmxExporter" type:"structure"`
+
+	// Node Exporter settings.
+	NodeExporter *NodeExporterInfo `locationName:"nodeExporter" type:"structure"`
+}
+
+// String returns the string representation
+func (s PrometheusInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PrometheusInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PrometheusInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PrometheusInfo"}
+	if s.JmxExporter != nil {
+		if err := s.JmxExporter.Validate(); err != nil {
+			invalidParams.AddNested("JmxExporter", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.NodeExporter != nil {
+		if err := s.NodeExporter.Validate(); err != nil {
+			invalidParams.AddNested("NodeExporter", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetJmxExporter sets the JmxExporter field's value.
+func (s *PrometheusInfo) SetJmxExporter(v *JmxExporterInfo) *PrometheusInfo {
+	s.JmxExporter = v
+	return s
+}
+
+// SetNodeExporter sets the NodeExporter field's value.
+func (s *PrometheusInfo) SetNodeExporter(v *NodeExporterInfo) *PrometheusInfo {
+	s.NodeExporter = v
+	return s
+}
+
+// The details of the Amazon S3 destination for broker logs.
+type S3 struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the S3 bucket that is the destination for broker logs.
+	Bucket *string `locationName:"bucket" type:"string"`
+
+	// Specifies whether broker logs get sent to the specified Amazon S3 destination.
+	//
+	// Enabled is a required field
+	Enabled *bool `locationName:"enabled" type:"boolean" required:"true"`
+
+	// The S3 prefix that is the destination for broker logs.
+	Prefix *string `locationName:"prefix" type:"string"`
+}
+
+// String returns the string representation
+func (s S3) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3"}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBucket sets the Bucket field's value.
+func (s *S3) SetBucket(v string) *S3 {
+	s.Bucket = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *S3) SetEnabled(v bool) *S3 {
+	s.Enabled = &v
+	return s
+}
+
+// SetPrefix sets the Prefix field's value.
+func (s *S3) SetPrefix(v string) *S3 {
+	s.Prefix = &v
+	return s
+}
+
+// Returns information about an error.
+type ServiceUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
+	return &ServiceUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceUnavailableException) Code() string {
+	return "ServiceUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s ServiceUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains information about storage volumes attached to MSK broker nodes.
@@ -4426,6 +5866,122 @@ func (s *Tls) SetCertificateAuthorityArnList(v []*string) *Tls {
 	return s
 }
 
+// Returns information about an error.
+type TooManyRequestsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyRequestsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyRequestsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Returns information about an error.
+type UnauthorizedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnauthorizedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnauthorizedException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
+	return &UnauthorizedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnauthorizedException) Code() string {
+	return "UnauthorizedException"
+}
+
+// Message returns the exception's message.
+func (s UnauthorizedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnauthorizedException) OrigErr() error {
+	return nil
+}
+
+func (s UnauthorizedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnauthorizedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnauthorizedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4491,6 +6047,111 @@ func (s UntagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// Request body for UpdateBrokerCount.
+type UpdateBrokerCountInput struct {
+	_ struct{} `type:"structure"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+
+	// The current version of the cluster.
+	//
+	// CurrentVersion is a required field
+	CurrentVersion *string `locationName:"currentVersion" type:"string" required:"true"`
+
+	// The number of broker nodes that you want the cluster to have after this operation
+	// completes successfully.
+	//
+	// TargetNumberOfBrokerNodes is a required field
+	TargetNumberOfBrokerNodes *int64 `locationName:"targetNumberOfBrokerNodes" min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateBrokerCountInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateBrokerCountInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateBrokerCountInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateBrokerCountInput"}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+	if s.CurrentVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentVersion"))
+	}
+	if s.TargetNumberOfBrokerNodes == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetNumberOfBrokerNodes"))
+	}
+	if s.TargetNumberOfBrokerNodes != nil && *s.TargetNumberOfBrokerNodes < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("TargetNumberOfBrokerNodes", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateBrokerCountInput) SetClusterArn(v string) *UpdateBrokerCountInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetCurrentVersion sets the CurrentVersion field's value.
+func (s *UpdateBrokerCountInput) SetCurrentVersion(v string) *UpdateBrokerCountInput {
+	s.CurrentVersion = &v
+	return s
+}
+
+// SetTargetNumberOfBrokerNodes sets the TargetNumberOfBrokerNodes field's value.
+func (s *UpdateBrokerCountInput) SetTargetNumberOfBrokerNodes(v int64) *UpdateBrokerCountInput {
+	s.TargetNumberOfBrokerNodes = &v
+	return s
+}
+
+// Response body for UpdateBrokerCount.
+type UpdateBrokerCountOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the cluster.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the cluster operation.
+	ClusterOperationArn *string `locationName:"clusterOperationArn" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateBrokerCountOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateBrokerCountOutput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateBrokerCountOutput) SetClusterArn(v string) *UpdateBrokerCountOutput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetClusterOperationArn sets the ClusterOperationArn field's value.
+func (s *UpdateBrokerCountOutput) SetClusterOperationArn(v string) *UpdateBrokerCountOutput {
+	s.ClusterOperationArn = &v
+	return s
+}
+
 // Request object for UpdateBrokerStorage.
 type UpdateBrokerStorageInput struct {
 	_ struct{} `type:"structure"`
@@ -4506,6 +6167,11 @@ type UpdateBrokerStorageInput struct {
 
 	// Describes the target volume size and the ID of the broker to apply the update
 	// to.
+	//
+	// The value you specify for Target-Volume-in-GiB must be a whole number that
+	// is greater than 100 GiB.
+	//
+	// The storage per broker after the update operation can't exceed 16384 GiB.
 	//
 	// TargetBrokerEBSVolumeInfo is a required field
 	TargetBrokerEBSVolumeInfo []*BrokerEBSVolumeInfo `locationName:"targetBrokerEBSVolumeInfo" type:"list" required:"true"`
@@ -4611,13 +6277,12 @@ type UpdateClusterConfigurationInput struct {
 	// ClusterArn is a required field
 	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
 
-	// Represents the configuration that you want MSK to use for the brokers in
-	// a cluster.
+	// Represents the configuration that you want MSK to use for the cluster.
 	//
 	// ConfigurationInfo is a required field
 	ConfigurationInfo *ConfigurationInfo `locationName:"configurationInfo" type:"structure" required:"true"`
 
-	// The version of the cluster that needs to be updated.
+	// The version of the cluster that you want to update.
 	//
 	// CurrentVersion is a required field
 	CurrentVersion *string `locationName:"currentVersion" type:"string" required:"true"`
@@ -4711,6 +6376,132 @@ func (s *UpdateClusterConfigurationOutput) SetClusterOperationArn(v string) *Upd
 	return s
 }
 
+// Request body for UpdateMonitoring.
+type UpdateMonitoringInput struct {
+	_ struct{} `type:"structure"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+
+	// The version of cluster to update from. A successful operation will then generate
+	// a new version.
+	//
+	// CurrentVersion is a required field
+	CurrentVersion *string `locationName:"currentVersion" type:"string" required:"true"`
+
+	// Specifies which Apache Kafka metrics Amazon MSK gathers and sends to Amazon
+	// CloudWatch for this cluster.
+	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
+
+	// LoggingInfo details.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
+
+	// The settings for open monitoring.
+	OpenMonitoring *OpenMonitoringInfo `locationName:"openMonitoring" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateMonitoringInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMonitoringInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateMonitoringInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateMonitoringInput"}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+	if s.CurrentVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentVersion"))
+	}
+	if s.LoggingInfo != nil {
+		if err := s.LoggingInfo.Validate(); err != nil {
+			invalidParams.AddNested("LoggingInfo", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.OpenMonitoring != nil {
+		if err := s.OpenMonitoring.Validate(); err != nil {
+			invalidParams.AddNested("OpenMonitoring", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateMonitoringInput) SetClusterArn(v string) *UpdateMonitoringInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetCurrentVersion sets the CurrentVersion field's value.
+func (s *UpdateMonitoringInput) SetCurrentVersion(v string) *UpdateMonitoringInput {
+	s.CurrentVersion = &v
+	return s
+}
+
+// SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
+func (s *UpdateMonitoringInput) SetEnhancedMonitoring(v string) *UpdateMonitoringInput {
+	s.EnhancedMonitoring = &v
+	return s
+}
+
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *UpdateMonitoringInput) SetLoggingInfo(v *LoggingInfo) *UpdateMonitoringInput {
+	s.LoggingInfo = v
+	return s
+}
+
+// SetOpenMonitoring sets the OpenMonitoring field's value.
+func (s *UpdateMonitoringInput) SetOpenMonitoring(v *OpenMonitoringInfo) *UpdateMonitoringInput {
+	s.OpenMonitoring = v
+	return s
+}
+
+// Response body for UpdateMonitoring.
+type UpdateMonitoringOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the cluster.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the cluster operation.
+	ClusterOperationArn *string `locationName:"clusterOperationArn" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateMonitoringOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMonitoringOutput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateMonitoringOutput) SetClusterArn(v string) *UpdateMonitoringOutput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetClusterOperationArn sets the ClusterOperationArn field's value.
+func (s *UpdateMonitoringOutput) SetClusterOperationArn(v string) *UpdateMonitoringOutput {
+	s.ClusterOperationArn = &v
+	return s
+}
+
 // Zookeeper node information.
 type ZookeeperNodeInfo struct {
 	_ struct{} `type:"structure"`
@@ -4772,8 +6563,8 @@ func (s *ZookeeperNodeInfo) SetZookeeperVersion(v string) *ZookeeperNodeInfo {
 }
 
 // The distribution of broker nodes across Availability Zones. By default, broker
-// nodes are distributed among three Availability Zones. Currently, the only
-// supported value is DEFAULT. You can either specify this value explicitly
+// nodes are distributed among the Availability Zones of your Region. Currently,
+// the only supported value is DEFAULT. You can either specify this value explicitly
 // or leave it out.
 const (
 	// BrokerAZDistributionDefault is a BrokerAZDistribution enum value
@@ -4823,6 +6614,15 @@ const (
 
 	// EnhancedMonitoringPerTopicPerBroker is a EnhancedMonitoring enum value
 	EnhancedMonitoringPerTopicPerBroker = "PER_TOPIC_PER_BROKER"
+)
+
+// The status of a Kafka version.
+const (
+	// KafkaVersionStatusActive is a KafkaVersionStatus enum value
+	KafkaVersionStatusActive = "ACTIVE"
+
+	// KafkaVersionStatusDeprecated is a KafkaVersionStatus enum value
+	KafkaVersionStatusDeprecated = "DEPRECATED"
 )
 
 // The broker or Zookeeper node.

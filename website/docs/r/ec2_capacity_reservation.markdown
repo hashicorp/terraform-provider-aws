@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_capacity_reservation"
-sidebar_current: "docs-aws-resource-ec2-capacity-reservation"
 description: |-
   Provides an EC2 Capacity Reservation. This allows you to reserve capacity for your Amazon EC2 instances in a specific Availability Zone for any duration.
 ---

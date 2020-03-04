@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsEfsMountTarget() *schema.Resource {
@@ -101,7 +101,7 @@ func dataSourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	if err := d.Set("dns_name", resourceAwsEfsMountTargetDnsName(*mt.FileSystemId, meta.(*AWSClient).region)); err != nil {
+	if err := d.Set("dns_name", resourceAwsEfsMountTargetDnsName(*mt.FileSystemId, meta.(*AWSClient).region, meta.(*AWSClient).dnsSuffix)); err != nil {
 		return fmt.Errorf("Error setting dns_name error: %#v", err)
 	}
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_flow_log"
-sidebar_current: "docs-aws-resource-flow-log"
 description: |-
   Provides a VPC/Subnet/ENI Flow Log
 ---
@@ -101,6 +101,7 @@ The following arguments are supported:
 * `log_group_name` - (Optional) *Deprecated:* Use `log_destination` instead. The name of the CloudWatch log group.
 * `subnet_id` - (Optional) Subnet ID to attach to
 * `vpc_id` - (Optional) VPC ID to attach to
+* `log_format` - (Optional) The fields to include in the flow log record, in the order in which they should appear.
 
 ## Attributes Reference
 

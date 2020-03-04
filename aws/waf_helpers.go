@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func wafSizeConstraintSetSchema() map[string]*schema.Schema {
@@ -18,7 +18,10 @@ func wafSizeConstraintSetSchema() map[string]*schema.Schema {
 			Required: true,
 			ForceNew: true,
 		},
-
+		"arn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"size_constraints": {
 			Type:     schema.TypeSet,
 			Optional: true,

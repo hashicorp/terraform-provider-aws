@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_user"
-sidebar_current: "docs-aws-resource-iam-user"
 description: |-
   Provides an IAM user.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_option_group"
-sidebar_current: "docs-aws-resource-db-option-group"
 description: |-
   Provides an RDS DB option group resource.
 ---
@@ -9,6 +9,7 @@ description: |-
 # Resource: aws_db_option_group
 
 Provides an RDS DB option group resource. Documentation of the available options for various RDS engines can be found at:
+
 * [MariaDB Options](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.MariaDB.Options.html)
 * [Microsoft SQL Server Options](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.Options.html)
 * [MySQL Options](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.MySQL.Options.html)

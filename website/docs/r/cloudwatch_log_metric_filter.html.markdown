@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_metric_filter"
-sidebar_current: "docs-aws-resource-cloudwatch-log-metric-filter"
 description: |-
   Provides a CloudWatch Log Metric Filter resource.
 ---

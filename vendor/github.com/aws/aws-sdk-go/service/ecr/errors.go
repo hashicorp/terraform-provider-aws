@@ -2,6 +2,10 @@
 
 package ecr
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeEmptyUploadException for service response error code
@@ -140,6 +144,13 @@ const (
 	// repository policy.
 	ErrCodeRepositoryPolicyNotFoundException = "RepositoryPolicyNotFoundException"
 
+	// ErrCodeScanNotFoundException for service response error code
+	// "ScanNotFoundException".
+	//
+	// The specified image scan could not be found. Ensure that image scanning is
+	// enabled on the repository and try again.
+	ErrCodeScanNotFoundException = "ScanNotFoundException"
+
 	// ErrCodeServerException for service response error code
 	// "ServerException".
 	//
@@ -160,3 +171,30 @@ const (
 	// this repository.
 	ErrCodeUploadNotFoundException = "UploadNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"EmptyUploadException":                      newErrorEmptyUploadException,
+	"ImageAlreadyExistsException":               newErrorImageAlreadyExistsException,
+	"ImageNotFoundException":                    newErrorImageNotFoundException,
+	"ImageTagAlreadyExistsException":            newErrorImageTagAlreadyExistsException,
+	"InvalidLayerException":                     newErrorInvalidLayerException,
+	"InvalidLayerPartException":                 newErrorInvalidLayerPartException,
+	"InvalidParameterException":                 newErrorInvalidParameterException,
+	"InvalidTagParameterException":              newErrorInvalidTagParameterException,
+	"LayerAlreadyExistsException":               newErrorLayerAlreadyExistsException,
+	"LayerInaccessibleException":                newErrorLayerInaccessibleException,
+	"LayerPartTooSmallException":                newErrorLayerPartTooSmallException,
+	"LayersNotFoundException":                   newErrorLayersNotFoundException,
+	"LifecyclePolicyNotFoundException":          newErrorLifecyclePolicyNotFoundException,
+	"LifecyclePolicyPreviewInProgressException": newErrorLifecyclePolicyPreviewInProgressException,
+	"LifecyclePolicyPreviewNotFoundException":   newErrorLifecyclePolicyPreviewNotFoundException,
+	"LimitExceededException":                    newErrorLimitExceededException,
+	"RepositoryAlreadyExistsException":          newErrorRepositoryAlreadyExistsException,
+	"RepositoryNotEmptyException":               newErrorRepositoryNotEmptyException,
+	"RepositoryNotFoundException":               newErrorRepositoryNotFoundException,
+	"RepositoryPolicyNotFoundException":         newErrorRepositoryPolicyNotFoundException,
+	"ScanNotFoundException":                     newErrorScanNotFoundException,
+	"ServerException":                           newErrorServerException,
+	"TooManyTagsException":                      newErrorTooManyTagsException,
+	"UploadNotFoundException":                   newErrorUploadNotFoundException,
+}

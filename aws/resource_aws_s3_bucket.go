@@ -15,12 +15,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
+
+const s3BucketCreationTimeout = 2 * time.Minute
 
 func resourceAwsS3Bucket() *schema.Resource {
 	return &schema.Resource{
@@ -567,8 +570,8 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.StringInSlice([]string{
-														s3.ObjectLockModeGovernance,
-														s3.ObjectLockModeCompliance,
+														s3.ObjectLockRetentionModeGovernance,
+														s3.ObjectLockRetentionModeCompliance,
 													}, false),
 												},
 
@@ -676,8 +679,13 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
-	if err := setTagsS3Bucket(s3conn, d); err != nil {
-		return fmt.Errorf("%q: %s", d.Get("bucket").(string), err)
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.S3BucketUpdateTags(s3conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("policy") {
@@ -757,19 +765,39 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
 
-	var err error
+	input := &s3.HeadBucketInput{
+		Bucket: aws.String(d.Id()),
+	}
 
-	_, err = retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return s3conn.HeadBucket(&s3.HeadBucketInput{
-			Bucket: aws.String(d.Id()),
-		})
-	})
-	if err != nil {
-		if awsError, ok := err.(awserr.RequestFailure); ok && awsError.StatusCode() == 404 {
-			log.Printf("[WARN] S3 Bucket (%s) not found, error code (404)", d.Id())
-			d.SetId("")
-			return nil
+	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
+		_, err := s3conn.HeadBucket(input)
+
+		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+			return resource.RetryableError(err)
 		}
+
+		if d.IsNewResource() && isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = s3conn.HeadBucket(input)
+	}
+
+	if isAWSErrRequestFailureStatusCode(err, 404) || isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
 		return fmt.Errorf("error reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
@@ -1028,7 +1056,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 					}
 					// Tag
 					if len(filter.And.Tags) > 0 {
-						rule["tags"] = tagsToMapS3(filter.And.Tags)
+						rule["tags"] = keyvaluetags.S3KeyValueTags(filter.And.Tags).IgnoreAws().Map()
 					}
 				} else {
 					// Prefix
@@ -1037,7 +1065,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 					}
 					// Tag
 					if filter.Tag != nil {
-						rule["tags"] = tagsToMapS3([]*s3.Tag{filter.Tag})
+						rule["tags"] = keyvaluetags.S3KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAws().Map()
 					}
 				}
 			} else {
@@ -1223,13 +1251,17 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tagSet, err := getTagSetS3Bucket(s3conn, d.Id())
+	// Retry due to S3 eventual consistency
+	tags, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return keyvaluetags.S3BucketListTags(s3conn, d.Id())
+	})
+
 	if err != nil {
-		return fmt.Errorf("error getting S3 bucket tags: %s", err)
+		return fmt.Errorf("error listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tagsToMapS3(tagSet)); err != nil {
-		return err
+	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	arn := arn.ARN{
@@ -1256,52 +1288,25 @@ func resourceAwsS3BucketDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if isAWSErr(err, "BucketNotEmpty", "") {
 		if d.Get("force_destroy").(bool) {
+			// Use a S3 service client that can handle multiple slashes in URIs.
+			// While aws_s3_bucket_object resources cannot create these object
+			// keys, other AWS services and applications using the S3 Bucket can.
+			s3conn = meta.(*AWSClient).s3connUriCleaningDisabled
+
 			// bucket may have things delete them
 			log.Printf("[DEBUG] S3 Bucket attempting to forceDestroy %+v", err)
 
-			bucket := d.Get("bucket").(string)
-			resp, err := s3conn.ListObjectVersions(
-				&s3.ListObjectVersionsInput{
-					Bucket: aws.String(bucket),
-				},
-			)
+			// Delete everything including locked objects.
+			// Don't ignore any object errors or we could recurse infinitely.
+			var objectLockEnabled bool
+			objectLockConfiguration := expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
+			if objectLockConfiguration != nil {
+				objectLockEnabled = aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled
+			}
+			err = deleteAllS3ObjectVersions(s3conn, d.Id(), "", objectLockEnabled, false)
 
 			if err != nil {
-				return fmt.Errorf("Error S3 Bucket list Object Versions err: %s", err)
-			}
-
-			objectsToDelete := make([]*s3.ObjectIdentifier, 0)
-
-			if len(resp.DeleteMarkers) != 0 {
-
-				for _, v := range resp.DeleteMarkers {
-					objectsToDelete = append(objectsToDelete, &s3.ObjectIdentifier{
-						Key:       v.Key,
-						VersionId: v.VersionId,
-					})
-				}
-			}
-
-			if len(resp.Versions) != 0 {
-				for _, v := range resp.Versions {
-					objectsToDelete = append(objectsToDelete, &s3.ObjectIdentifier{
-						Key:       v.Key,
-						VersionId: v.VersionId,
-					})
-				}
-			}
-
-			params := &s3.DeleteObjectsInput{
-				Bucket: aws.String(bucket),
-				Delete: &s3.Delete{
-					Objects: objectsToDelete,
-				},
-			}
-
-			_, err = s3conn.DeleteObjects(params)
-
-			if err != nil {
-				return fmt.Errorf("Error S3 Bucket force_destroy error deleting: %s", err)
+				return fmt.Errorf("error S3 Bucket force_destroy: %s", err)
 			}
 
 			// this line recurses until all objects are deleted or an error is returned
@@ -1938,11 +1943,11 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
 			rcRule.Filter = &s3.ReplicationRuleFilter{}
 			filter := f[0].(map[string]interface{})
-			tags := filter["tags"].(map[string]interface{})
+			tags := keyvaluetags.New(filter["tags"]).IgnoreAws().S3Tags()
 			if len(tags) > 0 {
 				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{
 					Prefix: aws.String(filter["prefix"].(string)),
-					Tags:   tagsFromMapS3(tags),
+					Tags:   tags,
 				}
 			} else {
 				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
@@ -2010,12 +2015,12 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 		rule := &s3.LifecycleRule{}
 
 		// Filter
-		tags := r["tags"].(map[string]interface{})
+		tags := keyvaluetags.New(r["tags"]).IgnoreAws().S3Tags()
 		filter := &s3.LifecycleRuleFilter{}
 		if len(tags) > 0 {
 			lifecycleRuleAndOp := &s3.LifecycleRuleAndOperator{}
 			lifecycleRuleAndOp.SetPrefix(r["prefix"].(string))
-			lifecycleRuleAndOp.SetTags(tagsFromMapS3(tags))
+			lifecycleRuleAndOp.SetTags(tags)
 			filter.SetAnd(lifecycleRuleAndOp)
 		} else {
 			filter.SetPrefix(r["prefix"].(string))
@@ -2229,11 +2234,11 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				m["prefix"] = aws.StringValue(f.Prefix)
 			}
 			if t := f.Tag; t != nil {
-				m["tags"] = tagsMapToRaw(tagsToMapS3([]*s3.Tag{t}))
+				m["tags"] = keyvaluetags.S3KeyValueTags([]*s3.Tag{t}).IgnoreAws().Map()
 			}
 			if a := f.And; a != nil {
 				m["prefix"] = aws.StringValue(a.Prefix)
-				m["tags"] = tagsMapToRaw(tagsToMapS3(a.Tags))
+				m["tags"] = keyvaluetags.S3KeyValueTags(a.Tags).IgnoreAws().Map()
 			}
 			t["filter"] = []interface{}{m}
 		}
@@ -2399,7 +2404,7 @@ func replicationRuleFilterHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := m["tags"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", tagsMapToHash(v.(map[string]interface{}))))
+		buf.WriteString(fmt.Sprintf("%d-", keyvaluetags.New(v).Hash()))
 	}
 	return hashcode.String(buf.String())
 }
@@ -2472,13 +2477,18 @@ type S3Website struct {
 // S3 Object Lock functions.
 //
 
-func readS3ObjectLockConfiguration(conn *s3.S3, bucket string) (interface{}, error) {
+func readS3ObjectLockConfiguration(conn *s3.S3, bucket string) ([]interface{}, error) {
 	resp, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.GetObjectLockConfiguration(&s3.GetObjectLockConfigurationInput{
 			Bucket: aws.String(bucket),
 		})
 	})
 	if err != nil {
+		// Certain S3 implementations do not include this API
+		if isAWSErr(err, "MethodNotAllowed", "") {
+			return nil, nil
+		}
+
 		if isAWSErr(err, "ObjectLockConfigurationNotFoundError", "") {
 			return nil, nil
 		}

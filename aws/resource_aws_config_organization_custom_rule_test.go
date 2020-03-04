@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func testAccConfigOrganizationCustomRule_basic(t *testing.T) {
@@ -559,7 +559,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = "${aws_iam_role.lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_permission" "test" {
@@ -623,7 +623,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = "${aws_iam_role.lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_organizations_organization" "test" {
@@ -702,7 +702,7 @@ resource "aws_lambda_function" "test2" {
   function_name = "%[1]s2"
   role          = "${aws_iam_role.lambda.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_permission" "test2" {

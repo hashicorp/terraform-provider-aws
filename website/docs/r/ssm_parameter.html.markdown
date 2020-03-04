@@ -1,7 +1,7 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_parameter"
-sidebar_current: "docs-aws-resource-ssm-parameter"
 description: |-
   Provides a SSM Parameter resource
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_java_app_layer"
-sidebar_current: "docs-aws-resource-opsworks-java-app-layer"
 description: |-
   Provides an OpsWorks Java application layer resource.
 ---

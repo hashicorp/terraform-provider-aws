@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
@@ -18,7 +18,6 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	envName := fmt.Sprintf("tf_acc_env_basic_%s", rString)
 	uEnvName := fmt.Sprintf("tf_acc_env_basic_updated_%s", rString)
-
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,6 +34,12 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:cloud9:[^:]+:[^:]+:environment:.+$`)),
 					resource.TestMatchResourceAttr(resourceName, "owner_arn", regexp.MustCompile(`^arn:`)),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id"},
 			},
 			{
 				Config: testAccAWSCloud9EnvironmentEc2Config(uEnvName),
@@ -59,7 +64,6 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 	description := fmt.Sprintf("Tf Acc Test %s", rString)
 	uDescription := fmt.Sprintf("Tf Acc Test Updated %s", rString)
 	userName := fmt.Sprintf("tf_acc_cloud9_env_%s", rString)
-
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -79,6 +83,12 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"instance_type", "automatic_stop_time_minutes", "subnet_id"},
+			},
+			{
 				Config: testAccAWSCloud9EnvironmentEc2AllFieldsConfig(uEnvName, uDescription, userName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
@@ -88,30 +98,6 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "owner_arn", regexp.MustCompile(`^arn:`)),
 					resource.TestCheckResourceAttr(resourceName, "type", "ec2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSCloud9EnvironmentEc2_importBasic(t *testing.T) {
-	rString := acctest.RandString(8)
-	name := fmt.Sprintf("tf_acc_api_doc_part_import_%s", rString)
-
-	resourceName := "aws_cloud9_environment_ec2.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloud9(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloud9EnvironmentEc2Config(name),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"instance_type"},
 			},
 		},
 	})
@@ -196,64 +182,71 @@ func testAccPreCheckAWSCloud9(t *testing.T) {
 	}
 }
 
-func testAccAWSCloud9EnvironmentEc2Config(name string) string {
+func testAccAWSCloud9EnvironmentEc2ConfigBase() string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # t2.micro instance type is not available in these Availability Zones
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-cloud9-environment-ec2"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-cloud9-environment-ec2"
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route" "test" {
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+  route_table_id         = aws_vpc.test.main_route_table_id
+}
+`)
+}
+
+func testAccAWSCloud9EnvironmentEc2Config(name string) string {
+	return testAccAWSCloud9EnvironmentEc2ConfigBase() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
+  depends_on = [aws_route.test]
+
   instance_type = "t2.micro"
-  name          = "%s"
+  name          = %[1]q
+  subnet_id     = aws_subnet.test.id
 }
 `, name)
 }
 
 func testAccAWSCloud9EnvironmentEc2AllFieldsConfig(name, description, userName string) string {
-	return fmt.Sprintf(`
+	return testAccAWSCloud9EnvironmentEc2ConfigBase() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
-  instance_type               = "t2.micro"
-  name                        = "%s"
-  description                 = "%s"
+  depends_on = [aws_route.test]
+
   automatic_stop_time_minutes = 60
-  subnet_id                   = "${aws_subnet.test.id}"
-  owner_arn                   = "${aws_iam_user.test.arn}"
-  depends_on                  = ["aws_route_table_association.test"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-cloud9-environment-ec2-all-fields"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = "${aws_vpc.test.id}"
-  cidr_block = "10.10.0.0/19"
-
-  tags = {
-    Name = "tf-acc-cloud9-environment-ec2-all-fields"
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.test.id}"
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  subnet_id      = "${aws_subnet.test.id}"
-  route_table_id = "${aws_route_table.test.id}"
+  description                 = %[2]q
+  instance_type               = "t2.micro"
+  name                        = %[1]q
+  owner_arn                   = aws_iam_user.test.arn
+  subnet_id                   = aws_subnet.test.id
 }
 
 resource "aws_iam_user" "test" {
-  name = "%s"
+  name = %[3]q
 }
 `, name, description, userName)
 }

@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_snapshot_create_volume_permission"
-sidebar_current: "docs-aws-resource-snapshot-create-volume-permission"
 description: |-
   Adds create volume permission to an EBS Snapshot
 ---

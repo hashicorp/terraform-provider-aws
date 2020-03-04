@@ -1,7 +1,7 @@
 ---
+subcategory: "RAM"
 layout: "aws"
 page_title: "AWS: aws_ram_resource_share"
-sidebar_current: "docs-aws-datasource-ram-resource-share"
 description: |-
   Retrieve information about a RAM Resource Share
 ---
@@ -11,6 +11,7 @@ description: |-
 `aws_ram_resource_share` Retrieve information about a RAM Resource Share.
 
 ## Example Usage
+
 ```hcl
 data "aws_ram_resource_share" "example" {
   name = "example"
@@ -19,6 +20,7 @@ data "aws_ram_resource_share" "example" {
 ```
 
 ## Search by filters
+
 ```hcl
 data "aws_ram_resource_share" "tag_filter" {
   name           = "MyResourceName"

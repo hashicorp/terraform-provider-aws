@@ -9,32 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
-
-func TestAccAWSIAMUserPolicy_importBasic(t *testing.T) {
-	suffix := randomString(10)
-	resourceName := fmt.Sprintf("aws_iam_user_policy.foo_%s", suffix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsIamUserPolicyConfig(suffix),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
 
 func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 	rInt := acctest.RandInt()
@@ -66,6 +44,11 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      policyResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccIAMUserPolicyConfig_name(rInt, strconv.Quote(policy2)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMUserPolicy(userResourceName, policyResourceName),
@@ -79,7 +62,7 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 
 func TestAccAWSIAMUserPolicy_disappears(t *testing.T) {
 	var out iam.GetUserPolicyOutput
-	suffix := randomString(10)
+	suffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	resourceName := fmt.Sprintf("aws_iam_user_policy.foo_%s", suffix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -125,6 +108,12 @@ func TestAccAWSIAMUserPolicy_namePrefix(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            policyResourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
+			},
+			{
 				Config: testAccIAMUserPolicyConfig_namePrefix(rInt, strconv.Quote(policy2)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMUserPolicy(userResourceName, policyResourceName),
@@ -158,6 +147,11 @@ func TestAccAWSIAMUserPolicy_generatedName(t *testing.T) {
 					resource.TestMatchResourceAttr(policyResourceName, "id", regexp.MustCompile(fmt.Sprintf("^%s:.+$", userName))),
 					resource.TestCheckResourceAttr(policyResourceName, "policy", policy1),
 				),
+			},
+			{
+				ResourceName:      policyResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccIAMUserPolicyConfig_generatedName(rInt, strconv.Quote(policy2)),
@@ -194,6 +188,11 @@ func TestAccAWSIAMUserPolicy_multiplePolicies(t *testing.T) {
 					resource.TestCheckResourceAttr(policyResourceName1, "name", policyName1),
 					resource.TestCheckResourceAttr(policyResourceName1, "policy", policy1),
 				),
+			},
+			{
+				ResourceName:      policyResourceName1,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccIAMUserPolicyConfig_multiplePolicies(rInt, strconv.Quote(policy1), strconv.Quote(policy2)),

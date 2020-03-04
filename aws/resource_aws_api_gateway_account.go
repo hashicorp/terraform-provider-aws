@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsApiGatewayAccount() *schema.Resource {
@@ -93,7 +93,7 @@ func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Updating API Gateway Account: %s", input)
 
 	// Retry due to eventual consistency of IAM
-	expectedErrMsg := "The role ARN does not have required permissions set to API Gateway"
+	expectedErrMsg := "The role ARN does not have required permissions"
 	otherErrMsg := "API Gateway could not successfully write to CloudWatch Logs using the ARN specified"
 	var out *apigateway.Account
 	var err error

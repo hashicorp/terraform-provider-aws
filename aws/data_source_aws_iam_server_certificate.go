@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func dataSourceAwsIAMServerCertificate() *schema.Resource {
@@ -139,9 +139,9 @@ func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interfac
 
 	metadata := metadatas[0]
 	d.SetId(*metadata.ServerCertificateId)
-	d.Set("arn", *metadata.Arn)
-	d.Set("path", *metadata.Path)
-	d.Set("name", *metadata.ServerCertificateName)
+	d.Set("arn", metadata.Arn)
+	d.Set("path", metadata.Path)
+	d.Set("name", metadata.ServerCertificateName)
 	if metadata.Expiration != nil {
 		d.Set("expiration_date", metadata.Expiration.Format(time.RFC3339))
 	}

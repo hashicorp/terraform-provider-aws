@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsAppsyncDatasource_basic(t *testing.T) {
@@ -577,7 +577,7 @@ resource "aws_lambda_function" "test" {
   function_name = %q
   handler       = "exports.test"
   role          = "${aws_iam_role.lambda.arn}"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_iam_role" "test" {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 var defaultEgressAcl = &ec2.NetworkAclEntry{
@@ -440,10 +440,6 @@ resource "aws_default_network_acl" "default" {
 `
 
 const testAccAWSDefaultNetworkConfig_basicIpv6Vpc = `
-provider "aws" {
-  region = "us-east-2"
-}
-
 resource "aws_vpc" "tftestvpc" {
 	cidr_block = "10.1.0.0/16"
 	assign_generated_ipv6_cidr_block = true

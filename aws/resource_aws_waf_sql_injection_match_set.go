@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsWafSqlInjectionMatchSet() *schema.Resource {
@@ -98,7 +98,10 @@ func resourceAwsWafSqlInjectionMatchSetRead(d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("name", resp.SqlInjectionMatchSet.Name)
-	d.Set("sql_injection_match_tuples", resp.SqlInjectionMatchSet.SqlInjectionMatchTuples)
+
+	if err := d.Set("sql_injection_match_tuples", flattenWafSqlInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples)); err != nil {
+		return fmt.Errorf("error setting sql_injection_match_tuples: %s", err)
+	}
 
 	return nil
 }

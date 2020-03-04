@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_security_group"
-sidebar_current: "docs-aws-resource-db-security-group"
 description: |-
   Provides an RDS security group resource.
 ---
