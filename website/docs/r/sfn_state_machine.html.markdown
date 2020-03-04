@@ -107,6 +107,7 @@ The following arguments are supported:
 * `type` - (Optional) Determines whether a Standard or Express state machine is created. The default is STANDARD. You cannot update the type of a state machine once it has been created. Valid Values: STANDARD | EXPRESS
 
 ### `logging_configuration` Configuration Block
+
 * `log_destination` - (Optional) Amazon Resource Name (ARN) of CloudWatch log group. Make sure the State Machine does have the right IAM Policies for Logging. 
 * `include_execution_data` - (Optional) Determines whether execution data is included in your log. When set to FALSE, data is excluded.
 * `level` - (Optional) Defines which category of execution history events are logged. Valid Values: ALL | ERROR | FATAL | OFF
