@@ -281,6 +281,45 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(
 	})
 }
 
+func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_RecursiveDelete(t *testing.T) {
+	var workgroup1, workgroup2 athena.WorkGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_athena_workgroup.test"
+	rOutputLocation1 := fmt.Sprintf("%s-1", rName)
+	rOutputLocation2 := fmt.Sprintf("%s-2", rName)
+	
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocationRecursiveDelete(rName, rOutputLocation1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation1+"/test/output"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocationRecursiveDelete(rName, rOutputLocation2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation2+"/test/output"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -539,6 +578,27 @@ resource "aws_athena_workgroup" "test" {
 `, rName, bucketName)
 }
 
+func testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocationRecursiveDelete(rName string, bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test"{
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+  
+  recursive_delete_option = false
+
+  configuration {
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/test/output"
+    }
+  }
+}
+`, rName, bucketName)
+}
+
 func testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
@@ -587,7 +647,7 @@ resource "aws_athena_workgroup" "test" {
 }
 
 func testAccAthenaWorkGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
+	return fmt.Sprintf( `
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
 
