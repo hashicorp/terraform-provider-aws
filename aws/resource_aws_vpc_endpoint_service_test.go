@@ -110,6 +110,33 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpcEndpointService_PrivateDnsName(t *testing.T) {
+	var svcCfg ec2.ServiceConfiguration
+	resourceName := "aws_vpc_endpoint_service.test"
+	rName1 := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName2 := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointServiceConfig_privateDnsName(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name", "vpce.domain"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpcEndpointService_AllowedPrincipalsAndTags(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
@@ -333,6 +360,21 @@ resource "aws_vpc_endpoint_service" "test" {
   network_load_balancer_arns = [
     "${aws_lb.test1.arn}",
   ]
+}
+`)
+}
+
+func testAccVpcEndpointServiceConfig_privateDnsName(rName1, rName2 string) string {
+	return testAccVpcEndpointServiceConfig_base(rName1, rName2) + fmt.Sprintf(`
+resource "aws_vpc_endpoint_service" "test" {
+  acceptance_required = true
+
+  network_load_balancer_arns = [
+    "${aws_lb.test1.arn}",
+    "${aws_lb.test2.arn}",
+  ]
+
+  private_dns_name = "vpce.domain"
 }
 `)
 }

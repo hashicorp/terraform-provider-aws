@@ -63,7 +63,7 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 			},
 			"private_dns_name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"service_name": {
 				Type:     schema.TypeString,
@@ -89,6 +89,10 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 		AcceptanceRequired:      aws.Bool(d.Get("acceptance_required").(bool)),
 		NetworkLoadBalancerArns: expandStringSet(d.Get("network_load_balancer_arns").(*schema.Set)),
 		TagSpecifications:       ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), "vpc-endpoint-service"),
+	}
+
+	if v, ok := d.GetOk("private_dns_name"); ok {
+		req.PrivateDnsName = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating VPC Endpoint Service configuration: %#v", req)
