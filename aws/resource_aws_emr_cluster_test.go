@@ -96,7 +96,7 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "additional_info"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "0"),
 				),
 			},
 			{
@@ -988,7 +988,10 @@ func TestAccAWSEMRCluster_security_config(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrClusterConfig_SecurityConfiguration(r),
-				Check:  testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttrPair(resourceName, "security_configuration", "aws_emr_security_configuration.foo", "name"),
+				),
 			},
 			{
 				ResourceName:            resourceName,
@@ -1816,12 +1819,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
 
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
   configurations = "test-fixtures/emr_configurations.json"
 
   depends_on = ["aws_route_table_association.test"]
@@ -1973,12 +1970,6 @@ EOF
 
   scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
 
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
   configurations = "test-fixtures/emr_configurations.json"
 
   depends_on = ["aws_route_table_association.test"]
@@ -2013,12 +2004,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
-
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
 
   configurations_json = <<EOF
  [
@@ -2134,12 +2119,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
-
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
 
   configurations = "test-fixtures/emr_configurations.json"
 
@@ -2674,12 +2653,6 @@ EOT
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
 
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
   configurations = "test-fixtures/emr_configurations.json"
 
   depends_on = ["aws_route_table_association.test"]
@@ -2751,12 +2724,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
-
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
 
   configurations = "test-fixtures/emr_configurations.json"
 
@@ -2849,12 +2816,6 @@ EOT
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
 
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
   configurations = "test-fixtures/emr_configurations.json"
 
   depends_on = ["aws_route_table_association.test"]
@@ -2946,12 +2907,6 @@ EOT
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
 
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
   depends_on = ["aws_route_table_association.test"]
 
   service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
@@ -3040,12 +2995,6 @@ EOT
 
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
-
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
 
   depends_on = ["aws_route_table_association.test"]
 
@@ -3242,12 +3191,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = %[2]s
 
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
   configurations = "test-fixtures/emr_configurations.json"
 
   depends_on = ["aws_route_table_association.test"]
@@ -3299,12 +3242,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     }
   }
 
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
   configurations = "test-fixtures/emr_configurations.json"
 
   depends_on = ["aws_route_table_association.test"]
@@ -3346,12 +3283,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   keep_job_flow_alive_when_no_steps = true
   visible_to_all_users              = false
 
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
   configurations = "test-fixtures/emr_configurations.json"
 
   depends_on = ["aws_route_table_association.test"]
@@ -3391,12 +3322,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
-
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
 
   configurations = "test-fixtures/emr_configurations.json"
 
@@ -3438,12 +3363,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
-
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
 
   configurations = "test-fixtures/emr_configurations.json"
 
@@ -3487,12 +3406,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
   }
 
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
   service_role = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/EMR_DefaultRole"
 }
 
@@ -3527,12 +3440,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
-
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
 
   configurations = "test-fixtures/emr_configurations.json"
 
