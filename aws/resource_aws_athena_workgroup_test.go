@@ -287,7 +287,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_
 	resourceName := "aws_athena_workgroup.test"
 	rOutputLocation1 := fmt.Sprintf("%s-1", rName)
 	rOutputLocation2 := fmt.Sprintf("%s-2", rName)
-	
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -647,7 +647,7 @@ resource "aws_athena_workgroup" "test" {
 }
 
 func testAccAthenaWorkGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf( `
+	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
 

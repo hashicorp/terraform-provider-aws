@@ -116,9 +116,9 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 				}, false),
 			},
 			"recursive_delete_option": {
-				Type:		schema.TypeBool,
-				Optional:	true,
-				Default:	false,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"tags": tagsSchema(),
 		},
@@ -203,7 +203,7 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("name", resp.WorkGroup.Name)
 	d.Set("state", resp.WorkGroup.State)
-	
+
 	if v, ok := d.GetOk("recursive_delete_option"); ok {
 		d.Set("recursive_delete_option", v.(bool))
 	} else {
