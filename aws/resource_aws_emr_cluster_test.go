@@ -1157,6 +1157,28 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 					testAccCheck_bootstrap_order(&cluster, argsInts, argsStrings),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.0", "instance.isMaster=true"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "10"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+			},
+			{
+				Config: testAccAWSEmrClusterConfig_bootstrapAdd(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					testAccCheck_bootstrap_order(&cluster, argsInts, argsStrings),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
@@ -1171,6 +1193,33 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.0", "instance.isMaster=true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.1", "echo also running on master node"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+			},
+			{
+				Config: testAccAWSEmrClusterConfig_bootstrapReorder(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					testAccCheck_bootstrap_order(&cluster, argsInts, argsStrings),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.0", "instance.isMaster=true"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "runif-2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", "instance.isMaster=true"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", "echo also running on master node"),
 				),
 			},
 			{
@@ -1786,6 +1835,70 @@ resource "aws_emr_cluster" "test" {
       "10",
     ]
   }
+}
+
+resource "aws_s3_bucket" "tester" {
+  bucket = "%[1]s"
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_object" "testobject" {
+  bucket = "${aws_s3_bucket.tester.bucket}"
+  key    = "testscript.sh"
+  content = <<EOF
+#!/bin/bash
+echo $@
+EOF
+  acl     = "public-read"
+}
+`, r),
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+	)
+}
+
+func testAccAWSEmrClusterConfig_bootstrapAdd(r string) string {
+	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+resource "aws_emr_cluster" "test" {
+  name                 = "%[1]s"
+  release_label        = "emr-5.0.0"
+  applications         = ["Hadoop", "Hive"]
+  log_uri              = "s3n://terraform/testlog/"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
+  core_instance_count  = 1
+  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
+  depends_on           = ["aws_route_table_association.test"]
+
+  ec2_attributes {
+    subnet_id                         = "${aws_subnet.test.id}"
+    emr_managed_master_security_group = "${aws_security_group.test.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+
+  bootstrap_action {
+    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
+    name = "test"
+
+    args = ["1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+    ]
+  }
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -1809,6 +1922,76 @@ EOF
   acl     = "public-read"
 }
 `, r),
+	)
+}
+
+func testAccAWSEmrClusterConfig_bootstrapReorder(r string) string {
+	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+resource "aws_emr_cluster" "test" {
+  name                 = "%[1]s"
+  release_label        = "emr-5.0.0"
+  applications         = ["Hadoop", "Hive"]
+  log_uri              = "s3n://terraform/testlog/"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
+  core_instance_count  = 1
+  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
+  depends_on           = ["aws_route_table_association.test"]
+
+  ec2_attributes {
+    subnet_id                         = "${aws_subnet.test.id}"
+    emr_managed_master_security_group = "${aws_security_group.test.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif-2"
+    args = ["instance.isMaster=true", "echo also running on master node"]
+  }
+
+  bootstrap_action {
+    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
+    name = "test"
+
+    args = ["1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+    ]
+  }
+}
+
+resource "aws_s3_bucket" "tester" {
+  bucket = "%[1]s"
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_object" "testobject" {
+  bucket = "${aws_s3_bucket.tester.bucket}"
+  key    = "testscript.sh"
+  content = <<EOF
+#!/bin/bash
+echo $@
+EOF
+  acl     = "public-read"
+}
+`, r),
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
 	)
 }
 
