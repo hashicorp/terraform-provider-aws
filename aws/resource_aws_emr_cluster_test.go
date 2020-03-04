@@ -1843,8 +1843,8 @@ resource "aws_s3_bucket" "tester" {
 }
 
 resource "aws_s3_bucket_object" "testobject" {
-  bucket = "${aws_s3_bucket.tester.bucket}"
-  key    = "testscript.sh"
+  bucket  = "${aws_s3_bucket.tester.bucket}"
+  key     = "testscript.sh"
   content = <<EOF
 #!/bin/bash
 echo $@
@@ -1913,8 +1913,8 @@ resource "aws_s3_bucket" "tester" {
 }
 
 resource "aws_s3_bucket_object" "testobject" {
-  bucket = "${aws_s3_bucket.tester.bucket}"
-  key    = "testscript.sh"
+  bucket  = "${aws_s3_bucket.tester.bucket}"
+  key     = "testscript.sh"
   content = <<EOF
 #!/bin/bash
 echo $@
@@ -1981,8 +1981,8 @@ resource "aws_s3_bucket" "tester" {
 }
 
 resource "aws_s3_bucket_object" "testobject" {
-  bucket = "${aws_s3_bucket.tester.bucket}"
-  key    = "testscript.sh"
+  bucket  = "${aws_s3_bucket.tester.bucket}"
+  key     = "testscript.sh"
   content = <<EOF
 #!/bin/bash
 echo $@
@@ -2379,7 +2379,7 @@ data "aws_iam_policy_document" "test" {
         "application-autoscaling.amazonaws.com",
         "elasticmapreduce.amazonaws.com",
       ]
-      type        = "Service"
+      type = "Service"
     }
   }
 }
@@ -2440,7 +2440,7 @@ data "aws_iam_policy_document" "test" {
         "application-autoscaling.amazonaws.com",
         "elasticmapreduce.amazonaws.com",
       ]
-      type        = "Service"
+      type = "Service"
     }
   }
 }
