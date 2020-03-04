@@ -674,29 +674,7 @@ func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
-					func(s *terraform.State) error {
-						id := s.RootModule().Resources["data.aws_canonical_user_id.current"].Primary.ID
-						gh := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
-							"id":   id,
-							"type": "CanonicalUser",
-							"uri":  "",
-							"permissions": schema.NewSet(
-								schema.HashString,
-								[]interface{}{"FULL_CONTROL", "WRITE"},
-							),
-						}))
-						for _, t := range []resource.TestCheckFunc{
-							resource.TestCheckResourceAttr(resourceName, gh+".permissions.#", "2"),
-							resource.TestCheckResourceAttr(resourceName, gh+".permissions.3535167073", "FULL_CONTROL"),
-							resource.TestCheckResourceAttr(resourceName, gh+".permissions.2319431919", "WRITE"),
-							resource.TestCheckResourceAttr(resourceName, gh+".type", "CanonicalUser"),
-						} {
-							if err := t(s); err != nil {
-								return err
-							}
-						}
-						return nil
-					},
+					testAccCheckAWSS3BucketUpdateGrantSingle(resourceName),
 				),
 			},
 			{
@@ -711,41 +689,7 @@ func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "2"),
-					func(s *terraform.State) error {
-						id := s.RootModule().Resources["data.aws_canonical_user_id.current"].Primary.ID
-						gh1 := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
-							"id":   id,
-							"type": "CanonicalUser",
-							"uri":  "",
-							"permissions": schema.NewSet(
-								schema.HashString,
-								[]interface{}{"READ"},
-							),
-						}))
-						gh2 := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
-							"id":   "",
-							"type": "Group",
-							"uri":  "http://acs.amazonaws.com/groups/s3/LogDelivery",
-							"permissions": schema.NewSet(
-								schema.HashString,
-								[]interface{}{"READ_ACP"},
-							),
-						}))
-						for _, t := range []resource.TestCheckFunc{
-							resource.TestCheckResourceAttr(resourceName, gh1+".permissions.#", "1"),
-							resource.TestCheckResourceAttr(resourceName, gh1+".permissions.2931993811", "READ"),
-							resource.TestCheckResourceAttr(resourceName, gh1+".type", "CanonicalUser"),
-							resource.TestCheckResourceAttr(resourceName, gh2+".permissions.#", "1"),
-							resource.TestCheckResourceAttr(resourceName, gh2+".permissions.1600971645", "READ_ACP"),
-							resource.TestCheckResourceAttr(resourceName, gh2+".type", "Group"),
-							resource.TestCheckResourceAttr(resourceName, gh2+".uri", "http://acs.amazonaws.com/groups/s3/LogDelivery"),
-						} {
-							if err := t(s); err != nil {
-								return err
-							}
-						}
-						return nil
-					},
+					testAccCheckAWSS3BucketUpdateGrantMulti(resourceName),
 				),
 			},
 			{
@@ -771,8 +715,7 @@ func TestAccAWSS3Bucket_AclToGrant(t *testing.T) {
 				Config: testAccAWSS3BucketConfigWithAcl(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName, "acl", "public-read"),
+					resource.TestCheckResourceAttr(resourceName, "acl", "public-read"),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
 				),
 			},
@@ -807,8 +750,7 @@ func TestAccAWSS3Bucket_GrantToAcl(t *testing.T) {
 				Config: testAccAWSS3BucketConfigWithAcl(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName, "acl", "public-read"),
+					resource.TestCheckResourceAttr(resourceName, "acl", "public-read"),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
 					// check removed grants
 				),
@@ -2753,6 +2695,70 @@ func testAccCheckAWSS3BucketReplicationRules(n string, providerF func() *schema.
 			return fmt.Errorf("bad replication rules, expected: %v, got %v", rules, out.ReplicationConfiguration.Rules)
 		}
 
+		return nil
+	}
+}
+
+func testAccCheckAWSS3BucketUpdateGrantSingle(resourceName string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		id := s.RootModule().Resources["data.aws_canonical_user_id.current"].Primary.ID
+		gh := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
+			"id":   id,
+			"type": "CanonicalUser",
+			"uri":  "",
+			"permissions": schema.NewSet(
+				schema.HashString,
+				[]interface{}{"FULL_CONTROL", "WRITE"},
+			),
+		}))
+		for _, t := range []resource.TestCheckFunc{
+			resource.TestCheckResourceAttr(resourceName, gh+".permissions.#", "2"),
+			resource.TestCheckResourceAttr(resourceName, gh+".permissions.3535167073", "FULL_CONTROL"),
+			resource.TestCheckResourceAttr(resourceName, gh+".permissions.2319431919", "WRITE"),
+			resource.TestCheckResourceAttr(resourceName, gh+".type", "CanonicalUser"),
+		} {
+			if err := t(s); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func testAccCheckAWSS3BucketUpdateGrantMulti(resourceName string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		id := s.RootModule().Resources["data.aws_canonical_user_id.current"].Primary.ID
+		gh1 := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
+			"id":   id,
+			"type": "CanonicalUser",
+			"uri":  "",
+			"permissions": schema.NewSet(
+				schema.HashString,
+				[]interface{}{"READ"},
+			),
+		}))
+		gh2 := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
+			"id":   "",
+			"type": "Group",
+			"uri":  "http://acs.amazonaws.com/groups/s3/LogDelivery",
+			"permissions": schema.NewSet(
+				schema.HashString,
+				[]interface{}{"READ_ACP"},
+			),
+		}))
+		for _, t := range []resource.TestCheckFunc{
+			resource.TestCheckResourceAttr(resourceName, gh1+".permissions.#", "1"),
+			resource.TestCheckResourceAttr(resourceName, gh1+".permissions.2931993811", "READ"),
+			resource.TestCheckResourceAttr(resourceName, gh1+".type", "CanonicalUser"),
+			resource.TestCheckResourceAttr(resourceName, gh2+".permissions.#", "1"),
+			resource.TestCheckResourceAttr(resourceName, gh2+".permissions.1600971645", "READ_ACP"),
+			resource.TestCheckResourceAttr(resourceName, gh2+".type", "Group"),
+			resource.TestCheckResourceAttr(resourceName, gh2+".uri", "http://acs.amazonaws.com/groups/s3/LogDelivery"),
+		} {
+			if err := t(s); err != nil {
+				return err
+			}
+		}
 		return nil
 	}
 }
