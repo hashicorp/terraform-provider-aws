@@ -45,7 +45,7 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 			"health_check_path": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "/",
+				Computed: true,
 			},
 			"health_check_port": {
 				Type:     schema.TypeInt,
