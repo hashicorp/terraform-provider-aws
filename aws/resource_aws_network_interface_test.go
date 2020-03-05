@@ -116,11 +116,8 @@ func TestAccAWSENI_ipv6(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					testAccCheckAWSENIAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "ipv6_addresses"),
-					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test_interface"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
 				),
 			},
 			{

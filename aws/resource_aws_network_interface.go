@@ -172,7 +172,33 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(*resp.NetworkInterface.NetworkInterfaceId)
 
-	return resourceAwsNetworkInterfaceUpdate(d, meta)
+	if v, ok := d.GetOk("source_dest_check"); ok {
+		request := &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: aws.String(d.Id()),
+			SourceDestCheck:    &ec2.AttributeBooleanValue{Value: aws.Bool(v.(bool))},
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttribute(request)
+		if err != nil {
+			return fmt.Errorf("Failure updating ENI: %s", err)
+		}
+	}
+
+	if v, ok := d.GetOk("attachment"); ok && len(v.(*schema.Set).List()) > 0 {
+		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
+		di := attachment["device_index"].(int)
+		attachReq := &ec2.AttachNetworkInterfaceInput{
+			DeviceIndex:        aws.Int64(int64(di)),
+			InstanceId:         aws.String(attachment["instance"].(string)),
+			NetworkInterfaceId: aws.String(d.Id()),
+		}
+		_, err := conn.AttachNetworkInterface(attachReq)
+		if err != nil {
+			return fmt.Errorf("Error attaching ENI: %s", err)
+		}
+	}
+
+	return resourceAwsNetworkInterfaceRead(d, meta)
 }
 
 func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
@@ -473,7 +499,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if d.HasChange("tags") && !d.IsNewResource() {
+	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
