@@ -329,18 +329,22 @@ func testAccCheckFlowLogDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName string) string {
+func testAccFlowLogConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
+`, rName)
+}
 
+func testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName string) string {
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -363,7 +367,7 @@ EOF
 }
 
 resource "aws_cloudwatch_log_group" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_flow_log" "test" {
@@ -373,21 +377,13 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = "${aws_vpc.test.id}"
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccFlowLogConfig_LogDestinationType_S3(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %q
-  }
-}
-
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = %q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -397,49 +393,33 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = "${aws_vpc.test.id}"
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %q
-  }
-}
-
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_flow_log" "test" {
   log_destination      = "arn:aws:s3:::does-not-exist"
   log_destination_type = "s3"
   traffic_type         = "ALL"
   vpc_id               = "${aws_vpc.test.id}"
 }
-`, rName)
+`)
 }
 
 func testAccFlowLogConfig_SubnetID(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %q
-  }
-}
-
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_subnet" "test" {
   cidr_block = "10.0.1.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -462,7 +442,7 @@ EOF
 }
 
 resource "aws_cloudwatch_log_group" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_flow_log" "test" {
@@ -471,21 +451,13 @@ resource "aws_flow_log" "test" {
   subnet_id      = "${aws_subnet.test.id}"
   traffic_type   = "ALL"
 }
-`, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccFlowLogConfig_VPCID(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %q
-  }
-}
-
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -508,7 +480,7 @@ EOF
 }
 
 resource "aws_cloudwatch_log_group" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_flow_log" "test" {
@@ -517,20 +489,12 @@ resource "aws_flow_log" "test" {
   traffic_type   = "ALL"
   vpc_id         = "${aws_vpc.test.id}"
 }
-`, rName, rName, rName)
+`, rName)
 }
 func testAccFlowLogConfig_LogFormat(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %q
-  }
-}
-
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -553,10 +517,10 @@ EOF
 }
 
 resource "aws_cloudwatch_log_group" "test" {
-  name = %q
+  name = %[1]q
 }
 resource "aws_s3_bucket" "test" {
-	bucket        = %q
+	bucket        = %[1]q
 	force_destroy = true
   }
   
@@ -570,19 +534,11 @@ resource "aws_flow_log" "test" {
   vpc_id         = "${aws_vpc.test.id}"
   log_format     = "$${version} $${vpc-id} $${subnet-id}"
 }
-`, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccFlowLogConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -624,15 +580,7 @@ resource "aws_flow_log" "test" {
 }
 
 func testAccFlowLogConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
