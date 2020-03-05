@@ -11,7 +11,7 @@ description: |-
 `aws_regions` provides list of all enabled AWS regions.
 
 The data source provides list of AWS regions available.
-Can be used to filter regions by Opt-In status or list only regions enabled for current account.
+Can be used to filter regions i.e. by Opt-In status or list only regions enabled for current account.
 To get details like endpoint and description of each region the data source can be combined with `aws_region`.
 
 ## Example Usage
@@ -19,7 +19,7 @@ To get details like endpoint and description of each region the data source can 
 The following example shows how the resource might be used to obtain
 the list of the AWS regions configured on the provider.
 
-Regions enabled for the user
+To list regions enabled for the user:
 
 ```hcl
 data "aws_regions" "current" {}
@@ -33,13 +33,17 @@ data "aws_regions" "current" {
 }
 ```
 
-To see regions that are `"not-opted-in"` `"all_regions"` need to be set to true 
-or nothing will be displayed.
+To see regions that are filtered by `"not-opted-in"` `"all_regions"` need to be set to true 
+or probably nothing will be displayed.
 
 ```hcl
 data "aws_regions" "current" {
     all_regions = true
-    opt_in_status = "not-opted-in"
+
+    filter {
+      name   = "opt-in-status"
+      values = ["not-opted-in"]
+    }
 }
 ```
 
@@ -51,11 +55,14 @@ exported as attributes.
 
 * `all_regions` - (Optional) If true the source will query all regions regardless of availability.
 
-* `opt_in_status` - (Optional) Filter the list of regions according to op-in-status filter. Can be one of: `"opt-in-not-required"`, `"opted-in"` or `"not-opted-in"`.
+* `filter` - (Optional) One or more key/value pairs to use as filters. Full reference of valid keys 
+can be found [describe-regions in the AWS CLI reference][1].
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `names` - Names of regions that meets the criteria.
+
+[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-regions.html
 

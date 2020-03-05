@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -21,7 +20,6 @@ func TestAccDataSourceAwsRegionsBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionsCheck(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
-					resource.TestCheckNoResourceAttr(resourceName, "opt_in_status"),
 				),
 			},
 		},
@@ -41,31 +39,24 @@ func TestAccDataSourceAwsRegionsOptIn(t *testing.T) {
 		Steps: []resource.TestStep{
 			// This resource has to be at the very top of the test scenario due to bug in Terrafom Plugin SDK
 			{
-				Config:      testAccDataSourceAwsRegionsConfigOptIn("invalid-opt-in-status"),
-				ExpectError: regexp.MustCompile(`expected opt_in_status to be one of .*, got invalid-opt-in-status`),
-			},
-			{
-				Config: testAccDataSourceAwsRegionsConfigOptIn(statusOptedIn),
+				Config: testAccDataSourceAwsRegionsConfigAllRegionsFiltered(statusOptedIn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionsCheck(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
-					resource.TestCheckResourceAttr(resourceName, "opt_in_status", statusOptedIn),
 				),
 			},
 			{
-				Config: testAccDataSourceAwsRegionsConfigOptIn(statusOptInNotRequired),
+				Config: testAccDataSourceAwsRegionsConfigAllRegionsFiltered(statusOptInNotRequired),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionsCheck(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
-					resource.TestCheckResourceAttr(resourceName, "opt_in_status", statusOptInNotRequired),
 				),
 			},
 			{
-				Config: testAccDataSourceAwsRegionsConfigOptIn(statusNotOptedIn),
+				Config: testAccDataSourceAwsRegionsConfigAllRegionsFiltered(statusNotOptedIn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionsCheck(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
-					resource.TestCheckResourceAttr(resourceName, "opt_in_status", statusNotOptedIn),
 				),
 			},
 		},
@@ -116,10 +107,13 @@ data "aws_regions" "all_regions" {
 `
 }
 
-func testAccDataSourceAwsRegionsConfigOptIn(optInStatus string) string {
+func testAccDataSourceAwsRegionsConfigAllRegionsFiltered(filter string) string {
 	return fmt.Sprintf(`
 data "aws_regions" "opt_in_status" {
-	opt_in_status = "%s"
+	filter {
+       name   = "opt-in-status"
+       values = ["%s"]
+    }
 }
-`, optInStatus)
+`, filter)
 }
