@@ -41,6 +41,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -1426,6 +1427,33 @@ func (tags KeyValueTags) GameliftTags() []*gamelift.Tag {
 
 // GameliftKeyValueTags creates KeyValueTags from gamelift service tags.
 func GameliftKeyValueTags(tags []*gamelift.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// GlobalacceleratorTags returns globalaccelerator service tags.
+func (tags KeyValueTags) GlobalacceleratorTags() []*globalaccelerator.Tag {
+	result := make([]*globalaccelerator.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &globalaccelerator.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// GlobalacceleratorKeyValueTags creates KeyValueTags from globalaccelerator service tags.
+func GlobalacceleratorKeyValueTags(tags []*globalaccelerator.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
