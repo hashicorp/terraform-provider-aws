@@ -734,7 +734,7 @@ resource "aws_vpc" "test" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-network-interface-update-desc"
+    Name = "terraform-testacc-network-interface"
   }
 }
 
@@ -752,14 +752,14 @@ resource "aws_subnet" "test" {
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
-    Name = "tf-acc-network-interface-update-desc"
+    Name = "tf-acc-network-interface"
   }
 }
 
 resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
   description = "test"
-  name        = "terraform-testacc-network-interface-update-desc"
+  name        = "tf-acc-network-interface"
 
   egress {
     from_port   = 0
