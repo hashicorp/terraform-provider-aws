@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccDataSourceAwsRegionsBasic(t *testing.T) {
+func TestAccDataSourceAwsRegions_Basic(t *testing.T) {
 	resourceName := "data.aws_regions.empty"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -16,7 +16,7 @@ func TestAccDataSourceAwsRegionsBasic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsRegionsConfigEmpty(),
+				Config: testAccDataSourceAwsRegionsConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionsCheck(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
@@ -26,7 +26,7 @@ func TestAccDataSourceAwsRegionsBasic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRegionsOptIn(t *testing.T) {
+func TestAccDataSourceAwsRegions_OptIn(t *testing.T) {
 	resourceName := "data.aws_regions.opt_in_status"
 
 	statusOptedIn := "opted-in"
@@ -39,21 +39,21 @@ func TestAccDataSourceAwsRegionsOptIn(t *testing.T) {
 		Steps: []resource.TestStep{
 			// This resource has to be at the very top of the test scenario due to bug in Terrafom Plugin SDK
 			{
-				Config: testAccDataSourceAwsRegionsConfigAllRegionsFiltered(statusOptedIn),
+				Config: testAccDataSourceAwsRegionsConfig_allRegionsFiltered(statusOptedIn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionsCheck(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
 				),
 			},
 			{
-				Config: testAccDataSourceAwsRegionsConfigAllRegionsFiltered(statusOptInNotRequired),
+				Config: testAccDataSourceAwsRegionsConfig_allRegionsFiltered(statusOptInNotRequired),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionsCheck(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
 				),
 			},
 			{
-				Config: testAccDataSourceAwsRegionsConfigAllRegionsFiltered(statusNotOptedIn),
+				Config: testAccDataSourceAwsRegionsConfig_allRegionsFiltered(statusNotOptedIn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionsCheck(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
@@ -63,7 +63,7 @@ func TestAccDataSourceAwsRegionsOptIn(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRegionsAllRegions(t *testing.T) {
+func TestAccDataSourceAwsRegions_AllRegions(t *testing.T) {
 	resourceAllRegions := "data.aws_regions.all_regions"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -71,7 +71,7 @@ func TestAccDataSourceAwsRegionsAllRegions(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsRegionsConfigAllRegions(),
+				Config: testAccDataSourceAwsRegionsConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionsCheck(resourceAllRegions),
 					resource.TestCheckResourceAttr(resourceAllRegions, "all_regions", "true"),
@@ -93,13 +93,13 @@ func testAccDataSourceAwsRegionsCheck(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDataSourceAwsRegionsConfigEmpty() string {
+func testAccDataSourceAwsRegionsConfig_empty() string {
 	return `
 data "aws_regions" "empty" {}
 `
 }
 
-func testAccDataSourceAwsRegionsConfigAllRegions() string {
+func testAccDataSourceAwsRegionsConfig_allRegions() string {
 	return `
 data "aws_regions" "all_regions" {
 	all_regions = "true"
@@ -107,7 +107,7 @@ data "aws_regions" "all_regions" {
 `
 }
 
-func testAccDataSourceAwsRegionsConfigAllRegionsFiltered(filter string) string {
+func testAccDataSourceAwsRegionsConfig_allRegionsFiltered(filter string) string {
 	return fmt.Sprintf(`
 data "aws_regions" "opt_in_status" {
 	filter {
