@@ -187,6 +187,8 @@ func TestAccAwsDxGatewayAssociation_V0StateUpgrade(t *testing.T) {
 	resourceName := "aws_dx_gateway_association.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	var ga directconnect.GatewayAssociation
+	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -196,7 +198,7 @@ func TestAccAwsDxGatewayAssociation_V0StateUpgrade(t *testing.T) {
 			{
 				Config: testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga, &gap),
 					testAccCheckAwsDxGatewayAssociationStateUpgradeV0(resourceName),
 				),
 			},
@@ -210,6 +212,8 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewaySingleAccount(t *testing.T) {
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	var ga directconnect.GatewayAssociation
+	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -219,7 +223,7 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewaySingleAccount(t *testing.T) {
 			{
 				Config: testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
@@ -254,6 +258,8 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	var ga directconnect.GatewayAssociation
+	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -266,7 +272,7 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 			{
 				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
@@ -288,6 +294,8 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	var ga directconnect.GatewayAssociation
+	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -297,7 +305,7 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.
 			{
 				Config: testAccDxGatewayAssociationConfig_basicTransitGatewaySingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
@@ -333,6 +341,8 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	var ga directconnect.GatewayAssociation
+	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -345,7 +355,7 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 			{
 				Config: testAccDxGatewayAssociationConfig_basicTransitGatewayCrossAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
@@ -368,6 +378,8 @@ func TestAccAwsDxGatewayAssociation_multiVpnGatewaysSingleAccount(t *testing.T) 
 	rName1 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rName2 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	var ga directconnect.GatewayAssociation
+	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -377,8 +389,8 @@ func TestAccAwsDxGatewayAssociation_multiVpnGatewaysSingleAccount(t *testing.T) 
 			{
 				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName1, rName2, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationExists(resourceName1),
-					testAccCheckAwsDxGatewayAssociationExists(resourceName2),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName1, &ga, &gap),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName2, &ga, &gap),
 					resource.TestCheckResourceAttrSet(resourceName1, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName1, "allowed_prefixes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName1, "allowed_prefixes.*", "10.255.255.16/28"),
@@ -397,6 +409,8 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewaySingleAccount(t *te
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	var ga directconnect.GatewayAssociation
+	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -406,7 +420,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewaySingleAccount(t *te
 			{
 				Config: testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
@@ -418,7 +432,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewaySingleAccount(t *te
 			{
 				Config: testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccountUpdated(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/29"),
 				),
@@ -434,6 +448,8 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	var ga directconnect.GatewayAssociation
+	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -446,7 +462,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 			{
 				Config: testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
@@ -459,13 +475,49 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 			{
 				Config: testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccountUpdated(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga, &gap),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsDxGatewayAssociation_recreateProposal(t *testing.T) {
+	var providers []*schema.Provider
+	resourceName := "aws_dx_gateway_association.test"
+	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	var ga1, ga2 directconnect.GatewayAssociation
+	var gap1, gap2 directconnect.GatewayAssociationProposal
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga1, &gap1),
+					testAccCheckAwsDxGatewayAssociationProposalDisappears(&gap1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga2, &gap2),
+					testAccCheckAwsDxGatewayAssociationSameAssociation(&ga1, &ga2),
+					testAccCheckAwsDxGatewayAssociationDifferentProposal(&gap1, &gap2),
 				),
 			},
 		},
@@ -496,7 +548,7 @@ func testAccCheckAwsDxGatewayAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsDxGatewayAssociationExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsDxGatewayAssociationExists(name string, ga *directconnect.GatewayAssociation, gap *directconnect.GatewayAssociationProposal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -504,6 +556,45 @@ func testAccCheckAwsDxGatewayAssociationExists(name string) resource.TestCheckFu
 		}
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
+			AssociationId: aws.String(rs.Primary.Attributes["dx_gateway_association_id"]),
+		})
+		if err != nil {
+			return err
+		}
+
+		*ga = *resp.DirectConnectGatewayAssociations[0]
+
+		if proposalId := rs.Primary.Attributes["proposal_id"]; proposalId != "" && gap != nil {
+			v, err := describeDirectConnectGatewayAssociationProposal(conn, proposalId)
+			if err != nil {
+				return err
+			}
+
+			*gap = *v
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAwsDxGatewayAssociationSameAssociation(ga1, ga2 *directconnect.GatewayAssociation) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(ga1.AssociationId) != aws.StringValue(ga2.AssociationId) {
+			return fmt.Errorf("Association IDs differ")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAwsDxGatewayAssociationDifferentProposal(gap1, gap2 *directconnect.GatewayAssociationProposal) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(gap1.ProposalId) == aws.StringValue(gap2.ProposalId) {
+			return fmt.Errorf("Proposals IDs are equal")
 		}
 
 		return nil
