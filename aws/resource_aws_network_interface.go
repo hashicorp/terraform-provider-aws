@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -113,6 +112,18 @@ func resourceAwsNetworkInterface() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+			"ipv6_address_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"ipv6_addresses": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 	}
 }
@@ -144,6 +155,15 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		request.SecondaryPrivateIpAddressCount = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("ipv6_address_count"); ok {
+		request.Ipv6AddressCount = aws.Int64(int64(v.(int)))
+	}
+
+	ipv6Addresses := d.Get("ipv6_addresses").(*schema.Set).List()
+	if len(ipv6Addresses) != 0 {
+		request.Ipv6Addresses = expandIP6Addresses(ipv6Addresses)
+	}
+
 	log.Printf("[DEBUG] Creating network interface")
 	resp, err := conn.CreateNetworkInterface(request)
 	if err != nil {
@@ -165,7 +185,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
 
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidNetworkInterfaceID.NotFound" {
+		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
 			// The ENI is gone now, so just remove it from the state
 			d.SetId("")
 			return nil
@@ -207,6 +227,8 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
+	d.Set("ipv6_address_count", len(eni.Ipv6Addresses)-1)
+	d.Set("ipv6_addresses", flattenEc2NetworkInterfaceIpv6Address(eni.Ipv6Addresses))
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -246,7 +268,7 @@ func resourceAwsNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId s
 		conn := meta.(*AWSClient).ec2conn
 		_, detach_err := conn.DetachNetworkInterface(detach_request)
 		if detach_err != nil {
-			if awsErr, _ := detach_err.(awserr.Error); awsErr.Code() != "InvalidAttachmentID.NotFound" {
+			if !isAWSErr(detach_err, "InvalidAttachmentID.NotFound", "") {
 				return fmt.Errorf("Error detaching ENI: %s", detach_err)
 			}
 		}
@@ -329,6 +351,45 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 			_, err := conn.AssignPrivateIpAddresses(input)
 			if err != nil {
 				return fmt.Errorf("Failure to assign Private IPs: %s", err)
+			}
+		}
+	}
+
+	if d.HasChange("ipv6_addresses") {
+		o, n := d.GetChange("ipv6_addresses")
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		// Unassign old IP addresses
+		unassignIps := os.Difference(ns)
+		if unassignIps.Len() != 0 {
+			input := &ec2.UnassignIpv6AddressesInput{
+				NetworkInterfaceId: aws.String(d.Id()),
+				Ipv6Addresses:      expandStringList(unassignIps.List()),
+			}
+			_, err := conn.UnassignIpv6Addresses(input)
+			if err != nil {
+				return fmt.Errorf("Failure to unassign IPV6 Addresses: %s", err)
+			}
+		}
+
+		// Assign new IP addresses
+		assignIps := ns.Difference(os)
+		if assignIps.Len() != 0 {
+			input := &ec2.AssignIpv6AddressesInput{
+				NetworkInterfaceId: aws.String(d.Id()),
+				Ipv6Addresses:      expandStringList(assignIps.List()),
+			}
+			_, err := conn.AssignIpv6Addresses(input)
+			if err != nil {
+				return fmt.Errorf("Failure to assign IPV6 Addresses: %s", err)
 			}
 		}
 	}
