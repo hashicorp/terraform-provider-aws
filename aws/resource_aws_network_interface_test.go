@@ -174,6 +174,34 @@ func TestAccAWSENI_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSENI_ipv6_count(t *testing.T) {
+	var conf ec2.NetworkInterface
+	resourceName := "aws_network_interface.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSENIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSENIIPV6CountConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
+					testAccCheckAWSENIAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSENI_disappears(t *testing.T) {
 	var networkInterface ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
@@ -647,6 +675,51 @@ resource "aws_network_interface" "test" {
   ipv6_addresses  = ["${cidrhost(aws_subnet.test.ipv6_cidr_block, 4)}"]
   security_groups = ["${aws_security_group.test.id}"]
   description     = "Managed by Terraform"
+
+  tags = {
+    Name = "test-interface-ipv6"
+  }
+}
+`
+
+const testAccAWSENIIPV6CountConfig = `
+resource "aws_vpc" "test" {
+  cidr_block                       = "172.16.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+  enable_dns_hostnames             = true
+
+  tags = {
+  	Name = "terraform-testacc-network-interface-ipv6"
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id                          = "${aws_vpc.test.id}"
+  cidr_block                      = "172.16.10.0/24"
+  ipv6_cidr_block                 = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 16)}"
+  availability_zone               = "us-west-2a"
+
+  tags = {
+    Name = "tf-acc-network-interface-ipv6"
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id      = "${aws_vpc.test.id}"
+  description = "test"
+  name        = "tf-acc-network-interface-ipv6"
+
+  tags = {
+    Name = "test-interface-ipv6"
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id           = "${aws_subnet.test.id}"
+  private_ips         = ["172.16.10.100"]
+  ipv6_address_count  = 2
+  security_groups     = ["${aws_security_group.test.id}"]
+  description         = "Managed by Terraform"
 
   tags = {
     Name = "test-interface-ipv6"
