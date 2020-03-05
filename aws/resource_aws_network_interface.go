@@ -137,14 +137,12 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeNetworkInterface),
 	}
 
-	security_groups := d.Get("security_groups").(*schema.Set).List()
-	if len(security_groups) != 0 {
-		request.Groups = expandStringList(security_groups)
+	if v, ok := d.GetOk("security_groups"); ok && len(v.(*schema.Set).List()) > 0 {
+		request.Groups = expandStringList(v.(*schema.Set).List())
 	}
 
-	private_ips := d.Get("private_ips").(*schema.Set).List()
-	if len(private_ips) != 0 {
-		request.PrivateIpAddresses = expandPrivateIPAddresses(private_ips)
+	if v, ok := d.GetOk("private_ips"); ok && len(v.(*schema.Set).List()) > 0 {
+		request.PrivateIpAddresses = expandPrivateIPAddresses(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -159,9 +157,8 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		request.Ipv6AddressCount = aws.Int64(int64(v.(int)))
 	}
 
-	ipv6Addresses := d.Get("ipv6_addresses").(*schema.Set).List()
-	if len(ipv6Addresses) != 0 {
-		request.Ipv6Addresses = expandIP6Addresses(ipv6Addresses)
+	if v, ok := d.GetOk("ipv6_addresses"); ok && len(v.(*schema.Set).List()) > 0 {
+		request.Ipv6Addresses = expandIP6Addresses(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Creating network interface")
@@ -422,7 +419,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 
 	// ModifyNetworkInterfaceAttribute needs to be called after creating an ENI
 	// since CreateNetworkInterface doesn't take SourceDeskCheck parameter.
-	if d.HasChange("source_dest_check") || d.IsNewResource() {
+	if d.HasChange("source_dest_check") {
 		request := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
 			SourceDestCheck:    &ec2.AttributeBooleanValue{Value: aws.Bool(d.Get("source_dest_check").(bool))},
@@ -434,7 +431,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if d.HasChange("private_ips_count") && !d.IsNewResource() {
+	if d.HasChange("private_ips_count") {
 		o, n := d.GetChange("private_ips_count")
 		private_ips := d.Get("private_ips").(*schema.Set).List()
 		private_ips_filtered := private_ips[:0]
