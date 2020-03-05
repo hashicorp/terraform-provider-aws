@@ -74,6 +74,36 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 	})
 }
 
+func TestAccAwsGlobalAcceleratorEndpointGroup_tcp(t *testing.T) {
+	resourceName := "aws_globalaccelerator_endpoint_group.example"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalAcceleratorEndpointGroup_tcp(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_port", "1234"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckGlobalAcceleratorEndpointGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
@@ -198,6 +228,46 @@ resource "aws_globalaccelerator_endpoint_group" "example" {
   health_check_protocol         = "HTTPS"
   threshold_count               = 1
   traffic_dial_percentage       = 0
+}
+`, rInt)
+}
+
+func testAccGlobalAcceleratorEndpointGroup_tcp(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_accelerator" "example" {
+  name            = "tf-%d"
+  ip_address_type = "IPV4"
+	enabled         = false
+}
+
+resource "aws_globalaccelerator_listener" "example" {
+  accelerator_arn = "${aws_globalaccelerator_accelerator.example.id}"
+  protocol        = "TCP"
+
+  port_range {
+    from_port = 80
+    to_port   = 80
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_eip" "example" {}
+
+resource "aws_globalaccelerator_endpoint_group" "example" {
+  listener_arn = "${aws_globalaccelerator_listener.example.id}"
+
+  endpoint_configuration {
+    endpoint_id = "${aws_eip.example.id}"
+    weight = 10
+  }
+
+  endpoint_group_region         = "${data.aws_region.current.name}"
+  health_check_interval_seconds = 30
+  health_check_port             = 1234
+  health_check_protocol         = "TCP"
+  threshold_count               = 3
+  traffic_dial_percentage       = 100
 }
 `, rInt)
 }
