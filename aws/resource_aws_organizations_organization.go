@@ -239,37 +239,38 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error describing Organization: %s", err)
 	}
 
-	log.Printf("[INFO] Listing Accounts for Organization: %s", d.Id())
-	var accounts []*organizations.Account
-	var nonMasterAccounts []*organizations.Account
-	err = conn.ListAccountsPages(&organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
-		for _, account := range page.Accounts {
-			if aws.StringValue(account.Id) != aws.StringValue(org.Organization.MasterAccountId) {
-				nonMasterAccounts = append(nonMasterAccounts, account)
-			}
+	// Remove calls that require more permissions than "DescribeOrganization"
+	// log.Printf("[INFO] Listing Accounts for Organization: %s", d.Id())
+	// var accounts []*organizations.Account
+	// var nonMasterAccounts []*organizations.Account
+	// err = conn.ListAccountsPages(&organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
+	// 	for _, account := range page.Accounts {
+	// 		if aws.StringValue(account.Id) != aws.StringValue(org.Organization.MasterAccountId) {
+	// 			nonMasterAccounts = append(nonMasterAccounts, account)
+	// 		}
 
-			accounts = append(accounts, account)
-		}
+	// 		accounts = append(accounts, account)
+	// 	}
 
-		return !lastPage
-	})
-	if err != nil {
-		return fmt.Errorf("error listing AWS Organization (%s) accounts: %s", d.Id(), err)
-	}
+	// 	return !lastPage
+	// })
+	// if err != nil {
+	// 	return fmt.Errorf("error listing AWS Organization (%s) accounts: %s", d.Id(), err)
+	// }
 
-	log.Printf("[INFO] Listing Roots for Organization: %s", d.Id())
-	var roots []*organizations.Root
-	err = conn.ListRootsPages(&organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
-		roots = append(roots, page.Roots...)
-		return !lastPage
-	})
-	if err != nil {
-		return fmt.Errorf("error listing AWS Organization (%s) roots: %s", d.Id(), err)
-	}
+	// log.Printf("[INFO] Listing Roots for Organization: %s", d.Id())
+	// var roots []*organizations.Root
+	// err = conn.ListRootsPages(&organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
+	// 	roots = append(roots, page.Roots...)
+	// 	return !lastPage
+	// })
+	// if err != nil {
+	// 	return fmt.Errorf("error listing AWS Organization (%s) roots: %s", d.Id(), err)
+	// }
 
-	if err := d.Set("accounts", flattenOrganizationsAccounts(accounts)); err != nil {
-		return fmt.Errorf("error setting accounts: %s", err)
-	}
+	// if err := d.Set("accounts", flattenOrganizationsAccounts(accounts)); err != nil {
+	// 	return fmt.Errorf("error setting accounts: %s", err)
+	// }
 
 	d.Set("arn", org.Organization.Arn)
 	d.Set("feature_set", org.Organization.FeatureSet)
@@ -277,45 +278,45 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
 	d.Set("master_account_id", org.Organization.MasterAccountId)
 
-	if err := d.Set("non_master_accounts", flattenOrganizationsAccounts(nonMasterAccounts)); err != nil {
-		return fmt.Errorf("error setting non_master_accounts: %s", err)
-	}
+	// if err := d.Set("non_master_accounts", flattenOrganizationsAccounts(nonMasterAccounts)); err != nil {
+	// 	return fmt.Errorf("error setting non_master_accounts: %s", err)
+	// }
 
-	if err := d.Set("roots", flattenOrganizationsRoots(roots)); err != nil {
-		return fmt.Errorf("error setting roots: %s", err)
-	}
+	// if err := d.Set("roots", flattenOrganizationsRoots(roots)); err != nil {
+	// 	return fmt.Errorf("error setting roots: %s", err)
+	// }
 
-	awsServiceAccessPrincipals := make([]string, 0)
+	// awsServiceAccessPrincipals := make([]string, 0)
 
 	// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
-	if aws.StringValue(org.Organization.FeatureSet) == organizations.OrganizationFeatureSetAll {
-		err = conn.ListAWSServiceAccessForOrganizationPages(&organizations.ListAWSServiceAccessForOrganizationInput{}, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
-			for _, enabledServicePrincipal := range page.EnabledServicePrincipals {
-				awsServiceAccessPrincipals = append(awsServiceAccessPrincipals, aws.StringValue(enabledServicePrincipal.ServicePrincipal))
-			}
-			return !lastPage
-		})
+	// if aws.StringValue(org.Organization.FeatureSet) == organizations.OrganizationFeatureSetAll {
+	// 	err = conn.ListAWSServiceAccessForOrganizationPages(&organizations.ListAWSServiceAccessForOrganizationInput{}, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
+	// 		for _, enabledServicePrincipal := range page.EnabledServicePrincipals {
+	// 			awsServiceAccessPrincipals = append(awsServiceAccessPrincipals, aws.StringValue(enabledServicePrincipal.ServicePrincipal))
+	// 		}
+	// 		return !lastPage
+	// 	})
 
-		if err != nil {
-			return fmt.Errorf("error listing AWS Service Access for Organization (%s): %s", d.Id(), err)
-		}
-	}
+	// 	if err != nil {
+	// 		return fmt.Errorf("error listing AWS Service Access for Organization (%s): %s", d.Id(), err)
+	// 	}
+	// }
 
-	if err := d.Set("aws_service_access_principals", awsServiceAccessPrincipals); err != nil {
-		return fmt.Errorf("error setting aws_service_access_principals: %s", err)
-	}
+	// if err := d.Set("aws_service_access_principals", awsServiceAccessPrincipals); err != nil {
+	// 	return fmt.Errorf("error setting aws_service_access_principals: %s", err)
+	// }
 
-	enabledPolicyTypes := make([]string, 0)
+	// enabledPolicyTypes := make([]string, 0)
 
-	for _, policyType := range roots[0].PolicyTypes {
-		if aws.StringValue(policyType.Status) == organizations.PolicyTypeStatusEnabled {
-			enabledPolicyTypes = append(enabledPolicyTypes, aws.StringValue(policyType.Type))
-		}
-	}
+	// for _, policyType := range roots[0].PolicyTypes {
+	// 	if aws.StringValue(policyType.Status) == organizations.PolicyTypeStatusEnabled {
+	// 		enabledPolicyTypes = append(enabledPolicyTypes, aws.StringValue(policyType.Type))
+	// 	}
+	// }
 
-	if err := d.Set("enabled_policy_types", enabledPolicyTypes); err != nil {
-		return fmt.Errorf("error setting enabled_policy_types: %s", err)
-	}
+	// if err := d.Set("enabled_policy_types", enabledPolicyTypes); err != nil {
+	// 	return fmt.Errorf("error setting enabled_policy_types: %s", err)
+	// }
 
 	return nil
 }

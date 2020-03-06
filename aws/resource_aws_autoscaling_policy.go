@@ -77,14 +77,14 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				Removed:  "Use `min_adjustment_magnitude` argument instead",
 			},
 			"scaling_adjustment": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"step_adjustment"},
+				Type:     schema.TypeInt,
+				Optional: true,
+				// ConflictsWith: []string{"step_adjustment"},
 			},
 			"step_adjustment": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"scaling_adjustment"},
+				Type:     schema.TypeSet,
+				Optional: true,
+				// ConflictsWith: []string{"scaling_adjustment"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"metric_interval_lower_bound": {
@@ -110,10 +110,10 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"predefined_metric_specification": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification"},
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							// ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"predefined_metric_type": {
@@ -128,10 +128,10 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 							},
 						},
 						"customized_metric_specification": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"target_tracking_configuration.0.predefined_metric_specification"},
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							// ConflictsWith: []string{"target_tracking_configuration.0.predefined_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"metric_dimension": {
