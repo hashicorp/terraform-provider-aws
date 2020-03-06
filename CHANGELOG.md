@@ -7,6 +7,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_eks_cluster: Add `encryption_config` configuration block [GH-12280]
 * resource/aws_globalaccelerator_accelerator: Add `dns_name` and `hosted_zone_id` attributes [GH-11670]
 * resource/aws_lb_target_group: Add `load_balancing_algorithm_type` argument (support Least Outstanding Requests algorithm for Application Load Balancers) [GH-11141]
 * resource/aws_s3_bucket: Add `grant` to implement ACL policy grants [GH-3728]
