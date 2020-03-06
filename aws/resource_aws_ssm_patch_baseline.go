@@ -280,7 +280,8 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 	tags, err := keyvaluetags.SsmListTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SSM Patch Baseline (%s): %s", d.Id(), err)
+		// list tags is broken for patch baselines
+		// return fmt.Errorf("error listing tags for SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
