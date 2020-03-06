@@ -86,10 +86,10 @@ func TestAccAWSENI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					testAccCheckAWSENIAvailabilityZone("data.aws_availability_zones.available", "names.0", &conf),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -185,12 +185,50 @@ func TestAccAWSENI_ipv6_count(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSENIIPV6CountConfig,
+				Config: testAccAWSENIIPV6CountConfig(1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
-					testAccCheckAWSENIAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSENIIPV6CountConfig(2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSENIIPV6CountConfig(0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSENIIPV6CountConfig(1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
 				),
 			},
 			{
@@ -324,7 +362,7 @@ func TestAccAWSENI_sourceDestCheck(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSENIConfigWithSourceDestCheck(),
+				Config: testAccAWSENIConfigWithSourceDestCheck(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "false"),
@@ -334,6 +372,20 @@ func TestAccAWSENI_sourceDestCheck(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSENIConfigWithSourceDestCheck(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "true"),
+				),
+			},
+			{
+				Config: testAccAWSENIConfigWithSourceDestCheck(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "false"),
+				),
 			},
 		},
 	})
@@ -421,6 +473,49 @@ func TestAccAWSENI_PrivateIpsCount(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSENI_tags(t *testing.T) {
+	var conf ec2.NetworkInterface
+	resourceName := "aws_network_interface.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSENIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSENIConfigTags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSENIConfigTags2("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSENIConfigTags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
 			},
 		},
 	})
@@ -682,7 +777,8 @@ resource "aws_network_interface" "test" {
 }
 `
 
-const testAccAWSENIIPV6CountConfig = `
+func testAccAWSENIIPV6CountConfig(ipCount int) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "172.16.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -717,7 +813,7 @@ resource "aws_security_group" "test" {
 resource "aws_network_interface" "test" {
   subnet_id           = "${aws_subnet.test.id}"
   private_ips         = ["172.16.10.100"]
-  ipv6_address_count  = 2
+  ipv6_address_count  = %[1]d
   security_groups     = ["${aws_security_group.test.id}"]
   description         = "Managed by Terraform"
 
@@ -725,7 +821,8 @@ resource "aws_network_interface" "test" {
     Name = "test-interface-ipv6"
   }
 }
-`
+`, ipCount)
+}
 
 func testAccAWSENIConfigUpdatedDescription() string {
 	return fmt.Sprintf(`
@@ -781,14 +878,14 @@ resource "aws_network_interface" "test" {
 `)
 }
 
-func testAccAWSENIConfigWithSourceDestCheck() string {
+func testAccAWSENIConfigWithSourceDestCheck(enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-network-interface-w-source-dest-check"
+  	Name = "terraform-testacc-network-interface-w-source-dest-check"
   }
 }
 
@@ -812,21 +909,25 @@ resource "aws_subnet" "test" {
 
 resource "aws_network_interface" "test" {
   subnet_id         = aws_subnet.test.id
-  source_dest_check = false
+  source_dest_check = %[1]t
   private_ips       = ["172.16.10.100"]
+
+  tags = {
+    Name = "tf-acc-network-interface-w-source-dest-check"
+  }
 }
-`)
+`, enabled)
 }
 
 func testAccAWSENIConfigWithNoPrivateIPs() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block           = "172.16.0.0/16"
-  enable_dns_hostnames = true
+	cidr_block           = "172.16.0.0/16"
+	enable_dns_hostnames = true
 
-  tags = {
-    Name = "terraform-testacc-network-interface-w-no-private-ips"
-  }
+	tags = {
+	  Name = "terraform-testacc-network-interface-w-no-private-ips"
+	}
 }
 
 data "aws_availability_zones" "available" {
