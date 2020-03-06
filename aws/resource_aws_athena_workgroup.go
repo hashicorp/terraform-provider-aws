@@ -115,7 +115,7 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 					athena.WorkGroupStateEnabled,
 				}, false),
 			},
-			"recursive_delete_option": {
+			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -204,10 +204,10 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", resp.WorkGroup.Name)
 	d.Set("state", resp.WorkGroup.State)
 
-	if v, ok := d.GetOk("recursive_delete_option"); ok {
-		d.Set("recursive_delete_option", v.(bool))
+	if v, ok := d.GetOk("force_destroy"); ok {
+		d.Set("force_destroy", v.(bool))
 	} else {
-		d.Set("recursive_delete_option", false)
+		d.Set("force_destroy", false)
 	}
 
 	tags, err := keyvaluetags.AthenaListTags(conn, arn.String())
@@ -230,7 +230,7 @@ func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) 
 		WorkGroup: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("recursive_delete_option"); ok {
+	if v, ok := d.GetOk("force_destroy"); ok {
 		input.RecursiveDeleteOption = aws.Bool(v.(bool))
 	}
 	_, err := conn.DeleteWorkGroup(input)
