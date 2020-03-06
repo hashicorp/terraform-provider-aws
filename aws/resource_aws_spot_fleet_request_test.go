@@ -937,6 +937,10 @@ func testAccPreCheckAWSEc2SpotFleetRequest(t *testing.T) {
 
 func testAccAWSSpotFleetRequestConfigBase(rName string, rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_key_pair" "debugging" {
   key_name   = "tmp-key-%[1]s"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
@@ -1237,13 +1241,13 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m1.small"
         ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2b"
+        availability_zone = "${data.aws_availability_zones.available.names[1]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1262,7 +1266,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.test.id}"
-    availability_zone = "us-west-2a"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
         Name = "tf-acc-spot-fleet-request-w-subnet-test"
     }
@@ -1271,7 +1275,7 @@ resource "aws_subnet" "test" {
 resource "aws_subnet" "bar" {
     cidr_block = "10.1.20.0/24"
     vpc_id = "${aws_vpc.test.id}"
-    availability_zone = "us-west-2b"
+    availability_zone = "${data.aws_availability_zones.available.names[1]}"
   tags = {
         Name = "tf-acc-spot-fleet-request-w-subnet-bar"
     }
@@ -1310,7 +1314,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.test.id}"
-    availability_zone = "us-west-2a"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
         Name = "tf-acc-spot-fleet-request-with-elb-test"
     }
@@ -1319,7 +1323,7 @@ resource "aws_subnet" "test" {
 resource "aws_subnet" "bar" {
     cidr_block = "10.1.20.0/24"
     vpc_id = "${aws_vpc.test.id}"
-    availability_zone = "us-west-2b"
+    availability_zone = "${data.aws_availability_zones.available.names[1]}"
   tags = {
         Name = "tf-acc-spot-fleet-request-with-elb-bar"
     }
@@ -1366,7 +1370,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.test.id}"
-    availability_zone = "us-west-2a"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
         Name = "tf-acc-spot-fleet-request-with-target-groups-test"
     }
@@ -1375,7 +1379,7 @@ resource "aws_subnet" "test" {
 resource "aws_subnet" "bar" {
     cidr_block = "10.1.20.0/24"
     vpc_id = "${aws_vpc.test.id}"
-    availability_zone = "us-west-2b"
+    availability_zone = "${data.aws_availability_zones.available.names[1]}"
   tags = {
         Name = "tf-acc-spot-fleet-request-with-target-groups-bar"
     }
@@ -1437,13 +1441,13 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m1.small"
         ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1462,7 +1466,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.test.id}"
-    availability_zone = "us-west-2a"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
         Name = "tf-acc-spot-fleet-request-multi-instance-types"
     }
@@ -1505,13 +1509,13 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m1.small"
         ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
         spot_price = "0.01"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1531,13 +1535,13 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m1.small"
         ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1558,19 +1562,19 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1591,19 +1595,19 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1623,14 +1627,14 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
         weighted_capacity = "6"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        availability_zone = "us-west-2a"
+        availability_zone = "${data.aws_availability_zones.available.names[0]}"
         weighted_capacity = "3"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
