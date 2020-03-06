@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"reflect"
 	"regexp"
 	"testing"
 	"time"
@@ -1127,26 +1126,9 @@ func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
 
 func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 	var cluster emr.Cluster
+
 	resourceName := "aws_emr_cluster.test"
 	rName := acctest.RandomWithPrefix("tf-emr-bootstrap")
-	argsInts := []string{
-		"1",
-		"2",
-		"3",
-		"4",
-		"5",
-		"6",
-		"7",
-		"8",
-		"9",
-		"10",
-	}
-
-	argsStrings := []string{
-		"instance.isMaster=true",
-		"echo running on master node",
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -1156,7 +1138,6 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 				Config: testAccAWSEmrClusterConfig_bootstrap(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-					testAccCheck_bootstrap_order(&cluster, argsInts, argsStrings),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
@@ -1178,7 +1159,6 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 				Config: testAccAWSEmrClusterConfig_bootstrapAdd(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-					testAccCheck_bootstrap_order(&cluster, argsInts, argsStrings),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
@@ -1205,7 +1185,6 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 				Config: testAccAWSEmrClusterConfig_bootstrapReorder(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-					testAccCheck_bootstrap_order(&cluster, argsInts, argsStrings),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
@@ -1507,45 +1486,6 @@ func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheck_bootstrap_order(cluster *emr.Cluster, argsInts, argsStrings []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		emrconn := testAccProvider.Meta().(*AWSClient).emrconn
-		req := emr.ListBootstrapActionsInput{
-			ClusterId: cluster.Id,
-		}
-
-		resp, err := emrconn.ListBootstrapActions(&req)
-		if err != nil {
-			return fmt.Errorf("Error listing boostrap actions in test: %s", err)
-		}
-
-		// make sure we actually checked something
-		var ran bool
-		for _, ba := range resp.BootstrapActions {
-			// assume name matches the config
-			rArgs := aws.StringValueSlice(ba.Args)
-			if *ba.Name == "test" {
-				ran = true
-				if !reflect.DeepEqual(argsInts, rArgs) {
-					return fmt.Errorf("Error matching Bootstrap args:\n\texpected: %#v\n\tgot: %#v", argsInts, rArgs)
-				}
-			} else if *ba.Name == "runif" {
-				ran = true
-				if !reflect.DeepEqual(argsStrings, rArgs) {
-					return fmt.Errorf("Error matching Bootstrap args:\n\texpected: %#v\n\tgot: %#v", argsStrings, rArgs)
-				}
-			}
-		}
-
-		if !ran {
-			return fmt.Errorf("Expected to compare bootstrap actions, but no checks were ran")
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckAWSEmrDestroy(s *terraform.State) error {
