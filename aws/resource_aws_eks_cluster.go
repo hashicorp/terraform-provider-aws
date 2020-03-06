@@ -473,7 +473,7 @@ func deleteEksCluster(conn *eks.EKS, clusterName string) error {
 }
 
 func expandEksEncryptionConfig(tfList []interface{}) []*eks.EncryptionConfig {
-	if tfList == nil || len(tfList) == 0 {
+	if len(tfList) == 0 {
 		return nil
 	}
 
@@ -614,7 +614,7 @@ func flattenEksOidc(oidc *eks.OIDC) []map[string]interface{} {
 }
 
 func flattenEksEncryptionConfig(apiObjects []*eks.EncryptionConfig) []interface{} {
-	if apiObjects == nil || len(apiObjects) == 0 {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
