@@ -108,9 +108,9 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 			ServiceId:            aws.String(d.Id()),
 			AddAllowedPrincipals: expandStringSet(v.(*schema.Set)),
 		}
-		log.Printf("[DEBUG] Modifying VPC Endpoint Service permissions: %#v", modifyPermReq)
+		log.Printf("[DEBUG] Adding VPC Endpoint Service permissions: %#v", modifyPermReq)
 		if _, err := conn.ModifyVpcEndpointServicePermissions(modifyPermReq); err != nil {
-			return fmt.Errorf("error modifying VPC Endpoint Service permissions: %s", err.Error())
+			return fmt.Errorf("error adding VPC Endpoint Service permissions: %s", err.Error())
 		}
 	}
 
