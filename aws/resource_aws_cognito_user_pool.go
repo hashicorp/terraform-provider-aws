@@ -164,19 +164,19 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"email_verification_subject": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validateCognitoUserPoolEmailVerificationSubject,
-				ConflictsWith: []string{"verification_message_template.0.email_subject"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateCognitoUserPoolEmailVerificationSubject,
+				// ConflictsWith: []string{"verification_message_template.0.email_subject"},
 			},
 
 			"email_verification_message": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validateCognitoUserPoolEmailVerificationMessage,
-				ConflictsWith: []string{"verification_message_template.0.email_message"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateCognitoUserPoolEmailVerificationMessage,
+				// ConflictsWith: []string{"verification_message_template.0.email_message"},
 			},
 
 			"endpoint": {
@@ -331,11 +331,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"sms_verification_message": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validateCognitoUserPoolSmsVerificationMessage,
-				ConflictsWith: []string{"verification_message_template.0.sms_message"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateCognitoUserPoolSmsVerificationMessage,
+				// ConflictsWith: []string{"verification_message_template.0.sms_message"},
 			},
 
 			"tags": tagsSchema(),
@@ -351,7 +351,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						cognitoidentityprovider.UsernameAttributeTypePhoneNumber,
 					}, false),
 				},
-				ConflictsWith: []string{"alias_attributes"},
+				// ConflictsWith: []string{"alias_attributes"},
 			},
 
 			"user_pool_add_ons": {
@@ -390,11 +390,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							}, false),
 						},
 						"email_message": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ValidateFunc:  validateCognitoUserPoolTemplateEmailMessage,
-							ConflictsWith: []string{"email_verification_message"},
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateCognitoUserPoolTemplateEmailMessage,
+							// ConflictsWith: []string{"email_verification_message"},
 						},
 						"email_message_by_link": {
 							Type:         schema.TypeString,
@@ -403,11 +403,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateCognitoUserPoolTemplateEmailMessageByLink,
 						},
 						"email_subject": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ValidateFunc:  validateCognitoUserPoolTemplateEmailSubject,
-							ConflictsWith: []string{"email_verification_subject"},
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateCognitoUserPoolTemplateEmailSubject,
+							// ConflictsWith: []string{"email_verification_subject"},
 						},
 						"email_subject_by_link": {
 							Type:         schema.TypeString,
@@ -416,11 +416,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateCognitoUserPoolTemplateEmailSubjectByLink,
 						},
 						"sms_message": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ValidateFunc:  validateCognitoUserPoolTemplateSmsMessage,
-							ConflictsWith: []string{"sms_verification_message"},
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateCognitoUserPoolTemplateSmsMessage,
+							// ConflictsWith: []string{"sms_verification_message"},
 						},
 					},
 				},

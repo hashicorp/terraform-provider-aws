@@ -50,6 +50,7 @@ func resourceAwsKmsKey() *schema.Resource {
 					kms.KeyUsageTypeEncryptDecrypt,
 					kms.KeyUsageTypeSignVerify,
 				}, false),
+				DiffSuppressFunc: suppressEmptyToDefault(kms.KeyUsageTypeEncryptDecrypt),
 			},
 			"customer_master_key_spec": {
 				Type:     schema.TypeString,

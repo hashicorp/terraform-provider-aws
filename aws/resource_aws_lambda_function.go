@@ -30,6 +30,7 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimeGo1X,
 	lambda.RuntimeJava8,
 	lambda.RuntimeJava11,
+	lambda.RuntimeNodejs,
 	lambda.RuntimeNodejs43,
 	lambda.RuntimeNodejs43Edge,
 	lambda.RuntimeNodejs610,

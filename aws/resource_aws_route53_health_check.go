@@ -48,10 +48,10 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Optional: true,
 			},
 			"request_interval": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
-				ValidateFunc: validation.IntInSlice([]int{10, 30}),
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
+				// ValidateFunc: validation.IntInSlice([]int{10, 30}),
 			},
 			"ip_address": {
 				Type:     schema.TypeString,
