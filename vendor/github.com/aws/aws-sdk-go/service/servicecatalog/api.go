@@ -3354,6 +3354,9 @@ func (c *ServiceCatalog) DescribeServiceActionExecutionParametersRequest(input *
 
 // DescribeServiceActionExecutionParameters API operation for AWS Service Catalog.
 //
+// Finds the default parameters for a specific self-service action on a specific
+// provisioned product and returns a map of the results to the user.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5072,6 +5075,12 @@ func (c *ServiceCatalog) ListPortfolioAccessRequest(input *ListPortfolioAccessIn
 		Name:       opListPortfolioAccess,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"PageToken"},
+			OutputTokens:    []string{"NextPageToken"},
+			LimitToken:      "PageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -5098,6 +5107,9 @@ func (c *ServiceCatalog) ListPortfolioAccessRequest(input *ListPortfolioAccessIn
 //   * ResourceNotFoundException
 //   The specified resource was not found.
 //
+//   * InvalidParametersException
+//   One or more parameters provided to the operation are not valid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfolioAccess
 func (c *ServiceCatalog) ListPortfolioAccess(input *ListPortfolioAccessInput) (*ListPortfolioAccessOutput, error) {
 	req, out := c.ListPortfolioAccessRequest(input)
@@ -5118,6 +5130,58 @@ func (c *ServiceCatalog) ListPortfolioAccessWithContext(ctx aws.Context, input *
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListPortfolioAccessPages iterates over the pages of a ListPortfolioAccess operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPortfolioAccess method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPortfolioAccess operation.
+//    pageNum := 0
+//    err := client.ListPortfolioAccessPages(params,
+//        func(page *servicecatalog.ListPortfolioAccessOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ServiceCatalog) ListPortfolioAccessPages(input *ListPortfolioAccessInput, fn func(*ListPortfolioAccessOutput, bool) bool) error {
+	return c.ListPortfolioAccessPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPortfolioAccessPagesWithContext same as ListPortfolioAccessPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListPortfolioAccessPagesWithContext(ctx aws.Context, input *ListPortfolioAccessInput, fn func(*ListPortfolioAccessOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPortfolioAccessInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPortfolioAccessRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListPortfolioAccessOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListPortfolios = "ListPortfolios"
@@ -10175,7 +10239,7 @@ type CreateServiceActionInput struct {
 	//
 	// The list of parameters in JSON format.
 	//
-	// For example: [{\"Name\":\"InstanceId\",\"Type\":\"TARGET\"}].
+	// For example: [{\"Name\":\"InstanceId\",\"Type\":\"TARGET\"}] or [{\"Name\":\"InstanceId\",\"Type\":\"TEXT_VALUE\"}].
 	//
 	// Definition is a required field
 	Definition map[string]*string `min:"1" type:"map" required:"true"`
@@ -12279,11 +12343,22 @@ func (s *DescribeRecordOutput) SetRecordOutputs(v []*RecordOutput) *DescribeReco
 type DescribeServiceActionExecutionParametersInput struct {
 	_ struct{} `type:"structure"`
 
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
 	AcceptLanguage *string `type:"string"`
 
+	// The identifier of the provisioned product.
+	//
 	// ProvisionedProductId is a required field
 	ProvisionedProductId *string `min:"1" type:"string" required:"true"`
 
+	// The self-service action identifier.
+	//
 	// ServiceActionId is a required field
 	ServiceActionId *string `min:"1" type:"string" required:"true"`
 }
@@ -12341,6 +12416,7 @@ func (s *DescribeServiceActionExecutionParametersInput) SetServiceActionId(v str
 type DescribeServiceActionExecutionParametersOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The parameters of the self-service action.
 	ServiceActionParameters []*ExecutionParameter `type:"list"`
 }
 
@@ -13143,6 +13219,11 @@ type ExecuteProvisionedProductServiceActionInput struct {
 	// An idempotency token that uniquely identifies the execute request.
 	ExecuteToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
+	// A map of all self-service action parameters and their values. If a provided
+	// parameter is of a special type, such as TARGET, the provided value will override
+	// the default value generated by AWS Service Catalog. If the parameters field
+	// is not provided, no additional parameters are passed and default values will
+	// be used for any special parameters such as TARGET.
 	Parameters map[string][]*string `min:"1" type:"map"`
 
 	// The identifier of the provisioned product.
@@ -13248,13 +13329,18 @@ func (s *ExecuteProvisionedProductServiceActionOutput) SetRecordDetail(v *Record
 	return s
 }
 
+// Details of an execution parameter value that is passed to a self-service
+// action when executed on a provisioned product.
 type ExecutionParameter struct {
 	_ struct{} `type:"structure"`
 
+	// The default values for the execution parameter.
 	DefaultValues []*string `type:"list"`
 
+	// The name of the execution parameter.
 	Name *string `min:"1" type:"string"`
 
+	// The execution parameter type.
 	Type *string `min:"1" type:"string"`
 }
 
@@ -14181,6 +14267,17 @@ type ListPortfolioAccessInput struct {
 	//    * zh - Chinese
 	AcceptLanguage *string `type:"string"`
 
+	// The ID of an organization node the portfolio is shared with. All children
+	// of this node with an inherited portfolio share will be returned.
+	OrganizationParentId *string `min:"1" type:"string"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+
 	// The portfolio identifier.
 	//
 	// PortfolioId is a required field
@@ -14200,6 +14297,9 @@ func (s ListPortfolioAccessInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ListPortfolioAccessInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListPortfolioAccessInput"}
+	if s.OrganizationParentId != nil && len(*s.OrganizationParentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationParentId", 1))
+	}
 	if s.PortfolioId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PortfolioId"))
 	}
@@ -14216,6 +14316,24 @@ func (s *ListPortfolioAccessInput) Validate() error {
 // SetAcceptLanguage sets the AcceptLanguage field's value.
 func (s *ListPortfolioAccessInput) SetAcceptLanguage(v string) *ListPortfolioAccessInput {
 	s.AcceptLanguage = &v
+	return s
+}
+
+// SetOrganizationParentId sets the OrganizationParentId field's value.
+func (s *ListPortfolioAccessInput) SetOrganizationParentId(v string) *ListPortfolioAccessInput {
+	s.OrganizationParentId = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListPortfolioAccessInput) SetPageSize(v int64) *ListPortfolioAccessInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *ListPortfolioAccessInput) SetPageToken(v string) *ListPortfolioAccessInput {
+	s.PageToken = &v
 	return s
 }
 
@@ -20019,6 +20137,9 @@ type UpdateProvisioningArtifactInput struct {
 	AcceptLanguage *string `type:"string"`
 
 	// Indicates whether the product version is active.
+	//
+	// Inactive provisioning artifacts are invisible to end users. End users cannot
+	// launch or update a provisioned product from an inactive provisioning artifact.
 	Active *bool `type:"boolean"`
 
 	// The updated description of the provisioning artifact.

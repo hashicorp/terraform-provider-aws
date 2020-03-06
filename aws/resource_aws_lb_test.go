@@ -580,7 +580,7 @@ func TestAccAWSLB_noSecurityGroup(t *testing.T) {
 
 func TestAccAWSLB_ALB_AccessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("testaccawslbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
 	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	resourceName := "aws_lb.test"
 
@@ -668,7 +668,7 @@ func TestAccAWSLB_ALB_AccessLogs(t *testing.T) {
 
 func TestAccAWSLB_ALB_AccessLogs_Prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("testaccawslbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
 	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	resourceName := "aws_lb.test"
 
@@ -738,7 +738,7 @@ func TestAccAWSLB_ALB_AccessLogs_Prefix(t *testing.T) {
 
 func TestAccAWSLB_NLB_AccessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("testaccawslbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
 	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	resourceName := "aws_lb.test"
 
@@ -826,7 +826,7 @@ func TestAccAWSLB_NLB_AccessLogs(t *testing.T) {
 
 func TestAccAWSLB_NLB_AccessLogs_Prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("testaccawslbaccesslogs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
 	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	resourceName := "aws_lb.test"
 
@@ -1254,7 +1254,7 @@ resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1323,7 +1323,7 @@ resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1394,7 +1394,7 @@ resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout               = 30
   enable_deletion_protection = %t
@@ -1630,7 +1630,7 @@ resource "aws_alb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1699,7 +1699,7 @@ resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1767,7 +1767,7 @@ func testAccAWSLBConfig_generatedName() string {
 resource "aws_lb" "lb_test" {
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1843,7 +1843,7 @@ resource "aws_lb" "lb_test" {
   name            = ""
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1924,7 +1924,7 @@ resource "aws_lb" "lb_test" {
   name_prefix     = "tf-lb-"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1991,7 +1991,7 @@ resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -2069,7 +2069,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
+resource "aws_subnet" "alb_test" {
   count = 2
 
   availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
@@ -2111,7 +2111,7 @@ func testAccAWSLBConfigALBAccessLogs(enabled bool, lbName, bucketName, bucketPre
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnets  = "${aws_subnet.alb_test.*.id}"
 
   access_logs {
     bucket  = "${aws_s3_bucket_policy.test.bucket}"
@@ -2127,7 +2127,7 @@ func testAccAWSLBConfigALBAccessLogsNoBlocks(lbName, bucketName string) string {
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnets  = "${aws_subnet.alb_test.*.id}"
 }
 `, lbName)
 }
@@ -2146,7 +2146,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
+resource "aws_subnet" "alb_test" {
   count = 2
 
   availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
@@ -2200,7 +2200,7 @@ resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
-  subnets            = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnets            = "${aws_subnet.alb_test.*.id}"
 
   access_logs {
     bucket  = "${aws_s3_bucket_policy.test.bucket}"
@@ -2217,7 +2217,7 @@ resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
-  subnets            = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnets            = "${aws_subnet.alb_test.*.id}"
 }
 `, lbName)
 }
@@ -2227,7 +2227,7 @@ func testAccAWSLBConfig_nosg(lbName string) string {
 resource "aws_lb" "lb_test" {
   name     = "%s"
   internal = true
-  subnets  = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets  = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2272,7 +2272,7 @@ resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}", "${aws_security_group.alb_test_2.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  subnets         = "${aws_subnet.alb_test.*.id}"
 
   idle_timeout               = 30
   enable_deletion_protection = false

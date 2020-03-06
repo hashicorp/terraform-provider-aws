@@ -181,6 +181,33 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
+		{
+			Name: "empty environment, mountPoints, ulimits, and volumes",
+			ApiJson: `
+{
+	"image": "example:image",
+	"vcpus": 8,
+	"memory": 2048,
+	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
+	"jobRoleArn": "arn:aws:iam::123456789012:role/example",
+	"volumes": [],
+	"environment": [],
+	"mountPoints": [],
+	"ulimits": [],
+	"resourceRequirements": []
+}
+`,
+			ConfigurationJson: `
+{
+	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
+	"image": "example:image",
+	"memory": 2048,
+	"vcpus": 8,
+	"jobRoleArn": "arn:aws:iam::123456789012:role/example"
+}
+`,
+			ExpectEquivalent: true,
+		},
 	}
 
 	for _, testCase := range testCases {

@@ -208,21 +208,8 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 		docInput.TargetType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Waiting for SSM Document %q to be created", d.Get("name").(string))
-	var resp *ssm.CreateDocumentOutput
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = ssmconn.CreateDocument(docInput)
+	resp, err := ssmconn.CreateDocument(docInput)
 
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		resp, err = ssmconn.CreateDocument(docInput)
-	}
 	if err != nil {
 		return fmt.Errorf("Error creating SSM document: %s", err)
 	}

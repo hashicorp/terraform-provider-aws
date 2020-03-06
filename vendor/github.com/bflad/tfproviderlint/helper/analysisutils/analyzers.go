@@ -11,6 +11,26 @@ import (
 	"golang.org/x/tools/go/analysis/passes/inspect"
 )
 
+// DeprecatedReceiverMethodSelectorExprAnalyzer returns an Analyzer for deprecated *ast.SelectorExpr
+func DeprecatedReceiverMethodSelectorExprAnalyzer(analyzerName string, selectorExprAnalyzer *analysis.Analyzer, packageName, typeName, methodName string) *analysis.Analyzer {
+	doc := fmt.Sprintf(`check for deprecated %[2]s.%[3]s usage
+
+The %[1]s analyzer reports usage of the deprecated:
+
+%[2]s.%[3]s
+`, analyzerName, packageName, typeName, methodName)
+
+	return &analysis.Analyzer{
+		Name: analyzerName,
+		Doc:  doc,
+		Requires: []*analysis.Analyzer{
+			commentignore.Analyzer,
+			selectorExprAnalyzer,
+		},
+		Run: DeprecatedReceiverMethodSelectorExprRunner(analyzerName, selectorExprAnalyzer, packageName, typeName, methodName),
+	}
+}
+
 // DeprecatedWithReplacementSelectorExprAnalyzer returns an Analyzer for deprecated *ast.SelectorExpr with replacement
 func DeprecatedWithReplacementSelectorExprAnalyzer(analyzerName string, selectorExprAnalyzer *analysis.Analyzer, oldPackageName, oldSelectorName, newPackageName, newSelectorName string) *analysis.Analyzer {
 	doc := fmt.Sprintf(`check for deprecated %[2]s.%[3]s usage
@@ -48,6 +68,19 @@ func FunctionCallExprAnalyzer(analyzerName string, packageFunc func(ast.Expr, *t
 	}
 }
 
+// ReceiverMethodAssignStmtAnalyzer returns an Analyzer for receiver method *ast.AssignStmt
+func ReceiverMethodAssignStmtAnalyzer(analyzerName string, packageReceiverMethodFunc func(ast.Expr, *types.Info, string, string) bool, packagePath string, receiverName string, methodName string) *analysis.Analyzer {
+	return &analysis.Analyzer{
+		Name: analyzerName,
+		Doc:  fmt.Sprintf("find (%s.%s).%s assignments for later passes", packagePath, receiverName, methodName),
+		Requires: []*analysis.Analyzer{
+			inspect.Analyzer,
+		},
+		Run:        ReceiverMethodAssignStmtRunner(packageReceiverMethodFunc, receiverName, methodName),
+		ResultType: reflect.TypeOf([]*ast.AssignStmt{}),
+	}
+}
+
 // ReceiverMethodCallExprAnalyzer returns an Analyzer for receiver method *ast.CallExpr
 func ReceiverMethodCallExprAnalyzer(analyzerName string, packageReceiverMethodFunc func(ast.Expr, *types.Info, string, string) bool, packagePath string, receiverName string, methodName string) *analysis.Analyzer {
 	return &analysis.Analyzer{
@@ -58,6 +91,19 @@ func ReceiverMethodCallExprAnalyzer(analyzerName string, packageReceiverMethodFu
 		},
 		Run:        ReceiverMethodCallExprRunner(packageReceiverMethodFunc, receiverName, methodName),
 		ResultType: reflect.TypeOf([]*ast.CallExpr{}),
+	}
+}
+
+// ReceiverMethodSelectorExprAnalyzer returns an Analyzer for receiver method *ast.SelectorExpr
+func ReceiverMethodSelectorExprAnalyzer(analyzerName string, packageReceiverMethodFunc func(ast.Expr, *types.Info, string, string) bool, packagePath string, receiverName string, methodName string) *analysis.Analyzer {
+	return &analysis.Analyzer{
+		Name: analyzerName,
+		Doc:  fmt.Sprintf("find (%s.%s).%s calls for later passes", packagePath, receiverName, methodName),
+		Requires: []*analysis.Analyzer{
+			inspect.Analyzer,
+		},
+		Run:        ReceiverMethodSelectorExprRunner(packageReceiverMethodFunc, receiverName, methodName),
+		ResultType: reflect.TypeOf([]*ast.SelectorExpr{}),
 	}
 }
 

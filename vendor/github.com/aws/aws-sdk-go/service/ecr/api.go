@@ -57,8 +57,13 @@ func (c *ECR) BatchCheckLayerAvailabilityRequest(input *BatchCheckLayerAvailabil
 
 // BatchCheckLayerAvailability API operation for Amazon EC2 Container Registry.
 //
-// Check the availability of multiple image layers in a specified registry and
-// repository.
+// Checks the availability of one or more image layers in a repository.
+//
+// When an image is pushed to a repository, each image layer is checked to verify
+// if it has been uploaded before. If it is, then the image layer is skipped.
+//
+// When an image is pulled from a repository, each image layer is checked once
+// to verify it is available to be pulled.
 //
 // This operation is used by the Amazon ECR proxy, and it is not intended for
 // general use by customers for pulling and pushing images. In most cases, you
@@ -149,8 +154,8 @@ func (c *ECR) BatchDeleteImageRequest(input *BatchDeleteImageInput) (req *reques
 
 // BatchDeleteImage API operation for Amazon EC2 Container Registry.
 //
-// Deletes a list of specified images within a specified repository. Images
-// are specified with either imageTag or imageDigest.
+// Deletes a list of specified images within a repository. Images are specified
+// with either an imageTag or imageDigest.
 //
 // You can remove a tag from an image by specifying the image's tag in your
 // request. When you remove the last tag from an image, the image is deleted
@@ -244,8 +249,11 @@ func (c *ECR) BatchGetImageRequest(input *BatchGetImageInput) (req *request.Requ
 
 // BatchGetImage API operation for Amazon EC2 Container Registry.
 //
-// Gets detailed information for specified images within a specified repository.
-// Images are specified with either imageTag or imageDigest.
+// Gets detailed information for an image. Images are specified with either
+// an imageTag or imageDigest.
+//
+// When an image is pulled, the BatchGetImage API is called once to retrieve
+// the image manifest.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -335,6 +343,9 @@ func (c *ECR) CompleteLayerUploadRequest(input *CompleteLayerUploadInput) (req *
 // Informs Amazon ECR that the image layer upload has completed for a specified
 // registry, repository name, and upload ID. You can optionally provide a sha256
 // digest of the image layer for data validation purposes.
+//
+// When an image is pushed, the CompleteLayerUpload API is called once per each
+// new image layer to verify that the upload has completed.
 //
 // This operation is used by the Amazon ECR proxy, and it is not intended for
 // general use by customers for pulling and pushing images. In most cases, you
@@ -442,9 +453,7 @@ func (c *ECR) CreateRepositoryRequest(input *CreateRepositoryInput) (req *reques
 
 // CreateRepository API operation for Amazon EC2 Container Registry.
 //
-// Creates an Amazon Elastic Container Registry (Amazon ECR) repository, where
-// users can push and pull Docker images. For more information, see Amazon ECR
-// Repositories (https://docs.aws.amazon.com/AmazonECR/latest/userguide/Repositories.html)
+// Creates a repository. For more information, see Amazon ECR Repositories (https://docs.aws.amazon.com/AmazonECR/latest/userguide/Repositories.html)
 // in the Amazon Elastic Container Registry User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -546,7 +555,7 @@ func (c *ECR) DeleteLifecyclePolicyRequest(input *DeleteLifecyclePolicyInput) (r
 
 // DeleteLifecyclePolicy API operation for Amazon EC2 Container Registry.
 //
-// Deletes the specified lifecycle policy.
+// Deletes the lifecycle policy associated with the specified repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -636,8 +645,9 @@ func (c *ECR) DeleteRepositoryRequest(input *DeleteRepositoryInput) (req *reques
 
 // DeleteRepository API operation for Amazon EC2 Container Registry.
 //
-// Deletes an existing image repository. If a repository contains images, you
-// must use the force option to delete it.
+// Deletes a repository. If the repository contains images, you must either
+// delete all images in the repository or use the force option to delete the
+// repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -728,7 +738,7 @@ func (c *ECR) DeleteRepositoryPolicyRequest(input *DeleteRepositoryPolicyInput) 
 
 // DeleteRepositoryPolicy API operation for Amazon EC2 Container Registry.
 //
-// Deletes the repository policy from a specified repository.
+// Deletes the repository policy associated with the specified repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -825,7 +835,7 @@ func (c *ECR) DescribeImageScanFindingsRequest(input *DescribeImageScanFindingsI
 
 // DescribeImageScanFindings API operation for Amazon EC2 Container Registry.
 //
-// Describes the image scan findings for the specified image.
+// Returns the scan findings for the specified image.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -977,8 +987,7 @@ func (c *ECR) DescribeImagesRequest(input *DescribeImagesInput) (req *request.Re
 
 // DescribeImages API operation for Amazon EC2 Container Registry.
 //
-// Returns metadata about the images in a repository, including image size,
-// image tags, and creation date.
+// Returns metadata about the images in a repository.
 //
 // Beginning with Docker version 1.9, the Docker client compresses image layers
 // before pushing them to a V2 Docker registry. The output of the docker images
@@ -1270,14 +1279,16 @@ func (c *ECR) GetAuthorizationTokenRequest(input *GetAuthorizationTokenInput) (r
 
 // GetAuthorizationToken API operation for Amazon EC2 Container Registry.
 //
-// Retrieves a token that is valid for a specified registry for 12 hours. This
-// command allows you to use the docker CLI to push and pull images with Amazon
-// ECR. If you do not specify a registry, the default registry is assumed.
+// Retrieves an authorization token. An authorization token represents your
+// IAM authentication credentials and can be used to access any Amazon ECR registry
+// that your IAM principal has access to. The authorization token is valid for
+// 12 hours.
 //
-// The authorizationToken returned for each registry specified is a base64 encoded
-// string that can be decoded and used in a docker login command to authenticate
-// to a registry. The AWS CLI offers an aws ecr get-login command that simplifies
-// the login process.
+// The authorizationToken returned is a base64 encoded string that can be decoded
+// and used in a docker login command to authenticate to a registry. The AWS
+// CLI offers an get-login-password command that simplifies the login process.
+// For more information, see Registry Authentication (https://docs.aws.amazon.com/AmazonECR/latest/userguide/Registries.html#registry_auth)
+// in the Amazon Elastic Container Registry User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1362,6 +1373,9 @@ func (c *ECR) GetDownloadUrlForLayerRequest(input *GetDownloadUrlForLayerInput) 
 //
 // Retrieves the pre-signed Amazon S3 download URL corresponding to an image
 // layer. You can only get URLs for image layers that are referenced in an image.
+//
+// When an image is pulled, the GetDownloadUrlForLayer API is called once per
+// image layer.
 //
 // This operation is used by the Amazon ECR proxy, and it is not intended for
 // general use by customers for pulling and pushing images. In most cases, you
@@ -1460,7 +1474,7 @@ func (c *ECR) GetLifecyclePolicyRequest(input *GetLifecyclePolicyInput) (req *re
 
 // GetLifecyclePolicy API operation for Amazon EC2 Container Registry.
 //
-// Retrieves the specified lifecycle policy.
+// Retrieves the lifecycle policy for the specified repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1556,7 +1570,8 @@ func (c *ECR) GetLifecyclePolicyPreviewRequest(input *GetLifecyclePolicyPreviewI
 
 // GetLifecyclePolicyPreview API operation for Amazon EC2 Container Registry.
 //
-// Retrieves the results of the specified lifecycle policy preview request.
+// Retrieves the results of the lifecycle policy preview request for the specified
+// repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1698,7 +1713,7 @@ func (c *ECR) GetRepositoryPolicyRequest(input *GetRepositoryPolicyInput) (req *
 
 // GetRepositoryPolicy API operation for Amazon EC2 Container Registry.
 //
-// Retrieves the repository policy for a specified repository.
+// Retrieves the repository policy for the specified repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1789,7 +1804,11 @@ func (c *ECR) InitiateLayerUploadRequest(input *InitiateLayerUploadInput) (req *
 
 // InitiateLayerUpload API operation for Amazon EC2 Container Registry.
 //
-// Notify Amazon ECR that you intend to upload an image layer.
+// Notifies Amazon ECR that you intend to upload an image layer.
+//
+// When an image is pushed, the InitiateLayerUpload API is called once per image
+// layer that has not already been uploaded. Whether an image layer has been
+// uploaded before is determined by the BatchCheckLayerAvailability API action.
 //
 // This operation is used by the Amazon ECR proxy, and it is not intended for
 // general use by customers for pulling and pushing images. In most cases, you
@@ -1886,13 +1905,14 @@ func (c *ECR) ListImagesRequest(input *ListImagesInput) (req *request.Request, o
 
 // ListImages API operation for Amazon EC2 Container Registry.
 //
-// Lists all the image IDs for a given repository.
+// Lists all the image IDs for the specified repository.
 //
-// You can filter images based on whether or not they are tagged by setting
-// the tagStatus parameter to TAGGED or UNTAGGED. For example, you can filter
-// your results to return only UNTAGGED images and then pipe that result to
-// a BatchDeleteImage operation to delete them. Or, you can filter your results
-// to return only TAGGED images to list all of the tags in your repository.
+// You can filter images based on whether or not they are tagged by using the
+// tagStatus filter and specifying either TAGGED, UNTAGGED or ANY. For example,
+// you can filter your results to return only UNTAGGED images and then pipe
+// that result to a BatchDeleteImage operation to delete them. Or, you can filter
+// your results to return only TAGGED images to list all of the tags in your
+// repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2120,6 +2140,10 @@ func (c *ECR) PutImageRequest(input *PutImageInput) (req *request.Request, outpu
 //
 // Creates or updates the image manifest and tags associated with an image.
 //
+// When an image is pushed and all new image layers have been uploaded, the
+// PutImage API is called once to create or update the image manifest and tags
+// associated with the image.
+//
 // This operation is used by the Amazon ECR proxy, and it is not intended for
 // general use by customers for pulling and pushing images. In most cases, you
 // should use the docker CLI to pull, tag, and push images.
@@ -2227,7 +2251,7 @@ func (c *ECR) PutImageScanningConfigurationRequest(input *PutImageScanningConfig
 
 // PutImageScanningConfiguration API operation for Amazon EC2 Container Registry.
 //
-// Updates the image scanning configuration for a repository.
+// Updates the image scanning configuration for the specified repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2314,10 +2338,8 @@ func (c *ECR) PutImageTagMutabilityRequest(input *PutImageTagMutabilityInput) (r
 
 // PutImageTagMutability API operation for Amazon EC2 Container Registry.
 //
-// Updates the image tag mutability settings for a repository. When a repository
-// is configured with tag immutability, all image tags within the repository
-// will be prevented them from being overwritten. For more information, see
-// Image Tag Mutability (https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-tag-mutability.html)
+// Updates the image tag mutability settings for the specified repository. For
+// more information, see Image Tag Mutability (https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-tag-mutability.html)
 // in the Amazon Elastic Container Registry User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2405,8 +2427,8 @@ func (c *ECR) PutLifecyclePolicyRequest(input *PutLifecyclePolicyInput) (req *re
 
 // PutLifecyclePolicy API operation for Amazon EC2 Container Registry.
 //
-// Creates or updates a lifecycle policy. For information about lifecycle policy
-// syntax, see Lifecycle Policy Template (https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html).
+// Creates or updates the lifecycle policy for the specified repository. For
+// more information, see Lifecycle Policy Template (https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2493,8 +2515,8 @@ func (c *ECR) SetRepositoryPolicyRequest(input *SetRepositoryPolicyInput) (req *
 
 // SetRepositoryPolicy API operation for Amazon EC2 Container Registry.
 //
-// Applies a repository policy on a specified repository to control access permissions.
-// For more information, see Amazon ECR Repository Policies (https://docs.aws.amazon.com/AmazonECR/latest/userguide/RepositoryPolicies.html)
+// Applies a repository policy to the specified repository to control access
+// permissions. For more information, see Amazon ECR Repository Policies (https://docs.aws.amazon.com/AmazonECR/latest/userguide/RepositoryPolicies.html)
 // in the Amazon Elastic Container Registry User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2675,8 +2697,9 @@ func (c *ECR) StartLifecyclePolicyPreviewRequest(input *StartLifecyclePolicyPrev
 
 // StartLifecyclePolicyPreview API operation for Amazon EC2 Container Registry.
 //
-// Starts a preview of the specified lifecycle policy. This allows you to see
-// the results before creating the lifecycle policy.
+// Starts a preview of a lifecycle policy for the specified repository. This
+// allows you to see the results before associating the lifecycle policy with
+// the repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2966,6 +2989,10 @@ func (c *ECR) UploadLayerPartRequest(input *UploadLayerPartInput) (req *request.
 // UploadLayerPart API operation for Amazon EC2 Container Registry.
 //
 // Uploads an image layer part to Amazon ECR.
+//
+// When an image is pushed, each new image layer is uploaded in parts. The maximum
+// size of each image layer part can be 20971520 bytes (or about 20MB). The
+// UploadLayerPart API is called once per each new image layer part.
 //
 // This operation is used by the Amazon ECR proxy, and it is not intended for
 // general use by customers for pulling and pushing images. In most cases, you
@@ -4489,7 +4516,7 @@ type GetAuthorizationTokenInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of AWS account IDs that are associated with the registries for which
-	// to get authorization tokens. If you do not specify a registry, the default
+	// to get AuthorizationData objects. If you do not specify a registry, the default
 	// registry is assumed.
 	RegistryIds []*string `locationName:"registryIds" min:"1" type:"list"`
 }

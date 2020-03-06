@@ -26,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -54,6 +55,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -80,6 +82,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/qldb"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -810,6 +813,42 @@ func CodepipelineUpdateTags(conn *codepipeline.CodePipeline, identifier string, 
 		input := &codepipeline.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        updatedTags.IgnoreAws().CodepipelineTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// CodestarnotificationsUpdateTags updates codestarnotifications service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CodestarnotificationsUpdateTags(conn *codestarnotifications.CodeStarNotifications, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &codestarnotifications.UntagResourceInput{
+			Arn:     aws.String(identifier),
+			TagKeys: aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &codestarnotifications.TagResourceInput{
+			Arn:  aws.String(identifier),
+			Tags: updatedTags.IgnoreAws().CodestarnotificationsTags(),
 		}
 
 		_, err := conn.TagResource(input)
@@ -1829,6 +1868,42 @@ func GameliftUpdateTags(conn *gamelift.GameLift, identifier string, oldTagsMap i
 	return nil
 }
 
+// GlacierUpdateTags updates glacier service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GlacierUpdateTags(conn *glacier.Glacier, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &glacier.RemoveTagsFromVaultInput{
+			VaultName: aws.String(identifier),
+			TagKeys:   aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.RemoveTagsFromVault(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &glacier.AddTagsToVaultInput{
+			VaultName: aws.String(identifier),
+			Tags:      updatedTags.IgnoreAws().GlacierTags(),
+		}
+
+		_, err := conn.AddTagsToVault(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // GlueUpdateTags updates glue service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -2757,6 +2832,42 @@ func QldbUpdateTags(conn *qldb.QLDB, identifier string, oldTagsMap interface{}, 
 		input := &qldb.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        updatedTags.IgnoreAws().QldbTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// QuicksightUpdateTags updates quicksight service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func QuicksightUpdateTags(conn *quicksight.QuickSight, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &quicksight.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &quicksight.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().QuicksightTags(),
 		}
 
 		_, err := conn.TagResource(input)

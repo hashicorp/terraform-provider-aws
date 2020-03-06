@@ -35,6 +35,7 @@ var serviceNames = []string{
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
+	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
 	"configservice",
@@ -60,6 +61,7 @@ var serviceNames = []string{
 	"firehose",
 	"fsx",
 	"gamelift",
+	"glacier",
 	"glue",
 	"guardduty",
 	"greengrass",
@@ -86,6 +88,7 @@ var serviceNames = []string{
 	"organizations",
 	"pinpoint",
 	"qldb",
+	"quicksight",
 	"rds",
 	"resourcegroups",
 	"route53",
@@ -231,6 +234,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "DescribeTags"
 	case "firehose":
 		return "ListTagsForDeliveryStream"
+	case "glacier":
+		return "ListTagsForVault"
 	case "glue":
 		return "GetTags"
 	case "kinesis":
@@ -279,6 +284,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "cloudwatchlogs":
 		return "LogGroupName"
+	case "codestarnotifications":
+		return "Arn"
 	case "dax":
 		return "ResourceName"
 	case "devicefarm":
@@ -305,6 +312,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "gamelift":
 		return "ResourceARN"
+	case "glacier":
+		return "VaultName"
 	case "kinesis":
 		return "StreamName"
 	case "kinesisanalytics":

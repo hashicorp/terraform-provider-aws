@@ -9165,6 +9165,156 @@ func (c *Glue) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput, f
 	return p.Err()
 }
 
+const opListMLTransforms = "ListMLTransforms"
+
+// ListMLTransformsRequest generates a "aws/request.Request" representing the
+// client's request for the ListMLTransforms operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListMLTransforms for more information on using the ListMLTransforms
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListMLTransformsRequest method.
+//    req, resp := client.ListMLTransformsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListMLTransforms
+func (c *Glue) ListMLTransformsRequest(input *ListMLTransformsInput) (req *request.Request, output *ListMLTransformsOutput) {
+	op := &request.Operation{
+		Name:       opListMLTransforms,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListMLTransformsInput{}
+	}
+
+	output = &ListMLTransformsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListMLTransforms API operation for AWS Glue.
+//
+// Retrieves a sortable, filterable list of existing AWS Glue machine learning
+// transforms in this AWS account, or the resources with the specified tag.
+// This operation takes the optional Tags field, which you can use as a filter
+// of the responses so that tagged resources can be retrieved as a group. If
+// you choose to use tag filtering, only resources with the tags are retrieved.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation ListMLTransforms for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListMLTransforms
+func (c *Glue) ListMLTransforms(input *ListMLTransformsInput) (*ListMLTransformsOutput, error) {
+	req, out := c.ListMLTransformsRequest(input)
+	return out, req.Send()
+}
+
+// ListMLTransformsWithContext is the same as ListMLTransforms with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListMLTransforms for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListMLTransformsWithContext(ctx aws.Context, input *ListMLTransformsInput, opts ...request.Option) (*ListMLTransformsOutput, error) {
+	req, out := c.ListMLTransformsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListMLTransformsPages iterates over the pages of a ListMLTransforms operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListMLTransforms method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListMLTransforms operation.
+//    pageNum := 0
+//    err := client.ListMLTransformsPages(params,
+//        func(page *glue.ListMLTransformsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Glue) ListMLTransformsPages(input *ListMLTransformsInput, fn func(*ListMLTransformsOutput, bool) bool) error {
+	return c.ListMLTransformsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListMLTransformsPagesWithContext same as ListMLTransformsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListMLTransformsPagesWithContext(ctx aws.Context, input *ListMLTransformsInput, fn func(*ListMLTransformsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListMLTransformsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListMLTransformsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListMLTransformsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListTriggers = "ListTriggers"
 
 // ListTriggersRequest generates a "aws/request.Request" representing the
@@ -16932,6 +17082,9 @@ type CreateJobInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
+	// Non-overridable arguments for this job, specified as name-value pairs.
+	NonOverridableArguments map[string]*string `type:"map"`
+
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
@@ -17086,6 +17239,12 @@ func (s *CreateJobInput) SetMaxRetries(v int64) *CreateJobInput {
 // SetName sets the Name field's value.
 func (s *CreateJobInput) SetName(v string) *CreateJobInput {
 	s.Name = &v
+	return s
+}
+
+// SetNonOverridableArguments sets the NonOverridableArguments field's value.
+func (s *CreateJobInput) SetNonOverridableArguments(v map[string]*string) *CreateJobInput {
+	s.NonOverridableArguments = v
 	return s
 }
 
@@ -17293,6 +17452,12 @@ type CreateMLTransformInput struct {
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
 
+	// The tags to use with this machine learning transform. You may use tags to
+	// limit access to the machine learning transform. For more information about
+	// tags in AWS Glue, see AWS Tags in AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
+	// in the developer guide.
+	Tags map[string]*string `type:"map"`
+
 	// The timeout of the task run for this transform in minutes. This is the maximum
 	// time that a task run for this transform can consume resources before it is
 	// terminated and enters TIMEOUT status. The default is 2,880 minutes (48 hours).
@@ -17431,6 +17596,12 @@ func (s *CreateMLTransformInput) SetParameters(v *TransformParameters) *CreateML
 // SetRole sets the Role field's value.
 func (s *CreateMLTransformInput) SetRole(v string) *CreateMLTransformInput {
 	s.Role = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateMLTransformInput) SetTags(v map[string]*string) *CreateMLTransformInput {
+	s.Tags = v
 	return s
 }
 
@@ -25242,6 +25413,9 @@ type Job struct {
 	// The name you assign to this job definition.
 	Name *string `min:"1" type:"string"`
 
+	// Non-overridable arguments for this job, specified as name-value pairs.
+	NonOverridableArguments map[string]*string `type:"map"`
+
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
@@ -25365,6 +25539,12 @@ func (s *Job) SetMaxRetries(v int64) *Job {
 // SetName sets the Name field's value.
 func (s *Job) SetName(v string) *Job {
 	s.Name = &v
+	return s
+}
+
+// SetNonOverridableArguments sets the NonOverridableArguments field's value.
+func (s *Job) SetNonOverridableArguments(v map[string]*string) *Job {
+	s.NonOverridableArguments = v
 	return s
 }
 
@@ -25939,6 +26119,9 @@ type JobUpdate struct {
 	// The maximum number of times to retry this job if it fails.
 	MaxRetries *int64 `type:"integer"`
 
+	// Non-overridable arguments for this job, specified as name-value pairs.
+	NonOverridableArguments map[string]*string `type:"map"`
+
 	// Specifies the configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
@@ -26068,6 +26251,12 @@ func (s *JobUpdate) SetMaxCapacity(v float64) *JobUpdate {
 // SetMaxRetries sets the MaxRetries field's value.
 func (s *JobUpdate) SetMaxRetries(v int64) *JobUpdate {
 	s.MaxRetries = &v
+	return s
+}
+
+// SetNonOverridableArguments sets the NonOverridableArguments field's value.
+func (s *JobUpdate) SetNonOverridableArguments(v map[string]*string) *JobUpdate {
+	s.NonOverridableArguments = v
 	return s
 }
 
@@ -26527,6 +26716,124 @@ func (s *ListJobsOutput) SetJobNames(v []*string) *ListJobsOutput {
 // SetNextToken sets the NextToken field's value.
 func (s *ListJobsOutput) SetNextToken(v string) *ListJobsOutput {
 	s.NextToken = &v
+	return s
+}
+
+type ListMLTransformsInput struct {
+	_ struct{} `type:"structure"`
+
+	// A TransformFilterCriteria used to filter the machine learning transforms.
+	Filter *TransformFilterCriteria `type:"structure"`
+
+	// The maximum size of a list to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A continuation token, if this is a continuation request.
+	NextToken *string `type:"string"`
+
+	// A TransformSortCriteria used to sort the machine learning transforms.
+	Sort *TransformSortCriteria `type:"structure"`
+
+	// Specifies to return only these tagged resources.
+	Tags map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s ListMLTransformsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMLTransformsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListMLTransformsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListMLTransformsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.Filter != nil {
+		if err := s.Filter.Validate(); err != nil {
+			invalidParams.AddNested("Filter", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Sort != nil {
+		if err := s.Sort.Validate(); err != nil {
+			invalidParams.AddNested("Sort", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilter sets the Filter field's value.
+func (s *ListMLTransformsInput) SetFilter(v *TransformFilterCriteria) *ListMLTransformsInput {
+	s.Filter = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListMLTransformsInput) SetMaxResults(v int64) *ListMLTransformsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMLTransformsInput) SetNextToken(v string) *ListMLTransformsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSort sets the Sort field's value.
+func (s *ListMLTransformsInput) SetSort(v *TransformSortCriteria) *ListMLTransformsInput {
+	s.Sort = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListMLTransformsInput) SetTags(v map[string]*string) *ListMLTransformsInput {
+	s.Tags = v
+	return s
+}
+
+type ListMLTransformsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A continuation token, if the returned list does not contain the last metric
+	// available.
+	NextToken *string `type:"string"`
+
+	// The identifiers of all the machine learning transforms in the account, or
+	// the machine learning transforms with the specified tags.
+	//
+	// TransformIds is a required field
+	TransformIds []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ListMLTransformsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMLTransformsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMLTransformsOutput) SetNextToken(v string) *ListMLTransformsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTransformIds sets the TransformIds field's value.
+func (s *ListMLTransformsOutput) SetTransformIds(v []*string) *ListMLTransformsOutput {
+	s.TransformIds = v
 	return s
 }
 

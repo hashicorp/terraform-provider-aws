@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsVpcEndpointService() *schema.Resource {
@@ -139,7 +140,7 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 	d.Set("service_name", svcCfg.ServiceName)
 	d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
 	d.Set("state", svcCfg.ServiceState)
-	err = d.Set("tags", tagsToMap(svcCfg.Tags))
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(svcCfg.Tags).IgnoreAws().Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
@@ -202,10 +203,13 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		d.SetPartial("allowed_principals")
 	}
 
-	if err := setTags(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 VPC Endpoint Service (%s) tags: %s", d.Id(), err)
+		}
 	}
-	d.SetPartial("tags")
 
 	d.Partial(false)
 	return resourceAwsVpcEndpointServiceRead(d, meta)
