@@ -688,7 +688,7 @@ resource "aws_vpc" "test" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-network-interface"
+    Name = "tf-acc-network-interface"
   }
 }
 
@@ -721,6 +721,10 @@ resource "aws_security_group" "test" {
     protocol    = "tcp"
     cidr_blocks = ["10.0.0.0/16"]
   }
+
+  tags = {
+    Name = "tf-acc-network-interface"
+  }
 }
 
 resource "aws_network_interface" "test" {
@@ -739,7 +743,7 @@ resource "aws_vpc" "test" {
   enable_dns_hostnames             = true
 
   tags = {
-  	Name = "terraform-testacc-network-interface-ipv6"
+  	Name = "tf-acc-network-interface-ipv6"
   }
 }
 
@@ -760,7 +764,7 @@ resource "aws_security_group" "test" {
   name        = "tf-acc-network-interface-ipv6"
 
   tags = {
-    Name = "test-interface-ipv6"
+    Name = "tf-acc-network-interface-ipv6"
   }
 }
 
@@ -772,7 +776,7 @@ resource "aws_network_interface" "test" {
   description     = "Managed by Terraform"
 
   tags = {
-    Name = "test-interface-ipv6"
+    Name = "tf-acc-network-interface-ipv6"
   }
 }
 `
@@ -785,7 +789,7 @@ resource "aws_vpc" "test" {
   enable_dns_hostnames             = true
 
   tags = {
-  	Name = "terraform-testacc-network-interface-ipv6"
+  	Name = "tf-acc-network-interface-ipv6"
   }
 }
 
@@ -806,7 +810,7 @@ resource "aws_security_group" "test" {
   name        = "tf-acc-network-interface-ipv6"
 
   tags = {
-    Name = "test-interface-ipv6"
+    Name = "tf-acc-network-interface-ipv6"
   }
 }
 
@@ -818,7 +822,7 @@ resource "aws_network_interface" "test" {
   description         = "Managed by Terraform"
 
   tags = {
-    Name = "test-interface-ipv6"
+    Name = "tf-acc-network-interface-ipv6"
   }
 }
 `, ipCount)
@@ -871,9 +875,6 @@ resource "aws_network_interface" "test" {
   private_ips     = ["172.16.10.100"]
   security_groups = [aws_security_group.test.id]
   description     = "Updated ENI Description"
-  tags = {
-    Name = "test_interface"
-  }
 }
 `)
 }

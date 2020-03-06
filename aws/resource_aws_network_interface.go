@@ -422,6 +422,44 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
+	if d.HasChange("ipv6_address_count") {
+		o, n := d.GetChange("ipv6_address_count")
+		ipv6Addresses := d.Get("ipv6_addresses").(*schema.Set).List()
+		ipv6FilteredAddresses := ipv6Addresses[:0]
+
+		for _, ip := range ipv6Addresses {
+			ipv6FilteredAddresses = append(ipv6FilteredAddresses, ip)
+		}
+
+		if o != nil && n != nil && n != len(ipv6FilteredAddresses) {
+
+			diff := n.(int) - o.(int)
+
+			// Surplus of IPs, add the diff
+			if diff > 0 {
+				input := &ec2.AssignIpv6AddressesInput{
+					NetworkInterfaceId: aws.String(d.Id()),
+					Ipv6AddressCount:   aws.Int64(int64(diff)),
+				}
+				_, err := conn.AssignIpv6Addresses(input)
+				if err != nil {
+					return fmt.Errorf("failure to assign IPV6 Addresses: %s", err)
+				}
+			}
+
+			if diff < 0 {
+				input := &ec2.UnassignIpv6AddressesInput{
+					NetworkInterfaceId: aws.String(d.Id()),
+					Ipv6Addresses:      expandStringList(ipv6FilteredAddresses[0:int(math.Abs(float64(diff)))]),
+				}
+				_, err := conn.UnassignIpv6Addresses(input)
+				if err != nil {
+					return fmt.Errorf("failure to unassign IPV6 Addresses: %s", err)
+				}
+			}
+		}
+	}
+
 	if d.HasChange("source_dest_check") {
 		request := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
