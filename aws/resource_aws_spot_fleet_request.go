@@ -333,11 +333,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			"excess_capacity_termination_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  ec2.ExcessCapacityTerminationPolicyDefault,
+				Default:  "Default",
 				ForceNew: false,
 				ValidateFunc: validation.StringInSlice([]string{
-					ec2.ExcessCapacityTerminationPolicyDefault,
-					ec2.ExcessCapacityTerminationPolicyNoTermination,
+					"Default",
+					"NoTermination",
 				}, false),
 			},
 			"instance_interruption_behaviour": {
