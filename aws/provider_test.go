@@ -1288,3 +1288,14 @@ provider "aws" {
 }
 `, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
 }
+
+// composeConfig can be called to concatenate multiple strings to build test configurations
+func composeConfig(config ...string) string {
+	var str strings.Builder
+
+	for _, conf := range config {
+		str.WriteString(conf)
+	}
+
+	return str.String()
+}
