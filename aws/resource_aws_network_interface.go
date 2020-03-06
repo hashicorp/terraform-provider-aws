@@ -113,16 +113,18 @@ func resourceAwsNetworkInterface() *schema.Resource {
 
 			"tags": tagsSchema(),
 			"ipv6_address_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"ipv6_addresses"},
 			},
 			"ipv6_addresses": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Set:           schema.HashString,
+				ConflictsWith: []string{"ipv6_address_count"},
 			},
 		},
 	}
@@ -425,13 +427,8 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("ipv6_address_count") {
 		o, n := d.GetChange("ipv6_address_count")
 		ipv6Addresses := d.Get("ipv6_addresses").(*schema.Set).List()
-		ipv6FilteredAddresses := ipv6Addresses[:0]
 
-		for _, ip := range ipv6Addresses {
-			ipv6FilteredAddresses = append(ipv6FilteredAddresses, ip)
-		}
-
-		if o != nil && n != nil && n != len(ipv6FilteredAddresses) {
+		if o != nil && n != nil && n != len(ipv6Addresses) {
 
 			diff := n.(int) - o.(int)
 
@@ -450,7 +447,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 			if diff < 0 {
 				input := &ec2.UnassignIpv6AddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
-					Ipv6Addresses:      expandStringList(ipv6FilteredAddresses[0:int(math.Abs(float64(diff)))]),
+					Ipv6Addresses:      expandStringList(ipv6Addresses[0:int(math.Abs(float64(diff)))]),
 				}
 				_, err := conn.UnassignIpv6Addresses(input)
 				if err != nil {

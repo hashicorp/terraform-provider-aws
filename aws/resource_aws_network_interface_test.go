@@ -189,7 +189,6 @@ func TestAccAWSENI_ipv6_count(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
 				),
 			},
 			{
@@ -202,39 +201,21 @@ func TestAccAWSENI_ipv6_count(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "2"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSENIIPV6CountConfig(0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSENIIPV6CountConfig(1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
