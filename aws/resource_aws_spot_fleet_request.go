@@ -261,6 +261,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ec2.TenancyDefault,
+								ec2.TenancyDedicated,
+								ec2.TenancyHost,
+							}, false),
 						},
 						"spot_price": {
 							Type:     schema.TypeString,
