@@ -114,8 +114,10 @@ func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) er
 		log.Printf("Snapshot %q Not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return err
+	}
+
+	if err != nil {
+		return fmt.Errorf("error describing EC2 Snapshot (%s): %w", d.Id(), err)
 	}
 
 	snapshot := res.Snapshots[0]
