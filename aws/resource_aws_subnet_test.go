@@ -298,6 +298,8 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 				Config: testAccSubnetConfigPreIpv6,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "false"),
 				),
 			},
 			{
@@ -309,6 +311,8 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 				Config: testAccSubnetConfigIpv6,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
+					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "true"),
 				),
 			},
 			{
@@ -316,6 +320,7 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "false"),
 				),
 			},
 		},
