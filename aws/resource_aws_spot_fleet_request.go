@@ -497,7 +497,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		tags := keyvaluetags.New(m).IgnoreAws().Ec2Tags()
 
 		spec := &ec2.SpotFleetTagSpecification{
-			ResourceType: aws.String("instance"),
+			ResourceType: aws.String(ec2.ResourceTypeInstance),
 			Tags:         tags,
 		}
 
@@ -796,8 +796,8 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[INFO] Spot Fleet Request ID: %s", d.Id())
 	log.Println("[INFO] Waiting for Spot Fleet Request to be active")
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"submitted"},
-		Target:     []string{"active"},
+		Pending:    []string{ec2.BatchStateSubmitted},
+		Target:     []string{ec2.BatchStateActive},
 		Refresh:    resourceAwsSpotFleetRequestStateRefreshFunc(d, meta),
 		Timeout:    10 * time.Minute,
 		MinTimeout: 10 * time.Second,
@@ -812,8 +812,8 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	if d.Get("wait_for_fulfillment").(bool) {
 		log.Println("[INFO] Waiting for Spot Fleet Request to be fulfilled")
 		spotStateConf := &resource.StateChangeConf{
-			Pending:    []string{"pending_fulfillment"},
-			Target:     []string{"fulfilled"},
+			Pending:    []string{ec2.ActivityStatusPendingFulfillment},
+			Target:     []string{ec2.ActivityStatusFulfilled},
 			Refresh:    resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d.Id(), meta.(*AWSClient).ec2conn),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			Delay:      10 * time.Second,
