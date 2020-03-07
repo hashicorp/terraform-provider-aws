@@ -634,6 +634,36 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_networkInterfaceAddresses(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_networkInterfaceAddresses,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_addresses.0", "10.1.0.10"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_addresses.1", "10.1.0.11"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_associatePublicIPAddress(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1215,6 +1245,30 @@ resource "aws_launch_template" "test" {
   network_interfaces {
     network_interface_id = "${aws_network_interface.test.id}"
     ipv4_address_count = 2
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_networkInterfaceAddresses = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.1.0.0/24"
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = "${aws_subnet.test.id}"
+}
+
+resource "aws_launch_template" "test" {
+  name = "network-interface-launch-template"
+
+  network_interfaces {
+    network_interface_id = "${aws_network_interface.test.id}"
+    ipv4_addresses = ["10.1.0.10", "10.1.0.11"]
   }
 }
 `
