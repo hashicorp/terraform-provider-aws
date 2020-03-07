@@ -354,6 +354,27 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 	})
 }
 
+func TestAccAWSSubnet_disappears(t *testing.T) {
+	var v ec2.Subnet
+	resourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &v),
+					testAccCheckSubnetDisappears(&v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSubnet_outpost(t *testing.T) {
 	var v ec2.Subnet
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
@@ -472,6 +493,17 @@ func testAccCheckSubnetExists(n string, v *ec2.Subnet) resource.TestCheckFunc {
 		*v = *resp.Subnets[0]
 
 		return nil
+	}
+}
+
+func testAccCheckSubnetDisappears(v *ec2.Subnet) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		_, err := conn.DeleteSubnet(&ec2.DeleteSubnetInput{
+			SubnetId: v.SubnetId,
+		})
+
+		return err
 	}
 }
 
