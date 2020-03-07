@@ -198,6 +198,7 @@ The `listener` object supports the following:
 
 * `port_mapping` - (Required) The port mapping information for the listener.
 * `health_check` - (Optional) The health check information for the listener.
+* `tls` - (Optional) The Transport Layer Security (TLS) properties for the listener
 
 The `logging` object supports the following:
 
@@ -241,6 +242,39 @@ The `health_check` object supports the following:
 * `unhealthy_threshold` - (Required) The number of consecutive failed health checks that must occur before declaring a virtual node unhealthy.
 * `path` - (Optional) The destination path for the health check request. This is only required if the specified protocol is `http`.
 * `port` - (Optional) The destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
+
+The `tls` object supports the following:
+
+* `certificate` - (Required) The listener's TLS certificate.
+* `mode`- (Required) The listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
+
+The `certificate` object supports the following:
+
+* `acm` - (Optional) An AWS Certicate Manager (ACM) certificate.
+* `file` - (optional) A local file certificate.
+* `sds` - (Optional) A [secret discovery service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret) (SDS) secret.
+
+The `acm` object supports the following:
+
+* `certificate_arn` - (Required) The Amazon Resource Name (ARN) for the certificate.
+
+The `file` object supports the following:
+
+* `certificate_chain` - (Required) The certificate chain for the certificate.
+* `private_key` - (Required) The private key for a certificate stored on the file system of the virtual node that the proxy is running on.
+
+The `sds` object supports the following:
+
+* `secret_name` - (Required) The secret name.
+* `source` - (Required) The secret source.
+
+The `source` object supports the following:
+
+* `unix_domain_socket` - (Required) The Unix domain socket source location.
+
+The `unix_domain_socket` object supports the following:
+
+* `path` - (Required) file system path for the socket.
 
 ## Attributes Reference
 

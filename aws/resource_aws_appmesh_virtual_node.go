@@ -171,6 +171,114 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 											},
 										},
 									},
+
+									"tls": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"certificate": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"acm": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"certificate_arn": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validateArn,
+																		},
+																	},
+																},
+															},
+
+															"file": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"certificate_chain": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 255),
+																		},
+
+																		"private_key": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 255),
+																		},
+																	},
+																},
+															},
+
+															"sds": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"secret_name": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+
+																		"source": {
+																			Type:     schema.TypeList,
+																			Required: true,
+																			MinItems: 1,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"unix_domain_socket": {
+																						Type:     schema.TypeList,
+																						Required: true,
+																						MinItems: 1,
+																						MaxItems: 1,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"path": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"mode": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														appmesh.ListenerTlsModeDisabled,
+														appmesh.ListenerTlsModePermissive,
+														appmesh.ListenerTlsModeStrict,
+													}, false),
+												},
+											},
+										},
+									},
 								},
 							},
 						},
