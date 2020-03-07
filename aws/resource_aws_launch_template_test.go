@@ -651,8 +651,6 @@ func TestAccAWSLaunchTemplate_networkInterfaceAddresses(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_addresses.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_addresses.0", "10.1.0.10"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_addresses.1", "10.1.0.11"),
 				),
 			},
 			{
