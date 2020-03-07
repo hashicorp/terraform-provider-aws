@@ -171,6 +171,114 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 											},
 										},
 									},
+
+									"tls": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"certificate": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"acm": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"certificate_arn": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validateArn,
+																		},
+																	},
+																},
+															},
+
+															"file": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"certificate_chain": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 255),
+																		},
+
+																		"private_key": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 255),
+																		},
+																	},
+																},
+															},
+
+															"sds": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"secret_name": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+
+																		"source": {
+																			Type:     schema.TypeList,
+																			Required: true,
+																			MinItems: 1,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"unix_domain_socket": {
+																						Type:     schema.TypeList,
+																						Required: true,
+																						MinItems: 1,
+																						MaxItems: 1,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"path": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"mode": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														appmesh.ListenerTlsModeDisabled,
+														appmesh.ListenerTlsModePermissive,
+														appmesh.ListenerTlsModeStrict,
+													}, false),
+												},
+											},
+										},
+									},
 								},
 							},
 							Set: appmeshVirtualNodeListenerHash,
@@ -484,6 +592,45 @@ func appmeshVirtualNodeListenerHash(vListener interface{}) int {
 		}
 		if v, ok := mPortMapping["protocol"].(string); ok {
 			buf.WriteString(fmt.Sprintf("%s-", v))
+		}
+	}
+	if vTls, ok := mListener["tls"].([]interface{}); ok && len(vTls) > 0 && vTls[0] != nil {
+		mTls := vTls[0].(map[string]interface{})
+		if v, ok := mTls["mode"].(string); ok {
+			buf.WriteString(fmt.Sprintf("%s-", v))
+		}
+		if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+			mCertificate := vCertificate[0].(map[string]interface{})
+			if vAcm, ok := mCertificate["acm"].([]interface{}); ok && len(vAcm) > 0 && vAcm[0] != nil {
+				mAcm := vAcm[0].(map[string]interface{})
+				if v, ok := mAcm["certificate_arn"].(string); ok {
+					buf.WriteString(fmt.Sprintf("%s-", v))
+				}
+			}
+			if vFile, ok := mCertificate["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+				mFile := vFile[0].(map[string]interface{})
+				if v, ok := mFile["certificate_chain"].(string); ok {
+					buf.WriteString(fmt.Sprintf("%s-", v))
+				}
+				if v, ok := mFile["private_key"].(string); ok {
+					buf.WriteString(fmt.Sprintf("%s-", v))
+				}
+			}
+			if vSds, ok := mCertificate["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+				mSds := vSds[0].(map[string]interface{})
+				if v, ok := mSds["secret_name"].(string); ok {
+					buf.WriteString(fmt.Sprintf("%s-", v))
+				}
+				if vSource, ok := mSds["source"].([]interface{}); ok && len(vSource) > 0 && vSource[0] != nil {
+					mSource := vSource[0].(map[string]interface{})
+					if vUnixDomainSocket, ok := mSource["unix_domain_socket"].([]interface{}); ok && len(vUnixDomainSocket) > 0 && vUnixDomainSocket[0] != nil {
+						mUnixDomainSocket := vUnixDomainSocket[0].(map[string]interface{})
+						if v, ok := mUnixDomainSocket["path"].(string); ok {
+							buf.WriteString(fmt.Sprintf("%s-", v))
+						}
+					}
+				}
+			}
 		}
 	}
 	return hashcode.String(buf.String())
