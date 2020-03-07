@@ -22,6 +22,7 @@ func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "measure_latency", "true"),
+					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -174,6 +175,30 @@ func TestAccAWSRoute53HealthCheck_IpConfig(t *testing.T) {
 				Config: testAccRoute53HealthCheckIpConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ip_address", "1.2.3.4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53HealthCheck_Ipv6Config(t *testing.T) {
+	resourceName := "aws_route53_health_check.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53HealthCheckIpv6Config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53HealthCheckExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ip_address", "1234:5678:9abc:6811:0:0:0:4"),
 				),
 			},
 			{
@@ -374,6 +399,21 @@ resource "aws_route53_health_check" "test" {
 const testAccRoute53HealthCheckIpConfig = `
 resource "aws_route53_health_check" "test" {
   ip_address = "1.2.3.4"
+  port = 80
+  type = "HTTP"
+  resource_path = "/"
+  failure_threshold = "2"
+  request_interval = "30"
+
+  tags = {
+    Name = "tf-test-health-check"
+   }
+}
+`
+
+const testAccRoute53HealthCheckIpv6Config = `
+resource "aws_route53_health_check" "test" {
+  ip_address = "1234:5678:9abc:6811::4"
   port = 80
   type = "HTTP"
   resource_path = "/"
