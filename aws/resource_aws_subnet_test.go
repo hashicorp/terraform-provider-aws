@@ -284,6 +284,39 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 	})
 }
 
+func TestAccAWSSubnet_ipv6_remove(t *testing.T) {
+	var s ec2.Subnet
+	resourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfigIpv6,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &s),
+					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSubnetConfigIpv6BlockRemoved,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &s),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -618,6 +651,25 @@ resource "aws_subnet" "test" {
   tags = {
     Name = "tf-acc-subnet-ipv6-update-cidr"
   }
+}
+`
+
+const testAccSubnetConfigIpv6BlockRemoved = `
+resource "aws_vpc" "test" {
+	cidr_block = "10.10.0.0/16"
+	assign_generated_ipv6_cidr_block = true
+	tags = {
+		Name = "terraform-testacc-subnet-ipv6"
+	}
+}
+
+resource "aws_subnet" "test" {
+	cidr_block = "10.10.1.0/24"
+	vpc_id = "${aws_vpc.test.id}"
+	map_public_ip_on_launch = true
+	tags = {
+		Name = "tf-acc-subnet-ipv6"
+	}
 }
 `
 
