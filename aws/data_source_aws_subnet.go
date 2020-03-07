@@ -41,7 +41,6 @@ func dataSourceAwsSubnet() *schema.Resource {
 
 			"outpost_arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
