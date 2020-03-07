@@ -268,26 +268,9 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("assign_ipv6_address_on_creation") {
-		modifyOpts := &ec2.ModifySubnetAttributeInput{
-			SubnetId: aws.String(d.Id()),
-			AssignIpv6AddressOnCreation: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(d.Get("assign_ipv6_address_on_creation").(bool)),
-			},
-		}
-
-		log.Printf("[DEBUG] Subnet modify attributes: %#v", modifyOpts)
-
-		_, err := conn.ModifySubnetAttribute(modifyOpts)
-
-		if err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("ipv6_cidr_block") {
-		// We need to handle that we disassociate the IPv6 CIDR block before we try and associate the new one
-		// This could be an issue as, we could error out when we try and add the new one
+		// We need to handle that we disassociate the IPv6 CIDR block before we try to associate the new one
+		// This could be an issue as, we could error out when we try to add the new one
 		// We may need to roll back the state and reattach the old one if this is the case
 
 		_, newIpv6 := d.GetChange("ipv6_cidr_block")
@@ -295,6 +278,26 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("ipv6_cidr_block_association_id"); ok {
 
+			_, newIpv6AssignOnCreate := d.GetChange("assign_ipv6_address_on_creation")
+
+			ipv6AssignOnCreate := newIpv6AssignOnCreate.(bool)
+
+			if !ipv6AssignOnCreate {
+				modifyOpts := &ec2.ModifySubnetAttributeInput{
+					SubnetId: aws.String(d.Id()),
+					AssignIpv6AddressOnCreation: &ec2.AttributeBooleanValue{
+						Value: aws.Bool(false),
+					},
+				}
+
+				log.Printf("[DEBUG] Subnet modify attributes: %#v", modifyOpts)
+
+				_, err := conn.ModifySubnetAttribute(modifyOpts)
+
+				if err != nil {
+					return err
+				}
+			}
 			//Firstly we have to disassociate the old IPv6 CIDR Block
 			disassociateOps := &ec2.DisassociateSubnetCidrBlockInput{
 				AssociationId: aws.String(v.(string)),
@@ -350,6 +353,23 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 					d.Id(), err)
 			}
 
+		}
+	}
+
+	if d.HasChange("assign_ipv6_address_on_creation") {
+		modifyOpts := &ec2.ModifySubnetAttributeInput{
+			SubnetId: aws.String(d.Id()),
+			AssignIpv6AddressOnCreation: &ec2.AttributeBooleanValue{
+				Value: aws.Bool(d.Get("assign_ipv6_address_on_creation").(bool)),
+			},
+		}
+
+		log.Printf("[DEBUG] Subnet modify attributes: %#v", modifyOpts)
+
+		_, err := conn.ModifySubnetAttribute(modifyOpts)
+
+		if err != nil {
+			return err
 		}
 	}
 
