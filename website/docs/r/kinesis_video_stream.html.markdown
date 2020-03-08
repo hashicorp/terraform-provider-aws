@@ -1,9 +1,9 @@
 ---
+subcategory: "Kinesis Video"
 layout: "aws"
 page_title: "AWS: aws_kinesis_video_stream"
-sidebar_current: "docs-aws-resource-kinesis-video-stream"
 description: |-
-  Provides a AWS Kinesis Video Stream Resource.
+  Provides a AWS Kinesis Video Stream
 ---
 
 # Resource: aws_kinesis_video_stream
