@@ -224,45 +224,46 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																},
 															},
 
-															"sds": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"secret_name": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
+															// ForbiddenException: TLS Certificates from SDS are not supported.
+															// "sds": {
+															// 	Type:     schema.TypeList,
+															// 	Optional: true,
+															// 	MinItems: 0,
+															// 	MaxItems: 1,
+															// 	Elem: &schema.Resource{
+															// 		Schema: map[string]*schema.Schema{
+															// 			"secret_name": {
+															// 				Type:     schema.TypeString,
+															// 				Required: true,
+															// 			},
 
-																		"source": {
-																			Type:     schema.TypeList,
-																			Required: true,
-																			MinItems: 1,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"unix_domain_socket": {
-																						Type:     schema.TypeList,
-																						Required: true,
-																						MinItems: 1,
-																						MaxItems: 1,
-																						Elem: &schema.Resource{
-																							Schema: map[string]*schema.Schema{
-																								"path": {
-																									Type:     schema.TypeString,
-																									Required: true,
-																								},
-																							},
-																						},
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
+															// 			"source": {
+															// 				Type:     schema.TypeList,
+															// 				Required: true,
+															// 				MinItems: 1,
+															// 				MaxItems: 1,
+															// 				Elem: &schema.Resource{
+															// 					Schema: map[string]*schema.Schema{
+															// 						"unix_domain_socket": {
+															// 							Type:     schema.TypeList,
+															// 							Required: true,
+															// 							MinItems: 1,
+															// 							MaxItems: 1,
+															// 							Elem: &schema.Resource{
+															// 								Schema: map[string]*schema.Schema{
+															// 									"path": {
+															// 										Type:     schema.TypeString,
+															// 										Required: true,
+															// 									},
+															// 								},
+															// 							},
+															// 						},
+															// 					},
+															// 				},
+															// 			},
+															// 		},
+															// 	},
+															// },
 														},
 													},
 												},

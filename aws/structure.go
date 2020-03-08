@@ -4850,38 +4850,6 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 						certificate.File = file
 					}
 
-					if vSds, ok := mCertificate["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
-						sds := &appmesh.ListenerTlsSdsCertificate{}
-
-						mSds := vSds[0].(map[string]interface{})
-
-						if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
-							sds.SecretName = aws.String(vSecretName)
-						}
-
-						if vSource, ok := mSds["source"].([]interface{}); ok && len(vSource) > 0 && vSource[0] != nil {
-							source := &appmesh.SdsSource{}
-
-							mSource := vSource[0].(map[string]interface{})
-
-							if vUnixDomainSocket, ok := mSource["unix_domain_socket"].([]interface{}); ok && len(vUnixDomainSocket) > 0 && vUnixDomainSocket[0] != nil {
-								unixDomainSocket := &appmesh.SdsUnixDomainSocketSource{}
-
-								mUnixDomainSocket := vUnixDomainSocket[0].(map[string]interface{})
-
-								if vPath, ok := mUnixDomainSocket["path"].(string); ok && vPath != "" {
-									unixDomainSocket.Path = aws.String(vPath)
-								}
-
-								source.UnixDomainSocket = unixDomainSocket
-							}
-
-							sds.Source = source
-						}
-
-						certificate.Sds = sds
-					}
-
 					tls.Certificate = certificate
 				}
 
