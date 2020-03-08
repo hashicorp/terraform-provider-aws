@@ -10,6 +10,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsKinesisVideoStream() *schema.Resource {
@@ -86,6 +88,7 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 	createOpts := &kinesisvideo.CreateStreamInput{
 		StreamName:           aws.String(d.Get("name").(string)),
 		DataRetentionInHours: aws.Int64(int64(d.Get("data_retention_in_hours").(int))),
+		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().KinesisvideoTags(),
 	}
 
 	if v, ok := d.GetOk("device_name"); ok {
@@ -98,10 +101,6 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("media_type"); ok {
 		createOpts.MediaType = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
 	}
 
 	resp, err := conn.CreateStream(createOpts)
@@ -157,14 +156,14 @@ func resourceAwsKinesisVideoStreamRead(d *schema.ResourceData, meta interface{})
 	}
 	d.Set("version", resp.StreamInfo.Version)
 
-	if err := saveTagsKinesisVideoStream(conn, d, d.Id()); err != nil {
-		if isAWSErr(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
+	tags, err := keyvaluetags.KinesisvideoListTags(conn, d.Id())
 
-		return fmt.Errorf("error saving tags for %s: %s", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("error listing tags for Kinesis Video Stream (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -195,14 +194,12 @@ func resourceAwsKinesisVideoStreamUpdate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error updating Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
 
-	if err := setTagsKinesisVideoStream(conn, d, d.Id()); err != nil {
-		if isAWSErr(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-		return fmt.Errorf("error setting tags for %s: %s", d.Id(), err)
+		if err := keyvaluetags.KinesisvideoUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Kinesis Video Stream (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	stateConf := &resource.StateChangeConf{
