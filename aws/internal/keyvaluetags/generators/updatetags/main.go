@@ -78,6 +78,7 @@ var serviceNames = []string{
 	"kinesis",
 	"kinesisanalytics",
 	"kinesisanalyticsv2",
+	"kinesisvideo",
 	"kms",
 	"lambda",
 	"licensemanager",
@@ -354,6 +355,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToVault"
 	case "kinesis":
 		return "AddTagsToStream"
+	case "kinesisvideo":
+		return "TagStream"
 	case "medialive":
 		return "CreateTags"
 	case "mq":
@@ -454,6 +457,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "kinesisanalyticsv2":
 		return "ResourceARN"
+	case "kinesisvideo":
+		return "StreamARN"
 	case "kms":
 		return "KeyId"
 	case "lambda":
@@ -602,6 +607,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromVault"
 	case "kinesis":
 		return "RemoveTagsFromStream"
+	case "kinesisvideo":
+		return "UntagStream"
 	case "medialive":
 		return "DeleteTags"
 	case "mq":
@@ -682,6 +689,8 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "Tags"
 	case "glue":
 		return "TagsToRemove"
+	case "kinesisvideo":
+		return "TagKeyList"
 	case "resourcegroups":
 		return "Keys"
 	case "route53":
