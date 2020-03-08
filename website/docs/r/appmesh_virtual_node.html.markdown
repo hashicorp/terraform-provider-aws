@@ -252,7 +252,6 @@ The `certificate` object supports the following:
 
 * `acm` - (Optional) An AWS Certicate Manager (ACM) certificate.
 * `file` - (optional) A local file certificate.
-* `sds` - (Optional) A [secret discovery service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret) (SDS) secret.
 
 The `acm` object supports the following:
 
@@ -262,19 +261,6 @@ The `file` object supports the following:
 
 * `certificate_chain` - (Required) The certificate chain for the certificate.
 * `private_key` - (Required) The private key for a certificate stored on the file system of the virtual node that the proxy is running on.
-
-The `sds` object supports the following:
-
-* `secret_name` - (Required) The secret name.
-* `source` - (Required) The secret source.
-
-The `source` object supports the following:
-
-* `unix_domain_socket` - (Required) The Unix domain socket source location.
-
-The `unix_domain_socket` object supports the following:
-
-* `path` - (Required) file system path for the socket.
 
 ## Attributes Reference
 
