@@ -23,6 +23,7 @@ func TestAccAWSAppmesh(t *testing.T) {
 			"cloudMapServiceDiscovery": testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery,
 			"listenerHealthChecks":     testAccAwsAppmeshVirtualNode_listenerHealthChecks,
 			"logging":                  testAccAwsAppmeshVirtualNode_logging,
+			"tls":                      testAccAwsAppmeshVirtualNode_tls,
 			"tags":                     testAccAwsAppmeshVirtualNode_tags,
 		},
 		"VirtualRouter": {

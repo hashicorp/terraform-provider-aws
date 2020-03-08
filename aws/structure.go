@@ -5127,37 +5127,38 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 						certificate.File = file
 					}
 
-					if vSds, ok := mCertificate["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
-						sds := &appmesh.ListenerTlsSdsCertificate{}
+					// ForbiddenException: TLS Certificates from SDS are not supported.
+					// if vSds, ok := mCertificate["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+					// 	sds := &appmesh.ListenerTlsSdsCertificate{}
 
-						mSds := vSds[0].(map[string]interface{})
+					// 	mSds := vSds[0].(map[string]interface{})
 
-						if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
-							sds.SecretName = aws.String(vSecretName)
-						}
+					// 	if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+					// 		sds.SecretName = aws.String(vSecretName)
+					// 	}
 
-						if vSource, ok := mSds["source"].([]interface{}); ok && len(vSource) > 0 && vSource[0] != nil {
-							source := &appmesh.SdsSource{}
+					// 	if vSource, ok := mSds["source"].([]interface{}); ok && len(vSource) > 0 && vSource[0] != nil {
+					// 		source := &appmesh.SdsSource{}
 
-							mSource := vSource[0].(map[string]interface{})
+					// 		mSource := vSource[0].(map[string]interface{})
 
-							if vUnixDomainSocket, ok := mSource["unix_domain_socket"].([]interface{}); ok && len(vUnixDomainSocket) > 0 && vUnixDomainSocket[0] != nil {
-								unixDomainSocket := &appmesh.SdsUnixDomainSocketSource{}
+					// 		if vUnixDomainSocket, ok := mSource["unix_domain_socket"].([]interface{}); ok && len(vUnixDomainSocket) > 0 && vUnixDomainSocket[0] != nil {
+					// 			unixDomainSocket := &appmesh.SdsUnixDomainSocketSource{}
 
-								mUnixDomainSocket := vUnixDomainSocket[0].(map[string]interface{})
+					// 			mUnixDomainSocket := vUnixDomainSocket[0].(map[string]interface{})
 
-								if vPath, ok := mUnixDomainSocket["path"].(string); ok && vPath != "" {
-									unixDomainSocket.Path = aws.String(vPath)
-								}
+					// 			if vPath, ok := mUnixDomainSocket["path"].(string); ok && vPath != "" {
+					// 				unixDomainSocket.Path = aws.String(vPath)
+					// 			}
 
-								source.UnixDomainSocket = unixDomainSocket
-							}
+					// 			source.UnixDomainSocket = unixDomainSocket
+					// 		}
 
-							sds.Source = source
-						}
+					// 		sds.Source = source
+					// 	}
 
-						certificate.Sds = sds
-					}
+					// 	certificate.Sds = sds
+					// }
 
 					tls.Certificate = certificate
 				}
@@ -5330,27 +5331,28 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 						mCertificate["file"] = []interface{}{mFile}
 					}
 
-					if sds := certificate.Sds; sds != nil {
-						mSds := map[string]interface{}{
-							"secret_name": aws.StringValue(sds.SecretName),
-						}
+					// ForbiddenException: TLS Certificates from SDS are not supported.
+					// if sds := certificate.Sds; sds != nil {
+					// 	mSds := map[string]interface{}{
+					// 		"secret_name": aws.StringValue(sds.SecretName),
+					// 	}
 
-						if source := sds.Source; source != nil {
-							mSource := map[string]interface{}{}
+					// 	if source := sds.Source; source != nil {
+					// 		mSource := map[string]interface{}{}
 
-							if unixDomainSocket := source.UnixDomainSocket; unixDomainSocket != nil {
-								mUnixDomainSocket := map[string]interface{}{
-									"path": aws.StringValue(unixDomainSocket.Path),
-								}
+					// 		if unixDomainSocket := source.UnixDomainSocket; unixDomainSocket != nil {
+					// 			mUnixDomainSocket := map[string]interface{}{
+					// 				"path": aws.StringValue(unixDomainSocket.Path),
+					// 			}
 
-								mSource["unix_domain_socket"] = []interface{}{mUnixDomainSocket}
-							}
+					// 			mSource["unix_domain_socket"] = []interface{}{mUnixDomainSocket}
+					// 		}
 
-							mSds["source"] = []interface{}{mSource}
-						}
+					// 		mSds["source"] = []interface{}{mSource}
+					// 	}
 
-						mCertificate["sds"] = []interface{}{mSds}
-					}
+					// 	mCertificate["sds"] = []interface{}{mSds}
+					// }
 
 					mTls["certificate"] = []interface{}{mCertificate}
 				}
