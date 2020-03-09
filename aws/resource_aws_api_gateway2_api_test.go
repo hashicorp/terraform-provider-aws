@@ -16,11 +16,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_api_gateway_v2_api", &resource.Sweeper{
 		Name: "aws_api_gateway_v2_api",
-		F:    testSweepAPIGateway2Apis,
+		F:    testSweepAPIGatewayV2Apis,
 	})
 }
 
-func testSweepAPIGateway2Apis(region string) error {
+func testSweepAPIGatewayV2Apis(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -60,7 +60,7 @@ func testSweepAPIGateway2Apis(region string) error {
 	return nil
 }
 
-func TestAccAWSAPIGateway2Api_basic(t *testing.T) {
+func TestAccAWSAPIGatewayV2Api_basic(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_api_gateway_v2_api.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -68,12 +68,12 @@ func TestAccAWSAPIGateway2Api_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2ApiDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2ApiConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2ApiExists(resourceName, &v),
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
@@ -95,7 +95,7 @@ func TestAccAWSAPIGateway2Api_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Api_disappears(t *testing.T) {
+func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_api_gateway_v2_api.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -103,13 +103,13 @@ func TestAccAWSAPIGateway2Api_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2ApiDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2ApiConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2ApiExists(resourceName, &v),
-					testAccCheckAWSAPIGateway2Disappears(&v),
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
+					testAccCheckAWSAPIGatewayV2Disappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,7 +117,7 @@ func TestAccAWSAPIGateway2Api_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Api_AllAttributes(t *testing.T) {
+func TestAccAWSAPIGatewayV2Api_AllAttributes(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_api_gateway_v2_api.test"
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
@@ -126,12 +126,12 @@ func TestAccAWSAPIGateway2Api_AllAttributes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2ApiDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_allAttributes(rName1),
+				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributes(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2ApiExists(resourceName, &v),
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$context.authorizer.usageIdentifierKey"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
@@ -145,9 +145,9 @@ func TestAccAWSAPIGateway2Api_AllAttributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_basic(rName1),
+				Config: testAccAWSAPIGatewayV2ApiConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2ApiExists(resourceName, &v),
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -158,9 +158,9 @@ func TestAccAWSAPIGateway2Api_AllAttributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_allAttributes(rName2),
+				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributes(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2ApiExists(resourceName, &v),
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$context.authorizer.usageIdentifierKey"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -170,9 +170,9 @@ func TestAccAWSAPIGateway2Api_AllAttributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_allAttributes(rName1),
+				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributes(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2ApiExists(resourceName, &v),
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$context.authorizer.usageIdentifierKey"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -190,7 +190,7 @@ func TestAccAWSAPIGateway2Api_AllAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Api_Tags(t *testing.T) {
+func TestAccAWSAPIGatewayV2Api_Tags(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_api_gateway_v2_api.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -198,12 +198,12 @@ func TestAccAWSAPIGateway2Api_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2ApiDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_tags(rName),
+				Config: testAccAWSAPIGatewayV2ApiConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2ApiExists(resourceName, &v),
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
@@ -224,9 +224,9 @@ func TestAccAWSAPIGateway2Api_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2ApiConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2ApiExists(resourceName, &v),
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -240,7 +240,7 @@ func TestAccAWSAPIGateway2Api_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGateway2ApiDestroy(s *terraform.State) error {
+func testAccCheckAWSAPIGatewayV2ApiDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -264,7 +264,7 @@ func testAccCheckAWSAPIGateway2ApiDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGateway2Disappears(v *apigatewayv2.GetApiOutput) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayV2Disappears(v *apigatewayv2.GetApiOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
@@ -276,7 +276,7 @@ func testAccCheckAWSAPIGateway2Disappears(v *apigatewayv2.GetApiOutput) resource
 	}
 }
 
-func testAccCheckAWSAPIGateway2ApiExists(n string, v *apigatewayv2.GetApiOutput) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayV2ApiExists(n string, v *apigatewayv2.GetApiOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -302,7 +302,7 @@ func testAccCheckAWSAPIGateway2ApiExists(n string, v *apigatewayv2.GetApiOutput)
 	}
 }
 
-func testAccAWSAPIGateway2ApiConfig_basic(rName string) string {
+func testAccAWSAPIGatewayV2ApiConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_v2_api" "test" {
   name                       = %[1]q
@@ -312,7 +312,7 @@ resource "aws_api_gateway_v2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2ApiConfig_allAttributes(rName string) string {
+func testAccAWSAPIGatewayV2ApiConfig_allAttributes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_v2_api" "test" {
   api_key_selection_expression = "$context.authorizer.usageIdentifierKey"
@@ -325,7 +325,7 @@ resource "aws_api_gateway_v2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2ApiConfig_tags(rName string) string {
+func testAccAWSAPIGatewayV2ApiConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_v2_api" "test" {
   name                       = %[1]q
