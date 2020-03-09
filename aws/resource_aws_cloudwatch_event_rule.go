@@ -174,7 +174,8 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	tags, err := keyvaluetags.CloudwatcheventsListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for CloudWatch Event Rule (%s): %s", arn, err)
+		// ignore tags permissions errors
+		// return fmt.Errorf("error listing tags for CloudWatch Event Rule (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
