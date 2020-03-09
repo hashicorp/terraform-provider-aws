@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_appsync_graphql_api: Add xray_enabled argument [GH-11972]
 * resource/aws_cloud9_environment_ec2: Add `tags` argument [GH-12132]
 * resource/aws_ec2_traffic_mirror_filter: Add `tags` argument [GH-12133]
 * resource/aws_ec2_traffic_mirror_session: Add `tags` argument [GH-12134]
