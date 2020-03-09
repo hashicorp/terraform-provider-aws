@@ -7,6 +7,7 @@ ENHANCEMENTS:
 * resource/aws_ec2_traffic_mirror_filter: Add `tags` argument [GH-12133]
 * resource/aws_ec2_traffic_mirror_session: Add `tags` argument [GH-12134]
 * resource/aws_ec2_traffic_mirror_target: Add `tags` argument and `network_load_balancer_arn` plan-time validation [GH-12135]
+* resource/aws_globalaccelerator_accelerator: Add `tags` argument [GH-12309]
 * resource/aws_vpc_endpoint: Support tag-on-create [GH-12288]
 * resource/aws_vpc_endpoint_service: Support tag-on-create and add `network_load_balancer_arns` plan-time validation [GH-12290]
 
