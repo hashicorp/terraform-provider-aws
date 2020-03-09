@@ -68,6 +68,7 @@ var serviceNames = []string{
 	"fsx",
 	"gamelift",
 	"glacier",
+	"globalaccelerator",
 	"glue",
 	"guardduty",
 	"greengrass",

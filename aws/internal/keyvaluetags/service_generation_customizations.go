@@ -58,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -216,6 +217,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(gamelift.New)
 	case "glacier":
 		funcType = reflect.TypeOf(glacier.New)
+	case "globalaccelerator":
+		funcType = reflect.TypeOf(globalaccelerator.New)
 	case "glue":
 		funcType = reflect.TypeOf(glue.New)
 	case "guardduty":

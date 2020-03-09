@@ -50,6 +50,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -876,6 +877,23 @@ func GlacierListTags(conn *glacier.Glacier, identifier string) (KeyValueTags, er
 	}
 
 	return GlacierKeyValueTags(output.Tags), nil
+}
+
+// GlobalacceleratorListTags lists globalaccelerator service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GlobalacceleratorListTags(conn *globalaccelerator.GlobalAccelerator, identifier string) (KeyValueTags, error) {
+	input := &globalaccelerator.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GlobalacceleratorKeyValueTags(output.Tags), nil
 }
 
 // GlueListTags lists glue service tags.
