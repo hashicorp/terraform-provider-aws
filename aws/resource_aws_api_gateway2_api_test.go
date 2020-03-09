@@ -109,7 +109,7 @@ func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayV2ApiConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
-					testAccCheckAWSAPIGatewayV2Disappears(&v),
+					testAccCheckAWSAPIGatewayV2ApiDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -264,7 +264,7 @@ func testAccCheckAWSAPIGatewayV2ApiDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGatewayV2Disappears(v *apigatewayv2.GetApiOutput) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayV2ApiDisappears(v *apigatewayv2.GetApiOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
