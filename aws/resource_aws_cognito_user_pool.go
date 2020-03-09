@@ -511,6 +511,70 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
+			"risk_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"risk_exception_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"block_ip_range_list": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.IsCIDR,
+										},
+									},
+									"skip_ip_range_list": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.IsCIDR,
+										},
+									},
+								},
+							},
+						},
+						"compromised_credentials_risk_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"actions": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"event_action": {
+													Type: schema.TypeString,
+													ValidateFunc: validation.StringInSlice([]string{
+														cognitoidentityprovider.CompromisedCredentialsEventActionTypeBlock,
+														cognitoidentityprovider.CompromisedCredentialsEventActionTypeNoAction,
+													}, false),
+												},
+											},
+										},
+									},
+									"event_filter": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -691,6 +755,26 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.SetId(*resp.UserPool.Id)
+
+	if v, ok := d.GetOk("risk_configuration"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok {
+			input := &cognitoidentityprovider.SetRiskConfigurationInput{
+				UserPoolId: resp.UserPool.Id,
+			}
+
+			if v, ok := config["risk_exception_configuration"]; ok && v.(string) != "" {
+				input.RiskExceptionConfiguration = expandAwsCognitoUserPoolRiskExceptionConfiguration(v.([]interface{}))
+			}
+
+			_, err = conn.SetRiskConfiguration(input)
+			if err != nil {
+				return fmt.Errorf("Error setting Cognito User Pool Risk Configuration: %s", err)
+			}
+		}
+	}
 
 	return resourceAwsCognitoUserPoolRead(d, meta)
 }
@@ -990,4 +1074,24 @@ func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
+}
+
+func expandAwsCognitoUserPoolRiskExceptionConfiguration(v []interface{}) *cognitoidentityprovider.RiskExceptionConfigurationType {
+	config := &cognitoidentityprovider.RiskExceptionConfigurationType{}
+
+	if len(v) == 0 || v[0] == nil {
+		// Empty Spec is allowed.
+		return config
+	}
+	mConfig := v[0].(map[string]interface{})
+
+	if v, ok := mConfig["block_ip_range_list"]; ok && len(v.(*schema.Set).List()) > 0 {
+		config.BlockedIPRangeList = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := mConfig["skipped_ip_range_list"]; ok && len(v.(*schema.Set).List()) > 0 {
+		config.SkippedIPRangeList = expandStringSet(v.(*schema.Set))
+	}
+
+	return config
 }
