@@ -28,6 +28,7 @@ var serviceNames = []string{
 	"appsync",
 	"athena",
 	"backup",
+	"cloud9",
 	"cloudfront",
 	"cloudhsmv2",
 	"cloudtrail",
@@ -398,6 +399,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	case "acmpca":
 		return "CertificateAuthorityArn"
 	case "athena":
+		return "ResourceARN"
+	case "cloud9":
 		return "ResourceARN"
 	case "cloudfront":
 		return "Resource"
