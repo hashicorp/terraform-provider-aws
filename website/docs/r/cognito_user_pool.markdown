@@ -65,6 +65,7 @@ The following arguments are supported:
 * `software_token_mfa_configuration` - (Optional) Configuration block for software token Mult-Factor Authentication (MFA) settings. Detailed below.
 * `tags` - (Optional) A mapping of tags to assign to the User Pool.
 * `username_attributes` - (Optional) Specifies whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
+* `username_configuration` - (Optional) The [Username Configuration](#username-configuration).
 * `user_pool_add_ons` - (Optional) Configuration block for [user pool add-ons](#user-pool-add-ons) to enable user pool advanced security mode features.
 * `verification_message_template` (Optional) - The [verification message templates](#verification-message-template) configuration.
 
@@ -161,6 +162,10 @@ resource "aws_cognito_user_pool" "example" {
 
   * `external_id` (Required) - The external ID used in IAM role trust relationships. For more information about using external IDs, see [How to Use an External ID When Granting Access to Your AWS Resources to a Third Party](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html).
   * `sns_caller_arn` (Required) - The ARN of the Amazon SNS caller. This is usually the IAM role that you've given Cognito permission to assume.
+
+#### Username Configuration
+
+  * `case_sensitive` (Required) - Specifies whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
 
 ### Software Token MFA Configuration
 
