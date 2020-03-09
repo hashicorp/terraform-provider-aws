@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_cloud9_environment_ec2: Add `tags` argument [GH-12132]
 * resource/aws_ec2_traffic_mirror_filter: Add `tags` argument [GH-12133]
 * resource/aws_ec2_traffic_mirror_session: Add `tags` argument [GH-12134]
 * resource/aws_ec2_traffic_mirror_target: Add `tags` argument and `network_load_balancer_arn` plan-time validation [GH-12135]
