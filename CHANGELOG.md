@@ -1,4 +1,9 @@
 ## 2.53.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_vpc_endpoint: Support tag-on-create [GH-12288]
+
 ## 2.52.0 (March 06, 2020)
 
 FEATURES:
