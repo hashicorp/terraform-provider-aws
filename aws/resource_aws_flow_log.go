@@ -154,7 +154,7 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		opts.LogFormat = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok && v != "" {
+	if v, ok := d.GetOk("tags"); ok && len(v) > 0 {
 		opts.TagSpecifications = ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeVpcFlowLog)
 	}
 
