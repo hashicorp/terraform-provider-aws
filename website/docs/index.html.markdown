@@ -158,11 +158,11 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 (e.g. `alias` and `version`), the following arguments are supported in the AWS
  `provider` block:
 
-* `access_key` - (Optional) This is the AWS access key. It must be provided, but
+* `access_key` - (Required) This is the AWS access key. It must be provided, but
   it can also be sourced from the `AWS_ACCESS_KEY_ID` environment variable, or via
   a shared credentials file if `profile` is specified.
 
-* `secret_key` - (Optional) This is the AWS secret key. It must be provided, but
+* `secret_key` - (Required) This is the AWS secret key. It must be provided, but
   it can also be sourced from the `AWS_SECRET_ACCESS_KEY` environment variable, or
   via a shared credentials file if `profile` is specified.
 
