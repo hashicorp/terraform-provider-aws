@@ -93,7 +93,6 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 	createOpts := &kinesisvideo.CreateStreamInput{
 		StreamName:           aws.String(d.Get("name").(string)),
 		DataRetentionInHours: aws.Int64(int64(d.Get("data_retention_in_hours").(int))),
-		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().KinesisvideoTags(),
 	}
 
 	if v, ok := d.GetOk("device_name"); ok {
@@ -106,6 +105,10 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("media_type"); ok {
 		createOpts.MediaType = aws.String(v.(string))
+	}
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		createOpts.Tags = keyvaluetags.New(v).IgnoreAws().KinesisvideoTags()
 	}
 
 	resp, err := conn.CreateStream(createOpts)
