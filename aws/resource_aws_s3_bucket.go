@@ -1193,7 +1193,8 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Object Lock configuration.
 	if conf, err := readS3ObjectLockConfiguration(s3conn, d.Id()); err != nil {
-		return fmt.Errorf("error getting S3 Bucket Object Lock configuration: %s", err)
+		// ignore permissions errors on getting object lock configuration
+		// return fmt.Errorf("error getting S3 Bucket Object Lock configuration: %s", err)
 	} else {
 		if err := d.Set("object_lock_configuration", conf); err != nil {
 			return fmt.Errorf("error setting object_lock_configuration: %s", err)
