@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDynamoDbTable2019() *schema.Resource {
@@ -394,97 +393,12 @@ func deleteDynamoDbReplicas(tableName string, replicas []interface{}, conn *dyna
 }
 
 func resourceAwsDynamoDbTable2019Update(d *schema.ResourceData, meta interface{}) error {
+	err := resourceAwsDynamoDbTableUpdate(d, meta)
+	if err != nil {
+		return fmt.Errorf("error updating DynamoDB Table (%s) %s", d.Id(), err)
+	}
+
 	conn := meta.(*AWSClient).dynamodbconn
-	billingMode := d.Get("billing_mode").(string)
-
-	// Global Secondary Index operations must occur in multiple phases
-	// to prevent various error scenarios. If there are no detected required
-	// updates in the Terraform configuration, later validation or API errors
-	// will signal the problems.
-	var gsiUpdates []*dynamodb.GlobalSecondaryIndexUpdate
-
-	if d.HasChange("global_secondary_index") {
-		var err error
-		o, n := d.GetChange("global_secondary_index")
-		gsiUpdates, err = diffDynamoDbGSI(o.(*schema.Set).List(), n.(*schema.Set).List(), billingMode)
-
-		if err != nil {
-			return fmt.Errorf("computing difference for DynamoDB Table (%s) Global Secondary Index updates failed: %s", d.Id(), err)
-		}
-
-		log.Printf("[DEBUG] Computed DynamoDB Table (%s) Global Secondary Index updates: %s", d.Id(), gsiUpdates)
-	}
-
-	// Phase 1 of Global Secondary Index Operations: Delete Only
-	//  * Delete indexes first to prevent error when simultaneously updating
-	//    BillingMode to PROVISIONED, which requires updating index
-	//    ProvisionedThroughput first, but we have no definition
-	//  * Only 1 online index can be deleted simultaneously per table
-	for _, gsiUpdate := range gsiUpdates {
-		if gsiUpdate.Delete == nil {
-			continue
-		}
-
-		idxName := aws.StringValue(gsiUpdate.Delete.IndexName)
-		input := &dynamodb.UpdateTableInput{
-			GlobalSecondaryIndexUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{gsiUpdate},
-			TableName:                   aws.String(d.Id()),
-		}
-
-		if _, err := conn.UpdateTable(input); err != nil {
-			return fmt.Errorf("error deleting DynamoDB Table (%s) Global Secondary Index (%s): %s", d.Id(), idxName, err)
-		}
-
-		if err := waitForDynamoDbGSIToBeDeleted(d.Id(), idxName, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) deletion: %s", d.Id(), idxName, err)
-		}
-	}
-
-	hasTableUpdate := false
-	input := &dynamodb.UpdateTableInput{
-		TableName: aws.String(d.Id()),
-	}
-
-	if d.HasChange("billing_mode") || d.HasChange("read_capacity") || d.HasChange("write_capacity") {
-		hasTableUpdate = true
-
-		capacityMap := map[string]interface{}{
-			"write_capacity": d.Get("write_capacity"),
-			"read_capacity":  d.Get("read_capacity"),
-		}
-
-		if err := validateDynamoDbProvisionedThroughput(capacityMap, billingMode); err != nil {
-			return err
-		}
-
-		input.BillingMode = aws.String(billingMode)
-		input.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(capacityMap, billingMode)
-	}
-
-	if d.HasChange("stream_enabled") || d.HasChange("stream_view_type") {
-		hasTableUpdate = true
-
-		input.StreamSpecification = &dynamodb.StreamSpecification{
-			StreamEnabled: aws.Bool(d.Get("stream_enabled").(bool)),
-		}
-		if d.Get("stream_enabled").(bool) {
-			input.StreamSpecification.StreamViewType = aws.String(d.Get("stream_view_type").(string))
-		}
-	}
-
-	// Phase 2 of Global Secondary Index Operations: Update Only
-	// Cannot create or delete index while updating table ProvisionedThroughput
-	// Must skip all index updates when switching BillingMode from PROVISIONED to PAY_PER_REQUEST
-	// Must update all indexes when switching BillingMode from PAY_PER_REQUEST to PROVISIONED
-	if billingMode == dynamodb.BillingModeProvisioned {
-		for _, gsiUpdate := range gsiUpdates {
-			if gsiUpdate.Update == nil {
-				continue
-			}
-
-			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
-		}
-	}
 
 	if d.HasChange("replica") {
 		var replicaUpdates []*dynamodb.ReplicationGroupUpdate
@@ -513,88 +427,6 @@ func resourceAwsDynamoDbTable2019Update(d *schema.ResourceData, meta interface{}
 			} else {
 				return fmt.Errorf("error updating DynamoDB Table (%s): %s", d.Id(), replicaErr)
 			}
-		}
-	}
-
-	if hasTableUpdate {
-		log.Printf("[DEBUG] Updating DynamoDB Table: %s", input)
-		_, err := conn.UpdateTable(input)
-
-		if err != nil {
-			log.Printf("[DEBUG] Updating DynamoDB Table: %s", input)
-			return fmt.Errorf("error updating DynamoDB Table (%s): %s", d.Id(), err)
-		}
-
-		if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) update: %s", d.Id(), err)
-		}
-
-		for _, gsiUpdate := range gsiUpdates {
-			if gsiUpdate.Update == nil {
-				continue
-			}
-
-			idxName := aws.StringValue(gsiUpdate.Update.IndexName)
-			if err := waitForDynamoDbGSIToBeActive(d.Id(), idxName, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-				return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) update: %s", d.Id(), idxName, err)
-			}
-		}
-	}
-
-	// Phase 3 of Global Secondary Index Operations: Create Only
-	// Only 1 online index can be created simultaneously per table
-	for _, gsiUpdate := range gsiUpdates {
-		if gsiUpdate.Create == nil {
-			continue
-		}
-
-		idxName := aws.StringValue(gsiUpdate.Create.IndexName)
-		input := &dynamodb.UpdateTableInput{
-			AttributeDefinitions:        expandDynamoDbAttributes(d.Get("attribute").(*schema.Set).List()),
-			GlobalSecondaryIndexUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{gsiUpdate},
-			TableName:                   aws.String(d.Id()),
-		}
-
-		if _, err := conn.UpdateTable(input); err != nil {
-			return fmt.Errorf("error creating DynamoDB Table (%s) Global Secondary Index (%s): %s", d.Id(), idxName, err)
-		}
-
-		if err := waitForDynamoDbGSIToBeActive(d.Id(), idxName, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) creation: %s", d.Id(), idxName, err)
-		}
-	}
-
-	if d.HasChange("server_side_encryption") {
-		// "ValidationException: One or more parameter values were invalid: Server-Side Encryption modification must be the only operation in the request".
-		_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
-			TableName:        aws.String(d.Id()),
-			SSESpecification: expandDynamoDbEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
-		})
-		if err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
-		}
-
-		if err := waitForDynamoDbSSEUpdateToBeCompleted(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("ttl") {
-		if err := updateDynamoDbTimeToLive(d.Id(), d.Get("ttl").([]interface{}), conn); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) time to live: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-		if err := keyvaluetags.DynamodbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("point_in_time_recovery") {
-		if err := updateDynamoDbPITR(d, conn); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) point in time recovery: %s", d.Id(), err)
 		}
 	}
 
