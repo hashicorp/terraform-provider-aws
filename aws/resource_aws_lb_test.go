@@ -191,6 +191,35 @@ func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 	})
 }
 
+func TestAccAWSLB_networkLoadbalancerPrivateIPv4Address(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	resourceName := "aws_lb.lb_test"
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_networkLoadBalancerPrivateIPV4Address(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", lbName),
+					resource.TestCheckResourceAttr(resourceName, "internal", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", "network"),
+					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBBackwardsCompatibility(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -1621,6 +1650,54 @@ resource "aws_lb" "lb_test" {
 resource "aws_eip" "lb" {
   count = "2"
 }
+`, lbName)
+}
+
+func testAccAWSLBConfig_networkLoadBalancerPrivateIPV4Address(lbName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-network-load-balancer-private-ipv4-address"
+  }
+}
+
+resource "aws_subnet" "private" {
+  count             = "${length(data.aws_availability_zones.available.names)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  cidr_block        = "10.10.${count.index}.0/24"
+  vpc_id            = "${aws_vpc.main.id}"
+
+  tags = {
+    Name = "tf-acc-lb-network-load-balancer-private-ipv4-address-${count.index}"
+  }
+}
+
+resource "aws_internet_gateway" "default" {
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+resource "aws_lb" "lb_test" {
+  name               = "%s"
+  load_balancer_type = "network"
+  internal           = true
+
+  subnet_mapping {
+    subnet_id            = "${aws_subnet.private.0.id}"
+    private_ipv4_address = "${cidrhost(aws_subnet.private.0.cidr_block, 10)}"
+  }
+
+  subnet_mapping {
+    subnet_id            = "${aws_subnet.private.1.id}"
+    private_ipv4_address = "${cidrhost(aws_subnet.private.1.cidr_block, 10)}"
+  }
+
+  depends_on = ["aws_internet_gateway.default"]
+}
+
 `, lbName)
 }
 

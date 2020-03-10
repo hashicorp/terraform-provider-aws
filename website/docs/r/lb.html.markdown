@@ -74,6 +74,26 @@ resource "aws_lb" "example" {
 }
 ```
 
+### Manually specifying private IPv4 address
+
+```hcl
+resource "aws_lb" "example" {
+  name               = "example"
+  load_balancer_type = "network"
+  internal           = true
+
+  subnet_mapping {
+    subnet_id            = "${aws_subnet.example1.id}"
+    private_ipv4_address = "${cidrhost(aws_subnet.example1.cidr_block, 10)}"
+  }
+
+  subnet_mapping {
+    subnet_id            = "${aws_subnet.example2.id}"
+    private_ipv4_address = "${cidrhost(aws_subnet.example2.cidr_block, 10)}"
+  }
+}
+```
+
 ## Argument Reference
 
 ~> **NOTE:** Please note that internal LBs can only use `ipv4` as the ip_address_type. You can only change to `dualstack` ip_address_type if the selected subnets are IPv6 enabled.
@@ -113,6 +133,7 @@ Subnet Mapping (`subnet_mapping`) blocks support the following:
 
 * `subnet_id` - (Required) The id of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
 * `allocation_id` - (Optional) The allocation ID of the Elastic IP address.
+* `private_ipv4_address` - (Optional) The private IPv4 address to assign to the internal network load balancer.
 
 ## Attributes Reference
 
