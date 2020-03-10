@@ -4261,21 +4261,21 @@ func diffDynamoDbReplicas(oldReplica, newReplica []interface{}) (ops []*dynamodb
 	oldReplicas := make(map[string]interface{})
 	for _, replicaData := range oldReplica {
 		m := replicaData.(map[string]interface{})
-		oldReplicas[m["region"].(string)] = m
+		oldReplicas[m["region_name"].(string)] = m
 	}
 	newReplicas := make(map[string]interface{})
 	for _, replicaData := range newReplica {
 		m := replicaData.(map[string]interface{})
-		newReplicas[m["region"].(string)] = m
+		newReplicas[m["region_name"].(string)] = m
 	}
 
 	for _, data := range newReplica {
 		newMap := data.(map[string]interface{})
-		newName := newMap["region"].(string)
+		newName := newMap["region_name"].(string)
 
 		if _, exists := oldReplicas[newName]; !exists {
 			m := data.(map[string]interface{})
-			regionName := m["region"].(string)
+			regionName := m["region_name"].(string)
 
 			ops = append(ops, &dynamodb.ReplicationGroupUpdate{
 				Create: &dynamodb.CreateReplicationGroupMemberAction{
@@ -4287,7 +4287,7 @@ func diffDynamoDbReplicas(oldReplica, newReplica []interface{}) (ops []*dynamodb
 
 	for _, data := range oldReplicas {
 		oldMap := data.(map[string]interface{})
-		oldName := oldMap["region"].(string)
+		oldName := oldMap["region_name"].(string)
 
 		_, exists := newReplicas[oldName]
 		if exists {
@@ -4366,7 +4366,7 @@ func flattenAwsDynamoDbTableResource_2019(d *schema.ResourceData, table *dynamod
 	replicaList := make([]map[string]interface{}, 0, len(table.Replicas))
 	for _, replicaObject := range table.Replicas {
 		replica := map[string]interface{}{
-			"region": aws.StringValue(replicaObject.RegionName),
+			"region_name": aws.StringValue(replicaObject.RegionName),
 		}
 
 		replicaList = append(replicaList, replica)

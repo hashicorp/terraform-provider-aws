@@ -66,7 +66,7 @@ func TestAccAWSDynamoDbTable2019_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.name", "TestTableHashKey"),
 					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.type", "S"),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replica.0.region", "us-west-1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.0.region_name", "us-west-1"),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ resource "aws_dynamodb_table_2019" "test" {
   }
 
 	replica {
-	  region = "us-west-1"
+	  region_name = "us-west-1"
 	}
 }
 `, rName)

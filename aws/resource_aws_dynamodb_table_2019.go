@@ -283,7 +283,7 @@ func resourceAwsDynamoDbTable2019() *schema.Resource {
 				Computed: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region": {
+						"region_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -317,10 +317,10 @@ func resourceAwsDynamoDbTable2019Create(d *schema.ResourceData, meta interface{}
 func createDynamoDbReplicas(tableName string, replicas []interface{}, conn *dynamodb.DynamoDB) error {
 	for _, replica := range replicas {
 		var ops []*dynamodb.ReplicationGroupUpdate
-		if region, ok := replica.(map[string]interface{})["region"]; ok {
+		if regionName, ok := replica.(map[string]interface{})["region_name"]; ok {
 			ops = append(ops, &dynamodb.ReplicationGroupUpdate{
 				Create: &dynamodb.CreateReplicationGroupMemberAction{
-					RegionName: aws.String(region.(string)),
+					RegionName: aws.String(regionName.(string)),
 				},
 			})
 
@@ -345,7 +345,7 @@ func createDynamoDbReplicas(tableName string, replicas []interface{}, conn *dyna
 				return fmt.Errorf("Error updating DynamoDB Replicas status: %s", err)
 			}
 
-			if err := waitForDynamoDbReplicaUpdateToBeCompleted(tableName, region.(string), 20*time.Minute, conn); err != nil {
+			if err := waitForDynamoDbReplicaUpdateToBeCompleted(tableName, regionName.(string), 20*time.Minute, conn); err != nil {
 				return fmt.Errorf("Error waiting for DynamoDB replica update: %s", err)
 			}
 		}
@@ -356,10 +356,10 @@ func createDynamoDbReplicas(tableName string, replicas []interface{}, conn *dyna
 func deleteDynamoDbReplicas(tableName string, replicas []interface{}, conn *dynamodb.DynamoDB) error {
 	for _, replica := range replicas {
 		var ops []*dynamodb.ReplicationGroupUpdate
-		if region, ok := replica.(map[string]interface{})["region"]; ok {
+		if regionName, ok := replica.(map[string]interface{})["region_name"]; ok {
 			ops = append(ops, &dynamodb.ReplicationGroupUpdate{
 				Delete: &dynamodb.DeleteReplicationGroupMemberAction{
-					RegionName: aws.String(region.(string)),
+					RegionName: aws.String(regionName.(string)),
 				},
 			})
 
@@ -384,7 +384,7 @@ func deleteDynamoDbReplicas(tableName string, replicas []interface{}, conn *dyna
 				return fmt.Errorf("Error deleting DynamoDB Replicas status: %s", err)
 			}
 
-			if err := waitForDynamoDbReplicaDeleteToBeCompleted(tableName, region.(string), 20*time.Minute, conn); err != nil {
+			if err := waitForDynamoDbReplicaDeleteToBeCompleted(tableName, regionName.(string), 20*time.Minute, conn); err != nil {
 				return fmt.Errorf("Error waiting for DynamoDB replica delete: %s", err)
 			}
 		}
