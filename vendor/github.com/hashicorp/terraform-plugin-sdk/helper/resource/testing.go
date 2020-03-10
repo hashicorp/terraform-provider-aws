@@ -20,8 +20,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/logutils"
-	"github.com/mitchellh/colorstring"
-
+	"github.com/hashicorp/terraform-plugin-sdk/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/addrs"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/command/format"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/internal/states"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/tfdiags"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/mitchellh/colorstring"
 )
 
 // flagSweep is a flag available when running tests on the command line. It
@@ -108,6 +108,9 @@ func TestMain(m *testing.M) {
 			os.Exit(1)
 		}
 	} else {
+		if acctest.TestHelper != nil {
+			defer acctest.TestHelper.Close()
+		}
 		os.Exit(m.Run())
 	}
 }
@@ -325,6 +328,11 @@ type TestCase struct {
 	// IDRefreshIgnore is a list of configuration keys that will be ignored.
 	IDRefreshName   string
 	IDRefreshIgnore []string
+
+	// DisableBinaryDriver forces this test case to run using the legacy test
+	// driver, even if the binary test driver has been enabled.
+	// This property will be removed in version 2.0.0 of the SDK.
+	DisableBinaryDriver bool
 }
 
 // TestStep is a single apply sequence of a test, done within the
@@ -562,6 +570,12 @@ func Test(t TestT, c TestCase) {
 			t.Fatal(err)
 		}
 		providers[name] = p
+	}
+
+	if acctest.TestHelper != nil && c.DisableBinaryDriver == false {
+		// inject providers for ImportStateVerify
+		RunNewTest(t.(*testing.T), c, providers)
+		return
 	}
 
 	providerResolver, err := testProviderResolver(c)

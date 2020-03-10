@@ -87,9 +87,11 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	req.Filters = append(req.Filters, buildEC2TagFilterList(
-		tagsFromMap(d.Get("tags").(map[string]interface{})),
-	)...)
+	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+		req.Filters = append(req.Filters, buildEC2TagFilterList(
+			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+		)...)
+	}
 
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.

@@ -1352,6 +1352,152 @@ func (c *Kafka) ListConfigurationsPagesWithContext(ctx aws.Context, input *ListC
 	return p.Err()
 }
 
+const opListKafkaVersions = "ListKafkaVersions"
+
+// ListKafkaVersionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListKafkaVersions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListKafkaVersions for more information on using the ListKafkaVersions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListKafkaVersionsRequest method.
+//    req, resp := client.ListKafkaVersionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListKafkaVersions
+func (c *Kafka) ListKafkaVersionsRequest(input *ListKafkaVersionsInput) (req *request.Request, output *ListKafkaVersionsOutput) {
+	op := &request.Operation{
+		Name:       opListKafkaVersions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/kafka-versions",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListKafkaVersionsInput{}
+	}
+
+	output = &ListKafkaVersionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListKafkaVersions API operation for Managed Streaming for Kafka.
+//
+// Returns a list of Kafka versions.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation ListKafkaVersions for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListKafkaVersions
+func (c *Kafka) ListKafkaVersions(input *ListKafkaVersionsInput) (*ListKafkaVersionsOutput, error) {
+	req, out := c.ListKafkaVersionsRequest(input)
+	return out, req.Send()
+}
+
+// ListKafkaVersionsWithContext is the same as ListKafkaVersions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListKafkaVersions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) ListKafkaVersionsWithContext(ctx aws.Context, input *ListKafkaVersionsInput, opts ...request.Option) (*ListKafkaVersionsOutput, error) {
+	req, out := c.ListKafkaVersionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListKafkaVersionsPages iterates over the pages of a ListKafkaVersions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListKafkaVersions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListKafkaVersions operation.
+//    pageNum := 0
+//    err := client.ListKafkaVersionsPages(params,
+//        func(page *kafka.ListKafkaVersionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Kafka) ListKafkaVersionsPages(input *ListKafkaVersionsInput, fn func(*ListKafkaVersionsOutput, bool) bool) error {
+	return c.ListKafkaVersionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListKafkaVersionsPagesWithContext same as ListKafkaVersionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) ListKafkaVersionsPagesWithContext(ctx aws.Context, input *ListKafkaVersionsInput, fn func(*ListKafkaVersionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListKafkaVersionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListKafkaVersionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListKafkaVersionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListNodes = "ListNodes"
 
 // ListNodesRequest generates a "aws/request.Request" representing the
@@ -2240,6 +2386,74 @@ func (s *BrokerEBSVolumeInfo) SetVolumeSizeGB(v int64) *BrokerEBSVolumeInfo {
 	return s
 }
 
+// The broker logs configuration for this MSK cluster.
+type BrokerLogs struct {
+	_ struct{} `type:"structure"`
+
+	// Details of the CloudWatch Logs destination for broker logs.
+	CloudWatchLogs *CloudWatchLogs `locationName:"cloudWatchLogs" type:"structure"`
+
+	// Details of the Kinesis Data Firehose delivery stream that is the destination
+	// for broker logs.
+	Firehose *Firehose `locationName:"firehose" type:"structure"`
+
+	// Details of the Amazon S3 destination for broker logs.
+	S3 *S3 `locationName:"s3" type:"structure"`
+}
+
+// String returns the string representation
+func (s BrokerLogs) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BrokerLogs) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BrokerLogs) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BrokerLogs"}
+	if s.CloudWatchLogs != nil {
+		if err := s.CloudWatchLogs.Validate(); err != nil {
+			invalidParams.AddNested("CloudWatchLogs", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Firehose != nil {
+		if err := s.Firehose.Validate(); err != nil {
+			invalidParams.AddNested("Firehose", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.S3 != nil {
+		if err := s.S3.Validate(); err != nil {
+			invalidParams.AddNested("S3", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCloudWatchLogs sets the CloudWatchLogs field's value.
+func (s *BrokerLogs) SetCloudWatchLogs(v *CloudWatchLogs) *BrokerLogs {
+	s.CloudWatchLogs = v
+	return s
+}
+
+// SetFirehose sets the Firehose field's value.
+func (s *BrokerLogs) SetFirehose(v *Firehose) *BrokerLogs {
+	s.Firehose = v
+	return s
+}
+
+// SetS3 sets the S3 field's value.
+func (s *BrokerLogs) SetS3(v *S3) *BrokerLogs {
+	s.S3 = v
+	return s
+}
+
 // Describes the setup to be used for Kafka broker nodes in the cluster.
 type BrokerNodeGroupInfo struct {
 	_ struct{} `type:"structure"`
@@ -2476,6 +2690,54 @@ func (s *ClientAuthentication) SetTls(v *Tls) *ClientAuthentication {
 	return s
 }
 
+// Details of the CloudWatch Logs destination for broker logs.
+type CloudWatchLogs struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies whether broker logs get sent to the specified CloudWatch Logs destination.
+	//
+	// Enabled is a required field
+	Enabled *bool `locationName:"enabled" type:"boolean" required:"true"`
+
+	// The CloudWatch log group that is the destination for broker logs.
+	LogGroup *string `locationName:"logGroup" type:"string"`
+}
+
+// String returns the string representation
+func (s CloudWatchLogs) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudWatchLogs) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CloudWatchLogs) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CloudWatchLogs"}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *CloudWatchLogs) SetEnabled(v bool) *CloudWatchLogs {
+	s.Enabled = &v
+	return s
+}
+
+// SetLogGroup sets the LogGroup field's value.
+func (s *CloudWatchLogs) SetLogGroup(v string) *CloudWatchLogs {
+	s.LogGroup = &v
+	return s
+}
+
 // Returns information about a cluster.
 type ClusterInfo struct {
 	_ struct{} `type:"structure"`
@@ -2515,6 +2777,11 @@ type ClusterInfo struct {
 	// a list of the metrics associated with each of these three levels of monitoring,
 	// see Monitoring (https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html).
 	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
+
+	// You can configure your MSK cluster to send broker logs to different destination
+	// types. This is a container for the configuration details related to broker
+	// logs.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
 
 	// The number of broker nodes in the cluster.
 	NumberOfBrokerNodes *int64 `locationName:"numberOfBrokerNodes" type:"integer"`
@@ -2599,6 +2866,12 @@ func (s *ClusterInfo) SetEncryptionInfo(v *EncryptionInfo) *ClusterInfo {
 // SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
 func (s *ClusterInfo) SetEnhancedMonitoring(v string) *ClusterInfo {
 	s.EnhancedMonitoring = &v
+	return s
+}
+
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *ClusterInfo) SetLoggingInfo(v *LoggingInfo) *ClusterInfo {
+	s.LoggingInfo = v
 	return s
 }
 
@@ -3008,6 +3281,9 @@ type CreateClusterInput struct {
 	// KafkaVersion is a required field
 	KafkaVersion *string `locationName:"kafkaVersion" min:"1" type:"string" required:"true"`
 
+	// LoggingInfo details.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
+
 	// The number of Kafka broker nodes in the Amazon MSK cluster.
 	//
 	// NumberOfBrokerNodes is a required field
@@ -3069,6 +3345,11 @@ func (s *CreateClusterInput) Validate() error {
 			invalidParams.AddNested("EncryptionInfo", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.LoggingInfo != nil {
+		if err := s.LoggingInfo.Validate(); err != nil {
+			invalidParams.AddNested("LoggingInfo", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.OpenMonitoring != nil {
 		if err := s.OpenMonitoring.Validate(); err != nil {
 			invalidParams.AddNested("OpenMonitoring", err.(request.ErrInvalidParams))
@@ -3120,6 +3401,12 @@ func (s *CreateClusterInput) SetEnhancedMonitoring(v string) *CreateClusterInput
 // SetKafkaVersion sets the KafkaVersion field's value.
 func (s *CreateClusterInput) SetKafkaVersion(v string) *CreateClusterInput {
 	s.KafkaVersion = &v
+	return s
+}
+
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *CreateClusterInput) SetLoggingInfo(v *LoggingInfo) *CreateClusterInput {
+	s.LoggingInfo = v
 	return s
 }
 
@@ -3947,6 +4234,56 @@ func (s *ErrorInfo) SetErrorString(v string) *ErrorInfo {
 	return s
 }
 
+// Firehose details for BrokerLogs.
+type Firehose struct {
+	_ struct{} `type:"structure"`
+
+	// The Kinesis Data Firehose delivery stream that is the destination for broker
+	// logs.
+	DeliveryStream *string `locationName:"deliveryStream" type:"string"`
+
+	// Specifies whether broker logs get sent to the specified Kinesis Data Firehose
+	// delivery stream.
+	//
+	// Enabled is a required field
+	Enabled *bool `locationName:"enabled" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s Firehose) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Firehose) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Firehose) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Firehose"}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDeliveryStream sets the DeliveryStream field's value.
+func (s *Firehose) SetDeliveryStream(v string) *Firehose {
+	s.DeliveryStream = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *Firehose) SetEnabled(v bool) *Firehose {
+	s.Enabled = &v
+	return s
+}
+
 // Returns information about an error.
 type ForbiddenException struct {
 	_            struct{} `type:"structure"`
@@ -4167,7 +4504,7 @@ func (s *JmxExporter) SetEnabledInBroker(v bool) *JmxExporter {
 type JmxExporterInfo struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether you want to enable or disable the JMX Exporter.
+	// JMX Exporter being enabled in broker.
 	//
 	// EnabledInBroker is a required field
 	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
@@ -4199,6 +4536,39 @@ func (s *JmxExporterInfo) Validate() error {
 // SetEnabledInBroker sets the EnabledInBroker field's value.
 func (s *JmxExporterInfo) SetEnabledInBroker(v bool) *JmxExporterInfo {
 	s.EnabledInBroker = &v
+	return s
+}
+
+// Information about a Kafka version.
+type KafkaVersion struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the Apache Kafka version.
+	Status *string `locationName:"status" type:"string" enum:"KafkaVersionStatus"`
+
+	// The Kafka version.
+	Version *string `locationName:"version" type:"string"`
+}
+
+// String returns the string representation
+func (s KafkaVersion) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KafkaVersion) GoString() string {
+	return s.String()
+}
+
+// SetStatus sets the Status field's value.
+func (s *KafkaVersion) SetStatus(v string) *KafkaVersion {
+	s.Status = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *KafkaVersion) SetVersion(v string) *KafkaVersion {
+	s.Version = &v
 	return s
 }
 
@@ -4553,6 +4923,82 @@ func (s *ListConfigurationsOutput) SetNextToken(v string) *ListConfigurationsOut
 	return s
 }
 
+type ListKafkaVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListKafkaVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListKafkaVersionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListKafkaVersionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListKafkaVersionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListKafkaVersionsInput) SetMaxResults(v int64) *ListKafkaVersionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListKafkaVersionsInput) SetNextToken(v string) *ListKafkaVersionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// Response for ListKafkaVersions.
+type ListKafkaVersionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of Kafka version objects.
+	KafkaVersions []*KafkaVersion `locationName:"kafkaVersions" type:"list"`
+
+	// Paginated results marker.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListKafkaVersionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListKafkaVersionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetKafkaVersions sets the KafkaVersions field's value.
+func (s *ListKafkaVersionsOutput) SetKafkaVersions(v []*KafkaVersion) *ListKafkaVersionsOutput {
+	s.KafkaVersions = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListKafkaVersionsOutput) SetNextToken(v string) *ListKafkaVersionsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListNodesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4709,6 +5155,53 @@ func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForRe
 	return s
 }
 
+// You can configure your MSK cluster to send broker logs to different destination
+// types. This is a container for the configuration details related to broker
+// logs.
+type LoggingInfo struct {
+	_ struct{} `type:"structure"`
+
+	// You can configure your MSK cluster to send broker logs to different destination
+	// types. This configuration specifies the details of these destinations.
+	//
+	// BrokerLogs is a required field
+	BrokerLogs *BrokerLogs `locationName:"brokerLogs" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s LoggingInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoggingInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LoggingInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LoggingInfo"}
+	if s.BrokerLogs == nil {
+		invalidParams.Add(request.NewErrParamRequired("BrokerLogs"))
+	}
+	if s.BrokerLogs != nil {
+		if err := s.BrokerLogs.Validate(); err != nil {
+			invalidParams.AddNested("BrokerLogs", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBrokerLogs sets the BrokerLogs field's value.
+func (s *LoggingInfo) SetBrokerLogs(v *BrokerLogs) *LoggingInfo {
+	s.BrokerLogs = v
+	return s
+}
+
 // Information about cluster attributes that can be updated via update APIs.
 type MutableClusterInfo struct {
 	_ struct{} `type:"structure"`
@@ -4722,6 +5215,9 @@ type MutableClusterInfo struct {
 	// Specifies which Apache Kafka metrics Amazon MSK gathers and sends to Amazon
 	// CloudWatch for this cluster.
 	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
+
+	// LoggingInfo details.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
 
 	// The number of broker nodes in the cluster.
 	NumberOfBrokerNodes *int64 `locationName:"numberOfBrokerNodes" type:"integer"`
@@ -4755,6 +5251,12 @@ func (s *MutableClusterInfo) SetConfigurationInfo(v *ConfigurationInfo) *Mutable
 // SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
 func (s *MutableClusterInfo) SetEnhancedMonitoring(v string) *MutableClusterInfo {
 	s.EnhancedMonitoring = &v
+	return s
+}
+
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *MutableClusterInfo) SetLoggingInfo(v *LoggingInfo) *MutableClusterInfo {
+	s.LoggingInfo = v
 	return s
 }
 
@@ -4800,7 +5302,7 @@ func (s *NodeExporter) SetEnabledInBroker(v bool) *NodeExporter {
 type NodeExporterInfo struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether you want to enable or disable the Node Exporter.
+	// Node Exporter being enabled in broker.
 	//
 	// EnabledInBroker is a required field
 	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
@@ -5115,6 +5617,63 @@ func (s *PrometheusInfo) SetJmxExporter(v *JmxExporterInfo) *PrometheusInfo {
 // SetNodeExporter sets the NodeExporter field's value.
 func (s *PrometheusInfo) SetNodeExporter(v *NodeExporterInfo) *PrometheusInfo {
 	s.NodeExporter = v
+	return s
+}
+
+// The details of the Amazon S3 destination for broker logs.
+type S3 struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the S3 bucket that is the destination for broker logs.
+	Bucket *string `locationName:"bucket" type:"string"`
+
+	// Specifies whether broker logs get sent to the specified Amazon S3 destination.
+	//
+	// Enabled is a required field
+	Enabled *bool `locationName:"enabled" type:"boolean" required:"true"`
+
+	// The S3 prefix that is the destination for broker logs.
+	Prefix *string `locationName:"prefix" type:"string"`
+}
+
+// String returns the string representation
+func (s S3) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3"}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBucket sets the Bucket field's value.
+func (s *S3) SetBucket(v string) *S3 {
+	s.Bucket = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *S3) SetEnabled(v bool) *S3 {
+	s.Enabled = &v
+	return s
+}
+
+// SetPrefix sets the Prefix field's value.
+func (s *S3) SetPrefix(v string) *S3 {
+	s.Prefix = &v
 	return s
 }
 
@@ -5834,6 +6393,9 @@ type UpdateMonitoringInput struct {
 	// CloudWatch for this cluster.
 	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
 
+	// LoggingInfo details.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
+
 	// The settings for open monitoring.
 	OpenMonitoring *OpenMonitoringInfo `locationName:"openMonitoring" type:"structure"`
 }
@@ -5859,6 +6421,11 @@ func (s *UpdateMonitoringInput) Validate() error {
 	}
 	if s.CurrentVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("CurrentVersion"))
+	}
+	if s.LoggingInfo != nil {
+		if err := s.LoggingInfo.Validate(); err != nil {
+			invalidParams.AddNested("LoggingInfo", err.(request.ErrInvalidParams))
+		}
 	}
 	if s.OpenMonitoring != nil {
 		if err := s.OpenMonitoring.Validate(); err != nil {
@@ -5887,6 +6454,12 @@ func (s *UpdateMonitoringInput) SetCurrentVersion(v string) *UpdateMonitoringInp
 // SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
 func (s *UpdateMonitoringInput) SetEnhancedMonitoring(v string) *UpdateMonitoringInput {
 	s.EnhancedMonitoring = &v
+	return s
+}
+
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *UpdateMonitoringInput) SetLoggingInfo(v *LoggingInfo) *UpdateMonitoringInput {
+	s.LoggingInfo = v
 	return s
 }
 
@@ -6041,6 +6614,15 @@ const (
 
 	// EnhancedMonitoringPerTopicPerBroker is a EnhancedMonitoring enum value
 	EnhancedMonitoringPerTopicPerBroker = "PER_TOPIC_PER_BROKER"
+)
+
+// The status of a Kafka version.
+const (
+	// KafkaVersionStatusActive is a KafkaVersionStatus enum value
+	KafkaVersionStatusActive = "ACTIVE"
+
+	// KafkaVersionStatusDeprecated is a KafkaVersionStatus enum value
+	KafkaVersionStatusDeprecated = "DEPRECATED"
 )
 
 // The broker or Zookeeper node.

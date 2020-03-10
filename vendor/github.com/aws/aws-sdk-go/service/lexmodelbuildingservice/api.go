@@ -5426,7 +5426,7 @@ type CreateSlotTypeVersionOutput struct {
 
 	// A list of EnumerationValue objects that defines the values that the slot
 	// type can take.
-	EnumerationValues []*EnumerationValue `locationName:"enumerationValues" min:"1" type:"list"`
+	EnumerationValues []*EnumerationValue `locationName:"enumerationValues" type:"list"`
 
 	// The date that the slot type was updated. When you create a resource, the
 	// creation date and last update date are the same.
@@ -5434,6 +5434,12 @@ type CreateSlotTypeVersionOutput struct {
 
 	// The name of the slot type.
 	Name *string `locationName:"name" min:"1" type:"string"`
+
+	// The built-in slot type used a the parent of the slot type.
+	ParentSlotTypeSignature *string `locationName:"parentSlotTypeSignature" min:"1" type:"string"`
+
+	// Configuration information that extends the parent built-in slot type.
+	SlotTypeConfigurations []*SlotTypeConfiguration `locationName:"slotTypeConfigurations" type:"list"`
 
 	// The strategy that Amazon Lex uses to determine the value of the slot. For
 	// more information, see PutSlotType.
@@ -5486,6 +5492,18 @@ func (s *CreateSlotTypeVersionOutput) SetLastUpdatedDate(v time.Time) *CreateSlo
 // SetName sets the Name field's value.
 func (s *CreateSlotTypeVersionOutput) SetName(v string) *CreateSlotTypeVersionOutput {
 	s.Name = &v
+	return s
+}
+
+// SetParentSlotTypeSignature sets the ParentSlotTypeSignature field's value.
+func (s *CreateSlotTypeVersionOutput) SetParentSlotTypeSignature(v string) *CreateSlotTypeVersionOutput {
+	s.ParentSlotTypeSignature = &v
+	return s
+}
+
+// SetSlotTypeConfigurations sets the SlotTypeConfigurations field's value.
+func (s *CreateSlotTypeVersionOutput) SetSlotTypeConfigurations(v []*SlotTypeConfiguration) *CreateSlotTypeVersionOutput {
+	s.SlotTypeConfigurations = v
 	return s
 }
 
@@ -8420,7 +8438,7 @@ type GetSlotTypeOutput struct {
 
 	// A list of EnumerationValue objects that defines the values that the slot
 	// type can take.
-	EnumerationValues []*EnumerationValue `locationName:"enumerationValues" min:"1" type:"list"`
+	EnumerationValues []*EnumerationValue `locationName:"enumerationValues" type:"list"`
 
 	// The date that the slot type was updated. When you create a resource, the
 	// creation date and last update date are the same.
@@ -8428,6 +8446,12 @@ type GetSlotTypeOutput struct {
 
 	// The name of the slot type.
 	Name *string `locationName:"name" min:"1" type:"string"`
+
+	// The built-in slot type used as a parent for the slot type.
+	ParentSlotTypeSignature *string `locationName:"parentSlotTypeSignature" min:"1" type:"string"`
+
+	// Configuration information that extends the parent built-in slot type.
+	SlotTypeConfigurations []*SlotTypeConfiguration `locationName:"slotTypeConfigurations" type:"list"`
 
 	// The strategy that Amazon Lex uses to determine the value of the slot. For
 	// more information, see PutSlotType.
@@ -8480,6 +8504,18 @@ func (s *GetSlotTypeOutput) SetLastUpdatedDate(v time.Time) *GetSlotTypeOutput {
 // SetName sets the Name field's value.
 func (s *GetSlotTypeOutput) SetName(v string) *GetSlotTypeOutput {
 	s.Name = &v
+	return s
+}
+
+// SetParentSlotTypeSignature sets the ParentSlotTypeSignature field's value.
+func (s *GetSlotTypeOutput) SetParentSlotTypeSignature(v string) *GetSlotTypeOutput {
+	s.ParentSlotTypeSignature = &v
+	return s
+}
+
+// SetSlotTypeConfigurations sets the SlotTypeConfigurations field's value.
+func (s *GetSlotTypeOutput) SetSlotTypeConfigurations(v []*SlotTypeConfiguration) *GetSlotTypeOutput {
+	s.SlotTypeConfigurations = v
 	return s
 }
 
@@ -10635,7 +10671,7 @@ type PutSlotTypeInput struct {
 	// using a Lambda function you can choose to return the value that the user
 	// entered or the first value in the resolution list as the slot value. The
 	// valueSelectionStrategy field indicates the option to use.
-	EnumerationValues []*EnumerationValue `locationName:"enumerationValues" min:"1" type:"list"`
+	EnumerationValues []*EnumerationValue `locationName:"enumerationValues" type:"list"`
 
 	// The name of the slot type. The name is not case sensitive.
 	//
@@ -10648,6 +10684,17 @@ type PutSlotTypeInput struct {
 	//
 	// Name is a required field
 	Name *string `location:"uri" locationName:"name" min:"1" type:"string" required:"true"`
+
+	// The built-in slot type used as the parent of the slot type. When you define
+	// a parent slot type, the new slot type has all of the same configuration as
+	// the parent.
+	//
+	// Only AMAZON.AlphaNumeric is supported.
+	ParentSlotTypeSignature *string `locationName:"parentSlotTypeSignature" min:"1" type:"string"`
+
+	// Configuration information that extends the parent built-in slot type. The
+	// configuration is added to the settings for the parent slot type.
+	SlotTypeConfigurations []*SlotTypeConfiguration `locationName:"slotTypeConfigurations" type:"list"`
 
 	// Determines the slot resolution strategy that Amazon Lex uses to return slot
 	// type values. The field can be set to one of the following values:
@@ -10676,14 +10723,14 @@ func (s PutSlotTypeInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *PutSlotTypeInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "PutSlotTypeInput"}
-	if s.EnumerationValues != nil && len(s.EnumerationValues) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("EnumerationValues", 1))
-	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.ParentSlotTypeSignature != nil && len(*s.ParentSlotTypeSignature) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ParentSlotTypeSignature", 1))
 	}
 	if s.EnumerationValues != nil {
 		for i, v := range s.EnumerationValues {
@@ -10692,6 +10739,16 @@ func (s *PutSlotTypeInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "EnumerationValues", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.SlotTypeConfigurations != nil {
+		for i, v := range s.SlotTypeConfigurations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "SlotTypeConfigurations", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -10732,6 +10789,18 @@ func (s *PutSlotTypeInput) SetName(v string) *PutSlotTypeInput {
 	return s
 }
 
+// SetParentSlotTypeSignature sets the ParentSlotTypeSignature field's value.
+func (s *PutSlotTypeInput) SetParentSlotTypeSignature(v string) *PutSlotTypeInput {
+	s.ParentSlotTypeSignature = &v
+	return s
+}
+
+// SetSlotTypeConfigurations sets the SlotTypeConfigurations field's value.
+func (s *PutSlotTypeInput) SetSlotTypeConfigurations(v []*SlotTypeConfiguration) *PutSlotTypeInput {
+	s.SlotTypeConfigurations = v
+	return s
+}
+
 // SetValueSelectionStrategy sets the ValueSelectionStrategy field's value.
 func (s *PutSlotTypeInput) SetValueSelectionStrategy(v string) *PutSlotTypeInput {
 	s.ValueSelectionStrategy = &v
@@ -10757,7 +10826,7 @@ type PutSlotTypeOutput struct {
 
 	// A list of EnumerationValue objects that defines the values that the slot
 	// type can take.
-	EnumerationValues []*EnumerationValue `locationName:"enumerationValues" min:"1" type:"list"`
+	EnumerationValues []*EnumerationValue `locationName:"enumerationValues" type:"list"`
 
 	// The date that the slot type was updated. When you create a slot type, the
 	// creation date and last update date are the same.
@@ -10765,6 +10834,12 @@ type PutSlotTypeOutput struct {
 
 	// The name of the slot type.
 	Name *string `locationName:"name" min:"1" type:"string"`
+
+	// The built-in slot type used as the parent of the slot type.
+	ParentSlotTypeSignature *string `locationName:"parentSlotTypeSignature" min:"1" type:"string"`
+
+	// Configuration information that extends the parent built-in slot type.
+	SlotTypeConfigurations []*SlotTypeConfiguration `locationName:"slotTypeConfigurations" type:"list"`
 
 	// The slot resolution strategy that Amazon Lex uses to determine the value
 	// of the slot. For more information, see PutSlotType.
@@ -10824,6 +10899,18 @@ func (s *PutSlotTypeOutput) SetLastUpdatedDate(v time.Time) *PutSlotTypeOutput {
 // SetName sets the Name field's value.
 func (s *PutSlotTypeOutput) SetName(v string) *PutSlotTypeOutput {
 	s.Name = &v
+	return s
+}
+
+// SetParentSlotTypeSignature sets the ParentSlotTypeSignature field's value.
+func (s *PutSlotTypeOutput) SetParentSlotTypeSignature(v string) *PutSlotTypeOutput {
+	s.ParentSlotTypeSignature = &v
+	return s
+}
+
+// SetSlotTypeConfigurations sets the SlotTypeConfigurations field's value.
+func (s *PutSlotTypeOutput) SetSlotTypeConfigurations(v []*SlotTypeConfiguration) *PutSlotTypeOutput {
+	s.SlotTypeConfigurations = v
 	return s
 }
 
@@ -11106,6 +11193,45 @@ func (s *Slot) SetValueElicitationPrompt(v *Prompt) *Slot {
 	return s
 }
 
+// Provides configuration information for a slot type.
+type SlotTypeConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// A regular expression used to validate the value of a slot.
+	RegexConfiguration *SlotTypeRegexConfiguration `locationName:"regexConfiguration" type:"structure"`
+}
+
+// String returns the string representation
+func (s SlotTypeConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SlotTypeConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SlotTypeConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SlotTypeConfiguration"}
+	if s.RegexConfiguration != nil {
+		if err := s.RegexConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("RegexConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRegexConfiguration sets the RegexConfiguration field's value.
+func (s *SlotTypeConfiguration) SetRegexConfiguration(v *SlotTypeRegexConfiguration) *SlotTypeConfiguration {
+	s.RegexConfiguration = v
+	return s
+}
+
 // Provides information about a slot type..
 type SlotTypeMetadata struct {
 	_ struct{} `type:"structure"`
@@ -11164,6 +11290,65 @@ func (s *SlotTypeMetadata) SetName(v string) *SlotTypeMetadata {
 // SetVersion sets the Version field's value.
 func (s *SlotTypeMetadata) SetVersion(v string) *SlotTypeMetadata {
 	s.Version = &v
+	return s
+}
+
+// Provides a regular expression used to validate the value of a slot.
+type SlotTypeRegexConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// A regular expression used to validate the value of a slot.
+	//
+	// Use a standard regular expression. Amazon Lex supports the following characters
+	// in the regular expression:
+	//
+	//    * A-Z, a-z
+	//
+	//    * 0-9
+	//
+	//    * Unicode characters ("\ u<Unicode>")
+	//
+	// Represent Unicode characters with four digits, for example "\u0041" or "\u005A".
+	//
+	// The following regular expression operators are not supported:
+	//
+	//    * Infinite repeaters: *, +, or {x,} with no upper bound.
+	//
+	//    * Wild card (.)
+	//
+	// Pattern is a required field
+	Pattern *string `locationName:"pattern" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s SlotTypeRegexConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SlotTypeRegexConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SlotTypeRegexConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SlotTypeRegexConfiguration"}
+	if s.Pattern == nil {
+		invalidParams.Add(request.NewErrParamRequired("Pattern"))
+	}
+	if s.Pattern != nil && len(*s.Pattern) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Pattern", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPattern sets the Pattern field's value.
+func (s *SlotTypeRegexConfiguration) SetPattern(v string) *SlotTypeRegexConfiguration {
+	s.Pattern = &v
 	return s
 }
 

@@ -248,8 +248,8 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(*resp.UserPoolClient.ClientId)
-	d.Set("user_pool_id", *resp.UserPoolClient.UserPoolId)
-	d.Set("name", *resp.UserPoolClient.ClientName)
+	d.Set("user_pool_id", resp.UserPoolClient.UserPoolId)
+	d.Set("name", resp.UserPoolClient.ClientName)
 	d.Set("explicit_auth_flows", flattenStringList(resp.UserPoolClient.ExplicitAuthFlows))
 	d.Set("read_attributes", flattenStringList(resp.UserPoolClient.ReadAttributes))
 	d.Set("write_attributes", flattenStringList(resp.UserPoolClient.WriteAttributes))
