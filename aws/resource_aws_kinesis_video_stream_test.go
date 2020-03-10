@@ -108,27 +108,34 @@ func TestAccAWSKinesisVideoStream_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisVideoStreamConfig_Tags(rInt, 21),
+				Config: testAccKinesisVideoStreamConfig_Tags1(rInt, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisVideoStreamExists(resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "21"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag21", "tag21value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccKinesisVideoStreamConfig_Tags(rInt, 9),
+				Config: testAccKinesisVideoStreamConfig_Tags2(rInt, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisVideoStreamExists(resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "9"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag9", "tag9value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKinesisVideoStreamConfig_Tags1(rInt, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisVideoStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -269,17 +276,23 @@ resource "aws_kinesis_video_stream" "default" {
 }`, rInt, rName, mediaType)
 }
 
-func testAccKinesisVideoStreamConfig_Tags(rInt, tagCount int) string {
-	var tagPairs string
-	for i := 1; i <= tagCount; i++ {
-		tagPairs = tagPairs + fmt.Sprintf("tag%d = \"tag%dvalue\"\n", i, i)
-	}
-
+func testAccKinesisVideoStreamConfig_Tags1(rInt int, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_video_stream" "default" {
 	name = "terraform-kinesis-video-stream-test-%d"
 	tags = {
-%s
+		%[2]q = %[3]q
 	}
-}`, rInt, tagPairs)
+}`, rInt, tagKey1, tagValue1)
+}
+
+func testAccKinesisVideoStreamConfig_Tags2(rInt int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_video_stream" "default" {
+	name = "terraform-kinesis-video-stream-test-%d"
+	tags = {
+		%[2]q = %[3]q
+		%[4]q = %[5]q
+	}
+}`, rInt, tagKey1, tagValue1, tagKey2, tagValue2)
 }
