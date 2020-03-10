@@ -517,26 +517,173 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"risk_exception_configuration": {
+						"account_takeover_risk_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"block_ip_range_list": {
-										Type:     schema.TypeSet,
+									"actions": {
+										Type:     schema.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.IsCIDR,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"high_action": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"event_action": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeBlock,
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeMfaIfConfigured,
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeMfaRequired,
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeNoAction,
+																}, false),
+															},
+															"notify": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"low_action": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"event_action": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeBlock,
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeMfaIfConfigured,
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeMfaRequired,
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeNoAction,
+																}, false),
+															},
+															"notify": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"medium_action": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"event_action": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeBlock,
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeMfaIfConfigured,
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeMfaRequired,
+																	cognitoidentityprovider.AccountTakeoverEventActionTypeNoAction,
+																}, false),
+															},
+															"notify": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
 										},
 									},
-									"skip_ip_range_list": {
-										Type:     schema.TypeSet,
+									"notify_configuration": {
+										Type:     schema.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.IsCIDR,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"block_email": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"html_body": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"subject": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"text_body": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"from": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"mfa_email": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"html_body": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"subject": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"text_body": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"no_action_email": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"html_body": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"subject": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"text_body": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"reply_to": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"source_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateArn,
+												},
+											},
 										},
 									},
 								},
@@ -568,6 +715,31 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"risk_exception_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"block_ip_range_list": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.IsCIDR,
+										},
+									},
+									"skip_ip_range_list": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.IsCIDR,
+										},
 									},
 								},
 							},
@@ -757,22 +929,11 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetId(*resp.UserPool.Id)
 
 	if v, ok := d.GetOk("risk_configuration"); ok {
-		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
 
-		if ok {
-			input := &cognitoidentityprovider.SetRiskConfigurationInput{
-				UserPoolId: resp.UserPool.Id,
-			}
-
-			if v, ok := config["risk_exception_configuration"]; ok && v.(string) != "" {
-				input.RiskExceptionConfiguration = expandAwsCognitoUserPoolRiskExceptionConfiguration(v.([]interface{}))
-			}
-
-			_, err = conn.SetRiskConfiguration(input)
-			if err != nil {
-				return fmt.Errorf("Error setting Cognito User Pool Risk Configuration: %s", err)
-			}
+		input := expandAwsCognitoUserPoolRiskConfiguration(v.([]interface{}), d.Id())
+		_, err = conn.SetRiskConfiguration(input)
+		if err != nil {
+			return fmt.Errorf("Error setting Cognito User Pool Risk Configuration: %s", err)
 		}
 	}
 
@@ -880,6 +1041,17 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", resp.UserPool.Name)
 	if err := d.Set("tags", keyvaluetags.CognitoidentityKeyValueTags(resp.UserPool.UserPoolTags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	input := &cognitoidentityprovider.DescribeRiskConfigurationInput{
+		UserPoolId: aws.String(d.Id()),
+	}
+
+	out, err := conn.DescribeRiskConfiguration(input)
+	if out != nil {
+		if err := d.Set("tags", flattenAwsCognitoUserPoolRiskConfiguration(out.RiskConfiguration)); err != nil {
+			return fmt.Errorf("error setting User Pool Risk Config: %s", err)
+		}
 	}
 
 	return nil
@@ -1055,6 +1227,15 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error updating Cognito User pool: %s", err)
 	}
 
+	if v, ok := d.GetOk("risk_configuration"); ok {
+
+		input := expandAwsCognitoUserPoolRiskConfiguration(v.([]interface{}), d.Id())
+		_, err = conn.SetRiskConfiguration(input)
+		if err != nil {
+			return fmt.Errorf("Error setting Cognito User Pool Risk Configuration: %s", err)
+		}
+	}
+
 	return resourceAwsCognitoUserPoolRead(d, meta)
 }
 
@@ -1076,11 +1257,49 @@ func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
+func expandAwsCognitoUserPoolRiskConfiguration(v []interface{}, userPoolId string) *cognitoidentityprovider.SetRiskConfigurationInput {
+	config := &cognitoidentityprovider.SetRiskConfigurationInput{
+		UserPoolId: aws.String(userPoolId),
+	}
+
+	if len(v) == 0 || v[0] == nil {
+		return config
+	}
+	mConfig := v[0].(map[string]interface{})
+
+	if v, ok := mConfig["account_takeover_risk_configuration"]; ok {
+		config.AccountTakeoverRiskConfiguration = expandAwsCognitoUserPoolAccountTakeoverConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := mConfig["risk_exception_configuration"]; ok {
+		config.RiskExceptionConfiguration = expandAwsCognitoUserPoolRiskExceptionConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := mConfig["compromised_credentials_risk_configuration"]; ok {
+		config.CompromisedCredentialsRiskConfiguration = expandAwsCognitoUserPoolCompromisedCredentialsRiskConfiguration(v.([]interface{}))
+	}
+
+	return config
+}
+
+func flattenAwsCognitoUserPoolRiskConfiguration(riskConfig *cognitoidentityprovider.RiskConfigurationType) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+	if riskConfig == nil {
+		return result
+	}
+
+	item := make(map[string]interface{})
+	item["account_takeover_risk_configuration"] = flattenAwsCognitoUserPoolAccountTakeoverConfiguration(riskConfig.AccountTakeoverRiskConfiguration)
+	item["risk_exception_configuration"] = flattenAwsCognitoUserPoolRiskExceptionConfiguration(riskConfig.RiskExceptionConfiguration)
+	item["compromised_credentials_risk_configuration"] = flattenAwsCognitoUserPoolCompromisedCredentialsRiskConfiguration(riskConfig.CompromisedCredentialsRiskConfiguration)
+
+	return append(result, item)
+}
+
 func expandAwsCognitoUserPoolRiskExceptionConfiguration(v []interface{}) *cognitoidentityprovider.RiskExceptionConfigurationType {
 	config := &cognitoidentityprovider.RiskExceptionConfigurationType{}
 
 	if len(v) == 0 || v[0] == nil {
-		// Empty Spec is allowed.
 		return config
 	}
 	mConfig := v[0].(map[string]interface{})
@@ -1094,4 +1313,253 @@ func expandAwsCognitoUserPoolRiskExceptionConfiguration(v []interface{}) *cognit
 	}
 
 	return config
+}
+
+func flattenAwsCognitoUserPoolRiskExceptionConfiguration(riskConfig *cognitoidentityprovider.RiskExceptionConfigurationType) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+	if riskConfig == nil {
+		return result
+	}
+
+	item := make(map[string]interface{})
+	item["blocked_ip_range_list"] = flattenStringSet(riskConfig.BlockedIPRangeList)
+	item["skipped_ip_range_list"] = flattenStringSet(riskConfig.SkippedIPRangeList)
+
+	return append(result, item)
+}
+
+func expandAwsCognitoUserPoolAccountTakeoverConfiguration(v []interface{}) *cognitoidentityprovider.AccountTakeoverRiskConfigurationType {
+	config := &cognitoidentityprovider.AccountTakeoverRiskConfigurationType{}
+
+	if len(v) == 0 || v[0] == nil {
+		return config
+	}
+	mConfig := v[0].(map[string]interface{})
+
+	if v, ok := mConfig["actions"]; ok {
+		config.Actions = expandAwsCognitoUserPoolAccountTakeoverConfigurationActions(v.([]interface{}))
+	}
+
+	if v, ok := mConfig["notify_configuration"]; ok {
+		config.NotifyConfiguration = expandAwsCognitoUserPoolAccountTakeoverNotificationConfiguration(v.([]interface{}))
+	}
+
+	return config
+}
+
+func flattenAwsCognitoUserPoolAccountTakeoverConfiguration(accountTakeoverConf *cognitoidentityprovider.AccountTakeoverRiskConfigurationType) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+	if accountTakeoverConf == nil {
+		return result
+	}
+
+	item := make(map[string]interface{})
+	item["actions"] = flattenAwsCognitoUserPoolAccountTakeoverConfigurationActions(accountTakeoverConf.Actions)
+	item["notify_configuration"] = flattendAwsCognitoUserPoolAccountTakeoverNotificationConfiguration(accountTakeoverConf.NotifyConfiguration)
+
+	return append(result, item)
+}
+
+func expandAwsCognitoUserPoolAccountTakeoverConfigurationActions(v []interface{}) *cognitoidentityprovider.AccountTakeoverActionsType {
+	config := &cognitoidentityprovider.AccountTakeoverActionsType{}
+
+	if len(v) == 0 || v[0] == nil {
+		return config
+	}
+	mConfig := v[0].(map[string]interface{})
+
+	if v, ok := mConfig["high_action"]; ok {
+		config.HighAction = expandAwsCognitoUserPoolAccountTakeoverConfigurationAction(v.([]interface{}))
+	}
+
+	if v, ok := mConfig["low_action"]; ok {
+		config.LowAction = expandAwsCognitoUserPoolAccountTakeoverConfigurationAction(v.([]interface{}))
+	}
+
+	if v, ok := mConfig["medium_action"]; ok {
+		config.MediumAction = expandAwsCognitoUserPoolAccountTakeoverConfigurationAction(v.([]interface{}))
+	}
+
+	return config
+}
+
+func flattenAwsCognitoUserPoolAccountTakeoverConfigurationActions(actions *cognitoidentityprovider.AccountTakeoverActionsType) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+	if actions == nil {
+		return result
+	}
+
+	item := make(map[string]interface{})
+	item["high_action"] = flattenAwsCognitoUserPoolAccountTakeoverConfigurationAction(actions.HighAction)
+	item["low_action"] = flattenAwsCognitoUserPoolAccountTakeoverConfigurationAction(actions.LowAction)
+	item["medium_action"] = flattenAwsCognitoUserPoolAccountTakeoverConfigurationAction(actions.MediumAction)
+
+	return append(result, item)
+}
+
+func expandAwsCognitoUserPoolAccountTakeoverConfigurationAction(v []interface{}) *cognitoidentityprovider.AccountTakeoverActionType {
+	config := &cognitoidentityprovider.AccountTakeoverActionType{}
+
+	if len(v) == 0 || v[0] == nil {
+		return config
+	}
+	mConfig := v[0].(map[string]interface{})
+
+	if v, ok := mConfig["event_action"]; ok {
+		config.EventAction = aws.String(v.(string))
+	}
+
+	if v, ok := mConfig["notify"]; ok {
+		config.Notify = aws.Bool(v.(bool))
+	}
+
+	return config
+}
+
+func expandAwsCognitoUserPoolAccountTakeoverNotificationConfiguration(v []interface{}) *cognitoidentityprovider.NotifyConfigurationType {
+	config := &cognitoidentityprovider.NotifyConfigurationType{}
+
+	if len(v) == 0 || v[0] == nil {
+		return config
+	}
+	mConfig := v[0].(map[string]interface{})
+
+	if v, ok := mConfig["block_email"]; ok {
+		config.BlockEmail = expandAwsCognitoUserPoolAccountTakeoverNotificationEmailConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := mConfig["from"]; ok {
+		config.From = aws.String(v.(string))
+	}
+
+	if v, ok := mConfig["event_action"]; ok {
+		config.MfaEmail = expandAwsCognitoUserPoolAccountTakeoverNotificationEmailConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := mConfig["event_action"]; ok {
+		config.NoActionEmail = expandAwsCognitoUserPoolAccountTakeoverNotificationEmailConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := mConfig["reply_to"]; ok {
+		config.ReplyTo = aws.String(v.(string))
+	}
+
+	if v, ok := mConfig["source_arn"]; ok {
+		config.SourceArn = aws.String(v.(string))
+	}
+
+	return config
+}
+
+func flattenAwsCognitoUserPoolAccountTakeoverConfigurationAction(action *cognitoidentityprovider.AccountTakeoverActionType) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+	if action == nil {
+		return result
+	}
+
+	item := make(map[string]interface{})
+	item["event_action"] = aws.StringValue(action.EventAction)
+	item["notify"] = aws.BoolValue(action.Notify)
+
+	return append(result, item)
+}
+
+func flattendAwsCognitoUserPoolAccountTakeoverNotificationConfiguration(notifConfig *cognitoidentityprovider.NotifyConfigurationType) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+	if notifConfig == nil {
+		return result
+	}
+
+	item := make(map[string]interface{})
+	item["block_email"] = flattenAwsCognitoUserPoolAccountTakeoverNotificationEmailConfiguration(notifConfig.BlockEmail)
+	item["from"] = aws.StringValue(notifConfig.From)
+	item["mfa_email"] = flattenAwsCognitoUserPoolAccountTakeoverNotificationEmailConfiguration(notifConfig.MfaEmail)
+	item["no_action_email"] = flattenAwsCognitoUserPoolAccountTakeoverNotificationEmailConfiguration(notifConfig.NoActionEmail)
+	item["reply_to"] = aws.StringValue(notifConfig.ReplyTo)
+	item["source_arn"] = aws.StringValue(notifConfig.SourceArn)
+
+	return append(result, item)
+}
+
+func expandAwsCognitoUserPoolAccountTakeoverNotificationEmailConfiguration(v []interface{}) *cognitoidentityprovider.NotifyEmailType {
+	config := &cognitoidentityprovider.NotifyEmailType{}
+
+	if len(v) == 0 || v[0] == nil {
+
+		return config
+	}
+	mConfig := v[0].(map[string]interface{})
+
+	if v, ok := mConfig["html_body"]; ok {
+		config.HtmlBody = aws.String(v.(string))
+	}
+
+	if v, ok := mConfig["subject"]; ok {
+		config.Subject = aws.String(v.(string))
+	}
+
+	if v, ok := mConfig["text_body"]; ok {
+		config.TextBody = aws.String(v.(string))
+	}
+
+	return config
+}
+
+func flattenAwsCognitoUserPoolAccountTakeoverNotificationEmailConfiguration(notifyConfig *cognitoidentityprovider.NotifyEmailType) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+	if notifyConfig == nil {
+		return result
+	}
+
+	item := make(map[string]interface{})
+	item["html_body"] = aws.StringValue(notifyConfig.HtmlBody)
+	item["subject"] = aws.StringValue(notifyConfig.Subject)
+	item["text_body"] = aws.StringValue(notifyConfig.TextBody)
+
+	return append(result, item)
+}
+
+func expandAwsCognitoUserPoolCompromisedCredentialsRiskConfiguration(v []interface{}) *cognitoidentityprovider.CompromisedCredentialsRiskConfigurationType {
+	config := &cognitoidentityprovider.CompromisedCredentialsRiskConfigurationType{}
+
+	if len(v) == 0 || v[0] == nil {
+		return config
+	}
+	mConfig := v[0].(map[string]interface{})
+
+	if v, ok := mConfig["event_filter"]; ok && len(v.(*schema.Set).List()) > 0 {
+		config.EventFilter = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := mConfig["actions"]; ok {
+		mConfig := v.([]interface{})
+		if len(mConfig) == 0 || mConfig[0] == nil {
+			return nil
+		}
+
+		actions := mConfig[0].(map[string]interface{})
+		compromisedActions := &cognitoidentityprovider.CompromisedCredentialsActionsType{
+			EventAction: aws.String(actions["event_action"].(string)),
+		}
+		config.Actions = compromisedActions
+	}
+
+	return config
+}
+
+func flattenAwsCognitoUserPoolCompromisedCredentialsRiskConfiguration(comp *cognitoidentityprovider.CompromisedCredentialsRiskConfigurationType) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+	if comp == nil {
+		return result
+	}
+
+	item := make(map[string]interface{})
+	item["event_filter"] = flattenStringSet(comp.EventFilter)
+
+	actions := make(map[string]interface{})
+	actions["event_action"] = aws.StringValue(comp.Actions.EventAction)
+
+	item["actions"] = actions
+
+	return append(result, item)
 }
