@@ -1,23 +1,23 @@
 ---
-subcategory: "API Gateway v2"
+subcategory: "API Gateway (WebSocket and HTTP APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_v2_api"
+page_title: "AWS: aws_api_gatewayv2_api"
 description: |-
   Manages an Amazon API Gateway Version 2 API.
 ---
 
-# Resource: aws_api_gateway_v2_api
+# Resource: aws_api_gatewayv2_api
 
 Manages an Amazon API Gateway Version 2 API.
 
--> **Note:** Amazon API Gateway Version 2 resources are used for creating and deploying WebSocket APIs. To create and deploy REST APIs, use Amazon API Gateway Version 1 [resources](https://www.terraform.io/docs/providers/aws/r/api_gateway_rest_api.html).
+-> **Note:** Amazon API Gateway Version 2 resources are used for creating and deploying WebSocket and HTTP APIs. To create and deploy REST APIs, use Amazon API Gateway Version 1 [resources](https://www.terraform.io/docs/providers/aws/r/api_gateway_rest_api.html).
 
 ## Example Usage
 
 ### Basic
 
 ```hcl
-resource "aws_api_gateway_v2_api" "example" {
+resource "aws_api_gatewayv2_api" "example" {
   name                       = "example-websocket-api"
   protocol_type              = "WEBSOCKET"
   route_selection_expression = "$request.body.action"
@@ -49,8 +49,8 @@ See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigate
 
 ## Import
 
-`aws_api_gateway_v2_api` can be imported by using the API identifier, e.g.
+`aws_api_gatewayv2_api` can be imported by using the API identifier, e.g.
 
 ```
-$ terraform import aws_api_gateway_v2_api.example aabbccddee
+$ terraform import aws_api_gatewayv2_api.example aabbccddee
 ```
