@@ -320,12 +320,12 @@ resource "aws_s3_bucket" "bucket" {
   grant {
     id         = "${data.aws_canonical_user_id.current_user.id}"
     type       = "CanonicalUser"
-    permission = ["FULL_ACCESS"]
+    permissions = ["FULL_ACCESS"]
   }
 
   grant {
     type       = "Group"
-    permission = ["READ", "WRITE"]
+    permissions = ["READ", "WRITE"]
     uri        = "http://acs.amazonaws.com/groups/s3/LogDelivery"
   }
 }
