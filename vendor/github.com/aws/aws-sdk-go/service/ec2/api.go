@@ -29395,6 +29395,81 @@ func (c *EC2) ImportVolumeWithContext(ctx aws.Context, input *ImportVolumeInput,
 	return out, req.Send()
 }
 
+const opModifyAvailabilityZoneGroup = "ModifyAvailabilityZoneGroup"
+
+// ModifyAvailabilityZoneGroupRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyAvailabilityZoneGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyAvailabilityZoneGroup for more information on using the ModifyAvailabilityZoneGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyAvailabilityZoneGroupRequest method.
+//    req, resp := client.ModifyAvailabilityZoneGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyAvailabilityZoneGroup
+func (c *EC2) ModifyAvailabilityZoneGroupRequest(input *ModifyAvailabilityZoneGroupInput) (req *request.Request, output *ModifyAvailabilityZoneGroupOutput) {
+	op := &request.Operation{
+		Name:       opModifyAvailabilityZoneGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyAvailabilityZoneGroupInput{}
+	}
+
+	output = &ModifyAvailabilityZoneGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyAvailabilityZoneGroup API operation for Amazon Elastic Compute Cloud.
+//
+// Enables or disables a Zone Group for your account. To use Local Zones, you
+// must first enable the Zone Group.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyAvailabilityZoneGroup for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyAvailabilityZoneGroup
+func (c *EC2) ModifyAvailabilityZoneGroup(input *ModifyAvailabilityZoneGroupInput) (*ModifyAvailabilityZoneGroupOutput, error) {
+	req, out := c.ModifyAvailabilityZoneGroupRequest(input)
+	return out, req.Send()
+}
+
+// ModifyAvailabilityZoneGroupWithContext is the same as ModifyAvailabilityZoneGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyAvailabilityZoneGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyAvailabilityZoneGroupWithContext(ctx aws.Context, input *ModifyAvailabilityZoneGroupInput, opts ...request.Option) (*ModifyAvailabilityZoneGroupOutput, error) {
+	req, out := c.ModifyAvailabilityZoneGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyCapacityReservation = "ModifyCapacityReservation"
 
 // ModifyCapacityReservationRequest generates a "aws/request.Request" representing the
@@ -46616,12 +46691,21 @@ type CreateNatGatewayInput struct {
 	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	//
 	// Constraint: Maximum 64 ASCII characters.
-	ClientToken *string `type:"string"`
+	ClientToken *string `type:"string" idempotencyToken:"true"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
 
 	// The subnet in which to create the NAT gateway.
 	//
 	// SubnetId is a required field
 	SubnetId *string `type:"string" required:"true"`
+
+	// The tags to assign to the NAT gateway.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -46662,9 +46746,21 @@ func (s *CreateNatGatewayInput) SetClientToken(v string) *CreateNatGatewayInput 
 	return s
 }
 
+// SetDryRun sets the DryRun field's value.
+func (s *CreateNatGatewayInput) SetDryRun(v bool) *CreateNatGatewayInput {
+	s.DryRun = &v
+	return s
+}
+
 // SetSubnetId sets the SubnetId field's value.
 func (s *CreateNatGatewayInput) SetSubnetId(v string) *CreateNatGatewayInput {
 	s.SubnetId = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateNatGatewayInput) SetTagSpecifications(v []*TagSpecification) *CreateNatGatewayInput {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -52062,6 +52158,12 @@ func (s *DeleteLocalGatewayRouteTableVpcAssociationOutput) SetLocalGatewayRouteT
 type DeleteNatGatewayInput struct {
 	_ struct{} `type:"structure"`
 
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
 	// The ID of the NAT gateway.
 	//
 	// NatGatewayId is a required field
@@ -52089,6 +52191,12 @@ func (s *DeleteNatGatewayInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DeleteNatGatewayInput) SetDryRun(v bool) *DeleteNatGatewayInput {
+	s.DryRun = &v
+	return s
 }
 
 // SetNatGatewayId sets the NatGatewayId field's value.
@@ -61620,6 +61728,12 @@ func (s *DescribeMovingAddressesOutput) SetNextToken(v string) *DescribeMovingAd
 type DescribeNatGatewaysInput struct {
 	_ struct{} `type:"structure"`
 
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
 	// One or more filters.
 	//
 	//    * nat-gateway-id - The ID of the NAT gateway.
@@ -61674,6 +61788,12 @@ func (s *DescribeNatGatewaysInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeNatGatewaysInput) SetDryRun(v bool) *DescribeNatGatewaysInput {
+	s.DryRun = &v
+	return s
 }
 
 // SetFilter sets the Filter field's value.
@@ -84339,6 +84459,94 @@ func (s MemoryInfo) GoString() string {
 // SetSizeInMiB sets the SizeInMiB field's value.
 func (s *MemoryInfo) SetSizeInMiB(v int64) *MemoryInfo {
 	s.SizeInMiB = &v
+	return s
+}
+
+type ModifyAvailabilityZoneGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The names of the Zone Group.
+	//
+	// GroupName is a required field
+	GroupName *string `type:"string" required:"true"`
+
+	// Indicates whether to enable or disable Zone Group membership. The valid values
+	// are opted-in.
+	//
+	// OptInStatus is a required field
+	OptInStatus *string `type:"string" required:"true" enum:"ModifyAvailabilityZoneOptInStatus"`
+}
+
+// String returns the string representation
+func (s ModifyAvailabilityZoneGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyAvailabilityZoneGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyAvailabilityZoneGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyAvailabilityZoneGroupInput"}
+	if s.GroupName == nil {
+		invalidParams.Add(request.NewErrParamRequired("GroupName"))
+	}
+	if s.OptInStatus == nil {
+		invalidParams.Add(request.NewErrParamRequired("OptInStatus"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyAvailabilityZoneGroupInput) SetDryRun(v bool) *ModifyAvailabilityZoneGroupInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetGroupName sets the GroupName field's value.
+func (s *ModifyAvailabilityZoneGroupInput) SetGroupName(v string) *ModifyAvailabilityZoneGroupInput {
+	s.GroupName = &v
+	return s
+}
+
+// SetOptInStatus sets the OptInStatus field's value.
+func (s *ModifyAvailabilityZoneGroupInput) SetOptInStatus(v string) *ModifyAvailabilityZoneGroupInput {
+	s.OptInStatus = &v
+	return s
+}
+
+type ModifyAvailabilityZoneGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Is true if the request succeeds, and an error otherwise.
+	Return *bool `locationName:"return" type:"boolean"`
+}
+
+// String returns the string representation
+func (s ModifyAvailabilityZoneGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyAvailabilityZoneGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetReturn sets the Return field's value.
+func (s *ModifyAvailabilityZoneGroupOutput) SetReturn(v bool) *ModifyAvailabilityZoneGroupOutput {
+	s.Return = &v
 	return s
 }
 
@@ -110557,6 +110765,14 @@ const (
 
 	// MembershipTypeIgmp is a MembershipType enum value
 	MembershipTypeIgmp = "igmp"
+)
+
+const (
+	// ModifyAvailabilityZoneOptInStatusOptedIn is a ModifyAvailabilityZoneOptInStatus enum value
+	ModifyAvailabilityZoneOptInStatusOptedIn = "opted-in"
+
+	// ModifyAvailabilityZoneOptInStatusNotOptedIn is a ModifyAvailabilityZoneOptInStatus enum value
+	ModifyAvailabilityZoneOptInStatusNotOptedIn = "not-opted-in"
 )
 
 const (
