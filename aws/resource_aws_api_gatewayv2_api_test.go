@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -27,6 +28,7 @@ func testSweepAPIGatewayV2Apis(region string) error {
 	}
 	conn := client.(*AWSClient).apigatewayv2conn
 	input := &apigatewayv2.GetApisInput{}
+	var sweeperErrs *multierror.Error
 
 	for {
 		output, err := conn.GetApis(input)
@@ -47,7 +49,10 @@ func testSweepAPIGatewayV2Apis(region string) error {
 				continue
 			}
 			if err != nil {
-				return fmt.Errorf("error deleting API Gateway v2 API (%s): %s", aws.StringValue(api.ApiId), err)
+				sweeperErr := fmt.Errorf("error deleting API Gateway v2 API (%s): %w", aws.StringValue(api.ApiId), err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 		}
 
@@ -57,7 +62,7 @@ func testSweepAPIGatewayV2Apis(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSAPIGatewayV2Api_basic(t *testing.T) {
