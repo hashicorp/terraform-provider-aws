@@ -118,3 +118,4 @@ resource "aws_ssm_document" "test" {
     ignore_changes = ["attachments_source"]
   }
 }
+```

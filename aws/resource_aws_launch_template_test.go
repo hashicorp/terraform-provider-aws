@@ -414,7 +414,8 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
-					testAccCheckTags(&template.Tags, "test", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.test", "bar"),
 				),
 			},
 			{
@@ -426,8 +427,8 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 				Config: testAccAWSLaunchTemplateConfig_tagsUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
-					testAccCheckTags(&template.Tags, "test", ""),
-					testAccCheckTags(&template.Tags, "bar", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
 				),
 			},
 		},
