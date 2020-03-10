@@ -2386,6 +2386,74 @@ func (s *BrokerEBSVolumeInfo) SetVolumeSizeGB(v int64) *BrokerEBSVolumeInfo {
 	return s
 }
 
+// The broker logs configuration for this MSK cluster.
+type BrokerLogs struct {
+	_ struct{} `type:"structure"`
+
+	// Details of the CloudWatch Logs destination for broker logs.
+	CloudWatchLogs *CloudWatchLogs `locationName:"cloudWatchLogs" type:"structure"`
+
+	// Details of the Kinesis Data Firehose delivery stream that is the destination
+	// for broker logs.
+	Firehose *Firehose `locationName:"firehose" type:"structure"`
+
+	// Details of the Amazon S3 destination for broker logs.
+	S3 *S3 `locationName:"s3" type:"structure"`
+}
+
+// String returns the string representation
+func (s BrokerLogs) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BrokerLogs) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BrokerLogs) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BrokerLogs"}
+	if s.CloudWatchLogs != nil {
+		if err := s.CloudWatchLogs.Validate(); err != nil {
+			invalidParams.AddNested("CloudWatchLogs", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Firehose != nil {
+		if err := s.Firehose.Validate(); err != nil {
+			invalidParams.AddNested("Firehose", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.S3 != nil {
+		if err := s.S3.Validate(); err != nil {
+			invalidParams.AddNested("S3", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCloudWatchLogs sets the CloudWatchLogs field's value.
+func (s *BrokerLogs) SetCloudWatchLogs(v *CloudWatchLogs) *BrokerLogs {
+	s.CloudWatchLogs = v
+	return s
+}
+
+// SetFirehose sets the Firehose field's value.
+func (s *BrokerLogs) SetFirehose(v *Firehose) *BrokerLogs {
+	s.Firehose = v
+	return s
+}
+
+// SetS3 sets the S3 field's value.
+func (s *BrokerLogs) SetS3(v *S3) *BrokerLogs {
+	s.S3 = v
+	return s
+}
+
 // Describes the setup to be used for Kafka broker nodes in the cluster.
 type BrokerNodeGroupInfo struct {
 	_ struct{} `type:"structure"`
@@ -2622,6 +2690,54 @@ func (s *ClientAuthentication) SetTls(v *Tls) *ClientAuthentication {
 	return s
 }
 
+// Details of the CloudWatch Logs destination for broker logs.
+type CloudWatchLogs struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies whether broker logs get sent to the specified CloudWatch Logs destination.
+	//
+	// Enabled is a required field
+	Enabled *bool `locationName:"enabled" type:"boolean" required:"true"`
+
+	// The CloudWatch log group that is the destination for broker logs.
+	LogGroup *string `locationName:"logGroup" type:"string"`
+}
+
+// String returns the string representation
+func (s CloudWatchLogs) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudWatchLogs) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CloudWatchLogs) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CloudWatchLogs"}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *CloudWatchLogs) SetEnabled(v bool) *CloudWatchLogs {
+	s.Enabled = &v
+	return s
+}
+
+// SetLogGroup sets the LogGroup field's value.
+func (s *CloudWatchLogs) SetLogGroup(v string) *CloudWatchLogs {
+	s.LogGroup = &v
+	return s
+}
+
 // Returns information about a cluster.
 type ClusterInfo struct {
 	_ struct{} `type:"structure"`
@@ -2661,6 +2777,11 @@ type ClusterInfo struct {
 	// a list of the metrics associated with each of these three levels of monitoring,
 	// see Monitoring (https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html).
 	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
+
+	// You can configure your MSK cluster to send broker logs to different destination
+	// types. This is a container for the configuration details related to broker
+	// logs.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
 
 	// The number of broker nodes in the cluster.
 	NumberOfBrokerNodes *int64 `locationName:"numberOfBrokerNodes" type:"integer"`
@@ -2745,6 +2866,12 @@ func (s *ClusterInfo) SetEncryptionInfo(v *EncryptionInfo) *ClusterInfo {
 // SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
 func (s *ClusterInfo) SetEnhancedMonitoring(v string) *ClusterInfo {
 	s.EnhancedMonitoring = &v
+	return s
+}
+
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *ClusterInfo) SetLoggingInfo(v *LoggingInfo) *ClusterInfo {
+	s.LoggingInfo = v
 	return s
 }
 
@@ -3154,6 +3281,9 @@ type CreateClusterInput struct {
 	// KafkaVersion is a required field
 	KafkaVersion *string `locationName:"kafkaVersion" min:"1" type:"string" required:"true"`
 
+	// LoggingInfo details.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
+
 	// The number of Kafka broker nodes in the Amazon MSK cluster.
 	//
 	// NumberOfBrokerNodes is a required field
@@ -3215,6 +3345,11 @@ func (s *CreateClusterInput) Validate() error {
 			invalidParams.AddNested("EncryptionInfo", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.LoggingInfo != nil {
+		if err := s.LoggingInfo.Validate(); err != nil {
+			invalidParams.AddNested("LoggingInfo", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.OpenMonitoring != nil {
 		if err := s.OpenMonitoring.Validate(); err != nil {
 			invalidParams.AddNested("OpenMonitoring", err.(request.ErrInvalidParams))
@@ -3266,6 +3401,12 @@ func (s *CreateClusterInput) SetEnhancedMonitoring(v string) *CreateClusterInput
 // SetKafkaVersion sets the KafkaVersion field's value.
 func (s *CreateClusterInput) SetKafkaVersion(v string) *CreateClusterInput {
 	s.KafkaVersion = &v
+	return s
+}
+
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *CreateClusterInput) SetLoggingInfo(v *LoggingInfo) *CreateClusterInput {
+	s.LoggingInfo = v
 	return s
 }
 
@@ -4093,6 +4234,56 @@ func (s *ErrorInfo) SetErrorString(v string) *ErrorInfo {
 	return s
 }
 
+// Firehose details for BrokerLogs.
+type Firehose struct {
+	_ struct{} `type:"structure"`
+
+	// The Kinesis Data Firehose delivery stream that is the destination for broker
+	// logs.
+	DeliveryStream *string `locationName:"deliveryStream" type:"string"`
+
+	// Specifies whether broker logs get sent to the specified Kinesis Data Firehose
+	// delivery stream.
+	//
+	// Enabled is a required field
+	Enabled *bool `locationName:"enabled" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s Firehose) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Firehose) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Firehose) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Firehose"}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDeliveryStream sets the DeliveryStream field's value.
+func (s *Firehose) SetDeliveryStream(v string) *Firehose {
+	s.DeliveryStream = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *Firehose) SetEnabled(v bool) *Firehose {
+	s.Enabled = &v
+	return s
+}
+
 // Returns information about an error.
 type ForbiddenException struct {
 	_            struct{} `type:"structure"`
@@ -4313,7 +4504,7 @@ func (s *JmxExporter) SetEnabledInBroker(v bool) *JmxExporter {
 type JmxExporterInfo struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether you want to enable or disable the JMX Exporter.
+	// JMX Exporter being enabled in broker.
 	//
 	// EnabledInBroker is a required field
 	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
@@ -4352,7 +4543,7 @@ func (s *JmxExporterInfo) SetEnabledInBroker(v bool) *JmxExporterInfo {
 type KafkaVersion struct {
 	_ struct{} `type:"structure"`
 
-	// The status of a Kafka version.
+	// The status of the Apache Kafka version.
 	Status *string `locationName:"status" type:"string" enum:"KafkaVersionStatus"`
 
 	// The Kafka version.
@@ -4964,6 +5155,53 @@ func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForRe
 	return s
 }
 
+// You can configure your MSK cluster to send broker logs to different destination
+// types. This is a container for the configuration details related to broker
+// logs.
+type LoggingInfo struct {
+	_ struct{} `type:"structure"`
+
+	// You can configure your MSK cluster to send broker logs to different destination
+	// types. This configuration specifies the details of these destinations.
+	//
+	// BrokerLogs is a required field
+	BrokerLogs *BrokerLogs `locationName:"brokerLogs" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s LoggingInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoggingInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LoggingInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LoggingInfo"}
+	if s.BrokerLogs == nil {
+		invalidParams.Add(request.NewErrParamRequired("BrokerLogs"))
+	}
+	if s.BrokerLogs != nil {
+		if err := s.BrokerLogs.Validate(); err != nil {
+			invalidParams.AddNested("BrokerLogs", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBrokerLogs sets the BrokerLogs field's value.
+func (s *LoggingInfo) SetBrokerLogs(v *BrokerLogs) *LoggingInfo {
+	s.BrokerLogs = v
+	return s
+}
+
 // Information about cluster attributes that can be updated via update APIs.
 type MutableClusterInfo struct {
 	_ struct{} `type:"structure"`
@@ -4977,6 +5215,9 @@ type MutableClusterInfo struct {
 	// Specifies which Apache Kafka metrics Amazon MSK gathers and sends to Amazon
 	// CloudWatch for this cluster.
 	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
+
+	// LoggingInfo details.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
 
 	// The number of broker nodes in the cluster.
 	NumberOfBrokerNodes *int64 `locationName:"numberOfBrokerNodes" type:"integer"`
@@ -5010,6 +5251,12 @@ func (s *MutableClusterInfo) SetConfigurationInfo(v *ConfigurationInfo) *Mutable
 // SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
 func (s *MutableClusterInfo) SetEnhancedMonitoring(v string) *MutableClusterInfo {
 	s.EnhancedMonitoring = &v
+	return s
+}
+
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *MutableClusterInfo) SetLoggingInfo(v *LoggingInfo) *MutableClusterInfo {
+	s.LoggingInfo = v
 	return s
 }
 
@@ -5055,7 +5302,7 @@ func (s *NodeExporter) SetEnabledInBroker(v bool) *NodeExporter {
 type NodeExporterInfo struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether you want to enable or disable the Node Exporter.
+	// Node Exporter being enabled in broker.
 	//
 	// EnabledInBroker is a required field
 	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
@@ -5370,6 +5617,63 @@ func (s *PrometheusInfo) SetJmxExporter(v *JmxExporterInfo) *PrometheusInfo {
 // SetNodeExporter sets the NodeExporter field's value.
 func (s *PrometheusInfo) SetNodeExporter(v *NodeExporterInfo) *PrometheusInfo {
 	s.NodeExporter = v
+	return s
+}
+
+// The details of the Amazon S3 destination for broker logs.
+type S3 struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the S3 bucket that is the destination for broker logs.
+	Bucket *string `locationName:"bucket" type:"string"`
+
+	// Specifies whether broker logs get sent to the specified Amazon S3 destination.
+	//
+	// Enabled is a required field
+	Enabled *bool `locationName:"enabled" type:"boolean" required:"true"`
+
+	// The S3 prefix that is the destination for broker logs.
+	Prefix *string `locationName:"prefix" type:"string"`
+}
+
+// String returns the string representation
+func (s S3) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3"}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBucket sets the Bucket field's value.
+func (s *S3) SetBucket(v string) *S3 {
+	s.Bucket = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *S3) SetEnabled(v bool) *S3 {
+	s.Enabled = &v
+	return s
+}
+
+// SetPrefix sets the Prefix field's value.
+func (s *S3) SetPrefix(v string) *S3 {
+	s.Prefix = &v
 	return s
 }
 
@@ -6089,6 +6393,9 @@ type UpdateMonitoringInput struct {
 	// CloudWatch for this cluster.
 	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
 
+	// LoggingInfo details.
+	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
+
 	// The settings for open monitoring.
 	OpenMonitoring *OpenMonitoringInfo `locationName:"openMonitoring" type:"structure"`
 }
@@ -6114,6 +6421,11 @@ func (s *UpdateMonitoringInput) Validate() error {
 	}
 	if s.CurrentVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("CurrentVersion"))
+	}
+	if s.LoggingInfo != nil {
+		if err := s.LoggingInfo.Validate(); err != nil {
+			invalidParams.AddNested("LoggingInfo", err.(request.ErrInvalidParams))
+		}
 	}
 	if s.OpenMonitoring != nil {
 		if err := s.OpenMonitoring.Validate(); err != nil {
@@ -6142,6 +6454,12 @@ func (s *UpdateMonitoringInput) SetCurrentVersion(v string) *UpdateMonitoringInp
 // SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
 func (s *UpdateMonitoringInput) SetEnhancedMonitoring(v string) *UpdateMonitoringInput {
 	s.EnhancedMonitoring = &v
+	return s
+}
+
+// SetLoggingInfo sets the LoggingInfo field's value.
+func (s *UpdateMonitoringInput) SetLoggingInfo(v *LoggingInfo) *UpdateMonitoringInput {
+	s.LoggingInfo = v
 	return s
 }
 

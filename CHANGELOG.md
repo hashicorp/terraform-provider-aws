@@ -1,25 +1,75 @@
-## 2.51.0 (Unreleased)
-
-FEATURES:
-
-* **New Data Source:** `aws_sfn_state_machine` [GH-10932]
-* **New Resource:** `aws_ec2_traffic_mirror_filter` [GH-9372]
-* **New Resource:** `aws_ec2_traffic_mirror_filter_rule` [GH-9372]
-* **New Resource:** `aws_ec2_traffic_mirror_session` [GH-9372]
-* **New Resource:** `aws_ec2_traffic_mirror_target` [GH-9372]
-* **New Resource:** `aws_s3_access_point` [GH-11276]
+## 2.53.0 (Unreleased)
 
 ENHANCEMENTS:
 
-* resource/aws_glub_job: Add `notification_property` configuration block [GH-12115]
-* resource/aws_lambda_event_source_mapping: Add `bisect_batch_on_function_error`, `maximum_record_age_in_seconds`, `maximum_retry_attempts`, and `parallelization_factor` arguments [GH-11100]
-* resource/aws_lambda_event_source_mapping: Add `destination_config` configuration block [GH-11100]
-* resource/aws_msk_cluster: Support in-place updates to `enhanced_monitoring` and `number_of_broker_nodes` arguments [GH-11451]
-* resource/aws_msk_cluster: Add `open_monitoring` configuration block (support Prometheus monitoring configuration) [GH-11451]
+* resource/aws_appsync_graphql_api: Add `xray_enabled` argument [GH-11972]
+* resource/aws_cloud9_environment_ec2: Add `tags` argument [GH-12132]
+* resource/aws_ec2_traffic_mirror_filter: Add `tags` argument [GH-12133]
+* resource/aws_ec2_traffic_mirror_session: Add `tags` argument [GH-12134]
+* resource/aws_ec2_traffic_mirror_target: Add `tags` argument and `network_load_balancer_arn` plan-time validation [GH-12135]
+* resource/aws_flow_log: Add `tags` argument [GH-12273]
+* resource/aws_flow_log: Add `iam_role_arn` and `log_destination` plan-time validation [GH-12273]
+* resource/aws_globalaccelerator_accelerator: Add `tags` argument [GH-12309]
+* resource/aws_vpc_endpoint: Support tag-on-create [GH-12288]
+* resource/aws_vpc_endpoint_service: Support tag-on-create and add `network_load_balancer_arns` plan-time validation [GH-12290]
 
 BUG FIXES:
 
-* resource/aws_workspaces_directory: Prevent panic and remove resource from Terraform state if removed outside Terraform [GH-11837]
+* resource/aws_vpn_gateway: Automatically retry on `DetachVpnGateway` calls receiving `InvalidParameterValue: This call cannot be completed because there are pending VPNs or Virtual Interfaces` [GH-11720]
+* resource/aws_vpn_gateway_attachment: Automatically retry on `DetachVpnGateway` calls receiving `InvalidParameterValue: This call cannot be completed because there are pending VPNs or Virtual Interfaces` [GH-11720]
+
+## 2.52.0 (March 06, 2020)
+
+FEATURES:
+
+* **New Data Source:** `aws_ec2_instance_type_offering` ([#12139](https://github.com/terraform-providers/terraform-provider-aws/issues/12139))
+* **New Data Source:** `aws_ec2_instance_type_offerings` ([#12139](https://github.com/terraform-providers/terraform-provider-aws/issues/12139))
+
+ENHANCEMENTS:
+
+* resource/aws_eks_cluster: Add `encryption_config` configuration block ([#12280](https://github.com/terraform-providers/terraform-provider-aws/issues/12280))
+* resource/aws_globalaccelerator_accelerator: Add `dns_name` and `hosted_zone_id` attributes ([#11670](https://github.com/terraform-providers/terraform-provider-aws/issues/11670))
+* resource/aws_lb_target_group: Add `load_balancing_algorithm_type` argument (support Least Outstanding Requests algorithm for Application Load Balancers) ([#11141](https://github.com/terraform-providers/terraform-provider-aws/issues/11141))
+* resource/aws_s3_bucket: Add `grant` to implement ACL policy grants ([#3728](https://github.com/terraform-providers/terraform-provider-aws/issues/3728))
+
+BUG FIXES:
+
+* resource/aws_iam_service_linked_role: Allow `aws_service_name` argument validation to accept values in AWS partitions outside AWS Commercial and AWS GovCloud (US) ([#11919](https://github.com/terraform-providers/terraform-provider-aws/issues/11919))
+* resource/aws_lambda_function_event_invoke_config: Retry on additional IAM eventual consistency error with SNS Topic destinations ([#12171](https://github.com/terraform-providers/terraform-provider-aws/issues/12171))
+* resource/aws_media_store_container: Prevent `ValidationException` error on creation when no tags are configured ([#12170](https://github.com/terraform-providers/terraform-provider-aws/issues/12170))
+
+## 2.51.0 (February 28, 2020)
+
+FEATURES:
+
+* **New Data Source:** `aws_sfn_activity` ([#11080](https://github.com/terraform-providers/terraform-provider-aws/issues/11080))
+* **New Data Source:** `aws_sfn_state_machine` ([#10932](https://github.com/terraform-providers/terraform-provider-aws/issues/10932))
+* **New Resource:** `aws_ec2_traffic_mirror_filter` ([#9372](https://github.com/terraform-providers/terraform-provider-aws/issues/9372))
+* **New Resource:** `aws_ec2_traffic_mirror_filter_rule` ([#9372](https://github.com/terraform-providers/terraform-provider-aws/issues/9372))
+* **New Resource:** `aws_ec2_traffic_mirror_session` ([#9372](https://github.com/terraform-providers/terraform-provider-aws/issues/9372))
+* **New Resource:** `aws_ec2_traffic_mirror_target` ([#9372](https://github.com/terraform-providers/terraform-provider-aws/issues/9372))
+* **New Resource:** `aws_s3_access_point` ([#11276](https://github.com/terraform-providers/terraform-provider-aws/issues/11276))
+
+ENHANCEMENTS:
+
+* data-source/aws_lambda_layer_version: Support plan-time validation for `compatible_runtime` argument `ruby2.7` value ([#12116](https://github.com/terraform-providers/terraform-provider-aws/issues/12116))
+* resource/aws_dx_hosted_private_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_dx_hosted_public_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_dx_hosted_transit_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_dx_private_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_dx_public_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_dx_transit_virtual_interface: Add `amazon_side_asn` attribute ([#11415](https://github.com/terraform-providers/terraform-provider-aws/issues/11415))
+* resource/aws_glue_job: Add `notification_property` configuration block ([#12115](https://github.com/terraform-providers/terraform-provider-aws/issues/12115))
+* resource/aws_lambda_event_source_mapping: Add `bisect_batch_on_function_error`, `maximum_record_age_in_seconds`, `maximum_retry_attempts`, and `parallelization_factor` arguments ([#11100](https://github.com/terraform-providers/terraform-provider-aws/issues/11100))
+* resource/aws_lambda_event_source_mapping: Add `destination_config` configuration block ([#11100](https://github.com/terraform-providers/terraform-provider-aws/issues/11100))
+* resource/aws_lambda_function: Support plan-time validation for `runtime` argument `ruby2.7` value ([#12116](https://github.com/terraform-providers/terraform-provider-aws/issues/12116))
+* resource/aws_lambda_layer_version: Support plan-time validation for `compatible_runtimes` argument `ruby2.7` value ([#12116](https://github.com/terraform-providers/terraform-provider-aws/issues/12116))
+* resource/aws_msk_cluster: Support in-place updates to `enhanced_monitoring` and `number_of_broker_nodes` arguments ([#11451](https://github.com/terraform-providers/terraform-provider-aws/issues/11451))
+* resource/aws_msk_cluster: Add `open_monitoring` configuration block (support Prometheus monitoring configuration) ([#11451](https://github.com/terraform-providers/terraform-provider-aws/issues/11451))
+
+BUG FIXES:
+
+* resource/aws_workspaces_directory: Prevent panic and remove resource from Terraform state if removed outside Terraform ([#11837](https://github.com/terraform-providers/terraform-provider-aws/issues/11837))
 
 ## 2.50.0 (February 20, 2020)
 

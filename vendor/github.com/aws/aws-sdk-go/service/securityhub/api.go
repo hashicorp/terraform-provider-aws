@@ -157,7 +157,7 @@ func (c *SecurityHub) BatchDisableStandardsRequest(input *BatchDisableStandardsI
 //
 // Disables the standards specified by the provided StandardsSubscriptionArns.
 //
-// For more information, see Compliance Standards (https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html)
+// For more information, see Security Standards (https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html)
 // section of the AWS Security Hub User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -251,7 +251,7 @@ func (c *SecurityHub) BatchEnableStandardsRequest(input *BatchEnableStandardsInp
 // Enables the standards specified by the provided StandardsArn. To obtain the
 // ARN for a standard, use the DescribeStandards operation.
 //
-// For more information, see the Compliance Standards (https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html)
+// For more information, see the Security Standards (https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html)
 // section of the AWS Security Hub User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1742,7 +1742,7 @@ func (c *SecurityHub) DescribeStandardsControlsRequest(input *DescribeStandardsC
 
 // DescribeStandardsControls API operation for AWS SecurityHub.
 //
-// Returns a list of compliance standards controls.
+// Returns a list of security standards controls.
 //
 // For each control, the results include information about whether it is currently
 // enabled, the severity, and a link to remediation information.
@@ -4385,7 +4385,7 @@ func (c *SecurityHub) UpdateStandardsControlRequest(input *UpdateStandardsContro
 
 // UpdateStandardsControl API operation for AWS SecurityHub.
 //
-// Used to control whether an individual compliance standard control is enabled
+// Used to control whether an individual security standard control is enabled
 // or disabled.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -6816,9 +6816,9 @@ type AwsLambdaLayerVersionDetails struct {
 
 	// The layer's compatible runtimes. Maximum number of 5 items.
 	//
-	// Valid values: nodejs8.10 | nodejs10.x | nodejs12.x | java8 | java11 | python2.7
-	// | python3.6 | python3.7 | python3.8 | dotnetcore1.0 | dotnetcore2.1 | go1.x
-	// | ruby2.5 | provided
+	// Valid values: nodejs10.x | nodejs12.x | java8 | java11 | python2.7 | python3.6
+	// | python3.7 | python3.8 | dotnetcore1.0 | dotnetcore2.1 | go1.x | ruby2.5
+	// | provided
 	CompatibleRuntimes []*string `type:"list"`
 
 	// The date that the version was created, in ISO 8601 format. For example, 2018-11-27T15:10:45.123+0000.
@@ -7242,11 +7242,11 @@ func (s *AwsS3BucketDetails) SetOwnerName(v string) *AwsS3BucketDetails {
 
 // Provides consistent format for the contents of the Security Hub-aggregated
 // findings. AwsSecurityFinding format enables you to share findings between
-// AWS security services and third-party solutions, and compliance checks.
+// AWS security services and third-party solutions, and security standards checks.
 //
 // A finding is a potential security issue generated either by AWS services
 // (Amazon GuardDuty, Amazon Inspector, and Amazon Macie) or by the integrated
-// third-party solutions and compliance checks.
+// third-party solutions and standards checks.
 type AwsSecurityFinding struct {
 	_ struct{} `type:"structure"`
 
@@ -7256,8 +7256,8 @@ type AwsSecurityFinding struct {
 	AwsAccountId *string `type:"string" required:"true"`
 
 	// This data type is exclusive to findings that are generated as the result
-	// of a check run against a specific rule in a supported standard, such as CIS
-	// AWS Foundations. Contains compliance-related finding details.
+	// of a check run against a specific rule in a supported security standard,
+	// such as CIS AWS Foundations. Contains security standard-related finding details.
 	Compliance *Compliance `type:"structure"`
 
 	// A finding's confidence. Confidence is defined as the likelihood that a finding
@@ -7686,7 +7686,7 @@ type AwsSecurityFindingFilters struct {
 
 	// Exclusive to findings that are generated as the result of a check run against
 	// a specific rule in a supported standard, such as CIS AWS Foundations. Contains
-	// compliance-related finding details.
+	// security standard-related finding details.
 	ComplianceStatus []*StringFilter `type:"list"`
 
 	// A finding's confidence. Confidence is defined as the likelihood that a finding
@@ -8812,7 +8812,7 @@ func (s *BatchDisableStandardsOutput) SetStandardsSubscriptions(v []*StandardsSu
 type BatchEnableStandardsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The list of standards compliance checks to enable.
+	// The list of standards checks to enable.
 	//
 	// StandardsSubscriptionRequests is a required field
 	StandardsSubscriptionRequests []*StandardsSubscriptionRequest `min:"1" type:"list" required:"true"`
@@ -8979,14 +8979,14 @@ func (s *BatchImportFindingsOutput) SetSuccessCount(v int64) *BatchImportFinding
 }
 
 // Exclusive to findings that are generated as the result of a check run against
-// a specific rule in a supported standard, such as CIS AWS Foundations. Contains
-// compliance-related finding details.
+// a specific rule in a supported security standard, such as CIS AWS Foundations.
+// Contains security standard-related finding details.
 //
 // Values include the following:
 //
-//    * Allowed values are the following: PASSED - Compliance check passed for
+//    * Allowed values are the following: PASSED - Standards check passed for
 //    all evaluated resources. WARNING - Some information is missing or this
-//    check is not supported given your configuration. FAILED - Compliance check
+//    check is not supported given your configuration. FAILED - Standards check
 //    failed for at least one evaluated resource. NOT_AVAILABLE - Check could
 //    not be performed due to a service outage, API error, or because the result
 //    of the AWS Config evaluation was NOT_APPLICABLE. If the AWS Config evaluation
@@ -8998,7 +8998,7 @@ type Compliance struct {
 	// List of requirements that are related to a standards control.
 	RelatedRequirements []*string `type:"list"`
 
-	// The result of a compliance check.
+	// The result of a standards check.
 	Status *string `type:"string" enum:"ComplianceStatus"`
 }
 
@@ -9920,7 +9920,7 @@ func (s *DescribeProductsOutput) SetProducts(v []*Product) *DescribeProductsOutp
 type DescribeStandardsControlsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of compliance standard controls to return.
+	// The maximum number of security standard controls to return.
 	MaxResults *int64 `location:"querystring" locationName:"MaxResults" min:"1" type:"integer"`
 
 	// The token that is required for pagination. On your first call to the DescribeStandardsControls
@@ -9986,7 +9986,7 @@ func (s *DescribeStandardsControlsInput) SetStandardsSubscriptionArn(v string) *
 type DescribeStandardsControlsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of compliance standards controls.
+	// A list of security standards controls.
 	Controls []*StandardsControl `type:"list"`
 
 	// The pagination token to use to request the next page of results.
@@ -12345,6 +12345,16 @@ type Product struct {
 	// A description of the product.
 	Description *string `type:"string"`
 
+	// The types of integration that the product supports. Available values are
+	// the following.
+	//
+	//    * SEND_FINDINGS_TO_SECURITY_HUB - Indicates that the integration sends
+	//    findings to Security Hub.
+	//
+	//    * RECEIVE_FINDINGS_FROM_SECURITY_HUB - Indicates that the integration
+	//    receives findings from Security Hub.
+	IntegrationTypes []*string `type:"list"`
+
 	// The URL for the page that contains more information about the product.
 	MarketplaceUrl *string `type:"string"`
 
@@ -12391,6 +12401,12 @@ func (s *Product) SetCompanyName(v string) *Product {
 // SetDescription sets the Description field's value.
 func (s *Product) SetDescription(v string) *Product {
 	s.Description = &v
+	return s
+}
+
+// SetIntegrationTypes sets the IntegrationTypes field's value.
+func (s *Product) SetIntegrationTypes(v []*string) *Product {
+	s.IntegrationTypes = v
 	return s
 }
 
@@ -13124,23 +13140,23 @@ func (s *Standard) SetStandardsArn(v string) *Standard {
 	return s
 }
 
-// Details for an individual compliance standard control.
+// Details for an individual security standard control.
 type StandardsControl struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the compliance standard control.
+	// The identifier of the security standard control.
 	ControlId *string `type:"string"`
 
-	// The current status of the compliance standard control. Indicates whether
-	// the control is enabled or disabled. Security Hub does not check against disabled
+	// The current status of the security standard control. Indicates whether the
+	// control is enabled or disabled. Security Hub does not check against disabled
 	// controls.
 	ControlStatus *string `type:"string" enum:"ControlStatus"`
 
-	// The date and time that the status of the compliance standard control was
-	// most recently updated.
+	// The date and time that the status of the security standard control was most
+	// recently updated.
 	ControlStatusUpdatedAt *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
-	// The longer description of the compliance standard control. Provides information
+	// The longer description of the security standard control. Provides information
 	// about what the control is checking for.
 	Description *string `type:"string"`
 
@@ -13154,16 +13170,16 @@ type StandardsControl struct {
 	// documentation.
 	RemediationUrl *string `type:"string"`
 
-	// The severity of findings generated from this compliance standard control.
+	// The severity of findings generated from this security standard control.
 	//
 	// The finding severity is based on an assessment of how easy it would be to
-	// compromise AWS resources if the compliance issue is detected.
+	// compromise AWS resources if the issue is detected.
 	SeverityRating *string `type:"string" enum:"SeverityRating"`
 
-	// The ARN of the compliance standard control.
+	// The ARN of the security standard control.
 	StandardsControlArn *string `type:"string"`
 
-	// The title of the compliance standard control.
+	// The title of the security standard control.
 	Title *string `type:"string"`
 }
 
@@ -13826,13 +13842,13 @@ func (s UpdateInsightOutput) GoString() string {
 type UpdateStandardsControlInput struct {
 	_ struct{} `type:"structure"`
 
-	// The updated status of the compliance standard control.
+	// The updated status of the security standard control.
 	ControlStatus *string `type:"string" enum:"ControlStatus"`
 
-	// A description of the reason why you are disabling a compliance standard control.
+	// A description of the reason why you are disabling a security standard control.
 	DisabledReason *string `type:"string"`
 
-	// The ARN of the compliance standard control to enable or disable.
+	// The ARN of the security standard control to enable or disable.
 	//
 	// StandardsControlArn is a required field
 	StandardsControlArn *string `location:"uri" locationName:"StandardsControlArn" type:"string" required:"true"`
@@ -14016,6 +14032,14 @@ const (
 const (
 	// DateRangeUnitDays is a DateRangeUnit enum value
 	DateRangeUnitDays = "DAYS"
+)
+
+const (
+	// IntegrationTypeSendFindingsToSecurityHub is a IntegrationType enum value
+	IntegrationTypeSendFindingsToSecurityHub = "SEND_FINDINGS_TO_SECURITY_HUB"
+
+	// IntegrationTypeReceiveFindingsFromSecurityHub is a IntegrationType enum value
+	IntegrationTypeReceiveFindingsFromSecurityHub = "RECEIVE_FINDINGS_FROM_SECURITY_HUB"
 )
 
 const (

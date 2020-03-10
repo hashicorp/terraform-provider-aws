@@ -92,6 +92,10 @@ const (
 	// time until the role is unlocked.
 	ErrCodeWAFServiceLinkedRoleErrorException = "WAFServiceLinkedRoleErrorException"
 
+	// ErrCodeWAFSubscriptionNotFoundException for service response error code
+	// "WAFSubscriptionNotFoundException".
+	ErrCodeWAFSubscriptionNotFoundException = "WAFSubscriptionNotFoundException"
+
 	// ErrCodeWAFTagOperationException for service response error code
 	// "WAFTagOperationException".
 	//
@@ -122,6 +126,7 @@ var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
 	"WAFNonexistentItemException":           newErrorWAFNonexistentItemException,
 	"WAFOptimisticLockException":            newErrorWAFOptimisticLockException,
 	"WAFServiceLinkedRoleErrorException":    newErrorWAFServiceLinkedRoleErrorException,
+	"WAFSubscriptionNotFoundException":      newErrorWAFSubscriptionNotFoundException,
 	"WAFTagOperationException":              newErrorWAFTagOperationException,
 	"WAFTagOperationInternalErrorException": newErrorWAFTagOperationInternalErrorException,
 	"WAFUnavailableEntityException":         newErrorWAFUnavailableEntityException,

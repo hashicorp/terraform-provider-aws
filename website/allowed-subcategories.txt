@@ -1,7 +1,7 @@
 
 ACM PCA
 ACM
-API Gateway
+API Gateway (REST APIs)
 Access Analyzer
 AppMesh
 AppSync

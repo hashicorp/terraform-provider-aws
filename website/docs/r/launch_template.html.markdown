@@ -95,7 +95,7 @@ resource "aws_launch_template" "foo" {
     }
   }
 
-  user_data = "${base64encode(...)}"
+  user_data = filebase64("${path.module}/example.sh")
 }
 ```
 
@@ -275,8 +275,8 @@ Each `network_interfaces` block supports the following:
 * `ipv6_address_count` - The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
 * `network_interface_id` - The ID of the network interface to attach.
 * `private_ip_address` - The primary private IPv4 address.
-* `ipv4_address_count` - The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_address_count`
-* `ipv4_addresses` - One or more private IPv4 addresses to associate. Conflicts with `ipv4_addresses`
+* `ipv4_address_count` - The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_addresses`
+* `ipv4_addresses` - One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
 * `security_groups` - A list of security group IDs to associate.
 * `subnet_id` - The VPC Subnet ID to associate.
 

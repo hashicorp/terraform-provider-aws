@@ -2094,9 +2094,6 @@ func getStringPtr(m interface{}, key string) *string {
 			s := v.(string)
 			return &s
 		}
-
-	default:
-		panic("unknown type in getStringPtr")
 	}
 
 	return nil
@@ -2113,56 +2110,6 @@ func (s setMap) SetString(key string, value *string) {
 	}
 
 	s[key] = *value
-}
-
-// SetStringMap sets key to value as a map[string]interface{}, stripping any nil
-// values. The value parameter can be a map[string]interface{}, a
-// map[string]*string, or a map[string]string.
-func (s setMap) SetStringMap(key string, value interface{}) {
-	// because these methods are meant to be chained without intermediate
-	// checks for nil, we are likely to get interfaces with dynamic types but
-	// a nil value.
-	if reflect.ValueOf(value).IsNil() {
-		return
-	}
-
-	m := make(map[string]interface{})
-
-	switch value := value.(type) {
-	case map[string]string:
-		for k, v := range value {
-			m[k] = v
-		}
-	case map[string]*string:
-		for k, v := range value {
-			if v == nil {
-				continue
-			}
-			m[k] = *v
-		}
-	case map[string]interface{}:
-		for k, v := range value {
-			if v == nil {
-				continue
-			}
-
-			switch v := v.(type) {
-			case string:
-				m[k] = v
-			case *string:
-				if v != nil {
-					m[k] = *v
-				}
-			default:
-				panic(fmt.Sprintf("unknown type for SetString: %T", v))
-			}
-		}
-	}
-
-	// catch the case where the interface wasn't nil, but we had no non-nil values
-	if len(m) > 0 {
-		s[key] = m
-	}
 }
 
 // Set assigns value to s[key] if value isn't nil

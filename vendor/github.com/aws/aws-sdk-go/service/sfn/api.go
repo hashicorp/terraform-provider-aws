@@ -163,17 +163,19 @@ func (c *SFN) CreateStateMachineRequest(input *CreateStateMachineInput) (req *re
 // Creates a state machine. A state machine consists of a collection of states
 // that can do work (Task states), determine to which states to transition next
 // (Choice states), stop an execution with an error (Fail states), and so on.
-// State machines are specified using a JSON-based, structured language.
+// State machines are specified using a JSON-based, structured language. For
+// more information, see Amazon States Language (https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html)
+// in the AWS Step Functions User Guide.
 //
 // This operation is eventually consistent. The results are best effort and
 // may not reflect very recent updates and changes.
 //
 // CreateStateMachine is an idempotent API. Subsequent requests won’t create
 // a duplicate resource if it was already created. CreateStateMachine's idempotency
-// check is based on the state machine name and definition. If a following request
-// has a different roleArn or tags, Step Functions will ignore these differences
-// and treat it as an idempotent request of the previous. In this case, roleArn
-// and tags will not be updated, even if they are different.
+// check is based on the state machine name, definition, type, and LoggingConfiguration.
+// If a following request has a different roleArn or tags, Step Functions will
+// ignore these differences and treat it as an idempotent request of the previous.
+// In this case, roleArn and tags will not be updated, even if they are different.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -360,11 +362,11 @@ func (c *SFN) DeleteStateMachineRequest(input *DeleteStateMachineInput) (req *re
 // DeleteStateMachine API operation for AWS Step Functions.
 //
 // Deletes a state machine. This is an asynchronous operation: It sets the state
-// machine's status to DELETING and begins the deletion process. Each state
-// machine execution is deleted the next time it makes a state transition.
+// machine's status to DELETING and begins the deletion process.
 //
-// The state machine itself is deleted after all executions are completed or
-// deleted.
+// For EXPRESSstate machines, the deletion will happen eventually (usually less
+// than a minute). Running executions may emit logs after DeleteStateMachine
+// API is called.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -532,6 +534,8 @@ func (c *SFN) DescribeExecutionRequest(input *DescribeExecutionInput) (req *requ
 //
 // This operation is eventually consistent. The results are best effort and
 // may not reflect very recent updates and changes.
+//
+// This API action is not supported by EXPRESS state machines.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -702,6 +706,8 @@ func (c *SFN) DescribeStateMachineForExecutionRequest(input *DescribeStateMachin
 //
 // This operation is eventually consistent. The results are best effort and
 // may not reflect very recent updates and changes.
+//
+// This API action is not supported by EXPRESS state machines.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -897,6 +903,8 @@ func (c *SFN) GetExecutionHistoryRequest(input *GetExecutionHistoryInput) (req *
 // using the returned token to retrieve the next page. Keep all other arguments
 // unchanged. Each pagination token expires after 24 hours. Using an expired
 // pagination token will return an HTTP 400 InvalidToken error.
+//
+// This API action is not supported by EXPRESS state machines.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1196,6 +1204,8 @@ func (c *SFN) ListExecutionsRequest(input *ListExecutionsInput) (req *request.Re
 //
 // This operation is eventually consistent. The results are best effort and
 // may not reflect very recent updates and changes.
+//
+// This API action is not supported by EXPRESS state machines.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1945,6 +1955,8 @@ func (c *SFN) StopExecutionRequest(input *StopExecutionInput) (req *request.Requ
 //
 // Stops an execution.
 //
+// This API action is not supported by EXPRESS state machines.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2206,10 +2218,10 @@ func (c *SFN) UpdateStateMachineRequest(input *UpdateStateMachineInput) (req *re
 
 // UpdateStateMachine API operation for AWS Step Functions.
 //
-// Updates an existing state machine by modifying its definition and/or roleArn.
-// Running executions will continue to use the previous definition and roleArn.
-// You must include at least one of definition or roleArn or you will receive
-// a MissingRequiredParameter error.
+// Updates an existing state machine by modifying its definition, roleArn, or
+// loggingConfiguration. Running executions will continue to use the previous
+// definition and roleArn. You must include at least one of definition or roleArn
+// or you will receive a MissingRequiredParameter error.
 //
 // All StartExecution calls within a few seconds will use the updated definition
 // and roleArn. Executions started immediately after calling UpdateStateMachine
@@ -2436,6 +2448,9 @@ type ActivityListItem struct {
 	//    * special characters " # % \ ^ | ~ ` $ & , ; : /
 	//
 	//    * control characters (U+0000-001F, U+007F-009F)
+	//
+	// To enable logging with CloudWatch Logs, the name should only contain 0-9,
+	// A-Z, a-z, - and _.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
@@ -2753,6 +2768,9 @@ type CreateActivityInput struct {
 	//
 	//    * control characters (U+0000-001F, U+007F-009F)
 	//
+	// To enable logging with CloudWatch Logs, the name should only contain 0-9,
+	// A-Z, a-z, - and _.
+	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
@@ -2862,6 +2880,10 @@ type CreateStateMachineInput struct {
 	Definition *string `locationName:"definition" min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// Defines what execution history events are logged and where they are logged.
+	//
+	// By default, the level is set to OFF. For more information see Log Levels
+	// (https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html)
+	// in the AWS Step Functions User Guide.
 	LoggingConfiguration *LoggingConfiguration `locationName:"loggingConfiguration" type:"structure"`
 
 	// The name of the state machine.
@@ -2877,6 +2899,9 @@ type CreateStateMachineInput struct {
 	//    * special characters " # % \ ^ | ~ ` $ & , ; : /
 	//
 	//    * control characters (U+0000-001F, U+007F-009F)
+	//
+	// To enable logging with CloudWatch Logs, the name should only contain 0-9,
+	// A-Z, a-z, - and _.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
@@ -2897,8 +2922,9 @@ type CreateStateMachineInput struct {
 	// _ . : / = + - @.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
-	// Determines whether a Standard or Express state machine is created. If not
-	// set, Standard is created.
+	// Determines whether a Standard or Express state machine is created. The default
+	// is STANDARD. You cannot update the type of a state machine once it has been
+	// created.
 	Type *string `locationName:"type" type:"string" enum:"StateMachineType"`
 }
 
@@ -3205,6 +3231,9 @@ type DescribeActivityOutput struct {
 	//
 	//    * control characters (U+0000-001F, U+007F-009F)
 	//
+	// To enable logging with CloudWatch Logs, the name should only contain 0-9,
+	// A-Z, a-z, - and _.
+	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 }
@@ -3281,7 +3310,7 @@ func (s *DescribeExecutionInput) SetExecutionArn(v string) *DescribeExecutionInp
 type DescribeExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) that identifies the execution.
+	// The Amazon Resource Name (ARN) that id entifies the execution.
 	//
 	// ExecutionArn is a required field
 	ExecutionArn *string `locationName:"executionArn" min:"1" type:"string" required:"true"`
@@ -3304,6 +3333,9 @@ type DescribeExecutionOutput struct {
 	//    * special characters " # % \ ^ | ~ ` $ & , ; : /
 	//
 	//    * control characters (U+0000-001F, U+007F-009F)
+	//
+	// To enable logging with CloudWatch Logs, the name should only contain 0-9,
+	// A-Z, a-z, - and _.
 	Name *string `locationName:"name" min:"1" type:"string"`
 
 	// The JSON output data of the execution.
@@ -3440,6 +3472,9 @@ type DescribeStateMachineForExecutionOutput struct {
 	// Definition is a required field
 	Definition *string `locationName:"definition" min:"1" type:"string" required:"true" sensitive:"true"`
 
+	// The LoggingConfiguration data type is used to set CloudWatch Logs options.
+	LoggingConfiguration *LoggingConfiguration `locationName:"loggingConfiguration" type:"structure"`
+
 	// The name of the state machine associated with the execution.
 	//
 	// Name is a required field
@@ -3476,6 +3511,12 @@ func (s DescribeStateMachineForExecutionOutput) GoString() string {
 // SetDefinition sets the Definition field's value.
 func (s *DescribeStateMachineForExecutionOutput) SetDefinition(v string) *DescribeStateMachineForExecutionOutput {
 	s.Definition = &v
+	return s
+}
+
+// SetLoggingConfiguration sets the LoggingConfiguration field's value.
+func (s *DescribeStateMachineForExecutionOutput) SetLoggingConfiguration(v *LoggingConfiguration) *DescribeStateMachineForExecutionOutput {
+	s.LoggingConfiguration = v
 	return s
 }
 
@@ -3558,6 +3599,7 @@ type DescribeStateMachineOutput struct {
 	// Definition is a required field
 	Definition *string `locationName:"definition" min:"1" type:"string" required:"true" sensitive:"true"`
 
+	// The LoggingConfiguration data type is used to set CloudWatch Logs options.
 	LoggingConfiguration *LoggingConfiguration `locationName:"loggingConfiguration" type:"structure"`
 
 	// The name of the state machine.
@@ -3573,6 +3615,9 @@ type DescribeStateMachineOutput struct {
 	//    * special characters " # % \ ^ | ~ ` $ & , ; : /
 	//
 	//    * control characters (U+0000-001F, U+007F-009F)
+	//
+	// To enable logging with CloudWatch Logs, the name should only contain 0-9,
+	// A-Z, a-z, - and _.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
@@ -3592,6 +3637,8 @@ type DescribeStateMachineOutput struct {
 	// The current status of the state machine.
 	Status *string `locationName:"status" type:"string" enum:"StateMachineStatus"`
 
+	// The type of the state machine (STANDARD or EXPRESS).
+	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"StateMachineType"`
 }
@@ -3895,7 +3942,7 @@ func (s ExecutionLimitExceeded) RequestID() string {
 type ExecutionListItem struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) that identifies the execution.
+	// The Amazon Resource Name (ARN) that id entifies the execution.
 	//
 	// ExecutionArn is a required field
 	ExecutionArn *string `locationName:"executionArn" min:"1" type:"string" required:"true"`
@@ -3913,6 +3960,9 @@ type ExecutionListItem struct {
 	//    * special characters " # % \ ^ | ~ ` $ & , ; : /
 	//
 	//    * control characters (U+0000-001F, U+007F-009F)
+	//
+	// To enable logging with CloudWatch Logs, the name should only contain 0-9,
+	// A-Z, a-z, - and _.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
@@ -5629,15 +5679,16 @@ func (s *LogDestination) SetCloudWatchLogsLogGroup(v *CloudWatchLogsLogGroup) *L
 	return s
 }
 
+// The LoggingConfiguration data type is used to set CloudWatch Logs options.
 type LoggingConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// An object that describes where your execution history events will be logged.
-	// Limited to size 1. Required, if your log level is not set to OFF.
+	// An array of objects that describes where your execution history events will
+	// be logged. Limited to size 1. Required, if your log level is not set to OFF.
 	Destinations []*LogDestination `locationName:"destinations" type:"list"`
 
-	// Determines whether execution history data is included in your log. When set
-	// to FALSE, data is excluded.
+	// Determines whether execution data is included in your log. When set to FALSE,
+	// data is excluded.
 	IncludeExecutionData *bool `locationName:"includeExecutionData" type:"boolean"`
 
 	// Defines which category of execution history events are logged.
@@ -6095,6 +6146,9 @@ type StartExecutionInput struct {
 	//    * special characters " # % \ ^ | ~ ` $ & , ; : /
 	//
 	//    * control characters (U+0000-001F, U+007F-009F)
+	//
+	// To enable logging with CloudWatch Logs, the name should only contain 0-9,
+	// A-Z, a-z, - and _.
 	Name *string `locationName:"name" min:"1" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the state machine to execute.
@@ -6153,7 +6207,7 @@ func (s *StartExecutionInput) SetStateMachineArn(v string) *StartExecutionInput 
 type StartExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) that identifies the execution.
+	// The Amazon Resource Name (ARN) that id entifies the execution.
 	//
 	// ExecutionArn is a required field
 	ExecutionArn *string `locationName:"executionArn" min:"1" type:"string" required:"true"`
@@ -6238,6 +6292,9 @@ type StateExitedEventDetails struct {
 	//    * special characters " # % \ ^ | ~ ` $ & , ; : /
 	//
 	//    * control characters (U+0000-001F, U+007F-009F)
+	//
+	// To enable logging with CloudWatch Logs, the name should only contain 0-9,
+	// A-Z, a-z, - and _.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
@@ -6516,6 +6573,9 @@ type StateMachineListItem struct {
 	//    * special characters " # % \ ^ | ~ ` $ & , ; : /
 	//
 	//    * control characters (U+0000-001F, U+007F-009F)
+	//
+	// To enable logging with CloudWatch Logs, the name should only contain 0-9,
+	// A-Z, a-z, - and _.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
@@ -7503,6 +7563,7 @@ type UpdateStateMachineInput struct {
 	// Language (https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
 	Definition *string `locationName:"definition" min:"1" type:"string" sensitive:"true"`
 
+	// The LoggingConfiguration data type is used to set CloudWatch Logs options.
 	LoggingConfiguration *LoggingConfiguration `locationName:"loggingConfiguration" type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the IAM role of the state machine.
