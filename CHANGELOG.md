@@ -13,6 +13,11 @@ ENHANCEMENTS:
 * resource/aws_vpc_endpoint: Support tag-on-create [GH-12288]
 * resource/aws_vpc_endpoint_service: Support tag-on-create and add `network_load_balancer_arns` plan-time validation [GH-12290]
 
+BUG FIXES:
+
+* resource/aws_vpn_gateway: Automatically retry on `DetachVpnGateway` calls receiving `InvalidParameterValue: This call cannot be completed because there are pending VPNs or Virtual Interfaces` [GH-11720]
+* resource/aws_vpn_gateway_attachment: Automatically retry on `DetachVpnGateway` calls receiving `InvalidParameterValue: This call cannot be completed because there are pending VPNs or Virtual Interfaces` [GH-11720]
+
 ## 2.52.0 (March 06, 2020)
 
 FEATURES:
