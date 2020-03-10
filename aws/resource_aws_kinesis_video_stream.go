@@ -123,7 +123,7 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 		Pending:    []string{kinesisvideo.StatusCreating},
 		Target:     []string{kinesisvideo.StatusActive},
 		Refresh:    kinesisVideoStreamStateRefresh(conn, arn),
-		Timeout:    15 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -213,7 +213,7 @@ func resourceAwsKinesisVideoStreamUpdate(d *schema.ResourceData, meta interface{
 		Pending:    []string{kinesisvideo.StatusUpdating},
 		Target:     []string{kinesisvideo.StatusActive},
 		Refresh:    kinesisVideoStreamStateRefresh(conn, d.Id()),
-		Timeout:    15 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -242,7 +242,7 @@ func resourceAwsKinesisVideoStreamDelete(d *schema.ResourceData, meta interface{
 		Pending:    []string{kinesisvideo.StatusDeleting},
 		Target:     []string{"DELETED"},
 		Refresh:    kinesisVideoStreamStateRefresh(conn, d.Id()),
-		Timeout:    15 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
