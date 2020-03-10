@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -230,6 +231,35 @@ func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "user_data", resourceName, "user_data"),
 					resource.TestCheckResourceAttrPair(datasourceName, "associate_public_ip_address", resourceName, "associate_public_ip_address"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tenancy", resourceName, "tenancy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstanceDataSource_Outpost(t *testing.T) {
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+
+	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
+	if outpostArn == "" {
+		t.Skip(
+			"Environment variable AWS_OUTPOST_ARN is not set. " +
+				"This environment variable must be set to the ARN of " +
+				"a deployed Outpost to enable this test.")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_Outpost(rName, outpostArn),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "outpost_arn", resourceName, "outpost_arn"),
 				),
 			},
 		},
@@ -678,6 +708,20 @@ resource "aws_instance" "test" {
   tenancy                     = "dedicated"
   # pre-encoded base64 data
   user_data                   = "3dc39dda39be1205215e776bad998da361a5955d"
+}
+
+data "aws_instance" "test" {
+  instance_id = "${aws_instance.test.id}"
+}
+`)
+}
+
+func testAccInstanceDataSourceConfig_Outpost(rName string, outpostArn string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceOutpostConfig(rName, outpostArn) + fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type               = "m1.small"
+  subnet_id                   = "${aws_subnet.test.id}"
 }
 
 data "aws_instance" "test" {
