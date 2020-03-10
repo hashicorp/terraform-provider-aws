@@ -28,6 +28,7 @@ var serviceNames = []string{
 	"appsync",
 	"athena",
 	"backup",
+	"cloud9",
 	"cloudfront",
 	"cloudhsmv2",
 	"cloudtrail",
@@ -67,6 +68,7 @@ var serviceNames = []string{
 	"fsx",
 	"gamelift",
 	"glacier",
+	"globalaccelerator",
 	"glue",
 	"guardduty",
 	"greengrass",
@@ -93,6 +95,7 @@ var serviceNames = []string{
 	"organizations",
 	"pinpoint",
 	"qldb",
+	"quicksight",
 	"ram",
 	"rds",
 	"redshift",
@@ -112,7 +115,6 @@ var serviceNames = []string{
 	"waf",
 	"wafregional",
 	"wafv2",
-	"workspaces",
 }
 
 type TemplateData struct {
@@ -375,8 +377,6 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "storagegateway":
 		return "AddTagsToResource"
-	case "workspaces":
-		return "CreateTags"
 	default:
 		return "TagResource"
 	}
@@ -400,6 +400,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	case "acmpca":
 		return "CertificateAuthorityArn"
 	case "athena":
+		return "ResourceARN"
+	case "cloud9":
 		return "ResourceARN"
 	case "cloudfront":
 		return "Resource"
@@ -493,8 +495,6 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "wafv2":
 		return "ResourceARN"
-	case "workspaces":
-		return "ResourceId"
 	default:
 		return "ResourceArn"
 	}
@@ -623,8 +623,6 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromResource"
 	case "storagegateway":
 		return "RemoveTagsFromResource"
-	case "workspaces":
-		return "DeleteTags"
 	default:
 		return "UntagResource"
 	}
