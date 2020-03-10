@@ -26,6 +26,7 @@ var serviceNames = []string{
 	"appsync",
 	"athena",
 	"backup",
+	"cloud9",
 	"cloudfront",
 	"cloudhsmv2",
 	"cloudtrail",
@@ -35,6 +36,7 @@ var serviceNames = []string{
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
+	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
 	"configservice",
@@ -61,6 +63,7 @@ var serviceNames = []string{
 	"fsx",
 	"gamelift",
 	"glacier",
+	"globalaccelerator",
 	"glue",
 	"guardduty",
 	"greengrass",
@@ -87,6 +90,7 @@ var serviceNames = []string{
 	"organizations",
 	"pinpoint",
 	"qldb",
+	"quicksight",
 	"rds",
 	"resourcegroups",
 	"route53",
@@ -270,6 +274,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "CertificateAuthorityArn"
 	case "athena":
 		return "ResourceARN"
+	case "cloud9":
+		return "ResourceARN"
 	case "cloudfront":
 		return "Resource"
 	case "cloudhsmv2":
@@ -282,6 +288,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "cloudwatchlogs":
 		return "LogGroupName"
+	case "codestarnotifications":
+		return "Arn"
 	case "dax":
 		return "ResourceName"
 	case "devicefarm":

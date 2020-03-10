@@ -148,19 +148,6 @@ resource "aws_autoscaling_group" "bar" {
   launch_configuration = "${aws_launch_configuration.foobar.name}"
   vpc_zone_identifier  = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
 
-  tags = [
-    {
-      key                 = "explicit1"
-      value               = "value1"
-      propagate_at_launch = true
-    },
-    {
-      key                 = "explicit2"
-      value               = "value2"
-      propagate_at_launch = true
-    },
-  ]
-
   tags = ["${concat(
     list(
       map("key", "interpolation1", "value", "value3", "propagate_at_launch", true),
@@ -335,7 +322,6 @@ been launched, creating unintended behavior. If you need hooks to run on all
 instances, add them with `initial_lifecycle_hook` here, but take
 care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 
-<a id="timeouts"></a>
 ## Timeouts
 
 `autoscaling_group` provides the following

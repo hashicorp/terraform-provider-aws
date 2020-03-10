@@ -84,7 +84,7 @@ For more information about CloudWatch Logs for Lambda, see the [Lambda User Guid
 ```hcl
 resource "aws_lambda_function" "test_lambda" {
   function_name = "${var.lambda_function_name}"
-  ...
+  # ... other configuration ...
   depends_on    = ["aws_iam_role_policy_attachment.lambda_logs", "aws_cloudwatch_log_group.example"]
 }
 

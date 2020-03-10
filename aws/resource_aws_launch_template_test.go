@@ -8,10 +8,70 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_launch_template", &resource.Sweeper{
+		Name: "aws_launch_template",
+		Dependencies: []string{
+			"aws_autoscaling_group",
+			"aws_batch_compute_environment",
+		},
+		F: testSweepLaunchTemplates,
+	})
+}
+
+func testSweepLaunchTemplates(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeLaunchTemplatesInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.DescribeLaunchTemplatesPages(input, func(page *ec2.DescribeLaunchTemplatesOutput, lastPage bool) bool {
+		for _, launchTemplate := range page.LaunchTemplates {
+			id := aws.StringValue(launchTemplate.LaunchTemplateId)
+			input := &ec2.DeleteLaunchTemplateInput{
+				LaunchTemplateId: launchTemplate.LaunchTemplateId,
+			}
+
+			log.Printf("[INFO] Deleting EC2 Launch Template: %s", id)
+			_, err := conn.DeleteLaunchTemplate(input)
+
+			if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+				continue
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting EC2 Launch Template (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Launch Template sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error describing EC2 Launch Templates: %w", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 	var template ec2.LaunchTemplate
@@ -354,7 +414,8 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
-					testAccCheckTags(&template.Tags, "test", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.test", "bar"),
 				),
 			},
 			{
@@ -366,8 +427,8 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 				Config: testAccAWSLaunchTemplateConfig_tagsUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
-					testAccCheckTags(&template.Tags, "test", ""),
-					testAccCheckTags(&template.Tags, "bar", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
 				),
 			},
 		},
@@ -419,6 +480,26 @@ func TestAccAWSLaunchTemplate_capacityReservation_target(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_cpuOptions(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_cpuOptions(rName, 4, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+				),
 			},
 		},
 	})
@@ -1051,6 +1132,19 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rInt)
+}
+
+func testAccAWSLaunchTemplateConfig_cpuOptions(rName string, coreCount, threadsPerCore int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+	name = %q
+
+  cpu_options {
+		core_count = %d
+		threads_per_core = %d
+  }
+}
+`, rName, coreCount, threadsPerCore)
 }
 
 func testAccAWSLaunchTemplateConfig_creditSpecification(rName, instanceType, cpuCredits string) string {
