@@ -117,6 +117,7 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 	}
 
 	arn := aws.StringValue(resp.StreamARN)
+	d.SetId(arn)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{kinesisvideo.StatusCreating},
@@ -130,8 +131,6 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 	if _, err = stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("Error waiting for creating Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
-
-	d.SetId(arn)
 
 	return resourceAwsKinesisVideoStreamRead(d, meta)
 }
