@@ -1043,15 +1043,8 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	input := &cognitoidentityprovider.DescribeRiskConfigurationInput{
-		UserPoolId: aws.String(d.Id()),
-	}
-
-	out, err := conn.DescribeRiskConfiguration(input)
-	if out != nil {
-		if err := d.Set("tags", flattenAwsCognitoUserPoolRiskConfiguration(out.RiskConfiguration)); err != nil {
-			return fmt.Errorf("error setting User Pool Risk Config: %s", err)
-		}
+	if err := d.Set("risk_configuration", flattenAwsCognitoUserPoolRiskConfiguration(conn, d.Id())); err != nil {
+		return fmt.Errorf("error setting User Pool Risk Config: %s", err)
 	}
 
 	return nil
@@ -1282,12 +1275,21 @@ func expandAwsCognitoUserPoolRiskConfiguration(v []interface{}, userPoolId strin
 	return config
 }
 
-func flattenAwsCognitoUserPoolRiskConfiguration(riskConfig *cognitoidentityprovider.RiskConfigurationType) []map[string]interface{} {
+func flattenAwsCognitoUserPoolRiskConfiguration(conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId string) []map[string]interface{} {
+	input := &cognitoidentityprovider.DescribeRiskConfigurationInput{
+		UserPoolId: aws.String(userPoolId),
+	}
+
+	out, err := conn.DescribeRiskConfiguration(input)
+	if err == nil {
+		return nil
+	}
 	result := make([]map[string]interface{}, 0)
-	if riskConfig == nil {
+	if out == nil {
 		return result
 	}
 
+	riskConfig := out.RiskConfiguration
 	item := make(map[string]interface{})
 	item["account_takeover_risk_configuration"] = flattenAwsCognitoUserPoolAccountTakeoverConfiguration(riskConfig.AccountTakeoverRiskConfiguration)
 	item["risk_exception_configuration"] = flattenAwsCognitoUserPoolRiskExceptionConfiguration(riskConfig.RiskExceptionConfiguration)
