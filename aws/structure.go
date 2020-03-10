@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"sort"
@@ -4256,6 +4257,55 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*d
 	return
 }
 
+func diffDynamoDbReplicas(oldReplica, newReplica []interface{}) (ops []*dynamodb.ReplicationGroupUpdate, e error) {
+	// Transform slices into maps
+	oldReplicas := make(map[string]interface{})
+	for _, replicaData := range oldReplica {
+		m := replicaData.(map[string]interface{})
+		oldReplicas[m["region"].(string)] = m
+	}
+	newReplicas := make(map[string]interface{})
+	for _, replicaData := range newReplica {
+		m := replicaData.(map[string]interface{})
+		newReplicas[m["region"].(string)] = m
+	}
+
+	for _, data := range newReplica {
+		newMap := data.(map[string]interface{})
+		newName := newMap["region"].(string)
+
+		if _, exists := oldReplicas[newName]; !exists {
+			m := data.(map[string]interface{})
+			regionName := m["region"].(string)
+
+			ops = append(ops, &dynamodb.ReplicationGroupUpdate{
+				Create: &dynamodb.CreateReplicationGroupMemberAction{
+					RegionName: aws.String(regionName),
+				},
+			})
+		}
+	}
+
+	for _, data := range oldReplicas {
+		oldMap := data.(map[string]interface{})
+		oldName := oldMap["region"].(string)
+
+		_, exists := newReplicas[oldName]
+		if exists {
+			// newMap := newData.(map[string]interface{})
+			// regionName := newMap["region"].(string)
+		} else {
+			regionName := oldName
+			ops = append(ops, &dynamodb.ReplicationGroupUpdate{
+				Delete: &dynamodb.DeleteReplicationGroupMemberAction{
+					RegionName: aws.String(regionName),
+				},
+			})
+		}
+	}
+	return
+}
+
 func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{}, error) {
 	mapCopy, err := copystructure.Copy(in)
 	if err != nil {
@@ -4306,6 +4356,141 @@ func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []i
 	}
 
 	return []interface{}{m}
+}
+
+func flattenAwsDynamoDbTableResource_2019(d *schema.ResourceData, table *dynamodb.TableDescription) error {
+	d.Set("billing_mode", dynamodb.BillingModeProvisioned)
+	if table.BillingModeSummary != nil {
+		d.Set("billing_mode", table.BillingModeSummary.BillingMode)
+	}
+
+	d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
+	d.Set("read_capacity", table.ProvisionedThroughput.ReadCapacityUnits)
+
+	attributes := []interface{}{}
+	for _, attrdef := range table.AttributeDefinitions {
+		attribute := map[string]string{
+			"name": *attrdef.AttributeName,
+			"type": *attrdef.AttributeType,
+		}
+		attributes = append(attributes, attribute)
+	}
+
+	d.Set("attribute", attributes)
+	d.Set("name", table.TableName)
+
+	for _, attribute := range table.KeySchema {
+		if *attribute.KeyType == dynamodb.KeyTypeHash {
+			d.Set("hash_key", attribute.AttributeName)
+		}
+
+		if *attribute.KeyType == dynamodb.KeyTypeRange {
+			d.Set("range_key", attribute.AttributeName)
+		}
+	}
+
+	lsiList := make([]map[string]interface{}, 0, len(table.LocalSecondaryIndexes))
+	for _, lsiObject := range table.LocalSecondaryIndexes {
+		lsi := map[string]interface{}{
+			"name":            *lsiObject.IndexName,
+			"projection_type": *lsiObject.Projection.ProjectionType,
+		}
+
+		for _, attribute := range lsiObject.KeySchema {
+
+			if *attribute.KeyType == dynamodb.KeyTypeRange {
+				lsi["range_key"] = *attribute.AttributeName
+			}
+		}
+		nkaList := make([]string, len(lsiObject.Projection.NonKeyAttributes))
+		for _, nka := range lsiObject.Projection.NonKeyAttributes {
+			nkaList = append(nkaList, *nka)
+		}
+		lsi["non_key_attributes"] = nkaList
+
+		lsiList = append(lsiList, lsi)
+	}
+
+	err := d.Set("local_secondary_index", lsiList)
+	if err != nil {
+		return err
+	}
+
+	gsiList := make([]map[string]interface{}, 0, len(table.GlobalSecondaryIndexes))
+	for _, gsiObject := range table.GlobalSecondaryIndexes {
+		gsi := map[string]interface{}{
+			"write_capacity": *gsiObject.ProvisionedThroughput.WriteCapacityUnits,
+			"read_capacity":  *gsiObject.ProvisionedThroughput.ReadCapacityUnits,
+			"name":           *gsiObject.IndexName,
+		}
+
+		for _, attribute := range gsiObject.KeySchema {
+			if *attribute.KeyType == dynamodb.KeyTypeHash {
+				gsi["hash_key"] = *attribute.AttributeName
+			}
+
+			if *attribute.KeyType == dynamodb.KeyTypeRange {
+				gsi["range_key"] = *attribute.AttributeName
+			}
+		}
+
+		gsi["projection_type"] = *(gsiObject.Projection.ProjectionType)
+
+		nonKeyAttrs := make([]string, 0, len(gsiObject.Projection.NonKeyAttributes))
+		for _, nonKeyAttr := range gsiObject.Projection.NonKeyAttributes {
+			nonKeyAttrs = append(nonKeyAttrs, *nonKeyAttr)
+		}
+		gsi["non_key_attributes"] = nonKeyAttrs
+
+		gsiList = append(gsiList, gsi)
+	}
+
+	if table.StreamSpecification != nil {
+		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
+		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
+	} else {
+		d.Set("stream_view_type", "")
+		d.Set("stream_enabled", false)
+	}
+
+	d.Set("stream_arn", table.LatestStreamArn)
+	d.Set("stream_label", table.LatestStreamLabel)
+
+	err = d.Set("global_secondary_index", gsiList)
+	if err != nil {
+		return err
+	}
+
+	sseOptions := []map[string]interface{}{}
+	if sseDescription := table.SSEDescription; sseDescription != nil {
+		sseOptions = []map[string]interface{}{{
+			"enabled":     aws.StringValue(sseDescription.Status) == dynamodb.SSEStatusEnabled,
+			"kms_key_arn": aws.StringValue(sseDescription.KMSMasterKeyArn),
+		}}
+	}
+	err = d.Set("server_side_encryption", sseOptions)
+	if err != nil {
+		return err
+	}
+
+	replicaList := make([]map[string]interface{}, 0, len(table.Replicas))
+	for _, replicaObject := range table.Replicas {
+		replica := map[string]interface{}{
+			"region": aws.StringValue(replicaObject.RegionName),
+		}
+
+		replicaList = append(replicaList, replica)
+	}
+
+	log.Printf("[DEBUG] Creating replica list: %#v", replicaList)
+	err = d.Set("replica", replicaList)
+	if err != nil {
+		return err
+	}
+
+	d.Set("arn", table.TableArn)
+
+	return nil
 }
 
 func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.TableDescription) error {
