@@ -33,6 +33,7 @@ func resourceAwsRoute53Zone() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				DiffSuppressFunc: suppressRoute53ZoneNameWithTrailingDot,
+				ValidateFunc:     validation.StringLenBetween(1, 1024),
 			},
 
 			"comment": {
@@ -89,6 +90,7 @@ func resourceAwsRoute53Zone() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"vpc"},
+				ValidateFunc:  validation.StringLenBetween(1, 32),
 			},
 
 			"name_servers": {
