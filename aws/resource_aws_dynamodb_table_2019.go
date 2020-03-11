@@ -1,297 +1,41 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-func resourceAwsDynamoDbTable2019() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceAwsDynamoDbTable2019Create,
-		Read:   resourceAwsDynamoDbTable2019Read,
-		Update: resourceAwsDynamoDbTable2019Update,
-		Delete: resourceAwsDynamoDbTable2019Delete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(60 * time.Minute),
-		},
-
-		CustomizeDiff: customdiff.Sequence(
-			func(diff *schema.ResourceDiff, v interface{}) error {
-				return validateDynamoDbStreamSpec(diff)
-			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
-				return validateDynamoDbTableAttributes(diff)
-			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
-				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
-					o, n := diff.GetChange("server_side_encryption")
-					if isDynamoDbTableOptionDisabled(o) && isDynamoDbTableOptionDisabled(n) {
-						return diff.Clear("server_side_encryption")
-					}
-				}
-				return nil
-			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
-				if diff.Id() != "" && diff.HasChange("point_in_time_recovery") {
-					o, n := diff.GetChange("point_in_time_recovery")
-					if isDynamoDbTableOptionDisabled(o) && isDynamoDbTableOptionDisabled(n) {
-						return diff.Clear("point_in_time_recovery")
-					}
-				}
-				return nil
-			},
-		),
-
-		SchemaVersion: 1,
-		MigrateState:  resourceAwsDynamoDbTableMigrateState,
-
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"hash_key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"range_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"billing_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  dynamodb.BillingModeProvisioned,
-				ValidateFunc: validation.StringInSlice([]string{
-					dynamodb.BillingModePayPerRequest,
-					dynamodb.BillingModeProvisioned,
-				}, false),
-			},
-			"write_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"read_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"attribute": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								dynamodb.ScalarAttributeTypeB,
-								dynamodb.ScalarAttributeTypeN,
-								dynamodb.ScalarAttributeTypeS,
-							}, false),
-						},
-					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-					return hashcode.String(buf.String())
-				},
-			},
-			"ttl": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
-			},
-			"local_secondary_index": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"projection_type": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"non_key_attributes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-					return hashcode.String(buf.String())
-				},
-			},
-			"global_secondary_index": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"write_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"read_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"hash_key": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"projection_type": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"non_key_attributes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"stream_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"stream_view_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(v interface{}) string {
-					value := v.(string)
-					return strings.ToUpper(value)
-				},
-				ValidateFunc: validation.StringInSlice([]string{
-					"",
-					dynamodb.StreamViewTypeNewImage,
-					dynamodb.StreamViewTypeOldImage,
-					dynamodb.StreamViewTypeNewAndOldImages,
-					dynamodb.StreamViewTypeKeysOnly,
-				}, false),
-			},
-			"stream_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stream_label": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"server_side_encryption": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"kms_key_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateArn,
-						},
-					},
-				},
-			},
-			"tags": tagsSchema(),
-			"point_in_time_recovery": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"replica": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: false,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"region_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+func replicaSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: false,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"region_name": {
+					Type:     schema.TypeString,
+					Required: true,
 				},
 			},
 		},
 	}
+}
+
+func resourceAwsDynamoDbTable2019() *schema.Resource {
+	schema := resourceAwsDynamoDbTable()
+	schema.Create = resourceAwsDynamoDbTable2019Create
+	schema.Read = resourceAwsDynamoDbTable2019Read
+	schema.Update = resourceAwsDynamoDbTable2019Update
+	schema.Delete = resourceAwsDynamoDbTable2019Delete
+	schema.Schema["replica"] = replicaSchema()
+
+	return schema
 }
 
 func resourceAwsDynamoDbTable2019Create(d *schema.ResourceData, meta interface{}) error {
