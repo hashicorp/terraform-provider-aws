@@ -47,7 +47,7 @@ func replicaSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Required: true,
 							},
-							"provisioned_capcity_override": {
+							"provisioned_capacity_override": {
 								Type:     schema.TypeMap,
 								Required: true,
 								Elem: &schema.Resource{
