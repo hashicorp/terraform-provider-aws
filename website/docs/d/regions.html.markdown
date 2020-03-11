@@ -6,7 +6,7 @@ description: |-
     Provides list of all enabled AWS regions
 ---
 
-# Data Source: aws_region
+# Data Source: aws_regions
 
 `aws_regions` provides list of all enabled AWS regions.
 
