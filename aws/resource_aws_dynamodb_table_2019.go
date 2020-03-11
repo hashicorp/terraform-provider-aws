@@ -22,6 +22,46 @@ func replicaSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 				},
+				"kms_master_key_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"provision_capacity_override": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"read_capacity": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+						},
+					},
+				},
+				"global_secondary_index": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"provisioned_capcity_override": {
+								Type:     schema.TypeMap,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"read_capacity": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
