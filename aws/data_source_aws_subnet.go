@@ -91,6 +91,11 @@ func dataSourceAwsSubnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -184,6 +189,7 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", subnet.SubnetArn)
 	d.Set("owner_id", subnet.OwnerId)
+	d.Set("outpost_arn", subnet.OutpostArn)
 
 	return nil
 }

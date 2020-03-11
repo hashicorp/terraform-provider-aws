@@ -14,6 +14,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
 	tag := "tf-acc-subnet-data-source"
 	arnregex := regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)
+	//outpostArnRegex := regexp.MustCompile(`(^arn:[^:]+:outposts:[^:]+:\d{12}:outpost:\d|^$)`)
 
 	snResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
@@ -48,6 +49,8 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds1ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
 						ds1ResourceName, "arn", arnregex),
+					resource.TestCheckResourceAttr(
+						ds1ResourceName, "outpost_arn", ""),
 
 					resource.TestCheckResourceAttrPair(
 						ds2ResourceName, "id", snResourceName, "id"),
@@ -65,6 +68,8 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds2ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
 						ds2ResourceName, "arn", arnregex),
+					resource.TestCheckResourceAttr(
+						ds2ResourceName, "outpost_arn", ""),
 
 					resource.TestCheckResourceAttrPair(
 						ds3ResourceName, "id", snResourceName, "id"),
@@ -82,6 +87,8 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds3ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
 						ds3ResourceName, "arn", arnregex),
+					resource.TestCheckResourceAttr(
+						ds3ResourceName, "outpost_arn", ""),
 
 					resource.TestCheckResourceAttrPair(
 						ds4ResourceName, "id", snResourceName, "id"),
@@ -99,6 +106,8 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds4ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
 						ds4ResourceName, "arn", arnregex),
+					resource.TestCheckResourceAttr(
+						ds4ResourceName, "outpost_arn", ""),
 
 					resource.TestCheckResourceAttrPair(
 						ds5ResourceName, "id", snResourceName, "id"),
@@ -116,6 +125,8 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds5ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
 						ds5ResourceName, "arn", arnregex),
+					resource.TestCheckResourceAttr(
+						ds5ResourceName, "outpost_arn", ""),
 
 					resource.TestCheckResourceAttrPair(
 						ds6ResourceName, "id", snResourceName, "id"),
@@ -133,6 +144,8 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds6ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
 						ds6ResourceName, "arn", arnregex),
+					resource.TestCheckResourceAttr(
+						ds6ResourceName, "outpost_arn", ""),
 				),
 			},
 		},
