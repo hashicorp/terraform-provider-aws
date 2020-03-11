@@ -3479,33 +3479,6 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 	return values
 }
 
-func expandCognitoUserPoolSmsConfiguration(config map[string]interface{}) *cognitoidentityprovider.SmsConfigurationType {
-	smsConfigurationType := &cognitoidentityprovider.SmsConfigurationType{
-		SnsCallerArn: aws.String(config["sns_caller_arn"].(string)),
-	}
-
-	if v, ok := config["external_id"]; ok && v.(string) != "" {
-		smsConfigurationType.ExternalId = aws.String(v.(string))
-	}
-
-	return smsConfigurationType
-}
-
-func flattenCognitoUserPoolSmsConfiguration(s *cognitoidentityprovider.SmsConfigurationType) []map[string]interface{} {
-	m := map[string]interface{}{}
-
-	if s == nil {
-		return nil
-	}
-
-	if s.ExternalId != nil {
-		m["external_id"] = *s.ExternalId
-	}
-	m["sns_caller_arn"] = *s.SnsCallerArn
-
-	return []map[string]interface{}{m}
-}
-
 func expandCognitoUserPoolVerificationMessageTemplate(config map[string]interface{}) *cognitoidentityprovider.VerificationMessageTemplateType {
 	verificationMessageTemplateType := &cognitoidentityprovider.VerificationMessageTemplateType{}
 
