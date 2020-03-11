@@ -373,8 +373,8 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 		o, n := d.GetChange("endpoint_configuration.0.vpc_endpoint_ids")
 		prefix := "/endpointConfiguration/vpcEndpointIds"
 
-		old := o.([]interface{})
-		new := n.([]interface{})
+		old := o.(*schema.Set).List()
+		new := n.(*schema.Set).List()
 
 		for _, v := range old {
 			operations = append(operations, &apigateway.PatchOperation{
