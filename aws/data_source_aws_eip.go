@@ -142,9 +142,9 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		dashIP := strings.Replace(*eip.PublicIp, ".", "-", -1)
 
 		if region == "us-east-1" {
-			d.Set("public_dns", fmt.Sprintf("ec2-%s.compute-1.amazonaws.com", dashIP))
+			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.compute-1", dashIP)))
 		} else {
-			d.Set("public_dns", fmt.Sprintf("ec2-%s.%s.compute.amazonaws.com", dashIP, region))
+			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s.compute", dashIP, region)))
 		}
 	}
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
