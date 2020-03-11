@@ -15,7 +15,6 @@ func replicaSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
-		Computed: false,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"region_name": {
@@ -118,6 +117,13 @@ func createDynamoDbReplicas(tableName string, replicas []interface{}, conn *dyna
 			err := resource.Retry(20*time.Minute, func() *resource.RetryError {
 				_, err := conn.UpdateTable(input)
 				if err != nil {
+					if isAWSErr(err, "ThrottlingException", "") {
+						return resource.RetryableError(err)
+					}
+					if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+						return resource.RetryableError(err)
+					}
+
 					return resource.NonRetryableError(err)
 				}
 				return nil
@@ -157,6 +163,13 @@ func deleteDynamoDbReplicas(tableName string, replicas []interface{}, conn *dyna
 			err := resource.Retry(20*time.Minute, func() *resource.RetryError {
 				_, err := conn.UpdateTable(input)
 				if err != nil {
+					if isAWSErr(err, "ThrottlingException", "") {
+						return resource.RetryableError(err)
+					}
+					if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+						return resource.RetryableError(err)
+					}
+
 					return resource.NonRetryableError(err)
 				}
 				return nil
@@ -203,10 +216,16 @@ func resourceAwsDynamoDbTable2019Update(d *schema.ResourceData, meta interface{}
 			if replicaErr == nil {
 				if replicaUpdate.Delete == nil {
 					log.Printf("[DEBUG] waiting for replica to be updated")
-					waitForDynamoDbReplicaUpdateToBeCompleted(d.Id(), aws.StringValue(replicaUpdate.Update.RegionName), 20*time.Minute, conn)
+					err = waitForDynamoDbReplicaUpdateToBeCompleted(d.Id(), aws.StringValue(replicaUpdate.Update.RegionName), 20*time.Minute, conn)
+					if err != nil {
+						return fmt.Errorf("error waiting for DynamoDB Table Replicas to update (%s): %s", d.Id(), err)
+					}
 				} else {
 					log.Printf("[DEBUG] waiting for replica to be deleted")
-					waitForDynamoDbReplicaDeleteToBeCompleted(d.Id(), aws.StringValue(replicaUpdate.Delete.RegionName), 20*time.Minute, conn)
+					err = waitForDynamoDbReplicaDeleteToBeCompleted(d.Id(), aws.StringValue(replicaUpdate.Delete.RegionName), 20*time.Minute, conn)
+					if err != nil {
+						return fmt.Errorf("error waiting for DynamoDB Table Replicas to delete (%s): %s", d.Id(), err)
+					}
 				}
 			} else {
 				return fmt.Errorf("error updating DynamoDB Table (%s): %s", d.Id(), replicaErr)
@@ -277,10 +296,13 @@ func resourceAwsDynamoDbTable2019Delete(d *schema.ResourceData, meta interface{}
 
 	output, err := conn.DescribeTable(input)
 	log.Printf("[DEBUG] DynamoDB delete describe: %s", output)
+	if err != nil {
+		return fmt.Errorf("error describing DynamoDB Table (%s):  %s", d.Id(), err)
+	}
 
 	if len(output.Table.Replicas) > 0 {
 		if err := deleteDynamoDbReplicas(d.Id(), d.Get("replica").([]interface{}), conn); err != nil {
-			return fmt.Errorf("error enabled DynamoDB Table (%s) replicas: %s", d.Id(), err)
+			return fmt.Errorf("error deleting DynamoDB Table (%s) replicas: %s", d.Id(), err)
 		}
 	}
 
