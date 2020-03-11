@@ -160,7 +160,7 @@ func TestAccAWSLightsailInstance_Tags(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
-					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "2"),
 				),
 			},
 			{
@@ -171,7 +171,7 @@ func TestAccAWSLightsailInstance_Tags(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
-					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "3"),
 				),
 			},
 		},
@@ -320,6 +320,7 @@ resource "aws_lightsail_instance" "lightsail_instance_test" {
   bundle_id         = "nano_1_0"
   tags = {
     Name = "tf-test"
+    KeyOnlyTag = ""
   }
 }
 `, lightsailName)
@@ -338,6 +339,7 @@ resource "aws_lightsail_instance" "lightsail_instance_test" {
   bundle_id         = "nano_1_0"
   tags = {
     Name = "tf-test",
+    KeyOnlyTag = ""
     ExtraName = "tf-test"
   }
 }
