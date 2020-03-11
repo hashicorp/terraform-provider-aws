@@ -59,12 +59,14 @@ func resourceAwsApiGatewayV2Api() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
+					apigatewayv2.ProtocolTypeHttp,
 					apigatewayv2.ProtocolTypeWebsocket,
 				}, false),
 			},
 			"route_selection_expression": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "$request.method $request.path",
 			},
 			"tags": tagsSchema(),
 			"version": {
@@ -79,17 +81,20 @@ func resourceAwsApiGatewayV2Api() *schema.Resource {
 func resourceAwsApiGatewayV2ApiCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
+	protocolType := d.Get("protocol_type").(string)
 	req := &apigatewayv2.CreateApiInput{
-		Name:                     aws.String(d.Get("name").(string)),
-		ProtocolType:             aws.String(d.Get("protocol_type").(string)),
-		RouteSelectionExpression: aws.String(d.Get("route_selection_expression").(string)),
-		Tags:                     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Apigatewayv2Tags(),
+		Name:         aws.String(d.Get("name").(string)),
+		ProtocolType: aws.String(protocolType),
+		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Apigatewayv2Tags(),
 	}
 	if v, ok := d.GetOk("api_key_selection_expression"); ok {
 		req.ApiKeySelectionExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("description"); ok {
 		req.Description = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("route_selection_expression"); ok {
+		req.RouteSelectionExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("version"); ok {
 		req.Version = aws.String(v.(string))
@@ -153,32 +158,27 @@ func resourceAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsApiGatewayV2ApiUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
-	updateApi := false
-	req := &apigatewayv2.UpdateApiInput{
-		ApiId: aws.String(d.Id()),
-	}
-	if d.HasChange("api_key_selection_expression") {
-		updateApi = true
-		req.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
-	}
-	if d.HasChange("description") {
-		updateApi = true
-		req.Description = aws.String(d.Get("description").(string))
-	}
-	if d.HasChange("name") {
-		updateApi = true
-		req.Name = aws.String(d.Get("name").(string))
-	}
-	if d.HasChange("route_selection_expression") {
-		updateApi = true
-		req.RouteSelectionExpression = aws.String(d.Get("route_selection_expression").(string))
-	}
-	if d.HasChange("version") {
-		updateApi = true
-		req.Version = aws.String(d.Get("version").(string))
-	}
+	if d.HasChanges("api_key_selection_expression", "description", "name", "route_selection_expression", "version") {
+		req := &apigatewayv2.UpdateApiInput{
+			ApiId: aws.String(d.Id()),
+		}
 
-	if updateApi {
+		if d.HasChange("api_key_selection_expression") {
+			req.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
+		}
+		if d.HasChange("description") {
+			req.Description = aws.String(d.Get("description").(string))
+		}
+		if d.HasChange("name") {
+			req.Name = aws.String(d.Get("name").(string))
+		}
+		if d.HasChange("route_selection_expression") {
+			req.RouteSelectionExpression = aws.String(d.Get("route_selection_expression").(string))
+		}
+		if d.HasChange("version") {
+			req.Version = aws.String(d.Get("version").(string))
+		}
+
 		log.Printf("[DEBUG] Updating API Gateway v2 API: %s", req)
 		_, err := conn.UpdateApi(req)
 		if err != nil {

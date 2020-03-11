@@ -14,7 +14,7 @@ Manages an Amazon API Gateway Version 2 API.
 
 ## Example Usage
 
-### Basic
+### Basic WebSocket API
 
 ```hcl
 resource "aws_api_gatewayv2_api" "example" {
@@ -24,15 +24,27 @@ resource "aws_api_gatewayv2_api" "example" {
 }
 ```
 
+### Basic HTTP API
+
+```hcl
+resource "aws_api_gatewayv2_api" "example" {
+  name          = "example-http-api"
+  protocol_type = "HTTP"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) The name of the API.
-* `protocol_type` - (Required) The API protocol. Valid values: `WEBSOCKET`.
-* `route_selection_expression` - (Required) The [route selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-selection-expressions) for the API.
-* `api_key_selection_expression` - (Optional) An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions). Valid values: `$context.authorizer.usageIdentifierKey`, `$request.header.x-api-key`. Defaults to `$request.header.x-api-key`.
+* `protocol_type` - (Required) The API protocol. Valid values: `HTTP`, `WEBSOCKET`.
+* `api_key_selection_expression` - (Optional) An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions).
+Valid values: `$context.authorizer.usageIdentifierKey`, `$request.header.x-api-key`. Defaults to `$request.header.x-api-key`.
+Applicable for WebSocket APIs.
 * `description` - (Optional) The description of the API.
+* `route_selection_expression` - (Optional) The [route selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-selection-expressions) for the API.
+Defaults to `$request.method $request.path`.
 * `tags` - (Optional) A mapping of tags to assign to the API.
 * `version` - (Optional) A version identifier for the API.
 

@@ -65,7 +65,7 @@ func testSweepAPIGatewayV2Apis(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSAPIGatewayV2Api_basic(t *testing.T) {
+func TestAccAWSAPIGatewayV2Api_basicWebSocket(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_api_gatewayv2_api.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -76,7 +76,7 @@ func TestAccAWSAPIGatewayV2Api_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2ApiConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2ApiConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
@@ -87,6 +87,41 @@ func TestAccAWSAPIGatewayV2Api_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeWebsocket),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.action"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2Api_basicHttp(t *testing.T) {
+	var v apigatewayv2.GetApiOutput
+	resourceName := "aws_api_gatewayv2_api.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2ApiConfig_basicHttp(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
+					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "version", ""),
 				),
@@ -111,7 +146,7 @@ func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2ApiConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2ApiConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					testAccCheckAWSAPIGatewayV2ApiDisappears(&v),
@@ -122,7 +157,7 @@ func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_AllAttributes(t *testing.T) {
+func TestAccAWSAPIGatewayV2Api_AllAttributesWebSocket(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_api_gatewayv2_api.test"
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
@@ -134,7 +169,7 @@ func TestAccAWSAPIGatewayV2Api_AllAttributes(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributes(rName1),
+				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributesWebSocket(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
@@ -150,7 +185,7 @@ func TestAccAWSAPIGatewayV2Api_AllAttributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2ApiConfig_basic(rName1),
+				Config: testAccAWSAPIGatewayV2ApiConfig_basicWebSocket(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
@@ -163,7 +198,7 @@ func TestAccAWSAPIGatewayV2Api_AllAttributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributes(rName2),
+				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributesWebSocket(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$context.authorizer.usageIdentifierKey"),
@@ -175,13 +210,86 @@ func TestAccAWSAPIGatewayV2Api_AllAttributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributes(rName1),
+				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributesWebSocket(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$context.authorizer.usageIdentifierKey"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.service"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "v1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2Api_AllAttributesHttp(t *testing.T) {
+	var v apigatewayv2.GetApiOutput
+	resourceName := "aws_api_gatewayv2_api.test"
+	rName1 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributesHttp(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
+					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "v1"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayV2ApiConfig_basicHttp(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
+					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", ""),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributesHttp(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "v1"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayV2ApiConfig_allAttributesHttp(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "version", "v1"),
 				),
@@ -229,7 +337,7 @@ func TestAccAWSAPIGatewayV2Api_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayV2ApiConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2ApiConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
@@ -307,7 +415,7 @@ func testAccCheckAWSAPIGatewayV2ApiExists(n string, v *apigatewayv2.GetApiOutput
 	}
 }
 
-func testAccAWSAPIGatewayV2ApiConfig_basic(rName string) string {
+func testAccAWSAPIGatewayV2ApiConfig_basicWebSocket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gatewayv2_api" "test" {
   name                       = %[1]q
@@ -317,7 +425,16 @@ resource "aws_api_gatewayv2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayV2ApiConfig_allAttributes(rName string) string {
+func testAccAWSAPIGatewayV2ApiConfig_basicHttp(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gatewayv2_api" "test" {
+  name          = %[1]q
+  protocol_type = "HTTP"
+}
+`, rName)
+}
+
+func testAccAWSAPIGatewayV2ApiConfig_allAttributesWebSocket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gatewayv2_api" "test" {
   api_key_selection_expression = "$context.authorizer.usageIdentifierKey"
@@ -326,6 +443,17 @@ resource "aws_api_gatewayv2_api" "test" {
   protocol_type                = "WEBSOCKET"
   route_selection_expression   = "$request.body.service"
   version                      = "v1"
+}
+`, rName)
+}
+
+func testAccAWSAPIGatewayV2ApiConfig_allAttributesHttp(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gatewayv2_api" "test" {
+  description   = "test description"
+  name          = %[1]q
+  protocol_type = "HTTP"
+  version       = "v1"
 }
 `, rName)
 }
