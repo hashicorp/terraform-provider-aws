@@ -4,6 +4,11 @@ NOTES:
 
 * resource/aws_cognito_user_pool: The addition of Software Token MFA support required the use of new `GetUserPoolMfaConfig` and `SetUserPoolMfaConfig` API calls. Restrictive IAM permissions for Terraform may require updates.  [GH-12358]
 
+FEATURES:
+
+* **New Resource:** `aws_apigatewayv2_api` [GH-8842]
+
+
 ENHANCEMENTS:
 
 * resource/aws_appsync_graphql_api: Add `xray_enabled` argument [GH-11972]
