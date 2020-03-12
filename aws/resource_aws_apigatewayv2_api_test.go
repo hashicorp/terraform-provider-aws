@@ -15,8 +15,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_api_gatewayv2_api", &resource.Sweeper{
-		Name: "aws_api_gatewayv2_api",
+	resource.AddTestSweepers("aws_apigatewayv2_api", &resource.Sweeper{
+		Name: "aws_apigatewayv2_api",
 		F:    testSweepAPIGatewayV2Apis,
 	})
 }
@@ -67,7 +67,7 @@ func testSweepAPIGatewayV2Apis(region string) error {
 
 func TestAccAWSAPIGatewayV2Api_basicWebSocket(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
-	resourceName := "aws_api_gatewayv2_api.test"
+	resourceName := "aws_apigatewayv2_api.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -102,7 +102,7 @@ func TestAccAWSAPIGatewayV2Api_basicWebSocket(t *testing.T) {
 
 func TestAccAWSAPIGatewayV2Api_basicHttp(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
-	resourceName := "aws_api_gatewayv2_api.test"
+	resourceName := "aws_apigatewayv2_api.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -137,7 +137,7 @@ func TestAccAWSAPIGatewayV2Api_basicHttp(t *testing.T) {
 
 func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
-	resourceName := "aws_api_gatewayv2_api.test"
+	resourceName := "aws_apigatewayv2_api.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -159,7 +159,7 @@ func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 
 func TestAccAWSAPIGatewayV2Api_AllAttributesWebSocket(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
-	resourceName := "aws_api_gatewayv2_api.test"
+	resourceName := "aws_apigatewayv2_api.test"
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -232,7 +232,7 @@ func TestAccAWSAPIGatewayV2Api_AllAttributesWebSocket(t *testing.T) {
 
 func TestAccAWSAPIGatewayV2Api_AllAttributesHttp(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
-	resourceName := "aws_api_gatewayv2_api.test"
+	resourceName := "aws_apigatewayv2_api.test"
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -305,7 +305,7 @@ func TestAccAWSAPIGatewayV2Api_AllAttributesHttp(t *testing.T) {
 
 func TestAccAWSAPIGatewayV2Api_Tags(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
-	resourceName := "aws_api_gatewayv2_api.test"
+	resourceName := "aws_apigatewayv2_api.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -357,7 +357,7 @@ func testAccCheckAWSAPIGatewayV2ApiDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gatewayv2_api" {
+		if rs.Type != "aws_apigatewayv2_api" {
 			continue
 		}
 
@@ -417,7 +417,7 @@ func testAccCheckAWSAPIGatewayV2ApiExists(n string, v *apigatewayv2.GetApiOutput
 
 func testAccAWSAPIGatewayV2ApiConfig_basicWebSocket(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gatewayv2_api" "test" {
+resource "aws_apigatewayv2_api" "test" {
   name                       = %[1]q
   protocol_type              = "WEBSOCKET"
   route_selection_expression = "$request.body.action"
@@ -427,7 +427,7 @@ resource "aws_api_gatewayv2_api" "test" {
 
 func testAccAWSAPIGatewayV2ApiConfig_basicHttp(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gatewayv2_api" "test" {
+resource "aws_apigatewayv2_api" "test" {
   name          = %[1]q
   protocol_type = "HTTP"
 }
@@ -436,7 +436,7 @@ resource "aws_api_gatewayv2_api" "test" {
 
 func testAccAWSAPIGatewayV2ApiConfig_allAttributesWebSocket(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gatewayv2_api" "test" {
+resource "aws_apigatewayv2_api" "test" {
   api_key_selection_expression = "$context.authorizer.usageIdentifierKey"
   description                  = "test description"
   name                         = %[1]q
@@ -449,7 +449,7 @@ resource "aws_api_gatewayv2_api" "test" {
 
 func testAccAWSAPIGatewayV2ApiConfig_allAttributesHttp(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gatewayv2_api" "test" {
+resource "aws_apigatewayv2_api" "test" {
   description   = "test description"
   name          = %[1]q
   protocol_type = "HTTP"
@@ -460,7 +460,7 @@ resource "aws_api_gatewayv2_api" "test" {
 
 func testAccAWSAPIGatewayV2ApiConfig_tags(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gatewayv2_api" "test" {
+resource "aws_apigatewayv2_api" "test" {
   name                       = %[1]q
   protocol_type              = "WEBSOCKET"
   route_selection_expression = "$request.body.action"
