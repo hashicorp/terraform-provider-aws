@@ -8,12 +8,21 @@ import (
 	"github.com/bflad/tfproviderlint/passes/AT005"
 	"github.com/bflad/tfproviderlint/passes/AT006"
 	"github.com/bflad/tfproviderlint/passes/AT007"
+	"github.com/bflad/tfproviderlint/passes/AT008"
 	"github.com/bflad/tfproviderlint/passes/R001"
 	"github.com/bflad/tfproviderlint/passes/R002"
 	"github.com/bflad/tfproviderlint/passes/R003"
 	"github.com/bflad/tfproviderlint/passes/R004"
 	"github.com/bflad/tfproviderlint/passes/R005"
 	"github.com/bflad/tfproviderlint/passes/R006"
+	"github.com/bflad/tfproviderlint/passes/R007"
+	"github.com/bflad/tfproviderlint/passes/R008"
+	"github.com/bflad/tfproviderlint/passes/R009"
+	"github.com/bflad/tfproviderlint/passes/R010"
+	"github.com/bflad/tfproviderlint/passes/R011"
+	"github.com/bflad/tfproviderlint/passes/R012"
+	"github.com/bflad/tfproviderlint/passes/R013"
+	"github.com/bflad/tfproviderlint/passes/R014"
 	"github.com/bflad/tfproviderlint/passes/S001"
 	"github.com/bflad/tfproviderlint/passes/S002"
 	"github.com/bflad/tfproviderlint/passes/S003"
@@ -37,7 +46,25 @@ import (
 	"github.com/bflad/tfproviderlint/passes/S021"
 	"github.com/bflad/tfproviderlint/passes/S022"
 	"github.com/bflad/tfproviderlint/passes/S023"
+	"github.com/bflad/tfproviderlint/passes/S024"
+	"github.com/bflad/tfproviderlint/passes/S025"
+	"github.com/bflad/tfproviderlint/passes/S026"
+	"github.com/bflad/tfproviderlint/passes/S027"
+	"github.com/bflad/tfproviderlint/passes/S028"
+	"github.com/bflad/tfproviderlint/passes/S029"
+	"github.com/bflad/tfproviderlint/passes/S030"
+	"github.com/bflad/tfproviderlint/passes/S031"
+	"github.com/bflad/tfproviderlint/passes/S032"
+	"github.com/bflad/tfproviderlint/passes/S033"
+	"github.com/bflad/tfproviderlint/passes/S034"
 	"github.com/bflad/tfproviderlint/passes/V001"
+	"github.com/bflad/tfproviderlint/passes/V002"
+	"github.com/bflad/tfproviderlint/passes/V003"
+	"github.com/bflad/tfproviderlint/passes/V004"
+	"github.com/bflad/tfproviderlint/passes/V005"
+	"github.com/bflad/tfproviderlint/passes/V006"
+	"github.com/bflad/tfproviderlint/passes/V007"
+	"github.com/bflad/tfproviderlint/passes/V008"
 	"golang.org/x/tools/go/analysis"
 )
 
@@ -52,12 +79,21 @@ var AllChecks = []*analysis.Analyzer{
 	AT005.Analyzer,
 	AT006.Analyzer,
 	AT007.Analyzer,
+	AT008.Analyzer,
 	R001.Analyzer,
 	R002.Analyzer,
 	R003.Analyzer,
 	R004.Analyzer,
 	R005.Analyzer,
 	R006.Analyzer,
+	R007.Analyzer,
+	R008.Analyzer,
+	R009.Analyzer,
+	R010.Analyzer,
+	R011.Analyzer,
+	R012.Analyzer,
+	R013.Analyzer,
+	R014.Analyzer,
 	S001.Analyzer,
 	S002.Analyzer,
 	S003.Analyzer,
@@ -81,5 +117,23 @@ var AllChecks = []*analysis.Analyzer{
 	S021.Analyzer,
 	S022.Analyzer,
 	S023.Analyzer,
+	S024.Analyzer,
+	S025.Analyzer,
+	S026.Analyzer,
+	S027.Analyzer,
+	S028.Analyzer,
+	S029.Analyzer,
+	S030.Analyzer,
+	S031.Analyzer,
+	S032.Analyzer,
+	S033.Analyzer,
+	S034.Analyzer,
 	V001.Analyzer,
+	V002.Analyzer,
+	V003.Analyzer,
+	V004.Analyzer,
+	V005.Analyzer,
+	V006.Analyzer,
+	V007.Analyzer,
+	V008.Analyzer,
 }

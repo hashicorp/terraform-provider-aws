@@ -24,6 +24,8 @@ type CheckCommandConfig struct {
 	AllowedGuideSubcategoriesFile    string
 	AllowedResourceSubcategories     string
 	AllowedResourceSubcategoriesFile string
+	IgnoreSideNavigationDataSources  string
+	IgnoreSideNavigationResources    string
 	LogLevel                         string
 	Path                             string
 	ProviderName                     string
@@ -45,6 +47,8 @@ func (*CheckCommand) Help() string {
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-allowed-guide-subcategories-file", "Path to newline separated file of allowed guide frontmatter subcategories.")
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-allowed-resource-subcategories", "Comma separated list of allowed data source and resource frontmatter subcategories.")
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-allowed-resource-subcategories-file", "Path to newline separated file of allowed data source and resource frontmatter subcategories.")
+	fmt.Fprintf(opts, CommandHelpOptionFormat, "-ignore-side-navigation-data-sources", "Comma separated list of data sources to ignore side navigation validation.")
+	fmt.Fprintf(opts, CommandHelpOptionFormat, "-ignore-side-navigation-resources", "Comma separated list of resources to ignore side navigation validation.")
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-provider-name", "Terraform Provider name. Automatically determined if current working directory or provided path is prefixed with terraform-provider-*.")
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-providers-schema-json", "Path to terraform providers schema -json file. Enables enhanced validations.")
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-require-guide-subcategory", "Require guide frontmatter subcategory.")
@@ -76,6 +80,8 @@ func (c *CheckCommand) Run(args []string) int {
 	flags.StringVar(&config.AllowedGuideSubcategoriesFile, "allowed-guide-subcategories-file", "", "")
 	flags.StringVar(&config.AllowedResourceSubcategories, "allowed-resource-subcategories", "", "")
 	flags.StringVar(&config.AllowedResourceSubcategoriesFile, "allowed-resource-subcategories-file", "", "")
+	flags.StringVar(&config.IgnoreSideNavigationDataSources, "ignore-side-navigation-data-sources", "", "")
+	flags.StringVar(&config.IgnoreSideNavigationResources, "ignore-side-navigation-resources", "", "")
 	flags.StringVar(&config.ProviderName, "provider-name", "", "")
 	flags.StringVar(&config.ProvidersSchemaJson, "providers-schema-json", "", "")
 	flags.BoolVar(&config.RequireGuideSubcategory, "require-guide-subcategory", false, "")
@@ -125,7 +131,7 @@ func (c *CheckCommand) Run(args []string) int {
 		return 1
 	}
 
-	var allowedGuideSubcategories, allowedResourceSubcategories []string
+	var allowedGuideSubcategories, allowedResourceSubcategories, ignoreSideNavigationDataSources, ignoreSideNavigationResources []string
 
 	if v := config.AllowedGuideSubcategories; v != "" {
 		allowedGuideSubcategories = strings.Split(v, ",")
@@ -153,6 +159,14 @@ func (c *CheckCommand) Run(args []string) int {
 			c.Ui.Error(fmt.Sprintf("Error getting allowed resource subcategories: %s", err))
 			return 1
 		}
+	}
+
+	if v := config.IgnoreSideNavigationDataSources; v != "" {
+		ignoreSideNavigationDataSources = strings.Split(v, ",")
+	}
+
+	if v := config.IgnoreSideNavigationResources; v != "" {
+		ignoreSideNavigationResources = strings.Split(v, ",")
 	}
 
 	fileOpts := &check.FileOptions{
@@ -207,6 +221,12 @@ func (c *CheckCommand) Run(args []string) int {
 				AllowedSubcategories: allowedResourceSubcategories,
 				RequireSubcategory:   config.RequireResourceSubcategory,
 			},
+		},
+		SideNavigation: &check.SideNavigationOptions{
+			FileOptions:       fileOpts,
+			IgnoreDataSources: ignoreSideNavigationDataSources,
+			IgnoreResources:   ignoreSideNavigationResources,
+			ProviderName:      config.ProviderName,
 		},
 	}
 

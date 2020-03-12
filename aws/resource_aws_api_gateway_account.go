@@ -29,7 +29,6 @@ func resourceAwsApiGatewayAccount() *schema.Resource {
 			"throttle_settings": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"burst_limit": {

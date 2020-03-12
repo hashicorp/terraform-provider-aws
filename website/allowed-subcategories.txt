@@ -1,7 +1,7 @@
 
 ACM PCA
 ACM
-API Gateway
+API Gateway (REST APIs)
 Access Analyzer
 Amplify
 AppMesh
@@ -22,6 +22,7 @@ CodeBuild
 CodeCommit
 CodeDeploy
 CodePipeline
+CodeStar Notifications
 Cognito
 Config
 Cost and Usage Report
@@ -103,5 +104,6 @@ VPC
 WAF Regional
 WAF
 WorkLink
+WorkMail
 WorkSpaces
 XRay

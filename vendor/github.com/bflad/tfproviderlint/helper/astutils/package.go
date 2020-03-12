@@ -37,6 +37,25 @@ func IsPackageFunc(e ast.Expr, info *types.Info, packageSuffix string, funcName 
 	return false
 }
 
+// IsPackageFunctionFieldListType returns true if the function parameter package suffix (for vendoring) and name matches
+func IsPackageFunctionFieldListType(e ast.Expr, info *types.Info, packageSuffix string, typeName string) bool {
+	switch e := e.(type) {
+	case *ast.SelectorExpr:
+		if e.Sel.Name != typeName {
+			return false
+		}
+
+		switch x := e.X.(type) {
+		case *ast.Ident:
+			return strings.HasSuffix(info.ObjectOf(x).(*types.PkgName).Imported().Path(), packageSuffix)
+		}
+	case *ast.StarExpr:
+		return IsPackageFunctionFieldListType(e.X, info, packageSuffix, typeName)
+	}
+
+	return false
+}
+
 // IsPackageNamedType returns if the type name matches and is from the package suffix
 func IsPackageNamedType(t *types.Named, packageSuffix string, typeName string) bool {
 	if t.Obj().Name() != typeName {

@@ -105,8 +105,8 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 					validation.StringLenBetween(1, 50),
 					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
 					validation.StringMatch(regexp.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
-					validateStringNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validateStringNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
 			"configuration_endpoint": {
@@ -157,6 +157,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Suppress default memcached/redis ports when not defined

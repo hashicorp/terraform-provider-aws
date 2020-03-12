@@ -12705,8 +12705,8 @@ type CreateScheduledActionOutput struct {
 	// Format of at expressions is "at(yyyy-mm-ddThh:mm:ss)". For example, "at(2016-03-04T17:27:00)".
 	//
 	// Format of cron expressions is "cron(Minutes Hours Day-of-month Month Day-of-week
-	// Year)". For example, "cron(0, 10, *, *, MON, *)". For more information, see
-	// Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// Year)". For example, "cron(0 10 ? * MON *)". For more information, see Cron
+	// Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
 	// in the Amazon CloudWatch Events User Guide.
 	Schedule *string `type:"string"`
 
@@ -15938,7 +15938,8 @@ type DescribeNodeConfigurationOptionsInput struct {
 	// The action type to evaluate for possible node configurations. Specify "restore-cluster"
 	// to get configuration combinations based on an existing snapshot. Specify
 	// "recommend-node-config" to get configuration recommendations based on an
-	// existing cluster or snapshot.
+	// existing cluster or snapshot. Specify "resize-cluster" to get configuration
+	// combinations for elastic resize based on an existing cluster.
 	//
 	// ActionType is a required field
 	ActionType *string `type:"string" required:"true" enum:"ActionType"`
@@ -19846,8 +19847,8 @@ type ModifyScheduledActionOutput struct {
 	// Format of at expressions is "at(yyyy-mm-ddThh:mm:ss)". For example, "at(2016-03-04T17:27:00)".
 	//
 	// Format of cron expressions is "cron(Minutes Hours Day-of-month Month Day-of-week
-	// Year)". For example, "cron(0, 10, *, *, MON, *)". For more information, see
-	// Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// Year)". For example, "cron(0 10 ? * MON *)". For more information, see Cron
+	// Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
 	// in the Amazon CloudWatch Events User Guide.
 	Schedule *string `type:"string"`
 
@@ -21053,9 +21054,7 @@ type ResizeClusterInput struct {
 	NodeType *string `type:"string"`
 
 	// The new number of nodes for the cluster.
-	//
-	// NumberOfNodes is a required field
-	NumberOfNodes *int64 `type:"integer" required:"true"`
+	NumberOfNodes *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -21073,9 +21072,6 @@ func (s *ResizeClusterInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ResizeClusterInput"}
 	if s.ClusterIdentifier == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
-	}
-	if s.NumberOfNodes == nil {
-		invalidParams.Add(request.NewErrParamRequired("NumberOfNodes"))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -21135,9 +21131,7 @@ type ResizeClusterMessage struct {
 	NodeType *string `type:"string"`
 
 	// The new number of nodes for the cluster.
-	//
-	// NumberOfNodes is a required field
-	NumberOfNodes *int64 `type:"integer" required:"true"`
+	NumberOfNodes *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -21155,9 +21149,6 @@ func (s *ResizeClusterMessage) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ResizeClusterMessage"}
 	if s.ClusterIdentifier == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
-	}
-	if s.NumberOfNodes == nil {
-		invalidParams.Add(request.NewErrParamRequired("NumberOfNodes"))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22199,8 +22190,8 @@ type ScheduledAction struct {
 	// Format of at expressions is "at(yyyy-mm-ddThh:mm:ss)". For example, "at(2016-03-04T17:27:00)".
 	//
 	// Format of cron expressions is "cron(Minutes Hours Day-of-month Month Day-of-week
-	// Year)". For example, "cron(0, 10, *, *, MON, *)". For more information, see
-	// Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// Year)". For example, "cron(0 10 ? * MON *)". For more information, see Cron
+	// Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
 	// in the Amazon CloudWatch Events User Guide.
 	Schedule *string `type:"string"`
 
@@ -23367,6 +23358,9 @@ const (
 
 	// ActionTypeRecommendNodeConfig is a ActionType enum value
 	ActionTypeRecommendNodeConfig = "recommend-node-config"
+
+	// ActionTypeResizeCluster is a ActionType enum value
+	ActionTypeResizeCluster = "resize-cluster"
 )
 
 const (

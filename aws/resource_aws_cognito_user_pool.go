@@ -67,6 +67,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"unused_account_validity_days": {
 							Type:          schema.TypeInt,
 							Optional:      true,
+							Computed:      true,
 							Deprecated:    "Use password_policy.temporary_password_validity_days instead",
 							ValidateFunc:  validation.IntBetween(0, 90),
 							ConflictsWith: []string{"password_policy.0.temporary_password_validity_days"},
@@ -728,26 +729,26 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		Resource:  fmt.Sprintf("userpool/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
-	d.Set("endpoint", fmt.Sprintf("cognito-idp.%s.amazonaws.com/%s", meta.(*AWSClient).region, d.Id()))
+	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*AWSClient).RegionalHostname("cognito-idp"), d.Id()))
 	d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
 
 	if resp.UserPool.EmailVerificationSubject != nil {
-		d.Set("email_verification_subject", *resp.UserPool.EmailVerificationSubject)
+		d.Set("email_verification_subject", resp.UserPool.EmailVerificationSubject)
 	}
 	if resp.UserPool.EmailVerificationMessage != nil {
-		d.Set("email_verification_message", *resp.UserPool.EmailVerificationMessage)
+		d.Set("email_verification_message", resp.UserPool.EmailVerificationMessage)
 	}
 	if err := d.Set("lambda_config", flattenCognitoUserPoolLambdaConfig(resp.UserPool.LambdaConfig)); err != nil {
 		return fmt.Errorf("Failed setting lambda_config: %s", err)
 	}
 	if resp.UserPool.MfaConfiguration != nil {
-		d.Set("mfa_configuration", *resp.UserPool.MfaConfiguration)
+		d.Set("mfa_configuration", resp.UserPool.MfaConfiguration)
 	}
 	if resp.UserPool.SmsVerificationMessage != nil {
-		d.Set("sms_verification_message", *resp.UserPool.SmsVerificationMessage)
+		d.Set("sms_verification_message", resp.UserPool.SmsVerificationMessage)
 	}
 	if resp.UserPool.SmsAuthenticationMessage != nil {
-		d.Set("sms_authentication_message", *resp.UserPool.SmsAuthenticationMessage)
+		d.Set("sms_authentication_message", resp.UserPool.SmsAuthenticationMessage)
 	}
 
 	if err := d.Set("device_configuration", flattenCognitoUserPoolDeviceConfiguration(resp.UserPool.DeviceConfiguration)); err != nil {

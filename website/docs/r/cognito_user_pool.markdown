@@ -106,15 +106,19 @@ The following arguments are supported:
 The [standard attributes](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) have the following defaults. Note that attributes which match the default values are not stored in Terraform state when importing.
 
 ```hcl
-schema {
-  name                     = <name>
-  attribute                = <appropriate type>
-  developer_only_attribute = false
-  mutable                  = true  // false for "sub"
-  required                 = false // true for "sub"
-  string_attribute_constraints { // if it's a string
-    min_length = 0    // 10 for "birthdate"
-    max_length = 2048 // 10 for "birthdate"
+resource "aws_cognito_user_pool" "example" {
+  # ... other configuration ...
+
+  schema {
+    name                     = "<name>"
+    attribute_data_type      = "<appropriate type>"
+    developer_only_attribute = false
+    mutable                  = true  // false for "sub"
+    required                 = false // true for "sub"
+    string_attribute_constraints {   // if it's a string
+      min_length = 0                 // 10 for "birthdate"
+      max_length = 2048              // 10 for "birthdate"
+    }
   }
 }
 ```

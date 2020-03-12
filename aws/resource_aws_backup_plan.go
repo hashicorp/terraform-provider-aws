@@ -291,7 +291,7 @@ func backupBackupPlanHash(vRule interface{}) int {
 	}
 
 	if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", tagsMapToHash(vRecoveryPointTags)))
+		buf.WriteString(fmt.Sprintf("%d-", keyvaluetags.New(vRecoveryPointTags).Hash()))
 	}
 
 	if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 && vLifecycle[0] != nil {

@@ -27,6 +27,7 @@ resource "aws_cognito_user_pool_client" "client" {
 ```
 
 ### Create a user pool client with no SRP authentication
+
 ```hcl
 resource "aws_cognito_user_pool" "pool" {
   name = "pool"
