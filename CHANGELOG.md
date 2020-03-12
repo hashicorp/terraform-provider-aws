@@ -1,4 +1,9 @@
 ## 2.54.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_ebs_snapshot_copy: Return API errors instead of panic if unable to read snapshot [GH-12283]
+
 ## 2.53.0 (March 12, 2020)
 
 NOTES:
