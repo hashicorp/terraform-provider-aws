@@ -1,32 +1,32 @@
-## 2.53.0 (Unreleased)
+## 2.53.0 (March 12, 2020)
 
 NOTES:
 
-* resource/aws_cognito_user_pool: The addition of Software Token MFA support required the use of new `GetUserPoolMfaConfig` and `SetUserPoolMfaConfig` API calls. Restrictive IAM permissions for Terraform may require updates.  [GH-12358]
+* resource/aws_cognito_user_pool: The addition of Software Token MFA support required the use of new `GetUserPoolMfaConfig` and `SetUserPoolMfaConfig` API calls. Restrictive IAM permissions for Terraform may require updates.  ([#12358](https://github.com/terraform-providers/terraform-provider-aws/issues/12358))
 
 FEATURES:
 
-* **New Resource:** `aws_apigatewayv2_api` [GH-8842]
+* **New Resource:** `aws_apigatewayv2_api` ([#8842](https://github.com/terraform-providers/terraform-provider-aws/issues/8842))
 
 
 ENHANCEMENTS:
 
-* resource/aws_appsync_graphql_api: Add `xray_enabled` argument [GH-11972]
-* resource/aws_cloud9_environment_ec2: Add `tags` argument [GH-12132]
-* resource/aws_cognito_user_pool: Add `software_token_mfa_configuration` configuration block (Support Time-based One-Time Password (TOTP) Multi-Factor Authentication) [GH-12358]
-* resource/aws_ec2_traffic_mirror_filter: Add `tags` argument [GH-12133]
-* resource/aws_ec2_traffic_mirror_session: Add `tags` argument [GH-12134]
-* resource/aws_ec2_traffic_mirror_target: Add `tags` argument and `network_load_balancer_arn` plan-time validation [GH-12135]
-* resource/aws_flow_log: Add `tags` argument [GH-12273]
-* resource/aws_flow_log: Add `iam_role_arn` and `log_destination` plan-time validation [GH-12273]
-* resource/aws_globalaccelerator_accelerator: Add `tags` argument [GH-12309]
-* resource/aws_vpc_endpoint: Support tag-on-create [GH-12288]
-* resource/aws_vpc_endpoint_service: Support tag-on-create and add `network_load_balancer_arns` plan-time validation [GH-12290]
+* resource/aws_appsync_graphql_api: Add `xray_enabled` argument ([#11972](https://github.com/terraform-providers/terraform-provider-aws/issues/11972))
+* resource/aws_cloud9_environment_ec2: Add `tags` argument ([#12132](https://github.com/terraform-providers/terraform-provider-aws/issues/12132))
+* resource/aws_cognito_user_pool: Add `software_token_mfa_configuration` configuration block (Support Time-based One-Time Password (TOTP) Multi-Factor Authentication) ([#12358](https://github.com/terraform-providers/terraform-provider-aws/issues/12358))
+* resource/aws_ec2_traffic_mirror_filter: Add `tags` argument ([#12133](https://github.com/terraform-providers/terraform-provider-aws/issues/12133))
+* resource/aws_ec2_traffic_mirror_session: Add `tags` argument ([#12134](https://github.com/terraform-providers/terraform-provider-aws/issues/12134))
+* resource/aws_ec2_traffic_mirror_target: Add `tags` argument and `network_load_balancer_arn` plan-time validation ([#12135](https://github.com/terraform-providers/terraform-provider-aws/issues/12135))
+* resource/aws_flow_log: Add `tags` argument ([#12273](https://github.com/terraform-providers/terraform-provider-aws/issues/12273))
+* resource/aws_flow_log: Add `iam_role_arn` and `log_destination` plan-time validation ([#12273](https://github.com/terraform-providers/terraform-provider-aws/issues/12273))
+* resource/aws_globalaccelerator_accelerator: Add `tags` argument ([#12309](https://github.com/terraform-providers/terraform-provider-aws/issues/12309))
+* resource/aws_vpc_endpoint: Support tag-on-create ([#12288](https://github.com/terraform-providers/terraform-provider-aws/issues/12288))
+* resource/aws_vpc_endpoint_service: Support tag-on-create and add `network_load_balancer_arns` plan-time validation ([#12290](https://github.com/terraform-providers/terraform-provider-aws/issues/12290))
 
 BUG FIXES:
 
-* resource/aws_vpn_gateway: Automatically retry on `DetachVpnGateway` calls receiving `InvalidParameterValue: This call cannot be completed because there are pending VPNs or Virtual Interfaces` [GH-11720]
-* resource/aws_vpn_gateway_attachment: Automatically retry on `DetachVpnGateway` calls receiving `InvalidParameterValue: This call cannot be completed because there are pending VPNs or Virtual Interfaces` [GH-11720]
+* resource/aws_vpn_gateway: Automatically retry on `DetachVpnGateway` calls receiving `InvalidParameterValue: This call cannot be completed because there are pending VPNs or Virtual Interfaces` ([#11720](https://github.com/terraform-providers/terraform-provider-aws/issues/11720))
+* resource/aws_vpn_gateway_attachment: Automatically retry on `DetachVpnGateway` calls receiving `InvalidParameterValue: This call cannot be completed because there are pending VPNs or Virtual Interfaces` ([#11720](https://github.com/terraform-providers/terraform-provider-aws/issues/11720))
 
 ## 2.52.0 (March 06, 2020)
 
