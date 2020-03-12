@@ -877,11 +877,7 @@ func testAccCheckAWSProviderEndpoints(providers *[]*schema.Provider) resource.Te
 					endpoint = "sfn"
 				}
 
-				if name == fmt.Sprintf("%sconn", endpoint) {
-					return true
-				}
-
-				return false
+				return name == fmt.Sprintf("%sconn", endpoint)
 			}
 		}
 
