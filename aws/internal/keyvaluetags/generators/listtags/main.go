@@ -21,6 +21,7 @@ var serviceNames = []string{
 	"acm",
 	"acmpca",
 	"amplify",
+	"apigatewayv2",
 	"appmesh",
 	"appstream",
 	"appsync",
@@ -212,6 +213,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "ListTagsForCertificate"
 	case "acmpca":
 		return "ListTags"
+	case "apigatewayv2":
+		return "GetTags"
 	case "backup":
 		return "ListTags"
 	case "cloudhsmv2":
