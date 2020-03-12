@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -42,10 +43,13 @@ func resourceAWSMediaConnectFlow() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateMediaConnectFlowName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 64),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_-]+$`), "must only include alphanumeric, underscore or hyphen characters"),
+				),
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
@@ -72,10 +76,13 @@ func resourceAWSMediaConnectFlow() *schema.Resource {
 							Computed: true,
 						},
 						"name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validateMediaConnectFlowSourceName,
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(0, 64),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_-]+$`), "must only include alphanumeric, underscore or hyphen characters"),
+							),
 							ConflictsWith: []string{
 								"source.entitlement_arn",
 							},

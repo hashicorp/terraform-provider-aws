@@ -17,7 +17,7 @@ import (
 func TestAccAWSMediaConnectFlowConfig_Base(t *testing.T) {
 	var flow mediaconnect.Flow
 
-	rName := fmt.Sprintf("tfacctest%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acctest_%s", acctest.RandString(5))
 	resourceName := "aws_media_connect_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{

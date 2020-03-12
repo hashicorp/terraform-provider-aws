@@ -2346,32 +2346,6 @@ func validateWorklinkFleetName(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func validateMediaConnectFlowName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters and hyphens are allowed in %q", k))
-	}
-	if len(value) > 64 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 64 characters", k))
-	}
-	return
-}
-
-func validateMediaConnectFlowSourceName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters are allowed in %q", k))
-	}
-	if len(value) > 64 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 64 characters", k))
-	}
-	return
-}
-
 func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors []error) {
 	// Type: String
 	// Length Constraints: Maximum length of 64.
