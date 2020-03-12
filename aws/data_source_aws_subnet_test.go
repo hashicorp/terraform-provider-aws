@@ -13,8 +13,6 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
 	tag := "tf-acc-subnet-data-source"
-	arnregex := regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)
-	//outpostArnRegex := regexp.MustCompile(`(^arn:[^:]+:outposts:[^:]+:\d{12}:outpost:\d|^$)`)
 
 	snResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
@@ -47,8 +45,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds1ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds1ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds1ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds1ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
 					resource.TestCheckResourceAttr(
 						ds1ResourceName, "outpost_arn", ""),
 
@@ -66,8 +63,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds2ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds2ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds2ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds2ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
 					resource.TestCheckResourceAttr(
 						ds2ResourceName, "outpost_arn", ""),
 
@@ -85,8 +81,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds3ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds3ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds3ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds3ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
 					resource.TestCheckResourceAttr(
 						ds3ResourceName, "outpost_arn", ""),
 
@@ -104,8 +99,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds4ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds4ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds4ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds4ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
 					resource.TestCheckResourceAttr(
 						ds4ResourceName, "outpost_arn", ""),
 
@@ -123,8 +117,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds5ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds5ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds5ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds5ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
 					resource.TestCheckResourceAttr(
 						ds5ResourceName, "outpost_arn", ""),
 
@@ -142,8 +135,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds6ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds6ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds6ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds6ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
 					resource.TestCheckResourceAttr(
 						ds6ResourceName, "outpost_arn", ""),
 				),
