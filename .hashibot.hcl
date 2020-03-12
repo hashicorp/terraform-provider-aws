@@ -586,7 +586,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/apigatewayv2" = [
       "**/*_api_gateway_v2_*",
       "**/*_apigatewayv2_*",
-      "**/api_gateway_v2_*"
+      "**/api_gateway_v2_*",
       "**/apigatewayv2_*"
     ]
     "service/applicationautoscaling" = [
