@@ -2,7 +2,7 @@
 ACM PCA
 ACM
 API Gateway (REST APIs)
-API Gateway (WebSocket and HTTP APIs)
+API Gateway v2 (WebSocket and HTTP APIs)
 Access Analyzer
 AppMesh
 AppSync
