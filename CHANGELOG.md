@@ -1,9 +1,14 @@
 ## 2.53.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_cognito_user_pool: The addition of Software Token MFA support required the use of new `GetUserPoolMfaConfig` and `SetUserPoolMfaConfig` API calls. Restrictive IAM permissions for Terraform may require updates.  [GH-12358]
+
 ENHANCEMENTS:
 
 * resource/aws_appsync_graphql_api: Add `xray_enabled` argument [GH-11972]
 * resource/aws_cloud9_environment_ec2: Add `tags` argument [GH-12132]
+* resource/aws_cognito_user_pool: Add `software_token_mfa_configuration` configuration block (Support Time-based One-Time Password (TOTP) Multi-Factor Authentication) [GH-12358]
 * resource/aws_ec2_traffic_mirror_filter: Add `tags` argument [GH-12133]
 * resource/aws_ec2_traffic_mirror_session: Add `tags` argument [GH-12134]
 * resource/aws_ec2_traffic_mirror_target: Add `tags` argument and `network_load_balancer_arn` plan-time validation [GH-12135]
