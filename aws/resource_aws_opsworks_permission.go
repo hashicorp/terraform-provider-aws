@@ -69,17 +69,10 @@ func resourceAwsOpsworksPermissionDelete(d *schema.ResourceData, meta interface{
 		req.Level = aws.String("iam_only")
 	}
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var cerr error
-		_, cerr = client.SetPermission(req)
-		if cerr != nil {
-			log.Printf("[INFO] client error")
-			return resource.NonRetryableError(cerr)
-		}
-		return nil
-	})
+	_, err := client.SetPermission(req)
 
 	if err != nil {
+		log.Printf("[INFO] client error")
 		return err
 	}
 
@@ -188,17 +181,10 @@ func resourceAwsOpsworksPermissionUpdate(d *schema.ResourceData, meta interface{
 		req.Level = aws.String(lns)
 	}
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var cerr error
-		_, cerr = client.SetPermission(req)
-		if cerr != nil {
-			log.Printf("[INFO] client error")
-			return resource.NonRetryableError(cerr)
-		}
-		return nil
-	})
+	_, err := client.SetPermission(req)
 
 	if err != nil {
+		log.Printf("[INFO] client error")
 		return err
 	}
 
