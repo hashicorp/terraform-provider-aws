@@ -136,12 +136,12 @@ resource "aws_codebuild_project" "example" {
 
   logs_config {
     cloudwatch_logs {
-      group_name = "log-group"
+      group_name  = "log-group"
       stream_name = "log-stream"
     }
 
     s3_logs {
-      status = "ENABLED"
+      status   = "ENABLED"
       location = "${aws_s3_bucket.example.id}/build-log"
     }
   }
@@ -152,9 +152,11 @@ resource "aws_codebuild_project" "example" {
     git_clone_depth = 1
 
     git_submodules_config {
-        fetch_submodules = true
+      fetch_submodules = true
     }
   }
+
+  source_version = "master"
 
   vpc_config {
     vpc_id = "${aws_vpc.example.id}"
@@ -180,8 +182,8 @@ resource "aws_codebuild_project" "project-with-cache" {
   description    = "test_codebuild_project_cache"
   build_timeout  = "5"
   queued_timeout = "5"
-  
-  service_role  = "${aws_iam_role.example.arn}"
+
+  service_role = "${aws_iam_role.example.arn}"
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -232,6 +234,7 @@ The following arguments are supported:
 * `encryption_key` - (Optional) The AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration for the builds to store log data to CloudWatch or S3.
 * `service_role` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
+* `source_version` - (Optional) A version of the build input to be built for this project. If not specified, the latest version is used.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `vpc_config` - (Optional) Configuration for the builds to run inside a VPC. VPC config blocks are documented below.
 * `secondary_artifacts` - (Optional) A set of secondary artifacts to be used inside the build. Secondary artifacts blocks are documented below.
@@ -299,6 +302,7 @@ The following arguments are supported:
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
 * `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when the `type` is `BITBUCKET` or `GITHUB`.
+
 
 `auth` supports the following:
 

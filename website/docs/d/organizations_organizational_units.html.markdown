@@ -20,9 +20,11 @@ data "aws_organizations_organizational_units" "ou" {
 ```
 
 ## Argument Reference
+
 * `parent_id` - (Required) The parent ID of the organizational unit.
 
 ## Attributes Reference
+
 * `children` - List of child organizational units, which have the following attributes:
   * `arn` - ARN of the organizational unit
   * `name` - Name of the organizational unit

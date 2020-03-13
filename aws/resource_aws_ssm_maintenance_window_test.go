@@ -2,15 +2,79 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ssm_maintenance_window", &resource.Sweeper{
+		Name: "aws_ssm_maintenance_window",
+		F:    testSweepSsmMaintenanceWindows,
+	})
+}
+
+func testSweepSsmMaintenanceWindows(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).ssmconn
+	input := &ssm.DescribeMaintenanceWindowsInput{}
+	var sweeperErrs *multierror.Error
+
+	for {
+		output, err := conn.DescribeMaintenanceWindows(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping SSM Maintenance Window sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving SSM Maintenance Windows: %s", err)
+		}
+
+		for _, window := range output.WindowIdentities {
+			id := aws.StringValue(window.WindowId)
+			input := &ssm.DeleteMaintenanceWindowInput{
+				WindowId: window.WindowId,
+			}
+
+			log.Printf("[INFO] Deleting SSM Maintenance Window: %s", id)
+
+			_, err := conn.DeleteMaintenanceWindow(input)
+
+			if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+				continue
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting SSM Maintenance Window (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity

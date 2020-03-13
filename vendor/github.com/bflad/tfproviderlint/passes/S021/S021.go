@@ -5,9 +5,9 @@ package S021
 import (
 	"golang.org/x/tools/go/analysis"
 
-	"github.com/bflad/tfproviderlint/helper/terraformtype"
+	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/schema"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
-	"github.com/bflad/tfproviderlint/passes/schemaschema"
+	"github.com/bflad/tfproviderlint/passes/helper/schema/schemainfo"
 )
 
 const Doc = `check for Schema that should omit ComputedWhen
@@ -21,7 +21,7 @@ var Analyzer = &analysis.Analyzer{
 	Name: analyzerName,
 	Doc:  Doc,
 	Requires: []*analysis.Analyzer{
-		schemaschema.Analyzer,
+		schemainfo.Analyzer,
 		commentignore.Analyzer,
 	},
 	Run: run,
@@ -29,16 +29,16 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
-	schemas := pass.ResultOf[schemaschema.Analyzer].([]*terraformtype.HelperSchemaSchemaInfo)
-	for _, schema := range schemas {
-		if ignorer.ShouldIgnore(analyzerName, schema.AstCompositeLit) {
+	schemaInfos := pass.ResultOf[schemainfo.Analyzer].([]*schema.SchemaInfo)
+	for _, schemaInfo := range schemaInfos {
+		if ignorer.ShouldIgnore(analyzerName, schemaInfo.AstCompositeLit) {
 			continue
 		}
 
-		field := terraformtype.SchemaFieldComputedWhen
+		field := schema.SchemaFieldComputedWhen
 
-		if schema.DeclaresField(field) {
-			pass.Reportf(schema.Fields[field].Value.Pos(), "%s: schema should omit ComputedWhen", analyzerName)
+		if schemaInfo.DeclaresField(field) {
+			pass.Reportf(schemaInfo.Fields[field].Value.Pos(), "%s: schema should omit ComputedWhen", analyzerName)
 		}
 	}
 
