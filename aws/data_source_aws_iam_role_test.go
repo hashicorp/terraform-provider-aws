@@ -28,6 +28,7 @@ func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "path", resourceName, "path"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "unique_id", resourceName, "unique_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 				),
 			},
 		},
