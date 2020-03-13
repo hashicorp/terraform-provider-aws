@@ -1,5 +1,9 @@
 ## 2.54.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_kinesis_video_stream` [GH-8291]
+
 BUG FIXES:
 
 * resource/aws_ebs_snapshot_copy: Return API errors instead of panic if unable to read snapshot [GH-12283]
