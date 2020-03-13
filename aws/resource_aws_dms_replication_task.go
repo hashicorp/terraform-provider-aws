@@ -60,7 +60,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 			"replication_task_settings": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 			"source_endpoint_arn": {
@@ -72,7 +72,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 			"table_mappings": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 			"tags": tagsSchema(),

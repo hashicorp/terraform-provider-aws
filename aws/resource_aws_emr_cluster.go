@@ -111,7 +111,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -276,7 +276,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressEquivalentJsonDiffs,
-							ValidateFunc:     validation.ValidateJsonString,
+							ValidateFunc:     validation.StringIsJSON,
 						},
 						"bid_price": {
 							Type:     schema.TypeString,
@@ -460,7 +460,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressEquivalentJsonDiffs,
-							ValidateFunc:     validation.ValidateJsonString,
+							ValidateFunc:     validation.StringIsJSON,
 							StateFunc: func(v interface{}) string {
 								jsonString, _ := structure.NormalizeJsonString(v)
 								return jsonString
@@ -585,7 +585,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				ConflictsWith:    []string{"configurations"},
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)

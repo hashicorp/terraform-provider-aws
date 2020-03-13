@@ -49,7 +49,7 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 			"input_parameters": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.ValidateJsonString,
+				ValidateFunc: validation.StringIsJSON,
 			},
 			"maximum_execution_frequency": {
 				Type:         schema.TypeString,
