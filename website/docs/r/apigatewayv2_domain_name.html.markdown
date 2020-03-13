@@ -1,25 +1,25 @@
 ---
+subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_v2_domain_name"
-sidebar_current: "docs-aws-resource-api-gateway-v2-domain-name"
+page_title: "AWS: aws_apigatewayv2_domain_name"
 description: |-
   Manages an Amazon API Gateway Version 2 domain name.
 ---
 
-# Resource: aws_api_gateway_v2_domain_name
+# Resource: aws_apigatewayv2_domain_name
 
 Manages an Amazon API Gateway Version 2 domain name.
 More information can be found in the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html).
 
 -> **Note:** This resource establishes ownership of and the TLS settings for
-a particular domain name. An API stage can be associated with the domain name using the `aws_api_gateway_v2_api_mapping` resource.
+a particular domain name. An API stage can be associated with the domain name using the `aws_apigatewayv2_api_mapping` resource.
 
 ## Example Usage
 
 ### Basic
 
 ```hcl
-resource "aws_api_gateway_v2_domain_name" "example" {
+resource "aws_apigatewayv2_domain_name" "example" {
   domain_name = "ws-api.example.com"
 
   domain_name_configuration {
@@ -57,14 +57,14 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_api_gateway_v2_domain_name` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+`aws_apigatewayv2_domain_name` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
 - `update` - (Default `60 minutes`) Used for updating the domain name
 
 ## Import
 
-`aws_api_gateway_v2_domain_name` can be imported by using the domain name, e.g.
+`aws_apigatewayv2_domain_name` can be imported by using the domain name, e.g.
 
 ```
-$ terraform import aws_api_gateway_v2_domain_name.example ws-api.example.com
+$ terraform import aws_apigatewayv2_domain_name.example ws-api.example.com
 ```

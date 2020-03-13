@@ -15,15 +15,15 @@ import (
 )
 
 const (
-	apiGateway2DomainNameStatusDeleted = "DELETED"
+	apiGatewayV2DomainNameStatusDeleted = "DELETED"
 )
 
-func resourceAwsApiGateway2DomainName() *schema.Resource {
+func resourceAwsApiGatewayV2DomainName() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGateway2DomainNameCreate,
-		Read:   resourceAwsApiGateway2DomainNameRead,
-		Update: resourceAwsApiGateway2DomainNameUpdate,
-		Delete: resourceAwsApiGateway2DomainNameDelete,
+		Create: resourceAwsApiGatewayV2DomainNameCreate,
+		Read:   resourceAwsApiGatewayV2DomainNameRead,
+		Update: resourceAwsApiGatewayV2DomainNameUpdate,
+		Delete: resourceAwsApiGatewayV2DomainNameDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -89,12 +89,12 @@ func resourceAwsApiGateway2DomainName() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGateway2DomainNameCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2DomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	req := &apigatewayv2.CreateDomainNameInput{
 		DomainName:               aws.String(d.Get("domain_name").(string)),
-		DomainNameConfigurations: expandApiGateway2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
+		DomainNameConfigurations: expandApiGatewayV2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
 		Tags:                     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Apigatewayv2Tags(),
 	}
 
@@ -106,18 +106,18 @@ func resourceAwsApiGateway2DomainNameCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.DomainName))
 
-	return resourceAwsApiGateway2DomainNameRead(d, meta)
+	return resourceAwsApiGatewayV2DomainNameRead(d, meta)
 }
 
-func resourceAwsApiGateway2DomainNameRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2DomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
-	respRaw, state, err := apiGateway2DomainNameRefresh(conn, d.Id())()
+	respRaw, state, err := apiGatewayV2DomainNameRefresh(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error reading API Gateway v2 domain name (%s): %s", d.Id(), err)
 	}
 
-	if state == apiGateway2DomainNameStatusDeleted {
+	if state == apiGatewayV2DomainNameStatusDeleted {
 		log.Printf("[WARN] API Gateway v2 domain name (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -133,7 +133,7 @@ func resourceAwsApiGateway2DomainNameRead(d *schema.ResourceData, meta interface
 	}.String()
 	d.Set("arn", arn)
 	d.Set("domain_name", resp.DomainName)
-	err = d.Set("domain_name_configuration", flattenApiGateway2DomainNameConfiguration(resp.DomainNameConfigurations[0]))
+	err = d.Set("domain_name_configuration", flattenApiGatewayV2DomainNameConfiguration(resp.DomainNameConfigurations[0]))
 	if err != nil {
 		return fmt.Errorf("error setting domain_name_configuration: %s", err)
 	}
@@ -144,13 +144,13 @@ func resourceAwsApiGateway2DomainNameRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsApiGateway2DomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2DomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	if d.HasChange("domain_name_configuration") {
 		req := &apigatewayv2.UpdateDomainNameInput{
 			DomainName:               aws.String(d.Id()),
-			DomainNameConfigurations: expandApiGateway2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
+			DomainNameConfigurations: expandApiGatewayV2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
 		}
 
 		log.Printf("[DEBUG] Updating API Gateway v2 domain name: %s", req)
@@ -159,7 +159,7 @@ func resourceAwsApiGateway2DomainNameUpdate(d *schema.ResourceData, meta interfa
 			return fmt.Errorf("error updating API Gateway v2 domain name (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForApiGateway2DomainNameAvailabilityOnUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitForApiGatewayV2DomainNameAvailabilityOnUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for API Gateway v2 domain name (%s) to become available: %s", d.Id(), err)
 		}
 	}
@@ -171,10 +171,10 @@ func resourceAwsApiGateway2DomainNameUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsApiGateway2DomainNameRead(d, meta)
+	return resourceAwsApiGatewayV2DomainNameRead(d, meta)
 }
 
-func resourceAwsApiGateway2DomainNameDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2DomainNameDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 domain name (%s)", d.Id())
@@ -191,13 +191,13 @@ func resourceAwsApiGateway2DomainNameDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func apiGateway2DomainNameRefresh(conn *apigatewayv2.ApiGatewayV2, domainName string) resource.StateRefreshFunc {
+func apiGatewayV2DomainNameRefresh(conn *apigatewayv2.ApiGatewayV2, domainName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.GetDomainName(&apigatewayv2.GetDomainNameInput{
 			DomainName: aws.String(domainName),
 		})
 		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
-			return "", apiGateway2DomainNameStatusDeleted, nil
+			return "", apiGatewayV2DomainNameStatusDeleted, nil
 		}
 		if err != nil {
 			return nil, "", err
@@ -216,11 +216,11 @@ func apiGateway2DomainNameRefresh(conn *apigatewayv2.ApiGatewayV2, domainName st
 	}
 }
 
-func waitForApiGateway2DomainNameAvailabilityOnUpdate(conn *apigatewayv2.ApiGatewayV2, domainName string, timeout time.Duration) error {
+func waitForApiGatewayV2DomainNameAvailabilityOnUpdate(conn *apigatewayv2.ApiGatewayV2, domainName string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{apigatewayv2.DomainNameStatusUpdating},
 		Target:     []string{apigatewayv2.DomainNameStatusAvailable},
-		Refresh:    apiGateway2DomainNameRefresh(conn, domainName),
+		Refresh:    apiGatewayV2DomainNameRefresh(conn, domainName),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -231,7 +231,7 @@ func waitForApiGateway2DomainNameAvailabilityOnUpdate(conn *apigatewayv2.ApiGate
 	return err
 }
 
-func expandApiGateway2DomainNameConfiguration(vDomainNameConfiguration []interface{}) []*apigatewayv2.DomainNameConfiguration {
+func expandApiGatewayV2DomainNameConfiguration(vDomainNameConfiguration []interface{}) []*apigatewayv2.DomainNameConfiguration {
 	if len(vDomainNameConfiguration) == 0 || vDomainNameConfiguration[0] == nil {
 		return nil
 	}
@@ -244,7 +244,7 @@ func expandApiGateway2DomainNameConfiguration(vDomainNameConfiguration []interfa
 	}}
 }
 
-func flattenApiGateway2DomainNameConfiguration(domainNameConfiguration *apigatewayv2.DomainNameConfiguration) []interface{} {
+func flattenApiGatewayV2DomainNameConfiguration(domainNameConfiguration *apigatewayv2.DomainNameConfiguration) []interface{} {
 	if domainNameConfiguration == nil {
 		return []interface{}{}
 	}

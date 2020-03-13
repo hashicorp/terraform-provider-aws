@@ -8,25 +8,27 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
-	resource.AddTestSweepers("aws_api_gateway_v2_domain_name", &resource.Sweeper{
-		Name: "aws_api_gateway_v2_domain_name",
-		F:    testSweepAPIGateway2DomainNames,
+	resource.AddTestSweepers("aws_apigatewayv2_domain_name", &resource.Sweeper{
+		Name: "aws_apigatewayv2_domain_name",
+		F:    testSweepAPIGatewayV2DomainNames,
 	})
 }
 
-func testSweepAPIGateway2DomainNames(region string) error {
+func testSweepAPIGatewayV2DomainNames(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).apigatewayv2conn
 	input := &apigatewayv2.GetDomainNamesInput{}
+	var sweeperErrs *multierror.Error
 
 	for {
 		output, err := conn.GetDomainNames(input)
@@ -47,7 +49,10 @@ func testSweepAPIGateway2DomainNames(region string) error {
 				continue
 			}
 			if err != nil {
-				return fmt.Errorf("error deleting API Gateway v2 domain name (%s): %s", aws.StringValue(domainName.DomainName), err)
+				sweeperErr := fmt.Errorf("error deleting API Gateway v2 domain name (%s): %s", aws.StringValue(domainName.DomainName), err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 		}
 
@@ -57,11 +62,12 @@ func testSweepAPIGateway2DomainNames(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSAPIGateway2DomainName_basic(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_domain_name.test"
+func TestAccAWSAPIGatewayV2DomainName_basic(t *testing.T) {
+	var v apigatewayv2.GetDomainNameOutput
+	resourceName := "aws_apigatewayv2_domain_name.test"
 	certResourceName := "aws_acm_certificate.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	key := tlsRsaPrivateKeyPem(2048)
@@ -70,12 +76,12 @@ func TestAccAWSAPIGateway2DomainName_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2DomainNameDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2DomainNameConfig_basic(rName, certificate, key, 1, 0),
+				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2DomainNameExists(resourceName),
+					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("%s.example.com", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -96,8 +102,33 @@ func TestAccAWSAPIGateway2DomainName_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2DomainName_Tags(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_domain_name.test"
+func TestAccAWSAPIGatewayV2DomainName_disappears(t *testing.T) {
+	var v apigatewayv2.GetDomainNameOutput
+	resourceName := "aws_apigatewayv2_domain_name.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, fmt.Sprintf("%s.example.com", rName))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
+					testAccCheckAWSAPIGatewayV2DomainNameDisappears(&v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2DomainName_Tags(t *testing.T) {
+	var v apigatewayv2.GetDomainNameOutput
+	resourceName := "aws_apigatewayv2_domain_name.test"
 	certResourceName := "aws_acm_certificate.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	key := tlsRsaPrivateKeyPem(2048)
@@ -106,12 +137,12 @@ func TestAccAWSAPIGateway2DomainName_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2DomainNameDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2DomainNameConfig_tags(rName, certificate, key, 1, 0),
+				Config: testAccAWSAPIGatewayV2DomainNameConfig_tags(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2DomainNameExists(resourceName),
+					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("%s.example.com", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -131,9 +162,9 @@ func TestAccAWSAPIGateway2DomainName_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGateway2DomainNameConfig_basic(rName, certificate, key, 1, 0),
+				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2DomainNameExists(resourceName),
+					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("%s.example.com", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -149,8 +180,9 @@ func TestAccAWSAPIGateway2DomainName_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2DomainName_UpdateCertificate(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_domain_name.test"
+func TestAccAWSAPIGatewayV2DomainName_UpdateCertificate(t *testing.T) {
+	var v apigatewayv2.GetDomainNameOutput
+	resourceName := "aws_apigatewayv2_domain_name.test"
 	certResourceName0 := "aws_acm_certificate.test.0"
 	certResourceName1 := "aws_acm_certificate.test.1"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -160,12 +192,12 @@ func TestAccAWSAPIGateway2DomainName_UpdateCertificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2DomainNameDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2DomainNameConfig_basic(rName, certificate, key, 2, 0),
+				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 2, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2DomainNameExists(resourceName),
+					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("%s.example.com", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -178,9 +210,9 @@ func TestAccAWSAPIGateway2DomainName_UpdateCertificate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGateway2DomainNameConfig_basic(rName, certificate, key, 2, 1),
+				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2DomainNameExists(resourceName),
+					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("%s.example.com", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -193,9 +225,9 @@ func TestAccAWSAPIGateway2DomainName_UpdateCertificate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGateway2DomainNameConfig_tags(rName, certificate, key, 2, 0),
+				Config: testAccAWSAPIGatewayV2DomainNameConfig_tags(rName, certificate, key, 2, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2DomainNameExists(resourceName),
+					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("%s.example.com", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
@@ -218,11 +250,11 @@ func TestAccAWSAPIGateway2DomainName_UpdateCertificate(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGateway2DomainNameDestroy(s *terraform.State) error {
+func testAccCheckAWSAPIGatewayV2DomainNameDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_v2_domain_name" {
+		if rs.Type != "aws_apigatewayv2_domain_name" {
 			continue
 		}
 
@@ -242,7 +274,19 @@ func testAccCheckAWSAPIGateway2DomainNameDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGateway2DomainNameExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayV2DomainNameDisappears(v *apigatewayv2.GetDomainNameOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+
+		_, err := conn.DeleteDomainName(&apigatewayv2.DeleteDomainNameInput{
+			DomainName: v.DomainName,
+		})
+
+		return err
+	}
+}
+
+func testAccCheckAWSAPIGatewayV2DomainNameExists(n string, v *apigatewayv2.GetDomainNameOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -255,18 +299,20 @@ func testAccCheckAWSAPIGateway2DomainNameExists(n string) resource.TestCheckFunc
 
 		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
-		_, err := conn.GetDomainName(&apigatewayv2.GetDomainNameInput{
+		resp, err := conn.GetDomainName(&apigatewayv2.GetDomainNameInput{
 			DomainName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
 			return err
 		}
 
+		*v = *resp
+
 		return nil
 	}
 }
 
-func testAccAWSAPIGateway2DomainNameConfig_base(rName, certificate, key string, count int) string {
+func testAccAWSAPIGatewayV2DomainNameConfig_base(rName, certificate, key string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   count = %[4]d
@@ -281,9 +327,9 @@ resource "aws_acm_certificate" "test" {
 `, rName, certificate, key, count)
 }
 
-func testAccAWSAPIGateway2DomainNameConfig_basic(rName, certificate, key string, count, index int) string {
-	return testAccAWSAPIGateway2DomainNameConfig_base(rName, certificate, key, count) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_domain_name" "test" {
+func testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key string, count, index int) string {
+	return testAccAWSAPIGatewayV2DomainNameConfig_base(rName, certificate, key, count) + fmt.Sprintf(`
+resource "aws_apigatewayv2_domain_name" "test" {
   domain_name = "%[1]s.example.com"
 
   domain_name_configuration {
@@ -295,9 +341,9 @@ resource "aws_api_gateway_v2_domain_name" "test" {
 `, rName, index)
 }
 
-func testAccAWSAPIGateway2DomainNameConfig_tags(rName, certificate, key string, count, index int) string {
-	return testAccAWSAPIGateway2DomainNameConfig_base(rName, certificate, key, count) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_domain_name" "test" {
+func testAccAWSAPIGatewayV2DomainNameConfig_tags(rName, certificate, key string, count, index int) string {
+	return testAccAWSAPIGatewayV2DomainNameConfig_base(rName, certificate, key, count) + fmt.Sprintf(`
+resource "aws_apigatewayv2_domain_name" "test" {
   domain_name = "%[1]s.example.com"
 
   domain_name_configuration {
