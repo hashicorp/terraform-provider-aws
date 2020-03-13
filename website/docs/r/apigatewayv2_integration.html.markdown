@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_v2_integration"
-sidebar_current: "docs-aws-resource-api-gateway-v2-integration"
+page_title: "AWS: aws_apigatewayv2_integration"
 description: |-
   Manages an Amazon API Gateway Version 2 integration.
 ---
 
-# Resource: aws_api_gateway_v2_integration
+# Resource: aws_apigatewayv2_integration
 
 Manages an Amazon API Gateway Version 2 integration.
 More information can be found in the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html).
@@ -16,8 +16,8 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 ### Basic
 
 ```hcl
-resource "aws_api_gateway_v2_integration" "example" {
-  api_id           = "${aws_api_gateway_v2_api.example.id}"
+resource "aws_apigatewayv2_integration" "example" {
+  api_id           = "${aws_apigatewayv2_api.example.id}"
   integration_type = "MOCK"
 }
 ```
@@ -33,16 +33,16 @@ resource "aws_lambda_function" "example" {
   runtime       = "nodejs10.x"
 }
 
-resource "aws_api_gateway_v2_integration" "example" {
-  api_id           = "${aws_api_gateway_v2_api.example.id}"
+resource "aws_apigatewayv2_integration" "example" {
+  api_id           = "${aws_apigatewayv2_api.example.id}"
   integration_type = "AWS"
 
-  connection_type               = "INTERNET"
-  content_handling_strategy     = "CONVERT_TO_TEXT"
-  description                   = "Lambda example"
-  integration_method            = "POST"
-  integration_uri               = "${aws_lambda_function.example.invoke_arn}"
-  passthrough_behavior          = "WHEN_NO_MATCH"
+  connection_type           = "INTERNET"
+  content_handling_strategy = "CONVERT_TO_TEXT"
+  description               = "Lambda example"
+  integration_method        = "POST"
+  integration_uri           = "${aws_lambda_function.example.invoke_arn}"
+  passthrough_behavior      = "WHEN_NO_MATCH"
 }
 ```
 
@@ -74,8 +74,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_v2_integration` can be imported by using the API identifier and integration identifier, e.g.
+`aws_apigatewayv2_integration` can be imported by using the API identifier and integration identifier, e.g.
 
 ```
-$ terraform import aws_api_gateway_v2_integration.example aabbccddee/1122334
+$ terraform import aws_apigatewayv2_integration.example aabbccddee/1122334
 ```

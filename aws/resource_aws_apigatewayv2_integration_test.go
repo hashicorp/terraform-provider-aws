@@ -11,19 +11,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSAPIGateway2Integration_basic(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_integration.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2Integration_basic(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetIntegrationOutput
+	resourceName := "aws_apigatewayv2_integration.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2IntegrationDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2IntegrationConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2IntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2IntegrationExists(resourceName),
+					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -41,7 +43,7 @@ func TestAccAWSAPIGateway2Integration_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -49,19 +51,44 @@ func TestAccAWSAPIGateway2Integration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Integration_IntegrationTypeHttp(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_integration.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2Integration_disappears(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetIntegrationOutput
+	resourceName := "aws_apigatewayv2_integration.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2IntegrationDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2IntegrationConfig_integrationTypeHttp(rName),
+				Config: testAccAWSAPIGatewayV2IntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2IntegrationExists(resourceName),
+					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					testAccCheckAWSAPIGatewayV2IntegrationDisappears(&apiId, &v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetIntegrationOutput
+	resourceName := "aws_apigatewayv2_integration.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttp(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
@@ -79,9 +106,9 @@ func TestAccAWSAPIGateway2Integration_IntegrationTypeHttp(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGateway2IntegrationConfig_integrationTypeHttpUpdated(rName),
+				Config: testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttpUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2IntegrationExists(resourceName),
+					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_BINARY"),
@@ -101,7 +128,7 @@ func TestAccAWSAPIGateway2Integration_IntegrationTypeHttp(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -109,21 +136,23 @@ func TestAccAWSAPIGateway2Integration_IntegrationTypeHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Integration_Lambda(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_integration.test"
+func TestAccAWSAPIGatewayV2Integration_Lambda(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetIntegrationOutput
+	resourceName := "aws_apigatewayv2_integration.test"
 	callerIdentityDatasourceName := "data.aws_caller_identity.current"
 	lambdaResourceName := "aws_lambda_function.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2IntegrationDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2IntegrationConfig_lambda(rName),
+				Config: testAccAWSAPIGatewayV2IntegrationConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2IntegrationExists(resourceName),
+					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", callerIdentityDatasourceName, "arn"),
@@ -140,7 +169,7 @@ func TestAccAWSAPIGateway2Integration_Lambda(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -148,20 +177,22 @@ func TestAccAWSAPIGateway2Integration_Lambda(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Integration_VpcLink(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_integration.test"
+func TestAccAWSAPIGatewayV2Integration_VpcLink(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetIntegrationOutput
+	resourceName := "aws_apigatewayv2_integration.test"
 	vpcLinkResourceName := "aws_api_gateway_vpc_link.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2IntegrationDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2IntegrationConfig_vpcLink(rName),
+				Config: testAccAWSAPIGatewayV2IntegrationConfig_vpcLink(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2IntegrationExists(resourceName),
+					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
@@ -179,7 +210,7 @@ func TestAccAWSAPIGateway2Integration_VpcLink(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2IntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -187,11 +218,11 @@ func TestAccAWSAPIGateway2Integration_VpcLink(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGateway2IntegrationDestroy(s *terraform.State) error {
+func testAccCheckAWSAPIGatewayV2IntegrationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_v2_integration" {
+		if rs.Type != "aws_apigatewayv2_integration" {
 			continue
 		}
 
@@ -212,7 +243,20 @@ func testAccCheckAWSAPIGateway2IntegrationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGateway2IntegrationExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayV2IntegrationDisappears(apiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+
+		_, err := conn.DeleteIntegration(&apigatewayv2.DeleteIntegrationInput{
+			ApiId:         apiId,
+			IntegrationId: v.IntegrationId,
+		})
+
+		return err
+	}
+}
+
+func testAccCheckAWSAPIGatewayV2IntegrationExists(n string, vApiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -225,19 +269,23 @@ func testAccCheckAWSAPIGateway2IntegrationExists(n string) resource.TestCheckFun
 
 		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
-		_, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
-			ApiId:         aws.String(rs.Primary.Attributes["api_id"]),
+		apiId := aws.String(rs.Primary.Attributes["api_id"])
+		resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
+			ApiId:         apiId,
 			IntegrationId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
 			return err
 		}
 
+		*vApiId = *apiId
+		*v = *resp
+
 		return nil
 	}
 }
 
-func testAccAWSAPIGateway2IntegrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -248,9 +296,9 @@ func testAccAWSAPIGateway2IntegrationImportStateIdFunc(resourceName string) reso
 	}
 }
 
-func testAccAWSAPIGateway2IntegrationConfig_api(rName string) string {
+func testAccAWSAPIGatewayV2IntegrationConfig_api(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_v2_api" "test" {
+resource "aws_apigatewayv2_api" "test" {
   name                       = %[1]q
   protocol_type              = "WEBSOCKET"
   route_selection_expression = "$request.body.action"
@@ -258,19 +306,19 @@ resource "aws_api_gateway_v2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2IntegrationConfig_basic(rName string) string {
-	return testAccAWSAPIGateway2IntegrationConfig_api(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_integration" "test" {
-  api_id           = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2IntegrationConfig_basic(rName string) string {
+	return testAccAWSAPIGatewayV2IntegrationConfig_api(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_integration" "test" {
+  api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "MOCK"
 }
 `)
 }
 
-func testAccAWSAPIGateway2IntegrationConfig_integrationTypeHttp(rName string) string {
-	return testAccAWSAPIGateway2IntegrationConfig_api(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_integration" "test" {
-  api_id           = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttp(rName string) string {
+	return testAccAWSAPIGatewayV2IntegrationConfig_api(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_integration" "test" {
+  api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "HTTP"
 
   connection_type               = "INTERNET"
@@ -289,10 +337,10 @@ resource "aws_api_gateway_v2_integration" "test" {
 `)
 }
 
-func testAccAWSAPIGateway2IntegrationConfig_integrationTypeHttpUpdated(rName string) string {
-	return testAccAWSAPIGateway2IntegrationConfig_api(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_integration" "test" {
-  api_id           = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttpUpdated(rName string) string {
+	return testAccAWSAPIGatewayV2IntegrationConfig_api(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_integration" "test" {
+  api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "HTTP"
 
   connection_type               = "INTERNET"
@@ -312,8 +360,8 @@ resource "aws_api_gateway_v2_integration" "test" {
 `)
 }
 
-func testAccAWSAPIGateway2IntegrationConfig_lambda(rName string) string {
-	return testAccAWSAPIGateway2IntegrationConfig_api(rName) + baseAccAWSLambdaConfig(rName, rName, rName) + fmt.Sprintf(`
+func testAccAWSAPIGatewayV2IntegrationConfig_lambda(rName string) string {
+	return testAccAWSAPIGatewayV2IntegrationConfig_api(rName) + baseAccAWSLambdaConfig(rName, rName, rName) + fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_lambda_function" "test" {
@@ -324,8 +372,8 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs10.x"
 }
 
-resource "aws_api_gateway_v2_integration" "test" {
-  api_id           = "${aws_api_gateway_v2_api.test.id}"
+resource "aws_apigatewayv2_integration" "test" {
+  api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "AWS"
 
   connection_type               = "INTERNET"
@@ -339,8 +387,8 @@ resource "aws_api_gateway_v2_integration" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2IntegrationConfig_vpcLink(rName string) string {
-	return testAccAWSAPIGateway2IntegrationConfig_api(rName) + fmt.Sprintf(`
+func testAccAWSAPIGatewayV2IntegrationConfig_vpcLink(rName string) string {
+	return testAccAWSAPIGatewayV2IntegrationConfig_api(rName) + fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
@@ -373,8 +421,8 @@ resource "aws_api_gateway_vpc_link" "test" {
   target_arns = ["${aws_lb.test.arn}"]
 }
 
-resource "aws_api_gateway_v2_integration" "test" {
-  api_id           = "${aws_api_gateway_v2_api.test.id}"
+resource "aws_apigatewayv2_integration" "test" {
+  api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "HTTP_PROXY"
 
   connection_id                 = "${aws_api_gateway_vpc_link.test.id}"

@@ -11,16 +11,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-func resourceAwsApiGateway2Integration() *schema.Resource {
+func resourceAwsApiGatewayV2Integration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGateway2IntegrationCreate,
-		Read:   resourceAwsApiGateway2IntegrationRead,
-		Update: resourceAwsApiGateway2IntegrationUpdate,
-		Delete: resourceAwsApiGateway2IntegrationDelete,
+		Create: resourceAwsApiGatewayV2IntegrationCreate,
+		Read:   resourceAwsApiGatewayV2IntegrationRead,
+		Update: resourceAwsApiGatewayV2IntegrationUpdate,
+		Delete: resourceAwsApiGatewayV2IntegrationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsApiGateway2IntegrationImport,
+			State: resourceAwsApiGatewayV2IntegrationImport,
 		},
-		CustomizeDiff: resourceAwsApiGateway2IntegrationCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"api_id": {
@@ -113,7 +112,7 @@ func resourceAwsApiGateway2Integration() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGateway2IntegrationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	req := &apigatewayv2.CreateIntegrationInput{
@@ -162,10 +161,10 @@ func resourceAwsApiGateway2IntegrationCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(resp.IntegrationId))
 
-	return resourceAwsApiGateway2IntegrationRead(d, meta)
+	return resourceAwsApiGatewayV2IntegrationRead(d, meta)
 }
 
-func resourceAwsApiGateway2IntegrationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2IntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
@@ -201,7 +200,7 @@ func resourceAwsApiGateway2IntegrationRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsApiGateway2IntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	req := &apigatewayv2.UpdateIntegrationInput{
@@ -248,10 +247,10 @@ func resourceAwsApiGateway2IntegrationUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error updating API Gateway v2 integration: %s", err)
 	}
 
-	return resourceAwsApiGateway2IntegrationRead(d, meta)
+	return resourceAwsApiGatewayV2IntegrationRead(d, meta)
 }
 
-func resourceAwsApiGateway2IntegrationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2IntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration (%s)", d.Id())
@@ -269,7 +268,7 @@ func resourceAwsApiGateway2IntegrationDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsApiGateway2IntegrationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAwsApiGatewayV2IntegrationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/integration-id'", d.Id())
@@ -279,21 +278,4 @@ func resourceAwsApiGateway2IntegrationImport(d *schema.ResourceData, meta interf
 	d.Set("api_id", parts[0])
 
 	return []*schema.ResourceData{d}, nil
-}
-
-func resourceAwsApiGateway2IntegrationCustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
-	if diff.Id() == "" {
-		// New resource.
-		integrationMethod := diff.Get("integration_method").(string)
-		integrationType := diff.Get("integration_type").(string)
-		if integrationType == apigatewayv2.IntegrationTypeMock {
-			if integrationMethod != "" {
-				return fmt.Errorf("'integration_method' must not be set when 'integration_type' is '%s'", integrationType)
-			}
-		} else if integrationMethod == "" {
-			return fmt.Errorf("'integration_method' must be set when 'integration_type' is '%s'", integrationType)
-		}
-	}
-
-	return nil
 }
