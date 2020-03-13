@@ -16,7 +16,7 @@ Provides an Amplify App resource, a fullstack serverless app hosted on the [AWS 
 
 ```hcl
 resource "aws_amplify_app" "app" {
-  name = "app"
+  name       = "app"
   repository = "https://github.com/example/app"
 
   // The default build_spec added by the Amplify Console for React.
@@ -54,11 +54,12 @@ If you create a new Amplify App with the `repository` argument, you also need to
 
 ```hcl
 resource "aws_amplify_app" "app" {
-  name = "app"
+  name       = "app"
   repository = "https://github.com/example/app"
 
   // GitHub personal access token
   access_token = "..."
+}
 ```
 
 You can omit `access_token` if you import an existing Amplify App created by the Amplify Console (using OAuth for authentication).
@@ -82,6 +83,7 @@ resource "aws_amplify_app" "app" {
     // Enable auto build for the created branch.
     enable_auto_build = true
   }
+}
 ```
 
 ### Basic Authentication
@@ -121,6 +123,7 @@ resource "aws_amplify_app" "app" {
     status = "200"
     target = "/index.html"
   }
+}
 ```
 
 ## Argument Reference
