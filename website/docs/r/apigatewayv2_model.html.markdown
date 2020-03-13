@@ -1,12 +1,12 @@
 ---
-subcategory: "API Gateway v2"
+subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_v2_model"
+page_title: "AWS: aws_apigatewayv2_model"
 description: |-
   Manages an Amazon API Gateway Version 2 model.
 ---
 
-# Resource: aws_api_gateway_v2_model
+# Resource: aws_apigatewayv2_model
 
 Manages an Amazon API Gateway Version 2 [model](https://docs.aws.amazon.com/apigateway/latest/developerguide/models-mappings.html#models-mappings-models).
 
@@ -15,8 +15,8 @@ Manages an Amazon API Gateway Version 2 [model](https://docs.aws.amazon.com/apig
 ### Basic
 
 ```hcl
-resource "aws_api_gateway_v2_model" "example" {
-  api_id       = "${aws_api_gateway_v2_api.example.id}"
+resource "aws_apigatewayv2_model" "example" {
+  api_id       = "${aws_apigatewayv2_api.example.id}"
   content_type = "application/json"
   name         = "example"
 
@@ -51,8 +51,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_v2_model` can be imported by using the API identifier and model identifier, e.g.
+`aws_apigatewayv2_model` can be imported by using the API identifier and model identifier, e.g.
 
 ```
-$ terraform import aws_api_gateway_v2_model.example aabbccddee/1122334
+$ terraform import aws_apigatewayv2_model.example aabbccddee/1122334
 ```

@@ -15,7 +15,7 @@ import (
 func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetModelOutput
-	resourceName := "aws_api_gateway_v2_model.test"
+	resourceName := "aws_apigatewayv2_model.test"
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
 	schema := `
@@ -59,7 +59,7 @@ func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
 func TestAccAWSAPIGatewayV2Model_disappears(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetModelOutput
-	resourceName := "aws_api_gateway_v2_model.test"
+	resourceName := "aws_apigatewayv2_model.test"
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
 	schema := `
@@ -95,7 +95,7 @@ func TestAccAWSAPIGatewayV2Model_disappears(t *testing.T) {
 func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetModelOutput
-	resourceName := "aws_api_gateway_v2_model.test"
+	resourceName := "aws_apigatewayv2_model.test"
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
 	schema1 := `
@@ -175,7 +175,7 @@ func testAccCheckAWSAPIGatewayV2ModelDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_v2_model" {
+		if rs.Type != "aws_apigatewayv2_model" {
 			continue
 		}
 
@@ -251,7 +251,7 @@ func testAccAWSAPIGatewayV2ModelImportStateIdFunc(resourceName string) resource.
 
 func testAccAWSAPIGatewayV2ModelConfig_api(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_v2_api" "test" {
+resource "aws_apigatewayv2_api" "test" {
   name                       = %[1]q
   protocol_type              = "WEBSOCKET"
   route_selection_expression = "$request.body.action"
@@ -261,8 +261,8 @@ resource "aws_api_gateway_v2_api" "test" {
 
 func testAccAWSAPIGatewayV2ModelConfig_basic(rName, schema string) string {
 	return testAccAWSAPIGatewayV2ModelConfig_api(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_model" "test" {
-  api_id       = "${aws_api_gateway_v2_api.test.id}"
+resource "aws_apigatewayv2_model" "test" {
+  api_id       = "${aws_apigatewayv2_api.test.id}"
   content_type = "application/json"
   name         = %[1]q
   schema       = %[2]q
@@ -272,8 +272,8 @@ resource "aws_api_gateway_v2_model" "test" {
 
 func testAccAWSAPIGatewayV2ModelConfig_allAttributes(rName, schema string) string {
 	return testAccAWSAPIGatewayV2ModelConfig_api(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_model" "test" {
-  api_id       = "${aws_api_gateway_v2_api.test.id}"
+resource "aws_apigatewayv2_model" "test" {
+  api_id       = "${aws_apigatewayv2_api.test.id}"
   content_type = "text/x-json"
   name         = %[1]q
   description  = "test"
