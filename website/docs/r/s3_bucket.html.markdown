@@ -320,7 +320,7 @@ resource "aws_s3_bucket" "bucket" {
   grant {
     id         = "${data.aws_canonical_user_id.current_user.id}"
     type       = "CanonicalUser"
-    permission = ["FULL_ACCESS"]
+    permission = ["FULL_CONTROL"]
   }
 
   grant {
