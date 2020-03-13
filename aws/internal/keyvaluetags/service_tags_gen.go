@@ -301,6 +301,16 @@ func KafkaKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// KinesisvideoTags returns kinesisvideo service tags.
+func (tags KeyValueTags) KinesisvideoTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// KinesisvideoKeyValueTags creates KeyValueTags from kinesisvideo service tags.
+func KinesisvideoKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // LambdaTags returns lambda service tags.
 func (tags KeyValueTags) LambdaTags() map[string]*string {
 	return aws.StringMap(tags.Map())

@@ -77,6 +77,7 @@ var serviceNames = []string{
 	"kinesis",
 	"kinesisanalytics",
 	"kinesisanalyticsv2",
+	"kinesisvideo",
 	"kms",
 	"lambda",
 	"licensemanager",
@@ -245,6 +246,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "GetTags"
 	case "kinesis":
 		return "ListTagsForStream"
+	case "kinesisvideo":
+		return "ListTagsForStream"
 	case "kms":
 		return "ListResourceTags"
 	case "lambda":
@@ -327,6 +330,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "kinesisanalyticsv2":
 		return "ResourceARN"
+	case "kinesisvideo":
+		return "StreamARN"
 	case "kms":
 		return "KeyId"
 	case "lambda":

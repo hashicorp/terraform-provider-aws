@@ -64,6 +64,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
@@ -1116,6 +1117,23 @@ func Kinesisanalyticsv2ListTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, ide
 	}
 
 	return Kinesisanalyticsv2KeyValueTags(output.Tags), nil
+}
+
+// KinesisvideoListTags lists kinesisvideo service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisvideoListTags(conn *kinesisvideo.KinesisVideo, identifier string) (KeyValueTags, error) {
+	input := &kinesisvideo.ListTagsForStreamInput{
+		StreamARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForStream(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return KinesisvideoKeyValueTags(output.Tags), nil
 }
 
 // KmsListTags lists kms service tags.

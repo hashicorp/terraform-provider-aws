@@ -69,6 +69,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
@@ -2368,6 +2369,42 @@ func Kinesisanalyticsv2UpdateTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, i
 		}
 
 		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// KinesisvideoUpdateTags updates kinesisvideo service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisvideoUpdateTags(conn *kinesisvideo.KinesisVideo, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &kinesisvideo.UntagStreamInput{
+			StreamARN:  aws.String(identifier),
+			TagKeyList: aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.UntagStream(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &kinesisvideo.TagStreamInput{
+			StreamARN: aws.String(identifier),
+			Tags:      updatedTags.IgnoreAws().KinesisvideoTags(),
+		}
+
+		_, err := conn.TagStream(input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)

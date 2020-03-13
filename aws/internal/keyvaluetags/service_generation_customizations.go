@@ -71,6 +71,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
@@ -243,6 +244,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(kinesisanalytics.New)
 	case "kinesisanalyticsv2":
 		funcType = reflect.TypeOf(kinesisanalyticsv2.New)
+	case "kinesisvideo":
+		funcType = reflect.TypeOf(kinesisvideo.New)
 	case "kms":
 		funcType = reflect.TypeOf(kms.New)
 	case "lambda":

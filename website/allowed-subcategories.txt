@@ -61,6 +61,7 @@ IoT
 KMS
 Kinesis Firehose
 Kinesis
+Kinesis Video
 Lambda
 License Manager
 Lightsail
