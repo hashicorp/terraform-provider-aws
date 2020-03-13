@@ -11,14 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-func resourceAwsApiGateway2Authorizer() *schema.Resource {
+func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGateway2AuthorizerCreate,
-		Read:   resourceAwsApiGateway2AuthorizerRead,
-		Update: resourceAwsApiGateway2AuthorizerUpdate,
-		Delete: resourceAwsApiGateway2AuthorizerDelete,
+		Create: resourceAwsApiGatewayV2AuthorizerCreate,
+		Read:   resourceAwsApiGatewayV2AuthorizerRead,
+		Update: resourceAwsApiGatewayV2AuthorizerUpdate,
+		Delete: resourceAwsApiGatewayV2AuthorizerDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsApiGateway2AuthorizerImport,
+			State: resourceAwsApiGatewayV2AuthorizerImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -59,7 +59,7 @@ func resourceAwsApiGateway2Authorizer() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGateway2AuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	req := &apigatewayv2.CreateAuthorizerInput{
@@ -81,10 +81,10 @@ func resourceAwsApiGateway2AuthorizerCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.AuthorizerId))
 
-	return resourceAwsApiGateway2AuthorizerRead(d, meta)
+	return resourceAwsApiGatewayV2AuthorizerRead(d, meta)
 }
 
-func resourceAwsApiGateway2AuthorizerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2AuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	resp, err := conn.GetAuthorizer(&apigatewayv2.GetAuthorizerInput{
@@ -111,7 +111,7 @@ func resourceAwsApiGateway2AuthorizerRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsApiGateway2AuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2AuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	req := &apigatewayv2.UpdateAuthorizerInput{
@@ -140,10 +140,10 @@ func resourceAwsApiGateway2AuthorizerUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error updating API Gateway v2 authorizer: %s", err)
 	}
 
-	return resourceAwsApiGateway2AuthorizerRead(d, meta)
+	return resourceAwsApiGatewayV2AuthorizerRead(d, meta)
 }
 
-func resourceAwsApiGateway2AuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2AuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 authorizer (%s)", d.Id())
@@ -161,7 +161,7 @@ func resourceAwsApiGateway2AuthorizerDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsApiGateway2AuthorizerImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAwsApiGatewayV2AuthorizerImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/authorizer-id'", d.Id())

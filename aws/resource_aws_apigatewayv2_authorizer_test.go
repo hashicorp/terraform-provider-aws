@@ -11,20 +11,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSAPIGateway2Authorizer_basic(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_authorizer.test"
+func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetAuthorizerOutput
+	resourceName := "aws_apigatewayv2_authorizer.test"
 	lambdaResourceName := "aws_lambda_function.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2AuthorizerDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2AuthorizerConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2AuthorizerExists(resourceName),
+					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
@@ -35,7 +37,7 @@ func TestAccAWSAPIGateway2Authorizer_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2AuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2AuthorizerImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -43,21 +45,46 @@ func TestAccAWSAPIGateway2Authorizer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Authorizer_Credentials(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_authorizer.test"
-	iamRoleResourceName := "aws_iam_role.test"
-	lambdaResourceName := "aws_lambda_function.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2Authorizer_disappears(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetAuthorizerOutput
+	resourceName := "aws_apigatewayv2_authorizer.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2AuthorizerDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2AuthorizerConfig_credentials(rName),
+				Config: testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2AuthorizerExists(resourceName),
+					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
+					testAccCheckAWSAPIGatewayV2AuthorizerDisappears(&apiId, &v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetAuthorizerOutput
+	resourceName := "aws_apigatewayv2_authorizer.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	lambdaResourceName := "aws_lambda_function.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2AuthorizerConfig_credentials(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
@@ -68,14 +95,14 @@ func TestAccAWSAPIGateway2Authorizer_Credentials(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2AuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2AuthorizerImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGateway2AuthorizerConfig_credentialsUpdated(rName),
+				Config: testAccAWSAPIGatewayV2AuthorizerConfig_credentialsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2AuthorizerExists(resourceName),
+					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
@@ -86,9 +113,9 @@ func TestAccAWSAPIGateway2Authorizer_Credentials(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGateway2AuthorizerConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2AuthorizerExists(resourceName),
+					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
@@ -101,11 +128,11 @@ func TestAccAWSAPIGateway2Authorizer_Credentials(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGateway2AuthorizerDestroy(s *terraform.State) error {
+func testAccCheckAWSAPIGatewayV2AuthorizerDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_v2_authorizer" {
+		if rs.Type != "aws_apigatewayv2_authorizer" {
 			continue
 		}
 
@@ -126,7 +153,20 @@ func testAccCheckAWSAPIGateway2AuthorizerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGateway2AuthorizerExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayV2AuthorizerDisappears(apiId *string, v *apigatewayv2.GetAuthorizerOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+
+		_, err := conn.DeleteAuthorizer(&apigatewayv2.DeleteAuthorizerInput{
+			ApiId:        apiId,
+			AuthorizerId: v.AuthorizerId,
+		})
+
+		return err
+	}
+}
+
+func testAccCheckAWSAPIGatewayV2AuthorizerExists(n string, vApiId *string, v *apigatewayv2.GetAuthorizerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -139,19 +179,23 @@ func testAccCheckAWSAPIGateway2AuthorizerExists(n string) resource.TestCheckFunc
 
 		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
-		_, err := conn.GetAuthorizer(&apigatewayv2.GetAuthorizerInput{
-			ApiId:        aws.String(rs.Primary.Attributes["api_id"]),
+		apiId := aws.String(rs.Primary.Attributes["api_id"])
+		resp, err := conn.GetAuthorizer(&apigatewayv2.GetAuthorizerInput{
+			ApiId:        apiId,
 			AuthorizerId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
 			return err
 		}
 
+		*vApiId = *apiId
+		*v = *resp
+
 		return nil
 	}
 }
 
-func testAccAWSAPIGateway2AuthorizerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAWSAPIGatewayV2AuthorizerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -162,7 +206,7 @@ func testAccAWSAPIGateway2AuthorizerImportStateIdFunc(resourceName string) resou
 	}
 }
 
-func testAccAWSAPIGateway2AuthorizerConfig_base(rName string) string {
+func testAccAWSAPIGatewayV2AuthorizerConfig_base(rName string) string {
 	return baseAccAWSLambdaConfig(rName, rName, rName) + fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -172,7 +216,7 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs10.x"
 }
 
-resource "aws_api_gateway_v2_api" "test" {
+resource "aws_apigatewayv2_api" "test" {
   name                       = %[1]q
   protocol_type              = "WEBSOCKET"
   route_selection_expression = "$request.body.action"
@@ -196,10 +240,10 @@ EOF
 `, rName)
 }
 
-func testAccAWSAPIGateway2AuthorizerConfig_basic(rName string) string {
-	return testAccAWSAPIGateway2AuthorizerConfig_base(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_authorizer" "test" {
-  api_id           = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName string) string {
+	return testAccAWSAPIGatewayV2AuthorizerConfig_base(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_authorizer" "test" {
+  api_id           = "${aws_apigatewayv2_api.test.id}"
   authorizer_type  = "REQUEST"
   authorizer_uri   = "${aws_lambda_function.test.invoke_arn}"
   identity_sources = ["route.request.header.Auth"]
@@ -208,10 +252,10 @@ resource "aws_api_gateway_v2_authorizer" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2AuthorizerConfig_credentials(rName string) string {
-	return testAccAWSAPIGateway2AuthorizerConfig_base(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_authorizer" "test" {
-  api_id           = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2AuthorizerConfig_credentials(rName string) string {
+	return testAccAWSAPIGatewayV2AuthorizerConfig_base(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_authorizer" "test" {
+  api_id           = "${aws_apigatewayv2_api.test.id}"
   authorizer_type  = "REQUEST"
   authorizer_uri   = "${aws_lambda_function.test.invoke_arn}"
   identity_sources = ["route.request.header.Auth"]
@@ -222,10 +266,10 @@ resource "aws_api_gateway_v2_authorizer" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2AuthorizerConfig_credentialsUpdated(rName string) string {
-	return testAccAWSAPIGateway2AuthorizerConfig_base(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_authorizer" "test" {
-  api_id           = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2AuthorizerConfig_credentialsUpdated(rName string) string {
+	return testAccAWSAPIGatewayV2AuthorizerConfig_base(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_authorizer" "test" {
+  api_id           = "${aws_apigatewayv2_api.test.id}"
   authorizer_type  = "REQUEST"
   authorizer_uri   = "${aws_lambda_function.test.invoke_arn}"
   identity_sources = ["route.request.header.Auth", "route.request.querystring.Name"]

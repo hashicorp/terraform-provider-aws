@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_v2_authorizer"
-sidebar_current: "docs-aws-resource-api-gateway-v2-authorizer"
+page_title: "AWS: aws_apigatewayv2_authorizer"
 description: |-
   Manages an Amazon API Gateway Version 2 authorizer.
 ---
 
-# Resource: aws_api_gateway_v2_authorizer
+# Resource: aws_apigatewayv2_authorizer
 
 Manages an Amazon API Gateway Version 2 authorizer.
 More information can be found in the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html).
@@ -16,8 +16,8 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 ### Basic
 
 ```hcl
-resource "aws_api_gateway_v2_authorizer" "example" {
-  api_id           = "${aws_api_gateway_v2_api.example.id}"
+resource "aws_apigatewayv2_authorizer" "example" {
+  api_id           = "${aws_apigatewayv2_api.example.id}"
   authorizer_type  = "REQUEST"
   authorizer_uri   = "${aws_lambda_function.example.invoke_arn}"
   identity_sources = ["route.request.header.Auth"]
@@ -46,8 +46,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_v2_authorizer` can be imported by using the API identifier and authorizer identifier, e.g.
+`aws_apigatewayv2_authorizer` can be imported by using the API identifier and authorizer identifier, e.g.
 
 ```
-$ terraform import aws_api_gateway_v2_authorizer.example aabbccddee/1122334
+$ terraform import aws_apigatewayv2_authorizer.example aabbccddee/1122334
 ```
