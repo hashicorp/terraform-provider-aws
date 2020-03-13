@@ -28,7 +28,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachments() *schema.Resource {
 						},
 						"id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"ipv6_support": {
 							Type:     schema.TypeString,
@@ -69,10 +69,6 @@ func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, me
 		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("id"); ok {
-		input.TransitGatewayAttachmentIds = []*string{aws.String(v.(string))}
-	}
-
 	log.Printf("[DEBUG] Reading EC2 Transit Gateways: %s", input)
 	output, err := conn.DescribeTransitGatewayVpcAttachments(input)
 
@@ -86,10 +82,10 @@ func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, me
 
 	for index, value := range output.TransitGatewayVpcAttachments {
 		transitGatewayVpcAttachment := output.TransitGatewayVpcAttachments[index]
+		var item *schema.ResourceData
 		if transitGatewayVpcAttachment != nil {
-			var item *schema.ResourceData
 			if transitGatewayVpcAttachment.Options == nil {
-				return fmt.Errorf("error reading EC2 Transit Gateway VPC Attachment (%s): missing options", d.Id())
+				return fmt.Errorf("error reading EC2 Transit Gateway VPC Attachment (%s): missing options", transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 			}
 
 			item.Set("dns_support", transitGatewayVpcAttachment.Options.DnsSupport)
