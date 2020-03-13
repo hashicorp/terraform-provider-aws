@@ -78,8 +78,10 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {
-			if isAWSErr(err, "ValidationException", "Unable to assume IAM role") {
-				log.Printf("[DEBUG] Retrying creation of Application Autoscaling Scalable Target due to possible issues with IAM: %s", err)
+			if isAWSErr(err, applicationautoscaling.ErrCodeValidationException, "Unable to assume IAM role") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, applicationautoscaling.ErrCodeValidationException, "ECS service doesn't exist") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

@@ -3954,6 +3954,7 @@ func (s *AdditionalAuthenticationProvider) SetUserPoolConfig(v *CognitoUserPoolC
 	return s
 }
 
+// The ApiCache object.
 type ApiCache struct {
 	_ struct{} `type:"structure"`
 
@@ -5190,6 +5191,9 @@ type CreateGraphqlApiInput struct {
 
 	// The Amazon Cognito user pool configuration.
 	UserPoolConfig *UserPoolConfig `locationName:"userPoolConfig" type:"structure"`
+
+	// A flag indicating whether to enable X-Ray tracing for the GraphqlApi.
+	XrayEnabled *bool `locationName:"xrayEnabled" type:"boolean"`
 }
 
 // String returns the string representation
@@ -5285,6 +5289,12 @@ func (s *CreateGraphqlApiInput) SetTags(v map[string]*string) *CreateGraphqlApiI
 // SetUserPoolConfig sets the UserPoolConfig field's value.
 func (s *CreateGraphqlApiInput) SetUserPoolConfig(v *UserPoolConfig) *CreateGraphqlApiInput {
 	s.UserPoolConfig = v
+	return s
+}
+
+// SetXrayEnabled sets the XrayEnabled field's value.
+func (s *CreateGraphqlApiInput) SetXrayEnabled(v bool) *CreateGraphqlApiInput {
+	s.XrayEnabled = &v
 	return s
 }
 
@@ -6572,6 +6582,7 @@ func (s *GetApiCacheInput) SetApiId(v string) *GetApiCacheInput {
 type GetApiCacheOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The ApiCache object.
 	ApiCache *ApiCache `locationName:"apiCache" type:"structure"`
 }
 
@@ -7262,6 +7273,9 @@ type GraphqlApi struct {
 
 	// The Amazon Cognito user pool configuration.
 	UserPoolConfig *UserPoolConfig `locationName:"userPoolConfig" type:"structure"`
+
+	// A flag representing whether X-Ray tracing is enabled for this GraphqlApi.
+	XrayEnabled *bool `locationName:"xrayEnabled" type:"boolean"`
 }
 
 // String returns the string representation
@@ -7331,6 +7345,12 @@ func (s *GraphqlApi) SetUris(v map[string]*string) *GraphqlApi {
 // SetUserPoolConfig sets the UserPoolConfig field's value.
 func (s *GraphqlApi) SetUserPoolConfig(v *UserPoolConfig) *GraphqlApi {
 	s.UserPoolConfig = v
+	return s
+}
+
+// SetXrayEnabled sets the XrayEnabled field's value.
+func (s *GraphqlApi) SetXrayEnabled(v bool) *GraphqlApi {
+	s.XrayEnabled = &v
 	return s
 }
 
@@ -7441,6 +7461,8 @@ func (s InternalFailureException) RequestID() string {
 	return s.respMetadata.RequestID
 }
 
+// The LambdaConflictHandlerConfig object when configuring LAMBDA as the Conflict
+// Handler.
 type LambdaConflictHandlerConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -9759,6 +9781,9 @@ type UpdateGraphqlApiInput struct {
 
 	// The new Amazon Cognito user pool configuration for the GraphqlApi object.
 	UserPoolConfig *UserPoolConfig `locationName:"userPoolConfig" type:"structure"`
+
+	// A flag indicating whether to enable X-Ray tracing for the GraphqlApi.
+	XrayEnabled *bool `locationName:"xrayEnabled" type:"boolean"`
 }
 
 // String returns the string representation
@@ -9854,6 +9879,12 @@ func (s *UpdateGraphqlApiInput) SetOpenIDConnectConfig(v *OpenIDConnectConfig) *
 // SetUserPoolConfig sets the UserPoolConfig field's value.
 func (s *UpdateGraphqlApiInput) SetUserPoolConfig(v *UserPoolConfig) *UpdateGraphqlApiInput {
 	s.UserPoolConfig = v
+	return s
+}
+
+// SetXrayEnabled sets the XrayEnabled field's value.
+func (s *UpdateGraphqlApiInput) SetXrayEnabled(v bool) *UpdateGraphqlApiInput {
+	s.XrayEnabled = &v
 	return s
 }
 

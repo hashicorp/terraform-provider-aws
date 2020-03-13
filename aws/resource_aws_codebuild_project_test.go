@@ -292,6 +292,27 @@ func TestAccAWSCodeBuildProject_Description(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_SourceVersion(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_SourceVersion(rName, "master"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source_version", "master"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_EncryptionKey(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2075,8 +2096,8 @@ POLICY
 func testAccAWSCodeBuildProjectConfig_basic(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         = "%s"
-  service_role = "${aws_iam_role.test.arn}"
+  name           = "%s"
+  service_role   = "${aws_iam_role.test.arn}"
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -2252,6 +2273,31 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, description, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_SourceVersion(rName, sourceVersion string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name           = "%s"
+  service_role   = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source_version = "%s"
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, sourceVersion)
 }
 
 func testAccAWSCodeBuildProjectConfig_EncryptionKey(rName string) string {

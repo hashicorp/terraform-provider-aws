@@ -1749,17 +1749,25 @@ func extractProcessors(processingConfigurationProcessors []interface{}) []*fireh
 	processors := []*firehose.Processor{}
 
 	for _, processor := range processingConfigurationProcessors {
-		processors = append(processors, extractProcessor(processor.(map[string]interface{})))
+		extractedProcessor := extractProcessor(processor.(map[string]interface{}))
+		if extractedProcessor != nil {
+			processors = append(processors, extractedProcessor)
+		}
 	}
 
 	return processors
 }
 
 func extractProcessor(processingConfigurationProcessor map[string]interface{}) *firehose.Processor {
-	return &firehose.Processor{
-		Type:       aws.String(processingConfigurationProcessor["type"].(string)),
-		Parameters: extractProcessorParameters(processingConfigurationProcessor["parameters"].([]interface{})),
+	var processor *firehose.Processor
+	processorType := processingConfigurationProcessor["type"].(string)
+	if processorType != "" {
+		processor = &firehose.Processor{
+			Type:       aws.String(processorType),
+			Parameters: extractProcessorParameters(processingConfigurationProcessor["parameters"].([]interface{})),
+		}
 	}
+	return processor
 }
 
 func extractProcessorParameters(processorParameters []interface{}) []*firehose.ProcessorParameter {

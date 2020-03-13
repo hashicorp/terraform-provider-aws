@@ -128,7 +128,7 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 }
 
 func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Creating API Gateway")
 
 	var description *string
@@ -190,7 +190,7 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Reading API Gateway %s", d.Id())
 
 	api, err := conn.GetRestApi(&apigateway.GetRestApiInput{
@@ -397,7 +397,7 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 }
 
 func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Updating API Gateway %s", d.Id())
 
 	if d.HasChange("tags") {
@@ -435,7 +435,7 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayRestApiDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	input := &apigateway.DeleteRestApiInput{
 		RestApiId: aws.String(d.Id()),

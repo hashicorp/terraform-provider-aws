@@ -26,7 +26,7 @@ func testSweepAPIGatewayRestApis(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).apigateway
+	conn := client.(*AWSClient).apigatewayconn
 
 	err = conn.GetRestApisPages(&apigateway.GetRestApisInput{}, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
 		for _, item := range page.Items {
@@ -237,7 +237,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 					// This can eventually be moved to a PreCheck function
 					// If the region does not support EDGE endpoint type, this test will either show
 					// SKIP (if REGIONAL passed) or FAIL (if REGIONAL failed)
-					conn := testAccProvider.Meta().(*AWSClient).apigateway
+					conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 					output, err := conn.CreateRestApi(&apigateway.CreateRestApiInput{
 						Name: aws.String(acctest.RandomWithPrefix("tf-acc-test-edge-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -285,7 +285,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 				PreConfig: func() {
 					// Ensure region supports PRIVATE endpoint
 					// This can eventually be moved to a PreCheck function
-					conn := testAccProvider.Meta().(*AWSClient).apigateway
+					conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 					output, err := conn.CreateRestApi(&apigateway.CreateRestApiInput{
 						Name: aws.String(acctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -338,7 +338,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VPCEndpoint(t *testing.T)
 				PreConfig: func() {
 					// Ensure region supports PRIVATE endpoint
 					// This can eventually be moved to a PreCheck function
-					conn := testAccProvider.Meta().(*AWSClient).apigateway
+					conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 					output, err := conn.CreateRestApi(&apigateway.CreateRestApiInput{
 						Name: aws.String(acctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -543,7 +543,7 @@ func testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttributeIsNil(conf *
 
 func testAccCheckAWSAPIGatewayRestAPIRoutes(conf *apigateway.RestApi, routes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		resp, err := conn.GetResources(&apigateway.GetResourcesInput{
 			RestApiId: conf.Id,
@@ -583,7 +583,7 @@ func testAccCheckAWSAPIGatewayRestAPIExists(n string, res *apigateway.RestApi) r
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetRestApiInput{
 			RestApiId: aws.String(rs.Primary.ID),
@@ -604,7 +604,7 @@ func testAccCheckAWSAPIGatewayRestAPIExists(n string, res *apigateway.RestApi) r
 }
 
 func testAccCheckAWSAPIGatewayRestAPIDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_rest_api" {
@@ -629,7 +629,7 @@ func testAccCheckAWSAPIGatewayRestAPIDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayRestAPIDisappears(restApi *apigateway.RestApi) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		input := &apigateway.DeleteRestApiInput{
 			RestApiId: restApi.Id,

@@ -647,6 +647,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"restriction_type": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											cloudfront.GeoRestrictionTypeNone,
+											cloudfront.GeoRestrictionTypeBlacklist,
+											cloudfront.GeoRestrictionTypeWhitelist,
+										}, false),
 									},
 								},
 							},

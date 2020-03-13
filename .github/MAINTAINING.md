@@ -6,7 +6,11 @@
     - [Pull Request Review Process](#pull-request-review-process)
         - [Dependency Updates](#dependency-updates)
             - [AWS Go SDK Updates](#aws-go-sdk-updates)
-            - [Terraform Updates](#terraform-updates)
+            - [golangci-lint Updates](#golangci-lint-updates)
+            - [Terraform Plugin SDK Updates](#terraform-plugin-sdk-updates)
+            - [tfproviderdocs Updates](#tfproviderdocs-updates)
+            - [tfproviderlint Updates](#tfproviderlint-updates)
+            - [yaml.v2 Updates](#yaml-v2-updates)
     - [Pull Request Merge Process](#pull-request-merge-process)
     - [Pull Request Types to CHANGELOG](#pull-request-types-to-changelog)
 - [Release Process](#release-process)
@@ -241,9 +245,25 @@ ENHANCEMENTS:
 * backend/s3: Support automatic region validation for `XX-XXXXX-#` [GH-####]
 ```
 
-##### Terraform Updates
+##### golangci-lint Updates
 
-Run the full acceptance testing suite against the pull request and verify there are no new or unexpected failures.
+Merge if CI passes.
+
+##### Terraform Plugin SDK Updates
+
+Except for trivial changes, run the full acceptance testing suite against the pull request and verify there are no new or unexpected failures.
+
+##### tfproviderdocs Updates
+
+Merge if CI passes.
+
+##### tfproviderlint Updates
+
+Merge if CI passes.
+
+##### yaml.v2 Updates
+
+Run the acceptance testing pattern, `TestAccAWSCloudFormationStack(_dataSource)?_yaml`, and merge if passing.
 
 ### Pull Request Merge Process
 

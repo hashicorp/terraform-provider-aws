@@ -109,6 +109,19 @@ func testAccCheckResourceAttrRegionalARN(resourceName, attributeName, arnService
 	}
 }
 
+// testAccCheckResourceAttrRegionalARNNoAccount ensures the Terraform state exactly matches a formatted ARN with region but without account ID
+func testAccCheckResourceAttrRegionalARNNoAccount(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
+			Partition: testAccGetPartition(),
+			Region:    testAccGetRegion(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
 // testAccMatchResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region
 func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -368,25 +381,6 @@ func testAccPartitionHasServicePreCheck(serviceId string, t *testing.T) {
 	}
 }
 
-// testAccRegionHasServicePreCheck skips a test if the AWS Go SDK endpoint value in a region is missing
-// NOTE: Most acceptance testing should prefer behavioral checks against an API (e.g. making an API call and
-//       using response errors) to determine if a test should be skipped since AWS Go SDK endpoint information
-//       can be incorrect, especially for newer endpoints or for private feature testing. This functionality
-//       is provided for cases where the API behavior may be completely unacceptable, such as permanent
-//       retries by the AWS Go SDK.
-func testAccRegionHasServicePreCheck(serviceId string, t *testing.T) {
-	regionId := testAccGetRegion()
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), regionId); ok {
-		service, ok := partition.Services()[serviceId]
-		if !ok {
-			t.Skip(fmt.Sprintf("skipping tests; partition %s does not support %s service", partition.ID(), serviceId))
-		}
-		if _, ok := service.Regions()[regionId]; !ok {
-			t.Skip(fmt.Sprintf("skipping tests; region %s does not support %s service", regionId, serviceId))
-		}
-	}
-}
-
 func testAccMultipleRegionsPreCheck(t *testing.T) {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
 		if len(partition.Regions()) < 2 {
@@ -409,6 +403,7 @@ func testAccOrganizationsAccountPreCheck(t *testing.T) {
 }
 
 func testAccAlternateAccountProviderConfig() string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   access_key = %[1]q
@@ -420,6 +415,7 @@ provider "aws" {
 }
 
 func testAccAlternateAccountAlternateRegionProviderConfig() string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   access_key = %[1]q
@@ -432,6 +428,7 @@ provider "aws" {
 }
 
 func testAccAlternateRegionProviderConfig() string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   alias  = "alternate"
@@ -441,6 +438,7 @@ provider "aws" {
 }
 
 func testAccProviderConfigIgnoreTagPrefixes1(keyPrefix1 string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   ignore_tag_prefixes = [%[1]q]
@@ -449,6 +447,7 @@ provider "aws" {
 }
 
 func testAccProviderConfigIgnoreTags1(key1 string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   ignore_tags = [%[1]q]
@@ -463,6 +462,7 @@ provider "aws" {
 // Other valid usage is for services only available in us-east-1 such as the
 // Cost and Usage Reporting and Pricing services.
 func testAccUsEast1RegionProviderConfig() string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   alias  = "us-east-1"
@@ -877,12 +877,7 @@ func testAccCheckAWSProviderEndpoints(providers *[]*schema.Provider) resource.Te
 					endpoint = "sfn"
 				}
 
-				switch name {
-				case endpoint, fmt.Sprintf("%sconn", endpoint), fmt.Sprintf("%sConn", endpoint):
-					return true
-				}
-
-				return false
+				return name == fmt.Sprintf("%sconn", endpoint)
 			}
 		}
 
@@ -1099,6 +1094,7 @@ func testAccCheckAWSProviderPartition(providers *[]*schema.Provider, expectedPar
 }
 
 func testAccAWSProviderConfigEndpoints(endpoints string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
@@ -1119,6 +1115,7 @@ data "aws_arn" "test" {
 }
 
 func testAccAWSProviderConfigIgnoreTagPrefixes0() string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
@@ -1135,6 +1132,7 @@ data "aws_arn" "test" {
 }
 
 func testAccAWSProviderConfigIgnoreTagPrefixes1(tagPrefix1 string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   ignore_tag_prefixes         = [%[1]q]
@@ -1152,6 +1150,7 @@ data "aws_arn" "test" {
 }
 
 func testAccAWSProviderConfigIgnoreTagPrefixes2(tagPrefix1, tagPrefix2 string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   ignore_tag_prefixes         = [%[1]q, %[2]q]
@@ -1169,6 +1168,7 @@ data "aws_arn" "test" {
 }
 
 func testAccAWSProviderConfigIgnoreTags0() string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
@@ -1185,6 +1185,7 @@ data "aws_arn" "test" {
 }
 
 func testAccAWSProviderConfigIgnoreTags1(tag1 string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   ignore_tags                 = [%[1]q]
@@ -1202,6 +1203,7 @@ data "aws_arn" "test" {
 }
 
 func testAccAWSProviderConfigIgnoreTags2(tag1, tag2 string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   ignore_tags                 = [%[1]q, %[2]q]
@@ -1219,6 +1221,7 @@ data "aws_arn" "test" {
 }
 
 func testAccAWSProviderConfigRegion(region string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   region                      = %[1]q
@@ -1243,6 +1246,7 @@ func testAccAssumeRoleARNPreCheck(t *testing.T) {
 }
 
 func testAccProviderConfigAssumeRolePolicy(policy string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
 	assume_role {

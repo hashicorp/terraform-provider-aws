@@ -97,7 +97,7 @@ func (c *Shield) AssociateDRTLogBucketRequest(input *AssociateDRTLogBucketInput)
 //
 //   * AccessDeniedForDependencyException
 //   In order to grant the necessary access to the DDoS Response Team, the user
-//   submitting AssociateDRTRole must have the iam:PassRole permission. This error
+//   submitting the request must have the iam:PassRole permission. This error
 //   indicates the user did not have the appropriate permissions. For more information,
 //   see Granting a User Permissions to Pass a Role to an AWS Service (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html).
 //
@@ -225,7 +225,7 @@ func (c *Shield) AssociateDRTRoleRequest(input *AssociateDRTRoleInput) (req *req
 //
 //   * AccessDeniedForDependencyException
 //   In order to grant the necessary access to the DDoS Response Team, the user
-//   submitting AssociateDRTRole must have the iam:PassRole permission. This error
+//   submitting the request must have the iam:PassRole permission. This error
 //   indicates the user did not have the appropriate permissions. For more information,
 //   see Granting a User Permissions to Pass a Role to an AWS Service (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html).
 //
@@ -253,6 +253,111 @@ func (c *Shield) AssociateDRTRole(input *AssociateDRTRoleInput) (*AssociateDRTRo
 // for more information on using Contexts.
 func (c *Shield) AssociateDRTRoleWithContext(ctx aws.Context, input *AssociateDRTRoleInput, opts ...request.Option) (*AssociateDRTRoleOutput, error) {
 	req, out := c.AssociateDRTRoleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opAssociateHealthCheck = "AssociateHealthCheck"
+
+// AssociateHealthCheckRequest generates a "aws/request.Request" representing the
+// client's request for the AssociateHealthCheck operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociateHealthCheck for more information on using the AssociateHealthCheck
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociateHealthCheckRequest method.
+//    req, resp := client.AssociateHealthCheckRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/AssociateHealthCheck
+func (c *Shield) AssociateHealthCheckRequest(input *AssociateHealthCheckInput) (req *request.Request, output *AssociateHealthCheckOutput) {
+	op := &request.Operation{
+		Name:       opAssociateHealthCheck,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AssociateHealthCheckInput{}
+	}
+
+	output = &AssociateHealthCheckOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// AssociateHealthCheck API operation for AWS Shield.
+//
+// Adds health-based detection to the Shield Advanced protection for a resource.
+// Shield Advanced health-based detection uses the health of your AWS resource
+// to improve responsiveness and accuracy in attack detection and mitigation.
+//
+// You define the health check in Route 53 and then associate it with your Shield
+// Advanced protection. For more information, see Shield Advanced Health-Based
+// Detection (https://docs.aws.amazon.com/waf/latest/developerguide/ddos-overview.html#ddos-advanced-health-check-option)
+// in the AWS WAF and AWS Shield Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Shield's
+// API operation AssociateHealthCheck for usage and error information.
+//
+// Returned Error Types:
+//   * InternalErrorException
+//   Exception that indicates that a problem occurred with the service infrastructure.
+//   You can retry the request.
+//
+//   * LimitsExceededException
+//   Exception that indicates that the operation would exceed a limit.
+//
+//   Type is the type of limit that would be exceeded.
+//
+//   Limit is the threshold that would be exceeded.
+//
+//   * ResourceNotFoundException
+//   Exception indicating the specified resource does not exist.
+//
+//   * InvalidParameterException
+//   Exception that indicates that the parameters passed to the API are invalid.
+//
+//   * OptimisticLockException
+//   Exception that indicates that the protection state has been modified by another
+//   client. You can retry the request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/AssociateHealthCheck
+func (c *Shield) AssociateHealthCheck(input *AssociateHealthCheckInput) (*AssociateHealthCheckOutput, error) {
+	req, out := c.AssociateHealthCheckRequest(input)
+	return out, req.Send()
+}
+
+// AssociateHealthCheckWithContext is the same as AssociateHealthCheck with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociateHealthCheck for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Shield) AssociateHealthCheckWithContext(ctx aws.Context, input *AssociateHealthCheckInput, opts ...request.Option) (*AssociateHealthCheckOutput, error) {
+	req, out := c.AssociateHealthCheckRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1156,7 +1261,7 @@ func (c *Shield) DisassociateDRTLogBucketRequest(input *DisassociateDRTLogBucket
 //
 //   * AccessDeniedForDependencyException
 //   In order to grant the necessary access to the DDoS Response Team, the user
-//   submitting AssociateDRTRole must have the iam:PassRole permission. This error
+//   submitting the request must have the iam:PassRole permission. This error
 //   indicates the user did not have the appropriate permissions. For more information,
 //   see Granting a User Permissions to Pass a Role to an AWS Service (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html).
 //
@@ -1283,6 +1388,105 @@ func (c *Shield) DisassociateDRTRole(input *DisassociateDRTRoleInput) (*Disassoc
 // for more information on using Contexts.
 func (c *Shield) DisassociateDRTRoleWithContext(ctx aws.Context, input *DisassociateDRTRoleInput, opts ...request.Option) (*DisassociateDRTRoleOutput, error) {
 	req, out := c.DisassociateDRTRoleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDisassociateHealthCheck = "DisassociateHealthCheck"
+
+// DisassociateHealthCheckRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateHealthCheck operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateHealthCheck for more information on using the DisassociateHealthCheck
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateHealthCheckRequest method.
+//    req, resp := client.DisassociateHealthCheckRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DisassociateHealthCheck
+func (c *Shield) DisassociateHealthCheckRequest(input *DisassociateHealthCheckInput) (req *request.Request, output *DisassociateHealthCheckOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateHealthCheck,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisassociateHealthCheckInput{}
+	}
+
+	output = &DisassociateHealthCheckOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisassociateHealthCheck API operation for AWS Shield.
+//
+// Removes health-based detection from the Shield Advanced protection for a
+// resource. Shield Advanced health-based detection uses the health of your
+// AWS resource to improve responsiveness and accuracy in attack detection and
+// mitigation.
+//
+// You define the health check in Route 53 and then associate or disassociate
+// it with your Shield Advanced protection. For more information, see Shield
+// Advanced Health-Based Detection (https://docs.aws.amazon.com/waf/latest/developerguide/ddos-overview.html#ddos-advanced-health-check-option)
+// in the AWS WAF and AWS Shield Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Shield's
+// API operation DisassociateHealthCheck for usage and error information.
+//
+// Returned Error Types:
+//   * InternalErrorException
+//   Exception that indicates that a problem occurred with the service infrastructure.
+//   You can retry the request.
+//
+//   * InvalidParameterException
+//   Exception that indicates that the parameters passed to the API are invalid.
+//
+//   * ResourceNotFoundException
+//   Exception indicating the specified resource does not exist.
+//
+//   * OptimisticLockException
+//   Exception that indicates that the protection state has been modified by another
+//   client. You can retry the request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DisassociateHealthCheck
+func (c *Shield) DisassociateHealthCheck(input *DisassociateHealthCheckInput) (*DisassociateHealthCheckOutput, error) {
+	req, out := c.DisassociateHealthCheckRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateHealthCheckWithContext is the same as DisassociateHealthCheck with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateHealthCheck for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Shield) DisassociateHealthCheckWithContext(ctx aws.Context, input *DisassociateHealthCheckInput, opts ...request.Option) (*DisassociateHealthCheckOutput, error) {
+	req, out := c.DisassociateHealthCheckRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1791,7 +1995,7 @@ func (s AccessDeniedException) RequestID() string {
 }
 
 // In order to grant the necessary access to the DDoS Response Team, the user
-// submitting AssociateDRTRole must have the iam:PassRole permission. This error
+// submitting the request must have the iam:PassRole permission. This error
 // indicates the user did not have the appropriate permissions. For more information,
 // see Granting a User Permissions to Pass a Role to an AWS Service (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html).
 type AccessDeniedForDependencyException struct {
@@ -1962,6 +2166,80 @@ func (s AssociateDRTRoleOutput) String() string {
 
 // GoString returns the string representation
 func (s AssociateDRTRoleOutput) GoString() string {
+	return s.String()
+}
+
+type AssociateHealthCheckInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the health check to associate with the
+	// protection.
+	//
+	// HealthCheckArn is a required field
+	HealthCheckArn *string `min:"1" type:"string" required:"true"`
+
+	// The unique identifier (ID) for the Protection object to add the health check
+	// association to.
+	//
+	// ProtectionId is a required field
+	ProtectionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociateHealthCheckInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateHealthCheckInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociateHealthCheckInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociateHealthCheckInput"}
+	if s.HealthCheckArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("HealthCheckArn"))
+	}
+	if s.HealthCheckArn != nil && len(*s.HealthCheckArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HealthCheckArn", 1))
+	}
+	if s.ProtectionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProtectionId"))
+	}
+	if s.ProtectionId != nil && len(*s.ProtectionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProtectionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHealthCheckArn sets the HealthCheckArn field's value.
+func (s *AssociateHealthCheckInput) SetHealthCheckArn(v string) *AssociateHealthCheckInput {
+	s.HealthCheckArn = &v
+	return s
+}
+
+// SetProtectionId sets the ProtectionId field's value.
+func (s *AssociateHealthCheckInput) SetProtectionId(v string) *AssociateHealthCheckInput {
+	s.ProtectionId = &v
+	return s
+}
+
+type AssociateHealthCheckOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AssociateHealthCheckOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateHealthCheckOutput) GoString() string {
 	return s.String()
 }
 
@@ -2830,6 +3108,80 @@ func (s DisassociateDRTRoleOutput) String() string {
 
 // GoString returns the string representation
 func (s DisassociateDRTRoleOutput) GoString() string {
+	return s.String()
+}
+
+type DisassociateHealthCheckInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the health check that is associated with
+	// the protection.
+	//
+	// HealthCheckArn is a required field
+	HealthCheckArn *string `min:"1" type:"string" required:"true"`
+
+	// The unique identifier (ID) for the Protection object to remove the health
+	// check association from.
+	//
+	// ProtectionId is a required field
+	ProtectionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateHealthCheckInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateHealthCheckInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateHealthCheckInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateHealthCheckInput"}
+	if s.HealthCheckArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("HealthCheckArn"))
+	}
+	if s.HealthCheckArn != nil && len(*s.HealthCheckArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HealthCheckArn", 1))
+	}
+	if s.ProtectionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProtectionId"))
+	}
+	if s.ProtectionId != nil && len(*s.ProtectionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProtectionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHealthCheckArn sets the HealthCheckArn field's value.
+func (s *DisassociateHealthCheckInput) SetHealthCheckArn(v string) *DisassociateHealthCheckInput {
+	s.HealthCheckArn = &v
+	return s
+}
+
+// SetProtectionId sets the ProtectionId field's value.
+func (s *DisassociateHealthCheckInput) SetProtectionId(v string) *DisassociateHealthCheckInput {
+	s.ProtectionId = &v
+	return s
+}
+
+type DisassociateHealthCheckOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateHealthCheckOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateHealthCheckOutput) GoString() string {
 	return s.String()
 }
 
@@ -3715,6 +4067,10 @@ func (s OptimisticLockException) RequestID() string {
 type Protection struct {
 	_ struct{} `type:"structure"`
 
+	// The unique identifier (ID) for the Route 53 health check that's associated
+	// with the protection.
+	HealthCheckIds []*string `type:"list"`
+
 	// The unique identifier (ID) of the protection.
 	Id *string `min:"1" type:"string"`
 
@@ -3733,6 +4089,12 @@ func (s Protection) String() string {
 // GoString returns the string representation
 func (s Protection) GoString() string {
 	return s.String()
+}
+
+// SetHealthCheckIds sets the HealthCheckIds field's value.
+func (s *Protection) SetHealthCheckIds(v []*string) *Protection {
+	s.HealthCheckIds = v
+	return s
 }
 
 // SetId sets the Id field's value.

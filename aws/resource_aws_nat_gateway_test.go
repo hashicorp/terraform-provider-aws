@@ -94,8 +94,9 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 				Config: testAccNatGatewayConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists(resourceName, &natGateway),
-					testAccCheckTags(&natGateway.Tags, "Name", "terraform-testacc-nat-gw-tags"),
-					testAccCheckTags(&natGateway.Tags, "foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "terraform-testacc-nat-gw-tags"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 				),
 			},
 
@@ -103,9 +104,9 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 				Config: testAccNatGatewayConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists(resourceName, &natGateway),
-					testAccCheckTags(&natGateway.Tags, "Name", "terraform-testacc-nat-gw-tags"),
-					testAccCheckTags(&natGateway.Tags, "foo", ""),
-					testAccCheckTags(&natGateway.Tags, "bar", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "terraform-testacc-nat-gw-tags"),
+					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
 				),
 			},
 			{
