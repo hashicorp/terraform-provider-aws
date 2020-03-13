@@ -23,10 +23,11 @@ func resourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"peer_account_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validateAwsAccountId,
 			},
 			"peer_region": {
 				Type:     schema.TypeString,
