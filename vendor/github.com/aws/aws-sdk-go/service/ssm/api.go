@@ -1108,13 +1108,12 @@ func (c *SSM) CreateResourceDataSyncRequest(input *CreateResourceDataSyncInput) 
 // for Inventory (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-datasync.html)
 // in the AWS Systems Manager User Guide.
 //
-// You can configure Systems Manager Explorer to use the SyncToDestination type
+// You can configure Systems Manager Explorer to use the SyncFromSource type
 // to synchronize operational work items (OpsItems) and operational data (OpsData)
-// from multiple AWS Regions to a single Amazon S3 bucket. You can also configure
-// Explorer to use the SyncFromSource type. This type synchronizes OpsItems
-// and OpsData from multiple AWS accounts and Regions by using AWS Organizations.
-// For more information, see Setting Up Explorer to Display Data from Multiple
-// Accounts and Regions (http://docs.aws.amazon.com/systems-manager/latest/userguide/Explorer-resource-data-sync.html)
+// from multiple AWS Regions to a single Amazon S3 bucket. This type can synchronize
+// OpsItems and OpsData from multiple AWS accounts and Regions or EntireOrganization
+// by using AWS Organizations. For more information, see Setting Up Explorer
+// to Display Data from Multiple Accounts and Regions (http://docs.aws.amazon.com/systems-manager/latest/userguide/Explorer-resource-data-sync.html)
 // in the AWS Systems Manager User Guide.
 //
 // A resource data sync is an asynchronous operation that returns immediately.
@@ -36892,9 +36891,11 @@ type PatchRule struct {
 	// The number of days after the release date of each patch matched by the rule
 	// that the patch is marked as approved in the patch baseline. For example,
 	// a value of 7 means that patches are approved seven days after they are released.
-	//
-	// ApproveAfterDays is a required field
-	ApproveAfterDays *int64 `type:"integer" required:"true"`
+	ApproveAfterDays *int64 `type:"integer"`
+
+	// The cutoff date for auto approval of released patches. Any patches released
+	// on or before this date will be installed automatically
+	ApproveUntilDate *string `min:"1" type:"string"`
 
 	// A compliance severity level for all approved patches in a patch baseline.
 	// Valid compliance severity levels include the following: Unspecified, Critical,
@@ -36925,8 +36926,8 @@ func (s PatchRule) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *PatchRule) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "PatchRule"}
-	if s.ApproveAfterDays == nil {
-		invalidParams.Add(request.NewErrParamRequired("ApproveAfterDays"))
+	if s.ApproveUntilDate != nil && len(*s.ApproveUntilDate) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApproveUntilDate", 1))
 	}
 	if s.PatchFilterGroup == nil {
 		invalidParams.Add(request.NewErrParamRequired("PatchFilterGroup"))
@@ -36946,6 +36947,12 @@ func (s *PatchRule) Validate() error {
 // SetApproveAfterDays sets the ApproveAfterDays field's value.
 func (s *PatchRule) SetApproveAfterDays(v int64) *PatchRule {
 	s.ApproveAfterDays = &v
+	return s
+}
+
+// SetApproveUntilDate sets the ApproveUntilDate field's value.
+func (s *PatchRule) SetApproveUntilDate(v string) *PatchRule {
+	s.ApproveUntilDate = &v
 	return s
 }
 
@@ -37536,7 +37543,9 @@ type PutParameterInput struct {
 
 	// The fully qualified name of the parameter that you want to add to the system.
 	// The fully qualified name includes the complete hierarchy of the parameter
-	// path and name. For example: /Dev/DBServer/MySQL/db-string13
+	// path and name. For parameters in a hierarchy, you must include a leading
+	// forward slash character (/) when you create or reference a parameter. For
+	// example: /Dev/DBServer/MySQL/db-string13
 	//
 	// Naming Constraints:
 	//
@@ -37558,10 +37567,10 @@ type PutParameterInput struct {
 	// in the AWS Systems Manager User Guide.
 	//
 	// The maximum length constraint listed below includes capacity for additional
-	// system attributes that are not part of the name. The maximum length for the
-	// fully qualified parameter name is 1011 characters, including the full length
-	// of the parameter ARN. For example, the following fully qualified parameter
-	// name is 65 characters, not 20 characters:
+	// system attributes that are not part of the name. The maximum length for a
+	// parameter name, including the full length of the parameter ARN, is 1011 characters.
+	// For example, the length of the following parameter name is 65 characters,
+	// not 20 characters:
 	//
 	// arn:aws:ssm:us-east-2:111122223333:parameter/ExampleParameterName
 	//
@@ -39385,8 +39394,8 @@ func (s *ResourceDataSyncS3Destination) SetSyncFormat(v string) *ResourceDataSyn
 type ResourceDataSyncSource struct {
 	_ struct{} `type:"structure"`
 
-	// The field name in SyncSource for the ResourceDataSyncAwsOrganizationsSource
-	// type.
+	// Information about the AwsOrganizationsSource resource data sync source. A
+	// sync source of this type can synchronize data from AWS Organizations.
 	AwsOrganizationsSource *ResourceDataSyncAwsOrganizationsSource `type:"structure"`
 
 	// Whether to automatically synchronize and aggregate data from new AWS Regions

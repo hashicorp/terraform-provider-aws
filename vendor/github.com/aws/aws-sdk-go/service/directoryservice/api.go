@@ -6256,6 +6256,9 @@ type CertificateInfo struct {
 	// The common name for the certificate.
 	CommonName *string `type:"string"`
 
+	// The date and time when the certificate will expire.
+	ExpiryDateTime *time.Time `type:"timestamp"`
+
 	// The state of the certificate.
 	State *string `type:"string" enum:"CertificateState"`
 }
@@ -6279,6 +6282,12 @@ func (s *CertificateInfo) SetCertificateId(v string) *CertificateInfo {
 // SetCommonName sets the CommonName field's value.
 func (s *CertificateInfo) SetCommonName(v string) *CertificateInfo {
 	s.CommonName = &v
+	return s
+}
+
+// SetExpiryDateTime sets the ExpiryDateTime field's value.
+func (s *CertificateInfo) SetExpiryDateTime(v time.Time) *CertificateInfo {
+	s.ExpiryDateTime = &v
 	return s
 }
 
@@ -8422,8 +8431,7 @@ type DescribeLDAPSSettingsInput struct {
 	// The type of next token used for pagination.
 	NextToken *string `type:"string"`
 
-	// The type of LDAP security the customer wants to enable, either server or
-	// client. Currently supports only Client, (the default).
+	// The type of LDAP security to enable. Currently only the value Client is supported.
 	Type *string `type:"string" enum:"LDAPSType"`
 }
 
@@ -9727,9 +9735,7 @@ type DisableLDAPSInput struct {
 	// DirectoryId is a required field
 	DirectoryId *string `type:"string" required:"true"`
 
-	// The type of LDAP security that the customer wants to enable. The security
-	// can be either server or client, but currently only the default Client is
-	// supported.
+	// The type of LDAP security to enable. Currently only the value Client is supported.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"LDAPSType"`
@@ -10103,8 +10109,7 @@ type EnableLDAPSInput struct {
 	// DirectoryId is a required field
 	DirectoryId *string `type:"string" required:"true"`
 
-	// The type of LDAP security the customer wants to enable. The security can
-	// be either server or client, but currently only the default Client is supported.
+	// The type of LDAP security to enable. Currently only the value Client is supported.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"LDAPSType"`

@@ -110,12 +110,12 @@ resource "aws_autoscaling_group" "example" {
       }
 
       override {
-        instance_type = "c4.large"
+        instance_type     = "c4.large"
         weighted_capacity = "3"
       }
 
       override {
-        instance_type = "c3.large"
+        instance_type     = "c3.large"
         weighted_capacity = "2"
       }
     }
@@ -147,19 +147,6 @@ resource "aws_autoscaling_group" "bar" {
   min_size             = 2
   launch_configuration = "${aws_launch_configuration.foobar.name}"
   vpc_zone_identifier  = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
-
-  tags = [
-    {
-      key                 = "explicit1"
-      value               = "value1"
-      propagate_at_launch = true
-    },
-    {
-      key                 = "explicit2"
-      value               = "value2"
-      propagate_at_launch = true
-    },
-  ]
 
   tags = ["${concat(
     list(

@@ -767,11 +767,15 @@ func (c *SageMaker) CreateEndpointRequest(input *CreateEndpointInput) (req *requ
 // You create the endpoint configuration with the CreateEndpointConfig (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpointConfig.html)
 // API.
 //
-// Use this API only for hosting models using Amazon SageMaker hosting services.
+// Use this API to deploy models using Amazon SageMaker hosting services.
 //
-// You must not delete an EndpointConfig in use by an endpoint that is live
-// or while the UpdateEndpoint or CreateEndpoint operations are being performed
-// on the endpoint. To update an endpoint, you must create a new EndpointConfig.
+// For an example that calls this method when deploying a model to Amazon SageMaker
+// hosting services, see Deploy the Model to Amazon SageMaker Hosting Services
+// (AWS SDK for Python (Boto 3)). (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html#ex1-deploy-model-boto)
+//
+// You must not delete an EndpointConfig that is in use by an endpoint that
+// is live or while the UpdateEndpoint or CreateEndpoint operations are being
+// performed on the endpoint. To update an endpoint, you must create a new EndpointConfig.
 //
 // The endpoint name must be unique within an AWS Region in your AWS account.
 //
@@ -783,9 +787,6 @@ func (c *SageMaker) CreateEndpointRequest(input *CreateEndpointInput) (req *requ
 // Amazon SageMaker can then process incoming requests for inferences. To check
 // the status of an endpoint, use the DescribeEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
 // API.
-//
-// For an example, see Exercise 1: Using the K-Means Algorithm Provided by Amazon
-// SageMaker (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1.html).
 //
 // If any of the models hosted at this endpoint get model data from an Amazon
 // S3 location, Amazon SageMaker uses AWS Security Token Service to download
@@ -879,11 +880,11 @@ func (c *SageMaker) CreateEndpointConfigRequest(input *CreateEndpointConfigInput
 // Amazon SageMaker to provision. Then you call the CreateEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpoint.html)
 // API.
 //
-// Use this API only if you want to use Amazon SageMaker hosting services to
-// deploy models into production.
+// Use this API if you want to use Amazon SageMaker hosting services to deploy
+// models into production.
 //
-// In the request, you define one or more ProductionVariants, each of which
-// identifies a model. Each ProductionVariant parameter also describes the resources
+// In the request, you define a ProductionVariant, for each model that you want
+// to deploy. Each ProductionVariant parameter also describes the resources
 // that you want Amazon SageMaker to provision. This includes the number and
 // type of ML compute instances to deploy.
 //
@@ -892,6 +893,10 @@ func (c *SageMaker) CreateEndpointConfigRequest(input *CreateEndpointConfigInput
 // that you want to host two models, A and B, and you assign traffic weight
 // 2 for model A and 1 for model B. Amazon SageMaker distributes two-thirds
 // of the traffic to Model A, and one-third to model B.
+//
+// For an example that calls this method when deploying a model to Amazon SageMaker
+// hosting services, see Deploy the Model to Amazon SageMaker Hosting Services
+// (AWS SDK for Python (Boto 3)). (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html#ex1-deploy-model-boto)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1442,9 +1447,9 @@ func (c *SageMaker) CreateModelRequest(input *CreateModelInput) (req *request.Re
 //
 // Creates a model in Amazon SageMaker. In the request, you name the model and
 // describe a primary container. For the primary container, you specify the
-// docker image containing inference code, artifacts (from prior training),
-// and custom environment map that the inference code uses when you deploy the
-// model for predictions.
+// Docker image that contains inference code, artifacts (from prior training),
+// and a custom environment map that the inference code uses when you deploy
+// the model for predictions.
 //
 // Use this API to create a model if you want to use Amazon SageMaker hosting
 // services or run a batch transform job.
@@ -1453,6 +1458,10 @@ func (c *SageMaker) CreateModelRequest(input *CreateModelInput) (req *request.Re
 // API, and then create an endpoint with the CreateEndpoint API. Amazon SageMaker
 // then deploys all of the containers that you defined for the model in the
 // hosting environment.
+//
+// For an example that calls this method when deploying a model to Amazon SageMaker
+// hosting services, see Deploy the Model to Amazon SageMaker Hosting Services
+// (AWS SDK for Python (Boto 3)). (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html#ex1-deploy-model-boto)
 //
 // To run a batch transform using your model, you start a job with the CreateTransformJob
 // API. Amazon SageMaker uses your model and your dataset to get inferences
@@ -6334,6 +6343,10 @@ func (c *SageMaker) DisassociateTrialComponentRequest(input *DisassociateTrialCo
 // associate a trial component with a trial, call the AssociateTrialComponent
 // API.
 //
+// To get a list of the trials a component is associated with, use the Search
+// API. Specify ExperimentTrialComponent for the Resource parameter. The list
+// appears in the response under Results.TrialComponent.Parents.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -10232,9 +10245,10 @@ func (c *SageMaker) ListTrialsRequest(input *ListTrialsInput) (req *request.Requ
 // ListTrials API operation for Amazon SageMaker Service.
 //
 // Lists the trials in your account. Specify an experiment name to limit the
-// list to the trials that are part of that experiment. The list can be filtered
-// to show only trials that were created in a specific time range. The list
-// can be sorted by trial name or creation time.
+// list to the trials that are part of that experiment. Specify a trial component
+// name to limit the list to the trials that associated with that trial component.
+// The list can be filtered to show only trials that were created in a specific
+// time range. The list can be sorted by trial name or creation time.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -13411,7 +13425,7 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-VerificationBoundingBox
 	//
 	//    * Semantic segmentation verification - Uses a variant of the Expectation
-	//    Maximization approach to estimate the true class of verification judgement
+	//    Maximization approach to estimate the true class of verification judgment
 	//    for semantic segmentation labels based on annotations from individual
 	//    workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-VerificationSemanticSegmentation
 	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-VerificationSemanticSegmentation
@@ -13892,7 +13906,7 @@ type AutoMLChannel struct {
 	// DataSource is a required field
 	DataSource *AutoMLDataSource `type:"structure" required:"true"`
 
-	// The name of the target variable in supervised learning, a.k.a. ‘y’.
+	// The name of the target variable in supervised learning, a.k.a. 'y'.
 	//
 	// TargetAttributeName is a required field
 	TargetAttributeName *string `min:"1" type:"string" required:"true"`
@@ -22122,9 +22136,9 @@ type DescribeAutoMLJobOutput struct {
 	// Returns the job's problem type.
 	ProblemType *string `type:"string" enum:"ProblemType"`
 
-	// This contains ProblemType, AutoMLJobObjective and CompletionCriteria. They’re
+	// This contains ProblemType, AutoMLJobObjective and CompletionCriteria. They're
 	// auto-inferred values, if not provided by you. If you do provide them, then
-	// they’ll be the same as provided.
+	// they'll be the same as provided.
 	ResolvedAttributes *ResolvedAttributes `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the AWS Identity and Access Management
@@ -23730,7 +23744,7 @@ type DescribeLabelingJobOutput struct {
 	//
 	//    * Semantic segmentation labeling jobs using automated labeling: 20 labels
 	//
-	//    * Box bounding labeling jobs (all): 10 lables
+	//    * Box bounding labeling jobs (all): 10 labels
 	//
 	// The file is a JSON structure in the following format:
 	//
@@ -26336,8 +26350,8 @@ type DescribeWorkforceInput struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the private workforce whose access you want to restrict. WorkforceName
-	// is automatically set to "default" when a workforce is created and cannot
-	// be modified.
+	// is automatically set to default when a workforce is created and cannot be
+	// modified.
 	//
 	// WorkforceName is a required field
 	WorkforceName *string `min:"1" type:"string" required:"true"`
@@ -26380,7 +26394,7 @@ type DescribeWorkforceOutput struct {
 
 	// A single private workforce, which is automatically created when you create
 	// your first private work team. You can create one private work force in each
-	// AWS Region. By default, any workforce related API operation used in a specific
+	// AWS Region. By default, any workforce-related API operation used in a specific
 	// region will apply to the workforce created in that region. To learn how to
 	// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
 	//
@@ -28158,7 +28172,10 @@ type HumanLoopConfig struct {
 	// The length of time that a task remains available for labeling by human workers.
 	TaskAvailabilityLifetimeInSeconds *int64 `min:"1" type:"integer"`
 
-	// The number of human tasks.
+	// The number of distinct workers who will perform the same task on each object.
+	// For example, if TaskCount is set to 3 for an image classification labeling
+	// job, three workers will classify each input image. Increasing TaskCount can
+	// improve label accuracy.
 	//
 	// TaskCount is a required field
 	TaskCount *int64 `min:"1" type:"integer" required:"true"`
@@ -35027,6 +35044,10 @@ type ListTrialsInput struct {
 
 	// The sort order. The default value is Descending.
 	SortOrder *string `type:"string" enum:"SortOrder"`
+
+	// A filter that returns only trials that are associated with the specified
+	// trial component.
+	TrialComponentName *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -35047,6 +35068,9 @@ func (s *ListTrialsInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.TrialComponentName != nil && len(*s.TrialComponentName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TrialComponentName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -35094,6 +35118,12 @@ func (s *ListTrialsInput) SetSortBy(v string) *ListTrialsInput {
 // SetSortOrder sets the SortOrder field's value.
 func (s *ListTrialsInput) SetSortOrder(v string) *ListTrialsInput {
 	s.SortOrder = &v
+	return s
+}
+
+// SetTrialComponentName sets the TrialComponentName field's value.
+func (s *ListTrialsInput) SetTrialComponentName(v string) *ListTrialsInput {
+	s.TrialComponentName = &v
 	return s
 }
 
@@ -40359,7 +40389,7 @@ type SourceIpConfig struct {
 	// A list of one to four Classless Inter-Domain Routing (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
 	// (CIDR) values.
 	//
-	// Maximum: 4 CIDR values
+	// Maximum: Four CIDR values
 	//
 	// The following Length Constraints apply to individual CIDR values in the CIDR
 	// value list.
@@ -44057,6 +44087,21 @@ type UpdateEndpointInput struct {
 	//
 	// EndpointName is a required field
 	EndpointName *string `type:"string" required:"true"`
+
+	// When you are updating endpoint resources with RetainAllVariantProperties
+	// (https://docs.aws.amazon.com/sagemaker/latest/dg/API_UpdateEndpoint.html#SageMaker-UpdateEndpoint-request-RetainAllVariantProperties),
+	// whose value is set to true, ExcludeRetainedVariantProperties specifies the
+	// list of type VariantProperty (https://docs.aws.amazon.com/sagemaker/latest/dg/API_VariantProperty.html)
+	// to override with the values provided by EndpointConfig. If you don't specify
+	// a value for ExcludeAllVariantProperties, no variant properties are overridden.
+	ExcludeRetainedVariantProperties []*VariantProperty `type:"list"`
+
+	// When updating endpoint resources, enables or disables the retention of variant
+	// properties, such as the instance count or the variant weight. To retain the
+	// variant properties of an endpoint when updating it, set RetainAllVariantProperties
+	// to true. To use the variant properties specified in a new EndpointConfig
+	// call when updating an endpoint, set RetainAllVariantProperties to false.
+	RetainAllVariantProperties *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -44078,6 +44123,16 @@ func (s *UpdateEndpointInput) Validate() error {
 	if s.EndpointName == nil {
 		invalidParams.Add(request.NewErrParamRequired("EndpointName"))
 	}
+	if s.ExcludeRetainedVariantProperties != nil {
+		for i, v := range s.ExcludeRetainedVariantProperties {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ExcludeRetainedVariantProperties", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -44094,6 +44149,18 @@ func (s *UpdateEndpointInput) SetEndpointConfigName(v string) *UpdateEndpointInp
 // SetEndpointName sets the EndpointName field's value.
 func (s *UpdateEndpointInput) SetEndpointName(v string) *UpdateEndpointInput {
 	s.EndpointName = &v
+	return s
+}
+
+// SetExcludeRetainedVariantProperties sets the ExcludeRetainedVariantProperties field's value.
+func (s *UpdateEndpointInput) SetExcludeRetainedVariantProperties(v []*VariantProperty) *UpdateEndpointInput {
+	s.ExcludeRetainedVariantProperties = v
+	return s
+}
+
+// SetRetainAllVariantProperties sets the RetainAllVariantProperties field's value.
+func (s *UpdateEndpointInput) SetRetainAllVariantProperties(v bool) *UpdateEndpointInput {
+	s.RetainAllVariantProperties = &v
 	return s
 }
 
@@ -45041,12 +45108,12 @@ type UpdateWorkforceInput struct {
 	// A list of one to four worker IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
 	// that can be used to access tasks assigned to this workforce.
 	//
-	// Maximum: 4 CIDR values
+	// Maximum: Four CIDR values
 	SourceIpConfig *SourceIpConfig `type:"structure"`
 
 	// The name of the private workforce whose access you want to restrict. WorkforceName
-	// is automatically set to "default" when a workforce is created and cannot
-	// be modified.
+	// is automatically set to default when a workforce is created and cannot be
+	// modified.
 	//
 	// WorkforceName is a required field
 	WorkforceName *string `min:"1" type:"string" required:"true"`
@@ -45100,7 +45167,7 @@ type UpdateWorkforceOutput struct {
 
 	// A single private workforce, which is automatically created when you create
 	// your first private work team. You can create one private work force in each
-	// AWS Region. By default, any workforce related API operation used in a specific
+	// AWS Region. By default, any workforce-related API operation used in a specific
 	// region will apply to the workforce created in that region. To learn how to
 	// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
 	//
@@ -45418,6 +45485,60 @@ func (s *UserSettings) SetTensorBoardAppSettings(v *TensorBoardAppSettings) *Use
 	return s
 }
 
+// Specifies a production variant property type for an Endpoint.
+//
+// If you are updating an endpoint with the RetainAllVariantProperties (https://docs.aws.amazon.com/sagemaker/latest/dg/API_UpdateEndpoint.html#SageMaker-UpdateEndpoint-request-RetainAllVariantProperties)
+// option set to true, the VariantProperty objects listed in ExcludeRetainedVariantProperties
+// (https://docs.aws.amazon.com/sagemaker/latest/dg/API_UpdateEndpoint.html#SageMaker-UpdateEndpoint-request-ExcludeRetainedVariantProperties)
+// override the existing variant properties of the endpoint.
+type VariantProperty struct {
+	_ struct{} `type:"structure"`
+
+	// The type of variant property. The supported values are:
+	//
+	//    * DesiredInstanceCount: Overrides the existing variant instance counts
+	//    using the InitialInstanceCount (https://docs.aws.amazon.com/sagemaker/latest/dg/API_ProductionVariant.html#SageMaker-Type-ProductionVariant-InitialInstanceCount)
+	//    values in the ProductionVariants (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpointConfig.html#SageMaker-CreateEndpointConfig-request-ProductionVariants).
+	//
+	//    * DesiredWeight: Overrides the existing variant weights using the InitialVariantWeight
+	//    (https://docs.aws.amazon.com/sagemaker/latest/dg/API_ProductionVariant.html#SageMaker-Type-ProductionVariant-InitialVariantWeight)
+	//    values in the ProductionVariants (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpointConfig.html#SageMaker-CreateEndpointConfig-request-ProductionVariants).
+	//
+	//    * DataCaptureConfig: (Not currently supported.)
+	//
+	// VariantPropertyType is a required field
+	VariantPropertyType *string `type:"string" required:"true" enum:"VariantPropertyType"`
+}
+
+// String returns the string representation
+func (s VariantProperty) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VariantProperty) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VariantProperty) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VariantProperty"}
+	if s.VariantPropertyType == nil {
+		invalidParams.Add(request.NewErrParamRequired("VariantPropertyType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetVariantPropertyType sets the VariantPropertyType field's value.
+func (s *VariantProperty) SetVariantPropertyType(v string) *VariantProperty {
+	s.VariantPropertyType = &v
+	return s
+}
+
 // Specifies a VPC that your training jobs and hosted models have access to.
 // Control access to and from your training and model containers by configuring
 // the VPC. For more information, see Protect Endpoints by Using an Amazon Virtual
@@ -45433,12 +45554,8 @@ type VpcConfig struct {
 	SecurityGroupIds []*string `min:"1" type:"list" required:"true"`
 
 	// The ID of the subnets in the VPC to which you want to connect your training
-	// job or model.
-	//
-	// Amazon EC2 P3 accelerated computing instances are not available in the c/d/e
-	// availability zones of region us-east-1. If you want to create endpoints with
-	// P3 instances in VPC mode in region us-east-1, create subnets in a/b/f availability
-	// zones instead.
+	// job or model. For information about the availability of specific instance
+	// types, see Supported Instance Types and Availability Zones (https://docs.aws.amazon.com/sagemaker/latest/dg/instance-types-az.html).
 	//
 	// Subnets is a required field
 	Subnets []*string `min:"1" type:"list" required:"true"`
@@ -45490,7 +45607,7 @@ func (s *VpcConfig) SetSubnets(v []*string) *VpcConfig {
 
 // A single private workforce, which is automatically created when you create
 // your first private work team. You can create one private work force in each
-// AWS Region. By default, any workforce related API operation used in a specific
+// AWS Region. By default, any workforce-related API operation used in a specific
 // region will apply to the workforce created in that region. To learn how to
 // create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
 type Workforce struct {
@@ -45511,8 +45628,8 @@ type Workforce struct {
 	WorkforceArn *string `type:"string" required:"true"`
 
 	// The name of the private workforce whose access you want to restrict. WorkforceName
-	// is automatically set to "default" when a workforce is created and cannot
-	// be modified.
+	// is automatically set to default when a workforce is created and cannot be
+	// modified.
 	//
 	// WorkforceName is a required field
 	WorkforceName *string `min:"1" type:"string" required:"true"`
@@ -47318,8 +47435,14 @@ const (
 	// TargetDeviceJetsonNano is a TargetDevice enum value
 	TargetDeviceJetsonNano = "jetson_nano"
 
+	// TargetDeviceJetsonXavier is a TargetDevice enum value
+	TargetDeviceJetsonXavier = "jetson_xavier"
+
 	// TargetDeviceRasp3b is a TargetDevice enum value
 	TargetDeviceRasp3b = "rasp3b"
+
+	// TargetDeviceImx8qm is a TargetDevice enum value
+	TargetDeviceImx8qm = "imx8qm"
 
 	// TargetDeviceDeeplens is a TargetDevice enum value
 	TargetDeviceDeeplens = "deeplens"
@@ -47341,6 +47464,9 @@ const (
 
 	// TargetDeviceQcs603 is a TargetDevice enum value
 	TargetDeviceQcs603 = "qcs603"
+
+	// TargetDeviceAmbaCv22 is a TargetDevice enum value
+	TargetDeviceAmbaCv22 = "amba_cv22"
 )
 
 const (
@@ -47619,4 +47745,15 @@ const (
 
 	// UserProfileStatusPending is a UserProfileStatus enum value
 	UserProfileStatusPending = "Pending"
+)
+
+const (
+	// VariantPropertyTypeDesiredInstanceCount is a VariantPropertyType enum value
+	VariantPropertyTypeDesiredInstanceCount = "DesiredInstanceCount"
+
+	// VariantPropertyTypeDesiredWeight is a VariantPropertyType enum value
+	VariantPropertyTypeDesiredWeight = "DesiredWeight"
+
+	// VariantPropertyTypeDataCaptureConfig is a VariantPropertyType enum value
+	VariantPropertyTypeDataCaptureConfig = "DataCaptureConfig"
 )

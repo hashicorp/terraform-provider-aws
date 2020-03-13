@@ -1436,7 +1436,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 
 	// For a bad image, we just return nil so we don't block a refresh
 	if len(res.Images) == 0 {
-		return nil, fmt.Errorf("No images found for AMI %s", ami)
+		return nil, nil
 	}
 
 	image := res.Images[0]

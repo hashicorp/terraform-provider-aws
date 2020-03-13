@@ -15,13 +15,15 @@ github.com/agext/levenshtein
 # github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412
 github.com/agl/ed25519
 github.com/agl/ed25519/edwards25519
+# github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
+github.com/andreyvit/diff
 # github.com/apparentlymart/go-cidr v1.0.1
 github.com/apparentlymart/go-cidr/cidr
 # github.com/apparentlymart/go-textseg v1.0.0
 github.com/apparentlymart/go-textseg/textseg
 # github.com/armon/go-radix v1.0.0
 github.com/armon/go-radix
-# github.com/aws/aws-sdk-go v1.28.9
+# github.com/aws/aws-sdk-go v1.29.20
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
@@ -42,6 +44,7 @@ github.com/aws/aws-sdk-go/aws/endpoints
 github.com/aws/aws-sdk-go/aws/request
 github.com/aws/aws-sdk-go/aws/session
 github.com/aws/aws-sdk-go/aws/signer/v4
+github.com/aws/aws-sdk-go/internal/context
 github.com/aws/aws-sdk-go/internal/ini
 github.com/aws/aws-sdk-go/internal/s3err
 github.com/aws/aws-sdk-go/internal/sdkio
@@ -50,6 +53,7 @@ github.com/aws/aws-sdk-go/internal/sdkrand
 github.com/aws/aws-sdk-go/internal/sdkuri
 github.com/aws/aws-sdk-go/internal/shareddefaults
 github.com/aws/aws-sdk-go/internal/strings
+github.com/aws/aws-sdk-go/internal/sync/singleflight
 github.com/aws/aws-sdk-go/private/protocol
 github.com/aws/aws-sdk-go/private/protocol/ec2query
 github.com/aws/aws-sdk-go/private/protocol/eventstream
@@ -203,13 +207,18 @@ github.com/aws/aws-sdk-go/service/workspaces
 github.com/aws/aws-sdk-go/service/xray
 # github.com/beevik/etree v1.1.0
 github.com/beevik/etree
+# github.com/bflad/gopaniccheck v0.1.0
+github.com/bflad/gopaniccheck/passes/logpaniccallexpr
+github.com/bflad/gopaniccheck/passes/logpanicfcallexpr
+github.com/bflad/gopaniccheck/passes/logpaniclncallexpr
+github.com/bflad/gopaniccheck/passes/paniccallexpr
 # github.com/bflad/tfproviderdocs v0.5.0
 github.com/bflad/tfproviderdocs
 github.com/bflad/tfproviderdocs/check
 github.com/bflad/tfproviderdocs/check/sidenavigation
 github.com/bflad/tfproviderdocs/command
 github.com/bflad/tfproviderdocs/version
-# github.com/bflad/tfproviderlint v0.9.0
+# github.com/bflad/tfproviderlint v0.11.0
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/helper/analysisutils
 github.com/bflad/tfproviderlint/helper/astutils
@@ -225,12 +234,21 @@ github.com/bflad/tfproviderlint/passes/AT004
 github.com/bflad/tfproviderlint/passes/AT005
 github.com/bflad/tfproviderlint/passes/AT006
 github.com/bflad/tfproviderlint/passes/AT007
+github.com/bflad/tfproviderlint/passes/AT008
 github.com/bflad/tfproviderlint/passes/R001
 github.com/bflad/tfproviderlint/passes/R002
 github.com/bflad/tfproviderlint/passes/R003
 github.com/bflad/tfproviderlint/passes/R004
 github.com/bflad/tfproviderlint/passes/R005
 github.com/bflad/tfproviderlint/passes/R006
+github.com/bflad/tfproviderlint/passes/R007
+github.com/bflad/tfproviderlint/passes/R008
+github.com/bflad/tfproviderlint/passes/R009
+github.com/bflad/tfproviderlint/passes/R010
+github.com/bflad/tfproviderlint/passes/R011
+github.com/bflad/tfproviderlint/passes/R012
+github.com/bflad/tfproviderlint/passes/R013
+github.com/bflad/tfproviderlint/passes/R014
 github.com/bflad/tfproviderlint/passes/S001
 github.com/bflad/tfproviderlint/passes/S002
 github.com/bflad/tfproviderlint/passes/S003
@@ -264,6 +282,7 @@ github.com/bflad/tfproviderlint/passes/S030
 github.com/bflad/tfproviderlint/passes/S031
 github.com/bflad/tfproviderlint/passes/S032
 github.com/bflad/tfproviderlint/passes/S033
+github.com/bflad/tfproviderlint/passes/S034
 github.com/bflad/tfproviderlint/passes/V001
 github.com/bflad/tfproviderlint/passes/V002
 github.com/bflad/tfproviderlint/passes/V003
@@ -276,9 +295,16 @@ github.com/bflad/tfproviderlint/passes/commentignore
 github.com/bflad/tfproviderlint/passes/helper/resource/retryfuncinfo
 github.com/bflad/tfproviderlint/passes/helper/resource/testcaseinfo
 github.com/bflad/tfproviderlint/passes/helper/resource/testmatchresourceattrcallexpr
+github.com/bflad/tfproviderlint/passes/helper/schema/crudfuncinfo
+github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatagetchangeassignstmt
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatagetokexistscallexpr
+github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatapartialselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetcallexpr
+github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourceinfo
+github.com/bflad/tfproviderlint/passes/helper/schema/resourceinfodatasourceonly
+github.com/bflad/tfproviderlint/passes/helper/schema/resourceinforesourceonly
+github.com/bflad/tfproviderlint/passes/helper/schema/resourcemapcompositelit
 github.com/bflad/tfproviderlint/passes/helper/schema/schemainfo
 github.com/bflad/tfproviderlint/passes/helper/schema/schemainfocomputedonly
 github.com/bflad/tfproviderlint/passes/helper/schema/schemamapcompositelit
@@ -384,7 +410,7 @@ github.com/golangci/gocyclo/pkg/gocyclo
 # github.com/golangci/gofmt v0.0.0-20190930125516-244bba706f1a
 github.com/golangci/gofmt/gofmt
 github.com/golangci/gofmt/goimports
-# github.com/golangci/golangci-lint v1.23.6
+# github.com/golangci/golangci-lint v1.23.8
 github.com/golangci/golangci-lint/cmd/golangci-lint
 github.com/golangci/golangci-lint/internal/cache
 github.com/golangci/golangci-lint/internal/errorutil
@@ -433,6 +459,8 @@ github.com/google/go-cmp/cmp/internal/value
 github.com/google/uuid
 # github.com/googleapis/gax-go/v2 v2.0.5
 github.com/googleapis/gax-go/v2
+# github.com/gookit/color v1.1.7
+github.com/gookit/color
 # github.com/gostaticanalysis/analysisutil v0.0.0-20190318220348-4088753ea4d3
 github.com/gostaticanalysis/analysisutil
 # github.com/hashicorp/aws-sdk-go-base v0.4.0
@@ -470,8 +498,9 @@ github.com/hashicorp/hcl/hcl/token
 github.com/hashicorp/hcl/json/parser
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
-# github.com/hashicorp/hcl/v2 v2.0.0
+# github.com/hashicorp/hcl/v2 v2.3.0
 github.com/hashicorp/hcl/v2
+github.com/hashicorp/hcl/v2/ext/customdecode
 github.com/hashicorp/hcl/v2/ext/dynblock
 github.com/hashicorp/hcl/v2/ext/typeexpr
 github.com/hashicorp/hcl/v2/gohcl
@@ -485,9 +514,10 @@ github.com/hashicorp/hcl/v2/json
 github.com/hashicorp/logutils
 # github.com/hashicorp/terraform-config-inspect v0.0.0-20191115094559-17f92b0546e8
 github.com/hashicorp/terraform-config-inspect/tfconfig
-# github.com/hashicorp/terraform-json v0.3.1
+# github.com/hashicorp/terraform-json v0.4.0
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-sdk v1.6.0
+# github.com/hashicorp/terraform-plugin-sdk v1.7.0
+github.com/hashicorp/terraform-plugin-sdk/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/customdiff
 github.com/hashicorp/terraform-plugin-sdk/helper/encryption
@@ -538,6 +568,8 @@ github.com/hashicorp/terraform-plugin-sdk/internal/version
 github.com/hashicorp/terraform-plugin-sdk/meta
 github.com/hashicorp/terraform-plugin-sdk/plugin
 github.com/hashicorp/terraform-plugin-sdk/terraform
+# github.com/hashicorp/terraform-plugin-test v1.2.0
+github.com/hashicorp/terraform-plugin-test
 # github.com/hashicorp/terraform-svchost v0.0.0-20191011084731-65d371908596
 github.com/hashicorp/terraform-svchost
 github.com/hashicorp/terraform-svchost/auth
@@ -558,6 +590,15 @@ github.com/jingyugao/rowserrcheck/passes/rowserr
 github.com/jirfag/go-printf-func-name/pkg/analyzer
 # github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 github.com/jmespath/go-jmespath
+# github.com/katbyte/terrafmt v0.2.1-0.20200303174203-e6a3e82cb21b
+github.com/katbyte/terrafmt
+github.com/katbyte/terrafmt/cli
+github.com/katbyte/terrafmt/lib/blocks
+github.com/katbyte/terrafmt/lib/common
+github.com/katbyte/terrafmt/lib/fmtverbs
+github.com/katbyte/terrafmt/lib/format
+github.com/katbyte/terrafmt/lib/upgrade012
+github.com/katbyte/terrafmt/lib/version
 # github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba
 github.com/keybase/go-crypto/brainpool
 github.com/keybase/go-crypto/cast5
@@ -614,7 +655,7 @@ github.com/pelletier/go-toml
 # github.com/pierrec/lz4 v2.0.5+incompatible
 github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32
-# github.com/pkg/errors v0.8.1
+# github.com/pkg/errors v0.9.1
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
@@ -630,6 +671,8 @@ github.com/pquerna/otp/totp
 # github.com/securego/gosec v0.0.0-20200103095621-79fbf3af8d83
 github.com/securego/gosec
 github.com/securego/gosec/rules
+# github.com/sergi/go-diff v1.0.0
+github.com/sergi/go-diff/diffmatchpatch
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
 # github.com/sourcegraph/go-diff v0.5.1
@@ -673,7 +716,7 @@ github.com/uudashr/gocognit
 # github.com/vmihailenco/msgpack v4.0.1+incompatible
 github.com/vmihailenco/msgpack
 github.com/vmihailenco/msgpack/codes
-# github.com/zclconf/go-cty v1.1.0
+# github.com/zclconf/go-cty v1.2.1
 github.com/zclconf/go-cty/cty
 github.com/zclconf/go-cty/cty/convert
 github.com/zclconf/go-cty/cty/function
@@ -718,7 +761,10 @@ golang.org/x/crypto/openpgp/packet
 golang.org/x/crypto/openpgp/s2k
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ssh
-# golang.org/x/net v0.0.0-20191009170851-d66e71096ffb
+# golang.org/x/mod v0.1.1-0.20191105210325-c90efee705ee
+golang.org/x/mod/module
+golang.org/x/mod/semver
+# golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/html
@@ -744,7 +790,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.0.0-20200204192400-7124308813f3
+# golang.org/x/tools v0.0.0-20200216192241-b320d3a0f5a2
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/analysistest
 golang.org/x/tools/go/analysis/internal/analysisflags
@@ -804,10 +850,11 @@ golang.org/x/tools/imports
 golang.org/x/tools/internal/fastwalk
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
-golang.org/x/tools/internal/module
 golang.org/x/tools/internal/packagesinternal
-golang.org/x/tools/internal/semver
 golang.org/x/tools/internal/testenv
+# golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898
+golang.org/x/xerrors
+golang.org/x/xerrors/internal
 # google.golang.org/api v0.9.0
 google.golang.org/api/gensupport
 google.golang.org/api/googleapi

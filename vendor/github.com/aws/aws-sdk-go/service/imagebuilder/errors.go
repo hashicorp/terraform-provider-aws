@@ -31,7 +31,7 @@ const (
 	// ErrCodeIdempotentParameterMismatchException for service response error code
 	// "IdempotentParameterMismatchException".
 	//
-	// You have specified an client token for an operation using parameter values
+	// You have specified a client token for an operation using parameter values
 	// that differ from a previous request that used the same client token.
 	ErrCodeIdempotentParameterMismatchException = "IdempotentParameterMismatchException"
 
@@ -83,14 +83,14 @@ const (
 	// "ResourceDependencyException".
 	//
 	// You have attempted to mutate or delete a resource with a dependency that
-	// is prohibitting this action. See the error message for more details.
+	// prohibits this action. See the error message for more details.
 	ErrCodeResourceDependencyException = "ResourceDependencyException"
 
 	// ErrCodeResourceInUseException for service response error code
 	// "ResourceInUseException".
 	//
 	// The resource that you are trying to operate on is currently in use. Review
-	// the message details, and retry later.
+	// the message details and retry later.
 	ErrCodeResourceInUseException = "ResourceInUseException"
 
 	// ErrCodeResourceNotFoundException for service response error code
