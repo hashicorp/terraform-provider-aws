@@ -163,15 +163,15 @@ resource "aws_cognito_user_pool" "example" {
   * `external_id` (Required) - The external ID used in IAM role trust relationships. For more information about using external IDs, see [How to Use an External ID When Granting Access to Your AWS Resources to a Third Party](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html).
   * `sns_caller_arn` (Required) - The ARN of the Amazon SNS caller. This is usually the IAM role that you've given Cognito permission to assume.
 
-#### Username Configuration
-
-  * `case_sensitive` (Required) - Specifies whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
-
 ### Software Token MFA Configuration
 
 The following arguments are required in the `software_token_mfa_configuration` configuration block:
 
 * `enabled` - (Required) Boolean whether to enable software token Multi-Factor (MFA) tokens, such as Time-based One-Time Password (TOTP). To disable software token MFA when `sms_configuration` is not present, the `mfa_configuration` argument must be set to `OFF` and the `software_token_mfa_configuration` configuration block must be fully removed.
+
+#### Username Configuration
+
+  * `case_sensitive` (Required) - Specifies whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
 
 #### User Pool Add-ons
 
