@@ -62,5 +62,5 @@ In addition to all arguments above, the following attributes are exported:
 Backup Plan can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_backup_paln.test <id>
+$ terraform import aws_backup_plan.test <id>
 ```
