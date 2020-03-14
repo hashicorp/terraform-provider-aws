@@ -204,6 +204,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_transit_gateway_vpn_attachment":        dataSourceAwsEc2TransitGatewayVpnAttachment(),
 			"aws_ecr_image":                                 dataSourceAwsEcrImage(),
 			"aws_ecr_repository":                            dataSourceAwsEcrRepository(),
+			"aws_ecr_authorization_token":                   dataSourceAwsEcrAuthorizationToken(),
 			"aws_ecs_cluster":                               dataSourceAwsEcsCluster(),
 			"aws_ecs_container_definition":                  dataSourceAwsEcsContainerDefinition(),
 			"aws_ecs_service":                               dataSourceAwsEcsService(),
