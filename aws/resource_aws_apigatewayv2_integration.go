@@ -274,8 +274,25 @@ func resourceAwsApiGatewayV2IntegrationImport(d *schema.ResourceData, meta inter
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/integration-id'", d.Id())
 	}
 
-	d.SetId(parts[1])
-	d.Set("api_id", parts[0])
+	apiId := parts[0]
+	integrationId := parts[1]
+
+	conn := meta.(*AWSClient).apigatewayv2conn
+
+	resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
+		ApiId:         aws.String(apiId),
+		IntegrationId: aws.String(integrationId),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if aws.BoolValue(resp.ApiGatewayManaged) {
+		return nil, fmt.Errorf("API Gateway v2 integration (%s) was created via quick create", integrationId)
+	}
+
+	d.SetId(integrationId)
+	d.Set("api_id", apiId)
 
 	return []*schema.ResourceData{d}, nil
 }
