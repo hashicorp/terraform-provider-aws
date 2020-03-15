@@ -17,11 +17,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_guardduty_publishing_destination", &resource.Sweeper{
 		Name: "aws_guardduty_publishing_destination",
-		F:    testSweepGuarddutyPublishDestinations,
+		F:    testSweepGuarddutyPublishingDestinations,
 	})
 }
 
-func testSweepGuarddutyPublishDestinations(region string) error {
+func testSweepGuarddutyPublishingDestinations(region string) error {
 	client, err := sharedClientForRegion(region)
 
 	if err != nil {
@@ -79,7 +79,7 @@ func testSweepGuarddutyPublishDestinations(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsGuardDutyPublishDestination_basic(t *testing.T) {
+func TestAccAwsGuardDutyPublishingDestination_basic(t *testing.T) {
 	resourceName := "aws_guardduty_publishing_destination.test"
 	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 
@@ -89,19 +89,19 @@ func TestAccAwsGuardDutyPublishDestination_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsGuardDutyPublishingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsGuardDutyPublishDestinationConfig_basic(bucketName),
+				Config: testAccAwsGuardDutyPublishingDestinationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyPublishingDestinationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "destination_type", "S3")),
 			},
 		},
 	})
 }
 
-func TestAccAwsGuardDutyPublishDestination_import(t *testing.T) {
+func TestAccAwsGuardDutyPublishingDestination_import(t *testing.T) {
 	resourceName := "aws_guardduty_publishing_destination.test"
 	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
 
@@ -111,9 +111,8 @@ func TestAccAwsGuardDutyPublishDestination_import(t *testing.T) {
 		CheckDestroy: testAccCheckAwsGuardDutyPublishingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsGuardDutyPublishDestinationConfig_basic(bucketName),
+				Config: testAccAwsGuardDutyPublishingDestinationConfig_basic(bucketName),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -123,7 +122,7 @@ func TestAccAwsGuardDutyPublishDestination_import(t *testing.T) {
 	})
 }
 
-const testAccGuardDutyDetectorDSConfig_basic1 = `
+const testAccGuardDutyPublishingDestinationConfig_basic1 = `
 
 data "aws_caller_identity" "current" {}
 
@@ -220,7 +219,7 @@ resource "aws_kms_key" "gd_key" {
   policy = data.aws_iam_policy_document.kms_pol.json
 }`
 
-func testAccAwsGuardDutyPublishDestinationConfig_basic(bucketName string) string {
+func testAccAwsGuardDutyPublishingDestinationConfig_basic(bucketName string) string {
 	return fmt.Sprintf(`
 	%[1]s
 	
@@ -233,7 +232,7 @@ func testAccAwsGuardDutyPublishDestinationConfig_basic(bucketName string) string
 		  aws_s3_bucket_policy.gd_bucket_policy,
 		]
 	  }
-	`, strings.Replace(testAccGuardDutyDetectorDSConfig_basic1, "<<BUCKET_NAME>>", bucketName, 1))
+	`, strings.Replace(testAccGuardDutyPublishingDestinationConfig_basic1, "<<BUCKET_NAME>>", bucketName, 1))
 }
 
 func testAccCheckAwsGuardDutyPublishingDestinationExists(name string) resource.TestCheckFunc {

@@ -28,9 +28,9 @@ func TestAccAWSGuardDuty(t *testing.T) {
 			"inviteDisassociate": testAccAwsGuardDutyMember_invite_disassociate,
 			"invitationMessage":  testAccAwsGuardDutyMember_invitationMessage,
 		},
-		"PublishDestination": {
-			"basic":  TestAccAwsGuardDutyPublishDestination_basic,
-			"import": TestAccAwsGuardDutyPublishDestination_import,
+		"PublishingDestination": {
+			"basic":  TestAccAwsGuardDutyPublishingDestination_basic,
+			"import": TestAccAwsGuardDutyPublishingDestination_import,
 		},
 	}
 
