@@ -97,22 +97,6 @@ func TestAccAwsGuardDutyPublishingDestination_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "destination_type", "S3")),
 			},
-		},
-	})
-}
-
-func TestAccAwsGuardDutyPublishingDestination_import(t *testing.T) {
-	resourceName := "aws_guardduty_publishing_destination.test"
-	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsGuardDutyPublishingDestinationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsGuardDutyPublishingDestinationConfig_basic(bucketName),
-			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,

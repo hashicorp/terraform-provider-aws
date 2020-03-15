@@ -29,8 +29,7 @@ func TestAccAWSGuardDuty(t *testing.T) {
 			"invitationMessage":  testAccAwsGuardDutyMember_invitationMessage,
 		},
 		"PublishingDestination": {
-			"basic":  TestAccAwsGuardDutyPublishingDestination_basic,
-			"import": TestAccAwsGuardDutyPublishingDestination_import,
+			"basic": TestAccAwsGuardDutyPublishingDestination_basic,
 		},
 	}
 

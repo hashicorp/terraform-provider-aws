@@ -124,10 +124,10 @@ func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta 
 	}
 
 	d.Set("detector_id", detector_id)
-	d.Set("destination_type", *gdo.DestinationType)
-	d.Set("kms_key_arn", *gdo.DestinationProperties.KmsKeyArn)
-	d.Set("destination_arn", *gdo.DestinationProperties.DestinationArn)
-	d.Set("status", *gdo.Status)
+	d.Set("destination_type", gdo.DestinationType)
+	d.Set("kms_key_arn", gdo.DestinationProperties.KmsKeyArn)
+	d.Set("destination_arn", gdo.DestinationProperties.DestinationArn)
+	d.Set("status", gdo.Status)
 	return nil
 }
 
