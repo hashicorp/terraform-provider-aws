@@ -17,6 +17,8 @@ which provides some details about a specific availability zone.
 
 ## Example Usage
 
+### By State
+
 ```hcl
 # Declare the data source
 data "aws_availability_zones" "available" {
@@ -38,21 +40,44 @@ resource "aws_subnet" "secondary" {
 }
 ```
 
+### By Filter
+
+```hcl
+data "aws_availability_zones" "example" {
+  all_availability_zones = true
+
+  filter {
+    name   = "opt-in-status"
+    values = ["not-opted-in", "opted-in"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
+* `all_availability_zones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
 * `blacklisted_names` - (Optional) List of blacklisted Availability Zone names.
 * `blacklisted_zone_ids` - (Optional) List of blacklisted Availability Zone IDs.
+* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `state` - (Optional) Allows to filter list of Availability Zones based on their
 current state. Can be either `"available"`, `"information"`, `"impaired"` or
 `"unavailable"`. By default the list includes a complete set of Availability Zones
 to which the underlying AWS account has access, regardless of their state.
 
+### filter Configuration Block
+
+The following arguments are supported by the `filter` configuration block:
+
+* `name` - (Required) The name of the filter field. Valid values can be found in the [EC2 DescribeAvailabilityZones API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html).
+* `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `group_names` A set of the Availability Zone Group names. For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `us-west-2-lax-1`.
 * `names` - A list of the Availability Zone names available to the account.
 * `zone_ids` - A list of the Availability Zone IDs available to the account.
 
