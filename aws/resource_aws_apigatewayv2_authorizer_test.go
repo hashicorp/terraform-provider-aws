@@ -32,6 +32,7 @@ func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.645907014", "route.request.header.Auth"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -90,6 +91,7 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.645907014", "route.request.header.Auth"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -109,6 +111,7 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.645907014", "route.request.header.Auth"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.4138478046", "route.request.querystring.Name"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s-updated", rName)),
 				),
 			},
@@ -121,6 +124,59 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.645907014", "route.request.header.Auth"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetAuthorizerOutput
+	resourceName := "aws_apigatewayv2_authorizer.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "JWT"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_uri", ""),
+					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_sources.2786136151", "$request.header.Authorization"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.1785148924", "test"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSAPIGatewayV2AuthorizerImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAPIGatewayV2AuthorizerConfig_jwtUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "JWT"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_uri", ""),
+					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_sources.2786136151", "$request.header.Authorization"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.1785148924", "test"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.2323796166", "testing"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -206,7 +262,7 @@ func testAccAWSAPIGatewayV2AuthorizerImportStateIdFunc(resourceName string) reso
 	}
 }
 
-func testAccAWSAPIGatewayV2AuthorizerConfig_base(rName string) string {
+func testAccAWSAPIGatewayV2AuthorizerConfig_baseWebSocket(rName string) string {
 	return baseAccAWSLambdaConfig(rName, rName, rName) + fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -240,8 +296,21 @@ EOF
 `, rName)
 }
 
+func testAccAWSAPIGatewayV2AuthorizerConfig_baseHttp(rName string) string {
+	return baseAccAWSLambdaConfig(rName, rName, rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_api" "test" {
+  name          = %[1]q
+  protocol_type = "HTTP"
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
 func testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName string) string {
-	return testAccAWSAPIGatewayV2AuthorizerConfig_base(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2AuthorizerConfig_baseWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_authorizer" "test" {
   api_id           = "${aws_apigatewayv2_api.test.id}"
   authorizer_type  = "REQUEST"
@@ -253,7 +322,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 }
 
 func testAccAWSAPIGatewayV2AuthorizerConfig_credentials(rName string) string {
-	return testAccAWSAPIGatewayV2AuthorizerConfig_base(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2AuthorizerConfig_baseWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_authorizer" "test" {
   api_id           = "${aws_apigatewayv2_api.test.id}"
   authorizer_type  = "REQUEST"
@@ -267,7 +336,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 }
 
 func testAccAWSAPIGatewayV2AuthorizerConfig_credentialsUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2AuthorizerConfig_base(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2AuthorizerConfig_baseWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_authorizer" "test" {
   api_id           = "${aws_apigatewayv2_api.test.id}"
   authorizer_type  = "REQUEST"
@@ -276,6 +345,38 @@ resource "aws_apigatewayv2_authorizer" "test" {
   name             = "%[1]s-updated"
 
   authorizer_credentials_arn = "${aws_iam_role.test.arn}"
+}
+`, rName)
+}
+
+func testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName string) string {
+	return testAccAWSAPIGatewayV2AuthorizerConfig_baseHttp(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_authorizer" "test" {
+  api_id           = "${aws_apigatewayv2_api.test.id}"
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.Authorization"]
+  name             = %[1]q
+
+  jwt_configuration {
+    audience = ["test"]
+    issuer   = "https://${aws_cognito_user_pool.test.endpoint}"
+  }
+}
+`, rName)
+}
+
+func testAccAWSAPIGatewayV2AuthorizerConfig_jwtUpdated(rName string) string {
+	return testAccAWSAPIGatewayV2AuthorizerConfig_baseHttp(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_authorizer" "test" {
+  api_id           = "${aws_apigatewayv2_api.test.id}"
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.Authorization"]
+  name             = %[1]q
+
+  jwt_configuration {
+    audience = ["test", "testing"]
+    issuer   = "https://${aws_cognito_user_pool.test.endpoint}"
+  }
 }
 `, rName)
 }

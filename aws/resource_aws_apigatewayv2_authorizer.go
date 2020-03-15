@@ -36,12 +36,13 @@ func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
+					apigatewayv2.AuthorizerTypeJwt,
 					apigatewayv2.AuthorizerTypeRequest,
 				}, false),
 			},
 			"authorizer_uri": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
 			"identity_sources": {
@@ -49,6 +50,25 @@ func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 				Required: true,
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"jwt_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"audience": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"issuer": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -65,12 +85,17 @@ func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interf
 	req := &apigatewayv2.CreateAuthorizerInput{
 		ApiId:          aws.String(d.Get("api_id").(string)),
 		AuthorizerType: aws.String(d.Get("authorizer_type").(string)),
-		AuthorizerUri:  aws.String(d.Get("authorizer_uri").(string)),
 		IdentitySource: expandStringSet(d.Get("identity_sources").(*schema.Set)),
 		Name:           aws.String(d.Get("name").(string)),
 	}
 	if v, ok := d.GetOk("authorizer_credentials_arn"); ok {
 		req.AuthorizerCredentialsArn = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("authorizer_uri"); ok {
+		req.AuthorizerUri = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("jwt_configuration"); ok {
+		req.JwtConfiguration = expandApiGateway2JwtConfiguration(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 authorizer: %s", req)
@@ -106,6 +131,9 @@ func resourceAwsApiGatewayV2AuthorizerRead(d *schema.ResourceData, meta interfac
 	if err := d.Set("identity_sources", flattenStringSet(resp.IdentitySource)); err != nil {
 		return fmt.Errorf("error setting identity_sources: %s", err)
 	}
+	if err := d.Set("jwt_configuration", flattenApiGateway2JwtConfiguration(resp.JwtConfiguration)); err != nil {
+		return fmt.Errorf("error setting jwt_configuration: %s", err)
+	}
 	d.Set("name", resp.Name)
 
 	return nil
@@ -132,6 +160,9 @@ func resourceAwsApiGatewayV2AuthorizerUpdate(d *schema.ResourceData, meta interf
 	}
 	if d.HasChange("name") {
 		req.Name = aws.String(d.Get("name").(string))
+	}
+	if d.HasChange("jwt_configuration") {
+		req.JwtConfiguration = expandApiGateway2JwtConfiguration(d.Get("jwt_configuration").([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating API Gateway v2 authorizer: %s", req)
@@ -171,4 +202,33 @@ func resourceAwsApiGatewayV2AuthorizerImport(d *schema.ResourceData, meta interf
 	d.Set("api_id", parts[0])
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func expandApiGateway2JwtConfiguration(vConfiguration []interface{}) *apigatewayv2.JWTConfiguration {
+	configuration := &apigatewayv2.JWTConfiguration{}
+
+	if len(vConfiguration) == 0 || vConfiguration[0] == nil {
+		return configuration
+	}
+	mConfiguration := vConfiguration[0].(map[string]interface{})
+
+	if vAudience, ok := mConfiguration["audience"].(*schema.Set); ok && vAudience.Len() > 0 {
+		configuration.Audience = expandStringSet(vAudience)
+	}
+	if vIssuer, ok := mConfiguration["issuer"].(string); ok && vIssuer != "" {
+		configuration.Issuer = aws.String(vIssuer)
+	}
+
+	return configuration
+}
+
+func flattenApiGateway2JwtConfiguration(configuration *apigatewayv2.JWTConfiguration) []interface{} {
+	if configuration == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{map[string]interface{}{
+		"audience": flattenStringSet(configuration.Audience),
+		"issuer":   aws.StringValue(configuration.Issuer),
+	}}
 }
