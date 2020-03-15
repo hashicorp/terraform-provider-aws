@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "bucket_pol" {
   statement {
     sid = "Allow GetBucketLocation"
     actions = [
-      "s3:GetBucketLocation"                                                   
+      "s3:GetBucketLocation"
     ]
 
     resources = [
@@ -80,7 +80,7 @@ data "aws_iam_policy_document" "kms_pol" {
 
     principals {
       type        = "AWS"
-      identifiers = [ "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" ]
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
   }
 
@@ -91,8 +91,8 @@ resource "aws_guardduty_detector" "test_gd" {
 }
 
 resource "aws_s3_bucket" "gd_bucket" {
-  bucket = "<<BUCKET_NAME>>"
-  acl    = "private"
+  bucket        = "<<BUCKET_NAME>>"
+  acl           = "private"
   force_destroy = true
 }
 
@@ -102,16 +102,16 @@ resource "aws_s3_bucket_policy" "gd_bucket_policy" {
 }
 
 resource "aws_kms_key" "gd_key" {
-  description = "Temporary key for AccTest of TF"
+  description             = "Temporary key for AccTest of TF"
   deletion_window_in_days = 7
-  policy = data.aws_iam_policy_document.kms_pol.json
+  policy                  = data.aws_iam_policy_document.kms_pol.json
 }
 
 resource "aws_guardduty_publishing_destination" "test" {
-	detector_id = aws_guardduty_detector.test_gd.id
+  detector_id     = aws_guardduty_detector.test_gd.id
   destination_arn = aws_s3_bucket.gd_bucket.arn
-  kms_key_arn = aws_kms_key.gd_key.arn
-  
+  kms_key_arn     = aws_kms_key.gd_key.arn
+
   depends_on = [
     aws_s3_bucket_policy.gd_bucket_policy,
   ]
