@@ -28,6 +28,10 @@ func TestAccAWSGuardDuty(t *testing.T) {
 			"inviteDisassociate": testAccAwsGuardDutyMember_invite_disassociate,
 			"invitationMessage":  testAccAwsGuardDutyMember_invitationMessage,
 		},
+		"PublishDestination": {
+			"basic":  TestAccAwsGuardDutyPublishDestination_basic,
+			"import": TestAccAwsGuardDutyPublishDestination_import,
+		},
 	}
 
 	for group, m := range testCases {
