@@ -1,11 +1,11 @@
 ---
 subcategory: "GuardDuty"
 layout: aws
-page_title: 'AWS: aws_guardduty_publishingdestination'
+page_title: 'AWS: aws_guardduty_publishing_destination'
 description: Provides a resource to manage a GuardDuty PublishingDestination
 ---
 
-# Resource: aws_guardduty_publishingdestination
+# Resource: aws_guardduty_publishing_destination
 
 Provides a resource to manage a GuardDuty PublishingDestination. Requires an existing GuardDuty Detector.
 
