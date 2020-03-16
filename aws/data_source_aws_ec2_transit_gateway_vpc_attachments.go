@@ -18,7 +18,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachments() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
 			"transit_gateway_vpc_attachments": {
-				Type:  schema.TypeList,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -52,7 +52,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachments() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-				        },
+					},
 				},
 			},
 		},
@@ -63,7 +63,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, me
 	conn := meta.(*AWSClient).ec2conn
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
-	items := []
+	var items []*schema.ResourceData
 
 	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
@@ -106,6 +106,6 @@ func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, me
 		}
 		items.append(item)
 	}
-	d.set("transit_gateway_vpc_attachments",items)
+	d.set("transit_gateway_vpc_attachments", items)
 	return nil
 }
