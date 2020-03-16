@@ -349,10 +349,6 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 	name, nameOk := d.GetOk("name")
 	tags, tagsOk := d.GetOk("tags")
 
-	if !filtersOk && !nameOk && !tagsOk {
-		return fmt.Errorf("One of filters, tags, or name must be assigned")
-	}
-
 	params := &ec2.DescribeLaunchTemplatesInput{}
 	if filtersOk {
 		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
