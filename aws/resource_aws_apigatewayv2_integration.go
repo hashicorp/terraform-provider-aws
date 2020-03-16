@@ -93,6 +93,15 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 					apigatewayv2.PassthroughBehaviorWhenNoTemplates,
 				}, false),
 			},
+			"payload_format_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "1.0",
+				ValidateFunc: validation.StringInSlice([]string{
+					"1.0",
+					"2.0",
+				}, false),
+			},
 			"request_templates": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -107,6 +116,20 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 				Optional:     true,
 				Default:      29000,
 				ValidateFunc: validation.IntBetween(50, 29000),
+			},
+			"tls_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"server_name_to_verify": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -143,6 +166,9 @@ func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("passthrough_behavior"); ok {
 		req.PassthroughBehavior = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("payload_format_version"); ok {
+		req.PayloadFormatVersion = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("request_templates"); ok {
 		req.RequestTemplates = stringMapToPointers(v.(map[string]interface{}))
 	}
@@ -151,6 +177,9 @@ func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta inter
 	}
 	if v, ok := d.GetOk("timeout_milliseconds"); ok {
 		req.TimeoutInMillis = aws.Int64(int64(v.(int)))
+	}
+	if v, ok := d.GetOk("tls_config"); ok {
+		req.TlsConfig = expandApiGateway2TlsConfig(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 integration: %s", req)
@@ -190,12 +219,16 @@ func resourceAwsApiGatewayV2IntegrationRead(d *schema.ResourceData, meta interfa
 	d.Set("integration_type", resp.IntegrationType)
 	d.Set("integration_uri", resp.IntegrationUri)
 	d.Set("passthrough_behavior", resp.PassthroughBehavior)
+	d.Set("payload_format_version", resp.PayloadFormatVersion)
 	err = d.Set("request_templates", pointersMapToStringList(resp.RequestTemplates))
 	if err != nil {
 		return fmt.Errorf("error setting request_templates: %s", err)
 	}
 	d.Set("template_selection_expression", resp.TemplateSelectionExpression)
 	d.Set("timeout_milliseconds", resp.TimeoutInMillis)
+	if err := d.Set("tls_config", flattenApiGateway2TlsConfig(resp.TlsConfig)); err != nil {
+		return fmt.Errorf("error setting tls_config: %s", err)
+	}
 
 	return nil
 }
@@ -231,6 +264,9 @@ func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta inter
 	if d.HasChange("passthrough_behavior") {
 		req.PassthroughBehavior = aws.String(d.Get("passthrough_behavior").(string))
 	}
+	if d.HasChange("payload_format_version") {
+		req.PayloadFormatVersion = aws.String(d.Get("payload_format_version").(string))
+	}
 	if d.HasChange("request_templates") {
 		req.RequestTemplates = stringMapToPointers(d.Get("request_templates").(map[string]interface{}))
 	}
@@ -239,6 +275,9 @@ func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("timeout_milliseconds") {
 		req.TimeoutInMillis = aws.Int64(int64(d.Get("timeout_milliseconds").(int)))
+	}
+	if d.HasChange("tls_config") {
+		req.TlsConfig = expandApiGateway2TlsConfig(d.Get("tls_config").([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating API Gateway v2 integration: %s", req)
@@ -295,4 +334,29 @@ func resourceAwsApiGatewayV2IntegrationImport(d *schema.ResourceData, meta inter
 	d.Set("api_id", apiId)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func expandApiGateway2TlsConfig(vConfig []interface{}) *apigatewayv2.TlsConfigInput {
+	config := &apigatewayv2.TlsConfigInput{}
+
+	if len(vConfig) == 0 || vConfig[0] == nil {
+		return config
+	}
+	mConfig := vConfig[0].(map[string]interface{})
+
+	if vServerNameToVerify, ok := mConfig["server_name_to_verify"].(string); ok && vServerNameToVerify != "" {
+		config.ServerNameToVerify = aws.String(vServerNameToVerify)
+	}
+
+	return config
+}
+
+func flattenApiGateway2TlsConfig(config *apigatewayv2.TlsConfig) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{map[string]interface{}{
+		"server_name_to_verify": aws.StringValue(config.ServerNameToVerify),
+	}}
 }
