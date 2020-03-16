@@ -29,7 +29,7 @@ The following arguments are supported:
 * `vpn_connection_id` - (Optional) Identifier of the EC2 VPN Connection.
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
-[describe-vpc-endpoint-services in the AWS CLI reference][1].
+[describe-transit-gateway-attachments in the AWS CLI reference][1].
 
 ## Attribute Reference
 
@@ -38,4 +38,4 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - EC2 Transit Gateway VPN Attachment identifier
 * `tags` - Key-value tags for the EC2 Transit Gateway VPN Attachment
 
-[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-vpc-endpoint-services.html
+[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-transit-gateway-attachments.html
