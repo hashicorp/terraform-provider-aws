@@ -19,7 +19,7 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -336,7 +336,8 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags":   tagsSchemaComputed(),
+			"filter": dataSourceFiltersSchema(),
 		},
 	}
 }
@@ -346,9 +347,26 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Reading launch template %s", d.Get("name"))
 
-	dlt, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
-		LaunchTemplateNames: []*string{aws.String(d.Get("name").(string))},
-	})
+	filters, filtersOk := d.GetOk("filter")
+	name, nameOk := d.GetOk("name")
+	tags, tagsOk := d.GetOk("tags")
+
+	if !filtersOk && !nameOk && !tagsOk {
+		return fmt.Errorf("One of filters, tags, or name must be assigned")
+	}
+
+	params := &ec2.DescribeLaunchTemplatesInput{}
+	if filtersOk {
+		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+	}
+	if nameOk {
+		params.LaunchTemplateNames = []*string{aws.String(name.(string))}
+	}
+	if tagsOk {
+		params.Filters = append(params.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
+	}
+
+	dlt, err := conn.DescribeLaunchTemplates(params)
 
 	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())

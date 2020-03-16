@@ -22,7 +22,10 @@ data "aws_launch_template" "default" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the launch template.
+* `name` - (Optional) The name of the launch template.
+* `filter` - (Optional) One or more name/value pairs to use as filters. There are
+several valid keys, for a full reference, check out
+[describe-launch-templates in the AWS CLI reference][1].
 
 ## Attributes Reference
 
@@ -62,3 +65,5 @@ In addition to all arguments above, the following attributes are exported:
 * `tag_specifications` - The tags to apply to the resources during launch.
 * `tags` - (Optional) A mapping of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
+
+[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-launch-templates.html

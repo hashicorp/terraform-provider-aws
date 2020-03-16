@@ -31,6 +31,54 @@ func TestAccAWSLaunchTemplateDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplateDataSource_basic_filter(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_launch_template.test"
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfigBasicFilter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_version", dataSourceName, "default_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "latest_version", dataSourceName, "latest_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplateDataSource_tags(t *testing.T) {
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_launch_template.test"
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfigFilterTags(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_version", dataSourceName, "default_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "latest_version", dataSourceName, "latest_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSLaunchTemplateDataSourceConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -41,4 +89,38 @@ data "aws_launch_template" "test" {
   name = "${aws_launch_template.test.name}"
 }
 `, rName)
+}
+
+func testAccAWSLaunchTemplateDataSourceConfigBasicFilter(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+}
+
+data "aws_launch_template" "test" {
+  filter {
+    name   = "launch-template-name"
+    values = ["${aws_launch_template.test.name}"]
+  }
+}
+`, rName)
+}
+
+func testAccAWSLaunchTemplateDataSourceConfigFilterTags(rName string, rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+  tags = {
+    Name     = "key1"
+    TestSeed = "%[2]d"
+  }
+}
+
+data "aws_launch_template" "test" {
+  tags = {
+    Name     = "${aws_launch_template.test.tags["Name"]}"
+    TestSeed = "%[2]d"
+  }
+}
+`, rName, rInt)
 }
