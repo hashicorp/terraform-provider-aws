@@ -19,6 +19,7 @@ data "aws_launch_template" "default" {
 ```
 
 Filter usage:
+
 ```hcl
 data "aws_launch_template" "test" {
   filter {
