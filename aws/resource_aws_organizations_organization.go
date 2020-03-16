@@ -14,6 +14,12 @@ import (
 
 const organizationsPolicyTypeStatusDisabled = "DISABLED"
 
+func createSuppressEmptyDiffFunc(attribute string) func(_, old, new string, d *schema.ResourceData) bool {
+	return func(_, old, new string, d *schema.ResourceData) bool {
+		return len(d.Get(attribute).([]interface{})) == 0
+	}
+}
+
 func resourceAwsOrganizationsOrganization() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsOrganizationsOrganizationCreate,
@@ -47,8 +53,10 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"accounts": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:             schema.TypeList,
+				Computed:         true,
+				Optional:         true,
+				DiffSuppressFunc: createSuppressEmptyDiffFunc("accounts"),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
@@ -75,8 +83,10 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 				},
 			},
 			"non_master_accounts": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:             schema.TypeList,
+				Computed:         true,
+				Optional:         true,
+				DiffSuppressFunc: createSuppressEmptyDiffFunc("non_master_accounts"),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
@@ -103,8 +113,10 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 				},
 			},
 			"roots": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:             schema.TypeList,
+				Computed:         true,
+				Optional:         true,
+				DiffSuppressFunc: createSuppressEmptyDiffFunc("roots"),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
