@@ -60,32 +60,6 @@ func TestAccAWSEc2TransitGatewayVpnAttachmentDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayVpnAttachmentDataSource_filter_tags(t *testing.T) {
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
-	dataSourceName := "data.aws_ec2_transit_gateway_vpn_attachment.test"
-	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
-	vpnConnectionResourceName := "aws_vpn_connection.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPreCheckAWSEc2TransitGateway(t)
-		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigFilterTags(rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "vpn_connection_id", vpnConnectionResourceName, "id"),
-				),
-			},
-		},
-	})
-}
-
 func testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigBase(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
@@ -121,16 +95,6 @@ func testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigTransitGatewayIdAnd
 data "aws_ec2_transit_gateway_vpn_attachment" "test" {
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
   vpn_connection_id  = "${aws_vpn_connection.test.id}"
-}
-`)
-}
-
-func testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigFilterTags(rBgpAsn int) string {
-	return testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigBase(rBgpAsn) + fmt.Sprintf(`
-data "aws_ec2_transit_gateway_vpn_attachment" "test" {
-  tags = {
-    Name  = "${aws_vpn_connection.test.tags["Name"]}"
-  }
 }
 `)
 }
