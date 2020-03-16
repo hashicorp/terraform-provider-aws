@@ -21,6 +21,17 @@ data "aws_ec2_transit_gateway_vpn_attachment" "example" {
 }
 ```
 
+Filter usage:
+
+```hcl
+data "aws_ec2_transit_gateway_vpn_attachment" "test" {
+  filter {
+    name   = "resource-id"
+    values = ["some-resource"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
