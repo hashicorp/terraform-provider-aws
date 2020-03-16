@@ -41,6 +41,17 @@ data "aws_vpc_endpoint_service" "custome" {
 }
 ```
 
+### Filter:
+
+```hcl
+data "aws_vpc_endpoint_service" "test" {
+  filter {
+    name   = "service-name"
+    values = ["some-service"]
+  }
+}
+```
+
 ## Argument Reference
 
 The arguments of this data source act as filters for querying the available VPC endpoint services.
@@ -48,8 +59,11 @@ The given filters must match exactly one VPC endpoint service whose data will be
 
 * `service` - (Optional) The common name of an AWS service (e.g. `s3`).
 * `service_name` - (Optional) The service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `filter` - (Optional) One or more name/value pairs to use as filters. There are
+several valid keys, for a full reference, check out
+[describe-vpc-endpoint-services in the AWS CLI reference][1].
 
-~> **NOTE:** One of `service` or `service_name` must be specified. Specifying `service` will not work for non-AWS services or AWS services that don't follow the standard `service_name` pattern of `com.amazonaws.<region>.<service>`.
+~> **NOTE:** Specifying `service` will not work for non-AWS services or AWS services that don't follow the standard `service_name` pattern of `com.amazonaws.<region>.<service>`.
 
 ## Attributes Reference
 
@@ -65,3 +79,5 @@ In addition to all arguments above, the following attributes are exported:
 * `service_type` - The service type, `Gateway` or `Interface`.
 * `tags` - A mapping of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.
+
+[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-vpc-endpoint-services.html
