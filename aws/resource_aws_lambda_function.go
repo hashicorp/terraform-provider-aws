@@ -110,6 +110,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"handler": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"layers": {
 				Type:     schema.TypeList,
