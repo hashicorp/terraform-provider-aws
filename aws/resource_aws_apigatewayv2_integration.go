@@ -117,20 +117,6 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 				Default:      29000,
 				ValidateFunc: validation.IntBetween(50, 29000),
 			},
-			"tls_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 0,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"server_name_to_verify": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
 		},
 	}
 }
@@ -178,9 +164,6 @@ func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("timeout_milliseconds"); ok {
 		req.TimeoutInMillis = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := d.GetOk("tls_config"); ok {
-		req.TlsConfig = expandApiGateway2TlsConfig(v.([]interface{}))
-	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 integration: %s", req)
 	resp, err := conn.CreateIntegration(req)
@@ -226,9 +209,6 @@ func resourceAwsApiGatewayV2IntegrationRead(d *schema.ResourceData, meta interfa
 	}
 	d.Set("template_selection_expression", resp.TemplateSelectionExpression)
 	d.Set("timeout_milliseconds", resp.TimeoutInMillis)
-	if err := d.Set("tls_config", flattenApiGateway2TlsConfig(resp.TlsConfig)); err != nil {
-		return fmt.Errorf("error setting tls_config: %s", err)
-	}
 
 	return nil
 }
@@ -275,9 +255,6 @@ func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("timeout_milliseconds") {
 		req.TimeoutInMillis = aws.Int64(int64(d.Get("timeout_milliseconds").(int)))
-	}
-	if d.HasChange("tls_config") {
-		req.TlsConfig = expandApiGateway2TlsConfig(d.Get("tls_config").([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating API Gateway v2 integration: %s", req)
@@ -334,29 +311,4 @@ func resourceAwsApiGatewayV2IntegrationImport(d *schema.ResourceData, meta inter
 	d.Set("api_id", apiId)
 
 	return []*schema.ResourceData{d}, nil
-}
-
-func expandApiGateway2TlsConfig(vConfig []interface{}) *apigatewayv2.TlsConfigInput {
-	config := &apigatewayv2.TlsConfigInput{}
-
-	if len(vConfig) == 0 || vConfig[0] == nil {
-		return config
-	}
-	mConfig := vConfig[0].(map[string]interface{})
-
-	if vServerNameToVerify, ok := mConfig["server_name_to_verify"].(string); ok && vServerNameToVerify != "" {
-		config.ServerNameToVerify = aws.String(vServerNameToVerify)
-	}
-
-	return config
-}
-
-func flattenApiGateway2TlsConfig(config *apigatewayv2.TlsConfig) []interface{} {
-	if config == nil {
-		return []interface{}{}
-	}
-
-	return []interface{}{map[string]interface{}{
-		"server_name_to_verify": aws.StringValue(config.ServerNameToVerify),
-	}}
 }

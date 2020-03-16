@@ -40,7 +40,6 @@ func TestAccAWSAPIGatewayV2Integration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
 				),
 			},
 			{
@@ -106,7 +105,6 @@ func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/json", ""),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", "$request.body.name"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "28999"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
 				),
 			},
 			{
@@ -129,7 +127,6 @@ func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/xml", "#set($percent=$number/100)"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", "$request.body.id"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "51"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
 				),
 			},
 			{
@@ -172,72 +169,6 @@ func TestAccAWSAPIGatewayV2Integration_Lambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayV2Integration_TlsConfig(t *testing.T) {
-	var apiId string
-	var v apigatewayv2.GetIntegrationOutput
-	resourceName := "aws_apigatewayv2_integration.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_tlsConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
-					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
-					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "integration_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP_PROXY"),
-					resource.TestCheckResourceAttr(resourceName, "integration_uri", "https://www.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
-					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "5001"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.0.server_name_to_verify", "www.example.com"),
-				),
-			},
-			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_tlsConfigUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
-					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
-					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test HTTPS updated"),
-					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
-					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP_PROXY"),
-					resource.TestCheckResourceAttr(resourceName, "integration_uri", "https://www.example.org"),
-					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
-					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "2.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "4999"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.0.server_name_to_verify", "www.example.org"),
 				),
 			},
 			{
@@ -280,7 +211,6 @@ func TestAccAWSAPIGatewayV2Integration_VpcLink(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "12345"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
 				),
 			},
 			{
@@ -381,15 +311,6 @@ resource "aws_apigatewayv2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_apigatewayv2_api" "test" {
-  name          = %[1]q
-  protocol_type = "HTTP"
-}
-`, rName)
-}
-
 func testAccAWSAPIGatewayV2IntegrationConfig_basic(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_integration" "test" {
@@ -469,45 +390,6 @@ resource "aws_apigatewayv2_integration" "test" {
   passthrough_behavior          = "WHEN_NO_MATCH"
 }
 `, rName)
-}
-
-func testAccAWSAPIGatewayV2IntegrationConfig_tlsConfig(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName) + fmt.Sprintf(`
-resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
-  integration_type = "HTTP_PROXY"
-
-  connection_type      = "INTERNET"
-  description          = "Test HTTPS"
-  integration_method   = "GET"
-  integration_uri      = "https://www.example.com"
-  timeout_milliseconds = 5001
-
-  tls_config {
-    server_name_to_verify = "www.example.com"
-  }
-}
-`)
-}
-
-func testAccAWSAPIGatewayV2IntegrationConfig_tlsConfigUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName) + fmt.Sprintf(`
-resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
-  integration_type = "HTTP_PROXY"
-
-  connection_type        = "INTERNET"
-  description            = "Test HTTPS updated"
-  integration_method     = "POST"
-  integration_uri        = "https://www.example.org"
-  payload_format_version = "2.0"
-  timeout_milliseconds   = 4999
-
-  tls_config = {
-    server_name_to_verify = "www.example.org"
-  }
-}
-`)
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_vpcLink(rName string) string {
