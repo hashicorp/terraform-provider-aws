@@ -267,7 +267,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 }
 
 func updateComputedAttributesOnPublish(d *schema.ResourceDiff, meta interface{}) error {
-	if needsFunctionCodeUpdate(d) {
+	if needsFunctionCodeUpdate(d) || needsFunctionConfigUpdate(d) {
 		d.SetNewComputed("last_modified")
 		publish := d.Get("publish").(bool)
 		if publish {
@@ -665,6 +665,10 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 	return d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version")
 }
 
+func needsFunctionConfigUpdate(d resourceDiffer) bool {
+	return d.HasChange("description") || d.HasChange("handler") || d.HasChange("memory_size") || d.HasChange("role") || d.HasChange("timeout") || d.HasChange("kms_key_arn") || d.HasChange("layers") || d.HasChange("dead_letter_config") || d.HasChange("tracing_config") || d.HasChange("vpc_config") || d.HasChange("runtime") || d.HasChange("environment")
+}
+
 // resourceAwsLambdaFunctionUpdate maps to:
 // UpdateFunctionCode in the API / SDK
 func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -685,101 +689,87 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		FunctionName: aws.String(d.Id()),
 	}
 
-	configUpdate := false
-	if d.HasChange("description") {
-		configReq.Description = aws.String(d.Get("description").(string))
-		configUpdate = true
-	}
-	if d.HasChange("handler") {
-		configReq.Handler = aws.String(d.Get("handler").(string))
-		configUpdate = true
-	}
-	if d.HasChange("memory_size") {
-		configReq.MemorySize = aws.Int64(int64(d.Get("memory_size").(int)))
-		configUpdate = true
-	}
-	if d.HasChange("role") {
-		configReq.Role = aws.String(d.Get("role").(string))
-		configUpdate = true
-	}
-	if d.HasChange("timeout") {
-		configReq.Timeout = aws.Int64(int64(d.Get("timeout").(int)))
-		configUpdate = true
-	}
-	if d.HasChange("kms_key_arn") {
-		configReq.KMSKeyArn = aws.String(d.Get("kms_key_arn").(string))
-		configUpdate = true
-	}
-	if d.HasChange("layers") {
-		layers := d.Get("layers").([]interface{})
-		configReq.Layers = expandStringList(layers)
-		configUpdate = true
-	}
-	if d.HasChange("dead_letter_config") {
-		dlcMaps := d.Get("dead_letter_config").([]interface{})
-		configReq.DeadLetterConfig = &lambda.DeadLetterConfig{
-			TargetArn: aws.String(""),
-		}
-		if len(dlcMaps) == 1 { // Schema guarantees either 0 or 1
-			dlcMap := dlcMaps[0].(map[string]interface{})
-			configReq.DeadLetterConfig.TargetArn = aws.String(dlcMap["target_arn"].(string))
-		}
-		configUpdate = true
-	}
-	if d.HasChange("tracing_config") {
-		tracingConfig := d.Get("tracing_config").([]interface{})
-		if len(tracingConfig) == 1 { // Schema guarantees either 0 or 1
-			config := tracingConfig[0].(map[string]interface{})
-			configReq.TracingConfig = &lambda.TracingConfig{
-				Mode: aws.String(config["mode"].(string)),
-			}
-			configUpdate = true
-		}
-	}
-	if d.HasChange("vpc_config") {
-		configReq.VpcConfig = &lambda.VpcConfig{
-			SecurityGroupIds: []*string{},
-			SubnetIds:        []*string{},
-		}
-		if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
-			vpcConfig := v.([]interface{})[0].(map[string]interface{})
-			configReq.VpcConfig.SecurityGroupIds = expandStringSet(vpcConfig["security_group_ids"].(*schema.Set))
-			configReq.VpcConfig.SubnetIds = expandStringSet(vpcConfig["subnet_ids"].(*schema.Set))
-		}
-		configUpdate = true
-	}
-
-	if d.HasChange("runtime") {
-		configReq.Runtime = aws.String(d.Get("runtime").(string))
-		configUpdate = true
-	}
-	if d.HasChange("environment") {
-		if v, ok := d.GetOk("environment"); ok {
-			environments := v.([]interface{})
-			environment, ok := environments[0].(map[string]interface{})
-			if !ok {
-				return errors.New("At least one field is expected inside environment")
-			}
-
-			if environmentVariables, ok := environment["variables"]; ok {
-				variables := readEnvironmentVariables(environmentVariables.(map[string]interface{}))
-
-				configReq.Environment = &lambda.Environment{
-					Variables: aws.StringMap(variables),
-				}
-				configUpdate = true
-			}
-		} else {
-			configReq.Environment = &lambda.Environment{
-				Variables: aws.StringMap(map[string]string{}),
-			}
-			configUpdate = true
-		}
-	}
-
+	configUpdate := needsFunctionConfigUpdate(d)
 	if configUpdate {
-		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
+		if d.HasChange("description") {
+			configReq.Description = aws.String(d.Get("description").(string))
+		}
+		if d.HasChange("handler") {
+			configReq.Handler = aws.String(d.Get("handler").(string))
+		}
+		if d.HasChange("memory_size") {
+			configReq.MemorySize = aws.Int64(int64(d.Get("memory_size").(int)))
+		}
+		if d.HasChange("role") {
+			configReq.Role = aws.String(d.Get("role").(string))
+		}
+		if d.HasChange("timeout") {
+			configReq.Timeout = aws.Int64(int64(d.Get("timeout").(int)))
+		}
+		if d.HasChange("kms_key_arn") {
+			configReq.KMSKeyArn = aws.String(d.Get("kms_key_arn").(string))
+		}
+		if d.HasChange("layers") {
+			layers := d.Get("layers").([]interface{})
+			configReq.Layers = expandStringList(layers)
+		}
+		if d.HasChange("dead_letter_config") {
+			dlcMaps := d.Get("dead_letter_config").([]interface{})
+			configReq.DeadLetterConfig = &lambda.DeadLetterConfig{
+				TargetArn: aws.String(""),
+			}
+			if len(dlcMaps) == 1 { // Schema guarantees either 0 or 1
+				dlcMap := dlcMaps[0].(map[string]interface{})
+				configReq.DeadLetterConfig.TargetArn = aws.String(dlcMap["target_arn"].(string))
+			}
+		}
+		if d.HasChange("tracing_config") {
+			tracingConfig := d.Get("tracing_config").([]interface{})
+			if len(tracingConfig) == 1 { // Schema guarantees either 0 or 1
+				config := tracingConfig[0].(map[string]interface{})
+				configReq.TracingConfig = &lambda.TracingConfig{
+					Mode: aws.String(config["mode"].(string)),
+				}
+			}
+		}
+		if d.HasChange("vpc_config") {
+			configReq.VpcConfig = &lambda.VpcConfig{
+				SecurityGroupIds: []*string{},
+				SubnetIds:        []*string{},
+			}
+			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
+				vpcConfig := v.([]interface{})[0].(map[string]interface{})
+				configReq.VpcConfig.SecurityGroupIds = expandStringSet(vpcConfig["security_group_ids"].(*schema.Set))
+				configReq.VpcConfig.SubnetIds = expandStringSet(vpcConfig["subnet_ids"].(*schema.Set))
+			}
+		}
 
+		if d.HasChange("runtime") {
+			configReq.Runtime = aws.String(d.Get("runtime").(string))
+		}
+		if d.HasChange("environment") {
+			if v, ok := d.GetOk("environment"); ok {
+				environments := v.([]interface{})
+				environment, ok := environments[0].(map[string]interface{})
+				if !ok {
+					return errors.New("At least one field is expected inside environment")
+				}
+
+				if environmentVariables, ok := environment["variables"]; ok {
+					variables := readEnvironmentVariables(environmentVariables.(map[string]interface{}))
+
+					configReq.Environment = &lambda.Environment{
+						Variables: aws.StringMap(variables),
+					}
+				}
+			} else {
+				configReq.Environment = &lambda.Environment{
+					Variables: aws.StringMap(map[string]string{}),
+				}
+			}
+		}
+
+		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 		// IAM changes can take 1 minute to propagate in AWS
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.UpdateFunctionConfiguration(configReq)
