@@ -19,12 +19,13 @@ func dataSourceAwsEc2TransitGatewayVpnAttachment() *schema.Resource {
 			"tags": tagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"vpn_connection_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
+			"filter": dataSourceFiltersSchema(),
 		},
 	}
 }
@@ -32,11 +33,32 @@ func dataSourceAwsEc2TransitGatewayVpnAttachment() *schema.Resource {
 func dataSourceAwsEc2TransitGatewayVpnAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
+	filters, filtersOk := d.GetOk("filter")
+	tags, tagsOk := d.GetOk("tags")
+	connectionId, connectionIdOk := d.GetOk("vpn_connection_id")
+	transitGatewayId, transitGatewayIdOk := d.GetOk("transit_gateway_id")
+
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
 		Filters: []*ec2.Filter{
 			{
+				Name:   aws.String("resource-type"),
+				Values: []*string{aws.String(ec2.TransitGatewayAttachmentResourceTypeVpn)},
+			},
+		},
+	}
+
+	if filtersOk {
+		input.Filters = append(input.Filters, buildAwsDataSourceFilters(filters.(*schema.Set))...)
+	}
+	if tagsOk {
+		input.Filters = append(input.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
+	}
+	// to preserve original functionality
+	if connectionIdOk && transitGatewayIdOk {
+		input.Filters = []*ec2.Filter{
+			{
 				Name:   aws.String("resource-id"),
-				Values: []*string{aws.String(d.Get("vpn_connection_id").(string))},
+				Values: []*string{aws.String(connectionId.(string))},
 			},
 			{
 				Name:   aws.String("resource-type"),
@@ -44,9 +66,9 @@ func dataSourceAwsEc2TransitGatewayVpnAttachmentRead(d *schema.ResourceData, met
 			},
 			{
 				Name:   aws.String("transit-gateway-id"),
-				Values: []*string{aws.String(d.Get("transit_gateway_id").(string))},
+				Values: []*string{aws.String(transitGatewayId.(string))},
 			},
-		},
+		}
 	}
 
 	log.Printf("[DEBUG] Reading EC2 Transit Gateway VPN Attachments: %s", input)
