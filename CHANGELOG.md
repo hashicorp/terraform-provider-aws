@@ -7,9 +7,11 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_iam_role: Add `tags` attribute [GH-12349]
+* data-source/aws_lb: Add `drop_invalid_header_fields` attribute [GH-11257]
 * resource/aws_backup_plan: Support resource import [GH-12381]
 * resource/aws_inspector_assessment_template: Add `tags` argument [GH-12375]
 * resource/aws_inspector_assessment_template: Support resource import [GH-12375]
+* resource/aws_lb: Add `drop_invalid_header_fields` argument [GH-11257]
 * resource/aws_nat_gateway: Support tag-on-create [GH-12347]
 
 BUG FIXES:
