@@ -18,6 +18,16 @@ data "aws_launch_template" "default" {
 }
 ```
 
+Filter usage:
+```hcl
+data "aws_launch_template" "test" {
+  filter {
+    name   = "launch-template-name"
+    values = ["some-template"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
