@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_backup_plan: Support resource import [GH-12381]
 * resource/aws_inspector_assessment_template: Add `tags` argument [GH-12375]
 * resource/aws_inspector_assessment_template: Support resource import [GH-12375]
 * resource/aws_nat_gateway: Support tag-on-create [GH-12347]
