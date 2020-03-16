@@ -4,6 +4,11 @@ FEATURES:
 
 * **New Resource:** `aws_kinesis_video_stream` [GH-8291]
 
+ENHANCEMENTS:
+
+* resource/aws_inspector_assessment_template: Add `tags` argument [GH-12375]
+* resource/aws_inspector_assessment_template: Support resource import [GH-12375]
+
 BUG FIXES:
 
 * resource/aws_ebs_snapshot_copy: Return API errors instead of panic if unable to read snapshot [GH-12283]
