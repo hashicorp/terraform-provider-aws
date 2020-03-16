@@ -53,7 +53,6 @@ data "aws_prefix_list" "test" {
     values = ["pl-68a54001"]
   }
 }
-`
 ```
 
 ## Argument Reference
