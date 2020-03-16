@@ -345,8 +345,6 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	log.Printf("[DEBUG] Reading launch template %s", d.Get("name"))
-
 	filters, filtersOk := d.GetOk("filter")
 	name, nameOk := d.GetOk("name")
 	tags, tagsOk := d.GetOk("tags")
