@@ -31,7 +31,7 @@ func TestAccAWSLaunchTemplateDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_basic_filter(t *testing.T) {
+func TestAccAWSLaunchTemplateDataSource_filter_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_launch_template.test"
 	resourceName := "aws_launch_template.test"
@@ -54,7 +54,7 @@ func TestAccAWSLaunchTemplateDataSource_basic_filter(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_tags(t *testing.T) {
+func TestAccAWSLaunchTemplateDataSource_filter_tags(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_launch_template.test"
