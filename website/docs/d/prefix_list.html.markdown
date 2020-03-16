@@ -44,6 +44,18 @@ resource "aws_network_acl_rule" "private_s3" {
 }
 ```
 
+### Filter
+
+```hcl
+data "aws_prefix_list" "test" {
+  filter {
+    name   = "prefix-list-id"
+    values = ["pl-68a54001"]
+  }
+}
+`
+```
+
 ## Argument Reference
 
 The arguments of this data source act as filters for querying the available
