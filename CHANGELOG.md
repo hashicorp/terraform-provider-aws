@@ -15,6 +15,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_backup_selection: Automatically retry on additional IAM Role eventual consistency error [GH-10687]
+* resource/aws_backup_vault: Remove resource from Terraform state when deleted outside Terraform [GH-11845]
 * resource/aws_ebs_snapshot_copy: Return API errors instead of panic if unable to read snapshot [GH-12283]
 
 ## 2.53.0 (March 12, 2020)
