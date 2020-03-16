@@ -13,7 +13,7 @@ can be specified when creating a VPC endpoint within the region configured in th
 
 ## Example Usage
 
-AWS service usage:
+### AWS Service
 
 ```hcl
 # Declare the data source
@@ -33,7 +33,7 @@ resource "aws_vpc_endpoint" "ep" {
 }
 ```
 
-Non-AWS service usage:
+### Non-AWS Service
 
 ```hcl
 data "aws_vpc_endpoint_service" "custome" {
@@ -41,7 +41,7 @@ data "aws_vpc_endpoint_service" "custome" {
 }
 ```
 
-Filter usage:
+### Filter
 
 ```hcl
 data "aws_vpc_endpoint_service" "test" {
@@ -63,7 +63,7 @@ The given filters must match exactly one VPC endpoint service whose data will be
 several valid keys, for a full reference, check out
 [describe-vpc-endpoint-services in the AWS CLI reference][1].
 
-~> **NOTE:** One of `service` or `service_name` must be specified.
+~> **NOTE:** Specifying `service` will not work for non-AWS services or AWS services that don't follow the standard `service_name` pattern of `com.amazonaws.<region>.<service>`.
 
 ## Attributes Reference
 
