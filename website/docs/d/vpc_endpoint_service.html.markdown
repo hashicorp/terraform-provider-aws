@@ -58,7 +58,7 @@ The arguments of this data source act as filters for querying the available VPC 
 The given filters must match exactly one VPC endpoint service whose data will be exported as attributes.
 
 * `service` - (Optional) The common name of an AWS service (e.g. `s3`).
-* `service_name` - (Optional) The service name that can be specified when creating a VPC endpoint.
+* `service_name` - (Optional) The service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
 [describe-vpc-endpoint-services in the AWS CLI reference][1].
