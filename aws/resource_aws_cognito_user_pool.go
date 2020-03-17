@@ -459,6 +459,21 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ConflictsWith: []string{"alias_attributes"},
 			},
 
+			"username_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"case_sensitive": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+
 			"user_pool_add_ons": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -652,6 +667,15 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.UsernameAttributes = expandStringList(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("username_configuration"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			params.UsernameConfiguration = expandCognitoUserPoolUsernameConfiguration(config)
+		}
+	}
+
 	if v, ok := d.GetOk("user_pool_add_ons"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -840,6 +864,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 
 	if resp.UserPool.UsernameAttributes != nil {
 		d.Set("username_attributes", flattenStringList(resp.UserPool.UsernameAttributes))
+	}
+
+	if err := d.Set("username_configuration", flattenCognitoUserPoolUsernameConfiguration(resp.UserPool.UsernameConfiguration)); err != nil {
+		return fmt.Errorf("Failed setting username_configuration: %s", err)
 	}
 
 	if err := d.Set("user_pool_add_ons", flattenCognitoUserPoolUserPoolAddOns(resp.UserPool.UserPoolAddOns)); err != nil {

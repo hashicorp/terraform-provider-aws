@@ -853,6 +853,40 @@ func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPool_withUsernameConfiguration(t *testing.T) {
+	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withUsernameConfiguration(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "username_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "username_configuration.0.case_sensitive", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withUsernameConfigurationUpdated(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "username_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "username_configuration.0.case_sensitive", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 	name := acctest.RandString(5)
 	resourceName := "aws_cognito_user_pool.test"
@@ -1561,6 +1595,30 @@ resource "aws_cognito_user_pool" "test" {
     require_symbols                  = false
     require_uppercase                = true
     temporary_password_validity_days = 14
+  }
+}
+`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withUsernameConfiguration(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = "terraform-test-pool-%s"
+
+  username_configuration {
+    case_sensitive = true
+  }
+}
+`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withUsernameConfigurationUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = "terraform-test-pool-%s"
+
+  username_configuration {
+    case_sensitive = false
   }
 }
 `, name)
