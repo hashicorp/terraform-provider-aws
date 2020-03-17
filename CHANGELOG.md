@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_dlm_lifecycle_policy: Support plan-time validation for 1 hour schedules in `policy_details` `schedule` `create_rule` `interval` argument [GH-12327]
 * resource/aws_inspector_assessment_template: Add `tags` argument [GH-12375]
 * resource/aws_inspector_assessment_template: Support resource import [GH-12375]
+* resource/aws_lambda_function: Support plan-time validation for `handler` argument [GH-12411]
 * resource/aws_lb: Add `drop_invalid_header_fields` argument [GH-11257]
 * resource/aws_nat_gateway: Support tag-on-create [GH-12347]
 * resource/aws_opsworks_application: Support resource import [GH-12383]
