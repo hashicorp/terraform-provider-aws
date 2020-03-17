@@ -21,6 +21,7 @@ var serviceNames = []string{
 	"acm",
 	"acmpca",
 	"amplify",
+	"apigatewayv2",
 	"appmesh",
 	"appstream",
 	"appsync",
@@ -76,6 +77,7 @@ var serviceNames = []string{
 	"kinesis",
 	"kinesisanalytics",
 	"kinesisanalyticsv2",
+	"kinesisvideo",
 	"kms",
 	"lambda",
 	"licensemanager",
@@ -212,6 +214,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "ListTagsForCertificate"
 	case "acmpca":
 		return "ListTags"
+	case "apigatewayv2":
+		return "GetTags"
 	case "backup":
 		return "ListTags"
 	case "cloudhsmv2":
@@ -241,6 +245,8 @@ func ServiceListTagsFunction(serviceName string) string {
 	case "glue":
 		return "GetTags"
 	case "kinesis":
+		return "ListTagsForStream"
+	case "kinesisvideo":
 		return "ListTagsForStream"
 	case "kms":
 		return "ListResourceTags"
@@ -324,6 +330,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "kinesisanalyticsv2":
 		return "ResourceARN"
+	case "kinesisvideo":
+		return "StreamARN"
 	case "kms":
 		return "KeyId"
 	case "lambda":

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -63,6 +64,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
@@ -163,6 +165,23 @@ func AmplifyListTags(conn *amplify.Amplify, identifier string) (KeyValueTags, er
 	}
 
 	return AmplifyKeyValueTags(output.Tags), nil
+}
+
+// Apigatewayv2ListTags lists apigatewayv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Apigatewayv2ListTags(conn *apigatewayv2.ApiGatewayV2, identifier string) (KeyValueTags, error) {
+	input := &apigatewayv2.GetTagsInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.GetTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Apigatewayv2KeyValueTags(output.Tags), nil
 }
 
 // AppmeshListTags lists appmesh service tags.
@@ -1098,6 +1117,23 @@ func Kinesisanalyticsv2ListTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, ide
 	}
 
 	return Kinesisanalyticsv2KeyValueTags(output.Tags), nil
+}
+
+// KinesisvideoListTags lists kinesisvideo service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisvideoListTags(conn *kinesisvideo.KinesisVideo, identifier string) (KeyValueTags, error) {
+	input := &kinesisvideo.ListTagsForStreamInput{
+		StreamARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForStream(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return KinesisvideoKeyValueTags(output.Tags), nil
 }
 
 // KmsListTags lists kms service tags.

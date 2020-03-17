@@ -117,6 +117,7 @@ var mapServiceNames = []string{
 	"guardduty",
 	"greengrass",
 	"kafka",
+	"kinesisvideo",
 	"imagebuilder",
 	"lambda",
 	"mediaconnect",
