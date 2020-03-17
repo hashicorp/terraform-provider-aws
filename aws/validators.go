@@ -288,11 +288,11 @@ func validateDbParamGroupNamePrefix(v interface{}, k string) (ws []string, error
 
 func validateDocDBIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
 	}
-	if !regexp.MustCompile(`^[A-Za-z]`).MatchString(value) {
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of %q must be a letter", k))
 	}
@@ -306,7 +306,7 @@ func validateDocDBIdentifier(v interface{}, k string) (ws []string, errors []err
 	}
 	if len(value) > 63 {
 		errors = append(errors, fmt.Errorf(
-			"parameter group %q cannot be greater than 63 characters", k))
+			"%q cannot be greater than 63 characters", k))
 	}
 	return
 }

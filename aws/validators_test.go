@@ -1408,7 +1408,7 @@ func TestValidateDocDBIdentifier(t *testing.T) {
 		"a",
 		"hello-world",
 		"hello-world-0123456789",
-		strings.Repeat("W", 63),
+		strings.Repeat("w", 63),
 	}
 	for _, v := range validNames {
 		_, errors := validateDocDBIdentifier(v, "name")
