@@ -8,9 +8,9 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
-	"github.com/bflad/tfproviderlint/helper/terraformtype"
+	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/schema"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
-	"github.com/bflad/tfproviderlint/passes/schemamap"
+	"github.com/bflad/tfproviderlint/passes/helper/schema/schemamapcompositelit"
 )
 
 const Doc = `check for Schema that are missing required fields
@@ -25,7 +25,7 @@ var Analyzer = &analysis.Analyzer{
 	Name: analyzerName,
 	Doc:  Doc,
 	Requires: []*analysis.Analyzer{
-		schemamap.Analyzer,
+		schemamapcompositelit.Analyzer,
 		commentignore.Analyzer,
 	},
 	Run: run,
@@ -33,23 +33,23 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
-	schemamaps := pass.ResultOf[schemamap.Analyzer].([]*ast.CompositeLit)
+	schemamapcompositelits := pass.ResultOf[schemamapcompositelit.Analyzer].([]*ast.CompositeLit)
 
-	for _, smap := range schemamaps {
-		for _, schemaCompositeLit := range schemamap.GetSchemaAttributes(smap) {
-			schema := terraformtype.NewHelperSchemaSchemaInfo(schemaCompositeLit, pass.TypesInfo)
+	for _, smap := range schemamapcompositelits {
+		for _, schemaCompositeLit := range schema.GetSchemaMapSchemas(smap) {
+			schemaInfo := schema.NewSchemaInfo(schemaCompositeLit, pass.TypesInfo)
 
-			if ignorer.ShouldIgnore(analyzerName, schema.AstCompositeLit) {
+			if ignorer.ShouldIgnore(analyzerName, schemaInfo.AstCompositeLit) {
 				continue
 			}
 
-			if schema.Schema.Computed || schema.Schema.Optional || schema.Schema.Required {
+			if schemaInfo.Schema.Computed || schemaInfo.Schema.Optional || schemaInfo.Schema.Required {
 				continue
 			}
 
-			switch t := schema.AstCompositeLit.Type.(type) {
+			switch t := schemaInfo.AstCompositeLit.Type.(type) {
 			default:
-				pass.Reportf(schema.AstCompositeLit.Lbrace, "%s: schema should configure one of Computed, Optional, or Required", analyzerName)
+				pass.Reportf(schemaInfo.AstCompositeLit.Lbrace, "%s: schema should configure one of Computed, Optional, or Required", analyzerName)
 			case *ast.SelectorExpr:
 				pass.Reportf(t.Sel.Pos(), "%s: schema should configure one of Computed, Optional, or Required", analyzerName)
 			}

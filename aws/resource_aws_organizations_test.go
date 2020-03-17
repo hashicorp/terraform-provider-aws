@@ -29,6 +29,7 @@ func TestAccAWSOrganizations(t *testing.T) {
 			"basic":       testAccAwsOrganizationsPolicy_basic,
 			"concurrent":  testAccAwsOrganizationsPolicy_concurrent,
 			"Description": testAccAwsOrganizationsPolicy_description,
+			"Type":        testAccAwsOrganizationsPolicy_type,
 		},
 		"PolicyAttachment": {
 			"Account":            testAccAwsOrganizationsPolicyAttachment_Account,

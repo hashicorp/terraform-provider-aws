@@ -28,6 +28,10 @@
 //    language runtime, and tools that AWS CodeBuild uses to run a build. You
 //    can add tags to build projects to help manage your resources and costs.
 //
+//    * BatchGetReportGroups: Returns an array of report groups.
+//
+//    * BatchGetReports: Returns an array of reports.
+//
 //    * CreateProject: Creates a build project.
 //
 //    * CreateReportGroup: Creates a report group. A report group contains a

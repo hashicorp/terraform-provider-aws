@@ -36,6 +36,8 @@ type CheckOptions struct {
 
 	SchemaDataSources map[string]*tfjson.Schema
 	SchemaResources   map[string]*tfjson.Schema
+
+	SideNavigation *SideNavigationOptions
 }
 
 func NewCheck(opts *CheckOptions) *Check {
@@ -117,8 +119,11 @@ func (check *Check) Run(directories map[string][]string) error {
 		}
 	}
 
-	if files, ok := directories[LegacyDataSourcesDirectory]; ok {
-		if err := NewLegacyDataSourceFileCheck(check.Options.LegacyDataSourceFile).RunAll(files); err != nil {
+	legacyDataSourcesFiles, legacyDataSourcesOk := directories[LegacyDataSourcesDirectory]
+	legacyResourcesFiles, legacyResourcesOk := directories[LegacyResourcesDirectory]
+
+	if legacyDataSourcesOk {
+		if err := NewLegacyDataSourceFileCheck(check.Options.LegacyDataSourceFile).RunAll(legacyDataSourcesFiles); err != nil {
 			result = multierror.Append(result, err)
 		}
 	}
@@ -135,8 +140,18 @@ func (check *Check) Run(directories map[string][]string) error {
 		}
 	}
 
-	if files, ok := directories[LegacyResourcesDirectory]; ok {
-		if err := NewLegacyResourceFileCheck(check.Options.LegacyResourceFile).RunAll(files); err != nil {
+	if legacyResourcesOk {
+		if err := NewLegacyResourceFileCheck(check.Options.LegacyResourceFile).RunAll(legacyResourcesFiles); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	if legacyDataSourcesOk || legacyResourcesOk {
+		if err := SideNavigationLinkCheck(check.Options.SideNavigation); err != nil {
+			result = multierror.Append(result, err)
+		}
+
+		if err := SideNavigationMismatchCheck(check.Options.SideNavigation, legacyDataSourcesFiles, legacyResourcesFiles); err != nil {
 			result = multierror.Append(result, err)
 		}
 	}

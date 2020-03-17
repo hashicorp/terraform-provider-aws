@@ -2,14 +2,77 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cloudformation_stack", &resource.Sweeper{
+		Name: "aws_cloudformation_stack",
+		Dependencies: []string{
+			"aws_cloudformation_stack_set_instance",
+		},
+		F: testSweepCloudformationStacks,
+	})
+}
+
+func testSweepCloudformationStacks(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).cfconn
+	input := &cloudformation.ListStacksInput{
+		StackStatusFilter: aws.StringSlice([]string{
+			cloudformation.StackStatusCreateComplete,
+			cloudformation.StackStatusImportComplete,
+			cloudformation.StackStatusRollbackComplete,
+			cloudformation.StackStatusUpdateComplete,
+		}),
+	}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListStacksPages(input, func(page *cloudformation.ListStacksOutput, lastPage bool) bool {
+		for _, stack := range page.StackSummaries {
+			input := &cloudformation.DeleteStackInput{
+				StackName: stack.StackName,
+			}
+			name := aws.StringValue(stack.StackName)
+
+			log.Printf("[INFO] Deleting CloudFormation Stack: %s", name)
+			_, err := conn.DeleteStack(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting CloudFormation Stack (%s): %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFormation Stack sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFormation Stacks: %s", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSCloudFormationStack_basic(t *testing.T) {
 	var stack cloudformation.Stack

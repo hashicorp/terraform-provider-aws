@@ -57,8 +57,9 @@ func testSweepCloudWatchEventTargets(region string) error {
 
 				for _, target := range listTargetsByRuleOutput.Targets {
 					removeTargetsInput := &events.RemoveTargetsInput{
-						Ids:  []*string{target.Id},
-						Rule: rule.Name,
+						Ids:   []*string{target.Id},
+						Rule:  rule.Name,
+						Force: aws.Bool(true),
 					}
 					targetID := aws.StringValue(target.Id)
 

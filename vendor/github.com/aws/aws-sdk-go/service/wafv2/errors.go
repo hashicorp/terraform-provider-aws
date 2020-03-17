@@ -2,6 +2,10 @@
 
 package wafv2
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeWAFAssociatedItemException for service response error code
@@ -88,6 +92,10 @@ const (
 	// time until the role is unlocked.
 	ErrCodeWAFServiceLinkedRoleErrorException = "WAFServiceLinkedRoleErrorException"
 
+	// ErrCodeWAFSubscriptionNotFoundException for service response error code
+	// "WAFSubscriptionNotFoundException".
+	ErrCodeWAFSubscriptionNotFoundException = "WAFSubscriptionNotFoundException"
+
 	// ErrCodeWAFTagOperationException for service response error code
 	// "WAFTagOperationException".
 	//
@@ -107,3 +115,19 @@ const (
 	// AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 	ErrCodeWAFUnavailableEntityException = "WAFUnavailableEntityException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"WAFAssociatedItemException":            newErrorWAFAssociatedItemException,
+	"WAFDuplicateItemException":             newErrorWAFDuplicateItemException,
+	"WAFInternalErrorException":             newErrorWAFInternalErrorException,
+	"WAFInvalidParameterException":          newErrorWAFInvalidParameterException,
+	"WAFInvalidResourceException":           newErrorWAFInvalidResourceException,
+	"WAFLimitsExceededException":            newErrorWAFLimitsExceededException,
+	"WAFNonexistentItemException":           newErrorWAFNonexistentItemException,
+	"WAFOptimisticLockException":            newErrorWAFOptimisticLockException,
+	"WAFServiceLinkedRoleErrorException":    newErrorWAFServiceLinkedRoleErrorException,
+	"WAFSubscriptionNotFoundException":      newErrorWAFSubscriptionNotFoundException,
+	"WAFTagOperationException":              newErrorWAFTagOperationException,
+	"WAFTagOperationInternalErrorException": newErrorWAFTagOperationInternalErrorException,
+	"WAFUnavailableEntityException":         newErrorWAFUnavailableEntityException,
+}

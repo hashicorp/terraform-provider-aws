@@ -682,7 +682,7 @@ func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "enabled_metrics.#", "7"),
+						"aws_autoscaling_group.bar", "enabled_metrics.#", "13"),
 				),
 			},
 			{
@@ -2755,7 +2755,13 @@ resource "aws_autoscaling_group" "bar" {
   	     "GroupDesiredCapacity",
   	     "GroupInServiceInstances",
   	     "GroupMinSize",
-  	     "GroupMaxSize"
+  	     "GroupMaxSize",
+  	     "GroupPendingCapacity",
+  	     "GroupInServiceCapacity",
+  	     "GroupStandbyCapacity",
+  	     "GroupTotalCapacity",
+  	     "GroupTerminatingCapacity",
+  	     "GroupStandbyInstances"
   ]
   metrics_granularity = "1Minute"
 }
@@ -3624,7 +3630,6 @@ data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
-}
 }
 
 resource "aws_launch_template" "test" {

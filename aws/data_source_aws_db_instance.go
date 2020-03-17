@@ -282,6 +282,7 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("master_username", dbInstance.MasterUsername)
 	d.Set("monitoring_interval", dbInstance.MonitoringInterval)
 	d.Set("monitoring_role_arn", dbInstance.MonitoringRoleArn)
+	d.Set("multi_az", dbInstance.MultiAZ)
 	d.Set("address", dbInstance.Endpoint.Address)
 	d.Set("port", dbInstance.Endpoint.Port)
 	d.Set("hosted_zone_id", dbInstance.Endpoint.HostedZoneId)
