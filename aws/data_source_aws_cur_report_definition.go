@@ -49,6 +49,14 @@ func dataSourceAwsCurReportDefinition() *schema.Resource {
 				Set:      schema.HashString,
 				Computed: true,
 			},
+			"refresh_closed_reports": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"report_versioning": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }

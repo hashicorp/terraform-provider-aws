@@ -28,6 +28,9 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccAwsCurReportDefinitionConfig_bucket(bucketName, bucketRegion),
+			},
+			{
 				Config: testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resourceName),
@@ -39,6 +42,8 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "s3_prefix", resourceName, "s3_prefix"),
 					resource.TestCheckResourceAttrPair(datasourceName, "s3_region", resourceName, "s3_region"),
 					resource.TestCheckResourceAttrPair(datasourceName, "additional_artifacts.#", resourceName, "additional_artifacts.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "refresh_closed_reports", resourceName, "refresh_closed_reports"),
+					resource.TestCheckResourceAttrPair(datasourceName, "report_versioning", resourceName, "report_versioning"),
 				),
 			},
 		},
@@ -62,52 +67,7 @@ func testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resource
 // note: cur report definitions are currently only supported in us-east-1
 func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, bucketName string, bucketRegion string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-data "aws_billing_service_account" "test" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = "%[2]s"
-  acl           = "private"
-  force_destroy = true
-  region        = "%[3]s"
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = "${aws_s3_bucket.test.id}"
-
-  policy = <<POLICY
-{
-    "Version": "2008-10-17",
-    "Id": "s3policy",
-    "Statement": [
-        {
-            "Sid": "AllowCURBillingACLPolicy",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "${data.aws_billing_service_account.test.arn}"
-            },
-            "Action": [
-                "s3:GetBucketAcl",
-                "s3:GetBucketPolicy"
-            ],
-            "Resource": "${aws_s3_bucket.test.arn}"
-        },
-        {
-            "Sid": "AllowCURPutObject",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::386209384616:root"
-            },
-            "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
-        }
-    ]
-}
-POLICY
-}
+%[2]s
 
 resource "aws_cur_report_definition" "test" {
   report_name                = "%[1]s"
@@ -119,10 +79,12 @@ resource "aws_cur_report_definition" "test" {
   s3_prefix                  = ""
   s3_region                  = "${aws_s3_bucket.test.region}"
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
+	refresh_closed_reports     = true
+	report_versioning          = "CREATE_NEW_REPORT"
 }
 
 data "aws_cur_report_definition" "test" {
   report_name = "${aws_cur_report_definition.test.report_name}"
 }
-`, reportName, bucketName, bucketRegion)
+`, reportName, testAccAwsCurReportDefinitionConfig_bucket(bucketName, bucketRegion))
 }
