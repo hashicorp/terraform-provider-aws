@@ -39,7 +39,9 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					costandusagereportservice.ReportFormatTextOrcsv}, false),
+					costandusagereportservice.ReportFormatTextOrcsv,
+					costandusagereportservice.ReportFormatParquet,
+				}, false),
 			},
 			"compression": {
 				Type:     schema.TypeString,
@@ -48,6 +50,7 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					costandusagereportservice.CompressionFormatGzip,
 					costandusagereportservice.CompressionFormatZip,
+					costandusagereportservice.CompressionFormatParquet,
 				}, false),
 			},
 			"additional_schema_elements": {
@@ -84,11 +87,28 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 					ValidateFunc: validation.StringInSlice([]string{
 						costandusagereportservice.AdditionalArtifactQuicksight,
 						costandusagereportservice.AdditionalArtifactRedshift,
+						costandusagereportservice.AdditionalArtifactAthena,
 					}, false),
 				},
 				Set:      schema.HashString,
 				Optional: true,
 				ForceNew: true,
+			},
+			"refresh_closed_reports": {
+				Type:     schema.TypeBool,
+				ForceNew: true,
+				Default:  false,
+				Optional: true,
+			},
+			"report_versioning": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+				Default:  costandusagereportservice.ReportVersioningCreateNewReport,
+				ValidateFunc: validation.StringInSlice([]string{
+					costandusagereportservice.ReportVersioningCreateNewReport,
+					costandusagereportservice.ReportVersioningOverwriteReport,
+				}, false),
 			},
 		},
 	}
@@ -97,18 +117,97 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).costandusagereportconn
 
+	additionalArtifacts := expandStringSet(d.Get("additional_artifacts").(*schema.Set))
+	compression := aws.String(d.Get("compression").(string))
+	format := aws.String(d.Get("format").(string))
+	prefix := aws.String(d.Get("s3_prefix").(string))
+	reportVersioning := aws.String(d.Get("report_versioning").(string))
+
+	hasAthena := false
+
+	// perform various combination checks, AWS API unhelpfully just returns an empty ValidationException
+	// these combinations have been determined from the Create Report AWS Console Web Form
+	for _, artifact := range additionalArtifacts {
+		if *artifact == costandusagereportservice.AdditionalArtifactAthena {
+			hasAthena = true
+			break
+		}
+	}
+
+	if hasAthena {
+		if len(additionalArtifacts) > 1 {
+			return fmt.Errorf(
+				"When %s exists within additional_artifacts, no other artifact type can be declared",
+				costandusagereportservice.AdditionalArtifactAthena,
+			)
+		}
+
+		if len(*prefix) == 0 {
+			return fmt.Errorf(
+				"When %s exists within additional_artifacts, prefix cannot be empty",
+				costandusagereportservice.AdditionalArtifactAthena,
+			)
+		}
+
+		if *reportVersioning != costandusagereportservice.ReportVersioningOverwriteReport {
+			return fmt.Errorf(
+				"When %s exists within additional_artifacts, report_versioning must be %s",
+				costandusagereportservice.AdditionalArtifactAthena,
+				costandusagereportservice.ReportVersioningOverwriteReport,
+			)
+		}
+	}
+
+	if *format == costandusagereportservice.ReportFormatParquet {
+		if *compression != costandusagereportservice.CompressionFormatParquet {
+			return fmt.Errorf(
+				"When format is %s, compression must also be %s",
+				costandusagereportservice.ReportFormatParquet,
+				costandusagereportservice.CompressionFormatParquet,
+			)
+		}
+	} else {
+		if *compression == costandusagereportservice.CompressionFormatParquet {
+			return fmt.Errorf(
+				"When format is %s, format must not be %s",
+				*format,
+				costandusagereportservice.CompressionFormatParquet,
+			)
+		}
+	}
+
+	if hasAthena && (*format != costandusagereportservice.ReportFormatParquet) {
+		return fmt.Errorf(
+			"When %s exists within additional_artifacts, both format and compression must be %s",
+			costandusagereportservice.AdditionalArtifactAthena,
+			costandusagereportservice.ReportFormatParquet,
+		)
+	}
+
+	if !hasAthena && len(additionalArtifacts) > 1 && (*format == costandusagereportservice.ReportFormatParquet) {
+		return fmt.Errorf(
+			"When additional_artifacts includes %s and/or %s, format must not be %s",
+			costandusagereportservice.AdditionalArtifactQuicksight,
+			costandusagereportservice.AdditionalArtifactRedshift,
+			costandusagereportservice.ReportFormatParquet,
+		)
+	}
+	// end checks
+
 	reportName := d.Get("report_name").(string)
 
 	reportDefinition := &costandusagereportservice.ReportDefinition{
 		ReportName:               aws.String(reportName),
 		TimeUnit:                 aws.String(d.Get("time_unit").(string)),
-		Format:                   aws.String(d.Get("format").(string)),
-		Compression:              aws.String(d.Get("compression").(string)),
+		Format:                   format,
+		Compression:              compression,
 		AdditionalSchemaElements: expandStringSet(d.Get("additional_schema_elements").(*schema.Set)),
 		S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
-		S3Prefix:                 aws.String(d.Get("s3_prefix").(string)),
+		S3Prefix:                 prefix,
 		S3Region:                 aws.String(d.Get("s3_region").(string)),
-		AdditionalArtifacts:      expandStringSet(d.Get("additional_artifacts").(*schema.Set)),
+		AdditionalArtifacts:      additionalArtifacts,
+		RefreshClosedReports:     aws.Bool(d.Get("refresh_closed_reports").(bool)),
+		ReportVersioning:         reportVersioning,
 	}
 
 	reportDefinitionInput := &costandusagereportservice.PutReportDefinitionInput{
@@ -148,6 +247,8 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 	d.Set("s3_prefix", aws.StringValue(matchingReportDefinition.S3Prefix))
 	d.Set("s3_region", aws.StringValue(matchingReportDefinition.S3Region))
 	d.Set("additional_artifacts", aws.StringValueSlice(matchingReportDefinition.AdditionalArtifacts))
+	d.Set("refresh_closed_reports", matchingReportDefinition.RefreshClosedReports)
+	d.Set("report_versioning", matchingReportDefinition.ReportVersioning)
 	return nil
 }
 
