@@ -97,7 +97,7 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 			"refresh_closed_reports": {
 				Type:     schema.TypeBool,
 				ForceNew: true,
-				Default:  false,
+				Default:  true,
 				Optional: true,
 			},
 			"report_versioning": {
