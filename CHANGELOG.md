@@ -24,6 +24,8 @@ BUG FIXES:
 * resource/aws_ebs_snapshot_copy: Return API errors instead of panic if unable to read snapshot [GH-12283]
 * resource/aws_kinesis_stream: Ensure `kms_key_id` argument in-place updates complete successfully [GH-12008]
 * resource/aws_lambda_alias: Propose resource recreation for `function_name` argument updates [GH-11170]
+* resource/aws_opsworks_application: Mark `app_source` configuration block `ssh_key` argument as sensitive [GH-11984]
+* resource/aws_opsworks_stack: Mark `custom_cookbooks_source` configuration block `ssh_key` argument as sensitive [GH-11984]
 
 ## 2.53.0 (March 12, 2020)
 
