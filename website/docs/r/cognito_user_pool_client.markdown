@@ -98,8 +98,8 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_cognito_user_pool_client" "test" {
-  name                = "pool_client"
-  user_pool_id        = "${aws_cognito_user_pool.test.id}"
+  name         = "pool_client"
+  user_pool_id = "${aws_cognito_user_pool.test.id}"
 
   analytics_configuration {
     application_id   = "${aws_pinpoint_app.test.application_id}"
