@@ -27,6 +27,7 @@ resource "aws_cognito_user_pool_client" "client" {
 ```
 
 ### Create a user pool client with no SRP authentication
+
 ```hcl
 resource "aws_cognito_user_pool" "pool" {
   name = "pool"
@@ -43,6 +44,7 @@ resource "aws_cognito_user_pool_client" "client" {
 ```
 
 ### Create a user pool client with pinpoint analytics
+
 ```hcl
 data "aws_caller_identity" "current" {}
 
@@ -129,6 +131,7 @@ The following arguments are supported:
 * `analytics_configuration` - (Optional) The Amazon Pinpoint analytics configuration for collecting metrics for this user pool.
 
 ### Analytics Configuration
+
 * `application_id` - (Required) The application ID for an Amazon Pinpoint application.
 * `external_id`  - (Required) An ID for the Analytics Configuration.
 * `role_arn` - (Required) The ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics.
