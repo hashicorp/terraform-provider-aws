@@ -1,13 +1,13 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func dataSourceAwsSecretsManagerSecretRotation() *schema.Resource {
@@ -16,9 +16,10 @@ func dataSourceAwsSecretsManagerSecretRotation() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"secret_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringLenBetween(1, 2048),
+				Required:     true,
+				ForceNew:     true,
 			},
 			"rotation_enabled": {
 				Type:     schema.TypeBool,
@@ -46,14 +47,7 @@ func dataSourceAwsSecretsManagerSecretRotation() *schema.Resource {
 
 func dataSourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
-	var secretID string
-	if v, ok := d.GetOk("secret_id"); ok {
-		secretID = v.(string)
-	}
-
-	if secretID == "" {
-		return errors.New("must specify secret_id")
-	}
+	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.DescribeSecretInput{
 		SecretId: aws.String(secretID),
@@ -62,9 +56,6 @@ func dataSourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Reading Secrets Manager Secret: %s", input)
 	output, err := conn.DescribeSecret(input)
 	if err != nil {
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
-			return fmt.Errorf("Secrets Manager Secret %q not found", secretID)
-		}
 		return fmt.Errorf("error reading Secrets Manager Secret: %s", err)
 	}
 

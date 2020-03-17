@@ -72,7 +72,7 @@ func testAccCheckAwsSecretsManagerSecretRotationDestroy(s *terraform.State) erro
 
 		if err != nil {
 			if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
-				return nil
+				continue
 			}
 			return err
 		}

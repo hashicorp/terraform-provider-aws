@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataSourceAwsSecretsManagerSecretRotation_Basic(t *testing.T) {
@@ -26,44 +25,13 @@ func TestAccDataSourceAwsSecretsManagerSecretRotation_Basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretRotationConfig_Default(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSecretsManagerSecretRotationCheck(datasourceName, resourceName),
+					resource.TestCheckResourceAttrPair(datasourceName, "rotation_enabled", resourceName, "rotation_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "rotation_lambda_arn", resourceName, "rotation_lambda_arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "rotation_rules.#", resourceName, "rotation_rules.#"),
 				),
 			},
 		},
 	})
-}
-
-func testAccDataSourceAwsSecretsManagerSecretRotationCheck(datasourceName, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		resource, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", resourceName)
-		}
-
-		dataSource, ok := s.RootModule().Resources[datasourceName]
-		if !ok {
-			return fmt.Errorf("root module has no datasource called %s", datasourceName)
-		}
-
-		attrNames := []string{
-			"rotation_enabled",
-			"rotation_lambda_arn",
-			"rotation_rules.#",
-		}
-
-		for _, attrName := range attrNames {
-			if resource.Primary.Attributes[attrName] != dataSource.Primary.Attributes[attrName] {
-				return fmt.Errorf(
-					"%s is %s; want %s",
-					attrName,
-					resource.Primary.Attributes[attrName],
-					dataSource.Primary.Attributes[attrName],
-				)
-			}
-		}
-
-		return nil
-	}
 }
 
 const testAccDataSourceAwsSecretsManagerSecretRotationConfig_NonExistent = `
@@ -80,7 +48,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s-1"
   handler       = "exports.example"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_permission" "test" {
