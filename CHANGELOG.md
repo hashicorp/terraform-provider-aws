@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_kinesis_video_stream` [GH-8291]
+* **New Resource:** `aws_securityhub_member` [GH-6975]
 
 ENHANCEMENTS:
 
