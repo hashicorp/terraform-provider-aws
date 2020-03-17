@@ -38,6 +38,7 @@ BUG FIXES:
 * resource/aws_lambda_alias: Propose resource recreation for `function_name` argument updates [GH-11170]
 * resource/aws_opsworks_application: Mark `app_source` configuration block `ssh_key` argument as sensitive [GH-11984]
 * resource/aws_opsworks_stack: Mark `custom_cookbooks_source` configuration block `ssh_key` argument as sensitive [GH-11984]
+* resource/aws_s3_bucket: Retry `NoSuchBucket` error when setting tags during resource creation [GH-12418]
 
 ## 2.53.0 (March 12, 2020)
 
