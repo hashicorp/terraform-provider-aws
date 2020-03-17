@@ -10,49 +10,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-// These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
-// and `aws-opsworks-service-role`.
-
-func TestAccAWSOpsworksRailsAppLayer_basic(t *testing.T) {
+func TestAccAWSOpsworksHAProxyLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_opsworks_rails_app_layer.test"
+	resourceName := "aws_opsworks_haproxy_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsOpsworksRailsAppLayerDestroy,
+		CheckDestroy: testAccCheckAwsOpsworksHAProxyLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksRailsAppLayerConfigVpcCreate(stackName),
+				Config: testAccAwsOpsworksHAProxyLayerConfigVpcCreate(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", stackName),
-					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "true"),
-				),
-			},
-			{
-				Config: testAccAwsOpsworksRailsAppLayerNoManageBundlerConfigVpcCreate(stackName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
-					resource.TestCheckResourceAttr(resourceName, "name", stackName),
-					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "false"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSOpsworksRailsAppLayer_tags(t *testing.T) {
+func TestAccAWSOpsworksHAProxyLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_opsworks_rails_app_layer.test"
+	resourceName := "aws_opsworks_haproxy_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsOpsworksRailsAppLayerDestroy,
+		CheckDestroy: testAccCheckAwsOpsworksHAProxyLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksRailsAppLayerConfigTags1(stackName, "key1", "value1"),
+				Config: testAccAwsOpsworksHAProxyLayerConfigTags1(stackName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -60,7 +48,7 @@ func TestAccAWSOpsworksRailsAppLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsOpsworksRailsAppLayerConfigTags2(stackName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAwsOpsworksHAProxyLayerConfigTags2(stackName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -69,7 +57,7 @@ func TestAccAWSOpsworksRailsAppLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsOpsworksRailsAppLayerConfigTags1(stackName, "key2", "value2"),
+				Config: testAccAwsOpsworksHAProxyLayerConfigTags1(stackName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -80,17 +68,18 @@ func TestAccAWSOpsworksRailsAppLayer_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsOpsworksRailsAppLayerDestroy(s *terraform.State) error {
-	return testAccCheckAwsOpsworksLayerDestroy("aws_opsworks_rails_app_layer", s)
+func testAccCheckAwsOpsworksHAProxyLayerDestroy(s *terraform.State) error {
+	return testAccCheckAwsOpsworksLayerDestroy("aws_opsworks_haproxy_layer", s)
 }
 
-func testAccAwsOpsworksRailsAppLayerConfigVpcCreate(name string) string {
+func testAccAwsOpsworksHAProxyLayerConfigVpcCreate(name string) string {
 	return testAccAwsOpsworksStackConfigVpcCreate(name) +
 		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
-resource "aws_opsworks_rails_app_layer" "test" {
-  stack_id = "${aws_opsworks_stack.tf-acc.id}"
-  name     = "%s"
+resource "aws_opsworks_haproxy_layer" "test" {
+  stack_id       = "${aws_opsworks_stack.tf-acc.id}"
+  name           = %[1]q
+  stats_password = %[1]q
 
   custom_security_group_ids = [
     "${aws_security_group.tf-ops-acc-layer1.id}",
@@ -100,31 +89,14 @@ resource "aws_opsworks_rails_app_layer" "test" {
 `, name)
 }
 
-func testAccAwsOpsworksRailsAppLayerNoManageBundlerConfigVpcCreate(name string) string {
+func testAccAwsOpsworksHAProxyLayerConfigTags1(name, tagKey1, tagValue1 string) string {
 	return testAccAwsOpsworksStackConfigVpcCreate(name) +
 		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
-resource "aws_opsworks_rails_app_layer" "test" {
-  stack_id = "${aws_opsworks_stack.tf-acc.id}"
-  name     = "%s"
-
-  custom_security_group_ids = [
-    "${aws_security_group.tf-ops-acc-layer1.id}",
-    "${aws_security_group.tf-ops-acc-layer2.id}",
-  ]
-
-  manage_bundler = false
-}
-`, name)
-}
-
-func testAccAwsOpsworksRailsAppLayerConfigTags1(name, tagKey1, tagValue1 string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
-		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
-		fmt.Sprintf(`
-resource "aws_opsworks_rails_app_layer" "test" {
-  stack_id = "${aws_opsworks_stack.tf-acc.id}"
-  name     = "%s"
+resource "aws_opsworks_haproxy_layer" "test" {
+  stack_id       = "${aws_opsworks_stack.tf-acc.id}"
+  name           = %[1]q
+  stats_password = %[1]q
 
   custom_security_group_ids = [
     "${aws_security_group.tf-ops-acc-layer1.id}",
@@ -138,13 +110,14 @@ resource "aws_opsworks_rails_app_layer" "test" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccAwsOpsworksRailsAppLayerConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAwsOpsworksHAProxyLayerConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAwsOpsworksStackConfigVpcCreate(name) +
 		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
-resource "aws_opsworks_rails_app_layer" "test" {
-  stack_id = "${aws_opsworks_stack.tf-acc.id}"
-  name     = "%s"
+resource "aws_opsworks_haproxy_layer" "test" {
+  stack_id       = "${aws_opsworks_stack.tf-acc.id}"
+  name           = %[1]q
+  stats_password = %[1]q
 
   custom_security_group_ids = [
     "${aws_security_group.tf-ops-acc-layer1.id}",
