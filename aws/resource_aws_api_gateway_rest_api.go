@@ -184,6 +184,15 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return fmt.Errorf("error creating API Gateway specification: %s", err)
 		}
+		// Due to PutRestApi removing the policy from the rest api
+		_, err = conn.UpdateRestApi(&apigateway.UpdateRestApiInput{
+			RestApiId:       aws.String(d.Id()),
+			PatchOperations: resourceAwsApiGatewayRestApiUpdateOperations(d),
+		})
+		if err != nil {
+			return err
+		}
+		log.Printf("[DEBUG] Updated API Gateway policy %s", d.Id())
 	}
 
 	return resourceAwsApiGatewayRestApiRead(d, meta)
