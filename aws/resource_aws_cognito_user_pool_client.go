@@ -144,7 +144,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 			"prevent_user_existence_errors": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "ENABLED",
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
