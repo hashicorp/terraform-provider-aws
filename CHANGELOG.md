@@ -32,6 +32,7 @@ BUG FIXES:
 
 * resource/aws_backup_selection: Automatically retry on additional IAM Role eventual consistency error [GH-10687]
 * resource/aws_backup_vault: Remove resource from Terraform state when deleted outside Terraform [GH-11845]
+* resource/aws_cognito_user_pool_client: Ignore ordering differences for `callback_urls`, `logout_urls`, and `supported_identity_providers` arguments [GH-12388]
 * resource/aws_ebs_snapshot_copy: Return API errors instead of panic if unable to read snapshot [GH-12283]
 * resource/aws_kinesis_stream: Ensure `kms_key_id` argument in-place updates complete successfully [GH-12008]
 * resource/aws_lambda_alias: Propose resource recreation for `function_name` argument updates [GH-11170]
