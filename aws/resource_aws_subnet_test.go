@@ -25,7 +25,7 @@ func init() {
 		Dependencies: []string{
 			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
-			"aws_beanstalk_environment",
+			"aws_elastic_beanstalk_environment",
 			"aws_cloudhsm_v2_cluster",
 			"aws_db_subnet_group",
 			"aws_directory_service_directory",

@@ -15,7 +15,7 @@ import (
 
 func TestAccAWSSSMDocument_basic(t *testing.T) {
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -40,9 +40,40 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMDocument_target_type(t *testing.T) {
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_document.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentBasicConfigTargetType(name, "/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "/"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMDocumentBasicConfigTargetType(name, "/AWS::EC2::Instance"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "/AWS::EC2::Instance"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMDocument_update(t *testing.T) {
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -76,7 +107,7 @@ func TestAccAWSSSMDocument_update(t *testing.T) {
 
 func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -101,7 +132,7 @@ func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 
 func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 	ids := "123456789012"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -126,7 +157,7 @@ func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 
 func TestAccAWSSSMDocument_permission_batching(t *testing.T) {
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 	ids := "123456789012,123456789013,123456789014,123456789015,123456789016,123456789017,123456789018,123456789019,123456789020,123456789021,123456789022,123456789023,123456789024,123456789025,123456789026,123456789027,123456789028,123456789029,123456789030,123456789031,123456789032"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -151,7 +182,7 @@ func TestAccAWSSSMDocument_permission_batching(t *testing.T) {
 
 func TestAccAWSSSMDocument_permission_change(t *testing.T) {
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 	idsInitial := "123456789012,123456789013"
 	idsRemove := "123456789012"
 	idsAdd := "123456789012,123456789014"
@@ -195,7 +226,7 @@ func TestAccAWSSSMDocument_permission_change(t *testing.T) {
 
 func TestAccAWSSSMDocument_params(t *testing.T) {
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -224,7 +255,7 @@ func TestAccAWSSSMDocument_params(t *testing.T) {
 
 func TestAccAWSSSMDocument_automation(t *testing.T) {
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -250,6 +281,7 @@ func TestAccAWSSSMDocument_package(t *testing.T) {
 	name := acctest.RandString(10)
 	rInt := acctest.RandInt()
 	rInt2 := acctest.RandInt()
+	resourceName := "aws_ssm_document.test"
 
 	source := testAccAWSS3BucketObjectCreateTempFile(t, "{anything will do }")
 	defer os.Remove(source)
@@ -262,13 +294,12 @@ func TestAccAWSSSMDocument_package(t *testing.T) {
 			{
 				Config: testAccAWSSSMDocumentTypePackageConfig(name, source, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMDocumentExists("aws_ssm_document.test"),
-					resource.TestCheckResourceAttr(
-						"aws_ssm_document.test", "document_type", "Package"),
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "document_type", "Package"),
 				),
 			},
 			{
-				ResourceName:            "aws_ssm_document.test",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"attachments_source"}, // This doesn't work because the API doesn't provide attachments info directly
@@ -276,9 +307,8 @@ func TestAccAWSSSMDocument_package(t *testing.T) {
 			{
 				Config: testAccAWSSSMDocumentTypePackageConfig(name, source, rInt2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMDocumentExists("aws_ssm_document.test"),
-					resource.TestCheckResourceAttr(
-						"aws_ssm_document.test", "document_type", "Package"),
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "document_type", "Package"),
 				),
 			},
 		},
@@ -319,7 +349,7 @@ func TestAccAWSSSMDocument_SchemaVersion_1(t *testing.T) {
 
 func TestAccAWSSSMDocument_session(t *testing.T) {
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -343,7 +373,7 @@ func TestAccAWSSSMDocument_session(t *testing.T) {
 
 func TestAccAWSSSMDocument_DocumentFormat_YAML(t *testing.T) {
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 	content1 := `
 ---
 schemaVersion: '2.2'
@@ -398,7 +428,7 @@ mainSteps:
 
 func TestAccAWSSSMDocument_Tags(t *testing.T) {
 	rName := acctest.RandString(10)
-	resourceName := "aws_ssm_document.foo"
+	resourceName := "aws_ssm_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -496,7 +526,7 @@ Based on examples from here: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGu
 
 func testAccAWSSSMDocumentBasicConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   name          = "%s"
   document_type = "Command"
 
@@ -522,9 +552,40 @@ DOC
 `, rName)
 }
 
+func testAccAWSSSMDocumentBasicConfigTargetType(rName, typ string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test" {
+  name          = "%s"
+  document_type = "Command"
+  target_type   = "%s"
+
+  content = <<DOC
+    {
+       "schemaVersion": "2.0",
+       "description": "Sample version 2.0 document v2",
+       "parameters": {
+
+       },
+       "mainSteps": [
+          {
+             "action": "aws:runPowerShellScript",
+             "name": "runPowerShellScript",
+             "inputs": {
+                "runCommand": [
+                   "Get-Process"
+                ]
+             }
+          }
+       ]
+    }
+DOC
+}
+`, rName, typ)
+}
+
 func testAccAWSSSMDocument20Config(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Command"
 
@@ -554,7 +615,7 @@ DOC
 
 func testAccAWSSSMDocument20UpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Command"
 
@@ -584,7 +645,7 @@ DOC
 
 func testAccAWSSSMDocumentPublicPermissionConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Command"
 
@@ -618,7 +679,7 @@ DOC
 
 func testAccAWSSSMDocumentPrivatePermissionConfig(rName string, rIds string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Command"
 
@@ -652,7 +713,7 @@ DOC
 
 func testAccAWSSSMDocumentParamConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Command"
 
@@ -736,7 +797,7 @@ resource "aws_iam_role" "ssm_role" {
 EOF
 }
 
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Automation"
 
@@ -793,7 +854,7 @@ DOC
 
 func testAccAWSSSMDocumentTypePackageConfig(rName, source string, rInt int) string {
 	return fmt.Sprintf(`
-data "aws_ami" "ssm_ami" {
+data "aws_ami" "test" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
 
@@ -803,12 +864,12 @@ data "aws_ami" "ssm_ami" {
   }
 }
 
-resource "aws_iam_instance_profile" "ssm_profile" {
+resource "aws_iam_instance_profile" "test" {
   name = "ssm_profile-%s"
-  role = "${aws_iam_role.ssm_role.name}"
+  role = "${aws_iam_role.test.name}"
 }
 
-resource "aws_iam_role" "ssm_role" {
+resource "aws_iam_role" "test" {
   name = "ssm_role-%s"
   path = "/"
 
@@ -829,23 +890,23 @@ resource "aws_iam_role" "ssm_role" {
 EOF
 }
 
-resource "aws_s3_bucket" "object_bucket" {
-	bucket = "tf-object-test-bucket-%d"
-  }
+resource "aws_s3_bucket" "test" {
+  bucket = "tf-object-test-bucket-%d"
+}
 
-  resource "aws_s3_bucket_object" "object" {
-	bucket = "${aws_s3_bucket.object_bucket.bucket}"
-	key = "test.zip"
-	source       = "%s"
-	content_type = "binary/octet-stream"
-  }
+resource "aws_s3_bucket_object" "test" {
+  bucket       = "${aws_s3_bucket.test.bucket}"
+  key          = "test.zip"
+  source       = %q
+  content_type = "binary/octet-stream"
+}
 
 resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Package"
   attachments_source {
 	key = "SourceUrl"
-	values = ["s3://${aws_s3_bucket.object_bucket.bucket}/test.zip"]
+	values = ["s3://${aws_s3_bucket.test.bucket}/test.zip"]
   }
 
   content = <<DOC
@@ -853,7 +914,7 @@ resource "aws_ssm_document" "test" {
 	   "description": "Systems Manager Package Document Test",
 	   "schemaVersion": "2.0",
 	   "version": "0.1",
-	   "assumeRole": "${aws_iam_role.ssm_role.arn}",
+	   "assumeRole": "${aws_iam_role.test.arn}",
 	   "files": {
 		   "test.zip": {
 			   "checksums": {
@@ -878,7 +939,7 @@ DOC
 
 func testAccAWSSSMDocumentTypeSessionConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Session"
 
@@ -902,7 +963,7 @@ DOC
 
 func testAccAWSSSMDocumentConfig_DocumentFormat_YAML(rName, content string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   document_format = "YAML"
   document_type   = "Command"
   name            = "test_document-%s"
@@ -964,7 +1025,7 @@ DOC
 
 func testAccAWSSSMDocumentConfig_Tags_Single(rName, key1, value1 string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   document_type = "Command"
   name          = "test_document-%s"
 
@@ -997,7 +1058,7 @@ DOC
 
 func testAccAWSSSMDocumentConfig_Tags_Multiple(rName, key1, value1, key2, value2 string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   document_type = "Command"
   name          = "test_document-%s"
 

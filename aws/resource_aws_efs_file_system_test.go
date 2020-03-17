@@ -98,11 +98,11 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 				Config: testAccAWSEFSFileSystemConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
+					testAccMatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "generalPurpose"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeBursting),
 					testAccCheckEfsFileSystem(resourceName, &desc),
 					testAccCheckEfsFileSystemPerformanceMode(resourceName, "generalPurpose"),
-					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile("^[^.]+.efs.us-west-2.amazonaws.com$")),
 				),
 			},
 			{

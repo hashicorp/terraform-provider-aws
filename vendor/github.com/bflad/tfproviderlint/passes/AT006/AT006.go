@@ -5,8 +5,9 @@ package AT006
 import (
 	"go/ast"
 
-	"github.com/bflad/tfproviderlint/helper/terraformtype"
-	"github.com/bflad/tfproviderlint/passes/acctestfunc"
+	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/resource"
+	"github.com/bflad/tfproviderlint/passes/commentignore"
+	"github.com/bflad/tfproviderlint/passes/testaccfuncdecl"
 	"golang.org/x/tools/go/analysis"
 )
 
@@ -21,15 +22,21 @@ var Analyzer = &analysis.Analyzer{
 	Name: analyzerName,
 	Doc:  Doc,
 	Requires: []*analysis.Analyzer{
-		acctestfunc.Analyzer,
+		commentignore.Analyzer,
+		testaccfuncdecl.Analyzer,
 	},
 	Run: run,
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	testFuncs := pass.ResultOf[acctestfunc.Analyzer].([]*ast.FuncDecl)
+	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
+	testFuncs := pass.ResultOf[testaccfuncdecl.Analyzer].([]*ast.FuncDecl)
 
 	for _, testFunc := range testFuncs {
+		if ignorer.ShouldIgnore(analyzerName, testFunc) {
+			continue
+		}
+
 		var resourceTestInvocations int
 
 		ast.Inspect(testFunc.Body, func(n ast.Node) bool {
@@ -39,7 +46,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				return true
 			}
 
-			if terraformtype.IsHelperResourceFunc(callExpr.Fun, pass.TypesInfo, terraformtype.FuncNameTest) {
+			if resource.IsFunc(callExpr.Fun, pass.TypesInfo, resource.FuncNameTest) {
 				resourceTestInvocations += 1
 			}
 

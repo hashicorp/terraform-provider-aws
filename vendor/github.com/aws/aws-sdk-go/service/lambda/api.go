@@ -1617,8 +1617,8 @@ func (c *Lambda) GetFunctionConcurrencyRequest(input *GetFunctionConcurrencyInpu
 
 // GetFunctionConcurrency API operation for AWS Lambda.
 //
-// Returns details about the concurrency configuration for a function. To set
-// a concurrency limit for a function, use PutFunctionConcurrency.
+// Returns details about the reserved concurrency configuration for a function.
+// To set a concurrency limit for a function, use PutFunctionConcurrency.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3080,7 +3080,7 @@ func (c *Lambda) ListFunctionsRequest(input *ListFunctionsInput) (req *request.R
 // ListFunctions API operation for AWS Lambda.
 //
 // Returns a list of Lambda functions, with the version-specific configuration
-// of each.
+// of each. Lambda returns up to 50 functions per call.
 //
 // Set FunctionVersion to ALL to include all published versions of each function
 // in addition to the unpublished version. To get more information about a function
@@ -3758,7 +3758,8 @@ func (c *Lambda) ListVersionsByFunctionRequest(input *ListVersionsByFunctionInpu
 // ListVersionsByFunction API operation for AWS Lambda.
 //
 // Returns a list of versions (https://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html),
-// with the version-specific configuration of each.
+// with the version-specific configuration of each. Lambda returns up to 50
+// versions per call.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4206,13 +4207,22 @@ func (c *Lambda) PutFunctionEventInvokeConfigRequest(input *PutFunctionEventInvo
 // PutFunctionEventInvokeConfig API operation for AWS Lambda.
 //
 // Configures options for asynchronous invocation (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html)
-// on a function, version, or alias.
+// on a function, version, or alias. If a configuration already exists for a
+// function, version, or alias, this operation overwrites it. If you exclude
+// any settings, they are removed. To set one option without affecting existing
+// settings for other options, use PutFunctionEventInvokeConfig.
 //
 // By default, Lambda retries an asynchronous invocation twice if the function
 // returns an error. It retains events in a queue for up to six hours. When
 // an event fails all processing attempts or stays in the asynchronous invocation
 // queue for too long, Lambda discards it. To retain discarded events, configure
 // a dead-letter queue with UpdateFunctionConfiguration.
+//
+// To send an invocation record to a queue, topic, function, or event bus, specify
+// a destination (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations).
+// You can configure separate destinations for successful invocations (on-success)
+// and events that fail all processing attempts (on-failure). You can configure
+// destinations in addition to or instead of a dead-letter queue.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10439,8 +10449,7 @@ type ListFunctionsInput struct {
 	// you must set FunctionVersion to ALL.
 	MasterRegion *string `location:"querystring" locationName:"MasterRegion" type:"string"`
 
-	// Specify a value between 1 and 50 to limit the number of functions in the
-	// response.
+	// The maximum number of functions to return.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
 }
 
@@ -10906,7 +10915,7 @@ type ListVersionsByFunctionInput struct {
 	// the next page of results.
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
 
-	// Limit the number of versions that are returned.
+	// The maximum number of versions to return.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
 }
 
@@ -13887,6 +13896,9 @@ const (
 
 	// RuntimeRuby25 is a Runtime enum value
 	RuntimeRuby25 = "ruby2.5"
+
+	// RuntimeRuby27 is a Runtime enum value
+	RuntimeRuby27 = "ruby2.7"
 
 	// RuntimeProvided is a Runtime enum value
 	RuntimeProvided = "provided"

@@ -147,11 +147,11 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.380129571", "aws.cognito.signin.user.admin"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.4080487570", "profile"),
 					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "callback_urls.0", "https://www.example.com/callback"),
-					resource.TestCheckResourceAttr(resourceName, "callback_urls.1", "https://www.example.com/redirect"),
+					resource.TestCheckResourceAttr(resourceName, "callback_urls.3974471891", "https://www.example.com/callback"),
+					resource.TestCheckResourceAttr(resourceName, "callback_urls.2465081732", "https://www.example.com/redirect"),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", "https://www.example.com/redirect"),
 					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logout_urls.0", "https://www.example.com/login"),
+					resource.TestCheckResourceAttr(resourceName, "logout_urls.2102268273", "https://www.example.com/login"),
 				),
 			},
 			{
@@ -205,11 +205,11 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.380129571", "aws.cognito.signin.user.admin"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.4080487570", "profile"),
 					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "callback_urls.0", "https://www.example.com/callback"),
-					resource.TestCheckResourceAttr(resourceName, "callback_urls.1", "https://www.example.com/redirect"),
+					resource.TestCheckResourceAttr(resourceName, "callback_urls.3974471891", "https://www.example.com/callback"),
+					resource.TestCheckResourceAttr(resourceName, "callback_urls.2465081732", "https://www.example.com/redirect"),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", "https://www.example.com/redirect"),
 					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logout_urls.0", "https://www.example.com/login"),
+					resource.TestCheckResourceAttr(resourceName, "logout_urls.2102268273", "https://www.example.com/login"),
 				),
 			},
 			{
@@ -457,7 +457,7 @@ resource "aws_cognito_user_pool_client" "test" {
   allowed_oauth_flows_user_pool_client = "true"
   allowed_oauth_scopes                 = ["phone", "email", "openid", "profile", "aws.cognito.signin.user.admin"]
 
-  callback_urls        = ["https://www.example.com/callback", "https://www.example.com/redirect"]
+  callback_urls        = ["https://www.example.com/redirect", "https://www.example.com/callback"]
   default_redirect_uri = "https://www.example.com/redirect"
   logout_urls          = ["https://www.example.com/login"]
 }

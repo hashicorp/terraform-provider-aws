@@ -7991,6 +7991,14 @@ type CustomKeyStoresListEntry struct {
 	//    * NETWORK_ERRORS - Network errors are preventing AWS KMS from connecting
 	//    to the custom key store.
 	//
+	//    * SUBNET_NOT_FOUND - A subnet in the AWS CloudHSM cluster configuration
+	//    was deleted. If AWS KMS cannot find all of the subnets that were configured
+	//    for the cluster when the custom key store was created, attempts to connect
+	//    fail. To fix this error, create a cluster from a backup and associate
+	//    it with your custom key store. This process includes selecting a VPC and
+	//    subnets. For details, see How to Fix a Connection Failure (https://docs.aws.amazon.com/kms/latest/developerguide/fix-keystore.html#fix-keystore-failed)
+	//    in the AWS Key Management Service Developer Guide.
+	//
 	//    * USER_LOCKED_OUT - The kmsuser CU account is locked out of the associated
 	//    AWS CloudHSM cluster due to too many failed password attempts. Before
 	//    you can connect your custom key store to its AWS CloudHSM cluster, you
@@ -10498,9 +10506,10 @@ type GetPublicKeyOutput struct {
 
 	// The exported public key.
 	//
-	// This value is returned as a binary Distinguished Encoding Rules (https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf)
-	// (DER)-encoded object. To decode it, use an ASN.1 parsing tool, such as OpenSSL
-	// asn1parse (https://www.openssl.org/docs/man1.0.2/man1/asn1parse.html).
+	// The value is a DER-encoded X.509 public key, also known as SubjectPublicKeyInfo
+	// (SPKI), as defined in RFC 5280 (https://tools.ietf.org/html/rfc5280). When
+	// you use the HTTP API or the AWS CLI, the value is Base64-encoded. Otherwise,
+	// it is not Base64-encoded.
 	//
 	// PublicKey is automatically base64 encoded/decoded by the SDK.
 	PublicKey []byte `min:"1" type:"blob"`
@@ -13554,8 +13563,8 @@ type SignInput struct {
 	Message []byte `min:"1" type:"blob" required:"true" sensitive:"true"`
 
 	// Tells AWS KMS whether the value of the Message parameter is a message or
-	// message digest. To indicate a message, enter RAW. To indicate a message digest,
-	// enter DIGEST.
+	// message digest. The default value, RAW, indicates a message. To indicate
+	// a message digest, enter DIGEST.
 	MessageType *string `type:"string" enum:"MessageType"`
 
 	// Specifies the signing algorithm to use when signing the message.
@@ -13640,6 +13649,18 @@ type SignOutput struct {
 	KeyId *string `min:"1" type:"string"`
 
 	// The cryptographic signature that was generated for the message.
+	//
+	//    * When used with the supported RSA signing algorithms, the encoding of
+	//    this value is defined by PKCS #1 in RFC 8017 (https://tools.ietf.org/html/rfc8017).
+	//
+	//    * When used with the ECDSA_SHA_256, ECDSA_SHA_384, or ECDSA_SHA_512 signing
+	//    algorithms, this value is a DER-encoded object as defined by ANS X9.62–2005
+	//    and RFC 3279 Section 2.2.3 (https://tools.ietf.org/html/rfc3279#section-2.2.3).
+	//    This is the most commonly used signature format and is appropriate for
+	//    most uses.
+	//
+	// When you use the HTTP API or the AWS CLI, the value is Base64-encoded. Otherwise,
+	// it is not Base64-encoded.
 	//
 	// Signature is automatically base64 encoded/decoded by the SDK.
 	Signature []byte `min:"1" type:"blob"`
@@ -14522,6 +14543,9 @@ const (
 
 	// ConnectionErrorCodeTypeUserLoggedIn is a ConnectionErrorCodeType enum value
 	ConnectionErrorCodeTypeUserLoggedIn = "USER_LOGGED_IN"
+
+	// ConnectionErrorCodeTypeSubnetNotFound is a ConnectionErrorCodeType enum value
+	ConnectionErrorCodeTypeSubnetNotFound = "SUBNET_NOT_FOUND"
 )
 
 const (

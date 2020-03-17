@@ -43,3 +43,21 @@ err := resource.Retry(1 * time.Minute, func() *RetryError {
   return nil
 })
 ```
+
+## Ignoring Reports
+
+Singular reports can be ignored by adding the a `//lintignore:R006` Go code comment at the end of the offending line or on the line immediately proceding, e.g.
+
+```go
+//lintignore:R006
+err := resource.Retry(1 * time.Minute, func() *RetryError {
+  // Calling API logic, e.g.
+  _, err := conn.DoSomething(input)
+
+  if err != nil {
+    return resource.NonRetryableError(err)
+  }
+
+  return nil
+})
+```

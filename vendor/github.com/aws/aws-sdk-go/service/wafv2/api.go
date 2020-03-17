@@ -67,7 +67,7 @@ func (c *WAFV2) AssociateWebACLRequest(input *AssociateWebACLInput) (req *reques
 // resource. A regional application can be an Application Load Balancer (ALB)
 // or an API Gateway stage.
 //
-// For AWS CloudFront, you can associate the Web ACL by providing the Id of
+// For AWS CloudFront, you can associate the Web ACL by providing the ARN of
 // the WebACL to the CloudFront API call UpdateDistribution. For information,
 // see UpdateDistribution (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateDistribution.html).
 //
@@ -231,6 +231,8 @@ func (c *WAFV2) CheckCapacityRequest(input *CheckCapacityInput) (req *request.Re
 //
 //   * WAFUnavailableEntityException
 //   AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
+//
+//   * WAFSubscriptionNotFoundException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/wafv2-2019-07-29/CheckCapacity
 func (c *WAFV2) CheckCapacity(input *CheckCapacityInput) (*CheckCapacityOutput, error) {
@@ -429,7 +431,8 @@ func (c *WAFV2) CreateRegexPatternSetRequest(input *CreateRegexPatternSetInput) 
 // 2019. For information, including how to migrate your AWS WAF resources from
 // the prior release, see the AWS WAF Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html).
 //
-// Creates a RegexPatternSet per the specifications provided.
+// Creates a RegexPatternSet, which you reference in a RegexPatternSetReferenceStatement,
+// to have AWS WAF inspect a web request component for the specified patterns.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -613,6 +616,8 @@ func (c *WAFV2) CreateRuleGroupRequest(input *CreateRuleGroupInput) (req *reques
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
+//   * WAFSubscriptionNotFoundException
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/wafv2-2019-07-29/CreateRuleGroup
 func (c *WAFV2) CreateRuleGroup(input *CreateRuleGroupInput) (*CreateRuleGroupOutput, error) {
 	req, out := c.CreateRuleGroupRequest(input)
@@ -756,6 +761,8 @@ func (c *WAFV2) CreateWebACLRequest(input *CreateWebACLInput) (req *request.Requ
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
+//   * WAFSubscriptionNotFoundException
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/wafv2-2019-07-29/CreateWebACL
 func (c *WAFV2) CreateWebACL(input *CreateWebACLInput) (*CreateWebACLOutput, error) {
 	req, out := c.CreateWebACLRequest(input)
@@ -866,6 +873,10 @@ func (c *WAFV2) DeleteIPSetRequest(input *DeleteIPSetInput) (req *request.Reques
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
+//
+//   * WAFAssociatedItemException
+//   AWS WAF couldn’t perform the operation because your resource is being used
+//   by another resource or it’s associated with another resource.
 //
 //   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
@@ -1081,6 +1092,10 @@ func (c *WAFV2) DeleteRegexPatternSetRequest(input *DeleteRegexPatternSetInput) 
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
+//   * WAFAssociatedItemException
+//   AWS WAF couldn’t perform the operation because your resource is being used
+//   by another resource or it’s associated with another resource.
+//
 //   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
@@ -1198,6 +1213,10 @@ func (c *WAFV2) DeleteRuleGroupRequest(input *DeleteRuleGroupInput) (req *reques
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
+//
+//   * WAFAssociatedItemException
+//   AWS WAF couldn’t perform the operation because your resource is being used
+//   by another resource or it’s associated with another resource.
 //
 //   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
@@ -1513,7 +1532,7 @@ func (c *WAFV2) DisassociateWebACLRequest(input *DisassociateWebACLInput) (req *
 // application can be an Application Load Balancer (ALB) or an API Gateway stage.
 //
 // For AWS CloudFront, you can disassociate the Web ACL by providing an empty
-// WebACLId in the CloudFront API call UpdateDistribution. For information,
+// web ACL ARN in the CloudFront API call UpdateDistribution. For information,
 // see UpdateDistribution (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateDistribution.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2452,8 +2471,8 @@ func (c *WAFV2) ListAvailableManagedRuleGroupsRequest(input *ListAvailableManage
 // the prior release, see the AWS WAF Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html).
 //
 // Retrieves an array of managed rule groups that are available for you to use.
-// This list includes all AWS managed rule groups and the AWS Marketplace managed
-// rule groups that you're subscribed to.
+// This list includes all AWS Managed Rules rule groups and the AWS Marketplace
+// managed rule groups that you're subscribed to.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3947,6 +3966,8 @@ func (c *WAFV2) UpdateRuleGroupRequest(input *UpdateRuleGroupInput) (req *reques
 //   * WAFUnavailableEntityException
 //   AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 //
+//   * WAFSubscriptionNotFoundException
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/wafv2-2019-07-29/UpdateRuleGroup
 func (c *WAFV2) UpdateRuleGroup(input *UpdateRuleGroupInput) (*UpdateRuleGroupOutput, error) {
 	req, out := c.UpdateRuleGroupRequest(input)
@@ -4083,6 +4104,8 @@ func (c *WAFV2) UpdateWebACLRequest(input *UpdateWebACLInput) (req *request.Requ
 //   * WAFUnavailableEntityException
 //   AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 //
+//   * WAFSubscriptionNotFoundException
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/wafv2-2019-07-29/UpdateWebACL
 func (c *WAFV2) UpdateWebACL(input *UpdateWebACLInput) (*UpdateWebACLOutput, error) {
 	req, out := c.UpdateWebACLRequest(input)
@@ -4111,6 +4134,9 @@ func (c *WAFV2) UpdateWebACLWithContext(ctx aws.Context, input *UpdateWebACLInpu
 // the prior release, see the AWS WAF Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html).
 //
 // All query arguments of a web request.
+//
+// This is used only to indicate the web request component for AWS WAF to inspect,
+// in the FieldToMatch specification.
 type AllQueryArguments struct {
 	_ struct{} `type:"structure"`
 }
@@ -4131,6 +4157,9 @@ func (s AllQueryArguments) GoString() string {
 // the prior release, see the AWS WAF Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html).
 //
 // Specifies that AWS WAF should allow requests.
+//
+// This is used only in the context of other settings, for example to specify
+// values for RuleAction and web ACL DefaultAction.
 type AllowAction struct {
 	_ struct{} `type:"structure"`
 }
@@ -4199,12 +4228,9 @@ type AssociateWebACLInput struct {
 	//
 	// The ARN must be in one of the following formats:
 	//
-	//    * For a CloudFront distribution: arn:aws:cloudfront::account-id:distribution/distribution-id
+	//    * For an Application Load Balancer: arn:aws:elasticloadbalancing:region:account-id:loadbalancer/app/load-balancer-name/load-balancer-id
 	//
-	//    * For an Application Load Balancer: arn:aws:elasticloadbalancing: region:account-id:loadbalancer/app/load-balancer-name
-	//    /load-balancer-id
-	//
-	//    * For an Amazon API Gateway stage: arn:aws:apigateway:region ::/restapis/api-id/stages/stage-name
+	//    * For an Amazon API Gateway stage: arn:aws:apigateway:region::/restapis/api-id/stages/stage-name
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `min:"20" type:"string" required:"true"`
@@ -4280,6 +4306,9 @@ func (s AssociateWebACLOutput) GoString() string {
 // the prior release, see the AWS WAF Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html).
 //
 // Specifies that AWS WAF should block requests.
+//
+// This is used only in the context of other settings, for example to specify
+// values for RuleAction and web ACL DefaultAction.
 type BlockAction struct {
 	_ struct{} `type:"structure"`
 }
@@ -4300,6 +4329,9 @@ func (s BlockAction) GoString() string {
 // the prior release, see the AWS WAF Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html).
 //
 // The body of a web request. This immediately follows the request headers.
+//
+// This is used only to indicate the web request component for AWS WAF to inspect,
+// in the FieldToMatch specification.
 type Body struct {
 	_ struct{} `type:"structure"`
 }
@@ -4595,6 +4627,9 @@ func (s *CheckCapacityOutput) SetCapacity(v int64) *CheckCapacityOutput {
 // the prior release, see the AWS WAF Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html).
 //
 // Specifies that AWS WAF should count requests.
+//
+// This is used only in the context of other settings, for example to specify
+// values for RuleAction and web ACL DefaultAction.
 type CountAction struct {
 	_ struct{} `type:"structure"`
 }
@@ -6031,12 +6066,9 @@ type DisassociateWebACLInput struct {
 	//
 	// The ARN must be in one of the following formats:
 	//
-	//    * For a CloudFront distribution: arn:aws:cloudfront::account-id:distribution/distribution-id
+	//    * For an Application Load Balancer: arn:aws:elasticloadbalancing:region:account-id:loadbalancer/app/load-balancer-name/load-balancer-id
 	//
-	//    * For an Application Load Balancer: arn:aws:elasticloadbalancing: region:account-id:loadbalancer/app/load-balancer-name
-	//    /load-balancer-id
-	//
-	//    * For an Amazon API Gateway stage: arn:aws:apigateway:region ::/restapis/api-id/stages/stage-name
+	//    * For an Amazon API Gateway stage: arn:aws:apigateway:region::/restapis/api-id/stages/stage-name
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `min:"20" type:"string" required:"true"`
@@ -6157,12 +6189,13 @@ type FieldToMatch struct {
 	// a form.
 	//
 	// Note that only the first 8 KB (8192 bytes) of the request body are forwarded
-	// to AWS WAF for inspection. If you don't need to inspect more than 8 KB, you
-	// can guarantee that you don't allow additional bytes in by combining a statement
-	// that inspects the body of the web request, such as ByteMatchStatement or
-	// RegexPatternSetReferenceStatement, with a SizeConstraintStatement that enforces
-	// an 8 KB size limit on the body of the request. AWS WAF doesn't support inspecting
-	// the entire contents of web requests whose bodies exceed the 8 KB limit.
+	// to AWS WAF for inspection by the underlying host service. If you don't need
+	// to inspect more than 8 KB, you can guarantee that you don't allow additional
+	// bytes in by combining a statement that inspects the body of the web request,
+	// such as ByteMatchStatement or RegexPatternSetReferenceStatement, with a SizeConstraintStatement
+	// that enforces an 8 KB size limit on the body of the request. AWS WAF doesn't
+	// support inspecting the entire contents of web requests whose bodies exceed
+	// the 8 KB limit.
 	Body *Body `type:"structure"`
 
 	// Inspect the HTTP method. The method indicates the type of operation that
@@ -6180,6 +6213,9 @@ type FieldToMatch struct {
 	// Inspect a single query argument. Provide the name of the query argument to
 	// inspect, such as UserName or SalesRegion. The name can be up to 30 characters
 	// long and isn't case sensitive.
+	//
+	// This is used only to indicate the web request component for AWS WAF to inspect,
+	// in the FieldToMatch specification.
 	SingleQueryArgument *SingleQueryArgument `type:"structure"`
 
 	// Inspect the request URI path. This is the part of a web request that identifies
@@ -8668,14 +8704,14 @@ func (s *ManagedRuleGroupStatement) SetVendorName(v string) *ManagedRuleGroupSta
 // High-level information about a managed rule group, returned by ListAvailableManagedRuleGroups.
 // This provides information like the name and vendor name, that you provide
 // when you add a ManagedRuleGroupStatement to a web ACL. Managed rule groups
-// include AWS managed rule groups, which are free of charge to AWS WAF customers,
-// and AWS Marketplace managed rule groups, which you can subscribe to through
-// AWS Marketplace.
+// include AWS Managed Rules rule groups, which are free of charge to AWS WAF
+// customers, and AWS Marketplace managed rule groups, which you can subscribe
+// to through AWS Marketplace.
 type ManagedRuleGroupSummary struct {
 	_ struct{} `type:"structure"`
 
-	// The description of the managed rule group, provided by AWS or the AWS Marketplace
-	// seller who manages it.
+	// The description of the managed rule group, provided by AWS Managed Rules
+	// or the AWS Marketplace seller who manages it.
 	Description *string `min:"1" type:"string"`
 
 	// The name of the managed rule group. You use this, along with the vendor name,
@@ -8722,6 +8758,9 @@ func (s *ManagedRuleGroupSummary) SetVendorName(v string) *ManagedRuleGroupSumma
 //
 // The HTTP method of a web request. The method indicates the type of operation
 // that the request is asking the origin to perform.
+//
+// This is used only to indicate the web request component for AWS WAF to inspect,
+// in the FieldToMatch specification.
 type Method struct {
 	_ struct{} `type:"structure"`
 }
@@ -8743,7 +8782,10 @@ func (s Method) GoString() string {
 //
 // Specifies that AWS WAF should do nothing. This is generally used to try out
 // a rule without performing any actions. You set the OverrideAction on the
-// Rule, and override the actions that are set at the statement level.
+// Rule.
+//
+// This is used only in the context of other settings, for example to specify
+// values for RuleAction and web ACL DefaultAction.
 type NoneAction struct {
 	_ struct{} `type:"structure"`
 }
@@ -8991,6 +9033,9 @@ func (s *PutLoggingConfigurationOutput) SetLoggingConfiguration(v *LoggingConfig
 //
 // The query string of a web request. This is the part of a URL that appears
 // after a ? character, if any.
+//
+// This is used only to indicate the web request component for AWS WAF to inspect,
+// in the FieldToMatch specification.
 type QueryString struct {
 	_ struct{} `type:"structure"`
 }
@@ -10029,6 +10074,9 @@ func (s *SampledHTTPRequest) SetWeight(v int64) *SampledHTTPRequest {
 //
 // One of the headers in a web request, identified by name, for example, User-Agent
 // or Referer. This setting isn't case sensitive.
+//
+// This is used only to indicate the web request component for AWS WAF to inspect,
+// in the FieldToMatch specification.
 type SingleHeader struct {
 	_ struct{} `type:"structure"`
 
@@ -11834,6 +11882,9 @@ func (s *UpdateWebACLOutput) SetNextLockToken(v string) *UpdateWebACLOutput {
 //
 // The path component of the URI of a web request. This is the part of a web
 // request that identifies a resource, for example, /images/daily-ad.jpg.
+//
+// This is used only to indicate the web request component for AWS WAF to inspect,
+// in the FieldToMatch specification.
 type UriPath struct {
 	_ struct{} `type:"structure"`
 }
@@ -12466,6 +12517,61 @@ func (s WAFServiceLinkedRoleErrorException) StatusCode() int {
 
 // RequestID returns the service's response RequestID for request.
 func (s WAFServiceLinkedRoleErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+type WAFSubscriptionNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFSubscriptionNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFSubscriptionNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFSubscriptionNotFoundException(v protocol.ResponseMetadata) error {
+	return &WAFSubscriptionNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFSubscriptionNotFoundException) Code() string {
+	return "WAFSubscriptionNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s WAFSubscriptionNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFSubscriptionNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s WAFSubscriptionNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFSubscriptionNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFSubscriptionNotFoundException) RequestID() string {
 	return s.respMetadata.RequestID
 }
 
@@ -13813,6 +13919,9 @@ const (
 
 	// ParameterExceptionFieldTagKeys is a ParameterExceptionField enum value
 	ParameterExceptionFieldTagKeys = "TAG_KEYS"
+
+	// ParameterExceptionFieldMetricName is a ParameterExceptionField enum value
+	ParameterExceptionFieldMetricName = "METRIC_NAME"
 )
 
 const (

@@ -52,7 +52,8 @@ func testSweepCloudWatchEventRules(region string) error {
 
 			log.Printf("[INFO] Deleting CloudWatch Event Rule %s", name)
 			_, err := conn.DeleteRule(&events.DeleteRuleInput{
-				Name: aws.String(name),
+				Name:  aws.String(name),
+				Force: aws.Bool(true),
 			})
 			if err != nil {
 				return fmt.Errorf("Error deleting CloudWatch Event Rule %s: %s", name, err)
