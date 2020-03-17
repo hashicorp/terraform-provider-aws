@@ -14,6 +14,8 @@ ENHANCEMENTS:
 * resource/aws_inspector_assessment_template: Support resource import [GH-12375]
 * resource/aws_lb: Add `drop_invalid_header_fields` argument [GH-11257]
 * resource/aws_nat_gateway: Support tag-on-create [GH-12347]
+* resource/aws_opsworks_application: Support resource import [GH-12383]
+* resource/aws_opsworks_application: Add plan-time validation to `data_source_arn` and `data_source_type` arguments and `app_source` configuration block `type` argument [GH-12383]
 
 BUG FIXES:
 
