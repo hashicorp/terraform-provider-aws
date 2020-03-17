@@ -31,6 +31,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_api_gateway_rest_api: Ignore ordering differences for `endpoint_configuration` configuration block `vpc_endpoint_ids` argument [GH-12350]
 * resource/aws_backup_selection: Automatically retry on additional IAM Role eventual consistency error [GH-10687]
 * resource/aws_backup_vault: Remove resource from Terraform state when deleted outside Terraform [GH-11845]
 * resource/aws_cognito_user_pool_client: Ignore ordering differences for `callback_urls`, `logout_urls`, and `supported_identity_providers` arguments [GH-12388]
