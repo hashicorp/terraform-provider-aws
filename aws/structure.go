@@ -4357,29 +4357,6 @@ func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []i
 	return []interface{}{m}
 }
 
-func flattenAwsDynamoDbTableResource_2019(d *schema.ResourceData, table *dynamodb.TableDescription) error {
-	err := flattenAwsDynamoDbTableResource(d, table)
-	if err != nil {
-		return err
-	}
-
-	replicaList := make([]map[string]interface{}, 0, len(table.Replicas))
-	for _, replicaObject := range table.Replicas {
-		replica := map[string]interface{}{
-			"region_name": aws.StringValue(replicaObject.RegionName),
-		}
-
-		replicaList = append(replicaList, replica)
-	}
-
-	err = d.Set("replica", replicaList)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.TableDescription) error {
 	d.Set("billing_mode", dynamodb.BillingModeProvisioned)
 	if table.BillingModeSummary != nil {
@@ -4491,6 +4468,20 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 		}}
 	}
 	err = d.Set("server_side_encryption", sseOptions)
+	if err != nil {
+		return err
+	}
+
+	replicaList := make([]map[string]interface{}, 0, len(table.Replicas))
+	for _, replicaObject := range table.Replicas {
+		replica := map[string]interface{}{
+			"region_name": aws.StringValue(replicaObject.RegionName),
+		}
+
+		replicaList = append(replicaList, replica)
+	}
+
+	err = d.Set("replica", replicaList)
 	if err != nil {
 		return err
 	}

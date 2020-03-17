@@ -1382,6 +1382,87 @@ func testAccCheckAWSDynamoDbTableDisappears(table *dynamodb.DescribeTableOutput)
 	}
 }
 
+func TestAccAWSDynamoDbTable2019_basic(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbReplicaUpdates(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", tableName),
+					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.name", "TestTableHashKey"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.type", "S"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.0.region_name", "us-west-1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDynamoDbReplicaDeletes(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", tableName),
+					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.name", "TestTableHashKey"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.type", "S"),
+					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSDynamoDbReplicaUpdates(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = "%s"
+  hash_key     = "TestTableHashKey"
+	billing_mode = "PAY_PER_REQUEST"
+	stream_enabled = true
+	stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+	replica {
+	  region_name = "us-west-1"
+	}
+}
+`, rName)
+}
+
+func testAccAWSDynamoDbReplicaDeletes(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = "%s"
+  hash_key     = "TestTableHashKey"
+	billing_mode = "PAY_PER_REQUEST"
+	stream_enabled = true
+	stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName)
+}
+
 func dynamoDbGetGSIIndex(gsiList *[]*dynamodb.GlobalSecondaryIndexDescription, target string) int {
 	for idx, gsiObject := range *gsiList {
 		if *gsiObject.IndexName == target {

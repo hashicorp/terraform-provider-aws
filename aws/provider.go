@@ -483,7 +483,6 @@ func Provider() terraform.ResourceProvider {
 			"aws_dx_public_virtual_interface":                         resourceAwsDxPublicVirtualInterface(),
 			"aws_dx_transit_virtual_interface":                        resourceAwsDxTransitVirtualInterface(),
 			"aws_dynamodb_table":                                      resourceAwsDynamoDbTable(),
-			"aws_dynamodb_table_2019":                                 resourceAwsDynamoDbTable2019(),
 			"aws_dynamodb_table_item":                                 resourceAwsDynamoDbTableItem(),
 			"aws_dynamodb_global_table":                               resourceAwsDynamoDbGlobalTable(),
 			"aws_ebs_default_kms_key":                                 resourceAwsEbsDefaultKmsKey(),
