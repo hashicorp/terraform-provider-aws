@@ -152,6 +152,7 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", "https://www.example.com/redirect"),
 					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logout_urls.2102268273", "https://www.example.com/login"),
+					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", "LEGACY"),
 				),
 			},
 			{
@@ -210,6 +211,7 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", "https://www.example.com/redirect"),
 					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logout_urls.2102268273", "https://www.example.com/login"),
+					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", "LEGACY"),
 				),
 			},
 			{
@@ -451,7 +453,8 @@ resource "aws_cognito_user_pool_client" "test" {
   read_attributes  = ["email"]
   write_attributes = ["email"]
 
-  refresh_token_validity = %d
+  refresh_token_validity        = %d
+  prevent_user_existence_errors = "LEGACY"
 
   allowed_oauth_flows                  = ["code", "implicit"]
   allowed_oauth_flows_user_pool_client = "true"
