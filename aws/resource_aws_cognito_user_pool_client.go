@@ -145,9 +145,6 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 
 			"supported_identity_providers": {
