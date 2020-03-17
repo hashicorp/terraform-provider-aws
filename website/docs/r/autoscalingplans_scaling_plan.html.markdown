@@ -2,7 +2,6 @@
 subcategory: "Autoscaling Plans"
 layout: "aws"
 page_title: "AWS: aws_autoscalingplans_scaling_plan"
-sidebar_current: "docs-aws-resource-autoscalingplans-scaling-plan"
 description: |-
   Manages an AWS Auto Scaling scaling plan.
 ---
