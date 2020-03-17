@@ -62,6 +62,9 @@ The following arguments are supported:
 * `domain` - (Required) The domain string.
 * `user_pool_id` - (Required) The user pool ID.
 * `certificate_arn` - (Optional) The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain.
+  * `wait_for_deployment` (Optional) - If enabled, the resource will wait for
+    the user pool domain status to change from `Creating` to `Active`. Setting
+    this to`false` will skip the process. Default: `true`.
 
 ## Attributes Reference
 

@@ -16,6 +16,7 @@ func resourceAwsCognitoUserPoolDomain() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCognitoUserPoolDomainCreate,
 		Read:   resourceAwsCognitoUserPoolDomainRead,
+		Update: resourceAwsCognitoUserPoolDomainRead,
 		Delete: resourceAwsCognitoUserPoolDomainDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -55,6 +56,11 @@ func resourceAwsCognitoUserPoolDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"wait_for_deployment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 		},
 	}
 }
@@ -88,8 +94,10 @@ func resourceAwsCognitoUserPoolDomainCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(domain)
 
-	if _, err := waiter.UserPoolDomainCreated(conn, d.Id(), timeout); err != nil {
-		return fmt.Errorf("error waiting for User Pool Domain (%s) creation: %w", d.Id(), err)
+	if d.Get("wait_for_deployment").(bool) {
+		if _, err := waiter.UserPoolDomainCreated(conn, d.Id(), timeout); err != nil {
+			return fmt.Errorf("error waiting for User Pool Domain (%s) creation: %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsCognitoUserPoolDomainRead(d, meta)
