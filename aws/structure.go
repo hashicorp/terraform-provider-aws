@@ -2530,6 +2530,10 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 		m["reply_to_email_address"] = *s.ReplyToEmailAddress
 	}
 
+	if s.From != nil {
+		m["from_email_address"] = *s.From
+	}
+
 	if s.SourceArn != nil {
 		m["source_arn"] = *s.SourceArn
 	}
