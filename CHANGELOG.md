@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * data-source/aws_lb: Add `drop_invalid_header_fields` attribute [GH-11257]
 * provider: Support AWS shared configuration file `duration_seconds` setting for assume role [GH-12359]
 * resource/aws_backup_plan: Support resource import [GH-12381]
+* resource/aws_cognito_user_pool_client: Add `analytics_configuration` configuration block (Support Pinpoint analytics) [GH-11762]
 * resource/aws_dlm_lifecycle_policy: Support plan-time validation for 1 hour schedules in `policy_details` `schedule` `create_rule` `interval` argument [GH-12327]
 * resource/aws_inspector_assessment_template: Add `tags` argument [GH-12375]
 * resource/aws_inspector_assessment_template: Support resource import [GH-12375]
