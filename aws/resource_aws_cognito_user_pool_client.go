@@ -300,7 +300,7 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 	d.Set("callback_urls", flattenStringSet(resp.UserPoolClient.CallbackURLs))
 	d.Set("default_redirect_uri", resp.UserPoolClient.DefaultRedirectURI)
 	d.Set("logout_urls", flattenStringSet(resp.UserPoolClient.LogoutURLs))
-        d.Set("prevent_user_existence_errors", resp.UserPoolClient.PreventUserExistenceErrors)
+	d.Set("prevent_user_existence_errors", resp.UserPoolClient.PreventUserExistenceErrors)
 	d.Set("supported_identity_providers", flattenStringSet(resp.UserPoolClient.SupportedIdentityProviders))
 
 	if err := d.Set("analytics_configuration", flattenAwsCognitoUserPoolClientAnalyticsConfig(resp.UserPoolClient.AnalyticsConfiguration)); err != nil {
