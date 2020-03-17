@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_cognito_user_pool: Add `email_configuration` configuration block `from_email_address` argument [GH-11607]
 * resource/aws_cognito_user_pool: Add `username_configuration` configuration block (Support case insensitive usernames) [GH-12317]
 * resource/aws_cognito_user_pool_client: Add `analytics_configuration` configuration block (Support Pinpoint analytics) [GH-11762]
+* resource/aws_cognito_user_pool_client: Add `prevent_user_existence_errors` argument [GH-11604]
 * resource/aws_dlm_lifecycle_policy: Support plan-time validation for 1 hour schedules in `policy_details` `schedule` `create_rule` `interval` argument [GH-12327]
 * resource/aws_inspector_assessment_template: Add `tags` argument [GH-12375]
 * resource/aws_inspector_assessment_template: Support resource import [GH-12375]
