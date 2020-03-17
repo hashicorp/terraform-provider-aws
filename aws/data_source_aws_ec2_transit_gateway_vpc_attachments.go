@@ -104,8 +104,8 @@ func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, me
 
 			item.SetId(aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
 		}
-		items.append(item)
+		append(items,item)
 	}
-	d.set("transit_gateway_vpc_attachments", items)
+	d.Set("transit_gateway_vpc_attachments", items)
 	return nil
 }
