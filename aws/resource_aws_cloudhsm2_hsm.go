@@ -75,14 +75,14 @@ func resourceAwsCloudHsmV2Hsm() *schema.Resource {
 
 func resourceAwsCloudHsmV2HsmImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("hsm_id", d.Id())
+	d.Set("hsm_eni_id", d.Id())
 	return []*schema.ResourceData{d}, nil
 }
 
-func describeHsm(conn *cloudhsmv2.CloudHSMV2, hsmId string) (*cloudhsmv2.Hsm, error) {
+func describeHsm(conn *cloudhsmv2.CloudHSMV2, eniId string) (*cloudhsmv2.Hsm, error) {
 	out, err := conn.DescribeClusters(&cloudhsmv2.DescribeClustersInput{})
 	if err != nil {
-		log.Printf("[WARN] Error on descibing CloudHSM v2 Cluster: %s", err)
+		log.Printf("[WARN] Error on describing CloudHSM v2 Cluster: %s", err)
 		return nil, err
 	}
 
@@ -90,7 +90,11 @@ func describeHsm(conn *cloudhsmv2.CloudHSMV2, hsmId string) (*cloudhsmv2.Hsm, er
 
 	for _, c := range out.Clusters {
 		for _, h := range c.Hsms {
-			if aws.StringValue(h.HsmId) == hsmId {
+			if aws.StringValue(h.EniId) == eniId {
+				hsm = h
+				break
+			} else if aws.StringValue(h.HsmId) == eniId {
+				// prior to the fix for #8648, state might be tracking HSM instances using the hsm_id instead
 				hsm = h
 				break
 			}
@@ -172,7 +176,7 @@ func resourceAwsCloudHsmV2HsmCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error creating CloudHSM v2 HSM module: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Hsm.HsmId))
+	d.SetId(aws.StringValue(output.Hsm.EniId))
 
 	if err := waitForCloudhsmv2HsmActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for CloudHSMv2 HSM (%s) creation: %s", d.Id(), err)
@@ -211,7 +215,7 @@ func resourceAwsCloudHsmV2HsmDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] CloudHSMv2 HSM delete %s %s", clusterId, d.Id())
 	input := &cloudhsmv2.DeleteHsmInput{
 		ClusterId: aws.String(clusterId),
-		HsmId:     aws.String(d.Id()),
+		HsmId:     aws.String(d.Get("hsm_id").(string)),
 	}
 	err := resource.Retry(180*time.Second, func() *resource.RetryError {
 		var err error
