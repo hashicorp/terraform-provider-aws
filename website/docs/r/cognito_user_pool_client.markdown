@@ -55,7 +55,7 @@ The following arguments are supported:
 * `generate_secret` - (Optional) Should an application secret be generated.
 * `logout_urls` - (Optional) List of allowed logout URLs for the identity providers.
 * `name` - (Required) The name of the application client.
-* `prevent_user_existence_errors` - (Optional, Default: ENABLED) How should Cognito APIs handle errors when a user does not exist in the user pool (LEGACY, ENABLED).
+* `prevent_user_existence_errors` - (Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to `ENABLED` and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to `LEGACY`, those APIs will return a `UserNotFoundException` exception if the user does not exist in the user pool.
 * `read_attributes` - (Optional) List of user pool attributes the application client can read from.
 * `refresh_token_validity` - (Optional) The time limit in days refresh tokens are valid for.
 * `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client.
