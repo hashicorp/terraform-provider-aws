@@ -110,6 +110,7 @@ func TestAccAWSMediaConnectFlowConfig_Options(t *testing.T) {
 
 	rName := fmt.Sprintf("tfacctest%s", acctest.RandString(5))
 	resourceName := "aws_media_connect_flow.test"
+	dataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -117,10 +118,10 @@ func TestAccAWSMediaConnectFlowConfig_Options(t *testing.T) {
 		CheckDestroy: testAccCheckAWSMediaConnectFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSMediaConnectFlowConfig_Options(rName, "us-west-2a", "Test Description1"),
+				Config: testAccAWSMediaConnectFlowConfig_Options(rName, "Test Description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMediaConnectFlowExists(resourceName, &flow),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone", "us-west-2a"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", dataSourceName, "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.description", "Test Description1"),
 				),
@@ -253,38 +254,42 @@ func testAccAWSMediaConnectFlowConfig_Decryption(rName string, algorithm string)
 %s
 
 resource "aws_media_connect_flow" "test" {
-	name = "%s"
+  name = "%s"
 
-	source {
-		name 			= "%s"
-		protocol 		= "zixi-push"
-		ingest_port 	= 2088
-		whitelist_cidr	= "10.24.34.0/23"
+  source {
+    name           = "%s"
+    protocol       = "zixi-push"
+    ingest_port    = 2088
+    whitelist_cidr = "10.24.34.0/23"
 
-		decryption {
-			key_type 	= "static-key"
-			algorithm	= "%s"
-			role_arn	= "${aws_iam_role.test.arn}"
-			secret_arn	= "${aws_secretsmanager_secret.test.arn}"
-		}
-	}
+    decryption {
+      key_type   = "static-key"
+      algorithm  = "%s"
+      role_arn   = "${aws_iam_role.test.arn}"
+      secret_arn = "${aws_secretsmanager_secret.test.arn}"
+    }
+  }
 }
-	`, testAccAWSMediaConnectFlowConfig_IamRole(rName), testAccAWSMediaConnectFlowConfig_SecretsManagerSecret(rName), rName, rName, algorithm)
+`, testAccAWSMediaConnectFlowConfig_IamRole(rName), testAccAWSMediaConnectFlowConfig_SecretsManagerSecret(rName), rName, rName, algorithm)
 }
 
-func testAccAWSMediaConnectFlowConfig_Options(rName, availabilityZone, description string) string {
+func testAccAWSMediaConnectFlowConfig_Options(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_media_connect_flow" "test" {
-	name = "%s"
-	availability_zone = "%s"
-
-	source {
-		name 			= "%s"
-		description 	= "%s"
-		protocol 		= "rtp"
-		ingest_port 	= 3010
-		whitelist_cidr	= "10.24.34.0/23"
-	}
+data "aws_availability_zones" "available" {
+  state = "available"
 }
-	`, rName, availabilityZone, rName, description)
+
+resource "aws_media_connect_flow" "test" {
+  name              = "%s"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+
+  source {
+    name           = "%s"
+    description    = "%s"
+    protocol       = "rtp"
+    ingest_port    = 3010
+    whitelist_cidr = "10.24.34.0/23"
+  }
+}
+`, rName, rName, description)
 }
