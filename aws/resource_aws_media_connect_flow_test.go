@@ -196,7 +196,9 @@ func testAccCheckAWSMediaConnectFlowDestroy(s *terraform.State) error {
 			return nil
 		})
 
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
