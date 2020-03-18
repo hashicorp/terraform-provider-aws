@@ -14,14 +14,14 @@ Provides an AWS Elemental MediaConnect Flow.
 
 ```hcl
 resource "aws_media_connect_flow" "test" {
-	name = "tfflow"
+  name = "tfflow"
 
-	source {
-		name 			= "tfsource"
-		protocol 		= "rtp"
-		ingest_port 	= 3010
-		whitelist_cidr	= "10.24.34.0/23"
-	}
+  source {
+    name           = "tfsource"
+    protocol       = "rtp"
+    ingest_port    = 3010
+    whitelist_cidr = "10.24.34.0/23"
+  }
 }
 ```
 
