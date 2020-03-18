@@ -40,6 +40,53 @@ func resourceAwsApiGatewayV2Api() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cors_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allow_credentials": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"allow_headers": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      hashStringCaseInsensitive,
+						},
+						"allow_methods": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      hashStringCaseInsensitive,
+						},
+						"allow_origins": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      hashStringCaseInsensitive,
+						},
+						"expose_headers": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      hashStringCaseInsensitive,
+						},
+						"max_age": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"credentials_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -63,12 +110,22 @@ func resourceAwsApiGatewayV2Api() *schema.Resource {
 					apigatewayv2.ProtocolTypeWebsocket,
 				}, false),
 			},
+			"route_key": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"route_selection_expression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "$request.method $request.path",
 			},
 			"tags": tagsSchema(),
+			"target": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"version": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -90,11 +147,23 @@ func resourceAwsApiGatewayV2ApiCreate(d *schema.ResourceData, meta interface{}) 
 	if v, ok := d.GetOk("api_key_selection_expression"); ok {
 		req.ApiKeySelectionExpression = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("cors_configuration"); ok {
+		req.CorsConfiguration = expandApiGateway2CorsConfiguration(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("credentials_arn"); ok {
+		req.CredentialsArn = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("description"); ok {
 		req.Description = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("route_key"); ok {
+		req.RouteKey = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("route_selection_expression"); ok {
 		req.RouteSelectionExpression = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("target"); ok {
+		req.Target = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("version"); ok {
 		req.Version = aws.String(v.(string))
@@ -135,6 +204,9 @@ func resourceAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) er
 		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
 	}.String()
 	d.Set("arn", apiArn)
+	if err := d.Set("cors_configuration", flattenApiGateway2CorsConfiguration(resp.CorsConfiguration)); err != nil {
+		return fmt.Errorf("error setting cors_configuration: %s", err)
+	}
 	d.Set("description", resp.Description)
 	executionArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -158,13 +230,33 @@ func resourceAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsApiGatewayV2ApiUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
-	if d.HasChanges("api_key_selection_expression", "description", "name", "route_selection_expression", "version") {
+	deleteCorsConfiguration := false
+	if d.HasChange("cors_configuration") {
+		v := d.Get("cors_configuration")
+		if len(v.([]interface{})) == 0 {
+			deleteCorsConfiguration = true
+
+			log.Printf("[DEBUG] Deleting CORS configuration for API Gateway v2 API (%s)", d.Id())
+			_, err := conn.DeleteCorsConfiguration(&apigatewayv2.DeleteCorsConfigurationInput{
+				ApiId: aws.String(d.Id()),
+			})
+			if err != nil {
+				return fmt.Errorf("error deleting CORS configuration for API Gateway v2 API (%s): %s", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChanges("api_key_selection_expression", "description", "name", "route_selection_expression", "version") ||
+		(d.HasChange("cors_configuration") && !deleteCorsConfiguration) {
 		req := &apigatewayv2.UpdateApiInput{
 			ApiId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("api_key_selection_expression") {
 			req.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
+		}
+		if d.HasChange("cors_configuration") {
+			req.CorsConfiguration = expandApiGateway2CorsConfiguration(d.Get("cors_configuration").([]interface{}))
 		}
 		if d.HasChange("description") {
 			req.Description = aws.String(d.Get("description").(string))
@@ -211,4 +303,49 @@ func resourceAwsApiGatewayV2ApiDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
+}
+
+func expandApiGateway2CorsConfiguration(vConfiguration []interface{}) *apigatewayv2.Cors {
+	configuration := &apigatewayv2.Cors{}
+
+	if len(vConfiguration) == 0 || vConfiguration[0] == nil {
+		return configuration
+	}
+	mConfiguration := vConfiguration[0].(map[string]interface{})
+
+	if vAllowCredentials, ok := mConfiguration["allow_credentials"].(bool); ok {
+		configuration.AllowCredentials = aws.Bool(vAllowCredentials)
+	}
+	if vAllowHeaders, ok := mConfiguration["allow_headers"].(*schema.Set); ok {
+		configuration.AllowHeaders = expandStringSet(vAllowHeaders)
+	}
+	if vAllowMethods, ok := mConfiguration["allow_methods"].(*schema.Set); ok {
+		configuration.AllowMethods = expandStringSet(vAllowMethods)
+	}
+	if vAllowOrigins, ok := mConfiguration["allow_origins"].(*schema.Set); ok {
+		configuration.AllowOrigins = expandStringSet(vAllowOrigins)
+	}
+	if vExposeHeaders, ok := mConfiguration["expose_headers"].(*schema.Set); ok {
+		configuration.ExposeHeaders = expandStringSet(vExposeHeaders)
+	}
+	if vMaxAge, ok := mConfiguration["max_age"].(int); ok {
+		configuration.MaxAge = aws.Int64(int64(vMaxAge))
+	}
+
+	return configuration
+}
+
+func flattenApiGateway2CorsConfiguration(configuration *apigatewayv2.Cors) []interface{} {
+	if configuration == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{map[string]interface{}{
+		"allow_credentials": aws.BoolValue(configuration.AllowCredentials),
+		"allow_headers":     flattenCaseInsensitiveStringSet(configuration.AllowHeaders),
+		"allow_methods":     flattenCaseInsensitiveStringSet(configuration.AllowMethods),
+		"allow_origins":     flattenCaseInsensitiveStringSet(configuration.AllowOrigins),
+		"expose_headers":    flattenCaseInsensitiveStringSet(configuration.ExposeHeaders),
+		"max_age":           int(aws.Int64Value(configuration.MaxAge)),
+	}}
 }
