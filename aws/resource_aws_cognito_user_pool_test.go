@@ -90,12 +90,58 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPool_recovery(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfigAccountRecoverySingle(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanisms.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfigAccountRecoveryMulti(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanisms.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfigAccountRecoveryUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanisms.#", "1"),
+				),
 			},
 		},
 	})
@@ -1267,6 +1313,56 @@ func testAccAWSCognitoUserPoolConfig_Name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
+}
+`, rName)
+}
+
+func testAccAWSCognitoUserPoolConfigAccountRecoverySingle(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  account_recovery_setting {
+    recovery_mechanisms {
+      name     = "verified_email"
+      priority = 1
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSCognitoUserPoolConfigAccountRecoveryMulti(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  account_recovery_setting {
+    recovery_mechanisms {
+      name     = "verified_email"
+      priority = 1
+    }
+
+    recovery_mechanisms {
+      name     = "verified_phone_number"
+      priority = 2
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSCognitoUserPoolConfigAccountRecoveryUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  account_recovery_setting {
+    recovery_mechanisms {
+      name     = "verified_phone_number"
+      priority = 1
+    }
+  }
 }
 `, rName)
 }

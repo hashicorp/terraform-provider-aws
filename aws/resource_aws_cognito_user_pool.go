@@ -536,6 +536,37 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
+			"account_recovery_setting": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"recovery_mechanisms": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											cognitoidentityprovider.RecoveryOptionNameTypeAdminOnly,
+											cognitoidentityprovider.RecoveryOptionNameTypeVerifiedEmail,
+											cognitoidentityprovider.RecoveryOptionNameTypeVerifiedPhoneNumber,
+										}, false),
+									},
+									"priority": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -553,6 +584,15 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 
 		if ok && config != nil {
 			params.AdminCreateUserConfig = expandCognitoUserPoolAdminCreateUserConfig(config)
+		}
+	}
+
+	if v, ok := d.GetOk("account_recovery_setting"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			params.AccountRecoverySetting = expandCognitoUserPoolAccountRecoverySettingConfig(config)
 		}
 	}
 
@@ -832,6 +872,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Failed setting device_configuration: %s", err)
 	}
 
+	if err := d.Set("account_recovery_setting", flattenCognitoUserPoolAccountRecoverySettingConfig(resp.UserPool.AccountRecoverySetting)); err != nil {
+		return fmt.Errorf("Failed setting account_recovery_setting: %s", err)
+	}
+
 	if resp.UserPool.EmailConfiguration != nil {
 		if err := d.Set("email_configuration", flattenCognitoUserPoolEmailConfiguration(resp.UserPool.EmailConfiguration)); err != nil {
 			return fmt.Errorf("Failed setting email_configuration: %s", err)
@@ -981,6 +1025,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		"tags",
 		"user_pool_add_ons",
 		"verification_message_template",
+		"account_recovery_setting",
 	) {
 		params := &cognitoidentityprovider.UpdateUserPoolInput{
 			UserPoolId: aws.String(d.Id()),
@@ -997,6 +1042,15 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 		if v, ok := d.GetOk("auto_verified_attributes"); ok {
 			params.AutoVerifiedAttributes = expandStringList(v.(*schema.Set).List())
+		}
+
+		if v, ok := d.GetOk("account_recovery_setting"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				params.AccountRecoverySetting = expandCognitoUserPoolAccountRecoverySettingConfig(config)
+			}
 		}
 
 		if v, ok := d.GetOk("device_configuration"); ok {
@@ -1238,4 +1292,55 @@ func flattenCognitoSoftwareTokenMfaConfiguration(apiObject *cognitoidentityprovi
 	}
 
 	return []interface{}{tfMap}
+}
+
+func expandCognitoUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *cognitoidentityprovider.AccountRecoverySettingType {
+	configs := &cognitoidentityprovider.AccountRecoverySettingType{}
+
+	mechs := make([]*cognitoidentityprovider.RecoveryOptionType, 0)
+
+	if v, ok := config["recovery_mechanisms"]; ok {
+		data := v.(*schema.Set).List()
+
+		for _, m := range data {
+			param := m.(map[string]interface{})
+			opt := &cognitoidentityprovider.RecoveryOptionType{}
+
+			if v, ok := param["name"]; ok {
+				opt.Name = aws.String(v.(string))
+			}
+
+			if v, ok := param["priority"]; ok {
+				opt.Priority = aws.Int64(int64(v.(int)))
+			}
+
+			mechs = append(mechs, opt)
+		}
+	}
+
+	configs.RecoveryMechanisms = mechs
+
+	return configs
+}
+
+func flattenCognitoUserPoolAccountRecoverySettingConfig(config *cognitoidentityprovider.AccountRecoverySettingType) []interface{} {
+	if config == nil {
+		return nil
+	}
+
+	settings := map[string]interface{}{}
+
+	mechanisms := make([]map[string]interface{}, 0)
+
+	for _, conf := range config.RecoveryMechanisms {
+		mech := map[string]interface{}{
+			"name":     aws.StringValue(conf.Name),
+			"priority": aws.Int64Value(conf.Priority),
+		}
+		mechanisms = append(mechanisms, mech)
+	}
+
+	settings["recovery_mechanisms"] = mechanisms
+
+	return []interface{}{settings}
 }
