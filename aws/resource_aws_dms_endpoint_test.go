@@ -145,6 +145,7 @@ func TestAccAwsDmsEndpoint_S3_Parquet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.data_format", "parquet"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-2-0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_S3"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_inserts_and_updates", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_settings.0.data_format"),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_settings.0.server_side_encryption_kms_key_id"),
 				),
@@ -709,6 +710,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	parquet_version                   = "parquet-2-0"
 	encryption_mode                   = "SSE_S3"
 	server_side_encryption_kms_key_id = "${data.aws_kms_alias.dms.target_key_arn}"
+	cdc_inserts_and_updates = true
  }
 }
 

@@ -1,5 +1,6 @@
 package aws
 
+import "C"
 import (
 	"fmt"
 	"log"
@@ -233,6 +234,11 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"cdc_inserts_and_updates": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -247,6 +253,15 @@ func getStringRefOrNil(d *schema.ResourceData, key string) *string {
 	}
 	valueString := value.(string)
 	return &valueString
+}
+
+func getBoolRefOrNil(d *schema.ResourceData, key string) *bool {
+	value, exists := d.GetOk(key)
+	if !exists {
+		return nil
+	}
+	valueBool := value.(bool)
+	return &valueBool
 }
 
 func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) error {
@@ -302,6 +317,7 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			ParquetVersion:               getStringRefOrNil(d, "s3_settings.0.parquet_version"),
 			EncryptionMode:               getStringRefOrNil(d, "s3_settings.0.encryption_mode"),
 			ServerSideEncryptionKmsKeyId: getStringRefOrNil(d, "s3_settings.0.server_side_encryption_kms_key_id"),
+			CdcInsertsAndUpdates:         getBoolRefOrNil(d, "s3_settings.0.cdc_inserts_and_updates"),
 		}
 	default:
 		request.Password = aws.String(d.Get("password").(string))
@@ -522,6 +538,7 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				ParquetVersion:               getStringRefOrNil(d, "s3_settings.0.parquet_version"),
 				EncryptionMode:               getStringRefOrNil(d, "s3_settings.0.encryption_mode"),
 				ServerSideEncryptionKmsKeyId: getStringRefOrNil(d, "s3_settings.0.server_side_encryption_kms_key_id"),
+				CdcInsertsAndUpdates:         getBoolRefOrNil(d, "s3_settings.0.cdc_inserts_and_updates"),
 			}
 			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 's3')
 			hasChanges = true
@@ -663,11 +680,21 @@ func flattenDmsS3Settings(settings *dms.S3Settings) []map[string]interface{} {
 		"parquet_version":                   settings.ParquetVersion,
 		"encryption_mode":                   settings.EncryptionMode,
 		"server_side_encryption_kms_key_id": settings.ServerSideEncryptionKmsKeyId,
+		"cdc_inserts_and_updates":           settings.CdcInsertsAndUpdates,
 	}
 	mapWithoutNills := make(map[string]interface{})
 	for key := range mapWithNils {
-		if mapWithNils[key].(*string) != nil {
-			mapWithoutNills[key] = aws.StringValue(mapWithNils[key].(*string))
+		switch v := mapWithNils[key].(type) {
+		default:
+			fmt.Printf("unexpected type %T", v)
+		case *bool:
+			if mapWithNils[key].(*bool) != nil {
+				mapWithoutNills[key] = aws.BoolValue(mapWithNils[key].(*bool))
+			}
+		case *string:
+			if mapWithNils[key].(*string) != nil {
+				mapWithoutNills[key] = aws.StringValue(mapWithNils[key].(*string))
+			}
 		}
 	}
 	return append(result, mapWithoutNills)
