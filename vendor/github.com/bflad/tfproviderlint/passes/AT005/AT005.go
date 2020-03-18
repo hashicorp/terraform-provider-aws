@@ -6,8 +6,9 @@ import (
 	"go/ast"
 	"strings"
 
-	"github.com/bflad/tfproviderlint/helper/terraformtype"
-	"github.com/bflad/tfproviderlint/passes/testfunc"
+	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/resource"
+	"github.com/bflad/tfproviderlint/passes/commentignore"
+	"github.com/bflad/tfproviderlint/passes/testfuncdecl"
 	"golang.org/x/tools/go/analysis"
 )
 
@@ -23,15 +24,21 @@ var Analyzer = &analysis.Analyzer{
 	Name: analyzerName,
 	Doc:  Doc,
 	Requires: []*analysis.Analyzer{
-		testfunc.Analyzer,
+		commentignore.Analyzer,
+		testfuncdecl.Analyzer,
 	},
 	Run: run,
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	testFuncs := pass.ResultOf[testfunc.Analyzer].([]*ast.FuncDecl)
+	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
+	testFuncs := pass.ResultOf[testfuncdecl.Analyzer].([]*ast.FuncDecl)
 
 	for _, testFunc := range testFuncs {
+		if ignorer.ShouldIgnore(analyzerName, testFunc) {
+			continue
+		}
+
 		if strings.HasPrefix(testFunc.Name.Name, "TestAcc") {
 			continue
 		}
@@ -43,8 +50,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				return true
 			}
 
-			isResourceTest := terraformtype.IsHelperResourceFunc(callExpr.Fun, pass.TypesInfo, terraformtype.FuncNameTest)
-			isResourceParallelTest := terraformtype.IsHelperResourceFunc(callExpr.Fun, pass.TypesInfo, terraformtype.FuncNameParallelTest)
+			isResourceTest := resource.IsFunc(callExpr.Fun, pass.TypesInfo, resource.FuncNameTest)
+			isResourceParallelTest := resource.IsFunc(callExpr.Fun, pass.TypesInfo, resource.FuncNameParallelTest)
 
 			if !isResourceTest && !isResourceParallelTest {
 				return true

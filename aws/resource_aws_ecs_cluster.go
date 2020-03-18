@@ -138,7 +138,7 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
 	if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutCreate); err != nil {
-		return err
+		return fmt.Errorf("error waiting for ECS Cluster (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceAwsEcsClusterRead(d, meta)
@@ -244,7 +244,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutUpdate); err != nil {
-			return err
+			return fmt.Errorf("error waiting for ECS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -287,7 +287,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutUpdate); err != nil {
-			return err
+			return fmt.Errorf("error waiting for ECS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -352,6 +352,7 @@ func waitForEcsClusterActive(conn *ecs.ECS, clusterName string, timeout time.Dur
 		Target:  []string{"ACTIVE"},
 		Timeout: timeout,
 		Refresh: refreshEcsClusterStatus(conn, clusterName),
+		Delay:   10 * time.Second,
 	}
 	_, err := stateConf.WaitForState()
 	return err

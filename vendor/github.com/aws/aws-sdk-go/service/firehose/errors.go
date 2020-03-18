@@ -2,6 +2,10 @@
 
 package firehose
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeConcurrentModificationException for service response error code
@@ -53,3 +57,13 @@ const (
 	// see Amazon Kinesis Data Firehose Limits (https://docs.aws.amazon.com/firehose/latest/dev/limits.html).
 	ErrCodeServiceUnavailableException = "ServiceUnavailableException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ConcurrentModificationException": newErrorConcurrentModificationException,
+	"InvalidArgumentException":        newErrorInvalidArgumentException,
+	"InvalidKMSResourceException":     newErrorInvalidKMSResourceException,
+	"LimitExceededException":          newErrorLimitExceededException,
+	"ResourceInUseException":          newErrorResourceInUseException,
+	"ResourceNotFoundException":       newErrorResourceNotFoundException,
+	"ServiceUnavailableException":     newErrorServiceUnavailableException,
+}

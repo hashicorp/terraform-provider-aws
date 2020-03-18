@@ -19,3 +19,15 @@ and enables `ForceNew`, which is invalid.
     Computed: true,
 }
 ```
+
+## Ignoring Reports
+
+Singular reports can be ignored by adding the a `//lintignore:S020` Go code comment at the end of the offending line or on the line immediately proceding, e.g.
+
+```go
+//lintignore:S020
+&schema.Schema{
+    Computed: true,
+    ForceNew: true,
+}
+```

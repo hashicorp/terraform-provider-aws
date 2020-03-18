@@ -70,22 +70,22 @@ func (c *Budgets) CreateBudgetRequest(input *CreateBudgetInput) (req *request.Re
 // See the AWS API reference guide for AWS Budgets's
 // API operation CreateBudget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeCreationLimitExceededException "CreationLimitExceededException"
+//   * CreationLimitExceededException
 //   You've exceeded the notification or subscriber limit.
 //
-//   * ErrCodeDuplicateRecordException "DuplicateRecordException"
+//   * DuplicateRecordException
 //   The budget name already exists. Budget names must be unique within an account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) CreateBudget(input *CreateBudgetInput) (*CreateBudgetOutput, error) {
@@ -162,25 +162,25 @@ func (c *Budgets) CreateNotificationRequest(input *CreateNotificationInput) (req
 // See the AWS API reference guide for AWS Budgets's
 // API operation CreateNotification for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeCreationLimitExceededException "CreationLimitExceededException"
+//   * CreationLimitExceededException
 //   You've exceeded the notification or subscriber limit.
 //
-//   * ErrCodeDuplicateRecordException "DuplicateRecordException"
+//   * DuplicateRecordException
 //   The budget name already exists. Budget names must be unique within an account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) CreateNotification(input *CreateNotificationInput) (*CreateNotificationOutput, error) {
@@ -257,25 +257,25 @@ func (c *Budgets) CreateSubscriberRequest(input *CreateSubscriberInput) (req *re
 // See the AWS API reference guide for AWS Budgets's
 // API operation CreateSubscriber for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeCreationLimitExceededException "CreationLimitExceededException"
+//   * CreationLimitExceededException
 //   You've exceeded the notification or subscriber limit.
 //
-//   * ErrCodeDuplicateRecordException "DuplicateRecordException"
+//   * DuplicateRecordException
 //   The budget name already exists. Budget names must be unique within an account.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) CreateSubscriber(input *CreateSubscriberInput) (*CreateSubscriberOutput, error) {
@@ -354,19 +354,19 @@ func (c *Budgets) DeleteBudgetRequest(input *DeleteBudgetInput) (req *request.Re
 // See the AWS API reference guide for AWS Budgets's
 // API operation DeleteBudget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DeleteBudget(input *DeleteBudgetInput) (*DeleteBudgetOutput, error) {
@@ -445,19 +445,19 @@ func (c *Budgets) DeleteNotificationRequest(input *DeleteNotificationInput) (req
 // See the AWS API reference guide for AWS Budgets's
 // API operation DeleteNotification for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DeleteNotification(input *DeleteNotificationInput) (*DeleteNotificationOutput, error) {
@@ -535,19 +535,19 @@ func (c *Budgets) DeleteSubscriberRequest(input *DeleteSubscriberInput) (req *re
 // See the AWS API reference guide for AWS Budgets's
 // API operation DeleteSubscriber for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DeleteSubscriber(input *DeleteSubscriberInput) (*DeleteSubscriberOutput, error) {
@@ -626,19 +626,19 @@ func (c *Budgets) DescribeBudgetRequest(input *DescribeBudgetInput) (req *reques
 // See the AWS API reference guide for AWS Budgets's
 // API operation DescribeBudget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DescribeBudget(input *DescribeBudgetInput) (*DescribeBudgetOutput, error) {
@@ -714,25 +714,25 @@ func (c *Budgets) DescribeBudgetPerformanceHistoryRequest(input *DescribeBudgetP
 // See the AWS API reference guide for AWS Budgets's
 // API operation DescribeBudgetPerformanceHistory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The pagination token is invalid.
 //
-//   * ErrCodeExpiredNextTokenException "ExpiredNextTokenException"
+//   * ExpiredNextTokenException
 //   The pagination token expired.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DescribeBudgetPerformanceHistory(input *DescribeBudgetPerformanceHistoryInput) (*DescribeBudgetPerformanceHistoryOutput, error) {
@@ -811,25 +811,25 @@ func (c *Budgets) DescribeBudgetsRequest(input *DescribeBudgetsInput) (req *requ
 // See the AWS API reference guide for AWS Budgets's
 // API operation DescribeBudgets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The pagination token is invalid.
 //
-//   * ErrCodeExpiredNextTokenException "ExpiredNextTokenException"
+//   * ExpiredNextTokenException
 //   The pagination token expired.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DescribeBudgets(input *DescribeBudgetsInput) (*DescribeBudgetsOutput, error) {
@@ -904,25 +904,25 @@ func (c *Budgets) DescribeNotificationsForBudgetRequest(input *DescribeNotificat
 // See the AWS API reference guide for AWS Budgets's
 // API operation DescribeNotificationsForBudget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The pagination token is invalid.
 //
-//   * ErrCodeExpiredNextTokenException "ExpiredNextTokenException"
+//   * ExpiredNextTokenException
 //   The pagination token expired.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DescribeNotificationsForBudget(input *DescribeNotificationsForBudgetInput) (*DescribeNotificationsForBudgetOutput, error) {
@@ -997,25 +997,25 @@ func (c *Budgets) DescribeSubscribersForNotificationRequest(input *DescribeSubsc
 // See the AWS API reference guide for AWS Budgets's
 // API operation DescribeSubscribersForNotification for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The pagination token is invalid.
 //
-//   * ErrCodeExpiredNextTokenException "ExpiredNextTokenException"
+//   * ExpiredNextTokenException
 //   The pagination token expired.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DescribeSubscribersForNotification(input *DescribeSubscribersForNotificationInput) (*DescribeSubscribersForNotificationOutput, error) {
@@ -1098,19 +1098,19 @@ func (c *Budgets) UpdateBudgetRequest(input *UpdateBudgetInput) (req *request.Re
 // See the AWS API reference guide for AWS Budgets's
 // API operation UpdateBudget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) UpdateBudget(input *UpdateBudgetInput) (*UpdateBudgetOutput, error) {
@@ -1186,22 +1186,22 @@ func (c *Budgets) UpdateNotificationRequest(input *UpdateNotificationInput) (req
 // See the AWS API reference guide for AWS Budgets's
 // API operation UpdateNotification for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeDuplicateRecordException "DuplicateRecordException"
+//   * DuplicateRecordException
 //   The budget name already exists. Budget names must be unique within an account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) UpdateNotification(input *UpdateNotificationInput) (*UpdateNotificationOutput, error) {
@@ -1277,22 +1277,22 @@ func (c *Budgets) UpdateSubscriberRequest(input *UpdateSubscriberInput) (req *re
 // See the AWS API reference guide for AWS Budgets's
 // API operation UpdateSubscriber for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   An error on the client occurred. Typically, the cause is an invalid input
 //   value.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   We can’t locate the resource that you specified.
 //
-//   * ErrCodeDuplicateRecordException "DuplicateRecordException"
+//   * DuplicateRecordException
 //   The budget name already exists. Budget names must be unique within an account.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) UpdateSubscriber(input *UpdateSubscriberInput) (*UpdateSubscriberOutput, error) {
@@ -1314,6 +1314,63 @@ func (c *Budgets) UpdateSubscriberWithContext(ctx aws.Context, input *UpdateSubs
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// You are not authorized to use this operation with the given parameters.
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The error message the exception carries.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Represents the output of the CreateBudget operation. The content consists
@@ -2201,6 +2258,63 @@ func (s CreateSubscriberOutput) GoString() string {
 	return s.String()
 }
 
+// You've exceeded the notification or subscriber limit.
+type CreationLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The error message the exception carries.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CreationLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreationLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorCreationLimitExceededException(v protocol.ResponseMetadata) error {
+	return &CreationLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CreationLimitExceededException) Code() string {
+	return "CreationLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s CreationLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CreationLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s CreationLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CreationLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CreationLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Request of DeleteBudget
 type DeleteBudgetInput struct {
 	_ struct{} `type:"structure"`
@@ -3045,6 +3159,350 @@ func (s *DescribeSubscribersForNotificationOutput) SetNextToken(v string) *Descr
 func (s *DescribeSubscribersForNotificationOutput) SetSubscribers(v []*Subscriber) *DescribeSubscribersForNotificationOutput {
 	s.Subscribers = v
 	return s
+}
+
+// The budget name already exists. Budget names must be unique within an account.
+type DuplicateRecordException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The error message the exception carries.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s DuplicateRecordException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DuplicateRecordException) GoString() string {
+	return s.String()
+}
+
+func newErrorDuplicateRecordException(v protocol.ResponseMetadata) error {
+	return &DuplicateRecordException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DuplicateRecordException) Code() string {
+	return "DuplicateRecordException"
+}
+
+// Message returns the exception's message.
+func (s DuplicateRecordException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DuplicateRecordException) OrigErr() error {
+	return nil
+}
+
+func (s DuplicateRecordException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DuplicateRecordException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DuplicateRecordException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The pagination token expired.
+type ExpiredNextTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The error message the exception carries.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ExpiredNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExpiredNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorExpiredNextTokenException(v protocol.ResponseMetadata) error {
+	return &ExpiredNextTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ExpiredNextTokenException) Code() string {
+	return "ExpiredNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s ExpiredNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ExpiredNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s ExpiredNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ExpiredNextTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ExpiredNextTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An error on the server occurred during the processing of your request. Try
+// again later.
+type InternalErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The error message the exception carries.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalErrorException(v protocol.ResponseMetadata) error {
+	return &InternalErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalErrorException) Code() string {
+	return "InternalErrorException"
+}
+
+// Message returns the exception's message.
+func (s InternalErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalErrorException) OrigErr() error {
+	return nil
+}
+
+func (s InternalErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The pagination token is invalid.
+type InvalidNextTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The error message the exception carries.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidNextTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidNextTokenException) Code() string {
+	return "InvalidNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidNextTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidNextTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An error on the client occurred. Typically, the cause is an invalid input
+// value.
+type InvalidParameterException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The error message the exception carries.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidParameterException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParameterException) Code() string {
+	return "InvalidParameterException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParameterException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParameterException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParameterException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParameterException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// We can’t locate the resource that you specified.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The error message the exception carries.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A notification that is associated with a budget. A budget can have up to

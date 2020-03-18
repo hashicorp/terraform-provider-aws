@@ -66,20 +66,20 @@ func (c *ApplicationInsights) CreateApplicationRequest(input *CreateApplicationI
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation CreateApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The resource is already created or in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
-//   * ErrCodeTagsAlreadyExistException "TagsAlreadyExistException"
+//   * TagsAlreadyExistException
 //   Tags are already registered for the specified application ARN.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/CreateApplication
@@ -158,17 +158,17 @@ func (c *ApplicationInsights) CreateComponentRequest(input *CreateComponentInput
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation CreateComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The resource is already created or in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/CreateComponent
@@ -246,17 +246,17 @@ func (c *ApplicationInsights) CreateLogPatternRequest(input *CreateLogPatternInp
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation CreateLogPattern for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The resource is already created or in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/CreateLogPattern
@@ -335,17 +335,17 @@ func (c *ApplicationInsights) DeleteApplicationRequest(input *DeleteApplicationI
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DeleteApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not understood by the server.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DeleteApplication
@@ -426,14 +426,14 @@ func (c *ApplicationInsights) DeleteComponentRequest(input *DeleteComponentInput
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DeleteComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DeleteComponent
@@ -512,17 +512,17 @@ func (c *ApplicationInsights) DeleteLogPatternRequest(input *DeleteLogPatternInp
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DeleteLogPattern for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not understood by the server.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DeleteLogPattern
@@ -600,14 +600,14 @@ func (c *ApplicationInsights) DescribeApplicationRequest(input *DescribeApplicat
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DescribeApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DescribeApplication
@@ -686,14 +686,14 @@ func (c *ApplicationInsights) DescribeComponentRequest(input *DescribeComponentI
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DescribeComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DescribeComponent
@@ -771,14 +771,14 @@ func (c *ApplicationInsights) DescribeComponentConfigurationRequest(input *Descr
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DescribeComponentConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DescribeComponentConfiguration
@@ -856,14 +856,14 @@ func (c *ApplicationInsights) DescribeComponentConfigurationRecommendationReques
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DescribeComponentConfigurationRecommendation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DescribeComponentConfigurationRecommendation
@@ -941,14 +941,14 @@ func (c *ApplicationInsights) DescribeLogPatternRequest(input *DescribeLogPatter
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DescribeLogPattern for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DescribeLogPattern
@@ -1026,14 +1026,14 @@ func (c *ApplicationInsights) DescribeObservationRequest(input *DescribeObservat
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DescribeObservation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DescribeObservation
@@ -1111,14 +1111,14 @@ func (c *ApplicationInsights) DescribeProblemRequest(input *DescribeProblemInput
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DescribeProblem for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DescribeProblem
@@ -1196,14 +1196,14 @@ func (c *ApplicationInsights) DescribeProblemObservationsRequest(input *Describe
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation DescribeProblemObservations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DescribeProblemObservations
@@ -1287,11 +1287,11 @@ func (c *ApplicationInsights) ListApplicationsRequest(input *ListApplicationsInp
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation ListApplications for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ListApplications
@@ -1427,14 +1427,14 @@ func (c *ApplicationInsights) ListComponentsRequest(input *ListComponentsInput) 
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation ListComponents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ListComponents
@@ -1511,6 +1511,157 @@ func (c *ApplicationInsights) ListComponentsPagesWithContext(ctx aws.Context, in
 	return p.Err()
 }
 
+const opListConfigurationHistory = "ListConfigurationHistory"
+
+// ListConfigurationHistoryRequest generates a "aws/request.Request" representing the
+// client's request for the ListConfigurationHistory operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListConfigurationHistory for more information on using the ListConfigurationHistory
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListConfigurationHistoryRequest method.
+//    req, resp := client.ListConfigurationHistoryRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ListConfigurationHistory
+func (c *ApplicationInsights) ListConfigurationHistoryRequest(input *ListConfigurationHistoryInput) (req *request.Request, output *ListConfigurationHistoryOutput) {
+	op := &request.Operation{
+		Name:       opListConfigurationHistory,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListConfigurationHistoryInput{}
+	}
+
+	output = &ListConfigurationHistoryOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListConfigurationHistory API operation for Amazon CloudWatch Application Insights.
+//
+// Lists the INFO, WARN, and ERROR events for periodic configuration updates
+// performed by Application Insights. Examples of events represented are:
+//
+//    * INFO: creating a new alarm or updating an alarm threshold.
+//
+//    * WARN: alarm not created due to insufficient data points used to predict
+//    thresholds.
+//
+//    * ERROR: alarm not created due to permission errors or exceeding quotas.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch Application Insights's
+// API operation ListConfigurationHistory for usage and error information.
+//
+// Returned Error Types:
+//   * ValidationException
+//   The parameter is not valid.
+//
+//   * ResourceNotFoundException
+//   The resource does not exist in the customer account.
+//
+//   * InternalServerException
+//   The server encountered an internal error and is unable to complete the request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ListConfigurationHistory
+func (c *ApplicationInsights) ListConfigurationHistory(input *ListConfigurationHistoryInput) (*ListConfigurationHistoryOutput, error) {
+	req, out := c.ListConfigurationHistoryRequest(input)
+	return out, req.Send()
+}
+
+// ListConfigurationHistoryWithContext is the same as ListConfigurationHistory with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListConfigurationHistory for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApplicationInsights) ListConfigurationHistoryWithContext(ctx aws.Context, input *ListConfigurationHistoryInput, opts ...request.Option) (*ListConfigurationHistoryOutput, error) {
+	req, out := c.ListConfigurationHistoryRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListConfigurationHistoryPages iterates over the pages of a ListConfigurationHistory operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListConfigurationHistory method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListConfigurationHistory operation.
+//    pageNum := 0
+//    err := client.ListConfigurationHistoryPages(params,
+//        func(page *applicationinsights.ListConfigurationHistoryOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ApplicationInsights) ListConfigurationHistoryPages(input *ListConfigurationHistoryInput, fn func(*ListConfigurationHistoryOutput, bool) bool) error {
+	return c.ListConfigurationHistoryPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListConfigurationHistoryPagesWithContext same as ListConfigurationHistoryPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApplicationInsights) ListConfigurationHistoryPagesWithContext(ctx aws.Context, input *ListConfigurationHistoryInput, fn func(*ListConfigurationHistoryOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListConfigurationHistoryInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListConfigurationHistoryRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListConfigurationHistoryOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListLogPatternSets = "ListLogPatternSets"
 
 // ListLogPatternSetsRequest generates a "aws/request.Request" representing the
@@ -1570,14 +1721,14 @@ func (c *ApplicationInsights) ListLogPatternSetsRequest(input *ListLogPatternSet
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation ListLogPatternSets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ListLogPatternSets
@@ -1713,14 +1864,14 @@ func (c *ApplicationInsights) ListLogPatternsRequest(input *ListLogPatternsInput
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation ListLogPatterns for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ListLogPatterns
@@ -1856,14 +2007,14 @@ func (c *ApplicationInsights) ListProblemsRequest(input *ListProblemsInput) (req
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation ListProblems for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ListProblems
@@ -1998,11 +2149,11 @@ func (c *ApplicationInsights) ListTagsForResourceRequest(input *ListTagsForResou
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ListTagsForResource
@@ -2089,15 +2240,15 @@ func (c *ApplicationInsights) TagResourceRequest(input *TagResourceInput) (req *
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   * TooManyTagsException
 //   The number of the provided tags is beyond the limit, or the number of total
 //   tags you are trying to attach to the specified resource exceeds the limit.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/TagResource
@@ -2176,11 +2327,11 @@ func (c *ApplicationInsights) UntagResourceRequest(input *UntagResourceInput) (r
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/UntagResource
@@ -2258,14 +2409,14 @@ func (c *ApplicationInsights) UpdateApplicationRequest(input *UpdateApplicationI
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation UpdateApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/UpdateApplication
@@ -2345,17 +2496,17 @@ func (c *ApplicationInsights) UpdateComponentRequest(input *UpdateComponentInput
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation UpdateComponent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The resource is already created or in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/UpdateComponent
@@ -2436,14 +2587,14 @@ func (c *ApplicationInsights) UpdateComponentConfigurationRequest(input *UpdateC
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation UpdateComponentConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/UpdateComponentConfiguration
@@ -2521,17 +2672,17 @@ func (c *ApplicationInsights) UpdateLogPatternRequest(input *UpdateLogPatternInp
 // See the AWS API reference guide for Amazon CloudWatch Application Insights's
 // API operation UpdateLogPattern for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The resource is already created or in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource does not exist in the customer account.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The parameter is not valid.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The server encountered an internal error and is unable to complete the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/UpdateLogPattern
@@ -2625,7 +2776,11 @@ type ApplicationInfo struct {
 	OpsItemSNSTopicArn *string `min:"20" type:"string"`
 
 	// The issues on the user side that block Application Insights from successfully
-	// monitoring an application.
+	// monitoring an application. Example remarks include:
+	//
+	//    * “Configuring application, detected 1 Errors, 3 Warnings”
+	//
+	//    * “Configuring application, detected 1 Unconfigured Components”
 	Remarks *string `type:"string"`
 
 	// The name of the resource group used for the application.
@@ -2669,6 +2824,133 @@ func (s *ApplicationInfo) SetRemarks(v string) *ApplicationInfo {
 // SetResourceGroupName sets the ResourceGroupName field's value.
 func (s *ApplicationInfo) SetResourceGroupName(v string) *ApplicationInfo {
 	s.ResourceGroupName = &v
+	return s
+}
+
+// The request is not understood by the server.
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The event information.
+type ConfigurationEvent struct {
+	_ struct{} `type:"structure"`
+
+	// The details of the event in plain text.
+	EventDetail *string `type:"string"`
+
+	// The name of the resource Application Insights attempted to configure.
+	EventResourceName *string `type:"string"`
+
+	// The resource type that Application Insights attempted to configure, for example,
+	// CLOUDWATCH_ALARM.
+	EventResourceType *string `type:"string" enum:"ConfigurationEventResourceType"`
+
+	// The status of the configuration update event. Possible values include INFO,
+	// WARN, and ERROR.
+	EventStatus *string `type:"string" enum:"ConfigurationEventStatus"`
+
+	// The timestamp of the event.
+	EventTime *time.Time `type:"timestamp"`
+
+	// The resource monitored by Application Insights.
+	MonitoredResourceARN *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ConfigurationEvent) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConfigurationEvent) GoString() string {
+	return s.String()
+}
+
+// SetEventDetail sets the EventDetail field's value.
+func (s *ConfigurationEvent) SetEventDetail(v string) *ConfigurationEvent {
+	s.EventDetail = &v
+	return s
+}
+
+// SetEventResourceName sets the EventResourceName field's value.
+func (s *ConfigurationEvent) SetEventResourceName(v string) *ConfigurationEvent {
+	s.EventResourceName = &v
+	return s
+}
+
+// SetEventResourceType sets the EventResourceType field's value.
+func (s *ConfigurationEvent) SetEventResourceType(v string) *ConfigurationEvent {
+	s.EventResourceType = &v
+	return s
+}
+
+// SetEventStatus sets the EventStatus field's value.
+func (s *ConfigurationEvent) SetEventStatus(v string) *ConfigurationEvent {
+	s.EventStatus = &v
+	return s
+}
+
+// SetEventTime sets the EventTime field's value.
+func (s *ConfigurationEvent) SetEventTime(v time.Time) *ConfigurationEvent {
+	s.EventTime = &v
+	return s
+}
+
+// SetMonitoredResourceARN sets the MonitoredResourceARN field's value.
+func (s *ConfigurationEvent) SetMonitoredResourceARN(v string) *ConfigurationEvent {
+	s.MonitoredResourceARN = &v
 	return s
 }
 
@@ -3859,6 +4141,62 @@ func (s *DescribeProblemOutput) SetProblem(v *Problem) *DescribeProblemOutput {
 	return s
 }
 
+// The server encountered an internal error and is unable to complete the request.
+type InternalServerException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerException(v protocol.ResponseMetadata) error {
+	return &InternalServerException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerException) Code() string {
+	return "InternalServerException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ListApplicationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4029,6 +4367,135 @@ func (s *ListComponentsOutput) SetApplicationComponentList(v []*ApplicationCompo
 
 // SetNextToken sets the NextToken field's value.
 func (s *ListComponentsOutput) SetNextToken(v string) *ListComponentsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListConfigurationHistoryInput struct {
+	_ struct{} `type:"structure"`
+
+	// The end time of the event.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The status of the configuration update event. Possible values include INFO,
+	// WARN, and ERROR.
+	EventStatus *string `type:"string" enum:"ConfigurationEventStatus"`
+
+	// The maximum number of results returned by ListConfigurationHistory in paginated
+	// output. When this parameter is used, ListConfigurationHistory returns only
+	// MaxResults in a single page along with a NextToken response element. The
+	// remaining results of the initial request can be seen by sending another ListConfigurationHistory
+	// request with the returned NextToken value. If this parameter is not used,
+	// then ListConfigurationHistory returns all results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The NextToken value returned from a previous paginated ListConfigurationHistory
+	// request where MaxResults was used and the results exceeded the value of that
+	// parameter. Pagination continues from the end of the previous results that
+	// returned the NextToken value. This value is null when there are no more results
+	// to return.
+	NextToken *string `type:"string"`
+
+	// Resource group to which the application belongs.
+	ResourceGroupName *string `min:"1" type:"string"`
+
+	// The start time of the event.
+	StartTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s ListConfigurationHistoryInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListConfigurationHistoryInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListConfigurationHistoryInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListConfigurationHistoryInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.ResourceGroupName != nil && len(*s.ResourceGroupName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceGroupName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *ListConfigurationHistoryInput) SetEndTime(v time.Time) *ListConfigurationHistoryInput {
+	s.EndTime = &v
+	return s
+}
+
+// SetEventStatus sets the EventStatus field's value.
+func (s *ListConfigurationHistoryInput) SetEventStatus(v string) *ListConfigurationHistoryInput {
+	s.EventStatus = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListConfigurationHistoryInput) SetMaxResults(v int64) *ListConfigurationHistoryInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListConfigurationHistoryInput) SetNextToken(v string) *ListConfigurationHistoryInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceGroupName sets the ResourceGroupName field's value.
+func (s *ListConfigurationHistoryInput) SetResourceGroupName(v string) *ListConfigurationHistoryInput {
+	s.ResourceGroupName = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *ListConfigurationHistoryInput) SetStartTime(v time.Time) *ListConfigurationHistoryInput {
+	s.StartTime = &v
+	return s
+}
+
+type ListConfigurationHistoryOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of configuration events and their corresponding details.
+	EventList []*ConfigurationEvent `type:"list"`
+
+	// The NextToken value to include in a future ListConfigurationHistory request.
+	// When the results of a ListConfigurationHistory request exceed MaxResults,
+	// this value can be used to retrieve the next page of results. This value is
+	// null when there are no more results to return.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListConfigurationHistoryOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListConfigurationHistoryOutput) GoString() string {
+	return s.String()
+}
+
+// SetEventList sets the EventList field's value.
+func (s *ListConfigurationHistoryOutput) SetEventList(v []*ConfigurationEvent) *ListConfigurationHistoryOutput {
+	s.EventList = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListConfigurationHistoryOutput) SetNextToken(v string) *ListConfigurationHistoryOutput {
 	s.NextToken = &v
 	return s
 }
@@ -4751,6 +5218,118 @@ func (s *RelatedObservations) SetObservationList(v []*Observation) *RelatedObser
 	return s
 }
 
+// The resource is already created or in use.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource does not exist in the customer account.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // An object that defines the tags associated with an application. A tag is
 // a label that you optionally define and associate with an application. Tags
 // can help you categorize and manage resources in different ways, such as by
@@ -4911,6 +5490,122 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// Tags are already registered for the specified application ARN.
+type TagsAlreadyExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s TagsAlreadyExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagsAlreadyExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagsAlreadyExistException(v protocol.ResponseMetadata) error {
+	return &TagsAlreadyExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TagsAlreadyExistException) Code() string {
+	return "TagsAlreadyExistException"
+}
+
+// Message returns the exception's message.
+func (s TagsAlreadyExistException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TagsAlreadyExistException) OrigErr() error {
+	return nil
+}
+
+func (s TagsAlreadyExistException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TagsAlreadyExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TagsAlreadyExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The number of the provided tags is beyond the limit, or the number of total
+// tags you are trying to attach to the specified resource exceeds the limit.
+type TooManyTagsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The name of the resource with too many tags.
+	ResourceName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyTagsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyTagsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyTagsException(v protocol.ResponseMetadata) error {
+	return &TooManyTagsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyTagsException) Code() string {
+	return "TooManyTagsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyTagsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyTagsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyTagsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyTagsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyTagsException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -5404,6 +6099,84 @@ func (s *UpdateLogPatternOutput) SetResourceGroupName(v string) *UpdateLogPatter
 	s.ResourceGroupName = &v
 	return s
 }
+
+// The parameter is not valid.
+type ValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ValidationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+const (
+	// ConfigurationEventResourceTypeCloudwatchAlarm is a ConfigurationEventResourceType enum value
+	ConfigurationEventResourceTypeCloudwatchAlarm = "CLOUDWATCH_ALARM"
+
+	// ConfigurationEventResourceTypeCloudformation is a ConfigurationEventResourceType enum value
+	ConfigurationEventResourceTypeCloudformation = "CLOUDFORMATION"
+
+	// ConfigurationEventResourceTypeSsmAssociation is a ConfigurationEventResourceType enum value
+	ConfigurationEventResourceTypeSsmAssociation = "SSM_ASSOCIATION"
+)
+
+const (
+	// ConfigurationEventStatusInfo is a ConfigurationEventStatus enum value
+	ConfigurationEventStatusInfo = "INFO"
+
+	// ConfigurationEventStatusWarn is a ConfigurationEventStatus enum value
+	ConfigurationEventStatusWarn = "WARN"
+
+	// ConfigurationEventStatusError is a ConfigurationEventStatus enum value
+	ConfigurationEventStatusError = "ERROR"
+)
 
 const (
 	// FeedbackKeyInsightsFeedback is a FeedbackKey enum value

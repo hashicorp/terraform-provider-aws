@@ -2,16 +2,80 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_eks_fargate_node_group", &resource.Sweeper{
+		Name: "aws_eks_fargate_node_group",
+		F:    testSweepEksFargateNodegroups,
+	})
+}
+
+func testSweepEksFargateNodegroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).eksconn
+
+	var errors error
+	input := &eks.ListClustersInput{}
+	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		for _, cluster := range page.Clusters {
+			clusterName := aws.StringValue(cluster)
+			input := &eks.ListNodegroupsInput{
+				ClusterName: cluster,
+			}
+			err := conn.ListNodegroupsPages(input, func(page *eks.ListNodegroupsOutput, lastPage bool) bool {
+				for _, nodegroup := range page.Nodegroups {
+					nodegroupName := aws.StringValue(nodegroup)
+					log.Printf("[INFO] Deleting EKS Node Group %q", nodegroupName)
+					input := &eks.DeleteNodegroupInput{
+						ClusterName:   cluster,
+						NodegroupName: nodegroup,
+					}
+					_, err := conn.DeleteNodegroup(input)
+
+					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+						errors = multierror.Append(errors, fmt.Errorf("error deleting EKS Node Group %q: %w", nodegroupName, err))
+						continue
+					}
+
+					if err := waitForEksNodeGroupDeletion(conn, clusterName, nodegroupName, 10*time.Minute); err != nil {
+						errors = multierror.Append(errors, fmt.Errorf("error waiting for EKS Node Group %q deletion: %w", nodegroupName, err))
+						continue
+					}
+				}
+				return true
+			})
+			if err != nil {
+				errors = multierror.Append(errors, fmt.Errorf("error listing Node Groups for EKS Cluster %s: %w", clusterName, err))
+			}
+		}
+
+		return true
+	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+		return errors // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		errors = multierror.Append(errors, fmt.Errorf("error retrieving EKS Clusters: %w", err))
+	}
+
+	return errors
+}
 
 func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 	var nodeGroup eks.Nodegroup
@@ -215,10 +279,10 @@ func TestAccAWSEksNodeGroup_ReleaseVersion(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigReleaseVersion(rName, "1.14.7-20190927"),
+				Config: testAccAWSEksNodeGroupConfigReleaseVersion(rName, "1.14.8-20191213"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "release_version", "1.14.7-20190927"),
+					resource.TestCheckResourceAttr(resourceName, "release_version", "1.14.8-20191213"),
 				),
 			},
 			{

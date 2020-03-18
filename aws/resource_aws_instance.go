@@ -254,6 +254,12 @@ func resourceAwsInstance() *schema.Resource {
 				Optional: true,
 			},
 
+			"hibernation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"monitoring": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -565,6 +571,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		UserData:                          instanceOpts.UserData64,
 		CreditSpecification:               instanceOpts.CreditSpecification,
 		CpuOptions:                        instanceOpts.CpuOptions,
+		HibernationOptions:                instanceOpts.HibernationOptions,
 		TagSpecifications:                 tagSpecifications,
 	}
 
@@ -710,6 +717,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if instance.CpuOptions != nil {
 		d.Set("cpu_core_count", instance.CpuOptions.CoreCount)
 		d.Set("cpu_threads_per_core", instance.CpuOptions.ThreadsPerCore)
+	}
+
+	if instance.HibernationOptions != nil {
+		d.Set("hibernation", instance.HibernationOptions.Configured)
 	}
 
 	d.Set("ami", instance.ImageId)
@@ -1425,7 +1436,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 
 	// For a bad image, we just return nil so we don't block a refresh
 	if len(res.Images) == 0 {
-		return nil, fmt.Errorf("No images found for AMI %s", ami)
+		return nil, nil
 	}
 
 	image := res.Images[0]
@@ -1433,7 +1444,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 
 	// Instance store backed AMIs do not provide a root device name.
 	if *image.RootDeviceType == ec2.DeviceTypeInstanceStore {
-		return nil, fmt.Errorf("Instance store backed AMIs do not provide a root device name - Use an EBS AMI")
+		return nil, nil
 	}
 
 	// Some AMIs have a RootDeviceName like "/dev/sda1" that does not appear as a
@@ -1642,15 +1653,20 @@ func readBlockDeviceMappingsFromConfig(
 				log.Print("[WARN] IOPs is only valid for storate type io1 for EBS Volumes")
 			}
 
-			dn, err := fetchRootDeviceName(d.Get("ami").(string), conn)
-			if err != nil {
-				return nil, fmt.Errorf("Expected 1 AMI for ID: %s (%s)", d.Get("ami").(string), err)
-			}
+			if dn, err := fetchRootDeviceName(d.Get("ami").(string), conn); err == nil {
+				if dn == nil {
+					return nil, fmt.Errorf(
+						"Expected 1 AMI for ID: %s, got none",
+						d.Get("ami").(string))
+				}
 
-			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-				DeviceName: dn,
-				Ebs:        ebs,
-			})
+				blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
+					DeviceName: dn,
+					Ebs:        ebs,
+				})
+			} else {
+				return nil, err
+			}
 		}
 	}
 
@@ -1798,6 +1814,7 @@ type awsInstanceOpts struct {
 	UserData64                        *string
 	CreditSpecification               *ec2.CreditSpecificationRequest
 	CpuOptions                        *ec2.CpuOptionsRequest
+	HibernationOptions                *ec2.HibernationOptionsRequest
 }
 
 func buildAwsInstanceOpts(
@@ -1886,6 +1903,12 @@ func buildAwsInstanceOpts(
 		opts.CpuOptions = &ec2.CpuOptionsRequest{
 			CoreCount:      aws.Int64(int64(v)),
 			ThreadsPerCore: aws.Int64(int64(tc)),
+		}
+	}
+
+	if v := d.Get("hibernation"); v != "" {
+		opts.HibernationOptions = &ec2.HibernationOptionsRequest{
+			Configured: aws.Bool(v.(bool)),
 		}
 	}
 

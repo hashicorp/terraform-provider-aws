@@ -83,20 +83,20 @@ func (c *Kinesis) AddTagsToStreamRequest(input *AddTagsToStreamInput) (req *requ
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation AddTagsToStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
@@ -214,16 +214,16 @@ func (c *Kinesis) CreateStreamRequest(input *CreateStreamInput) (req *request.Re
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation CreateStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
@@ -309,20 +309,20 @@ func (c *Kinesis) DecreaseStreamRetentionPeriodRequest(input *DecreaseStreamRete
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation DecreaseStreamRetentionPeriod for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
@@ -421,16 +421,16 @@ func (c *Kinesis) DeleteStreamRequest(input *DeleteStreamInput) (req *request.Re
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation DeleteStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
@@ -519,16 +519,16 @@ func (c *Kinesis) DeregisterStreamConsumerRequest(input *DeregisterStreamConsume
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation DeregisterStreamConsumer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
@@ -612,8 +612,8 @@ func (c *Kinesis) DescribeLimitsRequest(input *DescribeLimitsInput) (req *reques
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation DescribeLimits for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
@@ -716,12 +716,12 @@ func (c *Kinesis) DescribeStreamRequest(input *DescribeStreamInput) (req *reques
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation DescribeStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
@@ -860,16 +860,16 @@ func (c *Kinesis) DescribeStreamConsumerRequest(input *DescribeStreamConsumerInp
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation DescribeStreamConsumer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
@@ -953,12 +953,12 @@ func (c *Kinesis) DescribeStreamSummaryRequest(input *DescribeStreamSummaryInput
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation DescribeStreamSummary for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
@@ -1037,20 +1037,20 @@ func (c *Kinesis) DisableEnhancedMonitoringRequest(input *DisableEnhancedMonitor
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation DisableEnhancedMonitoring for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
@@ -1129,20 +1129,20 @@ func (c *Kinesis) EnableEnhancedMonitoringRequest(input *EnableEnhancedMonitorin
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation EnableEnhancedMonitoring for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
@@ -1276,16 +1276,16 @@ func (c *Kinesis) GetRecordsRequest(input *GetRecordsInput) (req *request.Reques
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation GetRecords for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   The request rate for the stream is too high, or the requested data is too
 //   large for the available throughput. Reduce the frequency or size of your
 //   requests. For more information, see Streams Limits (http://docs.aws.amazon.com/kinesis/latest/dev/service-sizes-and-limits.html)
@@ -1293,31 +1293,31 @@ func (c *Kinesis) GetRecordsRequest(input *GetRecordsInput) (req *request.Reques
 //   Exponential Backoff in AWS (http://docs.aws.amazon.com/general/latest/gr/api-retries.html)
 //   in the AWS General Reference.
 //
-//   * ErrCodeExpiredIteratorException "ExpiredIteratorException"
+//   * ExpiredIteratorException
 //   The provided iterator exceeds the maximum age allowed.
 //
-//   * ErrCodeKMSDisabledException "KMSDisabledException"
+//   * KMSDisabledException
 //   The request was rejected because the specified customer master key (CMK)
 //   isn't enabled.
 //
-//   * ErrCodeKMSInvalidStateException "KMSInvalidStateException"
+//   * KMSInvalidStateException
 //   The request was rejected because the state of the specified resource isn't
 //   valid for this request. For more information, see How Key State Affects Use
 //   of a Customer Master Key (http://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
 //   in the AWS Key Management Service Developer Guide.
 //
-//   * ErrCodeKMSAccessDeniedException "KMSAccessDeniedException"
+//   * KMSAccessDeniedException
 //   The ciphertext references a key that doesn't exist or that you don't have
 //   access to.
 //
-//   * ErrCodeKMSNotFoundException "KMSNotFoundException"
+//   * KMSNotFoundException
 //   The request was rejected because the specified entity or resource can't be
 //   found.
 //
-//   * ErrCodeKMSOptInRequired "KMSOptInRequired"
+//   * KMSOptInRequired
 //   The AWS access key ID needs a subscription for the service.
 //
-//   * ErrCodeKMSThrottlingException "KMSThrottlingException"
+//   * KMSThrottlingException
 //   The request was denied due to request throttling. For more information about
 //   throttling, see Limits (http://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
 //   in the AWS Key Management Service Developer Guide.
@@ -1435,16 +1435,16 @@ func (c *Kinesis) GetShardIteratorRequest(input *GetShardIteratorInput) (req *re
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation GetShardIterator for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   The request rate for the stream is too high, or the requested data is too
 //   large for the available throughput. Reduce the frequency or size of your
 //   requests. For more information, see Streams Limits (http://docs.aws.amazon.com/kinesis/latest/dev/service-sizes-and-limits.html)
@@ -1538,20 +1538,20 @@ func (c *Kinesis) IncreaseStreamRetentionPeriodRequest(input *IncreaseStreamRete
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation IncreaseStreamRetentionPeriod for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
@@ -1637,23 +1637,23 @@ func (c *Kinesis) ListShardsRequest(input *ListShardsInput) (req *request.Reques
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation ListShards for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeExpiredNextTokenException "ExpiredNextTokenException"
+//   * ExpiredNextTokenException
 //   The pagination token passed to the operation is expired.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
@@ -1741,23 +1741,23 @@ func (c *Kinesis) ListStreamConsumersRequest(input *ListStreamConsumersInput) (r
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation ListStreamConsumers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeExpiredNextTokenException "ExpiredNextTokenException"
+//   * ExpiredNextTokenException
 //   The pagination token passed to the operation is expired.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
@@ -1909,8 +1909,8 @@ func (c *Kinesis) ListStreamsRequest(input *ListStreamsInput) (req *request.Requ
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation ListStreams for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeLimitExceededException "LimitExceededException"
+// Returned Error Types:
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
@@ -2042,16 +2042,16 @@ func (c *Kinesis) ListTagsForStreamRequest(input *ListTagsForStreamInput) (req *
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation ListTagsForStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
@@ -2166,20 +2166,20 @@ func (c *Kinesis) MergeShardsRequest(input *MergeShardsInput) (req *request.Requ
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation MergeShards for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
@@ -2296,16 +2296,16 @@ func (c *Kinesis) PutRecordRequest(input *PutRecordInput) (req *request.Request,
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation PutRecord for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   The request rate for the stream is too high, or the requested data is too
 //   large for the available throughput. Reduce the frequency or size of your
 //   requests. For more information, see Streams Limits (http://docs.aws.amazon.com/kinesis/latest/dev/service-sizes-and-limits.html)
@@ -2313,28 +2313,28 @@ func (c *Kinesis) PutRecordRequest(input *PutRecordInput) (req *request.Request,
 //   Exponential Backoff in AWS (http://docs.aws.amazon.com/general/latest/gr/api-retries.html)
 //   in the AWS General Reference.
 //
-//   * ErrCodeKMSDisabledException "KMSDisabledException"
+//   * KMSDisabledException
 //   The request was rejected because the specified customer master key (CMK)
 //   isn't enabled.
 //
-//   * ErrCodeKMSInvalidStateException "KMSInvalidStateException"
+//   * KMSInvalidStateException
 //   The request was rejected because the state of the specified resource isn't
 //   valid for this request. For more information, see How Key State Affects Use
 //   of a Customer Master Key (http://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
 //   in the AWS Key Management Service Developer Guide.
 //
-//   * ErrCodeKMSAccessDeniedException "KMSAccessDeniedException"
+//   * KMSAccessDeniedException
 //   The ciphertext references a key that doesn't exist or that you don't have
 //   access to.
 //
-//   * ErrCodeKMSNotFoundException "KMSNotFoundException"
+//   * KMSNotFoundException
 //   The request was rejected because the specified entity or resource can't be
 //   found.
 //
-//   * ErrCodeKMSOptInRequired "KMSOptInRequired"
+//   * KMSOptInRequired
 //   The AWS access key ID needs a subscription for the service.
 //
-//   * ErrCodeKMSThrottlingException "KMSThrottlingException"
+//   * KMSThrottlingException
 //   The request was denied due to request throttling. For more information about
 //   throttling, see Limits (http://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
 //   in the AWS Key Management Service Developer Guide.
@@ -2472,16 +2472,16 @@ func (c *Kinesis) PutRecordsRequest(input *PutRecordsInput) (req *request.Reques
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation PutRecords for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   * ProvisionedThroughputExceededException
 //   The request rate for the stream is too high, or the requested data is too
 //   large for the available throughput. Reduce the frequency or size of your
 //   requests. For more information, see Streams Limits (http://docs.aws.amazon.com/kinesis/latest/dev/service-sizes-and-limits.html)
@@ -2489,28 +2489,28 @@ func (c *Kinesis) PutRecordsRequest(input *PutRecordsInput) (req *request.Reques
 //   Exponential Backoff in AWS (http://docs.aws.amazon.com/general/latest/gr/api-retries.html)
 //   in the AWS General Reference.
 //
-//   * ErrCodeKMSDisabledException "KMSDisabledException"
+//   * KMSDisabledException
 //   The request was rejected because the specified customer master key (CMK)
 //   isn't enabled.
 //
-//   * ErrCodeKMSInvalidStateException "KMSInvalidStateException"
+//   * KMSInvalidStateException
 //   The request was rejected because the state of the specified resource isn't
 //   valid for this request. For more information, see How Key State Affects Use
 //   of a Customer Master Key (http://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
 //   in the AWS Key Management Service Developer Guide.
 //
-//   * ErrCodeKMSAccessDeniedException "KMSAccessDeniedException"
+//   * KMSAccessDeniedException
 //   The ciphertext references a key that doesn't exist or that you don't have
 //   access to.
 //
-//   * ErrCodeKMSNotFoundException "KMSNotFoundException"
+//   * KMSNotFoundException
 //   The request was rejected because the specified entity or resource can't be
 //   found.
 //
-//   * ErrCodeKMSOptInRequired "KMSOptInRequired"
+//   * KMSOptInRequired
 //   The AWS access key ID needs a subscription for the service.
 //
-//   * ErrCodeKMSThrottlingException "KMSThrottlingException"
+//   * KMSThrottlingException
 //   The request was denied due to request throttling. For more information about
 //   throttling, see Limits (http://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
 //   in the AWS Key Management Service Developer Guide.
@@ -2598,20 +2598,20 @@ func (c *Kinesis) RegisterStreamConsumerRequest(input *RegisterStreamConsumerInp
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation RegisterStreamConsumer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
@@ -2696,20 +2696,20 @@ func (c *Kinesis) RemoveTagsFromStreamRequest(input *RemoveTagsFromStreamInput) 
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation RemoveTagsFromStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
@@ -2834,20 +2834,20 @@ func (c *Kinesis) SplitShardRequest(input *SplitShardInput) (req *request.Reques
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation SplitShard for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
@@ -2945,45 +2945,45 @@ func (c *Kinesis) StartStreamEncryptionRequest(input *StartStreamEncryptionInput
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation StartStreamEncryption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeKMSDisabledException "KMSDisabledException"
+//   * KMSDisabledException
 //   The request was rejected because the specified customer master key (CMK)
 //   isn't enabled.
 //
-//   * ErrCodeKMSInvalidStateException "KMSInvalidStateException"
+//   * KMSInvalidStateException
 //   The request was rejected because the state of the specified resource isn't
 //   valid for this request. For more information, see How Key State Affects Use
 //   of a Customer Master Key (http://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
 //   in the AWS Key Management Service Developer Guide.
 //
-//   * ErrCodeKMSAccessDeniedException "KMSAccessDeniedException"
+//   * KMSAccessDeniedException
 //   The ciphertext references a key that doesn't exist or that you don't have
 //   access to.
 //
-//   * ErrCodeKMSNotFoundException "KMSNotFoundException"
+//   * KMSNotFoundException
 //   The request was rejected because the specified entity or resource can't be
 //   found.
 //
-//   * ErrCodeKMSOptInRequired "KMSOptInRequired"
+//   * KMSOptInRequired
 //   The AWS access key ID needs a subscription for the service.
 //
-//   * ErrCodeKMSThrottlingException "KMSThrottlingException"
+//   * KMSThrottlingException
 //   The request was denied due to request throttling. For more information about
 //   throttling, see Limits (http://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
 //   in the AWS Key Management Service Developer Guide.
@@ -3081,20 +3081,20 @@ func (c *Kinesis) StopStreamEncryptionRequest(input *StopStreamEncryptionInput) 
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation StopStreamEncryption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
@@ -3194,20 +3194,20 @@ func (c *Kinesis) SubscribeToShardRequest(input *SubscribeToShardInput) (req *re
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation SubscribeToShard for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
@@ -3299,11 +3299,16 @@ func (es *SubscribeToShardEventStream) waitStreamPartClose() {
 	}
 }
 
-func (es *SubscribeToShardEventStream) eventTypeForSubscribeToShardEventStreamOutputEvent(eventType string) (eventstreamapi.Unmarshaler, error) {
+type eventTypeForSubscribeToShardEventStreamOutputEvent struct {
+	unmarshalerForEvent func(string) (eventstreamapi.Unmarshaler, error)
+	output              *SubscribeToShardOutput
+}
+
+func (e eventTypeForSubscribeToShardEventStreamOutputEvent) UnmarshalerForEventName(eventType string) (eventstreamapi.Unmarshaler, error) {
 	if eventType == "initial-response" {
-		return es.output, nil
+		return e.output, nil
 	}
-	return unmarshalerForSubscribeToShardEventStreamEvent(eventType)
+	return e.unmarshalerForEvent(eventType)
 }
 
 // Events returns a channel to read events from.
@@ -3321,12 +3326,23 @@ func (es *SubscribeToShardEventStream) runOutputStream(r *request.Request) {
 		opts = append(opts, eventstream.DecodeWithLogger(r.Config.Logger))
 	}
 
+	unmarshalerForEvent := unmarshalerForSubscribeToShardEventStreamEvent{
+		metadata: protocol.ResponseMetadata{
+			StatusCode: r.HTTPResponse.StatusCode,
+			RequestID:  r.RequestID,
+		},
+	}.UnmarshalerForEventName
+	unmarshalerForEvent = eventTypeForSubscribeToShardEventStreamOutputEvent{
+		unmarshalerForEvent: unmarshalerForEvent,
+		output:              es.output,
+	}.UnmarshalerForEventName
+
 	decoder := eventstream.NewDecoder(r.HTTPResponse.Body, opts...)
 	eventReader := eventstreamapi.NewEventReader(decoder,
 		protocol.HandlerPayloadUnmarshal{
 			Unmarshalers: r.Handlers.UnmarshalStream,
 		},
-		es.eventTypeForSubscribeToShardEventStreamOutputEvent,
+		unmarshalerForEvent,
 	)
 
 	es.outputReader = r.HTTPResponse.Body
@@ -3482,20 +3498,20 @@ func (c *Kinesis) UpdateShardCountRequest(input *UpdateShardCountInput) (req *re
 // See the AWS API reference guide for Amazon Kinesis's
 // API operation UpdateShardCount for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   A specified parameter exceeds its restrictions, is not supported, or can't
 //   be used. For more information, see the returned message.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested resource exceeds the maximum number allowed, or the number
 //   of concurrent stream requests exceeds the maximum number allowed.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is not available for this operation. For successful operation,
 //   the resource must be in the ACTIVE state.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The requested resource could not be found. The stream might not be specified
 //   correctly.
 //
@@ -4585,6 +4601,119 @@ func (s *EnhancedMonitoringOutput) SetStreamName(v string) *EnhancedMonitoringOu
 	return s
 }
 
+// The provided iterator exceeds the maximum age allowed.
+type ExpiredIteratorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A message that provides information about the error.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ExpiredIteratorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExpiredIteratorException) GoString() string {
+	return s.String()
+}
+
+func newErrorExpiredIteratorException(v protocol.ResponseMetadata) error {
+	return &ExpiredIteratorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ExpiredIteratorException) Code() string {
+	return "ExpiredIteratorException"
+}
+
+// Message returns the exception's message.
+func (s ExpiredIteratorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ExpiredIteratorException) OrigErr() error {
+	return nil
+}
+
+func (s ExpiredIteratorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ExpiredIteratorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ExpiredIteratorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The pagination token passed to the operation is expired.
+type ExpiredNextTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ExpiredNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExpiredNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorExpiredNextTokenException(v protocol.ResponseMetadata) error {
+	return &ExpiredNextTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ExpiredNextTokenException) Code() string {
+	return "ExpiredNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s ExpiredNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ExpiredNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s ExpiredNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ExpiredNextTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ExpiredNextTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Represents the input for GetRecords.
 type GetRecordsInput struct {
 	_ struct{} `type:"structure"`
@@ -4946,7 +5075,8 @@ func (s IncreaseStreamRetentionPeriodOutput) GoString() string {
 }
 
 type InternalFailureException struct {
-	_ struct{} `type:"structure"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4988,6 +5118,12 @@ func (s *InternalFailureException) MarshalEvent(pm protocol.PayloadMarshaler) (m
 	return msg, err
 }
 
+func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
+	return &InternalFailureException{
+		respMetadata: v,
+	}
+}
+
 // Code returns the exception type name.
 func (s InternalFailureException) Code() string {
 	return "InternalFailureException"
@@ -4995,7 +5131,10 @@ func (s InternalFailureException) Code() string {
 
 // Message returns the exception's message.
 func (s InternalFailureException) Message() string {
-	return *s.Message_
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
@@ -5007,10 +5146,79 @@ func (s InternalFailureException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalFailureException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalFailureException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A specified parameter exceeds its restrictions, is not supported, or can't
+// be used. For more information, see the returned message.
+type InvalidArgumentException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A message that provides information about the error.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidArgumentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidArgumentException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidArgumentException(v protocol.ResponseMetadata) error {
+	return &InvalidArgumentException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidArgumentException) Code() string {
+	return "InvalidArgumentException"
+}
+
+// Message returns the exception's message.
+func (s InvalidArgumentException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidArgumentException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidArgumentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidArgumentException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidArgumentException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The ciphertext references a key that doesn't exist or that you don't have
 // access to.
 type KMSAccessDeniedException struct {
-	_ struct{} `type:"structure"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// A message that provides information about the error.
 	Message_ *string `locationName:"message" type:"string"`
@@ -5053,6 +5261,12 @@ func (s *KMSAccessDeniedException) MarshalEvent(pm protocol.PayloadMarshaler) (m
 	return msg, err
 }
 
+func newErrorKMSAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &KMSAccessDeniedException{
+		respMetadata: v,
+	}
+}
+
 // Code returns the exception type name.
 func (s KMSAccessDeniedException) Code() string {
 	return "KMSAccessDeniedException"
@@ -5060,7 +5274,10 @@ func (s KMSAccessDeniedException) Code() string {
 
 // Message returns the exception's message.
 func (s KMSAccessDeniedException) Message() string {
-	return *s.Message_
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
@@ -5072,10 +5289,21 @@ func (s KMSAccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSAccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSAccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The request was rejected because the specified customer master key (CMK)
 // isn't enabled.
 type KMSDisabledException struct {
-	_ struct{} `type:"structure"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// A message that provides information about the error.
 	Message_ *string `locationName:"message" type:"string"`
@@ -5118,6 +5346,12 @@ func (s *KMSDisabledException) MarshalEvent(pm protocol.PayloadMarshaler) (msg e
 	return msg, err
 }
 
+func newErrorKMSDisabledException(v protocol.ResponseMetadata) error {
+	return &KMSDisabledException{
+		respMetadata: v,
+	}
+}
+
 // Code returns the exception type name.
 func (s KMSDisabledException) Code() string {
 	return "KMSDisabledException"
@@ -5125,7 +5359,10 @@ func (s KMSDisabledException) Code() string {
 
 // Message returns the exception's message.
 func (s KMSDisabledException) Message() string {
-	return *s.Message_
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
@@ -5137,12 +5374,23 @@ func (s KMSDisabledException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSDisabledException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSDisabledException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The request was rejected because the state of the specified resource isn't
 // valid for this request. For more information, see How Key State Affects Use
 // of a Customer Master Key (http://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
 // in the AWS Key Management Service Developer Guide.
 type KMSInvalidStateException struct {
-	_ struct{} `type:"structure"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// A message that provides information about the error.
 	Message_ *string `locationName:"message" type:"string"`
@@ -5185,6 +5433,12 @@ func (s *KMSInvalidStateException) MarshalEvent(pm protocol.PayloadMarshaler) (m
 	return msg, err
 }
 
+func newErrorKMSInvalidStateException(v protocol.ResponseMetadata) error {
+	return &KMSInvalidStateException{
+		respMetadata: v,
+	}
+}
+
 // Code returns the exception type name.
 func (s KMSInvalidStateException) Code() string {
 	return "KMSInvalidStateException"
@@ -5192,7 +5446,10 @@ func (s KMSInvalidStateException) Code() string {
 
 // Message returns the exception's message.
 func (s KMSInvalidStateException) Message() string {
-	return *s.Message_
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
@@ -5204,10 +5461,21 @@ func (s KMSInvalidStateException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSInvalidStateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSInvalidStateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The request was rejected because the specified entity or resource can't be
 // found.
 type KMSNotFoundException struct {
-	_ struct{} `type:"structure"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// A message that provides information about the error.
 	Message_ *string `locationName:"message" type:"string"`
@@ -5250,6 +5518,12 @@ func (s *KMSNotFoundException) MarshalEvent(pm protocol.PayloadMarshaler) (msg e
 	return msg, err
 }
 
+func newErrorKMSNotFoundException(v protocol.ResponseMetadata) error {
+	return &KMSNotFoundException{
+		respMetadata: v,
+	}
+}
+
 // Code returns the exception type name.
 func (s KMSNotFoundException) Code() string {
 	return "KMSNotFoundException"
@@ -5257,7 +5531,10 @@ func (s KMSNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s KMSNotFoundException) Message() string {
-	return *s.Message_
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
@@ -5269,9 +5546,20 @@ func (s KMSNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The AWS access key ID needs a subscription for the service.
 type KMSOptInRequired struct {
-	_ struct{} `type:"structure"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// A message that provides information about the error.
 	Message_ *string `locationName:"message" type:"string"`
@@ -5314,6 +5602,12 @@ func (s *KMSOptInRequired) MarshalEvent(pm protocol.PayloadMarshaler) (msg event
 	return msg, err
 }
 
+func newErrorKMSOptInRequired(v protocol.ResponseMetadata) error {
+	return &KMSOptInRequired{
+		respMetadata: v,
+	}
+}
+
 // Code returns the exception type name.
 func (s KMSOptInRequired) Code() string {
 	return "KMSOptInRequired"
@@ -5321,7 +5615,10 @@ func (s KMSOptInRequired) Code() string {
 
 // Message returns the exception's message.
 func (s KMSOptInRequired) Message() string {
-	return *s.Message_
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
@@ -5333,11 +5630,22 @@ func (s KMSOptInRequired) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSOptInRequired) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSOptInRequired) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The request was denied due to request throttling. For more information about
 // throttling, see Limits (http://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
 // in the AWS Key Management Service Developer Guide.
 type KMSThrottlingException struct {
-	_ struct{} `type:"structure"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// A message that provides information about the error.
 	Message_ *string `locationName:"message" type:"string"`
@@ -5380,6 +5688,12 @@ func (s *KMSThrottlingException) MarshalEvent(pm protocol.PayloadMarshaler) (msg
 	return msg, err
 }
 
+func newErrorKMSThrottlingException(v protocol.ResponseMetadata) error {
+	return &KMSThrottlingException{
+		respMetadata: v,
+	}
+}
+
 // Code returns the exception type name.
 func (s KMSThrottlingException) Code() string {
 	return "KMSThrottlingException"
@@ -5387,7 +5701,10 @@ func (s KMSThrottlingException) Code() string {
 
 // Message returns the exception's message.
 func (s KMSThrottlingException) Message() string {
-	return *s.Message_
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
@@ -5397,6 +5714,74 @@ func (s KMSThrottlingException) OrigErr() error {
 
 func (s KMSThrottlingException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s KMSThrottlingException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s KMSThrottlingException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The requested resource exceeds the maximum number allowed, or the number
+// of concurrent stream requests exceeds the maximum number allowed.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A message that provides information about the error.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListShardsInput struct {
@@ -5993,6 +6378,68 @@ func (s MergeShardsOutput) String() string {
 // GoString returns the string representation
 func (s MergeShardsOutput) GoString() string {
 	return s.String()
+}
+
+// The request rate for the stream is too high, or the requested data is too
+// large for the available throughput. Reduce the frequency or size of your
+// requests. For more information, see Streams Limits (http://docs.aws.amazon.com/kinesis/latest/dev/service-sizes-and-limits.html)
+// in the Amazon Kinesis Data Streams Developer Guide, and Error Retries and
+// Exponential Backoff in AWS (http://docs.aws.amazon.com/general/latest/gr/api-retries.html)
+// in the AWS General Reference.
+type ProvisionedThroughputExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A message that provides information about the error.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisionedThroughputExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionedThroughputExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorProvisionedThroughputExceededException(v protocol.ResponseMetadata) error {
+	return &ProvisionedThroughputExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ProvisionedThroughputExceededException) Code() string {
+	return "ProvisionedThroughputExceededException"
+}
+
+// Message returns the exception's message.
+func (s ProvisionedThroughputExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ProvisionedThroughputExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ProvisionedThroughputExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ProvisionedThroughputExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ProvisionedThroughputExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Represents the input for PutRecord.
@@ -6660,7 +7107,8 @@ func (s RemoveTagsFromStreamOutput) GoString() string {
 // The resource is not available for this operation. For successful operation,
 // the resource must be in the ACTIVE state.
 type ResourceInUseException struct {
-	_ struct{} `type:"structure"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// A message that provides information about the error.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6703,6 +7151,12 @@ func (s *ResourceInUseException) MarshalEvent(pm protocol.PayloadMarshaler) (msg
 	return msg, err
 }
 
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
 // Code returns the exception type name.
 func (s ResourceInUseException) Code() string {
 	return "ResourceInUseException"
@@ -6710,7 +7164,10 @@ func (s ResourceInUseException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceInUseException) Message() string {
-	return *s.Message_
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
@@ -6722,10 +7179,21 @@ func (s ResourceInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The requested resource could not be found. The stream might not be specified
 // correctly.
 type ResourceNotFoundException struct {
-	_ struct{} `type:"structure"`
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
 
 	// A message that provides information about the error.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6768,6 +7236,12 @@ func (s *ResourceNotFoundException) MarshalEvent(pm protocol.PayloadMarshaler) (
 	return msg, err
 }
 
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
 // Code returns the exception type name.
 func (s ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
@@ -6775,7 +7249,10 @@ func (s ResourceNotFoundException) Code() string {
 
 // Message returns the exception's message.
 func (s ResourceNotFoundException) Message() string {
-	return *s.Message_
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
@@ -6785,6 +7262,16 @@ func (s ResourceNotFoundException) OrigErr() error {
 
 func (s ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The range of possible sequence numbers for the shard.
@@ -7724,28 +8211,32 @@ func (r *readSubscribeToShardEventStream) readEventStream() {
 	}
 }
 
-func unmarshalerForSubscribeToShardEventStreamEvent(eventType string) (eventstreamapi.Unmarshaler, error) {
+type unmarshalerForSubscribeToShardEventStreamEvent struct {
+	metadata protocol.ResponseMetadata
+}
+
+func (u unmarshalerForSubscribeToShardEventStreamEvent) UnmarshalerForEventName(eventType string) (eventstreamapi.Unmarshaler, error) {
 	switch eventType {
 	case "SubscribeToShardEvent":
 		return &SubscribeToShardEvent{}, nil
 	case "InternalFailureException":
-		return &InternalFailureException{}, nil
+		return newErrorInternalFailureException(u.metadata).(eventstreamapi.Unmarshaler), nil
 	case "KMSAccessDeniedException":
-		return &KMSAccessDeniedException{}, nil
+		return newErrorKMSAccessDeniedException(u.metadata).(eventstreamapi.Unmarshaler), nil
 	case "KMSDisabledException":
-		return &KMSDisabledException{}, nil
+		return newErrorKMSDisabledException(u.metadata).(eventstreamapi.Unmarshaler), nil
 	case "KMSInvalidStateException":
-		return &KMSInvalidStateException{}, nil
+		return newErrorKMSInvalidStateException(u.metadata).(eventstreamapi.Unmarshaler), nil
 	case "KMSNotFoundException":
-		return &KMSNotFoundException{}, nil
+		return newErrorKMSNotFoundException(u.metadata).(eventstreamapi.Unmarshaler), nil
 	case "KMSOptInRequired":
-		return &KMSOptInRequired{}, nil
+		return newErrorKMSOptInRequired(u.metadata).(eventstreamapi.Unmarshaler), nil
 	case "KMSThrottlingException":
-		return &KMSThrottlingException{}, nil
+		return newErrorKMSThrottlingException(u.metadata).(eventstreamapi.Unmarshaler), nil
 	case "ResourceInUseException":
-		return &ResourceInUseException{}, nil
+		return newErrorResourceInUseException(u.metadata).(eventstreamapi.Unmarshaler), nil
 	case "ResourceNotFoundException":
-		return &ResourceNotFoundException{}, nil
+		return newErrorResourceNotFoundException(u.metadata).(eventstreamapi.Unmarshaler), nil
 	default:
 		return nil, awserr.New(
 			request.ErrCodeSerialization,

@@ -2,6 +2,10 @@
 
 package gamelift
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeConflictException for service response error code
@@ -108,3 +112,20 @@ const (
 	// The requested operation is not supported in the Region specified.
 	ErrCodeUnsupportedRegionException = "UnsupportedRegionException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ConflictException":                    newErrorConflictException,
+	"FleetCapacityExceededException":       newErrorFleetCapacityExceededException,
+	"GameSessionFullException":             newErrorGameSessionFullException,
+	"IdempotentParameterMismatchException": newErrorIdempotentParameterMismatchException,
+	"InternalServiceException":             newErrorInternalServiceException,
+	"InvalidFleetStatusException":          newErrorInvalidFleetStatusException,
+	"InvalidGameSessionStatusException":    newErrorInvalidGameSessionStatusException,
+	"InvalidRequestException":              newErrorInvalidRequestException,
+	"LimitExceededException":               newErrorLimitExceededException,
+	"NotFoundException":                    newErrorNotFoundException,
+	"TaggingFailedException":               newErrorTaggingFailedException,
+	"TerminalRoutingStrategyException":     newErrorTerminalRoutingStrategyException,
+	"UnauthorizedException":                newErrorUnauthorizedException,
+	"UnsupportedRegionException":           newErrorUnsupportedRegionException,
+}

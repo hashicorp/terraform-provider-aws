@@ -106,21 +106,21 @@ func (c *GameLift) AcceptMatchRequest(input *AcceptMatchInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation AcceptMatch for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/AcceptMatch
@@ -226,29 +226,29 @@ func (c *GameLift) CreateAliasRequest(input *CreateAliasInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreateAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested operation would cause the resource to exceed the allowed service
 //   limit. Resolve the issue before retrying.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
@@ -380,25 +380,25 @@ func (c *GameLift) CreateBuildRequest(input *CreateBuildInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreateBuild for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -531,33 +531,33 @@ func (c *GameLift) CreateFleetRequest(input *CreateFleetInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreateFleet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested operation would cause the resource to exceed the allowed service
 //   limit. Resolve the issue before retrying.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
@@ -681,49 +681,49 @@ func (c *GameLift) CreateGameSessionRequest(input *CreateGameSessionInput) (req 
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreateGameSession for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConflictException "ConflictException"
+// Returned Error Types:
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidFleetStatusException "InvalidFleetStatusException"
+//   * InvalidFleetStatusException
 //   The requested operation would cause a conflict with the current state of
 //   a resource associated with the request and/or the fleet. Resolve the conflict
 //   before retrying.
 //
-//   * ErrCodeTerminalRoutingStrategyException "TerminalRoutingStrategyException"
+//   * TerminalRoutingStrategyException
 //   The service is unable to resolve the routing for a particular alias because
 //   it has a terminal RoutingStrategy associated with it. The message returned
 //   in this exception is the message defined in the routing strategy itself.
 //   Such requests should only be retried if the routing strategy for the specified
 //   alias is modified.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeFleetCapacityExceededException "FleetCapacityExceededException"
+//   * FleetCapacityExceededException
 //   The specified fleet has no available instances to fulfill a CreateGameSession
 //   request. Clients can retry such requests immediately or after a waiting period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested operation would cause the resource to exceed the allowed service
 //   limit. Resolve the issue before retrying.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   A game session with this custom ID string already exists in this fleet. Resolve
 //   this conflict before retrying this request.
 //
@@ -839,24 +839,24 @@ func (c *GameLift) CreateGameSessionQueueRequest(input *CreateGameSessionQueueIn
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreateGameSessionQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested operation would cause the resource to exceed the allowed service
 //   limit. Resolve the issue before retrying.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
@@ -979,28 +979,28 @@ func (c *GameLift) CreateMatchmakingConfigurationRequest(input *CreateMatchmakin
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreateMatchmakingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested operation would cause the resource to exceed the allowed service
 //   limit. Resolve the issue before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
@@ -1117,20 +1117,20 @@ func (c *GameLift) CreateMatchmakingRuleSetRequest(input *CreateMatchmakingRuleS
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreateMatchmakingRuleSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
@@ -1232,36 +1232,36 @@ func (c *GameLift) CreatePlayerSessionRequest(input *CreatePlayerSessionInput) (
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreatePlayerSession for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidGameSessionStatusException "InvalidGameSessionStatusException"
+//   * InvalidGameSessionStatusException
 //   The requested operation would cause a conflict with the current state of
 //   a resource associated with the request and/or the game instance. Resolve
 //   the conflict before retrying.
 //
-//   * ErrCodeGameSessionFullException "GameSessionFullException"
+//   * GameSessionFullException
 //   The game instance is currently full and cannot allow the requested player(s)
 //   to join. Clients can retry such requests immediately or after a waiting period.
 //
-//   * ErrCodeTerminalRoutingStrategyException "TerminalRoutingStrategyException"
+//   * TerminalRoutingStrategyException
 //   The service is unable to resolve the routing for a particular alias because
 //   it has a terminal RoutingStrategy associated with it. The message returned
 //   in this exception is the message defined in the routing strategy itself.
 //   Such requests should only be retried if the routing strategy for the specified
 //   alias is modified.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -1362,36 +1362,36 @@ func (c *GameLift) CreatePlayerSessionsRequest(input *CreatePlayerSessionsInput)
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreatePlayerSessions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidGameSessionStatusException "InvalidGameSessionStatusException"
+//   * InvalidGameSessionStatusException
 //   The requested operation would cause a conflict with the current state of
 //   a resource associated with the request and/or the game instance. Resolve
 //   the conflict before retrying.
 //
-//   * ErrCodeGameSessionFullException "GameSessionFullException"
+//   * GameSessionFullException
 //   The game instance is currently full and cannot allow the requested player(s)
 //   to join. Clients can retry such requests immediately or after a waiting period.
 //
-//   * ErrCodeTerminalRoutingStrategyException "TerminalRoutingStrategyException"
+//   * TerminalRoutingStrategyException
 //   The service is unable to resolve the routing for a particular alias because
 //   it has a terminal RoutingStrategy associated with it. The message returned
 //   in this exception is the message defined in the routing strategy itself.
 //   Such requests should only be retried if the routing strategy for the specified
 //   alias is modified.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -1509,25 +1509,25 @@ func (c *GameLift) CreateScriptRequest(input *CreateScriptInput) (req *request.R
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreateScript for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -1646,19 +1646,19 @@ func (c *GameLift) CreateVpcPeeringAuthorizationRequest(input *CreateVpcPeeringA
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreateVpcPeeringAuthorization for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -1773,19 +1773,19 @@ func (c *GameLift) CreateVpcPeeringConnectionRequest(input *CreateVpcPeeringConn
 // See the AWS API reference guide for Amazon GameLift's
 // API operation CreateVpcPeeringConnection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -1880,24 +1880,24 @@ func (c *GameLift) DeleteAliasRequest(input *DeleteAliasInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DeleteAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -1999,25 +1999,25 @@ func (c *GameLift) DeleteBuildRequest(input *DeleteBuildInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DeleteBuild for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
@@ -2124,29 +2124,29 @@ func (c *GameLift) DeleteFleetRequest(input *DeleteFleetInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DeleteFleet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidFleetStatusException "InvalidFleetStatusException"
+//   * InvalidFleetStatusException
 //   The requested operation would cause a conflict with the current state of
 //   a resource associated with the request and/or the fleet. Resolve the conflict
 //   before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
@@ -2237,24 +2237,24 @@ func (c *GameLift) DeleteGameSessionQueueRequest(input *DeleteGameSessionQueueIn
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DeleteGameSessionQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
@@ -2355,24 +2355,24 @@ func (c *GameLift) DeleteMatchmakingConfigurationRequest(input *DeleteMatchmakin
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DeleteMatchmakingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
@@ -2477,24 +2477,24 @@ func (c *GameLift) DeleteMatchmakingRuleSetRequest(input *DeleteMatchmakingRuleS
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DeleteMatchmakingRuleSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
@@ -2591,20 +2591,20 @@ func (c *GameLift) DeleteScalingPolicyRequest(input *DeleteScalingPolicyInput) (
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DeleteScalingPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -2708,24 +2708,24 @@ func (c *GameLift) DeleteScriptRequest(input *DeleteScriptInput) (req *request.R
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DeleteScript for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -2819,19 +2819,19 @@ func (c *GameLift) DeleteVpcPeeringAuthorizationRequest(input *DeleteVpcPeeringA
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DeleteVpcPeeringAuthorization for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -2932,19 +2932,19 @@ func (c *GameLift) DeleteVpcPeeringConnectionRequest(input *DeleteVpcPeeringConn
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DeleteVpcPeeringConnection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -3040,19 +3040,19 @@ func (c *GameLift) DescribeAliasRequest(input *DescribeAliasInput) (req *request
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -3149,19 +3149,19 @@ func (c *GameLift) DescribeBuildRequest(input *DescribeBuildInput) (req *request
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeBuild for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -3270,17 +3270,17 @@ func (c *GameLift) DescribeEC2InstanceLimitsRequest(input *DescribeEC2InstanceLi
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeEC2InstanceLimits for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeEC2InstanceLimits
@@ -3388,21 +3388,21 @@ func (c *GameLift) DescribeFleetAttributesRequest(input *DescribeFleetAttributes
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeFleetAttributes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetAttributes
@@ -3511,21 +3511,21 @@ func (c *GameLift) DescribeFleetCapacityRequest(input *DescribeFleetCapacityInpu
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeFleetCapacity for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetCapacity
@@ -3626,20 +3626,20 @@ func (c *GameLift) DescribeFleetEventsRequest(input *DescribeFleetEventsInput) (
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeFleetEvents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
@@ -3743,21 +3743,21 @@ func (c *GameLift) DescribeFleetPortSettingsRequest(input *DescribeFleetPortSett
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeFleetPortSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetPortSettings
@@ -3864,21 +3864,21 @@ func (c *GameLift) DescribeFleetUtilizationRequest(input *DescribeFleetUtilizati
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeFleetUtilization for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeFleetUtilization
@@ -3981,24 +3981,24 @@ func (c *GameLift) DescribeGameSessionDetailsRequest(input *DescribeGameSessionD
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeGameSessionDetails for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeTerminalRoutingStrategyException "TerminalRoutingStrategyException"
+//   * TerminalRoutingStrategyException
 //   The service is unable to resolve the routing for a particular alias because
 //   it has a terminal RoutingStrategy associated with it. The message returned
 //   in this exception is the message defined in the routing strategy itself.
@@ -4097,21 +4097,21 @@ func (c *GameLift) DescribeGameSessionPlacementRequest(input *DescribeGameSessio
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeGameSessionPlacement for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeGameSessionPlacement
@@ -4201,21 +4201,21 @@ func (c *GameLift) DescribeGameSessionQueuesRequest(input *DescribeGameSessionQu
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeGameSessionQueues for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeGameSessionQueues
@@ -4319,24 +4319,24 @@ func (c *GameLift) DescribeGameSessionsRequest(input *DescribeGameSessionsInput)
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeGameSessions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeTerminalRoutingStrategyException "TerminalRoutingStrategyException"
+//   * TerminalRoutingStrategyException
 //   The service is unable to resolve the routing for a particular alias because
 //   it has a terminal RoutingStrategy associated with it. The message returned
 //   in this exception is the message defined in the routing strategy itself.
@@ -4425,19 +4425,19 @@ func (c *GameLift) DescribeInstancesRequest(input *DescribeInstancesInput) (req 
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -4546,17 +4546,17 @@ func (c *GameLift) DescribeMatchmakingRequest(input *DescribeMatchmakingInput) (
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeMatchmaking for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeMatchmaking
@@ -4663,17 +4663,17 @@ func (c *GameLift) DescribeMatchmakingConfigurationsRequest(input *DescribeMatch
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeMatchmakingConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeMatchmakingConfigurations
@@ -4777,21 +4777,21 @@ func (c *GameLift) DescribeMatchmakingRuleSetsRequest(input *DescribeMatchmaking
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeMatchmakingRuleSets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribeMatchmakingRuleSets
@@ -4890,21 +4890,21 @@ func (c *GameLift) DescribePlayerSessionsRequest(input *DescribePlayerSessionsIn
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribePlayerSessions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/DescribePlayerSessions
@@ -5004,20 +5004,20 @@ func (c *GameLift) DescribeRuntimeConfigurationRequest(input *DescribeRuntimeCon
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeRuntimeConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
@@ -5117,20 +5117,20 @@ func (c *GameLift) DescribeScalingPoliciesRequest(input *DescribeScalingPolicies
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeScalingPolicies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -5228,20 +5228,20 @@ func (c *GameLift) DescribeScriptRequest(input *DescribeScriptInput) (req *reque
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeScript for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -5334,15 +5334,15 @@ func (c *GameLift) DescribeVpcPeeringAuthorizationsRequest(input *DescribeVpcPee
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeVpcPeeringAuthorizations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -5441,19 +5441,19 @@ func (c *GameLift) DescribeVpcPeeringConnectionsRequest(input *DescribeVpcPeerin
 // See the AWS API reference guide for Amazon GameLift's
 // API operation DescribeVpcPeeringConnections for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -5555,20 +5555,20 @@ func (c *GameLift) GetGameSessionLogUrlRequest(input *GetGameSessionLogUrlInput)
 // See the AWS API reference guide for Amazon GameLift's
 // API operation GetGameSessionLogUrl for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
@@ -5663,19 +5663,19 @@ func (c *GameLift) GetInstanceAccessRequest(input *GetInstanceAccessInput) (req 
 // See the AWS API reference guide for Amazon GameLift's
 // API operation GetInstanceAccess for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -5771,15 +5771,15 @@ func (c *GameLift) ListAliasesRequest(input *ListAliasesInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation ListAliases for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -5880,15 +5880,15 @@ func (c *GameLift) ListBuildsRequest(input *ListBuildsInput) (req *request.Reque
 // See the AWS API reference guide for Amazon GameLift's
 // API operation ListBuilds for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -5991,21 +5991,21 @@ func (c *GameLift) ListFleetsRequest(input *ListFleetsInput) (req *request.Reque
 // See the AWS API reference guide for Amazon GameLift's
 // API operation ListFleets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/ListFleets
@@ -6100,15 +6100,15 @@ func (c *GameLift) ListScriptsRequest(input *ListScriptsInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation ListScripts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -6222,21 +6222,21 @@ func (c *GameLift) ListTagsForResourceRequest(input *ListTagsForResourceInput) (
 // See the AWS API reference guide for Amazon GameLift's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -6400,20 +6400,20 @@ func (c *GameLift) PutScalingPolicyRequest(input *PutScalingPolicyInput) (req *r
 // See the AWS API reference guide for Amazon GameLift's
 // API operation PutScalingPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -6514,19 +6514,19 @@ func (c *GameLift) RequestUploadCredentialsRequest(input *RequestUploadCredentia
 // See the AWS API reference guide for Amazon GameLift's
 // API operation RequestUploadCredentials for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -6618,26 +6618,26 @@ func (c *GameLift) ResolveAliasRequest(input *ResolveAliasInput) (req *request.R
 // See the AWS API reference guide for Amazon GameLift's
 // API operation ResolveAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeTerminalRoutingStrategyException "TerminalRoutingStrategyException"
+//   * TerminalRoutingStrategyException
 //   The service is unable to resolve the routing for a particular alias because
 //   it has a terminal RoutingStrategy associated with it. The message returned
 //   in this exception is the message defined in the routing strategy itself.
 //   Such requests should only be retried if the routing strategy for the specified
 //   alias is modified.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -6780,24 +6780,24 @@ func (c *GameLift) SearchGameSessionsRequest(input *SearchGameSessionsInput) (re
 // See the AWS API reference guide for Amazon GameLift's
 // API operation SearchGameSessions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeTerminalRoutingStrategyException "TerminalRoutingStrategyException"
+//   * TerminalRoutingStrategyException
 //   The service is unable to resolve the routing for a particular alias because
 //   it has a terminal RoutingStrategy associated with it. The message returned
 //   in this exception is the message defined in the routing strategy itself.
@@ -6908,20 +6908,20 @@ func (c *GameLift) StartFleetActionsRequest(input *StartFleetActionsInput) (req 
 // See the AWS API reference guide for Amazon GameLift's
 // API operation StartFleetActions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -7056,21 +7056,21 @@ func (c *GameLift) StartGameSessionPlacementRequest(input *StartGameSessionPlace
 // See the AWS API reference guide for Amazon GameLift's
 // API operation StartGameSessionPlacement for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StartGameSessionPlacement
@@ -7189,21 +7189,21 @@ func (c *GameLift) StartMatchBackfillRequest(input *StartMatchBackfillInput) (re
 // See the AWS API reference guide for Amazon GameLift's
 // API operation StartMatchBackfill for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StartMatchBackfill
@@ -7361,21 +7361,21 @@ func (c *GameLift) StartMatchmakingRequest(input *StartMatchmakingInput) (req *r
 // See the AWS API reference guide for Amazon GameLift's
 // API operation StartMatchmaking for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StartMatchmaking
@@ -7484,20 +7484,20 @@ func (c *GameLift) StopFleetActionsRequest(input *StopFleetActionsInput) (req *r
 // See the AWS API reference guide for Amazon GameLift's
 // API operation StopFleetActions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -7593,21 +7593,21 @@ func (c *GameLift) StopGameSessionPlacementRequest(input *StopGameSessionPlaceme
 // See the AWS API reference guide for Amazon GameLift's
 // API operation StopGameSessionPlacement for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StopGameSessionPlacement
@@ -7712,21 +7712,21 @@ func (c *GameLift) StopMatchmakingRequest(input *StopMatchmakingInput) (req *req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation StopMatchmaking for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/StopMatchmaking
@@ -7843,21 +7843,21 @@ func (c *GameLift) TagResourceRequest(input *TagResourceInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -7975,21 +7975,21 @@ func (c *GameLift) UntagResourceRequest(input *UntagResourceInput) (req *request
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeTaggingFailedException "TaggingFailedException"
+//   * TaggingFailedException
 //   The requested tagging operation did not succeed. This may be due to invalid
 //   tag format or the maximum tag limit may have been exceeded. Resolve the issue
 //   before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -8084,19 +8084,19 @@ func (c *GameLift) UpdateAliasRequest(input *UpdateAliasInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UpdateAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -8195,19 +8195,19 @@ func (c *GameLift) UpdateBuildRequest(input *UpdateBuildInput) (req *request.Req
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UpdateBuild for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -8308,35 +8308,35 @@ func (c *GameLift) UpdateFleetAttributesRequest(input *UpdateFleetAttributesInpu
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UpdateFleetAttributes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request.
 //
-//   * ErrCodeInvalidFleetStatusException "InvalidFleetStatusException"
+//   * InvalidFleetStatusException
 //   The requested operation would cause a conflict with the current state of
 //   a resource associated with the request and/or the fleet. Resolve the conflict
 //   before retrying.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested operation would cause the resource to exceed the allowed service
 //   limit. Resolve the issue before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateFleetAttributes
@@ -8448,35 +8448,35 @@ func (c *GameLift) UpdateFleetCapacityRequest(input *UpdateFleetCapacityInput) (
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UpdateFleetCapacity for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested operation would cause the resource to exceed the allowed service
 //   limit. Resolve the issue before retrying.
 //
-//   * ErrCodeInvalidFleetStatusException "InvalidFleetStatusException"
+//   * InvalidFleetStatusException
 //   The requested operation would cause a conflict with the current state of
 //   a resource associated with the request and/or the fleet. Resolve the conflict
 //   before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateFleetCapacity
@@ -8578,35 +8578,35 @@ func (c *GameLift) UpdateFleetPortSettingsRequest(input *UpdateFleetPortSettings
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UpdateFleetPortSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request.
 //
-//   * ErrCodeInvalidFleetStatusException "InvalidFleetStatusException"
+//   * InvalidFleetStatusException
 //   The requested operation would cause a conflict with the current state of
 //   a resource associated with the request and/or the fleet. Resolve the conflict
 //   before retrying.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The requested operation would cause the resource to exceed the allowed service
 //   limit. Resolve the issue before retrying.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateFleetPortSettings
@@ -8705,30 +8705,30 @@ func (c *GameLift) UpdateGameSessionRequest(input *UpdateGameSessionInput) (req 
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UpdateGameSession for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidGameSessionStatusException "InvalidGameSessionStatusException"
+//   * InvalidGameSessionStatusException
 //   The requested operation would cause a conflict with the current state of
 //   a resource associated with the request and/or the game instance. Resolve
 //   the conflict before retrying.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
@@ -8818,21 +8818,21 @@ func (c *GameLift) UpdateGameSessionQueueRequest(input *UpdateGameSessionQueueIn
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UpdateGameSessionQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateGameSessionQueue
@@ -8935,21 +8935,21 @@ func (c *GameLift) UpdateMatchmakingConfigurationRequest(input *UpdateMatchmakin
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UpdateMatchmakingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01/UpdateMatchmakingConfiguration
@@ -9059,24 +9059,24 @@ func (c *GameLift) UpdateRuntimeConfigurationRequest(input *UpdateRuntimeConfigu
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UpdateRuntimeConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeInvalidFleetStatusException "InvalidFleetStatusException"
+//   * InvalidFleetStatusException
 //   The requested operation would cause a conflict with the current state of
 //   a resource associated with the request and/or the fleet. Resolve the conflict
 //   before retrying.
@@ -9185,19 +9185,19 @@ func (c *GameLift) UpdateScriptRequest(input *UpdateScriptInput) (req *request.R
 // See the AWS API reference guide for Amazon GameLift's
 // API operation UpdateScript for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnauthorizedException "UnauthorizedException"
+// Returned Error Types:
+//   * UnauthorizedException
 //   The client failed authentication. Clients should not retry such requests.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
@@ -9302,16 +9302,16 @@ func (c *GameLift) ValidateMatchmakingRuleSetRequest(input *ValidateMatchmakingR
 // See the AWS API reference guide for Amazon GameLift's
 // API operation ValidateMatchmakingRuleSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   The service encountered an unrecoverable internal failure while processing
 //   the request. Clients can retry such requests immediately or after a waiting
 //   period.
 //
-//   * ErrCodeUnsupportedRegionException "UnsupportedRegionException"
+//   * UnsupportedRegionException
 //   The requested operation is not supported in the Region specified.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   One or more parameter values in the request are invalid. Correct the invalid
 //   parameter values before retrying.
 //
@@ -9793,6 +9793,64 @@ func (s *CertificateConfiguration) Validate() error {
 func (s *CertificateConfiguration) SetCertificateType(v string) *CertificateConfiguration {
 	s.CertificateType = &v
 	return s
+}
+
+// The requested operation would cause a conflict with the current state of
+// a service resource associated with the request. Resolve the conflict before
+// retrying this request.
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Represents the input for a request action.
@@ -14990,6 +15048,63 @@ func (s *FleetCapacity) SetInstanceType(v string) *FleetCapacity {
 	return s
 }
 
+// The specified fleet has no available instances to fulfill a CreateGameSession
+// request. Clients can retry such requests immediately or after a waiting period.
+type FleetCapacityExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s FleetCapacityExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FleetCapacityExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorFleetCapacityExceededException(v protocol.ResponseMetadata) error {
+	return &FleetCapacityExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s FleetCapacityExceededException) Code() string {
+	return "FleetCapacityExceededException"
+}
+
+// Message returns the exception's message.
+func (s FleetCapacityExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s FleetCapacityExceededException) OrigErr() error {
+	return nil
+}
+
+func (s FleetCapacityExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s FleetCapacityExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s FleetCapacityExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Current status of fleet utilization, including the number of game and player
 // sessions being hosted.
 //
@@ -15475,6 +15590,63 @@ func (s *GameSessionDetail) SetGameSession(v *GameSession) *GameSessionDetail {
 func (s *GameSessionDetail) SetProtectionPolicy(v string) *GameSessionDetail {
 	s.ProtectionPolicy = &v
 	return s
+}
+
+// The game instance is currently full and cannot allow the requested player(s)
+// to join. Clients can retry such requests immediately or after a waiting period.
+type GameSessionFullException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GameSessionFullException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GameSessionFullException) GoString() string {
+	return s.String()
+}
+
+func newErrorGameSessionFullException(v protocol.ResponseMetadata) error {
+	return &GameSessionFullException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s GameSessionFullException) Code() string {
+	return "GameSessionFullException"
+}
+
+// Message returns the exception's message.
+func (s GameSessionFullException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s GameSessionFullException) OrigErr() error {
+	return nil
+}
+
+func (s GameSessionFullException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s GameSessionFullException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s GameSessionFullException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Object that describes a StartGameSessionPlacement request. This object includes
@@ -16017,6 +16189,63 @@ func (s *GetInstanceAccessOutput) SetInstanceAccess(v *InstanceAccess) *GetInsta
 	return s
 }
 
+// A game session with this custom ID string already exists in this fleet. Resolve
+// this conflict before retrying this request.
+type IdempotentParameterMismatchException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s IdempotentParameterMismatchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IdempotentParameterMismatchException) GoString() string {
+	return s.String()
+}
+
+func newErrorIdempotentParameterMismatchException(v protocol.ResponseMetadata) error {
+	return &IdempotentParameterMismatchException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IdempotentParameterMismatchException) Code() string {
+	return "IdempotentParameterMismatchException"
+}
+
+// Message returns the exception's message.
+func (s IdempotentParameterMismatchException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IdempotentParameterMismatchException) OrigErr() error {
+	return nil
+}
+
+func (s IdempotentParameterMismatchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IdempotentParameterMismatchException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IdempotentParameterMismatchException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Properties that describe an instance of a virtual computing resource that
 // hosts one or more game servers. A fleet may contain zero or more instances.
 type Instance struct {
@@ -16225,6 +16454,237 @@ func (s *InstanceCredentials) SetUserName(v string) *InstanceCredentials {
 	return s
 }
 
+// The service encountered an unrecoverable internal failure while processing
+// the request. Clients can retry such requests immediately or after a waiting
+// period.
+type InternalServiceException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServiceException(v protocol.ResponseMetadata) error {
+	return &InternalServiceException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServiceException) Code() string {
+	return "InternalServiceException"
+}
+
+// Message returns the exception's message.
+func (s InternalServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServiceException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServiceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServiceException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServiceException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The requested operation would cause a conflict with the current state of
+// a resource associated with the request and/or the fleet. Resolve the conflict
+// before retrying.
+type InvalidFleetStatusException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidFleetStatusException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidFleetStatusException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidFleetStatusException(v protocol.ResponseMetadata) error {
+	return &InvalidFleetStatusException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidFleetStatusException) Code() string {
+	return "InvalidFleetStatusException"
+}
+
+// Message returns the exception's message.
+func (s InvalidFleetStatusException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidFleetStatusException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidFleetStatusException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidFleetStatusException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidFleetStatusException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The requested operation would cause a conflict with the current state of
+// a resource associated with the request and/or the game instance. Resolve
+// the conflict before retrying.
+type InvalidGameSessionStatusException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidGameSessionStatusException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidGameSessionStatusException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidGameSessionStatusException(v protocol.ResponseMetadata) error {
+	return &InvalidGameSessionStatusException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidGameSessionStatusException) Code() string {
+	return "InvalidGameSessionStatusException"
+}
+
+// Message returns the exception's message.
+func (s InvalidGameSessionStatusException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidGameSessionStatusException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidGameSessionStatusException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidGameSessionStatusException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidGameSessionStatusException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// One or more parameter values in the request are invalid. Correct the invalid
+// parameter values before retrying.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // A range of IP addresses and port settings that allow inbound traffic to connect
 // to server processes on an Amazon GameLift hosting resource. New game sessions
 // that are started on the fleet are assigned an IP address/port number combination,
@@ -16319,6 +16779,63 @@ func (s *IpPermission) SetProtocol(v string) *IpPermission {
 func (s *IpPermission) SetToPort(v int64) *IpPermission {
 	s.ToPort = &v
 	return s
+}
+
+// The requested operation would cause the resource to exceed the allowed service
+// limit. Resolve the issue before retrying.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Represents the input for a request action.
@@ -17295,6 +17812,63 @@ func (s *MatchmakingTicket) SetStatusReason(v string) *MatchmakingTicket {
 func (s *MatchmakingTicket) SetTicketId(v string) *MatchmakingTicket {
 	s.TicketId = &v
 	return s
+}
+
+// A service resource associated with the request could not be found. Clients
+// should not retry such requests.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information about a player session that was created as part of a StartGameSessionPlacement
@@ -19795,6 +20369,64 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// The requested tagging operation did not succeed. This may be due to invalid
+// tag format or the maximum tag limit may have been exceeded. Resolve the issue
+// before retrying.
+type TaggingFailedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TaggingFailedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaggingFailedException) GoString() string {
+	return s.String()
+}
+
+func newErrorTaggingFailedException(v protocol.ResponseMetadata) error {
+	return &TaggingFailedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TaggingFailedException) Code() string {
+	return "TaggingFailedException"
+}
+
+// Message returns the exception's message.
+func (s TaggingFailedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TaggingFailedException) OrigErr() error {
+	return nil
+}
+
+func (s TaggingFailedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TaggingFailedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TaggingFailedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Settings for a target-based scaling policy (see ScalingPolicy. A target-based
 // policy tracks a particular fleet metric specifies a target value for the
 // metric. As player usage changes, the policy triggers Amazon GameLift to adjust
@@ -19852,6 +20484,178 @@ func (s *TargetConfiguration) Validate() error {
 func (s *TargetConfiguration) SetTargetValue(v float64) *TargetConfiguration {
 	s.TargetValue = &v
 	return s
+}
+
+// The service is unable to resolve the routing for a particular alias because
+// it has a terminal RoutingStrategy associated with it. The message returned
+// in this exception is the message defined in the routing strategy itself.
+// Such requests should only be retried if the routing strategy for the specified
+// alias is modified.
+type TerminalRoutingStrategyException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TerminalRoutingStrategyException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TerminalRoutingStrategyException) GoString() string {
+	return s.String()
+}
+
+func newErrorTerminalRoutingStrategyException(v protocol.ResponseMetadata) error {
+	return &TerminalRoutingStrategyException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TerminalRoutingStrategyException) Code() string {
+	return "TerminalRoutingStrategyException"
+}
+
+// Message returns the exception's message.
+func (s TerminalRoutingStrategyException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TerminalRoutingStrategyException) OrigErr() error {
+	return nil
+}
+
+func (s TerminalRoutingStrategyException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TerminalRoutingStrategyException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TerminalRoutingStrategyException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The client failed authentication. Clients should not retry such requests.
+type UnauthorizedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UnauthorizedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnauthorizedException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
+	return &UnauthorizedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnauthorizedException) Code() string {
+	return "UnauthorizedException"
+}
+
+// Message returns the exception's message.
+func (s UnauthorizedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnauthorizedException) OrigErr() error {
+	return nil
+}
+
+func (s UnauthorizedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnauthorizedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnauthorizedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The requested operation is not supported in the Region specified.
+type UnsupportedRegionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UnsupportedRegionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedRegionException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedRegionException(v protocol.ResponseMetadata) error {
+	return &UnsupportedRegionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnsupportedRegionException) Code() string {
+	return "UnsupportedRegionException"
+}
+
+// Message returns the exception's message.
+func (s UnsupportedRegionException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnsupportedRegionException) OrigErr() error {
+	return nil
+}
+
+func (s UnsupportedRegionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnsupportedRegionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnsupportedRegionException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {

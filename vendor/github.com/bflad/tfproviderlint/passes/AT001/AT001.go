@@ -7,11 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-
-	"github.com/bflad/tfproviderlint/helper/terraformtype"
-	"github.com/bflad/tfproviderlint/passes/acctestcase"
+	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/resource"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
+	"github.com/bflad/tfproviderlint/passes/helper/resource/testcaseinfo"
+	"golang.org/x/tools/go/analysis"
 )
 
 const Doc = `check for TestCase missing CheckDestroy
@@ -30,15 +29,15 @@ var Analyzer = &analysis.Analyzer{
 	Name: analyzerName,
 	Doc:  Doc,
 	Requires: []*analysis.Analyzer{
-		acctestcase.Analyzer,
 		commentignore.Analyzer,
+		testcaseinfo.Analyzer,
 	},
 	Run: run,
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
-	testCases := pass.ResultOf[acctestcase.Analyzer].([]*terraformtype.HelperResourceTestCaseInfo)
+	testCases := pass.ResultOf[testcaseinfo.Analyzer].([]*resource.TestCaseInfo)
 	for _, testCase := range testCases {
 		fileName := filepath.Base(pass.Fset.File(testCase.AstCompositeLit.Pos()).Name())
 
@@ -50,7 +49,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			continue
 		}
 
-		if testCase.DeclaresField(terraformtype.TestCaseFieldCheckDestroy) {
+		if testCase.DeclaresField(resource.TestCaseFieldCheckDestroy) {
 			continue
 		}
 

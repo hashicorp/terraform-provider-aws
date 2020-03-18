@@ -110,12 +110,12 @@ resource "aws_autoscaling_group" "example" {
       }
 
       override {
-        instance_type = "c4.large"
+        instance_type     = "c4.large"
         weighted_capacity = "3"
       }
 
       override {
-        instance_type = "c3.large"
+        instance_type     = "c3.large"
         weighted_capacity = "2"
       }
     }
@@ -147,19 +147,6 @@ resource "aws_autoscaling_group" "bar" {
   min_size             = 2
   launch_configuration = "${aws_launch_configuration.foobar.name}"
   vpc_zone_identifier  = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
-
-  tags = [
-    {
-      key                 = "explicit1"
-      value               = "value1"
-      propagate_at_launch = true
-    },
-    {
-      key                 = "explicit2"
-      value               = "value2"
-      propagate_at_launch = true
-    },
-  ]
 
   tags = ["${concat(
     list(
@@ -214,7 +201,7 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
 * `tags` (Optional) A list of tag blocks (maps). Tags documented below.
 * `placement_group` (Optional) The name of the placement group into which you'll launch your instances, if any.
 * `metrics_granularity` - (Optional) The granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
-* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are `GroupMinSize`, `GroupMaxSize`, `GroupDesiredCapacity`, `GroupInServiceInstances`, `GroupPendingInstances`, `GroupStandbyInstances`, `GroupTerminatingInstances`, `GroupTotalInstances`.
+* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are `GroupDesiredCapacity`, `GroupInServiceCapacity`, `GroupPendingCapacity`, `GroupMinSize`, `GroupMaxSize`, `GroupInServiceInstances`, `GroupPendingInstances`, `GroupStandbyInstances`, `GroupStandbyCapacity`, `GroupTerminatingCapacity`, `GroupTerminatingInstances`, `GroupTotalCapacity`, `GroupTotalInstances`.
 * `wait_for_capacity_timeout` (Default: "10m") A maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for ASG instances to be healthy before timing out.  (See also [Waiting
@@ -335,7 +322,6 @@ been launched, creating unintended behavior. If you need hooks to run on all
 instances, add them with `initial_lifecycle_hook` here, but take
 care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 
-<a id="timeouts"></a>
 ## Timeouts
 
 `autoscaling_group` provides the following
