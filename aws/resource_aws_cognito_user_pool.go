@@ -539,13 +539,13 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"account_recovery_setting": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recovery_mechanisms": {
 							Type:     schema.TypeSet,
-							Optional: true,
+							Required: true,
+							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
