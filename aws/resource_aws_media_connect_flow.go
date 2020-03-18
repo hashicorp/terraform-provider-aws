@@ -84,7 +84,7 @@ func resourceAWSMediaConnectFlow() *schema.Resource {
 								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_-]+$`), "must only include alphanumeric, underscore or hyphen characters"),
 							),
 							ConflictsWith: []string{
-								"source.entitlement_arn",
+								"source.0.entitlement_arn",
 							},
 						},
 						"decryption": {
@@ -122,22 +122,22 @@ func resourceAWSMediaConnectFlow() *schema.Resource {
 							Optional: true,
 							Default:  "Managed by Terraform",
 							ConflictsWith: []string{
-								"source.entitlement_arn",
+								"source.0.entitlement_arn",
 							},
 						},
 						"entitlement_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ConflictsWith: []string{
-								"source.name",
-								"source.description",
-								"source.ingest_ip",
-								"source.ingest_port",
-								"source.max_bitrate",
-								"source.max_latency",
-								"source.protocol",
-								"source.stream_id",
-								"source.whitelist_cidr",
+								"source.0.name",
+								"source.0.description",
+								"source.0.ingest_ip",
+								"source.0.ingest_port",
+								"source.0.max_bitrate",
+								"source.0.max_latency",
+								"source.0.protocol",
+								"source.0.stream_id",
+								"source.0.whitelist_cidr",
 							},
 						},
 						"ingest_ip": {
@@ -148,7 +148,7 @@ func resourceAWSMediaConnectFlow() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ConflictsWith: []string{
-								"source.entitlement_arn",
+								"source.0.entitlement_arn",
 							},
 						},
 						"max_bitrate": {
@@ -157,14 +157,14 @@ func resourceAWSMediaConnectFlow() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 200000000),
 							ConflictsWith: []string{
-								"source.entitlement_arn",
+								"source.0.entitlement_arn",
 							},
 						},
 						"max_latency": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ConflictsWith: []string{
-								"source.entitlement_arn",
+								"source.0.entitlement_arn",
 							},
 						},
 						"protocol": {
@@ -176,7 +176,7 @@ func resourceAWSMediaConnectFlow() *schema.Resource {
 								"rtp",
 							}, false),
 							ConflictsWith: []string{
-								"source.entitlement_arn",
+								"source.0.entitlement_arn",
 							},
 						},
 						"smoothing_latency": {
@@ -188,14 +188,14 @@ func resourceAWSMediaConnectFlow() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ConflictsWith: []string{
-								"source.entitlement_arn",
+								"source.0.entitlement_arn",
 							},
 						},
 						"whitelist_cidr": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ConflictsWith: []string{
-								"source.entitlement_arn",
+								"source.0.entitlement_arn",
 							},
 						},
 					},
