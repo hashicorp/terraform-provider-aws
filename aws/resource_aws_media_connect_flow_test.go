@@ -207,20 +207,20 @@ func testAccCheckAWSMediaConnectFlowDestroy(s *terraform.State) error {
 func testAccAWSMediaConnectFlowConfig_IamRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name = %q
+  name = %q
   
-	assume_role_policy = <<POLICY
+  assume_role_policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Principal": {
-				"Service": "mediaconnect.amazonaws.com"
-			},
-			"Action": "sts:AssumeRole"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "mediaconnect.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
 }
 POLICY
 }`, rName)
@@ -237,16 +237,16 @@ resource "aws_secretsmanager_secret" "test" {
 func testAccAWSMediaConnectFlowConfig_Base(rName, protocol, ingressPort string) string {
 	return fmt.Sprintf(`
 resource "aws_media_connect_flow" "test" {
-	name = "%s"
+  name = "%s"
 
-	source {
-		name 			= "%s"
-		protocol 		= "%s"
-		ingest_port 	= %s
-		whitelist_cidr	= "10.24.34.0/23"
-	}
+  source {
+    name           = "%s"
+    protocol       = "%s"
+    ingest_port    = %s
+    whitelist_cidr = "10.24.34.0/23"
+  }
 }
-	`, rName, rName, protocol, ingressPort)
+`, rName, rName, protocol, ingressPort)
 }
 
 func testAccAWSMediaConnectFlowConfig_Decryption(rName string, algorithm string) string {
