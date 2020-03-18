@@ -33,6 +33,7 @@ ENHANCEMENTS:
 * resource/aws_opsworks_php_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
 * resource/aws_opsworks_rails_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
 * resource/aws_opsworks_static_web_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
+* resource/aws_vpc_dhcp_options_association: Support resource import [GH-7252]
 
 BUG FIXES:
 
