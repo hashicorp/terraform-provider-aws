@@ -39,7 +39,7 @@ Currently available standards:
 | Name                | ARN                                                                   |
 |---------------------|-----------------------------------------------------------------------|
 | CIS AWS Foundations | `arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0` |
-| CIS AWS Foundations | `arn:aws:securityhub:us-east-1::standards/pci-dss/v/3.2.1`            |
+| PCI DSS             | `arn:aws:securityhub:us-east-1::standards/pci-dss/v/3.2.1`            |
 
 ## Attributes Reference
 
