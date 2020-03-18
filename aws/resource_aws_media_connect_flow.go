@@ -97,9 +97,9 @@ func resourceAWSMediaConnectFlow() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
-											"aes128",
-											"aes192",
-											"aes256",
+											mediaconnect.AlgorithmAes128,
+											mediaconnect.AlgorithmAes192,
+											mediaconnect.AlgorithmAes256,
 										}, false),
 									},
 									"key_type": {
@@ -276,13 +276,13 @@ func resourceAWSMediaConnectFlowUpdate(d *schema.ResourceData, meta interface{})
 
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
-			"UPDATING",
-			"STARTING",
-			"STOPPING",
+			mediaconnect.StatusUpdating,
+			mediaconnect.StatusStarting,
+			mediaconnect.StatusStopping,
 		},
 		Target: []string{
-			"STANDBY",
-			"ACTIVE",
+			mediaconnect.StatusStandby,
+			mediaconnect.StatusActive,
 		},
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 		Refresh: refreshMediaConnectFlowStatus(conn, d.Id()),
@@ -375,12 +375,12 @@ func refreshMediaConnectFlowStatus(conn *mediaconnect.MediaConnect, flowArn stri
 func waitForDeleteMediaConnectFlow(conn *mediaconnect.MediaConnect, flowArn string, timeout time.Duration) error {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
-			"STANDBY",
-			"ACTIVE",
-			"UPDATING",
-			"DELETING",
-			"STARTING",
-			"STOPPING",
+			mediaconnect.StatusStandby,
+			mediaconnect.StatusActive,
+			mediaconnect.StatusUpdating,
+			mediaconnect.StatusDeleting,
+			mediaconnect.StatusStarting,
+			mediaconnect.StatusStopping,
 		},
 		Target:     []string{""},
 		Refresh:    refreshMediaConnectFlowStatus(conn, flowArn),
