@@ -369,10 +369,11 @@ func refreshMediaConnectFlowStatus(conn *mediaconnect.MediaConnect, flowArn stri
 		if err != nil {
 			return 42, "", err
 		}
-		flow := output.Flow
-		if flow == nil {
-			return flow, "", fmt.Errorf("Media Connect Flow (%s) missing", flowArn)
+		if output == nil || output.Flow == nil {
+			return nil, "", nil
 		}
+		flow := output.Flow
+
 		return flow, aws.StringValue(flow.Status), nil
 	}
 }
