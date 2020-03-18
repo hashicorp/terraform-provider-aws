@@ -52,6 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 * `iops` - The amount of IOPS for the disk.
 * `size` - The size of the drive in GiBs.
 * `snapshot_id` - The snapshot_id the EBS volume is based off.
+* `outpost_arn` - The Amazon Resource Name (ARN) of the Outpost.
 * `volume_type` - The type of EBS volume.
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `tags` - A mapping of tags for the resource.

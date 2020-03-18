@@ -21,6 +21,7 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "size", "40"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.Name", "External Volume"),
+					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "outpost_arn", ""),
 				),
 			},
 		},
