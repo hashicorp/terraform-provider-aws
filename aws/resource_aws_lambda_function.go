@@ -42,6 +42,7 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimePython37,
 	lambda.RuntimePython38,
 	lambda.RuntimeRuby25,
+	lambda.RuntimeRuby27,
 }
 
 func resourceAwsLambdaFunction() *schema.Resource {
@@ -107,8 +108,9 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				ForceNew: true,
 			},
 			"handler": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"layers": {
 				Type:     schema.TypeList,
@@ -843,10 +845,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		d.SetPartial("timeout")
 	}
 
-	if needsFunctionCodeUpdate(d) {
+	codeUpdate := needsFunctionCodeUpdate(d)
+	if codeUpdate {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
-			Publish:      aws.Bool(d.Get("publish").(bool)),
 		}
 
 		if v, ok := d.GetOk("filename"); ok {
@@ -911,6 +913,18 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			if err != nil {
 				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
 			}
+		}
+	}
+
+	publish := d.Get("publish").(bool)
+	if publish && (codeUpdate || configUpdate) {
+		versionReq := &lambda.PublishVersionInput{
+			FunctionName: aws.String(d.Id()),
+		}
+
+		_, err := conn.PublishVersion(versionReq)
+		if err != nil {
+			return fmt.Errorf("Error publishing Lambda Function Version %s: %s", d.Id(), err)
 		}
 	}
 

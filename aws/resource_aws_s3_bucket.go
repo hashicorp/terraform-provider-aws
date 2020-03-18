@@ -69,9 +69,53 @@ func resourceAwsS3Bucket() *schema.Resource {
 			},
 
 			"acl": {
-				Type:     schema.TypeString,
-				Default:  "private",
-				Optional: true,
+				Type:          schema.TypeString,
+				Default:       "private",
+				Optional:      true,
+				ConflictsWith: []string{"grant"},
+			},
+
+			"grant": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Set:           grantHash,
+				ConflictsWith: []string{"acl"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								s3.TypeCanonicalUser,
+								s3.TypeGroup,
+							}, false),
+						},
+						"uri": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"permissions": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Set:      schema.HashString,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									s3.PermissionFullControl,
+									s3.PermissionRead,
+									s3.PermissionReadAcp,
+									s3.PermissionWrite,
+									s3.PermissionWriteAcp,
+								}, false),
+							},
+						},
+					},
+				},
 			},
 
 			"policy": {
@@ -614,13 +658,17 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 		bucket = resource.UniqueId()
 	}
 	d.Set("bucket", bucket)
-	acl := d.Get("acl").(string)
 
-	log.Printf("[DEBUG] S3 bucket create: %s, ACL: %s", bucket, acl)
+	log.Printf("[DEBUG] S3 bucket create: %s", bucket)
 
 	req := &s3.CreateBucketInput{
 		Bucket: aws.String(bucket),
-		ACL:    aws.String(acl),
+	}
+
+	if acl, ok := d.GetOk("acl"); ok {
+		acl := acl.(string)
+		req.ACL = aws.String(acl)
+		log.Printf("[DEBUG] S3 bucket %s has canned ACL %s", bucket, acl)
 	}
 
 	var awsRegion string
@@ -683,7 +731,12 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.S3BucketUpdateTags(s3conn, d.Id(), o, n); err != nil {
+		// Retry due to S3 eventual consistency
+		_, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+			terr := keyvaluetags.S3BucketUpdateTags(s3conn, d.Id(), o, n)
+			return nil, terr
+		})
+		if err != nil {
 			return fmt.Errorf("error updating S3 Bucket (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -713,6 +766,12 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("acl") && !d.IsNewResource() {
 		if err := resourceAwsS3BucketAclUpdate(s3conn, d); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("grant") {
+		if err := resourceAwsS3BucketGrantsUpdate(s3conn, d); err != nil {
 			return err
 		}
 	}
@@ -806,7 +865,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("bucket", d.Id())
 	}
 
-	d.Set("bucket_domain_name", bucketDomainName(d.Get("bucket").(string)))
+	d.Set("bucket_domain_name", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", d.Get("bucket").(string))))
 
 	// Read the policy
 	if _, ok := d.GetOk("policy"); ok {
@@ -833,6 +892,27 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				}
 				d.Set("policy", policy)
 			}
+		}
+	}
+
+	//Read the Grant ACL. Reset if `acl` (canned ACL) is set.
+	if acl, ok := d.GetOk("acl"); ok && acl.(string) != "private" {
+		if err := d.Set("grant", nil); err != nil {
+			return fmt.Errorf("error resetting grant %s", err)
+		}
+	} else {
+		apResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+			return s3conn.GetBucketAcl(&s3.GetBucketAclInput{
+				Bucket: aws.String(d.Id()),
+			})
+		})
+		if err != nil {
+			return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
+		}
+		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), apResponse)
+		grants := flattenGrants(apResponse.(*s3.GetBucketAclOutput))
+		if err := d.Set("grant", schema.NewSet(grantHash, grants)); err != nil {
+			return fmt.Errorf("error setting grant %s", err)
 		}
 	}
 
@@ -1238,7 +1318,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Add website_endpoint as an attribute
-	websiteEndpoint, err := websiteEndpoint(s3conn, d)
+	websiteEndpoint, err := websiteEndpoint(meta.(*AWSClient), d)
 	if err != nil {
 		return err
 	}
@@ -1362,6 +1442,74 @@ func resourceAwsS3BucketPolicyUpdate(s3conn *s3.S3, d *schema.ResourceData) erro
 		}
 	}
 
+	return nil
+}
+
+func resourceAwsS3BucketGrantsUpdate(s3conn *s3.S3, d *schema.ResourceData) error {
+	bucket := d.Get("bucket").(string)
+	rawGrants := d.Get("grant").(*schema.Set).List()
+
+	if len(rawGrants) == 0 {
+		log.Printf("[DEBUG] S3 bucket: %s, Grants fallback to canned ACL", bucket)
+		if err := resourceAwsS3BucketAclUpdate(s3conn, d); err != nil {
+			return fmt.Errorf("Error fallback to canned ACL, %s", err)
+		}
+	} else {
+		apResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+			return s3conn.GetBucketAcl(&s3.GetBucketAclInput{
+				Bucket: aws.String(d.Id()),
+			})
+		})
+
+		if err != nil {
+			return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
+		}
+
+		ap := apResponse.(*s3.GetBucketAclOutput)
+		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), ap)
+
+		grants := make([]*s3.Grant, 0, len(rawGrants))
+		for _, rawGrant := range rawGrants {
+			log.Printf("[DEBUG] S3 bucket: %s, put grant: %#v", bucket, rawGrant)
+			grantMap := rawGrant.(map[string]interface{})
+			for _, rawPermission := range grantMap["permissions"].(*schema.Set).List() {
+				ge := &s3.Grantee{}
+				if i, ok := grantMap["id"].(string); ok && i != "" {
+					ge.SetID(i)
+				}
+				if t, ok := grantMap["type"].(string); ok && t != "" {
+					ge.SetType(t)
+				}
+				if u, ok := grantMap["uri"].(string); ok && u != "" {
+					ge.SetURI(u)
+				}
+
+				g := &s3.Grant{
+					Grantee:    ge,
+					Permission: aws.String(rawPermission.(string)),
+				}
+				grants = append(grants, g)
+			}
+		}
+
+		grantsInput := &s3.PutBucketAclInput{
+			Bucket: aws.String(bucket),
+			AccessControlPolicy: &s3.AccessControlPolicy{
+				Grants: grants,
+				Owner:  ap.Owner,
+			},
+		}
+
+		log.Printf("[DEBUG] S3 bucket: %s, put Grants: %#v", bucket, grantsInput)
+
+		_, err = retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
+			return s3conn.PutBucketAcl(grantsInput)
+		})
+
+		if err != nil {
+			return fmt.Errorf("Error putting S3 Grants: %s", err)
+		}
+	}
 	return nil
 }
 
@@ -1540,7 +1688,7 @@ func resourceAwsS3BucketWebsiteDelete(s3conn *s3.S3, d *schema.ResourceData) err
 	return nil
 }
 
-func websiteEndpoint(s3conn *s3.S3, d *schema.ResourceData) (*S3Website, error) {
+func websiteEndpoint(client *AWSClient, d *schema.ResourceData) (*S3Website, error) {
 	// If the bucket doesn't have a website configuration, return an empty
 	// endpoint
 	if _, ok := d.GetOk("website"); !ok {
@@ -1552,7 +1700,7 @@ func websiteEndpoint(s3conn *s3.S3, d *schema.ResourceData) (*S3Website, error) 
 	// Lookup the region for this bucket
 
 	locationResponse, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return s3conn.GetBucketLocation(
+		return client.s3conn.GetBucketLocation(
 			&s3.GetBucketLocationInput{
 				Bucket: aws.String(bucket),
 			},
@@ -1567,11 +1715,7 @@ func websiteEndpoint(s3conn *s3.S3, d *schema.ResourceData) (*S3Website, error) 
 		region = *location.LocationConstraint
 	}
 
-	return WebsiteEndpoint(bucket, region), nil
-}
-
-func bucketDomainName(bucket string) string {
-	return fmt.Sprintf("%s.s3.amazonaws.com", bucket)
+	return WebsiteEndpoint(client, bucket, region), nil
 }
 
 // https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
@@ -1579,7 +1723,7 @@ func BucketRegionalDomainName(bucket string, region string) (string, error) {
 	// Return a default AWS Commercial domain name if no region is provided
 	// Otherwise EndpointFor() will return BUCKET.s3..amazonaws.com
 	if region == "" {
-		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil
+		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil //lintignore:AWSR001
 	}
 	endpoint, err := endpoints.DefaultResolver().EndpointFor(endpoints.S3ServiceID, region)
 	if err != nil {
@@ -1588,24 +1732,21 @@ func BucketRegionalDomainName(bucket string, region string) (string, error) {
 	return fmt.Sprintf("%s.%s", bucket, strings.TrimPrefix(endpoint.URL, "https://")), nil
 }
 
-func WebsiteEndpoint(bucket string, region string) *S3Website {
-	domain := WebsiteDomainUrl(region)
+func WebsiteEndpoint(client *AWSClient, bucket string, region string) *S3Website {
+	domain := WebsiteDomainUrl(client, region)
 	return &S3Website{Endpoint: fmt.Sprintf("%s.%s", bucket, domain), Domain: domain}
 }
 
-func WebsiteDomainUrl(region string) string {
+func WebsiteDomainUrl(client *AWSClient, region string) string {
 	region = normalizeRegion(region)
 
 	// Different regions have different syntax for website endpoints
 	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
 	// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
 	if isOldRegion(region) {
-		return fmt.Sprintf("s3-website-%s.amazonaws.com", region)
+		return fmt.Sprintf("s3-website-%s.amazonaws.com", region) //lintignore:AWSR001
 	}
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && partition.ID() == endpoints.AwsCnPartitionID {
-		return fmt.Sprintf("s3-website.%s.amazonaws.com.cn", region)
-	}
-	return fmt.Sprintf("s3-website.%s.amazonaws.com", region)
+	return client.RegionalHostname(fmt.Sprintf("s3-website"))
 }
 
 func isOldRegion(region string) bool {
@@ -2339,6 +2480,24 @@ func validateS3BucketName(value string, region string) error {
 	return nil
 }
 
+func grantHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if v, ok := m["id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["uri"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if p, ok := m["permissions"]; ok {
+		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
+	}
+	return hashcode.String(buf.String())
+}
+
 func expirationHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
@@ -2560,4 +2719,44 @@ func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interf
 	}
 
 	return []interface{}{mConf}
+}
+
+func flattenGrants(ap *s3.GetBucketAclOutput) []interface{} {
+	//if ACL grants contains bucket owner FULL_CONTROL only - it is default "private" acl
+	if len(ap.Grants) == 1 && aws.StringValue(ap.Grants[0].Grantee.ID) == aws.StringValue(ap.Owner.ID) &&
+		aws.StringValue(ap.Grants[0].Permission) == s3.PermissionFullControl {
+		return nil
+	}
+
+	getGrant := func(grants []interface{}, grantee map[string]interface{}) (interface{}, bool) {
+		for _, pg := range grants {
+			pgt := pg.(map[string]interface{})
+			if pgt["type"] == grantee["type"] && pgt["id"] == grantee["id"] && pgt["uri"] == grantee["uri"] &&
+				pgt["permissions"].(*schema.Set).Len() > 0 {
+				return pg, true
+			}
+		}
+		return nil, false
+	}
+
+	grants := make([]interface{}, 0, len(ap.Grants))
+	for _, granteeObject := range ap.Grants {
+		grantee := make(map[string]interface{})
+		grantee["type"] = aws.StringValue(granteeObject.Grantee.Type)
+
+		if granteeObject.Grantee.ID != nil {
+			grantee["id"] = aws.StringValue(granteeObject.Grantee.ID)
+		}
+		if granteeObject.Grantee.URI != nil {
+			grantee["uri"] = aws.StringValue(granteeObject.Grantee.URI)
+		}
+		if pg, ok := getGrant(grants, grantee); ok {
+			pg.(map[string]interface{})["permissions"].(*schema.Set).Add(aws.StringValue(granteeObject.Permission))
+		} else {
+			grantee["permissions"] = schema.NewSet(schema.HashString, []interface{}{aws.StringValue(granteeObject.Permission)})
+			grants = append(grants, grantee)
+		}
+	}
+
+	return grants
 }
