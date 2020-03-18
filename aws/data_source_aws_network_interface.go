@@ -123,10 +123,6 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -184,7 +180,6 @@ func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{})
 	d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses))
 	d.Set("requester_id", eni.RequesterId)
 	d.Set("subnet_id", eni.SubnetId)
-	d.Set("outpost_arn", eni.OutpostArn)
 	d.Set("vpc_id", eni.VpcId)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().Map()); err != nil {
