@@ -30,13 +30,13 @@ resource "aws_media_connect_flow" "test" {
 The following arguments are supported:
 
 * `name` - (Required) A unique identifier describing the channel
-* `source` - (Required) A unique identifier describing the channel
+* `source` - (Required) Configuration block with source settings. Detailed below.
 * `availability_zone` - (Optional) The Availability Zone that you want to create the flow in. These options are limited to the Availability Zones within the current AWS Region.
 
 The `source` object supports the following:
 
 * `name` - (Required) The type of encryption that is used on the content ingested from the source. Defined below.
-* `decryption` - (Optional) The type of encryption that is used on the content ingested from the source. Defined below.
+* `decryption` - (Optional) Configuration block with type of encryption that is used on the content ingested from the source. Defined below.
 * `description` - (Optional) A description of the source. This description is not visible outside of the current AWS account.
 * `entitlement_arn` - (Optional) The ARN of the entitlement that allows you to subscribe to the flow. The content originator grants the entitlement, and the ARN is auto-generated as part of the originator's flow.
 * `ingest_port` - (Optional) The port that the flow listens on for incoming content. If the protocol of the source is Zixi, the port must be set to `2088`.
