@@ -309,8 +309,6 @@ In addition to all arguments above, the following attributes are exported:
 * `target_group_arns` (Optional) list of Target Group ARNs that apply to this
 AutoScaling Group
 
-~> **NOTE:** When using `ELB` as the `health_check_type`, `health_check_grace_period` is required.
-
 ~> **NOTE:** Terraform has two types of ways you can add lifecycle hooks - via
 the `initial_lifecycle_hook` attribute from this resource, or via the separate
 [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
