@@ -105,14 +105,19 @@ func resourceAWSMediaConnectFlow() *schema.Resource {
 									"key_type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											mediaconnect.KeyTypeStaticKey,
+										}, false),
 									},
 									"role_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
 									},
 									"secret_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
 									},
 								},
 							},
