@@ -43,10 +43,10 @@ func resourceAwsVpcDhcpOptionsAssociationImport(d *schema.ResourceData, meta int
 		return nil, nil
 	}
 	vpc := vpcRaw.(*ec2.Vpc)
-	if err = d.Set("vpc_id", *vpc.VpcId); err != nil {
+	if err = d.Set("vpc_id", vpc.VpcId); err != nil {
 		return nil, err
 	}
-	if err = d.Set("dhcp_options_id", *vpc.DhcpOptionsId); err != nil {
+	if err = d.Set("dhcp_options_id", vpc.DhcpOptionsId); err != nil {
 		return nil, err
 	}
 	d.SetId(*vpc.DhcpOptionsId + "-" + *vpc.VpcId)

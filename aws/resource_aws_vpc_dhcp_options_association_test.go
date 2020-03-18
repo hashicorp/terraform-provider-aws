@@ -12,6 +12,7 @@ import (
 func TestAccAWSDHCPOptionsAssociation_basic(t *testing.T) {
 	var v ec2.Vpc
 	var d ec2.DhcpOptions
+	resourceName := "aws_vpc_dhcp_options_association.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -26,25 +27,9 @@ func TestAccAWSDHCPOptionsAssociation_basic(t *testing.T) {
 					testAccCheckDHCPOptionsAssociationExist("aws_vpc_dhcp_options_association.foo", &v),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSDHCPOptionsAssociationImport_basic(t *testing.T) {
-	resourceName := "aws_vpc_dhcp_options_association.bar"
-	vpcName := "aws_vpc.foo"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDHCPOptionsAssociationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDHCPOptionsAssociationConfig,
-			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDHCPOptionsAssociationVPCImportIdFunc(vpcName),
+				ImportStateIdFunc: testAccDHCPOptionsAssociationVPCImportIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -59,7 +44,7 @@ func testAccDHCPOptionsAssociationVPCImportIdFunc(resourceName string) resource.
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["id"], nil
+		return rs.Primary.Attributes["vpc_id"], nil
 	}
 }
 
