@@ -1,52 +1,52 @@
-## 2.54.0 (Unreleased)
+## 2.54.0 (March 19, 2020)
 
 FEATURES:
 
-* **New Resource:** `aws_kinesis_video_stream` [GH-8291]
-* **New Resource:** `aws_securityhub_member` [GH-6975]
+* **New Resource:** `aws_kinesis_video_stream` ([#8291](https://github.com/terraform-providers/terraform-provider-aws/issues/8291))
+* **New Resource:** `aws_securityhub_member` ([#6975](https://github.com/terraform-providers/terraform-provider-aws/issues/6975))
 
 ENHANCEMENTS:
 
-* data-source/aws_iam_role: Add `tags` attribute [GH-12349]
-* data-source/aws_lb: Add `drop_invalid_header_fields` attribute [GH-11257]
-* provider: Support AWS shared configuration file `duration_seconds` setting for assume role [GH-12359]
-* resource/aws_backup_plan: Support resource import [GH-12381]
-* resource/aws_cognito_user_pool: Add `email_configuration` configuration block `from_email_address` argument [GH-11607]
-* resource/aws_cognito_user_pool: Add `username_configuration` configuration block (Support case insensitive usernames) [GH-12317]
-* resource/aws_cognito_user_pool_client: Add `analytics_configuration` configuration block (Support Pinpoint analytics) [GH-11762]
-* resource/aws_cognito_user_pool_client: Add `prevent_user_existence_errors` argument [GH-11604]
-* resource/aws_dlm_lifecycle_policy: Support plan-time validation for 1 hour schedules in `policy_details` `schedule` `create_rule` `interval` argument [GH-12327]
-* resource/aws_inspector_assessment_template: Add `tags` argument [GH-12375]
-* resource/aws_inspector_assessment_template: Support resource import [GH-12375]
-* resource/aws_lambda_function: Support plan-time validation for `handler` argument [GH-12411]
-* resource/aws_lb: Add `drop_invalid_header_fields` argument [GH-11257]
-* resource/aws_nat_gateway: Support tag-on-create [GH-12347]
-* resource/aws_opsworks_application: Support resource import [GH-12383]
-* resource/aws_opsworks_application: Add plan-time validation to `data_source_arn` and `data_source_type` arguments and `app_source` configuration block `type` argument [GH-12383]
-* resource/aws_opsworks_custom_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
-* resource/aws_opsworks_ganglia_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
-* resource/aws_opsworks_haproxy_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
-* resource/aws_opsworks_java_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
-* resource/aws_opsworks_memcached_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
-* resource/aws_opsworks_mysql_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
-* resource/aws_opsworks_nodejs_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
-* resource/aws_opsworks_php_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
-* resource/aws_opsworks_rails_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
-* resource/aws_opsworks_static_web_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument [GH-11667]
-* resource/aws_vpc_dhcp_options_association: Support resource import [GH-7252]
+* data-source/aws_iam_role: Add `tags` attribute ([#12349](https://github.com/terraform-providers/terraform-provider-aws/issues/12349))
+* data-source/aws_lb: Add `drop_invalid_header_fields` attribute ([#11257](https://github.com/terraform-providers/terraform-provider-aws/issues/11257))
+* provider: Support AWS shared configuration file `duration_seconds` setting for assume role ([#12359](https://github.com/terraform-providers/terraform-provider-aws/issues/12359))
+* resource/aws_backup_plan: Support resource import ([#12381](https://github.com/terraform-providers/terraform-provider-aws/issues/12381))
+* resource/aws_cognito_user_pool: Add `email_configuration` configuration block `from_email_address` argument ([#11607](https://github.com/terraform-providers/terraform-provider-aws/issues/11607))
+* resource/aws_cognito_user_pool: Add `username_configuration` configuration block (Support case insensitive usernames) ([#12317](https://github.com/terraform-providers/terraform-provider-aws/issues/12317))
+* resource/aws_cognito_user_pool_client: Add `analytics_configuration` configuration block (Support Pinpoint analytics) ([#11762](https://github.com/terraform-providers/terraform-provider-aws/issues/11762))
+* resource/aws_cognito_user_pool_client: Add `prevent_user_existence_errors` argument ([#11604](https://github.com/terraform-providers/terraform-provider-aws/issues/11604))
+* resource/aws_dlm_lifecycle_policy: Support plan-time validation for 1 hour schedules in `policy_details` `schedule` `create_rule` `interval` argument ([#12327](https://github.com/terraform-providers/terraform-provider-aws/issues/12327))
+* resource/aws_inspector_assessment_template: Add `tags` argument ([#12375](https://github.com/terraform-providers/terraform-provider-aws/issues/12375))
+* resource/aws_inspector_assessment_template: Support resource import ([#12375](https://github.com/terraform-providers/terraform-provider-aws/issues/12375))
+* resource/aws_lambda_function: Support plan-time validation for `handler` argument ([#12411](https://github.com/terraform-providers/terraform-provider-aws/issues/12411))
+* resource/aws_lb: Add `drop_invalid_header_fields` argument ([#11257](https://github.com/terraform-providers/terraform-provider-aws/issues/11257))
+* resource/aws_nat_gateway: Support tag-on-create ([#12347](https://github.com/terraform-providers/terraform-provider-aws/issues/12347))
+* resource/aws_opsworks_application: Support resource import ([#12383](https://github.com/terraform-providers/terraform-provider-aws/issues/12383))
+* resource/aws_opsworks_application: Add plan-time validation to `data_source_arn` and `data_source_type` arguments and `app_source` configuration block `type` argument ([#12383](https://github.com/terraform-providers/terraform-provider-aws/issues/12383))
+* resource/aws_opsworks_custom_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_ganglia_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_haproxy_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_java_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_memcached_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_mysql_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_nodejs_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_php_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_rails_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_static_web_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_vpc_dhcp_options_association: Support resource import ([#7252](https://github.com/terraform-providers/terraform-provider-aws/issues/7252))
 
 BUG FIXES:
 
-* resource/aws_api_gateway_rest_api: Ignore ordering differences for `endpoint_configuration` configuration block `vpc_endpoint_ids` argument [GH-12350]
-* resource/aws_backup_selection: Automatically retry on additional IAM Role eventual consistency error [GH-10687]
-* resource/aws_backup_vault: Remove resource from Terraform state when deleted outside Terraform [GH-11845]
-* resource/aws_cognito_user_pool_client: Ignore ordering differences for `callback_urls`, `logout_urls`, and `supported_identity_providers` arguments [GH-12388]
-* resource/aws_ebs_snapshot_copy: Return API errors instead of panic if unable to read snapshot [GH-12283]
-* resource/aws_kinesis_stream: Ensure `kms_key_id` argument in-place updates complete successfully [GH-12008]
-* resource/aws_lambda_alias: Propose resource recreation for `function_name` argument updates [GH-11170]
-* resource/aws_opsworks_application: Mark `app_source` configuration block `ssh_key` argument as sensitive [GH-11984]
-* resource/aws_opsworks_stack: Mark `custom_cookbooks_source` configuration block `ssh_key` argument as sensitive [GH-11984]
-* resource/aws_s3_bucket: Retry `NoSuchBucket` error when setting tags during resource creation [GH-12418]
+* resource/aws_api_gateway_rest_api: Ignore ordering differences for `endpoint_configuration` configuration block `vpc_endpoint_ids` argument ([#12350](https://github.com/terraform-providers/terraform-provider-aws/issues/12350))
+* resource/aws_backup_selection: Automatically retry on additional IAM Role eventual consistency error ([#10687](https://github.com/terraform-providers/terraform-provider-aws/issues/10687))
+* resource/aws_backup_vault: Remove resource from Terraform state when deleted outside Terraform ([#11845](https://github.com/terraform-providers/terraform-provider-aws/issues/11845))
+* resource/aws_cognito_user_pool_client: Ignore ordering differences for `callback_urls`, `logout_urls`, and `supported_identity_providers` arguments ([#12388](https://github.com/terraform-providers/terraform-provider-aws/issues/12388))
+* resource/aws_ebs_snapshot_copy: Return API errors instead of panic if unable to read snapshot ([#12283](https://github.com/terraform-providers/terraform-provider-aws/issues/12283))
+* resource/aws_kinesis_stream: Ensure `kms_key_id` argument in-place updates complete successfully ([#12008](https://github.com/terraform-providers/terraform-provider-aws/issues/12008))
+* resource/aws_lambda_alias: Propose resource recreation for `function_name` argument updates ([#11170](https://github.com/terraform-providers/terraform-provider-aws/issues/11170))
+* resource/aws_opsworks_application: Mark `app_source` configuration block `ssh_key` argument as sensitive ([#11984](https://github.com/terraform-providers/terraform-provider-aws/issues/11984))
+* resource/aws_opsworks_stack: Mark `custom_cookbooks_source` configuration block `ssh_key` argument as sensitive ([#11984](https://github.com/terraform-providers/terraform-provider-aws/issues/11984))
+* resource/aws_s3_bucket: Retry `NoSuchBucket` error when setting tags during resource creation ([#12418](https://github.com/terraform-providers/terraform-provider-aws/issues/12418))
 
 ## 2.53.0 (March 12, 2020)
 
