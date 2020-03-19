@@ -210,7 +210,7 @@ func TestAccAWSRoute53Record_disappears(t *testing.T) {
 			{
 				Config: testAccRoute53RecordConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneExists("aws_route53_zone.main", &zone1),
+					testAccCheckRoute53ZoneExists("aws_route53_zone.test", &zone1),
 					testAccCheckRoute53RecordExists(resourceName, &record1),
 					testAccCheckRoute53RecordDisappears(&zone1, &record1),
 				),
@@ -1203,12 +1203,12 @@ func testAccCheckRoute53RecordDoesNotExist(zoneResourceName string, recordName s
 
 func testAccRoute53RecordConfig_allowOverwrite(allowOverwrite bool) string {
 	return fmt.Sprintf(`
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com."
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www.notexample.com"
   type    = "A"
   ttl     = "30"
@@ -1219,7 +1219,7 @@ resource "aws_route53_record" "overwriting" {
   depends_on = ["aws_route53_record.test"]
 
   allow_overwrite = %v
-  zone_id         = aws_route53_zone.main.zone_id
+  zone_id         = aws_route53_zone.test.zone_id
   name            = "www.notexample.com"
   type            = "A"
   ttl             = "30"
@@ -1229,12 +1229,12 @@ resource "aws_route53_record" "overwriting" {
 }
 
 const testAccRoute53RecordConfig = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www.NOTexamplE.com"
   type    = "A"
   ttl     = "30"
@@ -1257,12 +1257,12 @@ resource "aws_route53_record" "default" {
 `
 
 const testAccRoute53RecordConfigZeroTTL = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
 	name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-	zone_id = "${aws_route53_zone.main.zone_id}"
+	zone_id = "${aws_route53_zone.test.zone_id}"
 	name = "www.NOTexamplE.com"
 	type = "A"
 	ttl = "0"
@@ -1287,12 +1287,12 @@ resource "aws_route53_record" "test" {
 `
 
 const testAccRoute53RecordConfig_fqdn = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www.NOTexamplE.com"
   type    = "A"
   ttl     = "30"
@@ -1305,12 +1305,12 @@ resource "aws_route53_record" "test" {
 `
 
 const testAccRoute53RecordConfig_fqdn_no_op = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www.NOTexamplE.com."
   type    = "A"
   ttl     = "30"
@@ -1323,12 +1323,12 @@ resource "aws_route53_record" "test" {
 `
 
 const testAccRoute53RecordConfigSuffix = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "subdomain"
   type    = "A"
   ttl     = "30"
@@ -1337,12 +1337,12 @@ resource "aws_route53_record" "test" {
 `
 
 const testAccRoute53WildCardRecordConfig = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "subdomain"
   type    = "A"
   ttl     = "30"
@@ -1350,7 +1350,7 @@ resource "aws_route53_record" "test" {
 }
 
 resource "aws_route53_record" "wildcard" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "*.notexample.com"
   type    = "A"
   ttl     = "30"
@@ -1359,12 +1359,12 @@ resource "aws_route53_record" "wildcard" {
 `
 
 const testAccRoute53WildCardRecordConfigUpdate = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "subdomain"
   type    = "A"
   ttl     = "30"
@@ -1372,7 +1372,7 @@ resource "aws_route53_record" "test" {
 }
 
 resource "aws_route53_record" "wildcard" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "*.notexample.com"
   type    = "A"
   ttl     = "60"
@@ -1381,12 +1381,12 @@ resource "aws_route53_record" "wildcard" {
 `
 
 const testAccRoute53RecordConfigTXT = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = "/hostedzone/${aws_route53_zone.main.zone_id}"
+  zone_id = "/hostedzone/${aws_route53_zone.test.zone_id}"
   name    = "subdomain"
   type    = "TXT"
   ttl     = "30"
@@ -1395,12 +1395,12 @@ resource "aws_route53_record" "test" {
 `
 
 const testAccRoute53RecordConfigSPF = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "test"
   type    = "SPF"
   ttl     = "30"
@@ -1409,12 +1409,12 @@ resource "aws_route53_record" "test" {
 `
 
 const testAccRoute53RecordConfigCAA = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "test"
   type    = "CAA"
   ttl     = "30"
@@ -1424,11 +1424,11 @@ resource "aws_route53_record" "test" {
 `
 
 const testAccRoute53FailoverCNAMERecord = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
-resource "aws_route53_health_check" "foo" {
+resource "aws_route53_health_check" "test" {
   fqdn              = "dev.notexample.com"
   port              = 80
   type              = "HTTP"
@@ -1442,26 +1442,24 @@ resource "aws_route53_health_check" "foo" {
 }
 
 resource "aws_route53_record" "www-primary" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   failover_routing_policy {
     type = "PRIMARY"
   }
 
-  health_check_id = aws_route53_health_check.foo.id
+  health_check_id = aws_route53_health_check.test.id
   set_identifier  = "www-primary"
   records         = ["primary.notexample.com"]
 }
 
 resource "aws_route53_record" "www-secondary" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   failover_routing_policy {
     type = "SECONDARY"
   }
@@ -1472,16 +1470,15 @@ resource "aws_route53_record" "www-secondary" {
 `
 
 const testAccRoute53WeightedCNAMERecord = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "www-dev" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   weighted_routing_policy {
     weight = 10
   }
@@ -1491,11 +1488,10 @@ resource "aws_route53_record" "www-dev" {
 }
 
 resource "aws_route53_record" "www-live" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   weighted_routing_policy {
     weight = 90
   }
@@ -1505,11 +1501,10 @@ resource "aws_route53_record" "www-live" {
 }
 
 resource "aws_route53_record" "www-off" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   weighted_routing_policy {
     weight = 0
   }
@@ -1520,12 +1515,12 @@ resource "aws_route53_record" "www-off" {
 `
 
 const testAccRoute53GeolocationCNAMERecord = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
@@ -1538,11 +1533,10 @@ resource "aws_route53_record" "test" {
 }
 
 resource "aws_route53_record" "california" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   geolocation_routing_policy {
     country     = "US"
     subdivision = "CA"
@@ -1553,11 +1547,10 @@ resource "aws_route53_record" "california" {
 }
 
 resource "aws_route53_record" "oceania" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   geolocation_routing_policy {
     continent = "OC"
   }
@@ -1567,11 +1560,10 @@ resource "aws_route53_record" "oceania" {
 }
 
 resource "aws_route53_record" "denmark" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   geolocation_routing_policy {
     country = "DK"
   }
@@ -1582,16 +1574,15 @@ resource "aws_route53_record" "denmark" {
 `
 
 const testAccRoute53LatencyCNAMERecord = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "us-east-1" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   latency_routing_policy {
     region = "us-east-1"
   }
@@ -1601,11 +1592,10 @@ resource "aws_route53_record" "us-east-1" {
 }
 
 resource "aws_route53_record" "eu-west-1" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   latency_routing_policy {
     region = "eu-west-1"
   }
@@ -1615,11 +1605,10 @@ resource "aws_route53_record" "eu-west-1" {
 }
 
 resource "aws_route53_record" "ap-northeast-1" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
-
   latency_routing_policy {
     region = "ap-northeast-1"
   }
@@ -1709,11 +1698,11 @@ resource "aws_elb" "test" {
 
 func testAccRoute53RecordConfigAliasS3(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
-resource "aws_s3_bucket" "website" {
+resource "aws_s3_bucket" "test" {
   bucket = %q
   acl    = "public-read"
 
@@ -1723,13 +1712,13 @@ resource "aws_s3_bucket" "website" {
 }
 
 resource "aws_route53_record" "alias" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "A"
 
   alias {
-    zone_id                = aws_s3_bucket.website.hosted_zone_id
-    name                   = aws_s3_bucket.website.website_domain
+    zone_id                = aws_s3_bucket.test.hosted_zone_id
+    name                   = aws_s3_bucket.test.website_domain
     evaluate_target_health = true
   }
 }
@@ -1870,6 +1859,10 @@ resource "aws_security_group" "test" {
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   network_load_balancer_arns = [aws_lb.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
@@ -1879,6 +1872,10 @@ resource "aws_vpc_endpoint" "test" {
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route53_zone" "test" {
@@ -1950,7 +1947,7 @@ resource "aws_elb" "live" {
 }
 
 resource "aws_route53_record" "elb_weighted_alias_live" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "A"
 
@@ -1980,7 +1977,7 @@ resource "aws_elb" "dev" {
 }
 
 resource "aws_route53_record" "elb_weighted_alias_dev" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "A"
 
@@ -1999,12 +1996,12 @@ resource "aws_route53_record" "elb_weighted_alias_dev" {
 `
 
 const testAccRoute53WeightedR53AliasRecord = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "blue_origin" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "blue-origin"
   type    = "CNAME"
   ttl     = 5
@@ -2012,7 +2009,7 @@ resource "aws_route53_record" "blue_origin" {
 }
 
 resource "aws_route53_record" "r53_weighted_alias_live" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
 
@@ -2023,14 +2020,14 @@ resource "aws_route53_record" "r53_weighted_alias_live" {
   set_identifier = "blue"
 
   alias {
-    zone_id                = aws_route53_zone.main.zone_id
-    name                   = "${aws_route53_record.blue_origin.name}.${aws_route53_zone.main.name}"
+    zone_id                = aws_route53_zone.test.zone_id
+    name                   = "${aws_route53_record.blue_origin.name}.${aws_route53_zone.test.name}"
     evaluate_target_health = false
   }
 }
 
 resource "aws_route53_record" "green_origin" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "green-origin"
   type    = "CNAME"
   ttl     = 5
@@ -2038,7 +2035,7 @@ resource "aws_route53_record" "green_origin" {
 }
 
 resource "aws_route53_record" "r53_weighted_alias_dev" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "CNAME"
 
@@ -2049,8 +2046,8 @@ resource "aws_route53_record" "r53_weighted_alias_dev" {
   set_identifier = "green"
 
   alias {
-    zone_id                = aws_route53_zone.main.zone_id
-    name                   = "${aws_route53_record.green_origin.name}.${aws_route53_zone.main.name}"
+    zone_id                = aws_route53_zone.test.zone_id
+    name                   = "${aws_route53_record.green_origin.name}.${aws_route53_zone.test.name}"
     evaluate_target_health = false
   }
 }
@@ -2243,12 +2240,12 @@ resource "aws_route53_record" "test" {
 `
 
 const testAccRoute53MultiValueAnswerARecord = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "www-server1" {
-  zone_id                          = aws_route53_zone.main.zone_id
+  zone_id                          = aws_route53_zone.test.zone_id
   name                             = "www"
   type                             = "A"
   ttl                              = "5"
@@ -2258,7 +2255,7 @@ resource "aws_route53_record" "www-server1" {
 }
 
 resource "aws_route53_record" "www-server2" {
-  zone_id                          = aws_route53_zone.main.zone_id
+  zone_id                          = aws_route53_zone.test.zone_id
   name                             = "www"
   type                             = "A"
   ttl                              = "5"
@@ -2269,12 +2266,12 @@ resource "aws_route53_record" "www-server2" {
 `
 
 const testaccRoute53RecordConfigWithWeightedRoutingPolicy = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "A"
 
@@ -2289,12 +2286,12 @@ resource "aws_route53_record" "test" {
 `
 
 const testaccRoute53RecordConfigWithSimpleRoutingPolicy = `
-resource "aws_route53_zone" "main" {
+resource "aws_route53_zone" "test" {
   name = "notexample.com"
 }
 
-resource "aws_route53_record" "www-server1" {
-  zone_id = aws_route53_zone.main.zone_id
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
   name    = "www"
   type    = "A"
   ttl     = "300"

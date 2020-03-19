@@ -138,7 +138,8 @@ func resourceAwsRoute53Record() *schema.Resource {
 							Required: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
 								value := v.(string)
-								if value != route53.ResourceRecordSetFailoverPrimary && value != route53.ResourceRecordSetFailoverSecondary {
+								if value != route53.ResourceRecordSetFailoverPrimary &&
+									value != route53.ResourceRecordSetFailoverSecondary {
 									es = append(es, fmt.Errorf("Failover policy type must be PRIMARY or SECONDARY"))
 								}
 								return
@@ -295,7 +296,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if v, _ := d.GetChange("ttl"); v.(int) != 0 {
+	if v, _ := d.GetChange("ttl"); v != nil {
 		oldRec.TTL = aws.Int64(int64(v.(int)))
 	}
 
