@@ -97,12 +97,6 @@ func resourceAwsNeptuneParameterGroupCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error creating Neptune Parameter Group: %s", err)
 	}
 
-	d.Partial(true)
-	d.SetPartial("name")
-	d.SetPartial("family")
-	d.SetPartial("description")
-	d.Partial(false)
-
 	d.SetId(*resp.DBParameterGroup.DBParameterGroupName)
 	d.Set("arn", resp.DBParameterGroup.DBParameterGroupArn)
 	log.Printf("[INFO] Neptune Parameter Group ID: %s", d.Id())
@@ -177,8 +171,6 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 
 func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-
-	d.Partial(true)
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -255,8 +247,6 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 				return fmt.Errorf("Error modifying Neptune Parameter Group: %s", err)
 			}
 		}
-
-		d.SetPartial("parameter")
 	}
 
 	if !d.IsNewResource() && d.HasChange("tags") {
@@ -265,11 +255,7 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsNeptuneParameterGroupRead(d, meta)
 }

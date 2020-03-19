@@ -594,7 +594,6 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if d.HasChange("neptune_cluster_parameter_group_name") {
-		d.SetPartial("neptune_cluster_parameter_group_name")
 		req.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
 		requestUpdate = true
 	}
@@ -681,7 +680,6 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error updating Neptune Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
 
-		d.SetPartial("tags")
 	}
 
 	return resourceAwsNeptuneClusterRead(d, meta)
