@@ -111,6 +111,11 @@ func resourceAwsEcsTask() *schema.Resource {
 					},
 				},
 			},
+			"health_status": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -137,6 +142,7 @@ func resourceAwsEcsTaskRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("task_definition_arn", task.TaskDefinitionArn)
 	d.Set("group", task.Group)
 	d.Set("launch_type", task.LaunchType)
+	d.Set("health_status", task.HealthStatus)
 
 	if err := d.Set("containers", flattenEcsTaskContainers(task.Containers)); err != nil {
 		return err
