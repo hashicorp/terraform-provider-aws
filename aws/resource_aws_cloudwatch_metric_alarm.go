@@ -44,14 +44,14 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"metric_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"metric_query"},
+				Type:     schema.TypeString,
+				Optional: true,
+				// ConflictsWith: []string{"metric_query"},
 			},
 			"metric_query": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"metric_name"},
+				Type:     schema.TypeSet,
+				Optional: true,
+				// ConflictsWith: []string{"metric_name"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -108,30 +108,30 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				},
 			},
 			"namespace": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"metric_query"},
+				Type:     schema.TypeString,
+				Optional: true,
+				// ConflictsWith: []string{"metric_query"},
 			},
 			"period": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"metric_query"},
+				Type:     schema.TypeInt,
+				Optional: true,
+				// ConflictsWith: []string{"metric_query"},
 			},
 			"statistic": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"extended_statistic", "metric_query"},
+				Type:     schema.TypeString,
+				Optional: true,
+				// ConflictsWith: []string{"extended_statistic", "metric_query"},
 			},
 			"threshold": {
-				Type:          schema.TypeFloat,
-				Optional:      true,
-				ConflictsWith: []string{"threshold_metric_id"},
+				Type:     schema.TypeFloat,
+				Optional: true,
+				// ConflictsWith: []string{"threshold_metric_id"},
 			},
 			"threshold_metric_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"threshold"},
-				ValidateFunc:  validation.StringLenBetween(1, 255),
+				Type:     schema.TypeString,
+				Optional: true,
+				// ConflictsWith: []string{"threshold"},
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"actions_enabled": {
 				Type:     schema.TypeBool,
@@ -160,9 +160,9 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"dimensions": {
-				Type:          schema.TypeMap,
-				Optional:      true,
-				ConflictsWith: []string{"metric_query"},
+				Type:     schema.TypeMap,
+				Optional: true,
+				// ConflictsWith: []string{"metric_query"},
 			},
 			"insufficient_data_actions": {
 				Type:     schema.TypeSet,
@@ -181,9 +181,9 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Optional: true,
 			},
 			"extended_statistic": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"statistic", "metric_query"},
+				Type:     schema.TypeString,
+				Optional: true,
+				// ConflictsWith: []string{"statistic", "metric_query"},
 			},
 			"treat_missing_data": {
 				Type:         schema.TypeString,
