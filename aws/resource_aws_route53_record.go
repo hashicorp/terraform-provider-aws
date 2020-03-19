@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/route53"
 )
 
@@ -576,7 +575,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 
 	if record.Weight != nil {
 		v := []map[string]interface{}{{
-			"weight": aws.Int64Value((record.Weight)),
+			"weight": aws.Int64Value(record.Weight),
 		}}
 		if err := d.Set("weighted_routing_policy", v); err != nil {
 			return fmt.Errorf("Error setting weighted records for: %s, error: %#v", d.Id(), err)
@@ -618,7 +617,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	// get expanded name
 	zoneRecord, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(zone)})
 	if err != nil {
-		if r53err, ok := err.(awserr.Error); ok && r53err.Code() == route53.ErrCodeNoSuchHostedZone {
+		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
 			return nil, r53NoHostedZoneFound
 		}
 		return nil, err
