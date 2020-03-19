@@ -924,6 +924,7 @@ func Provider() *schema.Provider {
 			"aws_acmpca_certificate":                       acmpca.ResourceCertificate(),
 			"aws_acmpca_certificate_authority":             acmpca.ResourceCertificateAuthority(),
 			"aws_acmpca_certificate_authority_certificate": acmpca.ResourceCertificateAuthorityCertificate(),
+			"aws_acmpca_permission":                        acmpca.ResourcePermission(),
 			"aws_acmpca_policy":                            acmpca.ResourcePolicy(),
 
 			"aws_applicationinsights_application": applicationinsights.ResourceApplication(),
