@@ -132,8 +132,6 @@ func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsSagemakerEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	d.Partial(true)
-
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
@@ -141,7 +139,6 @@ func resourceAwsSagemakerEndpointUpdate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("error updating Sagemaker Endpoint (%s) tags: %s", d.Id(), err)
 		}
 	}
-	d.SetPartial("tags")
 
 	if d.HasChange("endpoint_config_name") {
 		modifyOpts := &sagemaker.UpdateEndpointInput{
@@ -153,7 +150,6 @@ func resourceAwsSagemakerEndpointUpdate(d *schema.ResourceData, meta interface{}
 		if _, err := conn.UpdateEndpoint(modifyOpts); err != nil {
 			return fmt.Errorf("error updating SageMaker Endpoint (%s): %s", d.Id(), err)
 		}
-		d.SetPartial("endpoint_config_name")
 
 		describeInput := &sagemaker.DescribeEndpointInput{
 			EndpointName: aws.String(d.Id()),
@@ -164,8 +160,6 @@ func resourceAwsSagemakerEndpointUpdate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("error waiting for SageMaker Endpoint (%s) to be in service: %s", d.Id(), err)
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsSagemakerEndpointRead(d, meta)
 }
