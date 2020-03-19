@@ -103,9 +103,11 @@ func resourceAwsFlowLog() *schema.Resource {
 			},
 
 			"max_aggregation_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      600,
+				ValidateFunc: validation.IntInSlice([]int{60, 600}),
 			},
 
 			"tags": tagsSchema(),
@@ -157,6 +159,7 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("log_group_name"); ok && v != "" {
 		opts.LogGroupName = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("log_format"); ok && v != "" {
 		opts.LogFormat = aws.String(v.(string))
 	}
