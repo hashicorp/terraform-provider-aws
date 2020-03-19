@@ -210,7 +210,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		params.ParallelizationFactor = aws.Int64(int64(parallelizationFactor.(int)))
 	}
 
-	if maximumRetryAttempts, ok := d.GetOk("maximum_retry_attempts"); ok {
+	if maximumRetryAttempts, ok := d.GetOkExists("maximum_retry_attempts"); ok {
 		params.MaximumRetryAttempts = aws.Int64(int64(maximumRetryAttempts.(int)))
 	}
 
@@ -372,7 +372,7 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 			params.SetParallelizationFactor(int64(parallelizationFactor.(int)))
 		}
 
-		if maximumRetryAttempts, ok := d.GetOk("maximum_retry_attempts"); ok {
+		if maximumRetryAttempts, ok := d.GetOkExists("maximum_retry_attempts"); ok {
 			params.SetMaximumRetryAttempts(int64(maximumRetryAttempts.(int)))
 		}
 
