@@ -68,6 +68,89 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 					wafv2.ScopeRegional,
 				}, false),
 			},
+			"rule": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"action": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"allow": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{},
+										},
+									},
+								},
+							},
+						},
+						"name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
+						"priority": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"statement": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"geo_match_statement": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"country_codes": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"visibility_config": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cloudwatch_metrics_enabled": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"metric_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+									"sampled_requests_enabled": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"tags": tagsSchema(),
 			"visibility_config": {
 				Type:     schema.TypeList,
@@ -104,6 +187,7 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
+		Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
@@ -170,6 +254,7 @@ func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("capacity", resp.RuleGroup.Capacity)
 	d.Set("description", resp.RuleGroup.Description)
 	d.Set("arn", resp.RuleGroup.ARN)
+	d.Set("rule", flattenWafv2Rules(resp.RuleGroup.Rules))
 	d.Set("visibility_config", flattenWafv2VisibilityConfig(resp.RuleGroup.VisibilityConfig))
 
 	tags, err := keyvaluetags.Wafv2ListTags(conn, *resp.RuleGroup.ARN)
@@ -205,12 +290,12 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 			Id:               aws.String(d.Id()),
 			Name:             aws.String(d.Get("name").(string)),
 			Scope:            aws.String(d.Get("scope").(string)),
-			Description:      aws.String(d.Get("description").(string)),
 			LockToken:        resp.LockToken,
 			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+			Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
 		}
 
-		if d.HasChange("description") {
+		if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
 			u.Description = aws.String(d.Get("description").(string))
 		}
 
@@ -229,11 +314,14 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteRuleGroup(&wafv2.DeleteRuleGroupInput{
-			Id:        aws.String(d.Id()),
-			Name:      aws.String(d.Get("name").(string)),
-			Scope:     aws.String(d.Get("scope").(string)),
-			LockToken: resp.LockToken,
+		_, err = conn.UpdateRuleGroup(&wafv2.UpdateRuleGroupInput{
+			Id:               aws.String(d.Id()),
+			Name:             aws.String(d.Get("name").(string)),
+			Scope:            aws.String(d.Get("scope").(string)),
+			Description:      aws.String(d.Get("description").(string)),
+			LockToken:        resp.LockToken,
+			Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
+			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 		})
 	}
 
@@ -325,6 +413,135 @@ func expandWafv2VisibilityConfig(l []interface{}) *wafv2.VisibilityConfig {
 	}
 
 	return configuration
+}
+
+func expandWafv2Rules(l []interface{}) []*wafv2.Rule {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	rules := make([]*wafv2.Rule, 0)
+
+	for _, rule := range l {
+		if rule == nil {
+			continue
+		}
+		rules = append(rules, expandWafv2Rule(rule.(map[string]interface{})))
+	}
+
+	return rules
+}
+
+func expandWafv2Rule(m map[string]interface{}) *wafv2.Rule {
+	if m == nil {
+		return nil
+	}
+
+	return &wafv2.Rule{
+		Name:             aws.String(m["name"].(string)),
+		Priority:         aws.Int64(int64(m["priority"].(int))),
+		Action:           expandWafv2RuleAction(m["action"].([]interface{})),
+		Statement:        expandWafv2Statement(m["statement"].([]interface{})),
+		VisibilityConfig: expandWafv2VisibilityConfig(m["visibility_config"].([]interface{})),
+	}
+}
+
+func expandWafv2RuleAction(l []interface{}) *wafv2.RuleAction {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	action := &wafv2.RuleAction{}
+
+	if _, ok := m["allow"]; ok {
+		action.Allow = &wafv2.AllowAction{}
+	}
+
+	return action
+}
+
+func expandWafv2Statement(l []interface{}) *wafv2.Statement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	statement := &wafv2.Statement{}
+
+	if v, ok := m["geo_match_statement"]; ok {
+		statement.GeoMatchStatement = expandWafv2GeoStatement(v.([]interface{}))
+	}
+
+	return statement
+}
+
+func expandWafv2GeoStatement(l []interface{}) *wafv2.GeoMatchStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.GeoMatchStatement{
+		CountryCodes: expandStringList(m["country_codes"].([]interface{})),
+	}
+}
+
+func flattenWafv2Rules(r []*wafv2.Rule) []map[string]interface{} {
+	out := make([]map[string]interface{}, len(r))
+	for i, rule := range r {
+		m := make(map[string]interface{})
+		m["action"] = flattenWafv2RuleAction(rule.Action)
+		m["name"] = aws.StringValue(rule.Name)
+		m["priority"] = int(aws.Int64Value(rule.Priority))
+		m["statement"] = flattenWafv2Statement(rule.Statement)
+		m["visibility_config"] = flattenWafv2VisibilityConfig(rule.VisibilityConfig)
+		out[i] = m
+	}
+	return out
+}
+
+func flattenWafv2RuleAction(a *wafv2.RuleAction) interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if a.Allow != nil {
+		m["allow"] = map[string]interface{}{}
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2Statement(s *wafv2.Statement) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if s.GeoMatchStatement != nil {
+		m["geo_match_statement"] = flattenWafv2GeoMatchStatement(s.GeoMatchStatement)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2GeoMatchStatement(g *wafv2.GeoMatchStatement) interface{} {
+	if g == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"country_codes": flattenStringList(g.CountryCodes),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenWafv2VisibilityConfig(config *wafv2.VisibilityConfig) interface{} {
