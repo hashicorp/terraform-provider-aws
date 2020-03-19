@@ -164,8 +164,6 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
-
-		d.SetPartial("tags")
 	}
 
 	// You cannot modify multiple subnet attributes in the same request.
@@ -182,8 +180,6 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		if _, err := conn.ModifySubnetAttribute(input); err != nil {
 			return fmt.Errorf("error enabling EC2 Subnet (%s) assign IPv6 address on creation: %s", d.Id(), err)
 		}
-
-		d.SetPartial("assign_ipv6_address_on_creation")
 	}
 
 	if d.Get("map_public_ip_on_launch").(bool) {
@@ -197,11 +193,7 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		if _, err := conn.ModifySubnetAttribute(input); err != nil {
 			return fmt.Errorf("error enabling EC2 Subnet (%s) map public IP on launch: %s", d.Id(), err)
 		}
-
-		d.SetPartial("map_public_ip_on_launch")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsSubnetRead(d, meta)
 }
@@ -262,16 +254,12 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
-
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Subnet (%s) tags: %s", d.Id(), err)
 		}
-
-		d.SetPartial("tags")
 	}
 
 	if d.HasChange("map_public_ip_on_launch") {
@@ -288,8 +276,6 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return err
-		} else {
-			d.SetPartial("map_public_ip_on_launch")
 		}
 	}
 
@@ -357,8 +343,6 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 				"Error waiting for IPv6 CIDR (%s) to become associated: %s",
 				d.Id(), err)
 		}
-
-		d.SetPartial("ipv6_cidr_block")
 	}
 
 	if d.HasChange("assign_ipv6_address_on_creation") {
@@ -375,12 +359,8 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return err
-		} else {
-			d.SetPartial("assign_ipv6_address_on_creation")
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsSubnetRead(d, meta)
 }
