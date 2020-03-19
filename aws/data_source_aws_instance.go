@@ -506,14 +506,8 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		return fmt.Errorf("error setting credit_specification: %s", err)
 	}
 
-	if instance.MetadataOptions != nil {
-		mo := make(map[string]interface{})
-		mo["http_endpoint"] = instance.MetadataOptions.HttpEndpoint
-		mo["http_tokens"] = instance.MetadataOptions.HttpTokens
-		mo["http_put_response_hop_limit"] = instance.MetadataOptions.HttpPutResponseHopLimit
-		var metadataOptions []map[string]interface{}
-		metadataOptions = append(metadataOptions, mo)
-		d.Set("metadata_options", metadataOptions)
+	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %s", err)
 	}
 
 	return nil

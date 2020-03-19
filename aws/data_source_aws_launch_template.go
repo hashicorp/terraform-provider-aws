@@ -476,7 +476,7 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting instance_market_options: %s", err)
 	}
 
-	if err := d.Set("metadata_options", getMetadataOptions(ltData.MetadataOptions)); err != nil {
+	if err := d.Set("metadata_options", flattenLaunchTemplateInstanceMetadataOptions(ltData.MetadataOptions)); err != nil {
 		return fmt.Errorf("error setting metadata_options: %s", err)
 	}
 

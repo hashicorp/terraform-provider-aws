@@ -358,28 +358,27 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			"metadata_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http_endpoint": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled, ec2.LaunchTemplateInstanceMetadataEndpointStateDisabled}, false),
 						},
 						"http_tokens": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          ec2.LaunchTemplateHttpTokensStateOptional,
-							ValidateFunc:     validation.StringInSlice([]string{ec2.LaunchTemplateHttpTokensStateOptional, ec2.LaunchTemplateHttpTokensStateRequired}, false),
-							DiffSuppressFunc: suppressMetadataOptionsHttpEndpointDisabled,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{ec2.LaunchTemplateHttpTokensStateOptional, ec2.LaunchTemplateHttpTokensStateRequired}, false),
 						},
 						"http_put_response_hop_limit": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Default:          1,
-							ValidateFunc:     validation.IntBetween(1, 64),
-							DiffSuppressFunc: suppressMetadataOptionsHttpEndpointDisabled,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 64),
 						},
 					},
 				},
@@ -727,7 +726,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting license_specification: %s", err)
 	}
 
-	if err := d.Set("metadata_options", getMetadataOptions(ltData.MetadataOptions)); err != nil {
+	if err := d.Set("metadata_options", flattenLaunchTemplateInstanceMetadataOptions(ltData.MetadataOptions)); err != nil {
 		return fmt.Errorf("error setting metadata_options: %s", err)
 	}
 
@@ -973,17 +972,44 @@ func getLicenseSpecifications(licenseSpecifications []*ec2.LaunchTemplateLicense
 	return s
 }
 
-func getMetadataOptions(metadataOptions *ec2.LaunchTemplateInstanceMetadataOptions) []interface{} {
-	s := []interface{}{}
-	if metadataOptions != nil {
-		mo := map[string]interface{}{
-			"http_endpoint":               aws.StringValue(metadataOptions.HttpEndpoint),
-			"http_tokens":                 aws.StringValue(metadataOptions.HttpTokens),
-			"http_put_response_hop_limit": aws.Int64Value(metadataOptions.HttpPutResponseHopLimit),
-		}
-		s = append(s, mo)
+func expandLaunchTemplateInstanceMetadataOptions(l []interface{}) *ec2.LaunchTemplateInstanceMetadataOptionsRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
 	}
-	return s
+
+	m := l[0].(map[string]interface{})
+
+	opts := &ec2.LaunchTemplateInstanceMetadataOptionsRequest{
+		HttpEndpoint: aws.String(m["http_endpoint"].(string)),
+	}
+
+	if m["http_endpoint"].(string) == ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled {
+		// These parameters are not allowed unless HttpEndpoint is enabled
+
+		if v, ok := m["http_tokens"].(string); ok && v != "" {
+			opts.HttpTokens = aws.String(v)
+		}
+
+		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
+			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
+		}
+	}
+
+	return opts
+}
+
+func flattenLaunchTemplateInstanceMetadataOptions(opts *ec2.LaunchTemplateInstanceMetadataOptions) []interface{} {
+	if opts == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
+		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
+		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+	}
+
+	return []interface{}{m}
 }
 
 func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
@@ -1222,19 +1248,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 	}
 
 	if v, ok := d.GetOk("metadata_options"); ok {
-		m := v.([]interface{})
-		if len(m) > 0 && m[0] != nil {
-			mo := m[0].(map[string]interface{})
-			metadataOptions := &ec2.LaunchTemplateInstanceMetadataOptionsRequest{
-				HttpEndpoint: aws.String(mo["http_endpoint"].(string)),
-			}
-			if mo["http_endpoint"].(string) == ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled {
-				// These parameters are not allowed unless HttpEndpoint is enabled
-				metadataOptions.HttpTokens = aws.String(mo["http_tokens"].(string))
-				metadataOptions.HttpPutResponseHopLimit = aws.Int64(int64(mo["http_put_response_hop_limit"].(int)))
-			}
-			opts.MetadataOptions = metadataOptions
-		}
+		opts.MetadataOptions = expandLaunchTemplateInstanceMetadataOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("monitoring"); ok {
