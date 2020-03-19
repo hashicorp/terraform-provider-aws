@@ -218,7 +218,7 @@ github.com/bflad/tfproviderdocs/check
 github.com/bflad/tfproviderdocs/check/sidenavigation
 github.com/bflad/tfproviderdocs/command
 github.com/bflad/tfproviderdocs/version
-# github.com/bflad/tfproviderlint v0.11.0
+# github.com/bflad/tfproviderlint v0.12.0
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/helper/analysisutils
 github.com/bflad/tfproviderlint/helper/astutils
@@ -283,6 +283,9 @@ github.com/bflad/tfproviderlint/passes/S031
 github.com/bflad/tfproviderlint/passes/S032
 github.com/bflad/tfproviderlint/passes/S033
 github.com/bflad/tfproviderlint/passes/S034
+github.com/bflad/tfproviderlint/passes/S035
+github.com/bflad/tfproviderlint/passes/S036
+github.com/bflad/tfproviderlint/passes/S037
 github.com/bflad/tfproviderlint/passes/V001
 github.com/bflad/tfproviderlint/passes/V002
 github.com/bflad/tfproviderlint/passes/V003
