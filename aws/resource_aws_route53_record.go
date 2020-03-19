@@ -138,7 +138,7 @@ func resourceAwsRoute53Record() *schema.Resource {
 							Required: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
 								value := v.(string)
-								if value != "PRIMARY" && value != "SECONDARY" {
+								if value != route53.ResourceRecordSetFailoverPrimary && value != route53.ResourceRecordSetFailoverSecondary {
 									es = append(es, fmt.Errorf("Failover policy type must be PRIMARY or SECONDARY"))
 								}
 								return
@@ -788,7 +788,7 @@ func resourceAwsRoute53RecordBuildSet(d *schema.ResourceData, zoneName string) (
 		Type: aws.String(d.Get("type").(string)),
 	}
 
-	if v, ok := d.GetOk("ttl"); ok {
+	if v, ok := d.GetOkExists("ttl"); ok {
 		rec.TTL = aws.Int64(int64(v.(int)))
 	}
 
@@ -812,7 +812,7 @@ func resourceAwsRoute53RecordBuildSet(d *schema.ResourceData, zoneName string) (
 		}
 		log.Printf("[DEBUG] Creating alias: %#v", alias)
 	} else {
-		if _, ok := d.GetOk("ttl"); !ok {
+		if _, ok := d.GetOkExists("ttl"); !ok {
 			return nil, fmt.Errorf(`provider.aws: aws_route53_record: %s: "ttl": required field is not set`, d.Get("name").(string))
 		}
 
