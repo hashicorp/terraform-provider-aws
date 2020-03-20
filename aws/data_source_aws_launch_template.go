@@ -358,6 +358,18 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 			},
 			"tags":   tagsSchemaComputed(),
 			"filter": dataSourceFiltersSchema(),
+			"hibernation_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"configured": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -490,6 +502,10 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("placement", getPlacement(ltData.Placement)); err != nil {
 		return fmt.Errorf("error setting placement: %s", err)
+	}
+
+	if err := d.Set("hibernation_options", getHibernationOptions(ltData.HibernationOptions)); err != nil {
+		return fmt.Errorf("error setting hibernation_options: %s", err)
 	}
 
 	if err := d.Set("tag_specifications", getTagSpecifications(ltData.TagSpecifications)); err != nil {

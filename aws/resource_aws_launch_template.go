@@ -542,6 +542,19 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+			"hibernation_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"configured": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -740,6 +753,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 
 	if err := d.Set("placement", getPlacement(ltData.Placement)); err != nil {
 		return fmt.Errorf("error setting placement: %s", err)
+	}
+
+	if err := d.Set("hibernation_options", getHibernationOptions(ltData.HibernationOptions)); err != nil {
+		return fmt.Errorf("error setting hibernation_options: %s", err)
 	}
 
 	if err := d.Set("tag_specifications", getTagSpecifications(ltData.TagSpecifications)); err != nil {
@@ -1098,6 +1115,17 @@ func getPlacement(p *ec2.LaunchTemplatePlacement) []interface{} {
 	return s
 }
 
+func getHibernationOptions(m *ec2.LaunchTemplateHibernationOptions) []interface{} {
+	s := []interface{}{}
+	if m != nil {
+		mo := map[string]interface{}{
+			"configured": aws.BoolValue(m.Configured),
+		}
+		s = append(s, mo)
+	}
+	return s
+}
+
 func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{} {
 	s := []interface{}{}
 	for _, v := range t {
@@ -1285,6 +1313,17 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 
 		if len(p) > 0 && p[0] != nil {
 			opts.Placement = readPlacementFromConfig(p[0].(map[string]interface{}))
+		}
+	}
+
+	if v, ok := d.GetOk("hibernation_options"); ok {
+		m := v.([]interface{})
+		if len(m) > 0 && m[0] != nil {
+			mData := m[0].(map[string]interface{})
+			ho := &ec2.LaunchTemplateHibernationOptionsRequest{
+				Configured: aws.Bool(mData["configured"].(bool)),
+			}
+			opts.HibernationOptions = ho
 		}
 	}
 
