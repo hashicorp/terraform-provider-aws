@@ -125,7 +125,6 @@ In addition to all arguments above, the following attributes are exported:
 * `replication_instance_private_ips` -  A list of the private IP addresses of the replication instance.
 * `replication_instance_public_ips` - A list of the public IP addresses of the replication instance.
 
-<a id="timeouts"></a>
 ## Timeouts
 
 `aws_dms_replication_instance` provides the following
