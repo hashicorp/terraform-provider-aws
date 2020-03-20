@@ -2557,6 +2557,11 @@ resource "aws_elasticsearch_domain" "test_cluster" {
     instance_type = "m4.large.elasticsearch"
   }
 
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
   ebs_options {
     ebs_enabled = true
     volume_size = 10
@@ -2813,7 +2818,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
   }
   elasticsearch_configuration {
-    cluster_endpoint = "${aws_elasticsearch_domain.test_cluster.endpoint}"
+    cluster_endpoint = "https://${aws_elasticsearch_domain.test_cluster.endpoint}"
     role_arn = "${aws_iam_role.firehose.arn}"
     index_name = "test"
     type_name = "test"
@@ -2831,7 +2836,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
   }
   elasticsearch_configuration {
-    cluster_endpoint = "${aws_elasticsearch_domain.test_cluster.endpoint}"
+    cluster_endpoint = "https://${aws_elasticsearch_domain.test_cluster.endpoint}"
     role_arn = "${aws_iam_role.firehose.arn}"
     index_name = "test"
     type_name = "test"
