@@ -110,6 +110,21 @@ func resourceAwsGlueJob() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			"notification_property": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"notify_delay_after": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+					},
+				},
+			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -196,6 +211,10 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 		input.MaxRetries = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("notification_property"); ok {
+		input.NotificationProperty = expandGlueNotificationProperty(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("security_configuration"); ok {
 		input.SecurityConfiguration = aws.String(v.(string))
 	}
@@ -269,6 +288,9 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("max_capacity", aws.Float64Value(job.MaxCapacity))
 	d.Set("max_retries", int(aws.Int64Value(job.MaxRetries)))
+	if err := d.Set("notification_property", flattenGlueNotificationProperty(job.NotificationProperty)); err != nil {
+		return fmt.Errorf("error setting notification_property: #{err}")
+	}
 	d.Set("name", job.Name)
 	d.Set("role_arn", job.Role)
 
@@ -308,6 +330,7 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		d.HasChange("glue_version") ||
 		d.HasChange("max_capacity") ||
 		d.HasChange("max_retries") ||
+		d.HasChange("notification_property") ||
 		d.HasChange("number_of_workers") ||
 		d.HasChange("role_arn") ||
 		d.HasChange("security_configuration") ||
@@ -359,6 +382,10 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("max_retries"); ok {
 			jobUpdate.MaxRetries = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("notification_property"); ok {
+			jobUpdate.NotificationProperty = expandGlueNotificationProperty(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("security_configuration"); ok {
@@ -444,6 +471,16 @@ func expandGlueJobCommand(l []interface{}) *glue.JobCommand {
 	return jobCommand
 }
 
+func expandGlueNotificationProperty(l []interface{}) *glue.NotificationProperty {
+	m := l[0].(map[string]interface{})
+
+	notificationProperty := &glue.NotificationProperty{
+		NotifyDelayAfter: aws.Int64(int64(m["notify_delay_after"].(int))),
+	}
+
+	return notificationProperty
+}
+
 func flattenGlueConnectionsList(connectionsList *glue.ConnectionsList) []interface{} {
 	if connectionsList == nil {
 		return []interface{}{}
@@ -473,6 +510,18 @@ func flattenGlueJobCommand(jobCommand *glue.JobCommand) []map[string]interface{}
 		"name":            aws.StringValue(jobCommand.Name),
 		"script_location": aws.StringValue(jobCommand.ScriptLocation),
 		"python_version":  aws.StringValue(jobCommand.PythonVersion),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenGlueNotificationProperty(notificationProperty *glue.NotificationProperty) []map[string]interface{} {
+	if notificationProperty == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"notify_delay_after": int(aws.Int64Value(notificationProperty.NotifyDelayAfter)),
 	}
 
 	return []map[string]interface{}{m}

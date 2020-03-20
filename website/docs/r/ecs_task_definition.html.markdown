@@ -131,7 +131,7 @@ For more information, see [Specifying a Docker volume in your Task Definition De
 * `driver_opts` - (Optional) A map of Docker driver specific options.
 * `labels` - (Optional) A map of custom metadata to add to your Docker volume.
 
-##### Example Usage:
+##### Example Usage
 
 ```hcl
 resource "aws_ecs_task_definition" "service" {
@@ -163,7 +163,7 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 * `file_system_id` - (Required) The ID of the EFS File System.
 * `root_directory` - (Optional) The path to mount on the host
 
-##### Example Usage:
+##### Example Usage
 
 ```hcl
 resource "aws_ecs_task_definition" "service" {

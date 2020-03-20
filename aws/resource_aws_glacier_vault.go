@@ -102,7 +102,7 @@ func resourceAwsGlacierVaultCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.SetId(d.Get("name").(string))
-	d.Set("location", *out.Location)
+	d.Set("location", out.Location)
 
 	return resourceAwsGlacierVaultUpdate(d, meta)
 }

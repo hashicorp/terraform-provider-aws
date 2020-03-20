@@ -28,6 +28,7 @@ var serviceNames = []string{
 	"appsync",
 	"athena",
 	"backup",
+	"cloud9",
 	"cloudfront",
 	"cloudhsmv2",
 	"cloudtrail",
@@ -37,6 +38,7 @@ var serviceNames = []string{
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
+	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
 	"configservice",
@@ -66,6 +68,7 @@ var serviceNames = []string{
 	"fsx",
 	"gamelift",
 	"glacier",
+	"globalaccelerator",
 	"glue",
 	"guardduty",
 	"greengrass",
@@ -77,6 +80,7 @@ var serviceNames = []string{
 	"kinesis",
 	"kinesisanalytics",
 	"kinesisanalyticsv2",
+	"kinesisvideo",
 	"kms",
 	"lambda",
 	"licensemanager",
@@ -92,6 +96,7 @@ var serviceNames = []string{
 	"organizations",
 	"pinpoint",
 	"qldb",
+	"quicksight",
 	"ram",
 	"rds",
 	"redshift",
@@ -111,7 +116,6 @@ var serviceNames = []string{
 	"waf",
 	"wafregional",
 	"wafv2",
-	"workspaces",
 }
 
 type TemplateData struct {
@@ -352,6 +356,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToVault"
 	case "kinesis":
 		return "AddTagsToStream"
+	case "kinesisvideo":
+		return "TagStream"
 	case "medialive":
 		return "CreateTags"
 	case "mq":
@@ -374,8 +380,6 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "storagegateway":
 		return "AddTagsToResource"
-	case "workspaces":
-		return "CreateTags"
 	default:
 		return "TagResource"
 	}
@@ -400,6 +404,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "CertificateAuthorityArn"
 	case "athena":
 		return "ResourceARN"
+	case "cloud9":
+		return "ResourceARN"
 	case "cloudfront":
 		return "Resource"
 	case "cloudhsmv2":
@@ -412,6 +418,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "cloudwatchlogs":
 		return "LogGroupName"
+	case "codestarnotifications":
+		return "Arn"
 	case "datapipeline":
 		return "PipelineId"
 	case "dax":
@@ -450,6 +458,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "kinesisanalyticsv2":
 		return "ResourceARN"
+	case "kinesisvideo":
+		return "StreamARN"
 	case "kms":
 		return "KeyId"
 	case "lambda":
@@ -490,8 +500,6 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "wafv2":
 		return "ResourceARN"
-	case "workspaces":
-		return "ResourceId"
 	default:
 		return "ResourceArn"
 	}
@@ -598,6 +606,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromVault"
 	case "kinesis":
 		return "RemoveTagsFromStream"
+	case "kinesisvideo":
+		return "UntagStream"
 	case "medialive":
 		return "DeleteTags"
 	case "mq":
@@ -620,8 +630,6 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromResource"
 	case "storagegateway":
 		return "RemoveTagsFromResource"
-	case "workspaces":
-		return "DeleteTags"
 	default:
 		return "UntagResource"
 	}
@@ -678,6 +686,8 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "Tags"
 	case "glue":
 		return "TagsToRemove"
+	case "kinesisvideo":
+		return "TagKeyList"
 	case "resourcegroups":
 		return "Keys"
 	case "route53":
