@@ -164,7 +164,8 @@ resource "aws_route53_zone" "test" {
   }
 
   tags = {
-    Environment = "tf-acc-test-%[1]d"
+	Environment = "tf-acc-test-%[1]d"
+	Name        = "tf-acc-test-%[1]d"
   }
 }
 

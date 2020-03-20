@@ -347,6 +347,46 @@ func TestAccAWSGlueJob_MaxRetries(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueJob_NotificationProperty(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSGlueJobConfig_NotificationProperty(rName, 0),
+				ExpectError: regexp.MustCompile(`expected notification_property.0.notify_delay_after to be at least`),
+			},
+			{
+				Config: testAccAWSGlueJobConfig_NotificationProperty(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "notification_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "notification_property.0.notify_delay_after", "1"),
+				),
+			},
+			{
+				Config: testAccAWSGlueJobConfig_NotificationProperty(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "notification_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "notification_property.0.notify_delay_after", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueJob_Tags(t *testing.T) {
 	var job1, job2, job3 glue.Job
 
@@ -825,6 +865,28 @@ resource "aws_glue_job" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test"]
 }
 `, testAccAWSGlueJobConfig_Base(rName), maxRetries, rName)
+}
+
+func testAccAWSGlueJobConfig_NotificationProperty(rName string, notifyDelayAfter int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  allocated_capacity = 10
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  notification_property {
+    notify_delay_after = %d
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, testAccAWSGlueJobConfig_Base(rName), rName, notifyDelayAfter)
 }
 
 func testAccAWSGlueJobConfig_Required(rName string) string {
