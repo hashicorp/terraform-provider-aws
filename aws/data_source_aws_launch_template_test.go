@@ -79,6 +79,29 @@ func TestAccAWSLaunchTemplateDataSource_filter_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplateDataSource_metadataOptions(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_launch_template.test"
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfig_metadataOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.#", resourceName, "metadata_options.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_tokens", resourceName, "metadata_options.0.http_tokens"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_put_response_hop_limit", resourceName, "metadata_options.0.http_put_response_hop_limit"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSLaunchTemplateDataSourceConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -123,4 +146,22 @@ data "aws_launch_template" "test" {
   }
 }
 `, rName, rInt)
+}
+
+func testAccAWSLaunchTemplateDataSourceConfig_metadataOptions(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
+}
+
+data "aws_launch_template" "test" {
+  name = aws_launch_template.test.name
+}
+`, rName)
 }

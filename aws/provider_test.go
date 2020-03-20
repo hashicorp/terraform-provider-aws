@@ -9,8 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -1134,6 +1136,53 @@ func testAccCheckAWSProviderPartition(providers *[]*schema.Provider, expectedPar
 		}
 
 		return nil
+	}
+}
+
+// testAccPreCheckHasDefaultVpcOrEc2Classic checks that the test region has a default VPC or has the EC2-Classic platform.
+// This check is useful to ensure that an instance can be launched without specifying a subnet.
+func testAccPreCheckHasDefaultVpcOrEc2Classic(t *testing.T) {
+	client := testAccProvider.Meta().(*AWSClient)
+
+	if !testAccHasDefaultVpc(t) && !hasEc2Classic(client.supportedplatforms) {
+		t.Skipf("skipping tests; %s does not have a default VPC or EC2-Classic", client.region)
+	}
+}
+
+func testAccHasDefaultVpc(t *testing.T) bool {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	resp, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
+		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
+	})
+	if testAccPreCheckSkipError(err) ||
+		len(resp.AccountAttributes) == 0 ||
+		len(resp.AccountAttributes[0].AttributeValues) == 0 ||
+		aws.StringValue(resp.AccountAttributes[0].AttributeValues[0].AttributeValue) == "none" {
+		return false
+	}
+	if err != nil {
+		t.Fatalf("error describing EC2 account attributes: %s", err)
+	}
+
+	return true
+}
+
+// testAccPreCheckOffersEc2InstanceType checks that the test region offers the specified EC2 instance type.
+func testAccPreCheckOffersEc2InstanceType(t *testing.T, instanceType string) {
+	client := testAccProvider.Meta().(*AWSClient)
+
+	resp, err := client.ec2conn.DescribeInstanceTypeOfferings(&ec2.DescribeInstanceTypeOfferingsInput{
+		Filters: buildEC2AttributeFilterList(map[string]string{
+			"instance-type": instanceType,
+		}),
+		LocationType: aws.String(ec2.LocationTypeRegion),
+	})
+	if testAccPreCheckSkipError(err) || len(resp.InstanceTypeOfferings) == 0 {
+		t.Skipf("skipping tests; %s does not offer EC2 instance type: %s", client.region, instanceType)
+	}
+	if err != nil {
+		t.Fatalf("error describing EC2 instance type offerings: %s", err)
 	}
 }
 
