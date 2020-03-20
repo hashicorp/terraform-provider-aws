@@ -162,6 +162,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ami":                                       dataSourceAwsAmi(),
 			"aws_ami_ids":                                   dataSourceAwsAmiIds(),
 			"aws_api_gateway_api_key":                       dataSourceAwsApiGatewayApiKey(),
+			"aws_api_gateway_domain_name":                   dataSourceAwsApiGatewayDomainName(),
 			"aws_api_gateway_resource":                      dataSourceAwsApiGatewayResource(),
 			"aws_api_gateway_rest_api":                      dataSourceAwsApiGatewayRestApi(),
 			"aws_api_gateway_vpc_link":                      dataSourceAwsApiGatewayVpcLink(),
