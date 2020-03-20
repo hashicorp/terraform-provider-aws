@@ -14,7 +14,7 @@ Use this data source to get the custom domain name for use with AWS API Gateway.
 
 ```hcl
 resource "aws_api_gateway_domain_name" "example" {
-  domain_name     = "api.example.com"
+  domain_name = "api.example.com"
 }
 ```
 
