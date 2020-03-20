@@ -1956,11 +1956,11 @@ func createElasticsearchConfig(d *schema.ResourceData, s3Config *firehose.S3Dest
 		S3Configuration: s3Config,
 	}
 
-	if v, ok := es["domain_arn"]; ok {
+	if v, ok := es["domain_arn"]; ok && v.(string) != "" {
 		config.DomainARN = aws.String(v.(string))
 	}
 
-	if v, ok := es["cluster_endpoint"]; ok {
+	if v, ok := es["cluster_endpoint"]; ok && v.(string) != "" {
 		config.ClusterEndpoint = aws.String(v.(string))
 	}
 
@@ -2004,11 +2004,11 @@ func updateElasticsearchConfig(d *schema.ResourceData, s3Update *firehose.S3Dest
 		S3Update:       s3Update,
 	}
 
-	if v, ok := es["domain_arn"]; ok {
+	if v, ok := es["domain_arn"]; ok && v.(string) != "" {
 		update.DomainARN = aws.String(v.(string))
 	}
 
-	if v, ok := es["cluster_endpoint"]; ok {
+	if v, ok := es["cluster_endpoint"]; ok && v.(string) != "" {
 		update.ClusterEndpoint = aws.String(v.(string))
 	}
 
