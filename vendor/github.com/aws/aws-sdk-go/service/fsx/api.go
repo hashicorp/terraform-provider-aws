@@ -458,6 +458,10 @@ func (c *FSx) CreateFileSystemRequest(input *CreateFileSystemInput) (req *reques
 //   of IDs for security groups that are either invalid or not part of the VPC
 //   specified.
 //
+//   * InvalidPerUnitStorageThroughput
+//   An invalid value for PerUnitStorageThroughput was provided. Please create
+//   your file system again, using a valid value.
+//
 //   * ServiceLimitExceeded
 //   An error indicating that a particular service limit was exceeded. You can
 //   increase some service limits by contacting AWS Support.
@@ -466,7 +470,7 @@ func (c *FSx) CreateFileSystemRequest(input *CreateFileSystemInput) (req *reques
 //   A generic error indicating a server-side failure.
 //
 //   * MissingFileSystemConfiguration
-//   File system configuration is required for this operation.
+//   A file system configuration is required for this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/CreateFileSystem
 func (c *FSx) CreateFileSystem(input *CreateFileSystemInput) (*CreateFileSystemOutput, error) {
@@ -604,7 +608,7 @@ func (c *FSx) CreateFileSystemFromBackupRequest(input *CreateFileSystemFromBacku
 //   A generic error indicating a server-side failure.
 //
 //   * MissingFileSystemConfiguration
-//   File system configuration is required for this operation.
+//   A file system configuration is required for this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/CreateFileSystemFromBackup
 func (c *FSx) CreateFileSystemFromBackup(input *CreateFileSystemFromBackupInput) (*CreateFileSystemFromBackupOutput, error) {
@@ -1707,7 +1711,7 @@ func (c *FSx) UpdateFileSystemRequest(input *UpdateFileSystemInput) (req *reques
 //   No Amazon FSx file systems were found based upon supplied parameters.
 //
 //   * MissingFileSystemConfiguration
-//   File system configuration is required for this operation.
+//   A file system configuration is required for this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/UpdateFileSystem
 func (c *FSx) UpdateFileSystem(input *UpdateFileSystemInput) (*UpdateFileSystemOutput, error) {
@@ -2796,15 +2800,17 @@ type CreateFileSystemInput struct {
 	// when you use the AWS Command Line Interface (AWS CLI) or an AWS SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
-	// The type of Amazon FSx file system to create.
+	// The type of Amazon FSx file system to create, either WINDOWS or LUSTRE.
 	//
 	// FileSystemType is a required field
 	FileSystemType *string `type:"string" required:"true" enum:"FileSystemType"`
 
 	// The ID of the AWS Key Management Service (AWS KMS) key used to encrypt the
-	// file system's data for an Amazon FSx for Windows File Server file system
-	// at rest. Amazon FSx for Lustre does not support KMS encryption. For more
-	// information, see Encrypt (https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html)
+	// file system's data for Amazon FSx for Windows File Server file systems and
+	// Amazon FSx for Lustre PERSISTENT_1 file systems at rest. In either case,
+	// if not specified, the Amazon FSx managed key is used. The Amazon FSx for
+	// Lustre SCRATCH_1 and SCRATCH_2 file systems are always encrypted at rest
+	// using Amazon FSx managed keys. For more information, see Encrypt (https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html)
 	// in the AWS Key Management Service API Reference.
 	KmsKeyId *string `min:"1" type:"string"`
 
@@ -2821,15 +2827,17 @@ type CreateFileSystemInput struct {
 	//
 	// For Windows file systems, valid values are 32 GiB - 65,536 GiB.
 	//
-	// For Lustre file systems, valid values are 1,200, 2,400, 3,600, then continuing
-	// in increments of 3600 GiB.
+	// For SCRATCH_1 Lustre file systems, valid values are 1,200, 2,400, 3,600,
+	// then continuing in increments of 3600 GiB. For SCRATCH_2 and PERSISTENT_1
+	// file systems, valid values are 1200, 2400, then continuing in increments
+	// of 2400 GiB.
 	//
 	// StorageCapacity is a required field
 	StorageCapacity *int64 `type:"integer" required:"true"`
 
 	// Specifies the IDs of the subnets that the file system will be accessible
 	// from. For Windows MULTI_AZ_1 file system deployment types, provide exactly
-	// two subnet IDs, one for the preferred file server and one for the standy
+	// two subnet IDs, one for the preferred file server and one for the standby
 	// file server. You specify one of these subnets as the preferred subnet using
 	// the WindowsConfiguration > PreferredSubnetID property.
 	//
@@ -2966,6 +2974,25 @@ func (s *CreateFileSystemInput) SetWindowsConfiguration(v *CreateFileSystemWindo
 type CreateFileSystemLustreConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// (Optional) Choose SCRATCH_1 and SCRATCH_2 deployment types when you need
+	// temporary storage and shorter-term processing of data. The SCRATCH_2 deployment
+	// type provides in-transit encryption of data and higher burst throughput capacity
+	// than SCRATCH_1.
+	//
+	// Choose PERSISTENT_1 deployment type for longer-term storage and workloads
+	// and encryption of data in transit. To learn more about deployment types,
+	// see FSx for Lustre Deployment Options (https://docs.aws.amazon.com/fsx/latest/LustreGuide/lustre-deployment-types.html).
+	//
+	// Encryption of data in-transit is automatically enabled when you access a
+	// SCRATCH_2 or PERSISTENT_1 file system from Amazon EC2 instances that support
+	// this feature (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/data- protection.html).
+	// (Default = SCRATCH_1)
+	//
+	// Encryption of data in-transit for SCRATCH_2 and PERSISTENT_1 deployment types
+	// is supported when accessed from supported instance types in supported AWS
+	// Regions. To learn more, Encrypting Data in Transit (https://docs.aws.amazon.com/fsx/latest/LustreGuide/encryption-in-transit-fsxl.html).
+	DeploymentType *string `type:"string" enum:"LustreDeploymentType"`
+
 	// (Optional) The path in Amazon S3 where the root of your Amazon FSx file system
 	// is exported. The path must use the same Amazon S3 bucket as specified in
 	// ImportPath. You can provide an optional prefix to which new and changed data
@@ -2996,9 +3023,20 @@ type CreateFileSystemLustreConfiguration struct {
 	// be striped across is limited by the total number of disks that make up the
 	// file system.
 	//
-	// The chunk size default is 1,024 MiB (1 GiB) and can go as high as 512,000
+	// The default chunk size is 1,024 MiB (1 GiB) and can go as high as 512,000
 	// MiB (500 GiB). Amazon S3 objects have a maximum size of 5 TB.
 	ImportedFileChunkSize *int64 `min:"1" type:"integer"`
+
+	// (Optional) For the PERSISTENT_1 deployment type, describes the amount of
+	// read and write throughput for each 1 tebibyte of storage, in MB/s/TiB. File
+	// system throughput capacity is calculated by multiplying ﬁle system storage
+	// capacity (TiB) by the PerUnitStorageThroughput (MB/s/TiB). For a 2.4 TiB
+	// ﬁle system, provisioning 50 MB/s/TiB of PerUnitStorageThroughput yields
+	// 120 MB/s of ﬁle system throughput. You pay for the amount of throughput
+	// that you provision. (Default = 200 MB/s/TiB)
+	//
+	// Valid values are 50, 100, 200.
+	PerUnitStorageThroughput *int64 `min:"50" type:"integer"`
 
 	// The preferred time to perform weekly maintenance, in the UTC time zone.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
@@ -3026,6 +3064,9 @@ func (s *CreateFileSystemLustreConfiguration) Validate() error {
 	if s.ImportedFileChunkSize != nil && *s.ImportedFileChunkSize < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("ImportedFileChunkSize", 1))
 	}
+	if s.PerUnitStorageThroughput != nil && *s.PerUnitStorageThroughput < 50 {
+		invalidParams.Add(request.NewErrParamMinValue("PerUnitStorageThroughput", 50))
+	}
 	if s.WeeklyMaintenanceStartTime != nil && len(*s.WeeklyMaintenanceStartTime) < 7 {
 		invalidParams.Add(request.NewErrParamMinLen("WeeklyMaintenanceStartTime", 7))
 	}
@@ -3034,6 +3075,12 @@ func (s *CreateFileSystemLustreConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDeploymentType sets the DeploymentType field's value.
+func (s *CreateFileSystemLustreConfiguration) SetDeploymentType(v string) *CreateFileSystemLustreConfiguration {
+	s.DeploymentType = &v
+	return s
 }
 
 // SetExportPath sets the ExportPath field's value.
@@ -3051,6 +3098,12 @@ func (s *CreateFileSystemLustreConfiguration) SetImportPath(v string) *CreateFil
 // SetImportedFileChunkSize sets the ImportedFileChunkSize field's value.
 func (s *CreateFileSystemLustreConfiguration) SetImportedFileChunkSize(v int64) *CreateFileSystemLustreConfiguration {
 	s.ImportedFileChunkSize = &v
+	return s
+}
+
+// SetPerUnitStorageThroughput sets the PerUnitStorageThroughput field's value.
+func (s *CreateFileSystemLustreConfiguration) SetPerUnitStorageThroughput(v int64) *CreateFileSystemLustreConfiguration {
+	s.PerUnitStorageThroughput = &v
 	return s
 }
 
@@ -3102,7 +3155,9 @@ type CreateFileSystemWindowsConfiguration struct {
 	// to backups. This value defaults to false. If it's set to true, all tags for
 	// the file system are copied to all automatic and user-initiated backups where
 	// the user doesn't specify tags. If this value is true, and you specify one
-	// or more tags, only the specified tags are copied to backups.
+	// or more tags, only the specified tags are copied to backups. If you specify
+	// one or more tags when creating a user-initiated backup, no tags are copied
+	// from the file system, regardless of this value.
 	CopyTagsToBackups *bool `type:"boolean"`
 
 	// The preferred time to take daily automatic backups, formatted HH:MM in the
@@ -4407,8 +4462,12 @@ type FileSystem struct {
 	FileSystemType *string `type:"string" enum:"FileSystemType"`
 
 	// The ID of the AWS Key Management Service (AWS KMS) key used to encrypt the
-	// file system's data for an Amazon FSx for Windows File Server file system.
-	// Amazon FSx for Lustre does not support KMS encryption.
+	// file system's data for Amazon FSx for Windows File Server file systems and
+	// persistent Amazon FSx for Lustre file systems at rest. In either case, if
+	// not specified, the Amazon FSx managed key is used. The scratch Amazon FSx
+	// for Lustre file systems are always encrypted at rest using Amazon FSx managed
+	// keys. For more information, see Encrypt (https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html)
+	// in the AWS Key Management Service API Reference.
 	KmsKeyId *string `min:"1" type:"string"`
 
 	// The lifecycle status of the file system, following are the possible values
@@ -5006,6 +5065,64 @@ func (s InvalidNetworkSettings) RequestID() string {
 	return s.respMetadata.RequestID
 }
 
+// An invalid value for PerUnitStorageThroughput was provided. Please create
+// your file system again, using a valid value.
+type InvalidPerUnitStorageThroughput struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidPerUnitStorageThroughput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPerUnitStorageThroughput) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPerUnitStorageThroughput(v protocol.ResponseMetadata) error {
+	return &InvalidPerUnitStorageThroughput{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidPerUnitStorageThroughput) Code() string {
+	return "InvalidPerUnitStorageThroughput"
+}
+
+// Message returns the exception's message.
+func (s InvalidPerUnitStorageThroughput) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidPerUnitStorageThroughput) OrigErr() error {
+	return nil
+}
+
+func (s InvalidPerUnitStorageThroughput) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidPerUnitStorageThroughput) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidPerUnitStorageThroughput) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The request object for ListTagsForResource operation.
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
@@ -5119,6 +5236,23 @@ type LustreFileSystemConfiguration struct {
 	// in the response of the CreateFileSystem operation.
 	DataRepositoryConfiguration *DataRepositoryConfiguration `type:"structure"`
 
+	// The deployment type of the FSX for Lustre file system.
+	DeploymentType *string `type:"string" enum:"LustreDeploymentType"`
+
+	// You use the MountName value when mounting the file system.
+	//
+	// For the SCRATCH_1 deployment type, this value is always "fsx". For SCRATCH_2
+	// and PERSISTENT_1 deployment types, this value is a string that is unique
+	// within an AWS Region.
+	MountName *string `min:"1" type:"string"`
+
+	// Per unit storage throughput represents the megabytes per second of read or
+	// write throughput per 1 tebibyte of storage provisioned. File system throughput
+	// capacity is equal to Storage capacity (TiB) * PerUnitStorageThroughput (MB/s/TiB).
+	// This option is only valid for PERSISTENT_1 deployment types. Valid values
+	// are 50, 100, 200.
+	PerUnitStorageThroughput *int64 `min:"50" type:"integer"`
+
 	// The UTC time that you want to begin your weekly maintenance window.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
@@ -5139,13 +5273,31 @@ func (s *LustreFileSystemConfiguration) SetDataRepositoryConfiguration(v *DataRe
 	return s
 }
 
+// SetDeploymentType sets the DeploymentType field's value.
+func (s *LustreFileSystemConfiguration) SetDeploymentType(v string) *LustreFileSystemConfiguration {
+	s.DeploymentType = &v
+	return s
+}
+
+// SetMountName sets the MountName field's value.
+func (s *LustreFileSystemConfiguration) SetMountName(v string) *LustreFileSystemConfiguration {
+	s.MountName = &v
+	return s
+}
+
+// SetPerUnitStorageThroughput sets the PerUnitStorageThroughput field's value.
+func (s *LustreFileSystemConfiguration) SetPerUnitStorageThroughput(v int64) *LustreFileSystemConfiguration {
+	s.PerUnitStorageThroughput = &v
+	return s
+}
+
 // SetWeeklyMaintenanceStartTime sets the WeeklyMaintenanceStartTime field's value.
 func (s *LustreFileSystemConfiguration) SetWeeklyMaintenanceStartTime(v string) *LustreFileSystemConfiguration {
 	s.WeeklyMaintenanceStartTime = &v
 	return s
 }
 
-// File system configuration is required for this operation.
+// A file system configuration is required for this operation.
 type MissingFileSystemConfiguration struct {
 	_            struct{} `type:"structure"`
 	respMetadata protocol.ResponseMetadata
@@ -6245,6 +6397,8 @@ type WindowsFileSystemConfiguration struct {
 	// the file system are copied to all automatic backups and any user-initiated
 	// backups where the user doesn't specify any tags. If this value is true, and
 	// you specify one or more tags, only the specified tags are copied to backups.
+	// If you specify one or more tags when creating a user-initiated backup, no
+	// tags are copied from the file system, regardless of this value.
 	CopyTagsToBackups *bool `type:"boolean"`
 
 	// The preferred time to take daily automatic backups, in the UTC time zone.
@@ -6508,6 +6662,17 @@ const (
 
 	// FilterNameBackupType is a FilterName enum value
 	FilterNameBackupType = "backup-type"
+)
+
+const (
+	// LustreDeploymentTypeScratch1 is a LustreDeploymentType enum value
+	LustreDeploymentTypeScratch1 = "SCRATCH_1"
+
+	// LustreDeploymentTypeScratch2 is a LustreDeploymentType enum value
+	LustreDeploymentTypeScratch2 = "SCRATCH_2"
+
+	// LustreDeploymentTypePersistent1 is a LustreDeploymentType enum value
+	LustreDeploymentTypePersistent1 = "PERSISTENT_1"
 )
 
 const (

@@ -20,13 +20,13 @@ import (
 
 // initialize sweeper
 func init() {
-	resource.AddTestSweepers("aws_beanstalk_environment", &resource.Sweeper{
-		Name: "aws_beanstalk_environment",
-		F:    testSweepBeanstalkEnvironments,
+	resource.AddTestSweepers("aws_elastic_beanstalk_environment", &resource.Sweeper{
+		Name: "aws_elastic_beanstalk_environment",
+		F:    testSweepElasticBeanstalkEnvironments,
 	})
 }
 
-func testSweepBeanstalkEnvironments(region string) error {
+func testSweepElasticBeanstalkEnvironments(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

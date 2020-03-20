@@ -1,6 +1,7 @@
 package tfjson
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -42,6 +43,20 @@ func (p *ProviderSchemas) Validate() error {
 	}
 
 	return nil
+}
+
+func (p *ProviderSchemas) UnmarshalJSON(b []byte) error {
+	type rawSchemas ProviderSchemas
+	var schemas rawSchemas
+
+	err := json.Unmarshal(b, &schemas)
+	if err != nil {
+		return err
+	}
+
+	*p = *(*ProviderSchemas)(&schemas)
+
+	return p.Validate()
 }
 
 // ProviderSchema is the JSON representation of the schema of an

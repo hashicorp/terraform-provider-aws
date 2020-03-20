@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to create an organization.
 
-## Example Usage:
+## Example Usage
 
 ```hcl
 resource "aws_organizations_organization" "org" {

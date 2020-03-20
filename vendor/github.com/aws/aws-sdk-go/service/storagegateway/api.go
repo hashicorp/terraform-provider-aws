@@ -18207,6 +18207,9 @@ const (
 	// HostEnvironmentEc2 is a HostEnvironment enum value
 	HostEnvironmentEc2 = "EC2"
 
+	// HostEnvironmentKvm is a HostEnvironment enum value
+	HostEnvironmentKvm = "KVM"
+
 	// HostEnvironmentOther is a HostEnvironment enum value
 	HostEnvironmentOther = "OTHER"
 )

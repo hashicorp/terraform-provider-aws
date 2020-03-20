@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -133,7 +132,7 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 					if err != nil {
 						return fmt.Errorf("Error finding Route 53 Hosted Zone: %v", err)
 					}
-					matchingTags = reflect.DeepEqual(listTags, tags)
+					matchingTags = listTags.ContainsAll(tags)
 				}
 
 				if matchingTags && matchingVPC {

@@ -352,6 +352,206 @@ func TestAccAWSLambdaEventSourceMapping_BatchWindow(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaEventSourceMapping_ParallelizationFactor(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_event_source_mapping.test"
+	parallelizationFactor := int64(1)
+	parallelizationFactorUpdate := int64(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisParallelizationFactor(rName, parallelizationFactor),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "parallelization_factor", strconv.Itoa(int(parallelizationFactor))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"starting_position",
+					"starting_position_timestamp",
+				},
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisParallelizationFactor(rName, parallelizationFactorUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "parallelization_factor", strconv.Itoa(int(parallelizationFactorUpdate))),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_MaximumRetryAttempts(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_event_source_mapping.test"
+	maximumRetryAttempts := int64(10000)
+	maximumRetryAttemptsUpdate := int64(100)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRetryAttempts(rName, maximumRetryAttempts),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", strconv.Itoa(int(maximumRetryAttempts))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"starting_position",
+					"starting_position_timestamp",
+				},
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRetryAttempts(rName, maximumRetryAttemptsUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", strconv.Itoa(int(maximumRetryAttemptsUpdate))),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_MaximumRecordAgeInSeconds(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_event_source_mapping.test"
+	maximumRecordAgeInSeconds := int64(604800)
+	maximumRecordAgeInSecondsUpdate := int64(3600)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRecordAgeInSeconds(rName, maximumRecordAgeInSeconds),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "maximum_record_age_in_seconds", strconv.Itoa(int(maximumRecordAgeInSeconds))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"starting_position",
+					"starting_position_timestamp",
+				},
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRecordAgeInSeconds(rName, maximumRecordAgeInSecondsUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "maximum_record_age_in_seconds", strconv.Itoa(int(maximumRecordAgeInSecondsUpdate))),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_BisectBatch(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_event_source_mapping.test"
+	bisectBatch := false
+	bisectBatchUpdate := true
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisBisectBatch(rName, bisectBatch),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "bisect_batch_on_function_error", strconv.FormatBool(bisectBatch)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"starting_position",
+					"starting_position_timestamp",
+				},
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisBisectBatch(rName, bisectBatchUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "bisect_batch_on_function_error", strconv.FormatBool(bisectBatchUpdate)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_KinesisDestinationConfig(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rString := acctest.RandString(8)
+	resourceName := "aws_lambda_event_source_mapping.test"
+	streamName := fmt.Sprintf("tf_acc_stream_dest_config_%s", rString)
+	streamNameUpdated := fmt.Sprintf("tf_acc_stream_dest_config_updated_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisDestinationConfig(rName, streamName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination_arn", "aws_sqs_queue.sqs_queue_test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"starting_position",
+					"starting_position_timestamp",
+				},
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisDestinationConfig(rName, streamNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination_arn", "aws_sqs_queue.sqs_queue_test", "arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
@@ -561,6 +761,13 @@ resource "aws_iam_role_policy" "test" {
             "kinesis:ListStreams"
           ],
           "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "sqs:SendMessage"
+        ],
+        "Resource": "*"
       }
   ]
 }
@@ -606,6 +813,78 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position                   = "TRIM_HORIZON"
 }
 `, batchWindow)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigKinesisParallelizationFactor(rName string, parallelizationFactor int64) string {
+	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size              = 100
+  parallelization_factor  = %v
+  enabled                 = true
+  event_source_arn        = "${aws_kinesis_stream.test.arn}"
+  function_name           = "${aws_lambda_function.test.arn}"
+  starting_position       = "TRIM_HORIZON"
+}
+`, parallelizationFactor)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRetryAttempts(rName string, maximumRetryAttempts int64) string {
+	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size              = 100
+  maximum_retry_attempts  = %v
+  enabled                 = true
+  event_source_arn        = "${aws_kinesis_stream.test.arn}"
+  function_name           = "${aws_lambda_function.test.arn}"
+  starting_position       = "TRIM_HORIZON"
+}
+`, maximumRetryAttempts)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigKinesisBisectBatch(rName string, bisectBatch bool) string {
+	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size                      = 100
+  bisect_batch_on_function_error  = %t
+  enabled                         = true
+  event_source_arn                = "${aws_kinesis_stream.test.arn}"
+  function_name                   = "${aws_lambda_function.test.arn}"
+  starting_position               = "TRIM_HORIZON"
+}
+`, bisectBatch)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRecordAgeInSeconds(rName string, maximumRecordAgeInSeconds int64) string {
+	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size                    = 100
+  maximum_record_age_in_seconds = %v
+  enabled                       = true
+  event_source_arn              = "${aws_kinesis_stream.test.arn}"
+  function_name                 = "${aws_lambda_function.test.arn}"
+  starting_position             = "TRIM_HORIZON"
+}
+`, maximumRecordAgeInSeconds)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigKinesisDestinationConfig(rName string, streamName string) string {
+	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
+resource "aws_sqs_queue" "sqs_queue_test" {
+  name = "%s"
+}
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size                    = 100
+  enabled                       = true
+  event_source_arn              = "${aws_kinesis_stream.test.arn}"
+  function_name                 = "${aws_lambda_function.test.arn}"
+  starting_position             = "TRIM_HORIZON"
+  destination_config {
+    on_failure {
+      destination_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
+    }
+  }
+}
+`, streamName)
 }
 
 func testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName,
