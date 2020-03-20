@@ -121,6 +121,16 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				}, false),
 			},
 
+			"load_balancing_algorithm_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"round_robin",
+					"least_outstanding_requests",
+				}, false),
+			},
+
 			"stickiness": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -451,6 +461,13 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 				})
 			}
 		}
+
+		if d.HasChange("load_balancing_algorithm_type") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("load_balancing.algorithm.type"),
+				Value: aws.String(d.Get("load_balancing_algorithm_type").(string)),
+			})
+		}
 	case elbv2.TargetTypeEnumLambda:
 		if d.HasChange("lambda_multi_value_headers_enabled") {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
@@ -608,6 +625,9 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 				return fmt.Errorf("Error converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("slow_start", slowStart)
+		case "load_balancing.algorithm.type":
+			loadBalancingAlgorithm := aws.StringValue(attr.Value)
+			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
 		}
 	}
 
