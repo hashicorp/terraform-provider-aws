@@ -9,78 +9,115 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsSecurityHubAcceptInvitation() *schema.Resource {
+func resourceAwsSecurityHubInviteAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubAcceptInvitationCreate,
-		Read:   resourceAwsSecurityHubAcceptInvitationRead,
-		Delete: resourceAwsSecurityHubAcceptInvitationDelete,
+		Create: resourceAwsSecurityHubInviteAccepterCreate,
+		Read:   resourceAwsSecurityHubInviteAccepterRead,
+		Delete: resourceAwsSecurityHubInviteAccepterDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
-			"master_account_id": {
+			"master_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+
+			"invitation_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
 }
 
-func resourceAwsSecurityHubAcceptInvitationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
+	log.Print("[DEBUG] Accepting Security Hub invitation")
 
-	log.Print("[DEBUG] Retrieving list of invitations")
+	invitationId, err := resourceAwsSecurityHubInviteAccepterGetInvitationId(conn, d.Get("master_id").(string))
+
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.AcceptInvitation(&securityhub.AcceptInvitationInput{
+		InvitationId: aws.String(invitationId),
+		MasterId:     aws.String(d.Get("master_id").(string)),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error accepting Security Hub invitation: %s", err)
+	}
+
+	d.SetId("securityhub-invitation-accepter")
+
+	return resourceAwsSecurityHubInviteAccepterRead(d, meta)
+}
+
+func resourceAwsSecurityHubInviteAccepterGetInvitationId(conn *securityhub.SecurityHub, masterId string) (string, error) {
+	log.Printf("[DEBUG] Getting InvitationId for MasterId %s", masterId)
 
 	resp, err := conn.ListInvitations(&securityhub.ListInvitationsInput{})
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving Security Hub invitations list: %s", err)
+		return "", fmt.Errorf("Error listing Security Hub invitations: %s", err)
 	}
 
-	masterAccountId := d.Get("master_account_id").(string)
-
-	log.Printf("[DEBUG] Accepting invitation to Security Hub from %s", masterAccountId)
-
-	for i := range resp.Invitations {
-		if *resp.Invitations[i].AccountId == masterAccountId {
-			_, err := conn.AcceptInvitation(&securityhub.AcceptInvitationInput{
-				MasterId:     aws.String(masterAccountId),
-				InvitationId: resp.Invitations[i].InvitationId,
-			})
-
-			if err != nil {
-				return fmt.Errorf("Error accepting invite to Security Hub from %s: %s", masterAccountId, err)
-			}
-
-			d.SetId(*resp.Invitations[i].InvitationId)
+	for _, invitation := range resp.Invitations {
+		log.Printf("[DEBUG] Invitation: %s", invitation)
+		if *invitation.AccountId == masterId {
+			return *invitation.InvitationId, nil
 		}
 	}
 
-	return nil
+	return "", fmt.Errorf("Cannot find InvitationId for MasterId %s", masterId)
 }
 
-func resourceAwsSecurityHubAcceptInvitationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
+	log.Print("[DEBUG] Reading Security Hub master account")
 
-	log.Print("[DEBUG] Retrieving list of invitations")
-
-	resp, err := conn.ListInvitations(&securityhub.ListInvitationsInput{})
+	resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving Security Hub invitations list: %s", err)
-	}
-
-	for i := range resp.Invitations {
-		if *resp.Invitations[i].AccountId == d.Get("master_account_id").(string) {
-			d.SetId(*resp.Invitations[i].InvitationId)
+		if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
+			log.Print("[WARN] Security Hub master account not found, removing from state")
+			d.SetId("")
 			return nil
 		}
+		return err
 	}
 
-	d.SetId("")
+	master := resp.Master
+
+	if master == nil {
+		log.Print("[WARN] Security Hub master account not found, removing from state")
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("invitation_id", master.InvitationId)
+	d.Set("master_id", master.AccountId)
+
 	return nil
 }
 
-func resourceAwsSecurityHubAcceptInvitationDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[WARN] Will not delete Security Hub invitation. Terraform will remove this resource from the state file, however resources may remain.")
+func resourceAwsSecurityHubInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).securityhubconn
+	log.Print("[DEBUG] Disassociating from Security Hub master account")
+
+	_, err := conn.DisassociateFromMasterAccount(&securityhub.DisassociateFromMasterAccountInput{})
+
+	if err != nil {
+		if isAWSErr(err, "BadRequestException", "The request is rejected because the current account is not associated to a master account") {
+			log.Print("[WARN] Security Hub account is not a member account")
+			return nil
+		}
+		return err
+	}
+
 	return nil
 }
