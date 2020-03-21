@@ -444,7 +444,13 @@ func AcmKeyValueTags(tags []*acm.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -471,7 +477,13 @@ func AcmpcaKeyValueTags(tags []*acmpca.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -498,7 +510,13 @@ func AppmeshKeyValueTags(tags []*appmesh.TagRef) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -525,7 +543,13 @@ func AthenaKeyValueTags(tags []*athena.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -552,7 +576,13 @@ func Cloud9KeyValueTags(tags []*cloud9.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -579,7 +609,13 @@ func CloudformationKeyValueTags(tags []*cloudformation.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -606,7 +642,13 @@ func CloudfrontKeyValueTags(tags []*cloudfront.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -633,7 +675,13 @@ func Cloudhsmv2KeyValueTags(tags []*cloudhsmv2.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -660,7 +708,13 @@ func CloudtrailKeyValueTags(tags []*cloudtrail.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -687,7 +741,13 @@ func CloudwatchKeyValueTags(tags []*cloudwatch.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -714,7 +774,13 @@ func CloudwatcheventsKeyValueTags(tags []*cloudwatchevents.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -741,7 +807,13 @@ func CodebuildKeyValueTags(tags []*codebuild.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -768,7 +840,13 @@ func CodedeployKeyValueTags(tags []*codedeploy.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -795,7 +873,13 @@ func CodepipelineKeyValueTags(tags []*codepipeline.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -822,7 +906,13 @@ func ConfigserviceKeyValueTags(tags []*configservice.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -849,7 +939,13 @@ func DatabasemigrationserviceKeyValueTags(tags []*databasemigrationservice.Tag) 
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -876,7 +972,13 @@ func DatapipelineKeyValueTags(tags []*datapipeline.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -903,7 +1005,13 @@ func DatasyncKeyValueTags(tags []*datasync.TagListEntry) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -930,7 +1038,13 @@ func DaxKeyValueTags(tags []*dax.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -957,7 +1071,13 @@ func DevicefarmKeyValueTags(tags []*devicefarm.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -984,7 +1104,13 @@ func DirectconnectKeyValueTags(tags []*directconnect.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1011,7 +1137,13 @@ func DirectoryserviceKeyValueTags(tags []*directoryservice.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1038,7 +1170,13 @@ func DocdbKeyValueTags(tags []*docdb.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1065,7 +1203,13 @@ func DynamodbKeyValueTags(tags []*dynamodb.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1092,7 +1236,13 @@ func Ec2KeyValueTags(tags []*ec2.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1119,7 +1269,13 @@ func EcrKeyValueTags(tags []*ecr.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1146,7 +1302,13 @@ func EcsKeyValueTags(tags []*ecs.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1173,7 +1335,13 @@ func EfsKeyValueTags(tags []*efs.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1200,7 +1368,13 @@ func ElasticacheKeyValueTags(tags []*elasticache.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1227,7 +1401,13 @@ func ElasticbeanstalkKeyValueTags(tags []*elasticbeanstalk.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1254,7 +1434,13 @@ func ElasticsearchserviceKeyValueTags(tags []*elasticsearchservice.Tag) KeyValue
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1296,7 +1482,13 @@ func ElbKeyValueTags(tags []*elb.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1323,7 +1515,13 @@ func Elbv2KeyValueTags(tags []*elbv2.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1350,7 +1548,13 @@ func EmrKeyValueTags(tags []*emr.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1377,7 +1581,13 @@ func FirehoseKeyValueTags(tags []*firehose.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1404,7 +1614,13 @@ func FmsKeyValueTags(tags []*fms.ResourceTag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1431,7 +1647,13 @@ func FsxKeyValueTags(tags []*fsx.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1458,7 +1680,13 @@ func GameliftKeyValueTags(tags []*gamelift.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1485,7 +1713,13 @@ func GlobalacceleratorKeyValueTags(tags []*globalaccelerator.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1512,7 +1746,13 @@ func IamKeyValueTags(tags []*iam.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1539,7 +1779,13 @@ func InspectorKeyValueTags(tags []*inspector.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1566,7 +1812,13 @@ func IotKeyValueTags(tags []*iot.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1593,7 +1845,13 @@ func IotanalyticsKeyValueTags(tags []*iotanalytics.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1620,7 +1878,13 @@ func IoteventsKeyValueTags(tags []*iotevents.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1647,7 +1911,13 @@ func KinesisKeyValueTags(tags []*kinesis.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1674,7 +1944,13 @@ func KinesisanalyticsKeyValueTags(tags []*kinesisanalytics.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1701,7 +1977,13 @@ func Kinesisanalyticsv2KeyValueTags(tags []*kinesisanalyticsv2.Tag) KeyValueTags
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1728,7 +2010,13 @@ func KmsKeyValueTags(tags []*kms.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.TagKey)] = tag.TagValue
+		if tag.TagValue == nil {
+			// TagKey-only tag
+			m[aws.StringValue(tag.TagKey)] = aws.String("")
+		} else {
+			// TagKey-TagValue tag
+			m[aws.StringValue(tag.TagKey)] = tag.TagValue
+		}
 	}
 
 	return New(m)
@@ -1755,7 +2043,13 @@ func LicensemanagerKeyValueTags(tags []*licensemanager.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1786,7 +2080,7 @@ func LightsailKeyValueTags(tags []*lightsail.Tag) KeyValueTags {
 			// Key-only tag
 			m[aws.StringValue(tag.Key)] = aws.String("")
 		} else {
-			// Key-value tag
+			// Key-Value tag
 			m[aws.StringValue(tag.Key)] = tag.Value
 		}
 	}
@@ -1815,7 +2109,13 @@ func MediastoreKeyValueTags(tags []*mediastore.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1842,7 +2142,13 @@ func NeptuneKeyValueTags(tags []*neptune.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1869,7 +2175,13 @@ func OrganizationsKeyValueTags(tags []*organizations.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1896,7 +2208,13 @@ func QuicksightKeyValueTags(tags []*quicksight.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1923,7 +2241,13 @@ func RamKeyValueTags(tags []*ram.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1950,7 +2274,13 @@ func RdsKeyValueTags(tags []*rds.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -1977,7 +2307,13 @@ func RedshiftKeyValueTags(tags []*redshift.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2004,7 +2340,13 @@ func Route53KeyValueTags(tags []*route53.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2031,7 +2373,13 @@ func Route53resolverKeyValueTags(tags []*route53resolver.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2058,7 +2406,13 @@ func S3KeyValueTags(tags []*s3.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2085,7 +2439,13 @@ func SagemakerKeyValueTags(tags []*sagemaker.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2112,7 +2472,13 @@ func SecretsmanagerKeyValueTags(tags []*secretsmanager.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2139,7 +2505,13 @@ func ServerlessapplicationrepositoryKeyValueTags(tags []*serverlessapplicationre
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2166,7 +2538,13 @@ func ServicecatalogKeyValueTags(tags []*servicecatalog.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2193,7 +2571,13 @@ func SfnKeyValueTags(tags []*sfn.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2220,7 +2604,13 @@ func SnsKeyValueTags(tags []*sns.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2247,7 +2637,13 @@ func SsmKeyValueTags(tags []*ssm.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2274,7 +2670,13 @@ func StoragegatewayKeyValueTags(tags []*storagegateway.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2301,7 +2703,13 @@ func SwfKeyValueTags(tags []*swf.ResourceTag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2328,7 +2736,13 @@ func TransferKeyValueTags(tags []*transfer.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2355,7 +2769,13 @@ func WafKeyValueTags(tags []*waf.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2382,7 +2802,13 @@ func WafregionalKeyValueTags(tags []*waf.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2409,7 +2835,13 @@ func Wafv2KeyValueTags(tags []*wafv2.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
@@ -2436,7 +2868,13 @@ func WorkspacesKeyValueTags(tags []*workspaces.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		if tag.Value == nil {
+			// Key-only tag
+			m[aws.StringValue(tag.Key)] = aws.String("")
+		} else {
+			// Key-Value tag
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
 	}
 
 	return New(m)
