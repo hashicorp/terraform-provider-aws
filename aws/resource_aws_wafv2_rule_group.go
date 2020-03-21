@@ -71,7 +71,6 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 			"rule": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action": {
@@ -81,6 +80,22 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"allow": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{},
+										},
+									},
+									"block": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{},
+										},
+									},
+									"count": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -452,11 +467,18 @@ func expandWafv2RuleAction(l []interface{}) *wafv2.RuleAction {
 	}
 
 	m := l[0].(map[string]interface{})
-
 	action := &wafv2.RuleAction{}
 
-	if _, ok := m["allow"]; ok {
+	if v, ok := m["allow"]; ok && len(v.([]interface{})) > 0 {
 		action.Allow = &wafv2.AllowAction{}
+	}
+
+	if v, ok := m["block"]; ok && len(v.([]interface{})) > 0 {
+		action.Block = &wafv2.BlockAction{}
+	}
+
+	if v, ok := m["count"]; ok && len(v.([]interface{})) > 0 {
+		action.Count = &wafv2.CountAction{}
 	}
 
 	return action
@@ -490,7 +512,7 @@ func expandWafv2GeoStatement(l []interface{}) *wafv2.GeoMatchStatement {
 	}
 }
 
-func flattenWafv2Rules(r []*wafv2.Rule) []map[string]interface{} {
+func flattenWafv2Rules(r []*wafv2.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
 		m := make(map[string]interface{})
@@ -501,10 +523,12 @@ func flattenWafv2Rules(r []*wafv2.Rule) []map[string]interface{} {
 		m["visibility_config"] = flattenWafv2VisibilityConfig(rule.VisibilityConfig)
 		out[i] = m
 	}
+
 	return out
 }
 
 func flattenWafv2RuleAction(a *wafv2.RuleAction) interface{} {
+
 	if a == nil {
 		return []interface{}{}
 	}
@@ -512,7 +536,15 @@ func flattenWafv2RuleAction(a *wafv2.RuleAction) interface{} {
 	m := map[string]interface{}{}
 
 	if a.Allow != nil {
-		m["allow"] = map[string]interface{}{}
+		m["allow"] = make([]map[string]interface{}, 1)
+	}
+
+	if a.Block != nil {
+		m["block"] = make([]map[string]interface{}, 1)
+	}
+
+	if a.Count != nil {
+		m["count"] = make([]map[string]interface{}, 1)
 	}
 
 	return []interface{}{m}
