@@ -14,18 +14,21 @@ func dataSourceAwsWorkspaceBundle() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"bundle_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"owner", "name"},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"bundle_id"},
 			},
 			"owner": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"bundle_id"},
+			},
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,25 +75,56 @@ func dataSourceAwsWorkspaceBundle() *schema.Resource {
 func dataSourceAwsWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
 
-	bundleID := d.Get("bundle_id").(string)
-	input := &workspaces.DescribeWorkspaceBundlesInput{
-		BundleIds: []*string{aws.String(bundleID)},
+	var bundle *workspaces.WorkspaceBundle
+
+	if bundleID, ok := d.GetOk("bundle_id"); ok {
+		resp, err := conn.DescribeWorkspaceBundles(&workspaces.DescribeWorkspaceBundlesInput{
+			BundleIds: []*string{aws.String(bundleID.(string))},
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(resp.Bundles) != 1 {
+			return fmt.Errorf("expect 1 result for workspace bundle %q, got %d", bundleID, len(resp.Bundles))
+		}
+
+		bundle = resp.Bundles[0]
+
+		if bundle == nil {
+			return fmt.Errorf("not found workspace bundle with ID %q", bundleID)
+		}
 	}
 
-	resp, err := conn.DescribeWorkspaceBundles(input)
-	if err != nil {
-		return err
+	if name, ok := d.GetOk("name"); ok {
+		name := name.(string)
+		input := &workspaces.DescribeWorkspaceBundlesInput{
+			Owner: aws.String(d.Get("owner").(string)),
+		}
+		err := conn.DescribeWorkspaceBundlesPages(input, func(out *workspaces.DescribeWorkspaceBundlesOutput, lastPage bool) bool {
+			for _, b := range out.Bundles {
+				if aws.StringValue(b.Name) == name {
+					bundle = b
+					return true
+				}
+			}
+
+			return !lastPage
+		})
+		if err != nil {
+			return err
+		}
+
+		if bundle == nil {
+			return fmt.Errorf("not found workspace bundle with name %q", name)
+		}
 	}
 
-	if len(resp.Bundles) != 1 {
-		return fmt.Errorf("The number of Workspace Bundle (%s) should be 1, but %d", bundleID, len(resp.Bundles))
-	}
-
-	bundle := resp.Bundles[0]
-	d.SetId(bundleID)
-	d.Set("description", bundle.Description)
-	d.Set("name", bundle.Name)
-	d.Set("owner", bundle.Owner)
+	d.SetId(aws.StringValue(bundle.BundleId))
+	d.Set("bundle_id", aws.StringValue(bundle.BundleId))
+	d.Set("description", aws.StringValue(bundle.Description))
+	d.Set("name", aws.StringValue(bundle.Name))
+	d.Set("owner", aws.StringValue(bundle.Owner))
 
 	computeType := make([]map[string]interface{}, 1)
 	if bundle.ComputeType != nil {
