@@ -343,6 +343,16 @@ func testAccAlternateAccountPreCheck(t *testing.T) {
 	}
 }
 
+func testAccGetAccountEmail() string {
+	return os.Getenv("AWS_EMAIL")
+}
+
+func testAccAccountEmailPreCheck(t *testing.T) {
+	if os.Getenv("AWS_EMAIL") == "" {
+		t.Fatal("AWS_EMAIL must be set to the email address of the account used for acceptance tests")
+	}
+}
+
 func testAccAlternateRegionPreCheck(t *testing.T) {
 	if testAccGetRegion() == testAccGetAlternateRegion() {
 		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")

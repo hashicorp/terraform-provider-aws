@@ -28,8 +28,9 @@ resource "aws_securityhub_account" "invitee" {
 }
 
 resource "aws_securityhub_invite_accepter" "invitee" {
-  provider  = "aws.invitee"
-  master_id = "${aws_securityhub_member.example.master_id}"
+  provider   = "aws.invitee"
+  depends_on = [aws_securityhub_account.accepter]
+  master_id  = aws_securityhub_member.example.master_id
 }
 ```
 
