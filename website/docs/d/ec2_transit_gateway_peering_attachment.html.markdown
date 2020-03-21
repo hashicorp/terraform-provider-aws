@@ -26,10 +26,9 @@ data "aws_ec2_transit_gateway_peering_attachment" "example" {
 ### By Identifier
 
 ```hcl
- data "aws_ec2_transit_gateway_peering_attachment" "attachment" {
-   id = "tgw-attach-12345678"
- }
-
+data "aws_ec2_transit_gateway_peering_attachment" "attachment" {
+  id = "tgw-attach-12345678"
+}
 ```
 
 ## Argument Reference

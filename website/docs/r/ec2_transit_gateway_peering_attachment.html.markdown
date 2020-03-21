@@ -15,10 +15,10 @@ For examples of custom route table association and propagation, see the EC2 Tran
 
 ```hcl
 resource "aws_ec2_transit_gateway_peering_attachment" "example" {
-  peer_account_id             = "123456789012"
-  peer_region                 = "us-east-2"
-  peer_transit_gateway_id     = "tgw-12345678901234567"
-  transit_gateway_id          = "tgw-76543210987654321"
+  peer_account_id         = "123456789012"
+  peer_region             = "us-east-2"
+  peer_transit_gateway_id = "tgw-12345678901234567"
+  transit_gateway_id      = "tgw-76543210987654321"
 
   tags = {
     Name = "Example cross-account attachment"
@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 `aws_ec2_transit_gateway_peering_attachment` can be imported by using the EC2 Transit Gateway Attachment identifier, e.g.
 
 ```sh
-$ terraform import aws_ec2_transit_gateway_peering_attachment.example tgw-attach-12345678
+terraform import aws_ec2_transit_gateway_peering_attachment.example tgw-attach-12345678
 ```
 
 [1]: /docs/providers/aws/index.html
