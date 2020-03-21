@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_dhcp_options"
-sidebar_current: "docs-aws-resource-vpc-dhcp-options"
 description: |-
   Provides a VPC DHCP Options resource.
 ---
@@ -48,6 +48,7 @@ The following arguments are supported:
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Remarks
+
 * Notice that all arguments are optional but you have to specify at least one argument.
 * `domain_name_servers`, `netbios_name_servers`, `ntp_servers` are limited by AWS to maximum four servers only.
 * To actually use the DHCP Options Set you need to associate it to a VPC using [`aws_vpc_dhcp_options_association`](/docs/providers/aws/r/vpc_dhcp_options_association.html).

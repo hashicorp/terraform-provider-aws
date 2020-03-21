@@ -1,7 +1,7 @@
 ---
+subcategory: "Pricing"
 layout: "aws"
 page_title: "AWS: aws_pricing_product"
-sidebar_current: "docs-aws-datasource-pricing-product"
 description: |-
   Get information regarding the pricing of an Amazon product
 ---
@@ -45,6 +45,11 @@ data "aws_pricing_product" "example" {
   filters {
     field = "tenancy"
     value = "Shared"
+  }
+
+  filters {
+    field = "capacitystatus"
+    value = "Used"
   }
 }
 ```

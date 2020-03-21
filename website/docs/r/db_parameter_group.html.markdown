@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_parameter_group"
-sidebar_current: "docs-aws-resource-db-parameter-group"
 description: |-
   Provides an RDS DB parameter group resource.
 ---
@@ -9,6 +9,7 @@ description: |-
 # Resource: aws_db_parameter_group
 
 Provides an RDS DB parameter group resource .Documentation of the available parameters for various RDS engines can be found at:
+
 * [Aurora MySQL Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Reference.html)
 * [Aurora PostgreSQL Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraPostgreSQL.Reference.html)
 * [MariaDB Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.MariaDB.Parameters.html)

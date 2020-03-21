@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 /**
@@ -89,17 +89,13 @@ func testAccAwsPinpointAPNSVoipSandboxChannelTokenConfigurationFromEnv(t *testin
 }
 
 func TestAccAWSPinpointAPNSVoipSandboxChannel_basicCertificate(t *testing.T) {
-	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
-
 	var channel pinpoint.APNSVoipSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_sandbox_channel.test_channel"
 
 	configuration := testAccAwsPinpointAPNSVoipSandboxChannelCertConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSPinpointAPNSVoipSandboxChannelDestroy,
@@ -127,17 +123,13 @@ func TestAccAWSPinpointAPNSVoipSandboxChannel_basicCertificate(t *testing.T) {
 }
 
 func TestAccAWSPinpointAPNSVoipSandboxChannel_basicToken(t *testing.T) {
-	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
-
 	var channel pinpoint.APNSVoipSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_sandbox_channel.test_channel"
 
 	configuration := testAccAwsPinpointAPNSVoipSandboxChannelTokenConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSPinpointAPNSVoipSandboxChannelDestroy,
@@ -195,10 +187,6 @@ func testAccCheckAWSPinpointAPNSVoipSandboxChannelExists(n string, channel *pinp
 
 func testAccAWSPinpointAPNSVoipSandboxChannelConfig_basicCertificate(conf *testAccAwsPinpointAPNSVoipSandboxChannelCertConfiguration) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_apns_voip_sandbox_channel" "test_channel" {
@@ -213,10 +201,6 @@ resource "aws_pinpoint_apns_voip_sandbox_channel" "test_channel" {
 
 func testAccAWSPinpointAPNSVoipSandboxChannelConfig_basicToken(conf *testAccAwsPinpointAPNSVoipSandboxChannelTokenConfiguration) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_apns_voip_sandbox_channel" "test_channel" {

@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_route_table_association_table_association"
-sidebar_current: "docs-aws-resource-ec2-transit-gateway-route-table-association"
 description: |-
   Manages an EC2 Transit Gateway Route Table association
 ---

@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 // add sweeper to delete known test VPN Gateways
@@ -369,7 +369,8 @@ func TestAccAWSVpnGateway_tags(t *testing.T) {
 				Config: testAccCheckVpnGatewayConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(resourceName, &v),
-					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-vpn-gateway-tags"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "terraform-testacc-vpn-gateway-tags"),
 				),
 			},
 			{
@@ -381,8 +382,8 @@ func TestAccAWSVpnGateway_tags(t *testing.T) {
 				Config: testAccCheckVpnGatewayConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(resourceName, &v),
-					testAccCheckTags(&v.Tags, "test", ""),
-					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-vpn-gateway-tags-updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "terraform-testacc-vpn-gateway-tags-updated"),
 				),
 			},
 		},

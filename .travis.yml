@@ -5,33 +5,33 @@ services:
 language: go
 
 env:
-  global:
-    GOFLAGS=-mod=vendor
+  global: GOFLAGS=-mod=vendor
 
 matrix:
   fast_finish: true
   allow_failures:
     - go: tip
   include:
-  - go: "1.12.x"
-    name: "Code Lint"
-    script: make lint
-  - go: "1.12.x"
-    name: "Code UnitTest"
-    script: make test
-  - go: "1.12.x"
-    name: "Website"
-    script:
-      - make website-test
-      - make website-lint
+    - go: "1.13.x"
+      name: "Code Lint"
+      script: make lint
+    - go: "1.13.x"
+      name: "Code UnitTest"
+      script:
+        - make test
+        - make gencheck
+    - go: "1.13.x"
+      name: "Dependencies"
+      script: make depscheck
+    - go: "1.13.x"
+      name: "Website"
+      script:
+        - make docscheck
+        - make website-test
+        - make website-lint
 
 install:
-# This script is used by the Travis build to install a cookie for
-# go.googlesource.com so rate limits are higher when using `go get` to fetch
-# packages that live there.
-# See: https://github.com/golang/go/issues/12933
-- bash scripts/gogetcookie.sh
-- make tools
+  - make tools
 
 branches:
   only:

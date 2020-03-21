@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsSesDomainIdentityVerification() *schema.Resource {
@@ -55,7 +55,7 @@ func getAwsSesIdentityVerificationAttributes(conn *ses.SES, domainName string) (
 }
 
 func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 	domainName := strings.TrimSuffix(d.Get("domain").(string), ".")
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		att, err := getAwsSesIdentityVerificationAttributes(conn, domainName)
@@ -91,7 +91,7 @@ func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsSesDomainIdentityVerificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	domainName := d.Id()
 	d.Set("domain", domainName)

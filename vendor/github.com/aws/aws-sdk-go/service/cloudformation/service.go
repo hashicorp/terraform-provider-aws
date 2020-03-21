@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "cloudformation" // Name of service.
 	EndpointsID = ServiceName      // ID to lookup a service endpoint with.
-	ServiceID   = "CloudFormation" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "CloudFormation" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the CloudFormation client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a CloudFormation client from just a session.
 //     svc := cloudformation.New(mySession)
 //
@@ -46,11 +48,11 @@ const (
 //     svc := cloudformation.New(mySession, aws.NewConfig().WithRegion("us-west-2"))
 func New(p client.ConfigProvider, cfgs ...*aws.Config) *CloudFormation {
 	c := p.ClientConfig(EndpointsID, cfgs...)
-	return newClient(*c.Config, c.Handlers, c.Endpoint, c.SigningRegion, c.SigningName)
+	return newClient(*c.Config, c.Handlers, c.PartitionID, c.Endpoint, c.SigningRegion, c.SigningName)
 }
 
 // newClient creates, initializes and returns a new service client instance.
-func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegion, signingName string) *CloudFormation {
+func newClient(cfg aws.Config, handlers request.Handlers, partitionID, endpoint, signingRegion, signingName string) *CloudFormation {
 	svc := &CloudFormation{
 		Client: client.New(
 			cfg,
@@ -59,6 +61,7 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 				ServiceID:     ServiceID,
 				SigningName:   signingName,
 				SigningRegion: signingRegion,
+				PartitionID:   partitionID,
 				Endpoint:      endpoint,
 				APIVersion:    "2010-05-15",
 			},

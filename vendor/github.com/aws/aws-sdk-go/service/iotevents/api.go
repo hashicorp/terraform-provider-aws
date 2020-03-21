@@ -66,26 +66,26 @@ func (c *IoTEvents) CreateDetectorModelRequest(input *CreateDetectorModelInput) 
 // See the AWS API reference guide for AWS IoT Events's
 // API operation CreateDetectorModel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is in use.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit was exceeded.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/CreateDetectorModel
@@ -163,20 +163,20 @@ func (c *IoTEvents) CreateInputRequest(input *CreateInputInput) (req *request.Re
 // See the AWS API reference guide for AWS IoT Events's
 // API operation CreateInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The resource already exists.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/CreateInput
@@ -256,23 +256,23 @@ func (c *IoTEvents) DeleteDetectorModelRequest(input *DeleteDetectorModelInput) 
 // See the AWS API reference guide for AWS IoT Events's
 // API operation DeleteDetectorModel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/DeleteDetectorModel
@@ -351,23 +351,23 @@ func (c *IoTEvents) DeleteInputRequest(input *DeleteInputInput) (req *request.Re
 // See the AWS API reference guide for AWS IoT Events's
 // API operation DeleteInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/DeleteInput
@@ -436,8 +436,8 @@ func (c *IoTEvents) DescribeDetectorModelRequest(input *DescribeDetectorModelInp
 
 // DescribeDetectorModel API operation for AWS IoT Events.
 //
-// Describes a detector model. If the "version" parameter is not specified,
-// information about the latest version is returned.
+// Describes a detector model. If the version parameter is not specified, information
+// about the latest version is returned.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -446,20 +446,20 @@ func (c *IoTEvents) DescribeDetectorModelRequest(input *DescribeDetectorModelInp
 // See the AWS API reference guide for AWS IoT Events's
 // API operation DescribeDetectorModel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/DescribeDetectorModel
@@ -537,20 +537,20 @@ func (c *IoTEvents) DescribeInputRequest(input *DescribeInputInput) (req *reques
 // See the AWS API reference guide for AWS IoT Events's
 // API operation DescribeInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/DescribeInput
@@ -628,23 +628,23 @@ func (c *IoTEvents) DescribeLoggingOptionsRequest(input *DescribeLoggingOptionsI
 // See the AWS API reference guide for AWS IoT Events's
 // API operation DescribeLoggingOptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The requested operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/DescribeLoggingOptions
@@ -723,20 +723,20 @@ func (c *IoTEvents) ListDetectorModelVersionsRequest(input *ListDetectorModelVer
 // See the AWS API reference guide for AWS IoT Events's
 // API operation ListDetectorModelVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/ListDetectorModelVersions
@@ -815,17 +815,17 @@ func (c *IoTEvents) ListDetectorModelsRequest(input *ListDetectorModelsInput) (r
 // See the AWS API reference guide for AWS IoT Events's
 // API operation ListDetectorModels for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/ListDetectorModels
@@ -903,17 +903,17 @@ func (c *IoTEvents) ListInputsRequest(input *ListInputsInput) (req *request.Requ
 // See the AWS API reference guide for AWS IoT Events's
 // API operation ListInputs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/ListInputs
@@ -991,20 +991,20 @@ func (c *IoTEvents) ListTagsForResourceRequest(input *ListTagsForResourceInput) 
 // See the AWS API reference guide for AWS IoT Events's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is in use.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/ListTagsForResource
@@ -1076,10 +1076,10 @@ func (c *IoTEvents) PutLoggingOptionsRequest(input *PutLoggingOptionsInput) (req
 //
 // Sets or updates the AWS IoT Events logging options.
 //
-// If you update the value of any "loggingOptions" field, it takes up to one
-// minute for the change to take effect. Also, if you change the policy attached
-// to the role you specified in the "roleArn" field (for example, to correct
-// an invalid policy) it takes up to five minutes for that change to take effect.
+// If you update the value of any loggingOptions field, it takes up to one minute
+// for the change to take effect. If you change the policy attached to the role
+// you specified in the roleArn field (for example, to correct an invalid policy),
+// it takes up to five minutes for that change to take effect.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1088,23 +1088,23 @@ func (c *IoTEvents) PutLoggingOptionsRequest(input *PutLoggingOptionsInput) (req
 // See the AWS API reference guide for AWS IoT Events's
 // API operation PutLoggingOptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The requested operation is not supported.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/PutLoggingOptions
@@ -1184,23 +1184,23 @@ func (c *IoTEvents) TagResourceRequest(input *TagResourceInput) (req *request.Re
 // See the AWS API reference guide for AWS IoT Events's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is in use.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A limit was exceeded.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/TagResource
@@ -1279,20 +1279,20 @@ func (c *IoTEvents) UntagResourceRequest(input *UntagResourceInput) (req *reques
 // See the AWS API reference guide for AWS IoT Events's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is in use.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/UntagResource
@@ -1371,23 +1371,23 @@ func (c *IoTEvents) UpdateDetectorModelRequest(input *UpdateDetectorModelInput) 
 // See the AWS API reference guide for AWS IoT Events's
 // API operation UpdateDetectorModel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/UpdateDetectorModel
@@ -1465,23 +1465,23 @@ func (c *IoTEvents) UpdateInputRequest(input *UpdateInputInput) (req *request.Re
 // See the AWS API reference guide for AWS IoT Events's
 // API operation UpdateInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   The request was invalid.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   The request could not be completed due to throttling.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The resource was not found.
 //
-//   * ErrCodeInternalFailureException "InternalFailureException"
+//   * InternalFailureException
 //   An internal failure occurred.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is currently unavailable.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/UpdateInput
@@ -1506,8 +1506,8 @@ func (c *IoTEvents) UpdateInputWithContext(ctx aws.Context, input *UpdateInputIn
 	return out, req.Send()
 }
 
-// Sends an IoT Events input, passing in information about the detector model
-// instance and the event which triggered the action.
+// Sends an AWS IoT Events input, passing in information about the detector
+// model instance and the event that triggered the action.
 type Action struct {
 	_ struct{} `type:"structure"`
 
@@ -1549,26 +1549,26 @@ func (s *Action) SetInputName(v string) *Action {
 	return s
 }
 
-// An action to be performed when the "condition" is TRUE.
+// An action to be performed when the condition is TRUE.
 type ActionData struct {
 	_ struct{} `type:"structure"`
 
 	// Information needed to clear the timer.
 	ClearTimer *ClearTimerAction `locationName:"clearTimer" type:"structure"`
 
-	// Sends information about the detector model instance and the event which triggered
-	// the action to a Kinesis Data Firehose stream.
+	// Sends information about the detector model instance and the event that triggered
+	// the action to an Amazon Kinesis Data Firehose delivery stream.
 	Firehose *FirehoseAction `locationName:"firehose" type:"structure"`
 
-	// Sends an IoT Events input, passing in information about the detector model
-	// instance and the event which triggered the action.
+	// Sends an AWS IoT Events input, passing in information about the detector
+	// model instance and the event that triggered the action.
 	IotEvents *Action `locationName:"iotEvents" type:"structure"`
 
 	// Publishes an MQTT message with the given topic to the AWS IoT message broker.
 	IotTopicPublish *IotTopicPublishAction `locationName:"iotTopicPublish" type:"structure"`
 
 	// Calls a Lambda function, passing in information about the detector model
-	// instance and the event which triggered the action.
+	// instance and the event that triggered the action.
 	Lambda *LambdaAction `locationName:"lambda" type:"structure"`
 
 	// Information needed to reset the timer.
@@ -1583,8 +1583,8 @@ type ActionData struct {
 	// Sends an Amazon SNS message.
 	Sns *SNSTopicPublishAction `locationName:"sns" type:"structure"`
 
-	// Sends information about the detector model instance and the event which triggered
-	// the action to an AWS SQS queue.
+	// Sends information about the detector model instance and the event that triggered
+	// the action to an Amazon SQS queue.
 	Sqs *SqsAction `locationName:"sqs" type:"structure"`
 }
 
@@ -1720,7 +1720,7 @@ func (s *ActionData) SetSqs(v *SqsAction) *ActionData {
 
 // The attributes from the JSON payload that are made available by the input.
 // Inputs are derived from messages sent to the AWS IoT Events system using
-// BatchPutMessage. Each such message contains a JSON payload, and those attributes
+// BatchPutMessage. Each such message contains a JSON payload. Those attributes
 // (and their paired values) specified here are available for use in the condition
 // expressions used by detectors.
 type Attribute struct {
@@ -1728,10 +1728,10 @@ type Attribute struct {
 
 	// An expression that specifies an attribute-value pair in a JSON structure.
 	// Use this to specify an attribute from the JSON payload that is made available
-	// by the input. Inputs are derived from messages sent to the AWS IoT Events
-	// system (BatchPutMessage). Each such message contains a JSON payload, and
-	// the attribute (and its paired value) specified here are available for use
-	// in the "condition" expressions used by detectors.
+	// by the input. Inputs are derived from messages sent to AWS IoT Events (BatchPutMessage).
+	// Each such message contains a JSON payload. The attribute (and its paired
+	// value) specified here are available for use in the condition expressions
+	// used by detectors.
 	//
 	// Syntax: <field-name>.<field-name>...
 	//
@@ -1829,11 +1829,15 @@ type CreateDetectorModelInput struct {
 	// DetectorModelName is a required field
 	DetectorModelName *string `locationName:"detectorModelName" min:"1" type:"string" required:"true"`
 
-	// The input attribute key used to identify a device or system in order to create
-	// a detector (an instance of the detector model) and then to route each input
-	// received to the appropriate detector (instance). This parameter uses a JSON-path
-	// expression to specify the attribute-value pair in the message payload of
-	// each input that is used to identify the device associated with the input.
+	// Information about the order in which events are evaluated and how actions
+	// are executed.
+	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
+
+	// The input attribute key used to identify a device or system to create a detector
+	// (an instance of the detector model) and then to route each input received
+	// to the appropriate detector (instance). This parameter uses a JSON-path expression
+	// in the message payload of each input to specify the attribute-value pair
+	// that is used to identify the device associated with the input.
 	Key *string `locationName:"key" min:"1" type:"string"`
 
 	// The ARN of the role that grants permission to AWS IoT Events to perform its
@@ -1914,6 +1918,12 @@ func (s *CreateDetectorModelInput) SetDetectorModelDescription(v string) *Create
 // SetDetectorModelName sets the DetectorModelName field's value.
 func (s *CreateDetectorModelInput) SetDetectorModelName(v string) *CreateDetectorModelInput {
 	s.DetectorModelName = &v
+	return s
+}
+
+// SetEvaluationMethod sets the EvaluationMethod field's value.
+func (s *CreateDetectorModelInput) SetEvaluationMethod(v string) *CreateDetectorModelInput {
+	s.EvaluationMethod = &v
 	return s
 }
 
@@ -2464,11 +2474,15 @@ type DetectorModelConfiguration struct {
 	// The version of the detector model.
 	DetectorModelVersion *string `locationName:"detectorModelVersion" min:"1" type:"string"`
 
-	// The input attribute key used to identify a device or system in order to create
-	// a detector (an instance of the detector model) and then to route each input
-	// received to the appropriate detector (instance). This parameter uses a JSON-path
-	// expression to specify the attribute-value pair in the message payload of
-	// each input that is used to identify the device associated with the input.
+	// Information about the order in which events are evaluated and how actions
+	// are executed.
+	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
+
+	// The input attribute key used to identify a device or system to create a detector
+	// (an instance of the detector model) and then to route each input received
+	// to the appropriate detector (instance). This parameter uses a JSON-path expression
+	// in the message payload of each input to specify the attribute-value pair
+	// that is used to identify the device associated with the input.
 	Key *string `locationName:"key" min:"1" type:"string"`
 
 	// The time the detector model was last updated.
@@ -2519,6 +2533,12 @@ func (s *DetectorModelConfiguration) SetDetectorModelName(v string) *DetectorMod
 // SetDetectorModelVersion sets the DetectorModelVersion field's value.
 func (s *DetectorModelConfiguration) SetDetectorModelVersion(v string) *DetectorModelConfiguration {
 	s.DetectorModelVersion = &v
+	return s
+}
+
+// SetEvaluationMethod sets the EvaluationMethod field's value.
+func (s *DetectorModelConfiguration) SetEvaluationMethod(v string) *DetectorModelConfiguration {
+	s.EvaluationMethod = &v
 	return s
 }
 
@@ -2673,6 +2693,10 @@ type DetectorModelVersionSummary struct {
 	// The ID of the detector model version.
 	DetectorModelVersion *string `locationName:"detectorModelVersion" min:"1" type:"string"`
 
+	// Information about the order in which events are evaluated and how actions
+	// are executed.
+	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
+
 	// The last time the detector model version was updated.
 	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
 
@@ -2718,6 +2742,12 @@ func (s *DetectorModelVersionSummary) SetDetectorModelVersion(v string) *Detecto
 	return s
 }
 
+// SetEvaluationMethod sets the EvaluationMethod field's value.
+func (s *DetectorModelVersionSummary) SetEvaluationMethod(v string) *DetectorModelVersionSummary {
+	s.EvaluationMethod = &v
+	return s
+}
+
 // SetLastUpdateTime sets the LastUpdateTime field's value.
 func (s *DetectorModelVersionSummary) SetLastUpdateTime(v time.Time) *DetectorModelVersionSummary {
 	s.LastUpdateTime = &v
@@ -2736,17 +2766,16 @@ func (s *DetectorModelVersionSummary) SetStatus(v string) *DetectorModelVersionS
 	return s
 }
 
-// Specifies the "actions" to be performed when the "condition" evaluates to
-// TRUE.
+// Specifies the actions to be performed when the condition evaluates to TRUE.
 type Event struct {
 	_ struct{} `type:"structure"`
 
 	// The actions to be performed.
 	Actions []*ActionData `locationName:"actions" type:"list"`
 
-	// [Optional] The Boolean expression that when TRUE causes the "actions" to
-	// be performed. If not present, the actions are performed (=TRUE); if the expression
-	// result is not a Boolean value, the actions are NOT performed (=FALSE).
+	// Optional. The Boolean expression that, when TRUE, causes the actions to be
+	// performed. If not present, the actions are performed (=TRUE). If the expression
+	// result is not a Boolean value, the actions are not performed (=FALSE).
 	Condition *string `locationName:"condition" type:"string"`
 
 	// The name of the event.
@@ -2806,19 +2835,19 @@ func (s *Event) SetEventName(v string) *Event {
 	return s
 }
 
-// Sends information about the detector model instance and the event which triggered
-// the action to a Kinesis Data Firehose stream.
+// Sends information about the detector model instance and the event that triggered
+// the action to an Amazon Kinesis Data Firehose delivery stream.
 type FirehoseAction struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Kinesis Data Firehose stream where the data is written.
+	// The name of the Kinesis Data Firehose delivery stream where the data is written.
 	//
 	// DeliveryStreamName is a required field
 	DeliveryStreamName *string `locationName:"deliveryStreamName" type:"string" required:"true"`
 
 	// A character separator that is used to separate records written to the Kinesis
-	// Data Firehose stream. Valid values are: '\n' (newline), '\t' (tab), '\r\n'
-	// (Windows newline), ',' (comma).
+	// Data Firehose delivery stream. Valid values are: '\n' (newline), '\t' (tab),
+	// '\r\n' (Windows newline), ',' (comma).
 	Separator *string `locationName:"separator" type:"string"`
 }
 
@@ -2976,7 +3005,7 @@ type InputDefinition struct {
 	// The attributes from the JSON payload that are made available by the input.
 	// Inputs are derived from messages sent to the AWS IoT Events system using
 	// BatchPutMessage. Each such message contains a JSON payload, and those attributes
-	// (and their paired values) specified here are available for use in the "condition"
+	// (and their paired values) specified here are available for use in the condition
 	// expressions used by detectors that monitor this input.
 	//
 	// Attributes is a required field
@@ -3094,12 +3123,128 @@ func (s *InputSummary) SetStatus(v string) *InputSummary {
 	return s
 }
 
-// Information required to publish the MQTT message via the AWS IoT message
+// An internal failure occurred.
+type InternalFailureException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
+	return &InternalFailureException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalFailureException) Code() string {
+	return "InternalFailureException"
+}
+
+// Message returns the exception's message.
+func (s InternalFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalFailureException) OrigErr() error {
+	return nil
+}
+
+func (s InternalFailureException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalFailureException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalFailureException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The request was invalid.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Information required to publish the MQTT message through the AWS IoT message
 // broker.
 type IotTopicPublishAction struct {
 	_ struct{} `type:"structure"`
 
-	// The MQTT topic of the message.
+	// The MQTT topic of the message. You can use a string expression that includes
+	// variables ($variable.<variable-name>) and input values ($input.<input-name>.<path-to-datum>)
+	// as the topic string.
 	//
 	// MqttTopic is a required field
 	MqttTopic *string `locationName:"mqttTopic" min:"1" type:"string" required:"true"`
@@ -3138,11 +3283,11 @@ func (s *IotTopicPublishAction) SetMqttTopic(v string) *IotTopicPublishAction {
 }
 
 // Calls a Lambda function, passing in information about the detector model
-// instance and the event which triggered the action.
+// instance and the event that triggered the action.
 type LambdaAction struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the Lambda function which is executed.
+	// The ARN of the Lambda function that is executed.
 	//
 	// FunctionArn is a required field
 	FunctionArn *string `locationName:"functionArn" min:"1" type:"string" required:"true"`
@@ -3178,6 +3323,63 @@ func (s *LambdaAction) Validate() error {
 func (s *LambdaAction) SetFunctionArn(v string) *LambdaAction {
 	s.FunctionArn = &v
 	return s
+}
+
+// A limit was exceeded.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListDetectorModelVersionsInput struct {
@@ -3593,7 +3795,7 @@ type OnEnterLifecycle struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies the actions that are performed when the state is entered and the
-	// "condition" is TRUE.
+	// condition is TRUE.
 	Events []*Event `locationName:"events" type:"list"`
 }
 
@@ -3633,13 +3835,13 @@ func (s *OnEnterLifecycle) SetEvents(v []*Event) *OnEnterLifecycle {
 	return s
 }
 
-// When exiting this state, perform these "actions" if the specified "condition"
+// When exiting this state, perform these actions if the specified condition
 // is TRUE.
 type OnExitLifecycle struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the "actions" that are performed when the state is exited and the
-	// "condition" is TRUE.
+	// Specifies the actions that are performed when the state is exited and the
+	// condition is TRUE.
 	Events []*Event `locationName:"events" type:"list"`
 }
 
@@ -3679,14 +3881,14 @@ func (s *OnExitLifecycle) SetEvents(v []*Event) *OnExitLifecycle {
 	return s
 }
 
-// Specifies the actions performed when the "condition" evaluates to TRUE.
+// Specifies the actions performed when the condition evaluates to TRUE.
 type OnInputLifecycle struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the actions performed when the "condition" evaluates to TRUE.
+	// Specifies the actions performed when the condition evaluates to TRUE.
 	Events []*Event `locationName:"events" type:"list"`
 
-	// Specifies the actions performed, and the next state entered, when a "condition"
+	// Specifies the actions performed, and the next state entered, when a condition
 	// evaluates to TRUE.
 	TransitionEvents []*TransitionEvent `locationName:"transitionEvents" type:"list"`
 }
@@ -3800,7 +4002,8 @@ func (s PutLoggingOptionsOutput) GoString() string {
 	return s.String()
 }
 
-// Information needed to reset the timer.
+// Information required to reset the timer. The timer is reset to the previously
+// evaluated result of the duration.
 type ResetTimerAction struct {
 	_ struct{} `type:"structure"`
 
@@ -3840,6 +4043,183 @@ func (s *ResetTimerAction) Validate() error {
 func (s *ResetTimerAction) SetTimerName(v string) *ResetTimerAction {
 	s.TimerName = &v
 	return s
+}
+
+// The resource already exists.
+type ResourceAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The ARN of the resource.
+	ResourceArn *string `locationName:"resourceArn" type:"string"`
+
+	// The ID of the resource.
+	ResourceId *string `locationName:"resourceId" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ResourceAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceAlreadyExistsException) Code() string {
+	return "ResourceAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource is in use.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The resource was not found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Information required to publish the Amazon SNS message.
@@ -3884,15 +4264,80 @@ func (s *SNSTopicPublishAction) SetTargetArn(v string) *SNSTopicPublishAction {
 	return s
 }
 
+// The service is currently unavailable.
+type ServiceUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
+	return &ServiceUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceUnavailableException) Code() string {
+	return "ServiceUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s ServiceUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information needed to set the timer.
 type SetTimerAction struct {
 	_ struct{} `type:"structure"`
 
+	// The duration of the timer, in seconds. You can use a string expression that
+	// includes numbers, variables ($variable.<variable-name>), and input values
+	// ($input.<input-name>.<path-to-datum>) as the duration. The range of the duration
+	// is 1-31622400 seconds. To ensure accuracy, the minimum duration is 60 seconds.
+	// The evaluated result of the duration is rounded down to the nearest whole
+	// number.
+	DurationExpression *string `locationName:"durationExpression" min:"1" type:"string"`
+
 	// The number of seconds until the timer expires. The minimum value is 60 seconds
 	// to ensure accuracy.
 	//
-	// Seconds is a required field
-	Seconds *int64 `locationName:"seconds" type:"integer" required:"true"`
+	// Deprecated: seconds is deprecated. You can use durationExpression for SetTimerAction. The value of seconds can be used as a string expression for durationExpression.
+	Seconds *int64 `locationName:"seconds" min:"1" deprecated:"true" type:"integer"`
 
 	// The name of the timer.
 	//
@@ -3913,8 +4358,11 @@ func (s SetTimerAction) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *SetTimerAction) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "SetTimerAction"}
-	if s.Seconds == nil {
-		invalidParams.Add(request.NewErrParamRequired("Seconds"))
+	if s.DurationExpression != nil && len(*s.DurationExpression) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DurationExpression", 1))
+	}
+	if s.Seconds != nil && *s.Seconds < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Seconds", 1))
 	}
 	if s.TimerName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TimerName"))
@@ -3927,6 +4375,12 @@ func (s *SetTimerAction) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDurationExpression sets the DurationExpression field's value.
+func (s *SetTimerAction) SetDurationExpression(v string) *SetTimerAction {
+	s.DurationExpression = &v
+	return s
 }
 
 // SetSeconds sets the Seconds field's value.
@@ -4000,8 +4454,8 @@ func (s *SetVariableAction) SetVariableName(v string) *SetVariableAction {
 	return s
 }
 
-// Sends information about the detector model instance and the event which triggered
-// the action to an AWS SQS queue.
+// Sends information about the detector model instance and the event that triggered
+// the action to an Amazon SQS queue.
 type SqsAction struct {
 	_ struct{} `type:"structure"`
 
@@ -4010,8 +4464,8 @@ type SqsAction struct {
 	// QueueUrl is a required field
 	QueueUrl *string `locationName:"queueUrl" type:"string" required:"true"`
 
-	// Set this to TRUE if you want the data to be Base-64 encoded before it is
-	// written to the queue. Otherwise, set this to FALSE.
+	// Set this to TRUE if you want the data to be base-64 encoded before it is
+	// written to the queue.
 	UseBase64 *bool `locationName:"useBase64" type:"boolean"`
 }
 
@@ -4054,15 +4508,15 @@ func (s *SqsAction) SetUseBase64(v bool) *SqsAction {
 type State struct {
 	_ struct{} `type:"structure"`
 
-	// When entering this state, perform these "actions" if the "condition" is TRUE.
+	// When entering this state, perform these actions if the condition is TRUE.
 	OnEnter *OnEnterLifecycle `locationName:"onEnter" type:"structure"`
 
-	// When exiting this state, perform these "actions" if the specified "condition"
+	// When exiting this state, perform these actions if the specified condition
 	// is TRUE.
 	OnExit *OnExitLifecycle `locationName:"onExit" type:"structure"`
 
-	// When an input is received and the "condition" is TRUE, perform the specified
-	// "actions".
+	// When an input is received and the condition is TRUE, perform the specified
+	// actions.
 	OnInput *OnInputLifecycle `locationName:"onInput" type:"structure"`
 
 	// The name of the state.
@@ -4271,7 +4725,64 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
-// Specifies the actions performed and the next state entered when a "condition"
+// The request could not be completed due to throttling.
+type ThrottlingException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ThrottlingException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThrottlingException) GoString() string {
+	return s.String()
+}
+
+func newErrorThrottlingException(v protocol.ResponseMetadata) error {
+	return &ThrottlingException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ThrottlingException) Code() string {
+	return "ThrottlingException"
+}
+
+// Message returns the exception's message.
+func (s ThrottlingException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ThrottlingException) OrigErr() error {
+	return nil
+}
+
+func (s ThrottlingException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ThrottlingException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ThrottlingException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Specifies the actions performed and the next state entered when a condition
 // evaluates to TRUE.
 type TransitionEvent struct {
 	_ struct{} `type:"structure"`
@@ -4279,8 +4790,8 @@ type TransitionEvent struct {
 	// The actions to be performed.
 	Actions []*ActionData `locationName:"actions" type:"list"`
 
-	// [Required] A Boolean expression that when TRUE causes the actions to be performed
-	// and the "nextState" to be entered.
+	// Required. A Boolean expression that when TRUE causes the actions to be performed
+	// and the nextState to be entered.
 	//
 	// Condition is a required field
 	Condition *string `locationName:"condition" type:"string" required:"true"`
@@ -4360,6 +4871,63 @@ func (s *TransitionEvent) SetEventName(v string) *TransitionEvent {
 func (s *TransitionEvent) SetNextState(v string) *TransitionEvent {
 	s.NextState = &v
 	return s
+}
+
+// The requested operation is not supported.
+type UnsupportedOperationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The message for the exception.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnsupportedOperationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedOperationException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedOperationException(v protocol.ResponseMetadata) error {
+	return &UnsupportedOperationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnsupportedOperationException) Code() string {
+	return "UnsupportedOperationException"
+}
+
+// Message returns the exception's message.
+func (s UnsupportedOperationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnsupportedOperationException) OrigErr() error {
+	return nil
+}
+
+func (s UnsupportedOperationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnsupportedOperationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnsupportedOperationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -4447,6 +5015,10 @@ type UpdateDetectorModelInput struct {
 	// DetectorModelName is a required field
 	DetectorModelName *string `location:"uri" locationName:"detectorModelName" min:"1" type:"string" required:"true"`
 
+	// Information about the order in which events are evaluated and how actions
+	// are executed.
+	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
+
 	// The ARN of the role that grants permission to AWS IoT Events to perform its
 	// operations.
 	//
@@ -4509,6 +5081,12 @@ func (s *UpdateDetectorModelInput) SetDetectorModelDescription(v string) *Update
 // SetDetectorModelName sets the DetectorModelName field's value.
 func (s *UpdateDetectorModelInput) SetDetectorModelName(v string) *UpdateDetectorModelInput {
 	s.DetectorModelName = &v
+	return s
+}
+
+// SetEvaluationMethod sets the EvaluationMethod field's value.
+func (s *UpdateDetectorModelInput) SetEvaluationMethod(v string) *UpdateDetectorModelInput {
+	s.EvaluationMethod = &v
 	return s
 }
 
@@ -4654,6 +5232,14 @@ const (
 
 	// DetectorModelVersionStatusFailed is a DetectorModelVersionStatus enum value
 	DetectorModelVersionStatusFailed = "FAILED"
+)
+
+const (
+	// EvaluationMethodBatch is a EvaluationMethod enum value
+	EvaluationMethodBatch = "BATCH"
+
+	// EvaluationMethodSerial is a EvaluationMethod enum value
+	EvaluationMethodSerial = "SERIAL"
 )
 
 const (

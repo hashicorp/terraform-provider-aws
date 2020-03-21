@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSSESEventDestination_basic(t *testing.T) {
@@ -49,7 +49,7 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 }
 
 func testAccCheckSESEventDestinationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesConn
+	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_configuration_set" {
@@ -89,7 +89,7 @@ func testAccCheckAwsSESEventDestinationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES event destination ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		response, err := conn.ListConfigurationSets(&ses.ListConfigurationSetsInput{})
 		if err != nil {

@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -88,7 +88,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -162,6 +162,7 @@ func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
 	})
 }
 
+// lintignore: AT002
 func TestAccAWSFsxLustreFileSystem_ImportPath(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -197,6 +198,7 @@ func TestAccAWSFsxLustreFileSystem_ImportPath(t *testing.T) {
 	})
 }
 
+// lintignore: AT002
 func TestAccAWSFsxLustreFileSystem_ImportedFileChunkSize(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -289,11 +291,11 @@ func TestAccAWSFsxLustreFileSystem_StorageCapacity(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
 			},
 			{
-				Config: testAccAwsFsxLustreFileSystemConfigStorageCapacity(3600),
+				Config: testAccAwsFsxLustreFileSystemConfigStorageCapacity(1200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxLustreFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
 				),
 			},
 		},
@@ -496,7 +498,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_fsx_lustre_file_system" "test" {
   export_path      = "s3://${aws_s3_bucket.test.bucket}%[2]s"
   import_path      = "s3://${aws_s3_bucket.test.bucket}"
-  storage_capacity = 3600
+  storage_capacity = 1200
   subnet_ids       = ["${aws_subnet.test1.id}"]
 }
 `, rName, exportPrefix)
@@ -511,7 +513,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_fsx_lustre_file_system" "test" {
   import_path      = "s3://${aws_s3_bucket.test.bucket}%[2]s"
-  storage_capacity = 3600
+  storage_capacity = 1200
   subnet_ids       = ["${aws_subnet.test1.id}"]
 }
 `, rName, importPrefix)
@@ -527,7 +529,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_fsx_lustre_file_system" "test" {
   import_path              = "s3://${aws_s3_bucket.test.bucket}"
   imported_file_chunk_size = %[2]d
-  storage_capacity         = 3600
+  storage_capacity         = 1200
   subnet_ids               = ["${aws_subnet.test1.id}"]
 }
 `, rName, importedFileChunkSize)
@@ -556,7 +558,7 @@ resource "aws_security_group" "test1" {
 
 resource "aws_fsx_lustre_file_system" "test" {
   security_group_ids = ["${aws_security_group.test1.id}"]
-  storage_capacity   = 3600
+  storage_capacity   = 1200
   subnet_ids         = ["${aws_subnet.test1.id}"]
 }
 `)
@@ -604,7 +606,7 @@ resource "aws_security_group" "test2" {
 
 resource "aws_fsx_lustre_file_system" "test" {
   security_group_ids = ["${aws_security_group.test1.id}", "${aws_security_group.test2.id}"]
-  storage_capacity   = 3600
+  storage_capacity   = 1200
   subnet_ids         = ["${aws_subnet.test1.id}"]
 }
 `)
@@ -622,7 +624,7 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccAwsFsxLustreFileSystemConfigSubnetIds1() string {
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
-  storage_capacity = 3600
+  storage_capacity = 1200
   subnet_ids       = ["${aws_subnet.test1.id}"]
 }
 `)
@@ -631,7 +633,7 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccAwsFsxLustreFileSystemConfigTags1(tagKey1, tagValue1 string) string {
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
-  storage_capacity = 3600
+  storage_capacity = 1200
   subnet_ids       = ["${aws_subnet.test1.id}"]
 
   tags = {
@@ -644,7 +646,7 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccAwsFsxLustreFileSystemConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
-  storage_capacity = 3600
+  storage_capacity = 1200
   subnet_ids       = ["${aws_subnet.test1.id}"]
 
   tags = {
@@ -658,7 +660,7 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccAwsFsxLustreFileSystemConfigWeeklyMaintenanceStartTime(weeklyMaintenanceStartTime string) string {
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
-  storage_capacity              = 3600
+  storage_capacity              = 1200
   subnet_ids                    = ["${aws_subnet.test1.id}"]
   weekly_maintenance_start_time = %[1]q
 }

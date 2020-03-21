@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
@@ -196,6 +197,12 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
 
+	if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, "InvalidClientVpnEndpointId.NotFound", "") {
+		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error reading Client VPN endpoint: %s", err)
 	}
@@ -217,7 +224,12 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	d.Set("server_certificate_arn", result.ClientVpnEndpoints[0].ServerCertificateArn)
 	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
 	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
-	d.Set("status", result.ClientVpnEndpoints[0].Status)
+	d.Set("dns_servers", result.ClientVpnEndpoints[0].DnsServers)
+
+	if result.ClientVpnEndpoints[0].Status != nil {
+		d.Set("status", result.ClientVpnEndpoints[0].Status.Code)
+	}
+
 	d.Set("split_tunnel", result.ClientVpnEndpoints[0].SplitTunnel)
 
 	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
@@ -230,7 +242,7 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting connection_log_options: %s", err)
 	}
 
-	err = d.Set("tags", tagsToMap(result.ClientVpnEndpoints[0].Tags))
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(result.ClientVpnEndpoints[0].Tags).IgnoreAws().Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
@@ -314,10 +326,13 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error modifying Client VPN endpoint: %s", err)
 	}
 
-	if err := setTags(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Client VPN Endpoint (%s) tags: %s", d.Id(), err)
+		}
 	}
-	d.SetPartial("tags")
 
 	d.Partial(false)
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)

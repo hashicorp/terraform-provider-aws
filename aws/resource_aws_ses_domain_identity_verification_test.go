@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func testAccAwsSesDomainIdentityDomainFromEnv(t *testing.T) string {
@@ -90,8 +90,7 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 		}
 
 		domain := rs.Primary.ID
-		awsClient := testAccProvider.Meta().(*AWSClient)
-		conn := awsClient.sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -113,9 +112,9 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 		}
 
 		expected := arn.ARN{
-			AccountID: awsClient.accountid,
-			Partition: awsClient.partition,
-			Region:    awsClient.region,
+			AccountID: testAccProvider.Meta().(*AWSClient).accountid,
+			Partition: testAccProvider.Meta().(*AWSClient).partition,
+			Region:    testAccProvider.Meta().(*AWSClient).region,
 			Resource:  fmt.Sprintf("identity/%s", domain),
 			Service:   "ses",
 		}

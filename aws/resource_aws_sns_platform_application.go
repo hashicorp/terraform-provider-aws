@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 var snsPlatformRequiresPlatformPrincipal = map[string]bool{
@@ -225,9 +225,9 @@ func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interfac
 				// Some of the fetched attributes are stateful properties such as
 				// the number of subscriptions, the owner, etc. skip those
 				if resource.Schema[iKey] != nil {
-					value := *attrmap[oKey]
+					value := aws.StringValue(attrmap[oKey])
 					log.Printf("[DEBUG] Updating %s => %s -> %s", iKey, oKey, value)
-					d.Set(iKey, *attrmap[oKey])
+					d.Set(iKey, value)
 				}
 			}
 		}

@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSSESReceiptRule_basic(t *testing.T) {
@@ -114,7 +114,7 @@ func TestAccAWSSESReceiptRule_actions(t *testing.T) {
 }
 
 func testAccCheckSESReceiptRuleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesConn
+	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_receipt_rule" {
@@ -154,7 +154,7 @@ func testAccCheckAwsSESReceiptRuleExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES Receipt Rule name not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		params := &ses.DescribeReceiptRuleInput{
 			RuleName:    aws.String(rs.Primary.Attributes["name"]),
@@ -208,7 +208,7 @@ func testAccCheckAwsSESReceiptRuleOrder(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES Receipt Rule name not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		params := &ses.DescribeReceiptRuleSetInput{
 			RuleSetName: aws.String(rs.Primary.Attributes["rule_set_name"]),
@@ -240,7 +240,7 @@ func testAccCheckAwsSESReceiptRuleActions(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES Receipt Rule name not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		params := &ses.DescribeReceiptRuleInput{
 			RuleName:    aws.String(rs.Primary.Attributes["name"]),

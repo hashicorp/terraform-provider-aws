@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_subnet"
-sidebar_current: "docs-aws-datasource-subnet-x"
 description: |-
     Provides details about a specific VPC subnet
 ---
@@ -79,7 +79,7 @@ which take the following arguments:
 data "aws_subnet" "selected" {
   filter {
     name   = "tag:Name"
-    values = [""]       # insert value here
+    values = [""] # insert value here
   }
 }
 ```

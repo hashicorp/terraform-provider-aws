@@ -7,34 +7,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
-
-func TestAccAWSGlueCatalogDatabase_importBasic(t *testing.T) {
-	resourceName := "aws_glue_catalog_database.test"
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGlueDatabaseDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGlueCatalogDatabase_full(rInt, "A test catalog from terraform"),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
 
 func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_glue_catalog_database.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -44,56 +24,61 @@ func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 				Config:  testAccGlueCatalogDatabase_basic(rInt),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
+					testAccCheckGlueCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"name",
 						fmt.Sprintf("my_test_catalog_database_%d", rInt),
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"description",
 						"",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"location_uri",
 						"",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"parameters.%",
 						"0",
 					),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config:  testAccGlueCatalogDatabase_full(rInt, "A test catalog from terraform"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
+					testAccCheckGlueCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"description",
 						"A test catalog from terraform",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"location_uri",
 						"my-location",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"parameters.param1",
 						"value1",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"parameters.param2",
-						"1",
+						"true",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"parameters.param3",
 						"50",
 					),
@@ -102,29 +87,29 @@ func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 			{
 				Config: testAccGlueCatalogDatabase_full(rInt, "An updated test catalog from terraform"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueCatalogDatabaseExists("aws_glue_catalog_database.test"),
+					testAccCheckGlueCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"description",
 						"An updated test catalog from terraform",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"location_uri",
 						"my-location",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"parameters.param1",
 						"value1",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"parameters.param2",
-						"1",
+						"true",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_glue_catalog_database.test",
+						resourceName,
 						"parameters.param3",
 						"50",
 					),

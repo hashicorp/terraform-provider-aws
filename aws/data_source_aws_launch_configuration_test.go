@@ -2,10 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
@@ -26,6 +27,7 @@ func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "root_block_device.#", "1"),
 					resource.TestCheckResourceAttr(rName, "ebs_block_device.#", "1"),
 					resource.TestCheckResourceAttr(rName, "ephemeral_block_device.#", "1"),
+					testAccMatchResourceAttrRegionalARN(rName, "arn", "autoscaling", regexp.MustCompile(`launchConfiguration:.+`)),
 				),
 			},
 		},

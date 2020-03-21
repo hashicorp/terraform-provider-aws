@@ -1,7 +1,7 @@
 ---
+subcategory: "CodeBuild"
 layout: "aws"
 page_title: "AWS: aws_codebuild_webhook"
-sidebar_current: "docs-aws-resource-codebuild-webhook"
 description: |-
   Provides a CodeBuild Webhook resource.
 ---
@@ -23,15 +23,15 @@ When working with [Bitbucket](https://bitbucket.org) and [GitHub](https://github
 ```hcl
 resource "aws_codebuild_webhook" "example" {
   project_name = "${aws_codebuild_project.example.name}"
-  
+
   filter_group {
     filter {
-      type = "EVENT"
+      type    = "EVENT"
       pattern = "PUSH"
     }
 
     filter {
-      type = "HEAD_REF"
+      type    = "HEAD_REF"
       pattern = "master"
     }
   }

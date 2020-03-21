@@ -1,7 +1,7 @@
 ---
+subcategory: "Backup"
 layout: "aws"
 page_title: "AWS: aws_backup_selection"
-sidebar_current: "docs-aws-resource-backup-selection"
 description: |-
   Manages selection conditions for AWS Backup plan resources.
 ---

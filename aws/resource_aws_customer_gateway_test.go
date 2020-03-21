@@ -10,60 +10,44 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
-
-func TestAccAWSCustomerGateway_importBasic(t *testing.T) {
-	resourceName := "aws_customer_gateway.foo"
-	rInt := acctest.RandInt()
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCustomerGatewayDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCustomerGatewayConfig(rInt, rBgpAsn),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
 
 func TestAccAWSCustomerGateway_basic(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	rInt := acctest.RandInt()
+	resourceName := "aws_customer_gateway.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_customer_gateway.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfig(rInt, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGateway("aws_customer_gateway.foo", &gateway),
+					testAccCheckCustomerGateway(resourceName, &gateway),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccCustomerGatewayConfigUpdateTags(rInt, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGateway("aws_customer_gateway.foo", &gateway),
+					testAccCheckCustomerGateway(resourceName, &gateway),
 				),
 			},
 			{
 				Config: testAccCustomerGatewayConfigForceReplace(rInt, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGateway("aws_customer_gateway.foo", &gateway),
+					testAccCheckCustomerGateway(resourceName, &gateway),
 				),
 			},
 		},
@@ -74,17 +58,24 @@ func TestAccAWSCustomerGateway_similarAlreadyExists(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rInt := acctest.RandInt()
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_customer_gateway.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_customer_gateway.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfig(rInt, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGateway("aws_customer_gateway.foo", &gateway),
+					testAccCheckCustomerGateway(resourceName, &gateway),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config:      testAccCustomerGatewayConfigIdentical(rInt, rBgpAsn),
@@ -98,6 +89,8 @@ func TestAccAWSCustomerGateway_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	var gateway ec2.CustomerGateway
+	resourceName := "aws_customer_gateway.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -106,7 +99,7 @@ func TestAccAWSCustomerGateway_disappears(t *testing.T) {
 			{
 				Config: testAccCustomerGatewayConfig(rInt, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGateway("aws_customer_gateway.foo", &gateway),
+					testAccCheckCustomerGateway(resourceName, &gateway),
 					testAccAWSCustomerGatewayDisappears(&gateway),
 				),
 				ExpectNonEmptyPlan: true,
@@ -222,13 +215,13 @@ func testAccCheckCustomerGateway(gatewayResource string, cgw *ec2.CustomerGatewa
 
 func testAccCustomerGatewayConfig(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_customer_gateway" "foo" {
+resource "aws_customer_gateway" "test" {
   bgp_asn    = %d
   ip_address = "172.0.0.1"
   type       = "ipsec.1"
 
   tags = {
-    Name = "foo-gateway-%d"
+    Name = "test-gateway-%d"
   }
 }
 `, rBgpAsn, rInt)
@@ -236,13 +229,13 @@ resource "aws_customer_gateway" "foo" {
 
 func testAccCustomerGatewayConfigIdentical(randInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_customer_gateway" "foo" {
+resource "aws_customer_gateway" "test" {
   bgp_asn    = %d
   ip_address = "172.0.0.1"
   type       = "ipsec.1"
 
   tags = {
-    Name = "foo-gateway-%d"
+    Name = "test-gateway-%d"
   }
 }
 
@@ -252,7 +245,7 @@ resource "aws_customer_gateway" "identical" {
   type       = "ipsec.1"
 
   tags = {
-    Name = "foo-gateway-identical-%d"
+    Name = "test-gateway-identical-%d"
   }
 }
 `, rBgpAsn, randInt, rBgpAsn, randInt)
@@ -261,13 +254,13 @@ resource "aws_customer_gateway" "identical" {
 // Add the Another: "tag" tag.
 func testAccCustomerGatewayConfigUpdateTags(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_customer_gateway" "foo" {
+resource "aws_customer_gateway" "test" {
   bgp_asn    = %d
   ip_address = "172.0.0.1"
   type       = "ipsec.1"
 
   tags = {
-    Name    = "foo-gateway-%d"
+    Name    = "test-gateway-%d"
     Another = "tag"
   }
 }
@@ -277,13 +270,13 @@ resource "aws_customer_gateway" "foo" {
 // Change the ip_address.
 func testAccCustomerGatewayConfigForceReplace(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_customer_gateway" "foo" {
+resource "aws_customer_gateway" "test" {
   bgp_asn    = %d
   ip_address = "172.10.10.1"
   type       = "ipsec.1"
 
   tags = {
-    Name    = "foo-gateway-%d"
+    Name    = "test-gateway-%d"
     Another = "tag"
   }
 }

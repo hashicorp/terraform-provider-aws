@@ -1,7 +1,7 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_maintenance_window_target"
-sidebar_current: "docs-aws-resource-ssm-maintenance-window-target"
 description: |-
   Provides an SSM Maintenance Window Target resource
 ---

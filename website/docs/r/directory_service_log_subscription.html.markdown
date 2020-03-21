@@ -1,7 +1,7 @@
 ---
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_log_subscription"
-sidebar_current: "docs-aws-resource-directory-service-log-subscription"
 description: |-
   Provides a Log subscription for AWS Directory Service that pushes logs to cloudwatch.
 ---
@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
 
     principals {
       identifiers = ["ds.amazonaws.com"]
-      type = "Service"
+      type        = "Service"
     }
 
     resources = ["${aws_cloudwatch_log_group.example.arn}"]

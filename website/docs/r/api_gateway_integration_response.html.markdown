@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_integration_response"
-sidebar_current: "docs-aws-resource-api-gateway-integration-response"
 description: |-
   Provides an HTTP Method Integration Response for an API Gateway Resource.
 ---
@@ -55,7 +55,7 @@ resource "aws_api_gateway_integration_response" "MyDemoIntegrationResponse" {
   status_code = "${aws_api_gateway_method_response.response_200.status_code}"
 
   # Transforms the backend JSON response to XML
-  response_templates {
+  response_templates = {
     "application/xml" = <<EOF
 #set($inputRoot = $input.path('$'))
 <?xml version="1.0" encoding="UTF-8"?>

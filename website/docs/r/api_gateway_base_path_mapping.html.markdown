@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_base_path_mapping"
-sidebar_current: "docs-aws-resource-api-gateway-base-path-mapping"
 description: |-
   Connects a custom domain with a deployed API
 ---

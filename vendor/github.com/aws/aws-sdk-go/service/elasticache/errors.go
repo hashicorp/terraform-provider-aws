@@ -235,11 +235,23 @@ const (
 	// The specified replication group already exists.
 	ErrCodeReplicationGroupAlreadyExistsFault = "ReplicationGroupAlreadyExists"
 
+	// ErrCodeReplicationGroupAlreadyUnderMigrationFault for service response error code
+	// "ReplicationGroupAlreadyUnderMigrationFault".
+	//
+	// The targeted replication group is not available.
+	ErrCodeReplicationGroupAlreadyUnderMigrationFault = "ReplicationGroupAlreadyUnderMigrationFault"
+
 	// ErrCodeReplicationGroupNotFoundFault for service response error code
 	// "ReplicationGroupNotFoundFault".
 	//
 	// The specified replication group does not exist.
 	ErrCodeReplicationGroupNotFoundFault = "ReplicationGroupNotFoundFault"
+
+	// ErrCodeReplicationGroupNotUnderMigrationFault for service response error code
+	// "ReplicationGroupNotUnderMigrationFault".
+	//
+	// The designated replication group is not available for data migration.
+	ErrCodeReplicationGroupNotUnderMigrationFault = "ReplicationGroupNotUnderMigrationFault"
 
 	// ErrCodeReservedCacheNodeAlreadyExistsFault for service response error code
 	// "ReservedCacheNodeAlreadyExists".
