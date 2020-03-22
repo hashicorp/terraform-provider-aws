@@ -79,30 +79,9 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"allow": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{},
-										},
-									},
-									"block": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{},
-										},
-									},
-									"count": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{},
-										},
-									},
+									"allow": emptyWafv2BlockSchema(),
+									"block": emptyWafv2BlockSchema(),
+									"count": emptyWafv2BlockSchema(),
 								},
 							},
 						},
@@ -134,14 +113,39 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"all_query_arguments": {
+															"all_query_arguments": emptyWafv2BlockSchema(),
+															"body":                emptyWafv2BlockSchema(),
+															"method":              emptyWafv2BlockSchema(),
+															"query_string":        emptyWafv2BlockSchema(),
+															"single_header": {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{},
+																	Schema: map[string]*schema.Schema{
+																		"name": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 40),
+																		},
+																	},
 																},
 															},
+															"single_query_argument": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"name": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 30),
+																		},
+																	},
+																},
+															},
+															"uri_path": emptyWafv2BlockSchema(),
 														},
 													},
 												},
@@ -475,30 +479,6 @@ func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandWafv2VisibilityConfig(l []interface{}) *wafv2.VisibilityConfig {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	configuration := &wafv2.VisibilityConfig{}
-
-	if v, ok := m["cloudwatch_metrics_enabled"]; ok {
-		configuration.CloudWatchMetricsEnabled = aws.Bool(v.(bool))
-	}
-
-	if v, ok := m["metric_name"]; ok && len(v.(string)) > 0 {
-		configuration.MetricName = aws.String(v.(string))
-	}
-
-	if v, ok := m["sampled_requests_enabled"]; ok {
-		configuration.SampledRequestsEnabled = aws.Bool(v.(bool))
-	}
-
-	return configuration
-}
-
 func expandWafv2Rules(l []interface{}) []*wafv2.Rule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -573,6 +553,30 @@ func expandWafv2Statement(l []interface{}) *wafv2.Statement {
 	return statement
 }
 
+func expandWafv2VisibilityConfig(l []interface{}) *wafv2.VisibilityConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	configuration := &wafv2.VisibilityConfig{}
+
+	if v, ok := m["cloudwatch_metrics_enabled"]; ok {
+		configuration.CloudWatchMetricsEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["metric_name"]; ok && len(v.(string)) > 0 {
+		configuration.MetricName = aws.String(v.(string))
+	}
+
+	if v, ok := m["sampled_requests_enabled"]; ok {
+		configuration.SampledRequestsEnabled = aws.Bool(v.(bool))
+	}
+
+	return configuration
+}
+
 func expandWafv2ByteMatchStatement(l []interface{}) *wafv2.ByteMatchStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -593,8 +597,61 @@ func expandWafv2FieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 		return nil
 	}
 
-	return &wafv2.FieldToMatch{
-		AllQueryArguments: &wafv2.AllQueryArguments{},
+	m := l[0].(map[string]interface{})
+	f := &wafv2.FieldToMatch{}
+
+	if v, ok := m["all_query_arguments"]; ok && len(v.([]interface{})) > 0 {
+		f.AllQueryArguments = &wafv2.AllQueryArguments{}
+	}
+
+	if v, ok := m["body"]; ok && len(v.([]interface{})) > 0 {
+		f.Body = &wafv2.Body{}
+	}
+
+	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
+		f.Method = &wafv2.Method{}
+	}
+
+	if v, ok := m["query_string"]; ok && len(v.([]interface{})) > 0 {
+		f.QueryString = &wafv2.QueryString{}
+	}
+
+	if v, ok := m["single_header"]; ok && len(v.([]interface{})) > 0 {
+		f.SingleHeader = expandWafv2SingleHeader(m["single_header"].([]interface{}))
+	}
+
+	if v, ok := m["single_query_argument"]; ok && len(v.([]interface{})) > 0 {
+		f.SingleQueryArgument = expandWafv2SingleQueryArgument(m["single_query_argument"].([]interface{}))
+	}
+
+	if v, ok := m["uri_path"]; ok && len(v.([]interface{})) > 0 {
+		f.UriPath = &wafv2.UriPath{}
+	}
+
+	return f
+}
+
+func expandWafv2SingleHeader(l []interface{}) *wafv2.SingleHeader {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.SingleHeader{
+		Name: aws.String(m["name"].(string)),
+	}
+}
+
+func expandWafv2SingleQueryArgument(l []interface{}) *wafv2.SingleQueryArgument {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.SingleQueryArgument{
+		Name: aws.String(m["name"].(string)),
 	}
 }
 
@@ -654,7 +711,6 @@ func flattenWafv2Rules(r []*wafv2.Rule) interface{} {
 }
 
 func flattenWafv2RuleAction(a *wafv2.RuleAction) interface{} {
-
 	if a == nil {
 		return []interface{}{}
 	}
@@ -714,8 +770,58 @@ func flattenWafv2FieldToMatch(f *wafv2.FieldToMatch) interface{} {
 		return []interface{}{}
 	}
 
+	m := map[string]interface{}{}
+
+	if f.AllQueryArguments != nil {
+		m["all_query_arguments"] = make([]map[string]interface{}, 1)
+	}
+
+	if f.Body != nil {
+		m["body"] = make([]map[string]interface{}, 1)
+	}
+
+	if f.Method != nil {
+		m["method"] = make([]map[string]interface{}, 1)
+	}
+
+	if f.QueryString != nil {
+		m["query_string"] = make([]map[string]interface{}, 1)
+	}
+
+	if f.SingleHeader != nil {
+		m["single_header"] = flattenWafv2SingleHeader(f.SingleHeader)
+	}
+
+	if f.SingleQueryArgument != nil {
+		m["single_query_argument"] = flattenWafv2SingleQueryArgument(f.SingleQueryArgument)
+	}
+
+	if f.UriPath != nil {
+		m["uri_path"] = make([]map[string]interface{}, 1)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2SingleHeader(s *wafv2.SingleHeader) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
 	m := map[string]interface{}{
-		"all_query_arguments": make([]map[string]interface{}, 1),
+		"name": aws.StringValue(s.Name),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2SingleQueryArgument(s *wafv2.SingleQueryArgument) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"name": aws.StringValue(s.Name),
 	}
 
 	return []interface{}{m}
@@ -756,4 +862,15 @@ func flattenWafv2VisibilityConfig(config *wafv2.VisibilityConfig) interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func emptyWafv2BlockSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{},
+		},
+	}
 }
