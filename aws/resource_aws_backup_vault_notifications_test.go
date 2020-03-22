@@ -121,6 +121,21 @@ resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
+resource "aws_sns_topic_policy" "test" {
+	arn = "${aws_sns_topic.test.arn}"
+	policy = <<POLICY
+{
+      "Sid": "My-statement-id",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "backup.amazonaws.com"
+      },
+      "Action": "SNS:Publish",
+      "Resource": "${aws_sns_topic.test.arn}"
+}
+POLICY
+}
+
 resource "aws_backup_vault_notifications" "test" {
   backup_vault_name   = "${aws_backup_vault.test.name}"
   sns_topic_arn       = "${aws_sns_topic.test.arn}"

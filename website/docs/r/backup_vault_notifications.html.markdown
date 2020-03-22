@@ -13,6 +13,25 @@ Provides an AWS Backup vault notifications resource.
 ## Example Usage
 
 ```hcl
+resource "aws_sns_topic" "test" {
+  name = "backup-vault-events"
+}
+
+resource "aws_sns_topic_policy" "test" {
+	arn = "${aws_sns_topic.test.arn}"
+	policy = <<POLICY
+{
+      "Sid": "My-statement-id",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "backup.amazonaws.com"
+      },
+      "Action": "SNS:Publish",
+      "Resource": "${aws_sns_topic.test.arn}"
+}
+POLICY
+}
+
 resource "aws_backup_vault_notifications" "test" {
   backup_vault_name   = "example_backup_vault"
   sns_topic_arn       = "${sns_topic_arn.test.arn}"
