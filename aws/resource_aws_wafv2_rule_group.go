@@ -122,9 +122,78 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"byte_match_statement": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"field_to_match": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"all_query_arguments": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{},
+																},
+															},
+														},
+													},
+												},
+												"positional_constraint": {
+													Type:     schema.TypeString,
+													Required: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													ValidateFunc: validation.StringInSlice([]string{
+														wafv2.PositionalConstraintContains,
+														wafv2.PositionalConstraintContainsWord,
+														wafv2.PositionalConstraintEndsWith,
+														wafv2.PositionalConstraintExactly,
+														wafv2.PositionalConstraintStartsWith,
+													}, false),
+												},
+												"search_string": {
+													Type:         schema.TypeString,
+													Required:     true,
+													Elem:         &schema.Schema{Type: schema.TypeString},
+													ValidateFunc: validation.StringLenBetween(1, 50),
+												},
+												"text_transformation": {
+													Type:     schema.TypeSet,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"priority": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+															"type": {
+																Type:     schema.TypeString,
+																Required: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+																ValidateFunc: validation.StringInSlice([]string{
+																	wafv2.TextTransformationTypeCmdLine,
+																	wafv2.TextTransformationTypeCompressWhiteSpace,
+																	wafv2.TextTransformationTypeHtmlEntityDecode,
+																	wafv2.TextTransformationTypeLowercase,
+																	wafv2.TextTransformationTypeNone,
+																	wafv2.TextTransformationTypeUrlDecode,
+																}, false),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"geo_match_statement": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -493,14 +562,71 @@ func expandWafv2Statement(l []interface{}) *wafv2.Statement {
 
 	statement := &wafv2.Statement{}
 
+	if v, ok := m["byte_match_statement"]; ok {
+		statement.ByteMatchStatement = expandWafv2ByteMatchStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["geo_match_statement"]; ok {
-		statement.GeoMatchStatement = expandWafv2GeoStatement(v.([]interface{}))
+		statement.GeoMatchStatement = expandWafv2GeoMatchStatement(v.([]interface{}))
 	}
 
 	return statement
 }
 
-func expandWafv2GeoStatement(l []interface{}) *wafv2.GeoMatchStatement {
+func expandWafv2ByteMatchStatement(l []interface{}) *wafv2.ByteMatchStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.ByteMatchStatement{
+		FieldToMatch:         expandWafv2FieldToMatch(m["field_to_match"].([]interface{})),
+		PositionalConstraint: aws.String(m["positional_constraint"].(string)),
+		SearchString:         []byte(m["search_string"].(string)),
+		TextTransformations:  expandWafv2TextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
+func expandWafv2FieldToMatch(l []interface{}) *wafv2.FieldToMatch {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	return &wafv2.FieldToMatch{
+		AllQueryArguments: &wafv2.AllQueryArguments{},
+	}
+}
+
+func expandWafv2TextTransformations(l []interface{}) []*wafv2.TextTransformation {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	rules := make([]*wafv2.TextTransformation, 0)
+
+	for _, rule := range l {
+		if rule == nil {
+			continue
+		}
+		rules = append(rules, expandWafv2TextTransformation(rule.(map[string]interface{})))
+	}
+
+	return rules
+}
+
+func expandWafv2TextTransformation(m map[string]interface{}) *wafv2.TextTransformation {
+	if m == nil {
+		return nil
+	}
+
+	return &wafv2.TextTransformation{
+		Priority: aws.Int64(int64(m["priority"].(int))),
+		Type:     aws.String(m["type"].(string)),
+	}
+}
+
+func expandWafv2GeoMatchStatement(l []interface{}) *wafv2.GeoMatchStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -557,11 +683,53 @@ func flattenWafv2Statement(s *wafv2.Statement) interface{} {
 
 	m := map[string]interface{}{}
 
+	if s.ByteMatchStatement != nil {
+		m["byte_match_statement"] = flattenWafv2ByteMatchStatement(s.ByteMatchStatement)
+	}
+
 	if s.GeoMatchStatement != nil {
 		m["geo_match_statement"] = flattenWafv2GeoMatchStatement(s.GeoMatchStatement)
 	}
 
 	return []interface{}{m}
+}
+
+func flattenWafv2ByteMatchStatement(b *wafv2.ByteMatchStatement) interface{} {
+	if b == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"field_to_match":        flattenWafv2FieldToMatch(b.FieldToMatch),
+		"positional_constraint": b.PositionalConstraint,
+		"search_string":         string(b.SearchString),
+		"text_transformation":   flattenWafv2TextTransformations(b.TextTransformations),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2FieldToMatch(f *wafv2.FieldToMatch) interface{} {
+	if f == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"all_query_arguments": make([]map[string]interface{}, 1),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2TextTransformations(l []*wafv2.TextTransformation) []interface{} {
+	out := make([]interface{}, len(l))
+	for i, t := range l {
+		m := make(map[string]interface{})
+		m["priority"] = int(aws.Int64Value(t.Priority))
+		m["type"] = aws.StringValue(t.Type)
+		out[i] = m
+	}
+	return out
 }
 
 func flattenWafv2GeoMatchStatement(g *wafv2.GeoMatchStatement) interface{} {
