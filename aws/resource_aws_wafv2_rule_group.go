@@ -69,7 +69,7 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 				}, false),
 			},
 			"rule": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -275,7 +275,7 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
-		Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
+		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
@@ -367,6 +367,18 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	log.Printf("[INFO] Updating WAFV2 RuleGroup %s", d.Id())
 
+	u := &wafv2.UpdateRuleGroupInput{
+		Id:               aws.String(d.Id()),
+		Name:             aws.String(d.Get("name").(string)),
+		Scope:            aws.String(d.Get("scope").(string)),
+		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
+		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
+		u.Description = aws.String(d.Get("description").(string))
+	}
+
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.GetRuleGroup(params)
@@ -374,18 +386,7 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 			return resource.NonRetryableError(fmt.Errorf("Error getting lock token: %s", err))
 		}
 
-		u := &wafv2.UpdateRuleGroupInput{
-			Id:               aws.String(d.Id()),
-			Name:             aws.String(d.Get("name").(string)),
-			Scope:            aws.String(d.Get("scope").(string)),
-			LockToken:        resp.LockToken,
-			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
-			Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
-		}
-
-		if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
-			u.Description = aws.String(d.Get("description").(string))
-		}
+		u.LockToken = resp.LockToken
 
 		_, err = conn.UpdateRuleGroup(u)
 
@@ -402,15 +403,8 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = conn.UpdateRuleGroup(&wafv2.UpdateRuleGroupInput{
-			Id:               aws.String(d.Id()),
-			Name:             aws.String(d.Get("name").(string)),
-			Scope:            aws.String(d.Get("scope").(string)),
-			Description:      aws.String(d.Get("description").(string)),
-			LockToken:        resp.LockToken,
-			Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
-			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
-		})
+		u.LockToken = resp.LockToken
+		_, err = conn.UpdateRuleGroup(u)
 	}
 
 	if err != nil {
