@@ -20,7 +20,7 @@ the data source, as noted in [issue 4149](https://github.com/hashicorp/terraform
 # Declare the data source
 data "aws_vpc_peering_connections" "pcs" {
   filter {
-    name = "requester-vpc-info.vpc-id"
+    name   = "requester-vpc-info.vpc-id"
     values = ["${aws_vpc.foo.id}"]
   }
 }
@@ -28,7 +28,7 @@ data "aws_vpc_peering_connections" "pcs" {
 # get the details of each resource
 data "aws_vpc_peering_connection" "pc" {
   count = "${length(data.aws_vpc_peering_connections.pcs.ids)}"
-  id = "${data.aws_vpc_peering_connections.pcs.ids[count.index]}"
+  id    = "${data.aws_vpc_peering_connections.pcs.ids[count.index]}"
 }
 ```
 
