@@ -17,19 +17,32 @@ resource "aws_sns_topic" "test" {
   name = "backup-vault-events"
 }
 
-resource "aws_sns_topic_policy" "test" {
-	arn = "${aws_sns_topic.test.arn}"
-	policy = <<POLICY
-{
-      "Sid": "My-statement-id",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "backup.amazonaws.com"
-      },
-      "Action": "SNS:Publish",
-      "Resource": "${aws_sns_topic.test.arn}"
+data "aws_iam_policy_document" "test" {
+  policy_id = "__default_policy_ID"
+
+  statement {
+    actions = [
+      "SNS:Publish",
+    ]
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["backup.amazonaws.com"]
+    }
+
+    resources = [
+      "${aws_sns_topic.test.arn}",
+    ]
+
+    sid = "__default_statement_ID"
+  }
 }
-POLICY
+
+resource "aws_sns_topic_policy" "test" {
+  arn = "${aws_sns_topic.test.arn}"
+  policy = "${data.aws_iam_policy_document.test.json}"
 }
 
 resource "aws_backup_vault_notifications" "test" {

@@ -25,6 +25,7 @@ func TestAccAwsBackupVaultNotification_basic(t *testing.T) {
 				Config: testAccBackupVaultNotificationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultNotificationExists(resourceName, &vault),
+					resource.TestCheckResourceAttr(resourceName, "backup_vault_events.#", "2"),
 				),
 			},
 			{
@@ -65,13 +66,17 @@ func testAccCheckAwsBackupVaultNotificationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &backup.DeleteBackupVaultNotificationsInput{
+		input := &backup.GetBackupVaultNotificationsInput{
 			BackupVaultName: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DeleteBackupVaultNotifications(input)
+		resp, err := conn.GetBackupVaultNotifications(input)
 
-		return err
+		if err == nil {
+			if *resp.BackupVaultName == rs.Primary.ID {
+				return fmt.Errorf("Backup Plan notifications '%s' was not deleted properly", rs.Primary.ID)
+			}
+		}
 	}
 
 	return nil
@@ -121,19 +126,32 @@ resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
-resource "aws_sns_topic_policy" "test" {
-	arn = "${aws_sns_topic.test.arn}"
-	policy = <<POLICY
-{
-      "Sid": "My-statement-id",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "backup.amazonaws.com"
-      },
-      "Action": "SNS:Publish",
-      "Resource": "${aws_sns_topic.test.arn}"
+data "aws_iam_policy_document" "test" {
+  policy_id = "__default_policy_ID"
+
+  statement {
+    actions = [
+      "SNS:Publish",
+    ]
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["backup.amazonaws.com"]
+    }
+
+    resources = [
+      "${aws_sns_topic.test.arn}",
+    ]
+
+    sid = "__default_statement_ID"
+  }
 }
-POLICY
+
+resource "aws_sns_topic_policy" "test" {
+  arn = "${aws_sns_topic.test.arn}"
+  policy = "${data.aws_iam_policy_document.test.json}"
 }
 
 resource "aws_backup_vault_notifications" "test" {

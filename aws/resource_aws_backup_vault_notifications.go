@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -92,6 +93,11 @@ func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interf
 	}
 
 	resp, err := conn.GetBackupVaultNotifications(input)
+	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] Backup Vault Notifcations %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error reading Backup Vault (%s): %s", d.Id(), err)
