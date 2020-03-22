@@ -43,7 +43,7 @@ resource "aws_backup_vault_notifications" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) Name of the backup vault to add notifications for.
+* `backup_vault_name` - (Required) Name of the backup vault to add notifications for.
 * `sns_topic_arn` - (Required) The Amazon Resource Name (ARN) that specifies the topic for a backup vault’s events
 * `backup_vault_events` - (Required) An array of events that indicate the status of jobs to back up resources to the backup vault.
 
