@@ -65,7 +65,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the vault.
-* `arn` - The ARN of the vault.
+* `backup_vault_arn` - The ARN of the vault.
 
 ## Import
 

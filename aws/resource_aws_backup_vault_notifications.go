@@ -58,7 +58,7 @@ func resourceAwsBackupVaultNotifications() *schema.Resource {
 					}, false),
 				},
 			},
-			"arn": {
+			"backup_vault_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interf
 	}
 	d.Set("backup_vault_name", resp.BackupVaultName)
 	d.Set("sns_topic_arn", resp.SNSTopicArn)
-	d.Set("arn", resp.BackupVaultArn)
+	d.Set("backup_vault_arn", resp.BackupVaultArn)
 	d.Set("backup_vault_events", flattenStringSet(resp.BackupVaultEvents))
 
 	return nil
