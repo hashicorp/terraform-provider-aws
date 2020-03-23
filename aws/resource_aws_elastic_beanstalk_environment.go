@@ -237,7 +237,7 @@ func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta i
 
 	if cnamePrefix != "" {
 		if tier != "WebServer" {
-			return fmt.Errorf("Cannot set cname_prefix for tier: %s.", tier)
+			return fmt.Errorf("cannot set cname_prefix for tier: %s", tier)
 		}
 		createOpts.CNAMEPrefix = aws.String(cnamePrefix)
 	}
@@ -308,9 +308,7 @@ func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta i
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Elastic Beanstalk Environment (%s) to become ready: %s",
-			d.Id(), err)
+		return fmt.Errorf("Error waiting for Elastic Beanstalk Environment (%s) to become ready: %w", d.Id(), err)
 	}
 
 	envErrors, err := getBeanstalkEnvironmentErrors(conn, d.Id(), t)
@@ -792,9 +790,7 @@ func resourceAwsElasticBeanstalkEnvironmentDelete(d *schema.ResourceData, meta i
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Elastic Beanstalk Environment (%s) to become terminated: %s",
-			d.Id(), err)
+		return fmt.Errorf("Error waiting for Elastic Beanstalk Environment (%s) to become terminated: %w", d.Id(), err)
 	}
 
 	envErrors, err := getBeanstalkEnvironmentErrors(conn, d.Id(), t)
@@ -984,7 +980,7 @@ func getBeanstalkEnvironmentErrors(conn *elasticbeanstalk.ElasticBeanstalk, envi
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get Elastic Beanstalk Evironment events: %s", err)
+		return nil, fmt.Errorf("unable to get Elastic Beanstalk Environment events: %w", err)
 	}
 
 	var events beanstalkEnvironmentErrors
