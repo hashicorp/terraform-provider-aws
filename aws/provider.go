@@ -525,8 +525,11 @@ func Provider() *schema.Provider {
 			"aws_backup_region_settings":                              resourceAwsBackupRegionSettings(),
 			"aws_backup_selection":                                    resourceAwsBackupSelection(),
 			"aws_backup_vault":                                        resourceAwsBackupVault(),
+<<<<<<< HEAD
 			"aws_backup_vault_notifications":                          resourceAwsBackupVaultNotifications(),
 			"aws_backup_vault_policy":                                 resourceAwsBackupVaultPolicy(),
+=======
+>>>>>>> 7e2a4846f (add support for cloudfront field level encryption profile)
 			"aws_budgets_budget":                                      resourceAwsBudgetsBudget(),
 			"aws_cloud9_environment_ec2":                              resourceAwsCloud9EnvironmentEc2(),
 			"aws_cloudformation_stack":                                resourceAwsCloudFormationStack(),
