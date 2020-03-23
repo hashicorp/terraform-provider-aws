@@ -48,7 +48,7 @@ resource "aws_sns_topic_policy" "test" {
 resource "aws_backup_vault_notifications" "test" {
   backup_vault_name   = "example_backup_vault"
   sns_topic_arn       = "${sns_topic_arn.test.arn}"
-  backup_vault_events = ["BACKUP_JOB_STARTED", "RESTORE_JOB_COMPLETED"] 
+  backup_vault_events = ["BACKUP_JOB_STARTED", "RESTORE_JOB_COMPLETED"]
 }
 ```
 
