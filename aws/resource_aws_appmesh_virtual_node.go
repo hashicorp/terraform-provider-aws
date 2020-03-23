@@ -77,6 +77,92 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 255),
 												},
+
+												"client_policy": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"tls": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"enforce": {
+																			Type:     schema.TypeBool,
+																			Optional: true,
+																			Default:  true,
+																		},
+
+																		"ports": {
+																			Type:     schema.TypeSet,
+																			Optional: true,
+																			Elem:     &schema.Schema{Type: schema.TypeInt},
+																			Set:      schema.HashInt,
+																		},
+
+																		"validation": {
+																			Type:     schema.TypeList,
+																			Required: true,
+																			MinItems: 1,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"trust": {
+																						Type:     schema.TypeList,
+																						Required: true,
+																						MinItems: 1,
+																						MaxItems: 1,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"acm": {
+																									Type:     schema.TypeList,
+																									Optional: true,
+																									MinItems: 0,
+																									MaxItems: 1,
+																									Elem: &schema.Resource{
+																										Schema: map[string]*schema.Schema{
+																											"certificate_authority_arns": {
+																												Type:     schema.TypeSet,
+																												Required: true,
+																												Elem:     &schema.Schema{Type: schema.TypeString},
+																												Set:      schema.HashString,
+																											},
+																										},
+																									},
+																								},
+
+																								"file": {
+																									Type:     schema.TypeList,
+																									Optional: true,
+																									MinItems: 0,
+																									MaxItems: 1,
+																									Elem: &schema.Resource{
+																										Schema: map[string]*schema.Schema{
+																											"certificate_chain": {
+																												Type:         schema.TypeString,
+																												Required:     true,
+																												ValidateFunc: validation.StringLenBetween(1, 255),
+																											},
+																										},
+																									},
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
 											},
 										},
 									},
@@ -223,47 +309,6 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																	},
 																},
 															},
-
-															// ForbiddenException: TLS Certificates from SDS are not supported.
-															// "sds": {
-															// 	Type:     schema.TypeList,
-															// 	Optional: true,
-															// 	MinItems: 0,
-															// 	MaxItems: 1,
-															// 	Elem: &schema.Resource{
-															// 		Schema: map[string]*schema.Schema{
-															// 			"secret_name": {
-															// 				Type:     schema.TypeString,
-															// 				Required: true,
-															// 			},
-
-															// 			"source": {
-															// 				Type:     schema.TypeList,
-															// 				Required: true,
-															// 				MinItems: 1,
-															// 				MaxItems: 1,
-															// 				Elem: &schema.Resource{
-															// 					Schema: map[string]*schema.Schema{
-															// 						"unix_domain_socket": {
-															// 							Type:     schema.TypeList,
-															// 							Required: true,
-															// 							MinItems: 1,
-															// 							MaxItems: 1,
-															// 							Elem: &schema.Resource{
-															// 								Schema: map[string]*schema.Schema{
-															// 									"path": {
-															// 										Type:     schema.TypeString,
-															// 										Required: true,
-															// 									},
-															// 								},
-															// 							},
-															// 						},
-															// 					},
-															// 				},
-															// 			},
-															// 		},
-															// 	},
-															// },
 														},
 													},
 												},
@@ -566,6 +611,40 @@ func appmeshVirtualNodeBackendHash(vBackend interface{}) int {
 		mVirtualService := vVirtualService[0].(map[string]interface{})
 		if v, ok := mVirtualService["virtual_service_name"].(string); ok {
 			buf.WriteString(fmt.Sprintf("%s-", v))
+		}
+		if vClientPolicy, ok := mVirtualService["client_policy"].([]interface{}); ok && len(vClientPolicy) > 0 && vClientPolicy[0] != nil {
+			mClientPolicy := vClientPolicy[0].(map[string]interface{})
+			if vTls, ok := mClientPolicy["tls"].([]interface{}); ok && len(vTls) > 0 && vTls[0] != nil {
+				mTls := vTls[0].(map[string]interface{})
+				if v, ok := mTls["enforce"].(bool); ok {
+					buf.WriteString(fmt.Sprintf("%t-", v))
+				}
+				if v, ok := mTls["ports"].(*schema.Set); ok && v.Len() > 0 {
+					for _, port := range v.List() {
+						buf.WriteString(fmt.Sprintf("%d-", port.(int)))
+					}
+				}
+				if vValidation, ok := mTls["validation"].([]interface{}); ok && len(vValidation) > 0 && vValidation[0] != nil {
+					mValidation := vValidation[0].(map[string]interface{})
+					if vTrust, ok := mValidation["trust"].([]interface{}); ok && len(vTrust) > 0 && vTrust[0] != nil {
+						mTrust := vTrust[0].(map[string]interface{})
+						if vAcm, ok := mTrust["acm"].([]interface{}); ok && len(vAcm) > 0 && vAcm[0] != nil {
+							mAcm := vAcm[0].(map[string]interface{})
+							if v, ok := mAcm["certificate_authority_arns"].(*schema.Set); ok && v.Len() > 0 {
+								for _, arn := range v.List() {
+									buf.WriteString(fmt.Sprintf("%s-", arn.(string)))
+								}
+							}
+						}
+						if vFile, ok := mTrust["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+							mFile := vFile[0].(map[string]interface{})
+							if v, ok := mFile["certificate_chain"].(string); ok {
+								buf.WriteString(fmt.Sprintf("%s-", v))
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 	return hashcode.String(buf.String())
