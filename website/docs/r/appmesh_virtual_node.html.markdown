@@ -192,7 +192,35 @@ The `backend` object supports the following:
 
 The `virtual_service` object supports the following:
 
+* `client_policy` - (Optional) The client policy for the backend.
 * `virtual_service_name` - (Required) The name of the virtual service that is acting as a virtual node backend.
+
+The `client_policy` object supports the following:
+
+* `tls` - (Optional) The Transport Layer Security (TLS) client policy.
+
+The `tls` object supports the following:
+
+* `enforced` - (Optional) Whether the policy is enforced. Default is `true`.
+* `ports` - (Optional) One or more ports that the policy is enforced for.
+* `validation` - (Required) The TLS validation context.
+
+The `validation` object supports the following:
+
+* `trust` - (Required) The TLS validation context trust.
+
+The `trust` object supports the following:
+
+* `acm` - (Optional) The TLS validation context trust for an AWS Certicate Manager (ACM) certificate.
+* `file` - (Optional) The TLS validation context trust for a local file.
+
+The `acm` object supports the following:
+
+* `certificate_authority_arns` - (Required) One or more ACM Amazon Resource Name (ARN)s.
+
+The `file` object supports the following:
+
+* `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the virtual node that the proxy is running on.
 
 The `listener` object supports the following:
 

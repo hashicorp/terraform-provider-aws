@@ -984,6 +984,23 @@ func expandStringSet(configured *schema.Set) []*string {
 	return expandStringList(configured.List())
 }
 
+// Takes the result of flatmap.Expand for an array of ints
+// and returns a []*int64
+func expandIntList(configured []interface{}) []*int64 {
+	vs := make([]*int64, 0, len(configured))
+	for _, v := range configured {
+		if val, ok := v.(int); ok {
+			vs = append(vs, aws.Int64(int64(val)))
+		}
+	}
+	return vs
+}
+
+// Takes the result of schema.Set of ints and returns a []*int64
+func expandIntSet(configured *schema.Set) []*int64 {
+	return expandIntList(configured.List())
+}
+
 // Takes list of pointers to strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
@@ -997,6 +1014,21 @@ func flattenStringList(list []*string) []interface{} {
 
 func flattenStringSet(list []*string) *schema.Set {
 	return schema.NewSet(schema.HashString, flattenStringList(list))
+}
+
+// Takes list of pointers to int64s. Expand to an array
+// of raw ints and returns a []interface{}
+// to keep compatibility w/ schema.NewSetschema.NewSet
+func flattenIntList(list []*int64) []interface{} {
+	vs := make([]interface{}, 0, len(list))
+	for _, v := range list {
+		vs = append(vs, int(aws.Int64Value(v)))
+	}
+	return vs
+}
+
+func flattenIntSet(list []*int64) *schema.Set {
+	return schema.NewSet(schema.HashInt, flattenIntList(list))
 }
 
 //Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
@@ -5041,6 +5073,100 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 					virtualService.VirtualServiceName = aws.String(vVirtualServiceName)
 				}
 
+				if vClientPolicy, ok := mVirtualService["client_policy"].([]interface{}); ok && len(vClientPolicy) > 0 && vClientPolicy[0] != nil {
+					clientPolicy := &appmesh.ClientPolicy{}
+
+					mClientPolicy := vClientPolicy[0].(map[string]interface{})
+
+					if vTls, ok := mClientPolicy["tls"].([]interface{}); ok && len(vTls) > 0 && vTls[0] != nil {
+						tls := &appmesh.ClientPolicyTls{}
+
+						mTls := vTls[0].(map[string]interface{})
+
+						if vEnforce, ok := mTls["enforce"].(bool); ok {
+							tls.Enforce = aws.Bool(vEnforce)
+						}
+
+						if vPorts, ok := mTls["ports"].(*schema.Set); ok && vPorts.Len() > 0 {
+							tls.Ports = expandIntSet(vPorts)
+						}
+
+						if vValidation, ok := mTls["validation"].([]interface{}); ok && len(vValidation) > 0 && vValidation[0] != nil {
+							validation := &appmesh.TlsValidationContext{}
+
+							mValidation := vValidation[0].(map[string]interface{})
+
+							if vTrust, ok := mValidation["trust"].([]interface{}); ok && len(vTrust) > 0 && vTrust[0] != nil {
+								trust := &appmesh.TlsValidationContextTrust{}
+
+								mTrust := vTrust[0].(map[string]interface{})
+
+								if vAcm, ok := mTrust["acm"].([]interface{}); ok && len(vAcm) > 0 && vAcm[0] != nil {
+									acm := &appmesh.TlsValidationContextAcmTrust{}
+
+									mAcm := vAcm[0].(map[string]interface{})
+
+									if vCertificateAuthorityArns, ok := mAcm["certificate_authority_arns"].(*schema.Set); ok && vCertificateAuthorityArns.Len() > 0 {
+										acm.CertificateAuthorityArns = expandStringSet(vCertificateAuthorityArns)
+									}
+
+									trust.Acm = acm
+								}
+
+								if vFile, ok := mTrust["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+									file := &appmesh.TlsValidationContextFileTrust{}
+
+									mFile := vFile[0].(map[string]interface{})
+
+									if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+										file.CertificateChain = aws.String(vCertificateChain)
+									}
+
+									trust.File = file
+								}
+
+								// if vSds, ok := mTrust["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+								// 	sds := &appmesh.TlsValidationContextSdsTrust{}
+
+								// 	mSds := vSds[0].(map[string]interface{})
+
+								// 	if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+								// 		sds.SecretName = aws.String(vSecretName)
+								// 	}
+
+								// 	if vSource, ok := mSds["source"].([]interface{}); ok && len(vSource) > 0 && vSource[0] != nil {
+								// 		source := &appmesh.SdsSource{}
+
+								// 		mSource := vSource[0].(map[string]interface{})
+
+								// 		if vUnixDomainSocket, ok := mSource["unix_domain_socket"].([]interface{}); ok && len(vUnixDomainSocket) > 0 && vUnixDomainSocket[0] != nil {
+								// 			unixDomainSocket := &appmesh.SdsUnixDomainSocketSource{}
+
+								// 			mUnixDomainSocket := vUnixDomainSocket[0].(map[string]interface{})
+
+								// 			if vPath, ok := mUnixDomainSocket["path"].(string); ok && vPath != "" {
+								// 				unixDomainSocket.Path = aws.String(vPath)
+								// 			}
+
+								// 			source.UnixDomainSocket = unixDomainSocket
+								// 		}
+								// 	}
+
+								// 	trust.Sds = sds
+								// }
+
+								validation.Trust = trust
+							}
+
+							tls.Validation = validation
+						}
+
+						clientPolicy.Tls = tls
+					}
+
+					virtualService.ClientPolicy = clientPolicy
+				}
+
 				backend.VirtualService = virtualService
 			}
 
@@ -5283,6 +5409,71 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 			if virtualService := backend.VirtualService; virtualService != nil {
 				mVirtualService := map[string]interface{}{
 					"virtual_service_name": aws.StringValue(virtualService.VirtualServiceName),
+				}
+
+				if clientPolicy := virtualService.ClientPolicy; clientPolicy != nil {
+					mClientPolicy := map[string]interface{}{}
+
+					if tls := clientPolicy.Tls; tls != nil {
+						mTls := map[string]interface{}{
+							"enforce": aws.BoolValue(tls.Enforce),
+							"ports":   flattenIntSet(tls.Ports),
+						}
+
+						if validation := tls.Validation; validation != nil {
+							mValidation := map[string]interface{}{}
+
+							if trust := validation.Trust; trust != nil {
+								mTrust := map[string]interface{}{}
+
+								if acm := trust.Acm; acm != nil {
+									mAcm := map[string]interface{}{
+										"certificate_authority_arns": flattenStringSet(acm.CertificateAuthorityArns),
+									}
+
+									mTrust["acm"] = []interface{}{mAcm}
+								}
+
+								if file := trust.File; file != nil {
+									mFile := map[string]interface{}{
+										"certificate_chain": aws.StringValue(file.CertificateChain),
+									}
+
+									mTrust["file"] = []interface{}{mFile}
+								}
+
+								// if sds := trust.Sds; sds != nil {
+								// 	mSds := map[string]interface{}{
+								// 		"secret_name": aws.StringValue(sds.SecretName),
+								// 	}
+
+								// 	if source := sds.Source; source != nil {
+								// 		mSource := map[string]interface{}{}
+
+								// 		if unixDomainSocket := source.UnixDomainSocket; unixDomainSocket != nil {
+								// 			mUnixDomainSocket := map[string]interface{}{
+								// 				"path": aws.StringValue(unixDomainSocket.Path),
+								// 			}
+
+								// 			mSource["unix_domain_socket"] = []interface{}{mUnixDomainSocket}
+								// 		}
+
+								// 		mSds["source"] = []interface{}{mSource}
+								// 	}
+
+								// 	mTrust["sds"] = []interface{}{mSds}
+								// }
+
+								mValidation["trust"] = []interface{}{mTrust}
+							}
+
+							mTls["validation"] = []interface{}{mValidation}
+						}
+
+						mClientPolicy["tls"] = []interface{}{mTls}
+					}
+
+					mVirtualService["client_policy"] = []interface{}{mClientPolicy}
 				}
 
 				mBackend["virtual_service"] = []interface{}{mVirtualService}
