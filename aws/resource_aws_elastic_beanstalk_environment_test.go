@@ -73,20 +73,18 @@ func testSweepElasticBeanstalkEnvironments(region string) error {
 		pollInterval, _ := time.ParseDuration("10s")
 
 		// poll for deletion
-		t := time.Now()
 		stateConf := &resource.StateChangeConf{
 			Pending:      []string{"Terminating"},
 			Target:       []string{"Terminated"},
-			Refresh:      environmentStateRefreshFunc(beanstalkconn, environmentID, t),
+			Refresh:      elasticBeanstalkEnvironmentStateIgnoreErrorEventsRefreshFunc(beanstalkconn, environmentID),
 			Timeout:      waitForReadyTimeOut,
 			Delay:        10 * time.Second,
 			PollInterval: pollInterval,
 			MinTimeout:   3 * time.Second,
 		}
-
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			errors = multierror.Append(fmt.Errorf("Error waiting for Elastic Beanstalk Environment %q to become terminated: %w", environmentID, err))
+			errors = multierror.Append(fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to become terminated: %w", environmentID, err))
 			continue
 		}
 		log.Printf("> Terminated (%s) (%s)", environmentName, environmentID)
