@@ -41,7 +41,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_sns_topic_policy" "test" {
-  arn = "${aws_sns_topic.test.arn}"
+  arn    = "${aws_sns_topic.test.arn}"
   policy = "${data.aws_iam_policy_document.test.json}"
 }
 
