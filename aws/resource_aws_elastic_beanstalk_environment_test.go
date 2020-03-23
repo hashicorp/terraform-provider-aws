@@ -10,15 +10,14 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-// initialize sweeper
 func init() {
 	resource.AddTestSweepers("aws_elastic_beanstalk_environment", &resource.Sweeper{
 		Name: "aws_elastic_beanstalk_environment",
@@ -29,7 +28,7 @@ func init() {
 func testSweepElasticBeanstalkEnvironments(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	beanstalkconn := client.(*AWSClient).elasticbeanstalkconn
 
@@ -42,7 +41,7 @@ func testSweepElasticBeanstalkEnvironments(region string) error {
 			log.Printf("[WARN] Skipping Elastic Beanstalk Environment sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving beanstalk environment: %s", err)
+		return fmt.Errorf("error retrieving beanstalk environment: %w", err)
 	}
 
 	if len(resp.Environments) == 0 {
@@ -50,8 +49,11 @@ func testSweepElasticBeanstalkEnvironments(region string) error {
 		return nil
 	}
 
+	var errors error
 	for _, bse := range resp.Environments {
-		log.Printf("Trying to terminate (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
+		environmentName := aws.StringValue(bse.EnvironmentName)
+		environmentID := aws.StringValue(bse.EnvironmentId)
+		log.Printf("Trying to terminate (%s) (%s)", environmentName, environmentID)
 
 		_, err := beanstalkconn.TerminateEnvironment(
 			&elasticbeanstalk.TerminateEnvironmentInput{
@@ -60,13 +62,11 @@ func testSweepElasticBeanstalkEnvironments(region string) error {
 			})
 
 		if err != nil {
-			elasticbeanstalkerr, ok := err.(awserr.Error)
-			if ok && (elasticbeanstalkerr.Code() == "InvalidConfiguration.NotFound" || elasticbeanstalkerr.Code() == "ValidationError") {
-				log.Printf("[DEBUG] beanstalk environment (%s) not found", *bse.EnvironmentName)
-				return nil
+			if isAWSErr(err, "InvalidConfiguration.NotFound", "") || isAWSErr(err, "ValidationError", "") {
+				log.Printf("[DEBUG] Elastic Beanstalk Environment %q not found", environmentName)
+				continue
 			}
-
-			return err
+			errors = multierror.Append(fmt.Errorf("error terminating Elastic Beanstalk Environment %q: %w", environmentName, err))
 		}
 
 		waitForReadyTimeOut, _ := time.ParseDuration("5m")
@@ -77,7 +77,7 @@ func testSweepElasticBeanstalkEnvironments(region string) error {
 		stateConf := &resource.StateChangeConf{
 			Pending:      []string{"Terminating"},
 			Target:       []string{"Terminated"},
-			Refresh:      environmentStateRefreshFunc(beanstalkconn, *bse.EnvironmentId, t),
+			Refresh:      environmentStateRefreshFunc(beanstalkconn, environmentID, t),
 			Timeout:      waitForReadyTimeOut,
 			Delay:        10 * time.Second,
 			PollInterval: pollInterval,
@@ -86,14 +86,13 @@ func testSweepElasticBeanstalkEnvironments(region string) error {
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for Elastic Beanstalk Environment (%s) to become terminated: %s",
-				*bse.EnvironmentId, err)
+			errors = multierror.Append(fmt.Errorf("Error waiting for Elastic Beanstalk Environment %q to become terminated: %w", environmentID, err))
+			continue
 		}
-		log.Printf("> Terminated (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
+		log.Printf("> Terminated (%s) (%s)", environmentName, environmentID)
 	}
 
-	return nil
+	return errors
 }
 
 func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
@@ -106,7 +105,7 @@ func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	beanstalkElbNameRegexp := regexp.MustCompile("awseb.+?EBLoa[^,]+")
 	beanstalkInstancesNameRegexp := regexp.MustCompile("i-([0-9a-fA-F]{8}|[0-9a-fA-F]{17})")
 	beanstalkLcNameRegexp := regexp.MustCompile("awseb.+?AutoScalingLaunch[^,]+")
-	beanstalkEndpointUrl := regexp.MustCompile("awseb.+?EBLoa[^,].+?elb.amazonaws.com")
+	beanstalkEndpointURL := regexp.MustCompile("awseb.+?EBLoa[^,].+?elb.amazonaws.com")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -119,7 +118,7 @@ func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
 					resource.TestMatchResourceAttr(resourceName, "autoscaling_groups.0", beanstalkAsgNameRegexp),
-					resource.TestMatchResourceAttr(resourceName, "endpoint_url", beanstalkEndpointUrl),
+					resource.TestMatchResourceAttr(resourceName, "endpoint_url", beanstalkEndpointURL),
 					resource.TestMatchResourceAttr(resourceName, "instances.0", beanstalkInstancesNameRegexp),
 					resource.TestMatchResourceAttr(resourceName, "launch_configurations.0", beanstalkLcNameRegexp),
 					resource.TestMatchResourceAttr(resourceName, "load_balancers.0", beanstalkElbNameRegexp),
@@ -544,7 +543,7 @@ func testAccVerifyBeanstalkConfig(env *elasticbeanstalk.EnvironmentDescription, 
 		sort.Strings(testStrings)
 		sort.Strings(expected)
 		if !reflect.DeepEqual(testStrings, expected) {
-			return fmt.Errorf("Error matching strings, expected:\n\n%#v\n\ngot:\n\n%#v\n", testStrings, foundEnvs)
+			return fmt.Errorf("error matching strings, expected:\n\n%#v\n\ngot:\n\n%#v", testStrings, foundEnvs)
 		}
 
 		return nil
@@ -567,23 +566,18 @@ func testAccCheckBeanstalkEnvDestroy(s *terraform.State) error {
 		if err == nil {
 			switch {
 			case len(resp.Environments) > 1:
-				return fmt.Errorf("Error %d environments match, expected 1", len(resp.Environments))
+				return fmt.Errorf("error %d environments match, expected 1", len(resp.Environments))
 			case len(resp.Environments) == 1:
 				if *resp.Environments[0].Status == "Terminated" {
 					return nil
 				}
-				return fmt.Errorf("Elastic Beanstalk ENV still exists.")
+				return fmt.Errorf("Elastic Beanstalk ENV still exists")
 			default:
 				return nil
 			}
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "InvalidBeanstalkEnvID.NotFound" {
+		if !isAWSErr(err, "InvalidBeanstalkEnvID.NotFound", "") {
 			return err
 		}
 	}
@@ -746,10 +740,10 @@ func describeBeanstalkEnv(conn *elasticbeanstalk.ElasticBeanstalk,
 		return &elasticbeanstalk.EnvironmentDescription{}, err
 	}
 	if len(resp.Environments) == 0 {
-		return &elasticbeanstalk.EnvironmentDescription{}, fmt.Errorf("Elastic Beanstalk ENV not found.")
+		return &elasticbeanstalk.EnvironmentDescription{}, fmt.Errorf("Elastic Beanstalk ENV not found")
 	}
 	if len(resp.Environments) > 1 {
-		return &elasticbeanstalk.EnvironmentDescription{}, fmt.Errorf("Found %d environments, expected 1.", len(resp.Environments))
+		return &elasticbeanstalk.EnvironmentDescription{}, fmt.Errorf("found %d environments, expected 1", len(resp.Environments))
 	}
 	return resp.Environments[0], nil
 }
