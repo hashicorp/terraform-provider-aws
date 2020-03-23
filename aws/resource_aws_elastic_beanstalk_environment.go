@@ -315,12 +315,12 @@ func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta i
 func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticbeanstalkconn
 
-	envId := d.Id()
+	envID := d.Id()
 
 	var hasChange bool
 
 	updateOpts := elasticbeanstalk.UpdateEnvironmentInput{
-		EnvironmentId: aws.String(envId),
+		EnvironmentId: aws.String(envID),
 	}
 
 	if d.HasChange("description") {
@@ -476,9 +476,7 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 
 		err = waitForElasticBeanstalkEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
 		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for Elastic Beanstalk Environment (%s) to become ready: %s",
-				d.Id(), err)
+			return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to become ready: %w", d.Id(), err)
 		}
 
 		envErrors, err := getBeanstalkEnvironmentErrors(conn, d.Id(), t)
@@ -496,12 +494,12 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticbeanstalkconn
 
-	envId := d.Id()
+	envID := d.Id()
 
 	log.Printf("[DEBUG] Elastic Beanstalk environment read %s: id %s", d.Get("name").(string), d.Id())
 
 	resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
-		EnvironmentIds: []*string{aws.String(envId)},
+		EnvironmentIds: []*string{aws.String(envID)},
 	})
 
 	if err != nil {
@@ -527,7 +525,7 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 	}
 
 	resources, err := conn.DescribeEnvironmentResources(&elasticbeanstalk.DescribeEnvironmentResourcesInput{
-		EnvironmentId: aws.String(envId),
+		EnvironmentId: aws.String(envID),
 	})
 
 	if err != nil {
@@ -771,7 +769,7 @@ func deleteElasticBeanstalkEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, 
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Error waiting for Elastic Beanstalk Environment %q to become terminated: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to become terminated: %w", id, err)
 	}
 
 	return nil
@@ -827,7 +825,7 @@ func elasticBeanstalkEnvironmentStateRefreshFunc(conn *elasticbeanstalk.ElasticB
 
 		var env *elasticbeanstalk.EnvironmentDescription
 		for _, e := range resp.Environments {
-			if environmentId == *e.EnvironmentId {
+			if environmentID == aws.StringValue(e.EnvironmentId) {
 				env = e
 			}
 		}
@@ -836,7 +834,7 @@ func elasticBeanstalkEnvironmentStateRefreshFunc(conn *elasticbeanstalk.ElasticB
 			return -1, "failed", fmt.Errorf("Error finding Elastic Beanstalk Environment, environment not found")
 		}
 
-		envErrors, err := getBeanstalkEnvironmentErrors(conn, environmentId, t)
+		envErrors, err := getBeanstalkEnvironmentErrors(conn, environmentID, t)
 		if err != nil {
 			return -1, "failed", err
 		}
