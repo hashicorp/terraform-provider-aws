@@ -55,38 +55,11 @@ func testSweepElasticBeanstalkEnvironments(region string) error {
 		environmentID := aws.StringValue(bse.EnvironmentId)
 		log.Printf("Trying to terminate (%s) (%s)", environmentName, environmentID)
 
-		_, err := beanstalkconn.TerminateEnvironment(
-			&elasticbeanstalk.TerminateEnvironmentInput{
-				EnvironmentId:      bse.EnvironmentId,
-				TerminateResources: aws.Bool(true),
-			})
-
+		err := deleteElasticBeanstalkEnvironment(beanstalkconn, environmentID, 5*time.Minute, 10*time.Second)
 		if err != nil {
-			if isAWSErr(err, "InvalidConfiguration.NotFound", "") || isAWSErr(err, "ValidationError", "") {
-				log.Printf("[DEBUG] Elastic Beanstalk Environment %q not found", environmentName)
-				continue
-			}
-			errors = multierror.Append(fmt.Errorf("error terminating Elastic Beanstalk Environment %q: %w", environmentName, err))
+			errors = multierror.Append(fmt.Errorf("error deleting Elastic Beanstalk Environment %q: %w", environmentID, err))
 		}
 
-		waitForReadyTimeOut, _ := time.ParseDuration("5m")
-		pollInterval, _ := time.ParseDuration("10s")
-
-		// poll for deletion
-		stateConf := &resource.StateChangeConf{
-			Pending:      []string{"Terminating"},
-			Target:       []string{"Terminated"},
-			Refresh:      elasticBeanstalkEnvironmentStateIgnoreErrorEventsRefreshFunc(beanstalkconn, environmentID),
-			Timeout:      waitForReadyTimeOut,
-			Delay:        10 * time.Second,
-			PollInterval: pollInterval,
-			MinTimeout:   3 * time.Second,
-		}
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			errors = multierror.Append(fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to become terminated: %w", environmentID, err))
-			continue
-		}
 		log.Printf("> Terminated (%s) (%s)", environmentName, environmentID)
 	}
 

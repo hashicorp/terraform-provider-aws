@@ -740,24 +740,30 @@ func resourceAwsElasticBeanstalkEnvironmentDelete(d *schema.ResourceData, meta i
 		return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to be ready before terminating: %w", d.Id(), err)
 	}
 
+	return deleteElasticBeanstalkEnvironment(conn, d.Id(), waitForReadyTimeOut, pollInterval)
+}
+
+func deleteElasticBeanstalkEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration) error {
 	opts := elasticbeanstalk.TerminateEnvironmentInput{
-		EnvironmentId:      aws.String(d.Id()),
+		EnvironmentId:      aws.String(id),
 		TerminateResources: aws.Bool(true),
 	}
-
-	// Get the current time to filter getBeanstalkEnvironmentErrors messages
 	log.Printf("[DEBUG] Elastic Beanstalk Environment terminate opts: %s", opts)
-	_, err = conn.TerminateEnvironment(&opts)
 
+	_, err := conn.TerminateEnvironment(&opts)
 	if err != nil {
+		if isAWSErr(err, "InvalidConfiguration.NotFound", "") || isAWSErr(err, "ValidationError", "") {
+			log.Printf("[DEBUG] Elastic Beanstalk Environment %q not found", id)
+			return nil
+		}
 		return err
 	}
 
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{"Terminating"},
 		Target:       []string{"Terminated"},
-		Refresh:      elasticBeanstalkEnvironmentStateIgnoreErrorEventsRefreshFunc(conn, d.Id()),
-		Timeout:      waitForReadyTimeOut,
+		Refresh:      elasticBeanstalkEnvironmentStateIgnoreErrorEventsRefreshFunc(conn, id),
+		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,
 		MinTimeout:   3 * time.Second,
