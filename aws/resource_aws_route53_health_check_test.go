@@ -185,6 +185,37 @@ func TestAccAWSRoute53HealthCheck_IpConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53HealthCheck_Ipv6Config(t *testing.T) {
+	resourceName := "aws_route53_health_check.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53HealthCheckIpV6Form1Config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53HealthCheckExists(resourceName),
+				),
+			},
+			{
+				// Expect no diff if we write ipv6 addresses in an alternate form
+				Config:   testAccRoute53HealthCheckIpV6Form2Config,
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccRoute53HealthCheckIpV6Form1Config,
+				PlanOnly: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53HealthCheck_CloudWatchAlarmCheck(t *testing.T) {
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -527,6 +558,36 @@ resource "aws_route53_health_check" "test" {
   measure_latency = true
   invert_healthcheck = true
   enable_sni = false
+
+  tags = {
+    Name = "tf-test-health-check"
+   }
+}
+`
+
+const testAccRoute53HealthCheckIpV6Form1Config = `
+resource "aws_route53_health_check" "test" {
+  ip_address = "2001:DB8::1"
+  port = 80
+  type = "HTTP"
+  resource_path = "/"
+  failure_threshold = "2"
+  request_interval = "30"
+
+  tags = {
+    Name = "tf-test-health-check"
+   }
+}
+`
+
+const testAccRoute53HealthCheckIpV6Form2Config = `
+resource "aws_route53_health_check" "test" {
+  ip_address = "2001:DB8:0:0:0:0:0:1"
+  port = 80
+  type = "HTTP"
+  resource_path = "/"
+  failure_threshold = "2"
+  request_interval = "30"
 
   tags = {
     Name = "tf-test-health-check"

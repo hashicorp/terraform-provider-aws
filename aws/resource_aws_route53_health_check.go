@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"net"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -54,9 +55,11 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				ValidateFunc: validation.IntInSlice([]int{10, 30}),
 			},
 			"ip_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPAddress,
+				StateFunc:    func(v interface{}) string { return normalizeIPAddress(v.(string)) },
 			},
 			"fqdn": {
 				Type:     schema.TypeString,
@@ -343,7 +346,9 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 	d.Set("request_interval", updated.RequestInterval)
 	d.Set("fqdn", updated.FullyQualifiedDomainName)
 	d.Set("search_string", updated.SearchString)
-	d.Set("ip_address", updated.IPAddress)
+	if updated.IPAddress != nil {
+		d.Set("ip_address", normalizeIPAddress(*updated.IPAddress))
+	}
 	d.Set("port", updated.Port)
 	d.Set("resource_path", updated.ResourcePath)
 	d.Set("measure_latency", updated.MeasureLatency)
@@ -383,4 +388,13 @@ func resourceAwsRoute53HealthCheckDelete(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Deleting Route53 health check: %s", d.Id())
 	_, err := conn.DeleteHealthCheck(&route53.DeleteHealthCheckInput{HealthCheckId: aws.String(d.Id())})
 	return err
+}
+
+// normalizeIPAddress normalizes an ip address. Ipv4 addresses remain
+// unchanged, while Ipv6 addresses are normalized to the format
+// `net.IP.String()` uses.
+// For example, "2001:db8:0:0:0:0:0:1" is normalized to "2001:db8::1".
+func normalizeIPAddress(ip string) string {
+	parsed := net.ParseIP(ip)
+	return parsed.String()
 }
