@@ -25,8 +25,16 @@ data "aws_ec2_transit_gateway_dx_gateway_attachment" "example" {
 
 The following arguments are supported:
 
-* `transit_gateway_id` - (Required) Identifier of the EC2 Transit Gateway.
-* `dx_gateway_id` - (Required) Identifier of the Direct Connect Gateway.
+* `transit_gateway_id` - (Optional) Identifier of the EC2 Transit Gateway.
+* `dx_gateway_id` - (Optional) Identifier of the Direct Connect Gateway.
+* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
+### filter Configuration Block
+
+The following arguments are supported by the `filter` configuration block:
+
+* `name` - (Required) The name of the filter field. Valid values can be found in the [EC2 DescribeTransitGatewayAttachments API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html).
+* `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attribute Reference
 
