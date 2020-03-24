@@ -87,7 +87,14 @@ func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 }
 
 const testAccDataSourceAwsVpcEndpointServiceGatewayConfig = `
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 data "aws_vpc_endpoint_service" "test" {
   service = "s3"
@@ -128,7 +135,14 @@ resource "aws_lb" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "test1" {
   vpc_id            = "${aws_vpc.test.id}"

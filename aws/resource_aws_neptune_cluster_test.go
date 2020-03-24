@@ -572,6 +572,11 @@ func testAccCheckAWSNeptuneClusterSnapshot(rName string) resource.TestCheckFunc 
 var testAccAWSNeptuneClusterConfigBase = `
 data "aws_availability_zones" "test" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 `
 

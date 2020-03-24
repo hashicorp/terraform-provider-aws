@@ -3006,6 +3006,12 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 }
 
 data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_subnet" "test" {
@@ -3091,6 +3097,12 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 }
 
 data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_subnet" "test" {
@@ -3271,6 +3283,12 @@ resource "aws_codedeploy_deployment_group" "test" {
 func testAccAWSCodeDeployDeploymentGroupConfigEcsBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {

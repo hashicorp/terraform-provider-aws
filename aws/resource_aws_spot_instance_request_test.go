@@ -673,8 +673,13 @@ func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rInt int) string {
 func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-	blacklisted_zone_ids = ["usw2-az4"]
-	state                = "available"
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "foo_VPC" {
@@ -724,8 +729,13 @@ tags = {
 func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-	blacklisted_zone_ids = ["usw2-az4"]
-	state                = "available"
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_spot_instance_request" "foo" {

@@ -2736,6 +2736,12 @@ func testAccInstanceConfigInDefaultVpcBySgName(rName string) string {
 data "aws_availability_zones" "current" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_vpc" "default" {
@@ -2762,6 +2768,12 @@ func testAccInstanceConfigInDefaultVpcBySgId(rName string) string {
 data "aws_availability_zones" "current" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_vpc" "default" {
@@ -4123,6 +4135,12 @@ func testAccAwsInstanceVpcConfig(rName string, mapPublicIpOnLaunch bool) string 
 data "aws_availability_zones" "current" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -4188,6 +4206,12 @@ func testAccAwsInstanceVpcIpv6Config(rName string) string {
 data "aws_availability_zones" "current" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
