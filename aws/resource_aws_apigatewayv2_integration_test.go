@@ -397,11 +397,10 @@ func testAccAWSAPIGatewayV2IntegrationConfig_vpcLink(rName string) string {
 data "aws_availability_zones" "available" {
   state = "available"
 
-// https://github.com/terraform-providers/terraform-provider-aws/issues/12412
-//   filter {
-//     name   = "opt-in-status"
-//     values = ["opt-in-not-required"]
-//   }
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
