@@ -5,9 +5,11 @@ import (
 	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -40,24 +42,45 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 		return nil
 	}
 
+	var sweeperErrs *multierror.Error
+
 	for _, certificateAuthority := range certificateAuthorities {
 		arn := aws.StringValue(certificateAuthority.Arn)
-		log.Printf("[INFO] Deleting ACMPCA Certificate Authority: %s", arn)
-		input := &acmpca.DeleteCertificateAuthorityInput{
-			CertificateAuthorityArn:     aws.String(arn),
-			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
-		}
 
-		_, err := conn.DeleteCertificateAuthority(input)
-		if err != nil {
+		if aws.StringValue(certificateAuthority.Status) == acmpca.CertificateAuthorityStatusActive {
+			log.Printf("[INFO] Disabling ACMPCA Certificate Authority: %s", arn)
+			_, err := conn.UpdateCertificateAuthority(&acmpca.UpdateCertificateAuthorityInput{
+				CertificateAuthorityArn: aws.String(arn),
+				Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
+			})
 			if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
-			log.Printf("[ERROR] Failed to delete ACMPCA Certificate Authority (%s): %s", arn, err)
+			if err != nil {
+				sweeperErr := fmt.Errorf("error disabling ACMPCA Certificate Authority (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		log.Printf("[INFO] Deleting ACMPCA Certificate Authority: %s", arn)
+		_, err := conn.DeleteCertificateAuthority(&acmpca.DeleteCertificateAuthorityInput{
+			CertificateAuthorityArn:     aws.String(arn),
+			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
+		})
+		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			continue
+		}
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting ACMPCA Certificate Authority (%s): %w", arn, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
 		}
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
@@ -413,6 +436,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 func TestAccAwsAcmpcaCertificateAuthority_Type_Root(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -420,7 +444,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Type_Root(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfigType(acmpca.CertificateAuthorityTypeRoot),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfigType(rName, acmpca.CertificateAuthorityTypeRoot),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
@@ -493,6 +517,85 @@ func testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName string, certif
 		*certificateAuthority = *output.CertificateAuthority
 
 		return nil
+	}
+}
+
+func testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+
+		arn := aws.StringValue(certificateAuthority.Arn)
+
+		getCsrResp, err := conn.GetCertificateAuthorityCsr(&acmpca.GetCertificateAuthorityCsrInput{
+			CertificateAuthorityArn: aws.String(arn),
+		})
+		if err != nil {
+			return fmt.Errorf("error getting ACMPCA Certificate Authority (%s) CSR: %s", arn, err)
+		}
+
+		issueCertResp, err := conn.IssueCertificate(&acmpca.IssueCertificateInput{
+			CertificateAuthorityArn: aws.String(arn),
+			Csr:                     []byte(aws.StringValue(getCsrResp.Csr)),
+			IdempotencyToken:        aws.String(resource.UniqueId()),
+			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
+			TemplateArn:             aws.String("arn:aws:acm-pca:::template/RootCACertificate/V1"),
+			Validity: &acmpca.Validity{
+				Type:  aws.String(acmpca.ValidityPeriodTypeYears),
+				Value: aws.Int64(1),
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("error issuing ACMPCA Certificate Authority (%s) Root CA certificate from CSR: %s", arn, err)
+		}
+
+		// Wait for certificate status to become ISSUED.
+		var getCertResp *acmpca.GetCertificateOutput
+		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+			var err error
+			getCertResp, err = conn.GetCertificate(&acmpca.GetCertificateInput{
+				CertificateAuthorityArn: aws.String(arn),
+				CertificateArn:          issueCertResp.CertificateArn,
+			})
+			if err != nil {
+				if isAWSErr(err, acmpca.ErrCodeRequestInProgressException, "Try again later") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if isResourceTimeoutError(err) {
+			getCertResp, err = conn.GetCertificate(&acmpca.GetCertificateInput{
+				CertificateAuthorityArn: aws.String(arn),
+				CertificateArn:          issueCertResp.CertificateArn,
+			})
+		}
+		if err != nil {
+			return fmt.Errorf("error getting ACMPCA Certificate Authority (%s) issued Root CA certificate: %s", arn, err)
+		}
+
+		_, err = conn.ImportCertificateAuthorityCertificate(&acmpca.ImportCertificateAuthorityCertificateInput{
+			CertificateAuthorityArn: aws.String(arn),
+			Certificate:             []byte(aws.StringValue(getCertResp.Certificate)),
+		})
+		if err != nil {
+			return fmt.Errorf("error importing ACMPCA Certificate Authority (%s) Root CA certificate: %s", arn, err)
+		}
+
+		return err
+	}
+}
+
+func testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+
+		_, err := conn.UpdateCertificateAuthority(&acmpca.UpdateCertificateAuthorityInput{
+			CertificateAuthorityArn: certificateAuthority.Arn,
+			Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
+		})
+
+		return err
 	}
 }
 
@@ -723,20 +826,20 @@ resource "aws_acmpca_certificate_authority" "test" {
 }
 `
 
-func testAccAwsAcmpcaCertificateAuthorityConfigType(certificateAuthorityType string) string {
+func testAccAwsAcmpcaCertificateAuthorityConfigType(rName, certificateAuthorityType string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
-  type                            = %[1]q
+  type                            = %[2]q
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = "%[1]s.com"
     }
   }
 }
-`, certificateAuthorityType)
+`, rName, certificateAuthorityType)
 }
