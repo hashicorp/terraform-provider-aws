@@ -211,11 +211,8 @@ func TestAccAWSRoute53HealthCheck_Ipv6Config(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckIpv6ExpandedConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "1234:5678:9abc:6811:0:0:0:4"),
-				),
+				Config:   testAccRoute53HealthCheckIpv6ExpandedConfig,
+				PlanOnly: true,
 			},
 		},
 	})
