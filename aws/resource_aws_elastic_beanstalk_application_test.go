@@ -87,9 +87,10 @@ func TestAccAWSElasticBeanstalkApplication_basic(t *testing.T) {
 func testAccBeanstalkAppImportConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-	  name = "%s"
-	  description = "tf-test-desc"
-	}`, name)
+  name        = "%s"
+  description = "tf-test-desc"
+}
+`, name)
 }
 
 func TestAccAWSBeanstalkApp_basic(t *testing.T) {
@@ -286,7 +287,7 @@ func testAccCheckBeanstalkAppExists(n string, app *elasticbeanstalk.ApplicationD
 func testAccBeanstalkAppConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
 }
 `, rName)
