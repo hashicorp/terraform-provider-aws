@@ -760,7 +760,7 @@ func deleteElasticBeanstalkEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, 
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{"Terminating"},
 		Target:       []string{"Terminated"},
-		Refresh:      elasticBeanstalkEnvironmentStateIgnoreErrorEventsRefreshFunc(conn, id),
+		Refresh:      elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,
@@ -794,7 +794,7 @@ func waitForElasticBeanstalkEnvironmentReadyIgnoreErrorEvents(conn *elasticbeans
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{"Launching", "Updating"},
 		Target:       []string{"Ready"},
-		Refresh:      elasticBeanstalkEnvironmentStateIgnoreErrorEventsRefreshFunc(conn, id),
+		Refresh:      elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,
@@ -846,7 +846,7 @@ func elasticBeanstalkEnvironmentStateRefreshFunc(conn *elasticbeanstalk.ElasticB
 	}
 }
 
-func elasticBeanstalkEnvironmentStateIgnoreErrorEventsRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, environmentID string) resource.StateRefreshFunc {
+func elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, environmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
 			EnvironmentIds: []*string{aws.String(environmentID)},
