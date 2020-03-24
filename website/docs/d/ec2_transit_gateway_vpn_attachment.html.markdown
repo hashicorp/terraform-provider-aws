@@ -21,7 +21,7 @@ data "aws_ec2_transit_gateway_vpn_attachment" "example" {
 }
 ```
 
-Filter usage:
+### Filter
 
 ```hcl
 data "aws_ec2_transit_gateway_vpn_attachment" "test" {
