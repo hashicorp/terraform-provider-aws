@@ -1,4 +1,16 @@
 ## 2.55.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_availability_zone_group` [GH-12400]
+
+ENHANCEMENTS:
+
+* data-source/aws_availability_zone: Add `all_availability_zones` and `filter` arguments [GH-12400]
+* data-source/aws_availability_zone: Add `group_name`, `network_border_group`, and `opt_in_status` attributes [GH-12400]
+* data-source/aws_availability_zones: Add `all_availability_zones` and `filter` arguments [GH-12400]
+* data-source/aws_availability_zones: Add `group_names` attribute [GH-12400]
+
 ## 2.54.0 (March 19, 2020)
 
 FEATURES:
