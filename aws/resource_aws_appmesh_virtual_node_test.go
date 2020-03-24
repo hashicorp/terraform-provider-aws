@@ -6,7 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/acmpca"
+    "github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -567,18 +568,24 @@ func testAccAwsAppmeshVirtualNode_clientPolicyFile(t *testing.T) {
 
 func testAccAwsAppmeshVirtualNode_clientPolicyAcm(t *testing.T) {
 	var vn appmesh.VirtualNodeData
+	var ca acmpca.CertificateAuthority
 	resourceName := "aws_appmesh_virtual_node.test"
-	acmCAResourceName := "aws_acmpca_certificate_authority.cert"
+	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	meshName := acctest.RandomWithPrefix("tf-acc-test")
 	vnName := acctest.RandomWithPrefix("tf-acc-test")
-
-	t.Skip("Requires an active ACM PCA")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
 		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAcmpcaCertificateAuthorityConfigType(meshName, acmpca.CertificateAuthorityTypeRoot),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
+					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
+				),
+			},
 			{
 				Config: testAccAppmeshVirtualNodeConfig_clientPolicyAcm(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
@@ -604,6 +611,14 @@ func testAccAwsAppmeshVirtualNode_clientPolicyAcm(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
+			},
+			{
+				Config: testAccAppmeshVirtualNodeConfig_clientPolicyAcm(meshName, vnName),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -1128,7 +1143,7 @@ resource "aws_appmesh_virtual_node" "test" {
 }
 
 func testAccAppmeshVirtualNodeConfig_clientPolicyAcm(meshName, vnName string) string {
-	return testAccAcmCertificateConfig_privateCert(meshName) + testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+	return testAccAwsAcmpcaCertificateAuthorityConfigType(meshName, acmpca.CertificateAuthorityTypeRoot) + testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = "${aws_appmesh_mesh.test.id}"
@@ -1140,12 +1155,12 @@ resource "aws_appmesh_virtual_node" "test" {
 
         client_policy {
           tls {
-            ports = [443, 8443]
+            ports = [8443]
 
             validation {
               trust {
                 acm {
-                  certificate_authority_arns = ["${aws_acm_certificate.cert.arn}"]
+                  certificate_authority_arns = ["${aws_acmpca_certificate_authority.test.arn}"]
                 }
               }
             }
