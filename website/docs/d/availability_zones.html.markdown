@@ -42,6 +42,8 @@ resource "aws_subnet" "secondary" {
 
 ### By Filter
 
+All Local Zones (regardless of opt-in status):
+
 ```hcl
 data "aws_availability_zones" "example" {
   all_availability_zones = true
@@ -49,6 +51,17 @@ data "aws_availability_zones" "example" {
   filter {
     name   = "opt-in-status"
     values = ["not-opted-in", "opted-in"]
+  }
+}
+```
+
+Only Availability Zones (no Local Zones):
+
+```
+data "aws_availability_zones" "example" {
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
   }
 }
 ```
