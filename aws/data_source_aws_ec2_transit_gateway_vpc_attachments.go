@@ -80,8 +80,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, me
 		return errors.New("error reading EC2 Transit Gateway VPC Attachments: no results found")
 	}
 
-	for index, value := range output.TransitGatewayVpcAttachments {
-		transitGatewayVpcAttachment := output.TransitGatewayVpcAttachments[index]
+	for _, transitGatewayVpcAttachment := range output.TransitGatewayVpcAttachments {
 		var item *schema.ResourceData
 		if transitGatewayVpcAttachment != nil {
 			if transitGatewayVpcAttachment.Options == nil {
@@ -104,7 +103,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, me
 
 			item.SetId(aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
 		}
-		append(items,item)
+		items = append(items, item)
 	}
 	d.Set("transit_gateway_vpc_attachments", items)
 	return nil
