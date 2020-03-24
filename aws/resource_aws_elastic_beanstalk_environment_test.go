@@ -727,6 +727,10 @@ data "aws_availability_zones" "available" {
   # after waiting upwards of one hour to initialize the Auto Scaling Group.
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_elastic_beanstalk_solution_stack" "test" {
