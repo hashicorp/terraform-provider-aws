@@ -453,7 +453,7 @@ func TestAccAWSBeanstalkEnv_platformArn(t *testing.T) {
 				Config: testAccBeanstalkEnvConfig_platform_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
-					testAccCheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/Python 3.6 running on 64bit Amazon Linux/2.9.4"),
+					testAccCheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/Python 3.6 running on 64bit Amazon Linux/2.9.6"),
 				),
 			},
 			{
