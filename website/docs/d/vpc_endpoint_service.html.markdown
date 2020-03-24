@@ -84,5 +84,3 @@ In addition to all arguments above, the following attributes are exported:
 * `service_type` - The service type, `Gateway` or `Interface`.
 * `tags` - A mapping of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.
-
-[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-vpc-endpoint-services.html
