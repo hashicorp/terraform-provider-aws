@@ -649,6 +649,57 @@ func TestAccAWSDBInstance_ReplicateSourceDb_AllocatedStorage(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_ReplicateSourceDb_Iops(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_Iops(rName, 1000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ReplicateSourceDb_AllocatedStorageAndIops(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_AllocatedStorageAndIops(rName, 220, 2200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "220"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "2200"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_ReplicateSourceDb_AllowMajorVersionUpgrade(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
@@ -5385,6 +5436,59 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, allocatedStorage))
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_Iops(rName string, iops int) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 200
+  backup_retention_period = 1
+  engine                  = "mysql"
+  identifier              = "%s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+  iops                    = 1100
+  storage_type            = "io1"
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %q
+  instance_class      = "${aws_db_instance.source.instance_class}"
+  replicate_source_db = "${aws_db_instance.source.id}"
+  skip_final_snapshot = true
+  iops                = %d
+  storage_type        = "io1"
+}
+`, rName, rName, iops)
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_AllocatedStorageAndIops(rName string, allocatedStorage, iops int) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = %[2]d
+  backup_retention_period = 1
+  engine                  = "mysql"
+  identifier              = "%[1]s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+  iops                    = 1000
+  storage_type            = "io1"
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage   = %[2]d
+  identifier          = %[1]q
+  instance_class      = "${aws_db_instance.source.instance_class}"
+  replicate_source_db = "${aws_db_instance.source.id}"
+  skip_final_snapshot = true
+  iops                = %[3]d
+  storage_type        = "io1"
+}
+`, rName, allocatedStorage, iops)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_AllowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool) string {

@@ -583,9 +583,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                       tags.IgnoreAws().RdsTags(),
 		}
 
-		if attr, ok := d.GetOk("allocated_storage"); ok {
-			modifyDbInstanceInput.AllocatedStorage = aws.Int64(int64(attr.(int)))
-			requiresModifyDbInstance = true
+		if _, ok := d.GetOk("allocated_storage"); ok {
+			log.Printf("[INFO] allocated_storage was ignored for DB Instance (%s) because it inherits the primary's and cannot be changed at creation.", d.Id())
+			// RDS doesn't allow modifying the storage of a replica within the first 6h of creation.
+			// allocated_storage is inherited from the primary so only the same value or no value is correct; a different value would fail the creation.
+			// A different value is possible, granted: the value is higher than the current, there has been 6h between
 		}
 
 		if attr, ok := d.GetOk("availability_zone"); ok {
