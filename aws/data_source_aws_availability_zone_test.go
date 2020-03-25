@@ -106,7 +106,14 @@ func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 
 func testAccDataSourceAwsAvailabilityZoneConfigAllAvailabilityZones() string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "test" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 data "aws_availability_zone" "test" {
   all_availability_zones = true
@@ -117,7 +124,14 @@ data "aws_availability_zone" "test" {
 
 func testAccDataSourceAwsAvailabilityZoneConfigFilter() string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "test" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 data "aws_availability_zone" "test" {
   filter {
@@ -130,7 +144,14 @@ data "aws_availability_zone" "test" {
 
 func testAccDataSourceAwsAvailabilityZoneConfigName() string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "test" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 data "aws_availability_zone" "test" {
   name = data.aws_availability_zones.test.names[0]
@@ -140,7 +161,14 @@ data "aws_availability_zone" "test" {
 
 func testAccDataSourceAwsAvailabilityZoneConfigZoneId() string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "test" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 data "aws_availability_zone" "test" {
   zone_id = data.aws_availability_zones.test.zone_ids[0]

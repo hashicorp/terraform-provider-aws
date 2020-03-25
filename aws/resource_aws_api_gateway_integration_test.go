@@ -695,7 +695,14 @@ variable "name" {
   default = "%s"
 }
 
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "test" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"

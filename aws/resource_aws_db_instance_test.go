@@ -4617,7 +4617,14 @@ resource "aws_db_instance" "test" {
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_AvailabilityZone(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
@@ -5113,7 +5120,14 @@ resource "aws_db_instance" "test" {
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_AvailabilityZone(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_db_instance" "source" {
   allocated_storage   = 5

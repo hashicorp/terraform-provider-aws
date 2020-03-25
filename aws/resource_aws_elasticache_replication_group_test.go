@@ -851,6 +851,11 @@ func testAccAWSElasticacheReplicationGroupConfig_Uppercase(rName string) string 
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -980,6 +985,11 @@ resource "aws_elasticache_replication_group" "test" {
 var testAccAWSElasticacheReplicationGroupInVPCConfig = fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -1032,6 +1042,11 @@ resource "aws_elasticache_replication_group" "test" {
 var testAccAWSElasticacheReplicationGroupMultiAZInVPCConfig = fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 resource "aws_vpc" "test" {
     cidr_block = "192.168.0.0/16"
@@ -1091,10 +1106,15 @@ resource "aws_elasticache_replication_group" "test" {
 
 var testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig = fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-	# InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
-	blacklisted_zone_ids = ["use1-az1"]
-	state                = "available"
+  # InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
+  blacklisted_zone_ids = ["use1-az1"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
   }
+}
   resource "aws_vpc" "test" {
 	  cidr_block = "192.168.0.0/16"
 	tags = {
@@ -1157,6 +1177,11 @@ func testAccAWSElasticacheReplicationGroupNativeRedisClusterErrorConfig(rInt int
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -1233,6 +1258,11 @@ func testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName string,
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -1307,6 +1337,11 @@ func testAccAWSElasticacheReplicationGroup_UseCmkKmsKeyId(rInt int, rString stri
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "foo" {
@@ -1374,6 +1409,11 @@ func testAccAWSElasticacheReplicationGroup_EnableAtRestEncryptionConfig(rInt int
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -1436,6 +1476,11 @@ func testAccAWSElasticacheReplicationGroup_EnableAuthTokenTransitEncryptionConfi
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -1501,6 +1546,11 @@ data "aws_availability_zones" "available" {
   # InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
   blacklisted_zone_ids = ["use1-az1"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
