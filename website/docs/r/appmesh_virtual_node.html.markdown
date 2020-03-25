@@ -182,6 +182,7 @@ The following arguments are supported:
 The `spec` object supports the following:
 
 * `backend` - (Optional) The backends to which the virtual node is expected to send outbound traffic.
+* `backend_defaults` - (Optional) The defaults for backends.
 * `listener` - (Optional) The listeners from which the virtual node is expected to receive inbound traffic.
 * `logging` - (Optional) The inbound and outbound access logging information for the virtual node.
 * `service_discovery` - (Optional) The service discovery information for the virtual node.
@@ -221,6 +222,10 @@ The `acm` object supports the following:
 The `file` object supports the following:
 
 * `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the virtual node that the proxy is running on.
+
+The `backend_defaults` object supports the following:
+
+* `client_policy` - (Optional) The default client policy for virtual service backends. See above for details.
 
 The `listener` object supports the following:
 
