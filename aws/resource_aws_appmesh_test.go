@@ -23,6 +23,7 @@ func TestAccAWSAppmesh(t *testing.T) {
 		},
 		"VirtualNode": {
 			"basic":                    testAccAwsAppmeshVirtualNode_basic,
+			"backendDefaults":          testAccAwsAppmeshVirtualNode_backendDefaults,
 			"clientPolicyAcm":          testAccAwsAppmeshVirtualNode_clientPolicyAcm,
 			"clientPolicyFile":         testAccAwsAppmeshVirtualNode_clientPolicyFile,
 			"cloudMapServiceDiscovery": testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery,
