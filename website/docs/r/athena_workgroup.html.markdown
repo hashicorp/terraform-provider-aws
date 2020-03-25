@@ -41,6 +41,7 @@ The following arguments are supported:
 * `description` - (Optional) Description of the workgroup.
 * `state` - (Optional) State of the workgroup. Valid values are `DISABLED` or `ENABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value mapping of resource tags for the workgroup.
+* `force_destroy` - (Optional) The option to delete the workgroup and its contents even if the workgroup contains any named queries.
 
 ### configuration Argument Reference
 
