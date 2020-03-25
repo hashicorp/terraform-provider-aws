@@ -576,15 +576,15 @@ func resourceAwsS3Bucket() *schema.Resource {
 												},
 
 												"days": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
+													Type:     schema.TypeInt,
+													Optional: true,
+													// ValidateFunc: validation.IntAtLeast(1),
 												},
 
 												"years": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
+													Type:     schema.TypeInt,
+													Optional: true,
+													// ValidateFunc: validation.IntAtLeast(1),
 												},
 											},
 										},

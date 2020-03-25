@@ -48,11 +48,11 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				ForceNew: true,
 			},
 			"domain_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				// ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 				StateFunc: func(v interface{}) string {
 					// AWS Provider 1.42.0+ aws_route53_zone references may contain a
 					// trailing period, which generates an ACM API error
@@ -60,11 +60,11 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				},
 			},
 			"subject_alternative_names": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				// ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					StateFunc: func(v interface{}) string {
@@ -75,11 +75,11 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				},
 			},
 			"validation_method": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain", "certificate_authority_arn"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				// ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain", "certificate_authority_arn"},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -130,11 +130,11 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"certificate_transparency_logging_preference": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
-							ForceNew:      true,
-							ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  acm.CertificateTransparencyLoggingPreferenceEnabled,
+							ForceNew: true,
+							// ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 							ValidateFunc: validation.StringInSlice([]string{
 								acm.CertificateTransparencyLoggingPreferenceEnabled,
 								acm.CertificateTransparencyLoggingPreferenceDisabled,

@@ -151,6 +151,7 @@ func resourceAwsEcsService() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								ecs.DeploymentControllerTypeCodeDeploy,
 								ecs.DeploymentControllerTypeEcs,
+								"EXTERNAL",
 							}, false),
 						},
 					},

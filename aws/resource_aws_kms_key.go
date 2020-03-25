@@ -49,6 +49,7 @@ func resourceAwsKmsKey() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					kms.KeyUsageTypeEncryptDecrypt,
 					kms.KeyUsageTypeSignVerify,
+					"EXTERNAL",
 				}, false),
 				DiffSuppressFunc: suppressEmptyToDefault(kms.KeyUsageTypeEncryptDecrypt),
 			},

@@ -53,9 +53,9 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 			"network_load_balancer_arns": {
 				Type:     schema.TypeSet,
 				Required: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				// MinItems: 1,
+				Elem: &schema.Schema{Type: schema.TypeString},
+				Set:  schema.HashString,
 			},
 			"private_dns_name": {
 				Type:     schema.TypeString,

@@ -152,15 +152,15 @@ func resourceAwsInstance() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data"},
-				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
-					s := v.(string)
-					if !isBase64Encoded([]byte(s)) {
-						errs = append(errs, fmt.Errorf(
-							"%s: must be base64-encoded", name,
-						))
-					}
-					return
-				},
+				// ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
+				// 	s := v.(string)
+				// 	if !isBase64Encoded([]byte(s)) {
+				// 		errs = append(errs, fmt.Errorf(
+				// 			"%s: must be base64-encoded", name,
+				// 		))
+				// 	}
+				// 	return
+				// },
 			},
 
 			"security_groups": {
