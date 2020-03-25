@@ -113,7 +113,7 @@ func resourceAwsCloudWatchLogMetricFilterUpdate(d *schema.ResourceData, meta int
 		return fmt.Errorf("Creating/Updating CloudWatch Log Metric Filter failed: %s", err)
 	}
 
-	d.SetId(logGroupName + ":" + name)
+	d.SetId(d.Get("name").(string))
 
 	log.Println("[INFO] CloudWatch Log Metric Filter created/updated")
 
@@ -217,6 +217,6 @@ func resourceAwsCloudWatchLogMetricFilterImport(d *schema.ResourceData, meta int
 	name := idParts[1]
 	d.Set("log_group_name", logGroupName)
 	d.Set("name", name)
-	d.SetId(logGroupName + ":" + name)
+	d.SetId(name)
 	return []*schema.ResourceData{d}, nil
 }
