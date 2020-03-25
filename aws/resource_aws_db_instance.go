@@ -736,19 +736,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			var s []*string
-			for _, v := range attr.List() {
-				s = append(s, aws.String(v.(string)))
-			}
-			opts.VpcSecurityGroupIds = s
+			opts.VpcSecurityGroupIds = expandStringSet(attr)
 		}
 
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			var s []*string
-			for _, v := range attr.List() {
-				s = append(s, aws.String(v.(string)))
-			}
-			opts.DBSecurityGroups = s
+			opts.DBSecurityGroups = expandStringSet(attr)
 		}
 		if attr, ok := d.GetOk("storage_type"); ok {
 			opts.StorageType = aws.String(attr.(string))
@@ -1008,11 +1000,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			var s []*string
-			for _, v := range attr.List() {
-				s = append(s, aws.String(v.(string)))
-			}
-			opts.VpcSecurityGroupIds = s
+			opts.VpcSecurityGroupIds = expandStringSet(attr)
 		}
 
 		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -1116,19 +1104,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			var s []*string
-			for _, v := range attr.List() {
-				s = append(s, aws.String(v.(string)))
-			}
-			opts.VpcSecurityGroupIds = s
+			opts.VpcSecurityGroupIds = expandStringSet(attr)
 		}
 
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			var s []*string
-			for _, v := range attr.List() {
-				s = append(s, aws.String(v.(string)))
-			}
-			opts.DBSecurityGroups = s
+			opts.DBSecurityGroups = expandStringSet(attr)
 		}
 		if attr, ok := d.GetOk("storage_type"); ok {
 			opts.StorageType = aws.String(attr.(string))
