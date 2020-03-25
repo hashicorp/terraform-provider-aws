@@ -36,7 +36,11 @@ func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 			},
 			{
 				Config: testAccRoute53HealthCheckConfigUpdate,
-				PlanOnly: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					resource.TestCheckResourceAttr(resourceName, "failure_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "false"),
+				),
 			},
 		},
 	})
