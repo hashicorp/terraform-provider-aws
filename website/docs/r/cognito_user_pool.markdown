@@ -23,7 +23,7 @@ resource "aws_cognito_user_pool" "pool" {
 ### Enabling SMS and Software Token Multi-Factor Authentication
 
 ```hcl
-resource "aws_cognito_user_pool_mfa_config" "example" {
+resource "aws_cognito_user_pool" "example" {
   # ... other configuration ...
 
   mfa_configuration          = "ON"
