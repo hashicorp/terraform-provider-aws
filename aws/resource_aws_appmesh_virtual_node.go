@@ -78,97 +78,25 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 													ValidateFunc: validation.StringLenBetween(1, 255),
 												},
 
-												"client_policy": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"tls": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 0,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"enforce": {
-																			Type:     schema.TypeBool,
-																			Optional: true,
-																			Default:  true,
-																		},
-
-																		"ports": {
-																			Type:     schema.TypeSet,
-																			Optional: true,
-																			Elem:     &schema.Schema{Type: schema.TypeInt},
-																			Set:      schema.HashInt,
-																		},
-
-																		"validation": {
-																			Type:     schema.TypeList,
-																			Required: true,
-																			MinItems: 1,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"trust": {
-																						Type:     schema.TypeList,
-																						Required: true,
-																						MinItems: 1,
-																						MaxItems: 1,
-																						Elem: &schema.Resource{
-																							Schema: map[string]*schema.Schema{
-																								"acm": {
-																									Type:     schema.TypeList,
-																									Optional: true,
-																									MinItems: 0,
-																									MaxItems: 1,
-																									Elem: &schema.Resource{
-																										Schema: map[string]*schema.Schema{
-																											"certificate_authority_arns": {
-																												Type:     schema.TypeSet,
-																												Required: true,
-																												Elem:     &schema.Schema{Type: schema.TypeString},
-																												Set:      schema.HashString,
-																											},
-																										},
-																									},
-																								},
-
-																								"file": {
-																									Type:     schema.TypeList,
-																									Optional: true,
-																									MinItems: 0,
-																									MaxItems: 1,
-																									Elem: &schema.Resource{
-																										Schema: map[string]*schema.Schema{
-																											"certificate_chain": {
-																												Type:         schema.TypeString,
-																												Required:     true,
-																												ValidateFunc: validation.StringLenBetween(1, 255),
-																											},
-																										},
-																									},
-																								},
-																							},
-																						},
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
+												"client_policy": appmeshVirtualNodeClientPolicySchema(),
 											},
 										},
 									},
 								},
 							},
 							Set: appmeshVirtualNodeBackendHash,
+						},
+
+						"backend_defaults": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 0,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"client_policy": appmeshVirtualNodeClientPolicySchema(),
+								},
+							},
 						},
 
 						"listener": {
@@ -445,6 +373,136 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+		},
+	}
+}
+
+// appmeshVirtualNodeClientPolicySchema returns the schema for `client_policy` attributes.
+func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MinItems: 0,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"tls": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enforce": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+
+							"ports": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeInt},
+								Set:      schema.HashInt,
+							},
+
+							"validation": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"trust": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"acm": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"certificate_authority_arns": {
+																	Type:     schema.TypeSet,
+																	Required: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																	Set:      schema.HashString,
+																},
+															},
+														},
+													},
+
+													"file": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"certificate_chain": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 255),
+																},
+															},
+														},
+													},
+
+													// "sds": {
+													// 	Type:     schema.TypeList,
+													// 	Optional: true,
+													// 	MinItems: 0,
+													// 	MaxItems: 1,
+													// 	Elem: &schema.Resource{
+													// 		Schema: map[string]*schema.Schema{
+													// 			"secret_name": {
+													// 				Type:         schema.TypeString,
+													// 				Required:     true,
+													// 				ValidateFunc: validation.StringLenBetween(1, 255),
+													// 			},
+
+													// 			"source": {
+													// 				Type:     schema.TypeList,
+													// 				Required: true,
+													// 				MinItems: 1,
+													// 				MaxItems: 1,
+													// 				Elem: &schema.Resource{
+													// 					Schema: map[string]*schema.Schema{
+													// 						"unix_domain_socket": {
+													// 							Type:     schema.TypeList,
+													// 							Required: true,
+													// 							MinItems: 1,
+													// 							MaxItems: 1,
+													// 							Elem: &schema.Resource{
+													// 								Schema: map[string]*schema.Schema{
+													// 									"path": {
+													// 										Type:     schema.TypeString,
+													// 										Required: true,
+													// 									},
+													// 								},
+													// 							},
+													// 						},
+													// 					},
+													// 				},
+													// 			},
+													// 		},
+													// 	},
+													// },
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
