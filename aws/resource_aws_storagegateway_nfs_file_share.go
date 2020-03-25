@@ -40,6 +40,10 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 				MaxItems: 100,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"default_storage_class": {
 				Type:     schema.TypeString,
 				Optional: true,

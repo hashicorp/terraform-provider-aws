@@ -42,6 +42,7 @@ func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
 					resource.TestMatchResourceAttr(resourceName, "role_arn", regexp.MustCompile(`^arn:`)),
 					resource.TestCheckResourceAttr(resourceName, "squash", "RootSquash"),
+					resource.TestMatchResourceAttr(resourceName, "path", regexp.MustCompile(`^/.+`)),
 				),
 			},
 			{
