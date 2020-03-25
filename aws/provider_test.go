@@ -402,6 +402,18 @@ func testAccOrganizationsAccountPreCheck(t *testing.T) {
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
+func testAccOrganizationsEnabledPreCheck(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	input := &organizations.DescribeOrganizationInput{}
+	_, err := conn.DescribeOrganization(input)
+	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		t.Skip("this AWS account must be an existing member of an AWS Organization")
+	}
+	if err != nil {
+		t.Fatalf("error describing AWS Organization: %s", err)
+	}
+}
+
 func testAccAlternateAccountProviderConfig() string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
