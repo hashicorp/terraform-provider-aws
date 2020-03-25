@@ -16,6 +16,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_db_instance: Allow restoring from snapshot into RAM shared Subnet with VPC Security Group [GH-12447]
 * resource/aws_mq_configuration: Remove extraneous `ListTags` API call during refresh [GH-11843]
 
 ## 2.54.0 (March 19, 2020)
