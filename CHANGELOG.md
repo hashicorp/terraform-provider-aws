@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * data-source/aws_availability_zone: Add `group_name`, `network_border_group`, and `opt_in_status` attributes [GH-12400]
 * data-source/aws_availability_zones: Add `all_availability_zones` and `filter` arguments [GH-12400]
 * data-source/aws_availability_zones: Add `group_names` attribute [GH-12400]
+* resource/aws_cloudwatch_log_metric_filter: Support resource import [GH-11992]
 
 ## 2.54.0 (March 19, 2020)
 
