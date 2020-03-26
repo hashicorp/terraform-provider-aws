@@ -53,22 +53,18 @@ func dataSourceAwsEc2TransitGatewayVpnAttachmentRead(d *schema.ResourceData, met
 	if tagsOk {
 		input.Filters = append(input.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
 	}
-	// to preserve original functionality
-	if connectionIdOk && transitGatewayIdOk {
-		input.Filters = []*ec2.Filter{
-			{
-				Name:   aws.String("resource-id"),
-				Values: []*string{aws.String(connectionId.(string))},
-			},
-			{
-				Name:   aws.String("resource-type"),
-				Values: []*string{aws.String(ec2.TransitGatewayAttachmentResourceTypeVpn)},
-			},
-			{
-				Name:   aws.String("transit-gateway-id"),
-				Values: []*string{aws.String(transitGatewayId.(string))},
-			},
-		}
+	if connectionIdOk {
+		input.Filters = append(input.Filters, &ec2.Filter{
+			Name:   aws.String("resource-id"),
+			Values: []*string{aws.String(connectionId.(string))},
+		})
+	}
+
+	if transitGatewayIdOk {
+		input.Filters = append(input.Filters, &ec2.Filter{
+			Name:   aws.String("transit-gateway-id"),
+			Values: []*string{aws.String(transitGatewayId.(string))},
+		})
 	}
 
 	log.Printf("[DEBUG] Reading EC2 Transit Gateway VPN Attachments: %s", input)
