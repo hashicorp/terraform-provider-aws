@@ -17,6 +17,7 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	updated := "test"
 	resourceName := "aws_glue_user_defined_function.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -31,7 +32,6 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "class_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_type", "GROUP"),
-					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
 				),
 			},
 			{
@@ -48,6 +48,48 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "class_name", updated),
 					resource.TestCheckResourceAttr(resourceName, "owner_name", updated),
 					resource.TestCheckResourceAttr(resourceName, "owner_type", "GROUP"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
+	var udf glue.UserDefinedFunction
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_user_defined_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueUDFDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueUserDefinedFunctionExists(resourceName, &udf),
+					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:  testAccGlueUserDefinedFunctionResourceURIConfig2(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueUserDefinedFunctionExists(resourceName, &udf),
+					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "2"),
+				),
+			},
+			{
+				Config:  testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueUserDefinedFunctionExists(resourceName, &udf),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
 				),
 			},
@@ -99,13 +141,57 @@ resource "aws_glue_user_defined_function" "test" {
   class_name    = %[2]q
   owner_name    = %[2]q
   owner_type    = "GROUP"
-
-  resource_uris {
-    resource_type = "ARCHIVE"
-    uri           = %[2]q
-  }
 }
 `, rName, name)
+}
+
+func testAccGlueUserDefinedFunctionResourceURIConfig1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_user_defined_function" "test" {
+  name          = %[1]q
+  catalog_id    = "${aws_glue_catalog_database.test.catalog_id}"
+  database_name = "${aws_glue_catalog_database.test.name}"
+  class_name    = %[1]q
+  owner_name    = %[1]q
+  owner_type    = "GROUP"
+
+  resource_uris {
+   resource_type = "ARCHIVE"
+   uri           = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccGlueUserDefinedFunctionResourceURIConfig2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_user_defined_function" "test" {
+  name          = %[1]q
+  catalog_id    = "${aws_glue_catalog_database.test.catalog_id}"
+  database_name = "${aws_glue_catalog_database.test.name}"
+  class_name    = %[1]q
+  owner_name    = %[1]q
+  owner_type    = "GROUP"
+
+  resource_uris {
+   resource_type = "ARCHIVE"
+   uri           = %[1]q
+  }
+
+  resource_uris {
+   resource_type = "JAR"
+   uri           = %[1]q
+  }
+}
+`, rName)
 }
 
 func testAccCheckGlueUserDefinedFunctionExists(name string, udf *glue.UserDefinedFunction) resource.TestCheckFunc {
