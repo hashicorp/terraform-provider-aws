@@ -18,11 +18,31 @@ data "aws_launch_template" "default" {
 }
 ```
 
+### Filter
+
+```hcl
+data "aws_launch_template" "test" {
+  filter {
+    name   = "launch-template-name"
+    values = ["some-template"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the launch template.
+* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+* `name` - (Optional) The name of the launch template.
+* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired Launch Template.
+
+### filter Configuration Block
+
+The following arguments are supported by the `filter` configuration block:
+
+* `name` - (Required) The name of the filter field. Valid values can be found in the [EC2 DescribeLaunchTemplates API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeLaunchTemplates.html).
+* `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attributes Reference
 
