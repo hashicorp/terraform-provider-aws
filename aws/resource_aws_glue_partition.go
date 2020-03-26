@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"log"
-	"strings"
 )
 
 func resourceAwsGluePartition() *schema.Resource {
@@ -175,12 +177,13 @@ func resourceAwsGluePartition() *schema.Resource {
 	}
 }
 
-func readAwsGluePartitionID(id string) (catalogID string, dbName string, tableName string, error error) {
+func readAwsGluePartitionID(id string) (catalogID string, dbName string, tableName string, values []string, error error) {
 	idParts := strings.Split(id, ":")
-	if len(idParts) != 3 {
-		return "", "", "", fmt.Errorf("expected ID in format catalog-id:database-name:table-name, received: %s", id)
+	if len(idParts) != 4 {
+		return "", "", "", []string{}, fmt.Errorf("expected ID in format catalog-id:database-name:table-name:values, received: %s", id)
 	}
-	return idParts[0], idParts[1], idParts[2], nil
+	vals := strings.Split(idParts[3], "#")
+	return idParts[0], idParts[1], idParts[2], vals, nil
 }
 
 func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) error {
@@ -188,6 +191,7 @@ func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) er
 	catalogID := createAwsGlueCatalogID(d, meta.(*AWSClient).accountid)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
+	values := d.Get("values").(*schema.Set)
 
 	input := &glue.CreatePartitionInput{
 		CatalogId:      aws.String(catalogID),
@@ -201,7 +205,7 @@ func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating Glue Partition: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s:", catalogID, dbName, tableName))
+	d.SetId(fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, stringifyAwsGluePartition(values)))
 
 	return resourceAwsGluePartitionRead(d, meta)
 }
@@ -209,15 +213,16 @@ func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	catalogID, dbName, tableName, err := readAwsGluePartitionID(d.Id())
+	catalogID, dbName, tableName, values, err := readAwsGluePartitionID(d.Id())
 	if err != nil {
 		return err
 	}
 
 	input := &glue.GetPartitionInput{
-		CatalogId:    aws.String(catalogID),
-		DatabaseName: aws.String(dbName),
-		TableName:    aws.String(tableName),
+		CatalogId:       aws.String(catalogID),
+		DatabaseName:    aws.String(dbName),
+		TableName:       aws.String(tableName),
+		PartitionValues: aws.StringSlice(values),
 	}
 
 	out, err := conn.GetPartition(input)
@@ -253,7 +258,7 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsGluePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	catalogID, dbName, tableName, err := readAwsGluePartitionID(d.Id())
+	catalogID, dbName, tableName, _, err := readAwsGluePartitionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -275,16 +280,17 @@ func resourceAwsGluePartitionUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsGluePartitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	catalogID, dbName, tableName, tableErr := readAwsGluePartitionID(d.Id())
+	catalogID, dbName, tableName, values, tableErr := readAwsGluePartitionID(d.Id())
 	if tableErr != nil {
 		return tableErr
 	}
 
 	log.Printf("[DEBUG] Glue Partition: %s:%s:%s", catalogID, dbName, tableName)
 	_, err := conn.DeletePartition(&glue.DeletePartitionInput{
-		CatalogId:    aws.String(catalogID),
-		TableName:    aws.String(tableName),
-		DatabaseName: aws.String(dbName),
+		CatalogId:       aws.String(catalogID),
+		TableName:       aws.String(tableName),
+		DatabaseName:    aws.String(dbName),
+		PartitionValues: aws.StringSlice(values),
 	})
 	if err != nil {
 		return fmt.Errorf("Error deleting Glue Partition: %s", err.Error())
@@ -312,4 +318,14 @@ func expandGluePartitionInput(d *schema.ResourceData) *glue.PartitionInput {
 	}
 
 	return tableInput
+}
+
+func stringifyAwsGluePartition(partValues *schema.Set) string {
+	var b bytes.Buffer
+	for _, val := range partValues.List() {
+		b.WriteString(fmt.Sprintf("%s#", val.(string)))
+	}
+	vals := strings.Trim(b.String(), "#")
+
+	return vals
 }
