@@ -12,7 +12,7 @@ ENHANCEMENTS:
 * data-source/aws_availability_zones: Add `group_names` attribute [GH-12400]
 * data-source/aws_launch_template: Add `filter` and `tags` arguments [GH-12403]
 * data-source/aws_prefix_list: Add `filter` argument [GH-12416]
-* data-source/aws_vpc_endpoint_service: Add `filter` argument [GH-12404]
+* data-source/aws_vpc_endpoint_service: Add `filter` and `tags` arguments [GH-12404]
 * resource/aws_athena_workgroup: Add `force_destroy` argument [GH-12254]
 * resource/aws_cloudwatch_log_metric_filter: Support resource import [GH-11992]
 * resource/aws_mq_configuration: Support plan-time validation for `engine_type` argument [GH-11843]
