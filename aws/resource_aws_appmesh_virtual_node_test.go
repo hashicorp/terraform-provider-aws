@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -26,6 +27,8 @@ func testSweepAppmeshVirtualNodes(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).appmeshconn
+
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
 		if page == nil {
@@ -54,7 +57,10 @@ func testSweepAppmeshVirtualNodes(region string) error {
 					_, err := conn.DeleteVirtualNode(input)
 
 					if err != nil {
-						log.Printf("[ERROR] Error deleting Appmesh Mesh (%s) Virtual Node (%s): %s", meshName, virtualNodeName, err)
+						sweeperErr := fmt.Errorf("error deleting Appmesh Mesh (%s) Virtual Node (%s): %w", meshName, virtualNodeName, err)
+						log.Printf("[ERROR] %s", sweeperErr)
+						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+						continue
 					}
 				}
 
@@ -76,7 +82,7 @@ func testSweepAppmeshVirtualNodes(region string) error {
 		return fmt.Errorf("error retrieving Appmesh Virtual Nodes: %s", err)
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
