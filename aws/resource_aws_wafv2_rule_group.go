@@ -79,9 +79,9 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"allow": emptyWafv2BlockSchema(),
-									"block": emptyWafv2BlockSchema(),
-									"count": emptyWafv2BlockSchema(),
+									"allow": wafv2EmptySchema(),
+									"block": wafv2EmptySchema(),
+									"count": wafv2EmptySchema(),
 								},
 							},
 						},
@@ -95,124 +95,7 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"statement": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"byte_match_statement": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"field_to_match": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"all_query_arguments": emptyWafv2BlockSchema(),
-															"body":                emptyWafv2BlockSchema(),
-															"method":              emptyWafv2BlockSchema(),
-															"query_string":        emptyWafv2BlockSchema(),
-															"single_header": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"name": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 40),
-																		},
-																	},
-																},
-															},
-															"single_query_argument": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"name": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 30),
-																		},
-																	},
-																},
-															},
-															"uri_path": emptyWafv2BlockSchema(),
-														},
-													},
-												},
-												"positional_constraint": {
-													Type:     schema.TypeString,
-													Required: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-													ValidateFunc: validation.StringInSlice([]string{
-														wafv2.PositionalConstraintContains,
-														wafv2.PositionalConstraintContainsWord,
-														wafv2.PositionalConstraintEndsWith,
-														wafv2.PositionalConstraintExactly,
-														wafv2.PositionalConstraintStartsWith,
-													}, false),
-												},
-												"search_string": {
-													Type:         schema.TypeString,
-													Required:     true,
-													Elem:         &schema.Schema{Type: schema.TypeString},
-													ValidateFunc: validation.StringLenBetween(1, 50),
-												},
-												"text_transformation": {
-													Type:     schema.TypeSet,
-													Required: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"priority": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-															"type": {
-																Type:     schema.TypeString,
-																Required: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-																ValidateFunc: validation.StringInSlice([]string{
-																	wafv2.TextTransformationTypeCmdLine,
-																	wafv2.TextTransformationTypeCompressWhiteSpace,
-																	wafv2.TextTransformationTypeHtmlEntityDecode,
-																	wafv2.TextTransformationTypeLowercase,
-																	wafv2.TextTransformationTypeNone,
-																	wafv2.TextTransformationTypeUrlDecode,
-																}, false),
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"geo_match_statement": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"country_codes": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
+						"statement": wafv2StatementSchema(3),
 						"visibility_config": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -471,6 +354,154 @@ func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	return nil
+}
+
+func wafv2EmptySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{},
+		},
+	}
+}
+
+func wafv2StatementSchema(level int) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"byte_match_statement": wafv2ByteMatchStatementSchema(),
+				"geo_match_statement":  wafv2GeoMatchStatementSchema(),
+			},
+		},
+	}
+}
+
+func wafv2ByteMatchStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"field_to_match": fieldToMatchWafv2Schema(),
+				"positional_constraint": {
+					Type:     schema.TypeString,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ValidateFunc: validation.StringInSlice([]string{
+						wafv2.PositionalConstraintContains,
+						wafv2.PositionalConstraintContainsWord,
+						wafv2.PositionalConstraintEndsWith,
+						wafv2.PositionalConstraintExactly,
+						wafv2.PositionalConstraintStartsWith,
+					}, false),
+				},
+				"search_string": {
+					Type:         schema.TypeString,
+					Required:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					ValidateFunc: validation.StringLenBetween(1, 50),
+				},
+				"text_transformation": textTransformationWafv2Schema(),
+			},
+		},
+	}
+}
+
+func wafv2GeoMatchStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"country_codes": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			},
+		},
+	}
+}
+
+func fieldToMatchWafv2Schema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"all_query_arguments": wafv2EmptySchema(),
+				"body":                wafv2EmptySchema(),
+				"method":              wafv2EmptySchema(),
+				"query_string":        wafv2EmptySchema(),
+				"single_header": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 40),
+							},
+						},
+					},
+				},
+				"single_query_argument": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 30),
+							},
+						},
+					},
+				},
+				"uri_path": wafv2EmptySchema(),
+			},
+		},
+	}
+}
+
+func textTransformationWafv2Schema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Required: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"priority": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"type": {
+					Type:     schema.TypeString,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ValidateFunc: validation.StringInSlice([]string{
+						wafv2.TextTransformationTypeCmdLine,
+						wafv2.TextTransformationTypeCompressWhiteSpace,
+						wafv2.TextTransformationTypeHtmlEntityDecode,
+						wafv2.TextTransformationTypeLowercase,
+						wafv2.TextTransformationTypeNone,
+						wafv2.TextTransformationTypeUrlDecode,
+					}, false),
+				},
+			},
+		},
+	}
 }
 
 func expandWafv2Rules(l []interface{}) []*wafv2.Rule {
@@ -856,15 +887,4 @@ func flattenWafv2VisibilityConfig(config *wafv2.VisibilityConfig) interface{} {
 	}
 
 	return []interface{}{m}
-}
-
-func emptyWafv2BlockSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{},
-		},
-	}
 }
