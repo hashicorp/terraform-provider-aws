@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-    "github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -372,7 +372,6 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.client_policy.#", "0"),
@@ -398,8 +397,7 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			// ForbiddenException: TLS Certificates from SDS are not supported.
@@ -409,7 +407,6 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 			// 		testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 			// 		resource.TestCheckResourceAttr(resourceName, "name", vnName),
 			// 		resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-			// 		testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 			// 		resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 			// 		resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
 			//      resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.client_policy.#", "0"),
@@ -437,8 +434,7 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 			// 		resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 			// 		resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 			// 		resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-			// 		testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-			// 		testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+			// 		testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 			// 	),
 			// },
 			{
@@ -447,7 +443,6 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.client_policy.#", "0"),
@@ -462,8 +457,8 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -493,7 +488,6 @@ func testAccAwsAppmeshVirtualNode_clientPolicyFile(t *testing.T) {
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.#", "1"),
@@ -521,8 +515,7 @@ func testAccAwsAppmeshVirtualNode_clientPolicyFile(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -531,7 +524,6 @@ func testAccAwsAppmeshVirtualNode_clientPolicyFile(t *testing.T) {
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.#", "1"),
@@ -560,8 +552,7 @@ func testAccAwsAppmeshVirtualNode_clientPolicyFile(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -600,7 +591,6 @@ func testAccAwsAppmeshVirtualNode_clientPolicyAcm(t *testing.T) {
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
 					testAccCheckAppmeshVirtualNodeClientPolicyAcmCertificateAuthorityArn(acmCAResourceName, "arn", &vn),
@@ -617,8 +607,7 @@ func testAccAwsAppmeshVirtualNode_clientPolicyAcm(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -656,7 +645,6 @@ func testAccAwsAppmeshVirtualNode_backendDefaults(t *testing.T) {
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
@@ -675,8 +663,7 @@ func testAccAwsAppmeshVirtualNode_backendDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -685,7 +672,6 @@ func testAccAwsAppmeshVirtualNode_backendDefaults(t *testing.T) {
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
@@ -705,8 +691,7 @@ func testAccAwsAppmeshVirtualNode_backendDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
