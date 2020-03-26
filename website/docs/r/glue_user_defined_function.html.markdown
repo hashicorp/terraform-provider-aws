@@ -26,8 +26,8 @@ resource "aws_glue_user_defined_function" "example" {
   owner_type    = "GROUP"
 
   resource_uris {
-   resource_type = "ARCHIVE"
-   uri           = "uri"
+    resource_type = "ARCHIVE"
+    uri           = "uri"
   }
 }
 ```
