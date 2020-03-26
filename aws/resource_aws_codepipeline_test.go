@@ -14,10 +14,6 @@ import (
 )
 
 func TestAccAWSCodePipeline_basic(t *testing.T) {
-	if os.Getenv("GITHUB_TOKEN") == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
-
 	name := acctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
 
@@ -30,11 +26,49 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "arn",
-						regexp.MustCompile(fmt.Sprintf("^arn:aws:codepipeline:[^:]+:[0-9]{12}:test-pipeline-%s", name))),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.codepipeline_role", "arn"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.id", "1234"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.type", "KMS"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
+
+					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.category", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.owner", "ThirdParty"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.provider", "GitHub"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.input_artifacts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Owner", "lifesum-terraform"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Repo", "test"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Branch", "master"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.run_order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.region", ""),
+
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.category", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.owner", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.provider", "CodeBuild"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.ProjectName", "test"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.run_order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", ""),
 				),
 			},
 			{
@@ -47,8 +81,30 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.id", "4567"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.type", "KMS"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
+
+					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.input_artifacts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.0", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Owner", "foo-terraform"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Repo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Branch", "stable"),
+
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.0", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.ProjectName", "foo"),
 				),
 			},
 		},
@@ -56,10 +112,6 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 }
 
 func TestAccAWSCodePipeline_emptyArtifacts(t *testing.T) {
-	if os.Getenv("GITHUB_TOKEN") == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
-
 	name := acctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
 
@@ -72,17 +124,10 @@ func TestAccAWSCodePipeline_emptyArtifacts(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_emptyArtifacts(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "arn",
-						regexp.MustCompile(fmt.Sprintf("^arn:aws:codepipeline:[^:]+:[0-9]{12}:test-pipeline-%s", name))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.category", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.owner", "AWS"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.provider", "CodeBuild"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.#", "0"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,10 +141,6 @@ func TestAccAWSCodePipeline_emptyArtifacts(t *testing.T) {
 }
 
 func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
-	if os.Getenv("GITHUB_TOKEN") == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
-
 	name := acctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
 
@@ -114,9 +155,7 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 					testAccCheckAWSCodePipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "stage.2.name", "Deploy"),
 					resource.TestCheckResourceAttr(resourceName, "stage.2.action.0.category", "Deploy"),
-					resource.TestMatchResourceAttr(
-						resourceName, "stage.2.action.0.role_arn",
-						regexp.MustCompile("^arn:aws:iam::[0-9]{12}:role/codepipeline-action-role.*")),
+					resource.TestCheckResourceAttrPair(resourceName, "stage.2.action.0.role_arn", "aws_iam_role.codepipeline_action_role", "arn"),
 				),
 			},
 			{
@@ -129,10 +168,6 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 }
 
 func TestAccAWSCodePipeline_tags(t *testing.T) {
-	if os.Getenv("GITHUB_TOKEN") == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
-
 	name := acctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
 
@@ -182,33 +217,32 @@ func TestAccAWSCodePipeline_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipeline_basic_multiregion(t *testing.T) {
-	if os.Getenv("GITHUB_TOKEN") == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
+// func TestAccAWSCodePipeline_basic_multiregion(t *testing.T) {
+// 	name := acctest.RandString(10)
 
-	name := acctest.RandString(10)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCodePipelineConfig_multiregion(name),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodePipelineExists("aws_codepipeline.bar"),
-					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.2.name", "Build"),
-					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.2.action.0.region", "eu-west-1"),
-					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.2.action.1.region", "eu-central-1"),
-					resource.TestMatchResourceAttr(
-						"aws_codepipeline.bar", "stage.2.action.0.role_arn",
-						regexp.MustCompile("^arn:aws:iam::[0-9]{12}:role/codepipeline-action-role.*")),
-				),
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:     func() { testAccPreCheck(t) },
+// 		Providers:    testAccProviders,
+// 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccAWSCodePipelineConfig_multiregion(name),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckAWSCodePipelineExists("aws_codepipeline.bar"),
+// 					resource.TestCheckResourceAttr("aws_codepipeline.bar", "artifact_stores.%", "2"),
+// 					resource.TestCheckNoResourceAttr("aws_codepipeline.bar", "artifact_store.#"),
+// 					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.2.name", "Build"),
+// 					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.2.action.0.region", "eu-west-1"),
+// 					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.2.action.1.region", "eu-central-1"),
+// 					resource.TestMatchResourceAttr(
+// 						"aws_codepipeline.bar", "stage.2.action.0.role_arn",
+// 						regexp.MustCompile("^arn:aws:iam::[0-9]{12}:role/codepipeline-action-role.*"),
+// 					),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
 
 func testAccCheckAWSCodePipelineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -253,6 +287,10 @@ func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSCodePipeline(t *testing.T) {
+	if os.Getenv("GITHUB_TOKEN") == "" {
+		t.Skip("Environment variable GITHUB_TOKEN is not set")
+	}
+
 	conn := testAccProvider.Meta().(*AWSClient).codepipelineconn
 
 	input := &codepipeline.ListPipelinesInput{}
@@ -268,13 +306,17 @@ func testAccPreCheckAWSCodePipeline(t *testing.T) {
 	}
 }
 
-func testAccAWSCodePipelineConfig_basic(rName string) string {
+func testAccAWSCodePipelineS3Bucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "foo" {
   bucket = "tf-test-pipeline-%s"
   acl    = "private"
 }
+`, rName)
+}
 
+func testAccAWSCodePipelineServiceIAMRole(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "codepipeline_role" {
   name = "codepipeline-role-%s"
 
@@ -326,287 +368,11 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
 }
 EOF
 }
-
-resource "aws_codepipeline" "test" {
-  name     = "test-pipeline-%s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
-
-  artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
-    type     = "S3"
-
-    encryption_key {
-      id   = "1234"
-      type = "KMS"
-    }
-  }
-
-  stage {
-    name = "Source"
-
-    action {
-      name             = "Source"
-      category         = "Source"
-      owner            = "ThirdParty"
-      provider         = "GitHub"
-      version          = "1"
-      output_artifacts = ["test"]
-
-      configuration = {
-        Owner  = "lifesum-terraform"
-        Repo   = "test"
-        Branch = "master"
-      }
-    }
-  }
-
-  stage {
-    name = "Build"
-
-    action {
-      name            = "Build"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["test"]
-      version         = "1"
-
-      configuration = {
-        ProjectName = "test"
-      }
-    }
-  }
-}
-`, rName, rName, rName)
+`, rName)
 }
 
-func testAccAWSCodePipelineConfig_basicUpdated(rName string) string {
+func testAccAWSCodePipelineServiceIAMRoleWithAssumeRole(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "foo" {
-  bucket = "tf-test-pipeline-%s"
-  acl    = "private"
-}
-
-resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-role-%s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codepipeline.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "codepipeline_policy"
-  role = "${aws_iam_role.codepipeline_role.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect":"Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketVersioning"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.foo.arn}",
-        "${aws_s3_bucket.foo.arn}/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codebuild:BatchGetBuilds",
-        "codebuild:StartBuild"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_codepipeline" "test" {
-  name     = "test-pipeline-%s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
-
-  artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
-    type     = "S3"
-
-    encryption_key {
-      id   = "4567"
-      type = "KMS"
-    }
-  }
-
-  stage {
-    name = "Source"
-
-    action {
-      name             = "Source"
-      category         = "Source"
-      owner            = "ThirdParty"
-      provider         = "GitHub"
-      version          = "1"
-      output_artifacts = ["bar"]
-
-      configuration = {
-        Owner  = "foo-terraform"
-        Repo   = "bar"
-        Branch = "stable"
-      }
-    }
-  }
-
-  stage {
-    name = "Build"
-
-    action {
-      name            = "Build"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["bar"]
-      version         = "1"
-
-      configuration = {
-        ProjectName = "foo"
-      }
-    }
-  }
-}
-`, rName, rName, rName)
-}
-
-func testAccAWSCodePipelineConfig_emptyArtifacts(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "foo" {
-  bucket = "tf-test-pipeline-%s"
-  acl    = "private"
-}
-
-resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-role-%s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codepipeline.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "codepipeline_policy"
-  role = "${aws_iam_role.codepipeline_role.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect":"Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketVersioning"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.foo.arn}",
-        "${aws_s3_bucket.foo.arn}/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codebuild:BatchGetBuilds",
-        "codebuild:StartBuild"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_codepipeline" "test" {
-  name     = "test-pipeline-%s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
-
-  artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
-    type     = "S3"
-  }
-
-  stage {
-    name = "Source"
-
-    action {
-      name             = "Source"
-      category         = "Source"
-      owner            = "ThirdParty"
-      provider         = "GitHub"
-      version          = "1"
-      output_artifacts = ["test"]
-
-      configuration = {
-        Owner  = "lifesum-terraform"
-        Repo   = "test"
-        Branch = "master"
-      }
-    }
-  }
-
-  stage {
-    name = "Build"
-
-    action {
-      name             = "Build"
-      category         = "Build"
-      owner            = "AWS"
-      provider         = "CodeBuild"
-      input_artifacts  = ["test", ""]
-      output_artifacts = [""]
-      version          = "1"
-
-      configuration = {
-        ProjectName = "test"
-      }
-    }
-  }
-}
-`, rName, rName, rName)
-}
-
-func testAccAWSCodePipelineConfig_deployWithServiceRole(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "foo" {
-  bucket = "tf-test-pipeline-%s"
-  acl    = "private"
-}
-
 resource "aws_iam_role" "codepipeline_role" {
   name = "codepipeline-role-%s"
 
@@ -665,7 +431,181 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
 }
 EOF
 }
+`, rName)
+}
 
+func testAccAWSCodePipelineConfig_basic(rName string) string {
+	return composeConfig(
+		testAccAWSCodePipelineS3Bucket(rName),
+		testAccAWSCodePipelineServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%s"
+  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+
+  artifact_store {
+    location = "${aws_s3_bucket.foo.bucket}"
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "ThirdParty"
+      provider         = "GitHub"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        Owner  = "lifesum-terraform"
+        Repo   = "test"
+        Branch = "master"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccAWSCodePipelineConfig_basicUpdated(rName string) string {
+	return composeConfig(
+		testAccAWSCodePipelineS3Bucket(rName),
+		testAccAWSCodePipelineServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%s"
+  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+
+  artifact_store {
+    location = "${aws_s3_bucket.foo.bucket}"
+    type     = "S3"
+
+    encryption_key {
+      id   = "4567"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "ThirdParty"
+      provider         = "GitHub"
+      version          = "1"
+      output_artifacts = ["bar"]
+
+      configuration = {
+        Owner  = "foo-terraform"
+        Repo   = "bar"
+        Branch = "stable"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["bar"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "foo"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccAWSCodePipelineConfig_emptyArtifacts(rName string) string {
+	return composeConfig(
+		testAccAWSCodePipelineS3Bucket(rName),
+		testAccAWSCodePipelineServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%s"
+  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+
+  artifact_store {
+    location = "${aws_s3_bucket.foo.bucket}"
+    type     = "S3"
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "ThirdParty"
+      provider         = "GitHub"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        Owner  = "lifesum-terraform"
+        Repo   = "test"
+        Branch = "master"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name             = "Build"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      input_artifacts  = ["test", ""]
+      output_artifacts = [""]
+      version          = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccAWSCodePipelineDeployActionIAMRole(rName string) string {
+	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "codepipeline_action_role" {
@@ -711,7 +651,15 @@ resource "aws_iam_role_policy" "codepipeline_action_policy" {
 }
 EOF
 }
+`, rName)
+}
 
+func testAccAWSCodePipelineConfig_deployWithServiceRole(rName string) string {
+	return composeConfig(
+		testAccAWSCodePipelineS3Bucket(rName),
+		testAccAWSCodePipelineServiceIAMRoleWithAssumeRole(rName),
+		testAccAWSCodePipelineDeployActionIAMRole(rName),
+		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%s"
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
@@ -784,68 +732,14 @@ resource "aws_codepipeline" "test" {
     }
   }
 }
-`, rName, rName, rName, rName)
+`, rName))
 }
 
 func testAccAWSCodePipelineConfigWithTags(rName, tag1, tag2 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "foo" {
-  bucket = "tf-test-pipeline-%[1]s"
-  acl    = "private"
-}
-
-resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-role-%[1]s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codepipeline.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "codepipeline_policy"
-  role = "${aws_iam_role.codepipeline_role.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect":"Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketVersioning"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.foo.arn}",
-        "${aws_s3_bucket.foo.arn}/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codebuild:BatchGetBuilds",
-        "codebuild:StartBuild"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
+	return composeConfig(
+		testAccAWSCodePipelineS3Bucket(rName),
+		testAccAWSCodePipelineServiceIAMRole(rName),
+		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
@@ -902,149 +796,151 @@ resource "aws_codepipeline" "test" {
     tag2 = %[3]q
   }
 }
-`, rName, tag1, tag2)
+`, rName, tag1, tag2))
 }
 
-func testAccAWSCodePipelineConfig_multiregion(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "eu-west-1" {
-  bucket = "tf-test-pipeline-eu-west-1-%s"
-  acl    = "private"
-}
+// func testAccAWSCodePipelineConfig_multiregion(rName string) string {
+// 	return fmt.Sprintf(`
+// resource "aws_s3_bucket" "eu-west-1" {
+//   bucket = "tf-test-pipeline-eu-west-1-%s"
+//   acl    = "private"
+// }
 
-resource "aws_s3_bucket" "eu-central-1" {
-  bucket = "tf-test-pipeline-eu-central-1-%s"
-  acl    = "private"
-}
+// resource "aws_s3_bucket" "eu-central-1" {
+//   bucket = "tf-test-pipeline-eu-central-1-%s"
+//   acl    = "private"
+// }
 
-resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-role-%s"
+// resource "aws_iam_role" "codepipeline_role" {
+//   name = "codepipeline-role-%s"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codepipeline.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
+//   assume_role_policy = <<EOF
+// {
+//   "Version": "2012-10-17",
+//   "Statement": [
+//     {
+//       "Effect": "Allow",
+//       "Principal": {
+//         "Service": "codepipeline.amazonaws.com"
+//       },
+//       "Action": "sts:AssumeRole"
+//     }
+//   ]
+// }
+// EOF
+// }
 
-resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "codepipeline_policy"
-  role = "${aws_iam_role.codepipeline_role.id}"
+// resource "aws_iam_role_policy" "codepipeline_policy" {
+//   name = "codepipeline_policy"
+//   role = "${aws_iam_role.codepipeline_role.id}"
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect":"Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketVersioning"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.foo.arn}",
-        "${aws_s3_bucket.foo.arn}/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codebuild:BatchGetBuilds",
-        "codebuild:StartBuild"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
+//   policy = <<EOF
+// {
+//   "Version": "2012-10-17",
+//   "Statement": [
+//     {
+//       "Effect":"Allow",
+//       "Action": [
+//         "s3:GetObject",
+//         "s3:GetObjectVersion",
+//         "s3:GetBucketVersioning"
+//       ],
+//       "Resource": [
+//         "${aws_s3_bucket.eu-west-1.arn}",
+//         "${aws_s3_bucket.eu-central-1.arn}",
+//         "${aws_s3_bucket.eu-west-1.arn}/*"
+//         "${aws_s3_bucket.eu-central-1.arn}/*"
+//       ]
+//     },
+//     {
+//       "Effect": "Allow",
+//       "Action": [
+//         "codebuild:BatchGetBuilds",
+//         "codebuild:StartBuild"
+//       ],
+//       "Resource": "*"
+//     }
+//   ]
+// }
+// EOF
+// }
 
-resource "aws_codepipeline" "bar" {
-  name     = "test-pipeline-%s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+// resource "aws_codepipeline" "bar" {
+//   name     = "test-pipeline-%s"
+//   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
-  artifact_stores {
-	  eu-west-1 = {
-			location = "${aws_s3_bucket.eu-west-1.bucket}"
-			type     = "S3"
+//   artifact_stores {
+// 	  "eu-west-1" = {
+// 			location = "${aws_s3_bucket.eu-west-1.bucket}"
+// 			type     = "S3"
 
-			encryption_key {
-				id   = "1234"
-				type = "KMS"
-			}
-		}
+// 			encryption_key {
+// 				id   = "1234"
+// 				type = "KMS"
+// 			}
+// 		}
 
-		eu-central-1 = {
-			location = "${aws_s3_bucket.eu-central-1.bucket}"
-			type     = "S3"
+// 		"eu-central-1" = {
+// 			location = "${aws_s3_bucket.eu-central-1.bucket}"
+// 			type     = "S3"
 
-			encryption_key {
-				id   = "1234"
-				type = "KMS"
-			}
-		}
-	}
+// 			encryption_key {
+// 				id   = "1234"
+// 				type = "KMS"
+// 			}
+// 		}
+// 	}
 
-  stage {
-    name = "Source"
+//   stage {
+//     name = "Source"
 
-    action {
-      name             = "Source"
-      category         = "Source"
-      owner            = "ThirdParty"
-      provider         = "GitHub"
-      version          = "1"
-      output_artifacts = ["test"]
+//     action {
+//       name             = "Source"
+//       category         = "Source"
+//       owner            = "ThirdParty"
+//       provider         = "GitHub"
+//       version          = "1"
+//       output_artifacts = ["test"]
 
-      configuration = {
-        Owner  = "lifesum-terraform"
-        Repo   = "test"
-        Branch = "master"
-      }
-    }
-  }
+//       configuration = {
+//         Owner  = "lifesum-terraform"
+//         Repo   = "test"
+//         Branch = "master"
+//       }
+//     }
+//   }
 
-  stage {
-    name = "Build"
+//   stage {
+//     name = "Build"
 
-    action {
-		  region          = "eu-west-1"
-      name            = "EuWest1Build"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["test"]
-      version         = "1"
+//     action {
+// 		  region          = "eu-west-1"
+//       name            = "EuWest1Build"
+//       category        = "Build"
+//       owner           = "AWS"
+//       provider        = "CodeBuild"
+//       input_artifacts = ["test"]
+//       version         = "1"
 
-      configuration = {
-        ProjectName = "EuWest1Test"
-      }
-    }
+//       configuration = {
+//         ProjectName = "EuWest1Test"
+//       }
+//     }
 
-    action {
-		  region          = "eu-central-1"
-      name            = "EuCentral1Build"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["test"]
-      version         = "1"
+//     action {
+// 		  region          = "eu-central-1"
+//       name            = "EuCentral1Build"
+//       category        = "Build"
+//       owner           = "AWS"
+//       provider        = "CodeBuild"
+//       input_artifacts = ["test"]
+//       version         = "1"
 
-      configuration = {
-        ProjectName = "EuCentral1Test"
-      }
-    }
-  }
-}
-`, rName, rName, rName, rName)
-}
+//       configuration = {
+//         ProjectName = "EuCentral1Test"
+//       }
+//     }
+//   }
+// }
+// `, rName, rName, rName, rName)
+// }

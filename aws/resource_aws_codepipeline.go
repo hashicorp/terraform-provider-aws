@@ -81,10 +81,12 @@ func resourceAwsCodePipeline() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				Elem:     artifactStoreSchema,
+				Elem: &schema.Resource{
+					Schema: artifactStoreSchema,
+				},
 			},
 			"artifact_stores": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: artifactStoreSchema,
@@ -108,6 +110,7 @@ func resourceAwsCodePipeline() *schema.Resource {
 									"configuration": {
 										Type:     schema.TypeMap,
 										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"category": {
 										Type:     schema.TypeString,
@@ -230,7 +233,7 @@ func expandAwsCodePipeline(d *schema.ResourceData) *codepipeline.PipelineDeclara
 func expandAwsCodePipelineArtifactStore(d *schema.ResourceData) *codepipeline.ArtifactStore {
 	configs := d.Get("artifact_store").([]interface{})
 
-	if configs == nil {
+	if len(configs) == 0 {
 		return nil
 	}
 
@@ -252,17 +255,17 @@ func expandAwsCodePipelineArtifactStore(d *schema.ResourceData) *codepipeline.Ar
 }
 
 func expandAwsCodePipelineArtifactStores(d *schema.ResourceData) map[string]*codepipeline.ArtifactStore {
-	configs := d.Get("artifact_stores").(map[string]*schema.ResourceData)
+	configs := d.Get("artifact_stores").([]interface{})
 
-	if configs == nil {
+	if len(configs) == 0 {
 		return nil
 	}
 
 	pipelineArtifactStores := make(map[string]*codepipeline.ArtifactStore)
 
-	for region, config := range configs {
-		pipelineArtifactStores[region] = expandAwsCodePipelineArtifactStore(config)
-	}
+	// for region, config := range configs {
+	// 	pipelineArtifactStores[region] = expandAwsCodePipelineArtifactStore(config.(*schema.ResourceData))
+	// }
 
 	return pipelineArtifactStores
 }
@@ -279,6 +282,14 @@ func flattenAwsCodePipelineArtifactStore(artifactStore *codepipeline.ArtifactSto
 		values["encryption_key"] = []interface{}{as}
 	}
 	return []interface{}{values}
+}
+
+func flattenAwsCodePipelineArtifactStores(artifactStores map[string]*codepipeline.ArtifactStore) []interface{} {
+	values := []interface{}{}
+	for _, artifactStore := range artifactStores {
+		values = append(values, artifactStore)
+	}
+	return values
 }
 
 func expandAwsCodePipelineStages(d *schema.ResourceData) []*codepipeline.StageDeclaration {
@@ -488,6 +499,9 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 	pipeline := resp.Pipeline
 
 	if err := d.Set("artifact_store", flattenAwsCodePipelineArtifactStore(pipeline.ArtifactStore)); err != nil {
+		return err
+	}
+	if err := d.Set("artifact_stores", flattenAwsCodePipelineArtifactStores(pipeline.ArtifactStores)); err != nil {
 		return err
 	}
 
