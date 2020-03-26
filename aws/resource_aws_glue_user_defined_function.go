@@ -34,20 +34,23 @@ func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 				Required: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"class_name": {
-				Type:     schema.TypeList,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"owner_name": {
-				Type:     schema.TypeList,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"owner_type": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					glue.PrincipalTypeGroup,
@@ -57,7 +60,8 @@ func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 			},
 			"resource_uris": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
+				MaxItems: 1000,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resource_type": {
@@ -70,14 +74,15 @@ func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 							}, false),
 						},
 						"uri": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
 					},
 				},
 			},
 			"create_time": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
@@ -103,7 +108,7 @@ func resourceAwsGlueUserDefinedFunctionCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, funcName))
 
-	return resourceAwsGlueUserDefinedFunctionUpdate(d, meta)
+	return resourceAwsGlueUserDefinedFunctionRead(d, meta)
 }
 
 func resourceAwsGlueUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -160,6 +165,7 @@ func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interfa
 	udf := out.UserDefinedFunction
 	d.Set("name", udf.FunctionName)
 	d.Set("catalog_id", catalogID)
+	d.Set("database_name", dbName)
 	d.Set("owner_type", udf.OwnerType)
 	d.Set("owner_name", udf.OwnerName)
 	d.Set("class_name", udf.ClassName)
@@ -207,7 +213,10 @@ func expandAwsGlueUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDef
 		FunctionName: aws.String(d.Get("name").(string)),
 		OwnerName:    aws.String(d.Get("owner_name").(string)),
 		OwnerType:    aws.String(d.Get("owner_type").(string)),
-		ResourceUris: expandAwsGlueUserDefinedFunctionResourceUri(d.Get("resource_uris").(*schema.Set)),
+	}
+
+	if v, ok := d.GetOk("resource_uris"); ok && v.(*schema.Set).Len() > 0 {
+		udf.ResourceUris = expandAwsGlueUserDefinedFunctionResourceUri(d.Get("resource_uris").(*schema.Set))
 	}
 
 	return udf
