@@ -1729,7 +1729,10 @@ func testAccAWSEmrComposeConfig(mapPublicIPOnLaunch bool, config ...string) stri
 }
 
 func testAccAWSEmrClusterConfig_bootstrap(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   name                 = "%[1]s"
   release_label        = "emr-5.0.0"
@@ -1787,13 +1790,15 @@ EOF
   acl     = "public-read"
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
 	)
 }
 
 func testAccAWSEmrClusterConfig(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -1831,14 +1836,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   ebs_root_volume_size = 21
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
 func testAccAWSEmrClusterConfigAdditionalInfo(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -1885,14 +1891,14 @@ EOF
   ebs_root_volume_size = 21
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
 func testAccAWSEmrClusterConfigConfigurationsJson(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -1947,8 +1953,6 @@ EOF
   ebs_root_volume_size = 21
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
 	)
 }
 
@@ -1999,7 +2003,11 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 }
 
 func testAccAWSEmrClusterConfig_SecurityConfiguration(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-5.5.0"
@@ -2078,11 +2086,7 @@ resource "aws_kms_key" "foo" {
 }
 POLICY
 }
-`, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
-	)
+`, r))
 }
 
 const testAccAWSEmrClusterConfig_Step_DebugLoggingStep = `
@@ -2494,7 +2498,11 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigInstanceGroups(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -2579,14 +2587,15 @@ EOT
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
 func testAccAWSEmrClusterConfigInstanceGroupsName(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -2652,14 +2661,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
 func testAccAWSEmrClusterConfigInstanceGroupsUpdate(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -2744,14 +2754,15 @@ EOT
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
 func testAccAWSEmrClusterConfigInstanceGroups_st1(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -2834,14 +2845,15 @@ EOT
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
 func testAccAWSEmrClusterConfigInstanceGroups_updateAutoScalingPolicy(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -2924,9 +2936,6 @@ EOT
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
@@ -3093,7 +3102,11 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigTerminationPolicy(r string, term string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -3128,14 +3141,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 `, r, term),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
 func testAccAWSEmrClusterConfig_keepJob(r string, keepJob string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -3180,14 +3194,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 `, r, keepJob),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
 func testAccAWSEmrClusterConfigVisibleToAllUsersUpdated(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -3222,14 +3237,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
 func testAccAWSEmrClusterConfigUpdatedTags(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -3263,14 +3279,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
 func testAccAWSEmrClusterConfigUpdatedRootVolumeSize(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-4.6.0"
@@ -3306,9 +3323,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   ebs_root_volume_size = 48
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
@@ -3349,7 +3363,11 @@ data "aws_caller_identity" "current" {}
 }
 
 func testAccAWSEmrClusterConfigCustomAmiID(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleCustomAmiID(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "%[1]s"
   release_label = "emr-5.7.0"
@@ -3411,9 +3429,6 @@ data "aws_ami" "emr-custom-ami" {
   }
 }
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleCustomAmiID(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
 	)
 }
 
