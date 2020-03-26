@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_athena_workgroup: Add `force_destroy` argument [GH-12254]
 * resource/aws_cloudwatch_log_metric_filter: Support resource import [GH-11992]
 * resource/aws_mq_configuration: Support plan-time validation for `engine_type` argument [GH-11843]
+* resource/aws_storagegateway_nfs_file_share: Add `path` attribute [GH-12530]
 
 BUG FIXES:
 
