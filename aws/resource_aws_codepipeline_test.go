@@ -280,10 +280,13 @@ func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Expected AWS CodePipeline to be gone, but was still found")
 		}
-		return nil
+		if isAWSErr(err, "PipelineNotFoundException", "") {
+			return nil
+		}
+		return err
 	}
 
-	return fmt.Errorf("Default error in CodePipeline Test")
+	return nil
 }
 
 func testAccPreCheckAWSCodePipeline(t *testing.T) {
