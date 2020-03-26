@@ -26,7 +26,7 @@ func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
-				Required: true,
+				Optional: true,
 			},
 			"database_name": {
 				Type:     schema.TypeString,
