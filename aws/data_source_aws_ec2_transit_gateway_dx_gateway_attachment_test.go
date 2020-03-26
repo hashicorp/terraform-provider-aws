@@ -35,7 +35,7 @@ func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAn
 	})
 }
 
-func TestAccAWSEc2TransitGatewayGatewayAttachmentDataSource_filter(t *testing.T) {
+func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rBgpAsn := randIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_dx_gateway_attachment.test"
