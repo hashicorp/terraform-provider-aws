@@ -22,6 +22,7 @@ data "aws_ec2_transit_gateway_vpc_attachments" "example" {
   }
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:
