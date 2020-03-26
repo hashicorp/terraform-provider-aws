@@ -118,7 +118,7 @@ resource "aws_dx_gateway_association" "test" {
 data "aws_ec2_transit_gateway_dx_gateway_attachment" "test" {
   filter {
     name   = "resource-id"
-    values = ["${aws_dx_gateway.test.id}"]
+    values = ["${aws_dx_gateway_association.test.dx_gateway_id}"]
   }
 }
 `, rName, rBgpAsn)
