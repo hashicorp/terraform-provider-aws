@@ -949,7 +949,14 @@ data "aws_ami" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_launch_template" "test" {
   image_id      = "${data.aws_ami.test.id}"
@@ -999,7 +1006,14 @@ data "aws_ami" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_launch_template" "test" {
   image_id      = "${data.aws_ami.test.id}"
@@ -1143,7 +1157,14 @@ resource "aws_launch_template" "test" {
 
 func testAccAWSLaunchTemplateConfig_capacityReservation_target(rInt int) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
@@ -1335,7 +1356,14 @@ resource "aws_launch_template" "test" {
   instance_type = "t2.micro"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
@@ -1366,7 +1394,14 @@ resource "aws_launch_template" "test" {
   instance_type = "t2.nano"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
@@ -1404,7 +1439,14 @@ resource "aws_launch_template" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_autoscaling_group" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
@@ -1444,7 +1486,14 @@ resource "aws_launch_template" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_autoscaling_group" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
