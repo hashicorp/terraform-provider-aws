@@ -53,21 +53,18 @@ func dataSourceAwsEc2TransitGatewayDxGatewayAttachmentRead(d *schema.ResourceDat
 		input.Filters = append(input.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
 	}
 	// to preserve original functionality
-	if dxGatewayIdOk && transitGatewayIdOk {
-		input.Filters = []*ec2.Filter{
-			{
-				Name:   aws.String("resource-id"),
-				Values: []*string{aws.String(dxGatewayId.(string))},
-			},
-			{
-				Name:   aws.String("resource-type"),
-				Values: []*string{aws.String(ec2.TransitGatewayAttachmentResourceTypeDirectConnectGateway)},
-			},
-			{
-				Name:   aws.String("transit-gateway-id"),
-				Values: []*string{aws.String(transitGatewayId.(string))},
-			},
-		}
+	if dxGatewayIdOk {
+		input.Filters = append(input.Filters, &ec2.Filter{
+			Name:   aws.String("resource-id"),
+			Values: []*string{aws.String(dxGatewayId.(string))},
+		})
+	}
+
+	if transitGatewayIdOk {
+		input.Filters = append(input.Filters, &ec2.Filter{
+			Name:   aws.String("transit-gateway-id"),
+			Values: []*string{aws.String(transitGatewayId.(string))},
+		})
 	}
 
 	log.Printf("[DEBUG] Reading EC2 Transit Gateway Direct Connect Gateway Attachments: %s", input)

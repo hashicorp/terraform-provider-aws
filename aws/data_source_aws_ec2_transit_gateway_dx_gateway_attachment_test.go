@@ -24,7 +24,7 @@ func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAn
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigTransitGatewayIdAndDxGatewayId(rName, rBgpAsn),
+				Config: testAccAWSEc2TransitGatewayDxAttachmentDataSourceConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -35,7 +35,7 @@ func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAn
 	})
 }
 
-func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
+func TestAccAWSEc2TransitGatewayGatewayAttachmentDataSource_filter(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rBgpAsn := randIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_dx_gateway_attachment.test"
@@ -51,7 +51,7 @@ func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigFilter(rName, rBgpAsn),
+				Config: testAccAWSEc2TransitGatewayDxAttachmentDataSourceConfigFilter(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -62,7 +62,7 @@ func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.
 	})
 }
 
-func testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigTransitGatewayIdAndDxGatewayId(rName string, rBgpAsn int) string {
+func testAccAWSEc2TransitGatewayDxAttachmentDataSourceConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
@@ -92,7 +92,7 @@ data "aws_ec2_transit_gateway_dx_gateway_attachment" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigFilter(rName string, rBgpAsn int) string {
+func testAccAWSEc2TransitGatewayDxAttachmentDataSourceConfigFilter(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
