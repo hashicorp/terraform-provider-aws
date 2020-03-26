@@ -515,7 +515,6 @@ func testAccAwsAppmeshVirtualNode_clientPolicyFile(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.0.certificate_chain", "/etc/ssl/certs/cert_chain.pem"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.sds.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.virtual_service_name", "servicea.simpleapp.local"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
