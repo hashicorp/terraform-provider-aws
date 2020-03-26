@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -271,6 +272,37 @@ func testAccCheckListHasSomeElementAttrPair(nameFirst string, resourceAttr strin
 			return fmt.Errorf("%s: No element of %q found with attribute %q matching value %q set on %q of %s", nameFirst, resourceAttr, elementAttr, vSecond, keySecond, nameSecond)
 		}
 
+		return nil
+	}
+}
+
+// testAccCheckResourceAttrEquivalentJSON is a TestCheckFunc that compares a JSON value with an expected value. Both JSON
+// values are normalized before being compared.
+func testAccCheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := primaryInstanceState(s, resourceName)
+		if err != nil {
+			return err
+		}
+
+		v, ok := is.Attributes[attributeName]
+		if !ok {
+			return fmt.Errorf("%s: No attribute %q found", resourceName, attributeName)
+		}
+
+		vNormal, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("%s: Error normalizing JSON in %q: %w", resourceName, attributeName, err)
+		}
+
+		expectedNormal, err := structure.NormalizeJsonString(expectedJSON)
+		if err != nil {
+			return fmt.Errorf("Error normalizing expected JSON: %w", err)
+		}
+
+		if vNormal != expectedNormal {
+			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", resourceName, attributeName, expectedJSON, v)
+		}
 		return nil
 	}
 }
@@ -1267,4 +1299,15 @@ provider "aws" {
 	}
 }
 `, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
+}
+
+// composeConfig can be called to concatenate multiple strings to build test configurations
+func composeConfig(config ...string) string {
+	var str strings.Builder
+
+	for _, conf := range config {
+		str.WriteString(conf)
+	}
+
+	return str.String()
 }
