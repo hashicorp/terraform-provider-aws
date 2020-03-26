@@ -11,21 +11,6 @@ poll "closed_issue_locker" "locker" {
   EOF
 }
 
-poll "stale_issue_closer" "closer" {
-  schedule             = "0 22 23 * * *"
-  no_reply_in_last     = "2160h" # 90 days
-  max_issues           = 500
-  sleep_between_issues = "5s"
-  created_after        = "2019-06-01"
-  exclude_labels       = ["needs-triage", "technical-debt"]
-  extra_search_params  = "reactions:<20 no:milestone no:assignee"
-  message              = <<-EOF
-    I'm going to close this issue due to inactivity (_90 days_ without response ⏳ ). This helps our maintainers find and focus on the active issues.
-
-    If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
-    EOF
-}
-
 behavior "deprecated_import_commenter" "hashicorp_terraform" {
   import_regexp = "github.com/hashicorp/terraform/"
   marker_label  = "terraform-plugin-sdk-migration"
