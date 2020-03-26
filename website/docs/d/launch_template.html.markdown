@@ -33,8 +33,9 @@ data "aws_launch_template" "test" {
 
 The following arguments are supported:
 
-* `name` - (Optional) The name of the launch template.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+* `name` - (Optional) The name of the launch template.
+* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired Launch Template.
 
 ### filter Configuration Block
 
