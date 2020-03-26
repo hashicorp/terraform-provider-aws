@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * data-source/aws_vpc_endpoint_service: Add `filter` and `tags` arguments [GH-12404]
 * resource/aws_athena_workgroup: Add `force_destroy` argument [GH-12254]
 * resource/aws_cloudwatch_log_metric_filter: Support resource import [GH-11992]
+* resource/aws_flow_log: Add `max_aggregation_interval` argument [GH-12483]
 * resource/aws_mq_configuration: Support plan-time validation for `engine_type` argument [GH-11843]
 * resource/aws_storagegateway_nfs_file_share: Add `path` attribute [GH-12530]
 
