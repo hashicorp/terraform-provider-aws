@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsGluePartition() *schema.Resource {
@@ -29,14 +31,24 @@ func resourceAwsGluePartition() *schema.Resource {
 				Computed: true,
 			},
 			"database_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"table_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			"values": {
+				Type:     schema.TypeSet,
 				Required: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"storage_descriptor": {
 				Type:     schema.TypeList,
@@ -168,10 +180,17 @@ func resourceAwsGluePartition() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"values": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			"creation_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_analyzed_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_accessed_time": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -200,9 +219,10 @@ func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) er
 		PartitionInput: expandGluePartitionInput(d),
 	}
 
+	log.Printf("[DEBUG] Creating Glue Partition: %#v", input)
 	_, err := conn.CreatePartition(input)
 	if err != nil {
-		return fmt.Errorf("Error creating Glue Partition: %s", err)
+		return fmt.Errorf("error creating Glue Partition: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, stringifyAwsGluePartition(values)))
@@ -218,6 +238,7 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
+	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
 	input := &glue.GetPartitionInput{
 		CatalogId:       aws.String(catalogID),
 		DatabaseName:    aws.String(dbName),
@@ -234,7 +255,7 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 			return nil
 		}
 
-		return fmt.Errorf("Error reading Glue Partition: %s", err)
+		return fmt.Errorf("error reading Glue Partition: %s", err)
 	}
 
 	partition := out.Partition
@@ -243,6 +264,18 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("catalog_id", catalogID)
 	d.Set("database_name", partition.DatabaseName)
 	d.Set("values", flattenStringSet(partition.Values))
+
+	if partition.LastAccessTime != nil {
+		d.Set("last_accessed_time", partition.LastAccessTime.Format(time.RFC3339))
+	}
+
+	if partition.LastAnalyzedTime != nil {
+		d.Set("last_analyzed_time", partition.LastAnalyzedTime.Format(time.RFC3339))
+	}
+
+	if partition.CreationTime != nil {
+		d.Set("creation_time", partition.CreationTime.Format(time.RFC3339))
+	}
 
 	if err := d.Set("storage_descriptor", flattenGlueStorageDescriptor(partition.StorageDescriptor)); err != nil {
 		return fmt.Errorf("error setting storage_descriptor: %s", err)
@@ -258,20 +291,22 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsGluePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	catalogID, dbName, tableName, _, err := readAwsGluePartitionID(d.Id())
+	catalogID, dbName, tableName, values, err := readAwsGluePartitionID(d.Id())
 	if err != nil {
 		return err
 	}
 
 	input := &glue.UpdatePartitionInput{
-		CatalogId:      aws.String(catalogID),
-		DatabaseName:   aws.String(dbName),
-		TableName:      aws.String(tableName),
-		PartitionInput: expandGluePartitionInput(d),
+		CatalogId:          aws.String(catalogID),
+		DatabaseName:       aws.String(dbName),
+		TableName:          aws.String(tableName),
+		PartitionInput:     expandGluePartitionInput(d),
+		PartitionValueList: aws.StringSlice(values),
 	}
 
+	log.Printf("[DEBUG] Updating Glue Partition: %#v", input)
 	if _, err := conn.UpdatePartition(input); err != nil {
-		return fmt.Errorf("Error updating Glue Partition: %s", err)
+		return fmt.Errorf("error updating Glue Partition: %s", err)
 	}
 
 	return resourceAwsGluePartitionRead(d, meta)
@@ -285,7 +320,7 @@ func resourceAwsGluePartitionDelete(d *schema.ResourceData, meta interface{}) er
 		return tableErr
 	}
 
-	log.Printf("[DEBUG] Glue Partition: %s:%s:%s", catalogID, dbName, tableName)
+	log.Printf("[DEBUG] Deleting Glue Partition: %s", d.Id())
 	_, err := conn.DeletePartition(&glue.DeletePartitionInput{
 		CatalogId:       aws.String(catalogID),
 		TableName:       aws.String(tableName),
@@ -306,11 +341,7 @@ func expandGluePartitionInput(d *schema.ResourceData) *glue.PartitionInput {
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		paramsMap := map[string]string{}
-		for key, value := range v.(map[string]interface{}) {
-			paramsMap[key] = value.(string)
-		}
-		tableInput.Parameters = aws.StringMap(paramsMap)
+		tableInput.Parameters = stringMapToPointers(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("values"); ok && v.(*schema.Set).Len() > 0 {
