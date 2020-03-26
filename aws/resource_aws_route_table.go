@@ -128,17 +128,24 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf(
 		"[DEBUG] Waiting for route table (%s) to become available",
 		d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending:        []string{"pending"},
-		Target:         []string{"ready"},
-		Refresh:        resourceAwsRouteTableStateRefreshFunc(conn, d.Id()),
-		Timeout:        10 * time.Minute,
-		NotFoundChecks: 40,
+	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
+		rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(conn, d.Id())()
+		if rtRaw != nil {
+			return nil
+		}
+		if err == nil {
+			return resource.RetryableError(err)
+		}
+		return resource.NonRetryableError(err)
+	})
+	if isResourceTimeoutError(err) {
+		rtRaw, _, _ := resourceAwsRouteTableStateRefreshFunc(conn, d.Id())()
+		if rtRaw == nil {
+			return fmt.Errorf("error finding Route Table (%s) after creation; retry running Terraform", d.Id())
+		}
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for route table (%s) to become available: %s",
-			d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("Error refreshing route table state: %s", err)
 	}
 
 	return resourceAwsRouteTableUpdate(d, meta)
@@ -147,13 +154,26 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(conn, d.Id())()
-	if err != nil {
-		return err
+	var rtRaw interface{}
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(conn, d.Id())()
+		if rtRaw != nil {
+			return nil
+		}
+		if err == nil {
+			return resource.RetryableError(err)
+		}
+		return resource.NonRetryableError(err)
+	})
+	if isResourceTimeoutError(err) {
+		rtRaw, _, _ := resourceAwsRouteTableStateRefreshFunc(conn, d.Id())()
+		if rtRaw == nil {
+			d.SetId("")
+			return nil
+		}
 	}
-	if rtRaw == nil {
-		d.SetId("")
-		return nil
+	if err != nil {
+		return fmt.Errorf("Error refreshing route table (%s) state: %s", d.Id(), err)
 	}
 
 	rt := rtRaw.(*ec2.RouteTable)

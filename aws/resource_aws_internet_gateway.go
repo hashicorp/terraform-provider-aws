@@ -59,9 +59,8 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 		}
 		if err == nil {
 			return resource.RetryableError(err)
-		} else {
-			return resource.NonRetryableError(err)
 		}
+		return resource.NonRetryableError(err)
 	})
 	if isResourceTimeoutError(err) {
 		igRaw, _, err = IGStateRefreshFunc(conn, d.Id())()
@@ -90,14 +89,26 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 func resourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	igRaw, _, err := IGStateRefreshFunc(conn, d.Id())()
-	if err != nil {
-		return err
+	var igRaw interface{}
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		igRaw, _, err := IGStateRefreshFunc(conn, d.Id())()
+		if igRaw != nil {
+			return nil
+		}
+		if err == nil {
+			return resource.RetryableError(err)
+		}
+		return resource.NonRetryableError(err)
+	})
+	if isResourceTimeoutError(err) {
+		igRaw, _, err = IGStateRefreshFunc(conn, d.Id())()
+		if igRaw == nil {
+			d.SetId("")
+			return nil
+		}
 	}
-	if igRaw == nil {
-		// Seems we have lost our internet gateway
-		d.SetId("")
-		return nil
+	if err != nil {
+		return fmt.Errorf("Error refreshing internet gateway (%s) state: %s", d.Id(), err)
 	}
 
 	ig := igRaw.(*ec2.InternetGateway)
