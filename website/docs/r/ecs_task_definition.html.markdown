@@ -202,12 +202,12 @@ Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-
 * `device_name` - (Required) The Elastic Inference accelerator device name. The deviceName must also be referenced in a container definition as a ResourceRequirement.
 * `device_type` - (Required) The Elastic Inference accelerator type to use.
 
-##### Example Usage:
+##### Example Usage
 
 ```hcl
 resource "aws_ecs_task_definition" "test" {
   family                = "test"
-    container_definitions = <<TASK_DEFINITION
+  container_definitions = <<TASK_DEFINITION
   [
   	{
   		"cpu": 10,
