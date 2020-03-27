@@ -1734,6 +1734,7 @@ func testAccAWSEmrClusterConfig_bootstrap(r string) string {
 	return testAccAWSEmrComposeConfig(false,
 		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
 		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   name                 = "%[1]s"
@@ -1743,14 +1744,19 @@ resource "aws_emr_cluster" "test" {
   master_instance_type = "c4.large"
   core_instance_type   = "c4.large"
   core_instance_count  = 1
-  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
-  depends_on           = ["aws_route_table_association.test"]
+
+  service_role = "${aws_iam_role.emr_service.arn}"
+  depends_on   = [
+    "aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+  ]
 
   ec2_attributes {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   bootstrap_action {
@@ -1776,29 +1782,16 @@ resource "aws_emr_cluster" "test" {
     ]
   }
 }
-
-resource "aws_s3_bucket" "tester" {
-  bucket = "%[1]s"
-  acl    = "public-read"
-}
-
-resource "aws_s3_bucket_object" "testobject" {
-  bucket  = "${aws_s3_bucket.tester.bucket}"
-  key     = "testscript.sh"
-  content = <<EOF
-#!/bin/bash
-echo $@
-EOF
-  acl     = "public-read"
-}
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
 	)
 }
 
 func testAccAWSEmrClusterConfig_bootstrapAdd(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   name                 = "%[1]s"
   release_label        = "emr-5.0.0"
@@ -1807,14 +1800,19 @@ resource "aws_emr_cluster" "test" {
   master_instance_type = "c4.large"
   core_instance_type   = "c4.large"
   core_instance_count  = 1
-  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
-  depends_on           = ["aws_route_table_association.test"]
+
+  service_role = "${aws_iam_role.emr_service.arn}"
+  depends_on   = [
+    "aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+  ]
 
   ec2_attributes {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   bootstrap_action {
@@ -1822,7 +1820,6 @@ resource "aws_emr_cluster" "test" {
     name = "runif"
     args = ["instance.isMaster=true", "echo running on master node"]
   }
-
   bootstrap_action {
     path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
     name = "test"
@@ -1839,34 +1836,22 @@ resource "aws_emr_cluster" "test" {
       "10",
     ]
   }
-
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
     name = "runif-2"
     args = ["instance.isMaster=true", "echo also running on master node"]
   }
-}
-
-resource "aws_s3_bucket" "tester" {
-  bucket = "%[1]s"
-  acl    = "public-read"
-}
-
-resource "aws_s3_bucket_object" "testobject" {
-  bucket  = "${aws_s3_bucket.tester.bucket}"
-  key     = "testscript.sh"
-  content = <<EOF
-#!/bin/bash
-echo $@
-EOF
-  acl     = "public-read"
 }
 `, r),
 	)
 }
 
 func testAccAWSEmrClusterConfig_bootstrapReorder(r string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   name                 = "%[1]s"
   release_label        = "emr-5.0.0"
@@ -1875,14 +1860,19 @@ resource "aws_emr_cluster" "test" {
   master_instance_type = "c4.large"
   core_instance_type   = "c4.large"
   core_instance_count  = 1
-  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
-  depends_on           = ["aws_route_table_association.test"]
+
+  service_role = "${aws_iam_role.emr_service.arn}"
+  depends_on   = [
+    "aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+  ]
 
   ec2_attributes {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   bootstrap_action {
@@ -1914,24 +1904,7 @@ resource "aws_emr_cluster" "test" {
     ]
   }
 }
-
-resource "aws_s3_bucket" "tester" {
-  bucket = "%[1]s"
-  acl    = "public-read"
-}
-
-resource "aws_s3_bucket_object" "testobject" {
-  bucket  = "${aws_s3_bucket.tester.bucket}"
-  key     = "testscript.sh"
-  content = <<EOF
-#!/bin/bash
-echo $@
-EOF
-  acl     = "public-read"
-}
 `, r),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
 	)
 }
 
@@ -1950,7 +1923,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   master_instance_type = "c4.large"
@@ -1971,10 +1944,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role     = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role         = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role     = "${aws_iam_role.emr_autoscaling_role.arn}"
   ebs_root_volume_size = 21
 }
 `, r),
@@ -2005,7 +1983,7 @@ EOF
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   master_instance_type = "c4.large"
@@ -2026,10 +2004,15 @@ EOF
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role     = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role         = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role     = "${aws_iam_role.emr_autoscaling_role.arn}"
   ebs_root_volume_size = 21
 }
 `, r),
@@ -2050,7 +2033,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   master_instance_type = "c4.large"
@@ -2089,9 +2072,13 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 ]
 EOF
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+    "aws_route_table_association.test",
+    "aws_iam_role_policy_attachment.emr_service",
+    "aws_iam_role_policy_attachment.emr_instance_profile",
+  ]
 
-  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role         = "${aws_iam_role.emr_service.arn}"
   ebs_root_volume_size = 21
 }
 `, r),
@@ -2159,7 +2146,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   master_instance_type = "c4.large"
@@ -2180,10 +2167,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+    "aws_route_table_association.test",
+    "aws_iam_role_policy_attachment.emr_service",
+    "aws_iam_role_policy_attachment.emr_instance_profile",
+    "aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
 }
 
 resource "aws_emr_security_configuration" "foo" {
@@ -2362,7 +2354,10 @@ POLICY
     instance_type      = "m4.large"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test", "aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.test",
+  ]
 }
 `, rName, autoscalingPolicy),
 	)
@@ -2420,7 +2415,10 @@ resource "aws_emr_cluster" "test" {
     instance_type = "m4.large"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test", "aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.test", 
+  ]
 }
 `, rName),
 	)
@@ -2654,7 +2652,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   instance_group {
@@ -2723,10 +2721,15 @@ EOT
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
 }
 `, r),
 	)
@@ -2747,7 +2750,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   instance_group {
@@ -2797,10 +2800,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
 }
 `, r),
 	)
@@ -2821,7 +2829,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   instance_group {
@@ -2890,10 +2898,15 @@ EOT
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
 }
 `, r),
 	)
@@ -2914,7 +2927,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   instance_group {
@@ -2981,10 +2994,15 @@ EOT
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
 }
 `, r),
 	)
@@ -3005,7 +3023,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   instance_group {
@@ -3072,10 +3090,15 @@ EOT
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
 }
 `, r),
 	)
@@ -3258,7 +3281,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   master_instance_type = "c4.large"
@@ -3277,10 +3300,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
 }
 `, r, term),
 	)
@@ -3301,7 +3329,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   master_instance_type = "c4.large"
@@ -3330,10 +3358,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
 }
 `, r, keepJob),
 	)
@@ -3354,7 +3387,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   master_instance_type = "c4.large"
@@ -3373,10 +3406,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
 }
 `, r),
 	)
@@ -3397,7 +3435,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   master_instance_type = "c4.large"
@@ -3415,10 +3453,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
 }
 `, r),
 	)
@@ -3439,7 +3482,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   master_instance_type = "c4.large"
@@ -3458,10 +3501,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role     = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role         = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role     = "${aws_iam_role.emr_autoscaling_role.arn}"
   ebs_root_volume_size = 48
 }
 `, r),
@@ -3519,7 +3567,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.test.id}"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
     emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
   master_instance_type = "c4.large"
@@ -3538,10 +3586,15 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_route_table_association.test"]
+  depends_on = [
+	"aws_route_table_association.test",
+	"aws_iam_role_policy_attachment.emr_service",
+	"aws_iam_role_policy_attachment.emr_instance_profile",
+	"aws_iam_role_policy_attachment.emr_autoscaling_role",
+  ]
 
-  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role     = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role         = "${aws_iam_role.emr_service.arn}"
+  autoscaling_role     = "${aws_iam_role.emr_autoscaling_role.arn}"
   ebs_root_volume_size = 48
   custom_ami_id        = "${data.aws_ami.emr-custom-ami.id}"
 }
@@ -3687,8 +3740,7 @@ resource "aws_route_table_association" "test" {
 
 func testAccAWSEmrClusterConfigIAMServiceRoleBase(r string) string {
 	return fmt.Sprintf(`
-# IAM role for EMR Service
-resource "aws_iam_role" "iam_emr_default_role" {
+resource "aws_iam_role" "emr_service" {
   name = "%[1]s_default_role"
 
   assume_role_policy = <<EOT
@@ -3708,12 +3760,12 @@ resource "aws_iam_role" "iam_emr_default_role" {
 EOT
 }
 
-resource "aws_iam_role_policy_attachment" "service-attach" {
-  role       = "${aws_iam_role.iam_emr_default_role.id}"
-  policy_arn = "${aws_iam_policy.iam_emr_default_policy.arn}"
+resource "aws_iam_role_policy_attachment" "emr_service" {
+  role       = "${aws_iam_role.emr_service.id}"
+  policy_arn = "${aws_iam_policy.emr_service.arn}"
 }
 
-resource "aws_iam_policy" "iam_emr_default_policy" {
+resource "aws_iam_policy" "emr_service" {
   name = "%[1]s_emr"
 
   policy = <<EOT
@@ -3784,8 +3836,7 @@ EOT
 
 func testAccAWSEmrClusterConfigIAMServiceRoleCustomAmiID(r string) string {
 	return fmt.Sprintf(`
-# IAM role for EMR Service
-resource "aws_iam_role" "iam_emr_default_role" {
+resource "aws_iam_role" "emr_service" {
   name = "%[1]s_default_role"
 
   assume_role_policy = <<EOT
@@ -3805,12 +3856,12 @@ resource "aws_iam_role" "iam_emr_default_role" {
 EOT
 }
 
-resource "aws_iam_role_policy_attachment" "service-attach" {
-  role       = "${aws_iam_role.iam_emr_default_role.id}"
-  policy_arn = "${aws_iam_policy.iam_emr_default_policy.arn}"
+resource "aws_iam_role_policy_attachment" "emr_service" {
+  role       = "${aws_iam_role.emr_service.id}"
+  policy_arn = "${aws_iam_policy.emr_service.arn}"
 }
 
-resource "aws_iam_policy" "iam_emr_default_policy" {
+resource "aws_iam_policy" "emr_service" {
   name = "%[1]s_emr"
 
   policy = <<EOT
@@ -3884,12 +3935,12 @@ EOT
 
 func testAccAWSEmrClusterConfigIAMInstanceProfileBase(r string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_instance_profile" "emr_profile" {
+resource "aws_iam_instance_profile" "emr_instance_profile" {
   name = "%[1]s_profile"
-  role = "${aws_iam_role.iam_emr_profile_role.name}"
+  role = "${aws_iam_role.emr_instance_profile.name}"
 }
 
-resource "aws_iam_role" "iam_emr_profile_role" {
+resource "aws_iam_role" "emr_instance_profile" {
   name = "%[1]s_profile_role"
 
   assume_role_policy = <<EOT
@@ -3909,12 +3960,12 @@ resource "aws_iam_role" "iam_emr_profile_role" {
 EOT
 }
 
-resource "aws_iam_role_policy_attachment" "profile-attach" {
-  role       = "${aws_iam_role.iam_emr_profile_role.id}"
-  policy_arn = "${aws_iam_policy.iam_emr_profile_policy.arn}"
+resource "aws_iam_role_policy_attachment" "emr_instance_profile" {
+  role       = "${aws_iam_role.emr_instance_profile.id}"
+  policy_arn = "${aws_iam_policy.emr_instance_profile.arn}"
 }
 
-resource "aws_iam_policy" "iam_emr_profile_policy" {
+resource "aws_iam_policy" "emr_instance_profile" {
   name = "%[1]s_profile"
 
   policy = <<EOT
@@ -3956,12 +4007,12 @@ EOT
 
 func testAccAWSEmrClusterConfigIAMAutoscalingRole(r string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "emr-autoscaling-role" {
+resource "aws_iam_role" "emr_autoscaling_role" {
   name               = "%[1]s_autoscaling_role"
-  assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
+  assume_role_policy = "${data.aws_iam_policy_document.emr_autoscaling_role.json}"
 }
 
-data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
+data "aws_iam_policy_document" "emr_autoscaling_role" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -3973,9 +4024,28 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
-  role       = "${aws_iam_role.emr-autoscaling-role.name}"
+resource "aws_iam_role_policy_attachment" "emr_autoscaling_role" {
+  role       = "${aws_iam_role.emr_autoscaling_role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
+}
+`, r)
+}
+
+func testAccAWSEmrClusterConfigBootstrapActionBucket(r string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "tester" {
+  bucket = "%[1]s"
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_object" "testobject" {
+  bucket  = "${aws_s3_bucket.tester.bucket}"
+  key     = "testscript.sh"
+  content = <<EOF
+#!/bin/bash
+echo $@
+EOF
+  acl     = "public-read"
 }
 `, r)
 }
