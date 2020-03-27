@@ -1,5 +1,5 @@
 poll "closed_issue_locker" "locker" {
-  schedule             = "0 50 14 * * *"
+  schedule             = "0 10 17 * * *"
   closed_for           = "720h" # 30 days
   max_issues           = 500
   sleep_between_issues = "5s"
