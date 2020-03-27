@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -134,6 +136,26 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 	})
 }
 
+func TestAccAWSKmsGrant_disappers(t *testing.T) {
+	timestamp := time.Now().Format(time.RFC1123)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsGrant_Basic("basic", timestamp, "\"Encrypt\", \"Decrypt\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsGrantExists("aws_kms_grant.basic"),
+					testAccCheckAWSKmsGrantDisappears("aws_kms_grant.basic"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSKmsGrantDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).kmsconn
 
@@ -157,6 +179,25 @@ func testAccCheckAWSKmsGrantExists(name string) resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckAWSKmsGrantDisappears(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+
+		revokeInput := kms.RevokeGrantInput{
+			GrantId: aws.String(rs.Primary.Attributes["grant_id"]),
+			KeyId:   aws.String(rs.Primary.Attributes["key_id"]),
+		}
+
+		_, err := conn.RevokeGrant(&revokeInput)
+		return err
 	}
 }
 
