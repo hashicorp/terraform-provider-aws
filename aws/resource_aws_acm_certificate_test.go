@@ -3,15 +3,15 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
-	"os"
-	"regexp"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -219,7 +219,7 @@ func TestAccAWSAcmCertificate_root(t *testing.T) {
 
 func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -230,8 +230,8 @@ func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig_privateCert(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("%s.terraformtesting.com", rName)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("test.%s.com", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusFailed), // FailureReason: PCA_INVALID_STATE (PCA State: PENDING_CERTIFICATE)
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
