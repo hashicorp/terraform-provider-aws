@@ -356,8 +356,6 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":   tagsSchemaComputed(),
-			"filter": dataSourceFiltersSchema(),
 			"hibernation_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -370,6 +368,8 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"tags":   tagsSchemaComputed(),
+			"filter": dataSourceFiltersSchema(),
 		},
 	}
 }
@@ -504,7 +504,7 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting placement: %s", err)
 	}
 
-	if err := d.Set("hibernation_options", getHibernationOptions(ltData.HibernationOptions)); err != nil {
+	if err := d.Set("hibernation_options", flattenLaunchTemplateHibernationOptions(ltData.HibernationOptions)); err != nil {
 		return fmt.Errorf("error setting hibernation_options: %s", err)
 	}
 

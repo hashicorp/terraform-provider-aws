@@ -755,7 +755,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting placement: %s", err)
 	}
 
-	if err := d.Set("hibernation_options", getHibernationOptions(ltData.HibernationOptions)); err != nil {
+	if err := d.Set("hibernation_options", flattenLaunchTemplateHibernationOptions(ltData.HibernationOptions)); err != nil {
 		return fmt.Errorf("error setting hibernation_options: %s", err)
 	}
 
@@ -1115,7 +1115,21 @@ func getPlacement(p *ec2.LaunchTemplatePlacement) []interface{} {
 	return s
 }
 
-func getHibernationOptions(m *ec2.LaunchTemplateHibernationOptions) []interface{} {
+func expandLaunchTemplateHibernationOptions(l []interface{}) *ec2.LaunchTemplateHibernationOptionsRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	opts := &ec2.LaunchTemplateHibernationOptionsRequest{
+		Configured: aws.Bool(m["configured"].(bool)),
+	}
+
+	return opts
+}
+
+func flattenLaunchTemplateHibernationOptions(m *ec2.LaunchTemplateHibernationOptions) []interface{} {
 	s := []interface{}{}
 	if m != nil {
 		mo := map[string]interface{}{
@@ -1317,14 +1331,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 	}
 
 	if v, ok := d.GetOk("hibernation_options"); ok {
-		m := v.([]interface{})
-		if len(m) > 0 && m[0] != nil {
-			mData := m[0].(map[string]interface{})
-			ho := &ec2.LaunchTemplateHibernationOptionsRequest{
-				Configured: aws.Bool(mData["configured"].(bool)),
-			}
-			opts.HibernationOptions = ho
-		}
+		opts.HibernationOptions = expandLaunchTemplateHibernationOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("tag_specifications"); ok {
