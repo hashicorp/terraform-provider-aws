@@ -82,6 +82,12 @@ func TestAccAwsWafv2IPSet_minimal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAWSWafv2IPSetImportStateIdFunc(resourceName),
+			},
 		},
 	})
 }

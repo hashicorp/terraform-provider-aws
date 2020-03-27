@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -62,6 +61,10 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 					wafv2.IPAddressVersionIpv4,
 					wafv2.IPAddressVersionIpv6,
 				}, false),
+			},
+			"lock_token": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -148,7 +151,7 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetIPSet(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == wafv2.ErrCodeWAFNonexistentItemException {
+		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "AWS WAF couldn’t perform the operation because your resource doesn’t exist") {
 			log.Printf("[WARN] WAFV2 IPSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -161,8 +164,9 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", resp.IPSet.Description)
 	d.Set("ip_address_version", resp.IPSet.IPAddressVersion)
 	d.Set("arn", resp.IPSet.ARN)
+	d.Set("lock_token", resp.LockToken)
 
-	if err := d.Set("addresses", schema.NewSet(schema.HashString, flattenStringList(resp.IPSet.Addresses))); err != nil {
+	if err := d.Set("addresses", flattenStringSet(resp.IPSet.Addresses)); err != nil {
 		return fmt.Errorf("Error setting addresses: %s", err)
 	}
 
@@ -180,39 +184,27 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
-	var resp *wafv2.GetIPSetOutput
-	params := &wafv2.GetIPSetInput{
-		Id:    aws.String(d.Id()),
-		Name:  aws.String(d.Get("name").(string)),
-		Scope: aws.String(d.Get("scope").(string)),
-	}
+
 	log.Printf("[INFO] Updating WAFV2 IPSet %s", d.Id())
 
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.GetIPSet(params)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error getting lock token: %s", err))
-		}
-
 		u := &wafv2.UpdateIPSetInput{
-			Id:          aws.String(d.Id()),
-			Name:        aws.String(d.Get("name").(string)),
-			Scope:       aws.String(d.Get("scope").(string)),
-			Addresses:   []*string{},
-			Description: aws.String(d.Get("description").(string)),
-			LockToken:   resp.LockToken,
+			Id:        aws.String(d.Id()),
+			Name:      aws.String(d.Get("name").(string)),
+			Scope:     aws.String(d.Get("scope").(string)),
+			Addresses: []*string{},
+			LockToken: aws.String(d.Get("lock_token").(string)),
 		}
 
 		if v, ok := d.GetOk("addresses"); ok && v.(*schema.Set).Len() > 0 {
 			u.Addresses = expandStringSet(d.Get("addresses").(*schema.Set))
 		}
 
-		if d.HasChange("description") {
+		if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
 			u.Description = aws.String(d.Get("description").(string))
 		}
 
-		_, err = conn.UpdateIPSet(u)
+		_, err := conn.UpdateIPSet(u)
 
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
@@ -227,11 +219,11 @@ func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteIPSet(&wafv2.DeleteIPSetInput{
+		_, err = conn.UpdateIPSet(&wafv2.UpdateIPSetInput{
 			Id:        aws.String(d.Id()),
 			Name:      aws.String(d.Get("name").(string)),
 			Scope:     aws.String(d.Get("scope").(string)),
-			LockToken: resp.LockToken,
+			LockToken: aws.String(d.Get("lock_token").(string)),
 		})
 	}
 
@@ -251,26 +243,15 @@ func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsWafv2IPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
-	var resp *wafv2.GetIPSetOutput
-	params := &wafv2.GetIPSetInput{
-		Id:    aws.String(d.Id()),
-		Name:  aws.String(d.Get("name").(string)),
-		Scope: aws.String(d.Get("scope").(string)),
-	}
+
 	log.Printf("[INFO] Deleting WAFV2 IPSet %s", d.Id())
 
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.GetIPSet(params)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error getting lock token: %s", err))
-		}
-
-		_, err = conn.DeleteIPSet(&wafv2.DeleteIPSetInput{
+		_, err := conn.DeleteIPSet(&wafv2.DeleteIPSetInput{
 			Id:        aws.String(d.Id()),
 			Name:      aws.String(d.Get("name").(string)),
 			Scope:     aws.String(d.Get("scope").(string)),
-			LockToken: resp.LockToken,
+			LockToken: aws.String(d.Get("lock_token").(string)),
 		})
 
 		if err != nil {
@@ -290,7 +271,7 @@ func resourceAwsWafv2IPSetDelete(d *schema.ResourceData, meta interface{}) error
 			Id:        aws.String(d.Id()),
 			Name:      aws.String(d.Get("name").(string)),
 			Scope:     aws.String(d.Get("scope").(string)),
-			LockToken: resp.LockToken,
+			LockToken: aws.String(d.Get("lock_token").(string)),
 		})
 	}
 
