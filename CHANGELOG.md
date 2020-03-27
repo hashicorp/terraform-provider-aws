@@ -30,6 +30,7 @@ BUG FIXES:
 
 * resource/aws_db_instance: Allow restoring from snapshot into RAM shared Subnet with VPC Security Group [GH-12447]
 * resource/aws_mq_configuration: Remove extraneous `ListTags` API call during refresh [GH-11843]
+* resource/aws_neptune_cluster_instance: Add missing `configuring-log-exports` as allowed pending state [GH-12079]
 
 ## 2.54.0 (March 19, 2020)
 
