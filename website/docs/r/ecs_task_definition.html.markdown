@@ -111,6 +111,7 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `memory` - (Optional) The amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 * `proxy_configuration` - (Optional) The [proxy configuration](#proxy-configuration-arguments) details for the App Mesh proxy.
+* `inference_accelerators` - (Optional) The [inference accelerators](#inference-accelerators-arguments) details for Inference Accelerators.
 * `tags` - (Optional) Key-value mapping of resource tags
 
 #### Volume Block Arguments
@@ -195,6 +196,52 @@ Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-
 * `container_name` - (Required) The name of the container that will serve as the App Mesh proxy.
 * `properties` - (Required) The set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
 * `type` - (Optional) The proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
+
+#### Inference Accelerators Arguments
+
+* `device_name` - (Required) The Elastic Inference accelerator device name. The deviceName must also be referenced in a container definition as a ResourceRequirement.
+* `device_type` - (Required) The Elastic Inference accelerator type to use.
+
+##### Example Usage:
+
+```hcl
+resource "aws_ecs_task_definition" "test" {
+  family                = "test"
+    container_definitions = <<TASK_DEFINITION
+  [
+  	{
+  		"cpu": 10,
+  		"command": ["sleep", "10"],
+  		"entryPoint": ["/"],
+  		"environment": [
+  			{"name": "VARNAME", "value": "VARVAL"}
+  		],
+  		"essential": true,
+  		"image": "jenkins",
+  		"memory": 128,
+  		"name": "jenkins",
+  		"portMappings": [
+  			{
+  				"containerPort": 80,
+  				"hostPort": 8080
+  			}
+  		],
+          "resourceRequirements":[
+              {
+                  "type":"InferenceAccelerator",
+                  "value":"device_1"
+              }
+          ]
+  	}
+  ]
+  TASK_DEFINITION
+
+  inference_accelerators {
+    device_name = "device_1"
+    device_type = "eia1.medium"
+  }
+}
+```
 
 ## Attributes Reference
 
