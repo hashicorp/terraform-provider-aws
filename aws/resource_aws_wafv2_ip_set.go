@@ -122,9 +122,6 @@ func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error
 			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "AWS WAF couldn’t perform your tagging operation because of an internal error") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "AWS WAF couldn’t save your changes because you tried to update or delete a resource that has changed since you last retrieved it") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -210,9 +207,6 @@ func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error
 			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "AWS WAF couldn’t save your changes because you tried to update or delete a resource that has changed since you last retrieved it") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -256,9 +250,6 @@ func resourceAwsWafv2IPSetDelete(d *schema.ResourceData, meta interface{}) error
 
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "AWS WAF couldn’t save your changes because you tried to update or delete a resource that has changed since you last retrieved it") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
