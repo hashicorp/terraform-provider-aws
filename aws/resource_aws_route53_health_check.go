@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"net"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -57,6 +58,9 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return net.ParseIP(old).Equal(net.ParseIP(new))
+				},
 			},
 			"fqdn": {
 				Type:     schema.TypeString,
@@ -114,6 +118,11 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 			"insufficient_data_health_status": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					route53.InsufficientDataHealthStatusHealthy,
+					route53.InsufficientDataHealthStatusLastKnownStatus,
+					route53.InsufficientDataHealthStatusUnhealthy,
+				}, true),
 			},
 			"reference_name": {
 				Type:     schema.TypeString,
