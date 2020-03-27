@@ -17,13 +17,13 @@ resource "aws_cloudwatch_event_rule" "console" {
   name        = "capture-aws-sign-in"
   description = "Capture each AWS Console Sign In"
 
-  event_pattern = <<PATTERN
+  event_pattern = <<EOF
 {
   "detail-type": [
     "AWS Console Sign In via CloudTrail"
   ]
 }
-PATTERN
+EOF
 }
 
 resource "aws_cloudwatch_event_target" "sns" {
