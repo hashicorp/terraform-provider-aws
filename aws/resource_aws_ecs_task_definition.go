@@ -288,7 +288,7 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
-			"inference_accelerators": {
+			"inference_accelerator": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -375,7 +375,7 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 		input.Volumes = volumes
 	}
 
-	if v, ok := d.GetOk("inference_accelerators"); ok {
+	if v, ok := d.GetOk("inference_accelerator"); ok {
 		iAcc, err := expandEcsInferenceAccelerators(v.(*schema.Set).List())
 		if err != nil {
 			return err
@@ -502,7 +502,7 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting volume: %s", err)
 	}
 
-	if err := d.Set("inference_accelerators", flattenEcsInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
+	if err := d.Set("inference_accelerator", flattenEcsInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
 		return fmt.Errorf("error setting inference accelerators: %s", err)
 	}
 

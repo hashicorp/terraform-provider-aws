@@ -111,7 +111,7 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `memory` - (Optional) The amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 * `proxy_configuration` - (Optional) The [proxy configuration](#proxy-configuration-arguments) details for the App Mesh proxy.
-* `inference_accelerators` - (Optional) The [inference accelerators](#inference-accelerators-arguments) details for Inference Accelerators.
+* `inference_accelerator` - (Optional) Configuration block(s) with Inference Accelerators settings. Detailed below.
 * `tags` - (Optional) Key-value mapping of resource tags
 
 #### Volume Block Arguments
@@ -236,7 +236,7 @@ resource "aws_ecs_task_definition" "test" {
   ]
   TASK_DEFINITION
 
-  inference_accelerators {
+  inference_accelerator {
     device_name = "device_1"
     device_type = "eia1.medium"
   }

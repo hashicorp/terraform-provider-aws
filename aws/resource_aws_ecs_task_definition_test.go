@@ -694,7 +694,7 @@ func TestAccAWSEcsTaskDefinition_inferenceAccelerator(t *testing.T) {
 				Config: testAccAWSEcsTaskDefinitionConfigInferenceAccelerator(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "inference_accelerators.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inference_accelerator.#", "1"),
 				),
 			},
 			{
@@ -1988,7 +1988,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-  inference_accelerators {
+  inference_accelerator {
     device_name = "device_1"
     device_type = "eia1.medium"
   }
