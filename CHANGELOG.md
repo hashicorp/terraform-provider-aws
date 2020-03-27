@@ -24,6 +24,7 @@ ENHANCEMENTS:
 * resource/aws_launch_template: Add `metadata_options` configuration block (support IMDSv2) [GH-12491]
 * resource/aws_msk_cluster: Add `logging_info` configuration block (support CloudWatch, Firehose, and S3 logging) [GH-12215]
 * resource/aws_mq_configuration: Support plan-time validation for `engine_type` argument [GH-11843]
+* resource/aws_route53_health_check: A dd plan-time validation to `insufficient_data_health_status` [GH-12305]
 * resource/aws_storagegateway_nfs_file_share: Add `path` attribute [GH-12530]
 
 BUG FIXES:
@@ -31,6 +32,7 @@ BUG FIXES:
 * resource/aws_db_instance: Allow restoring from snapshot into RAM shared Subnet with VPC Security Group [GH-12447]
 * resource/aws_mq_configuration: Remove extraneous `ListTags` API call during refresh [GH-11843]
 * resource/aws_neptune_cluster_instance: Add missing `configuring-log-exports` as allowed pending state [GH-12079]
+* resource/aws_route53_health_check: Do not recreate health check when using compressed ipv6 address [GH-12305]
 
 ## 2.54.0 (March 19, 2020)
 
