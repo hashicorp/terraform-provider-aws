@@ -245,22 +245,11 @@ func resourceAwsWafv2RegexPatternSetUpdate(d *schema.ResourceData, meta interfac
 
 func resourceAwsWafv2RegexPatternSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
-	var resp *wafv2.GetRegexPatternSetOutput
-	params := &wafv2.GetRegexPatternSetInput{
-		Id:    aws.String(d.Id()),
-		Name:  aws.String(d.Get("name").(string)),
-		Scope: aws.String(d.Get("scope").(string)),
-	}
+
 	log.Printf("[INFO] Deleting WAFV2 RegexPatternSet %s", d.Id())
 
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.GetRegexPatternSet(params)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error getting lock token: %s", err))
-		}
-
-		_, err = conn.DeleteRegexPatternSet(&wafv2.DeleteRegexPatternSetInput{
+		_, err := conn.DeleteRegexPatternSet(&wafv2.DeleteRegexPatternSetInput{
 			Id:        aws.String(d.Id()),
 			Name:      aws.String(d.Get("name").(string)),
 			Scope:     aws.String(d.Get("scope").(string)),
