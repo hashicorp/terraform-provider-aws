@@ -147,7 +147,7 @@ The following arguments are supported:
 * `tag_specifications` - The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
 * `tags` - (Optional) A mapping of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
-* `hibernation_options` - The hibernation options for the instance. See [Hibernation](#hibernation) below for more details.
+* `hibernation_options` - The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 
 ### Block devices
 
@@ -313,12 +313,11 @@ The `placement` block supports the following:
 * `spread_domain` - Reserved for future use.
 * `tenancy` - The tenancy of the instance (if the instance is running in a VPC). Can be `default`, `dedicated`, or `host`.
 
-### Hibernation
+### Hibernation Options
 
 The `hibernation_options` block supports the following:
 
-* `configured` - If `true`, the launched EC2 instance will hibernation enabled.
-
+* `configured` - If set to `true`, the launched EC2 instance will hibernation enabled.
 
 ### Tag Specifications
 
