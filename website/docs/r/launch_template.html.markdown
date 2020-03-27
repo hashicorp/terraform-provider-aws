@@ -71,6 +71,12 @@ resource "aws_launch_template" "foo" {
     license_configuration_arn = "arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef"
   }
 
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
+
   monitoring {
     enabled = true
   }
@@ -129,6 +135,7 @@ The following arguments are supported:
 * `kernel_id` - The kernel ID.
 * `key_name` - The key name to use for the instance.
 * `license_specification` - A list of license specifications to associate with. See [License Specification](#license-specification) below for more details.
+* `metadata_options` - (Optional) Customize the metadata options for the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - The monitoring option for the instance. See [Monitoring](#monitoring) below for more details.
 * `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network
   Interfaces](#network-interfaces) below for more details.
@@ -252,6 +259,18 @@ The `spot_options` block supports the following:
 * `max_price` - The maximum hourly price you're willing to pay for the Spot Instances.
 * `spot_instance_type` - The Spot Instance request type. Can be `one-time`, or `persistent`.
 * `valid_until` - The end date of the request.
+
+### Metadata Options
+
+The metadata options for the instances.
+
+The `metadata_options` block supports the following:
+
+* `http_endpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"` or `"disabled"`. (Default: `"enabled"`).
+* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
+* `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
+
+For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 
 ### Monitoring
 

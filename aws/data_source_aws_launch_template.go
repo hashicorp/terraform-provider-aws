@@ -202,6 +202,26 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"metadata_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_endpoint": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_tokens": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_put_response_hop_limit": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"monitoring": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -454,6 +474,10 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("instance_market_options", getInstanceMarketOptions(ltData.InstanceMarketOptions)); err != nil {
 		return fmt.Errorf("error setting instance_market_options: %s", err)
+	}
+
+	if err := d.Set("metadata_options", flattenLaunchTemplateInstanceMetadataOptions(ltData.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %s", err)
 	}
 
 	if err := d.Set("monitoring", getMonitoring(ltData.Monitoring)); err != nil {
