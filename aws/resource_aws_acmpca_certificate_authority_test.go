@@ -541,7 +541,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(certificateAuthority *a
 			TemplateArn:             aws.String("arn:aws:acm-pca:::template/RootCACertificate/V1"),
 			Validity: &acmpca.Validity{
 				Type:  aws.String(acmpca.ValidityPeriodTypeYears),
-				Value: aws.Int64(1),
+				Value: aws.Int64(10),
 			},
 		})
 		if err != nil {

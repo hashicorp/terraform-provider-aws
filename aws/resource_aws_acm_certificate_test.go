@@ -2,15 +2,15 @@ package aws
 
 import (
 	"fmt"
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
-	"os"
-	"regexp"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -151,7 +151,7 @@ func TestAccAWSAcmCertificate_root(t *testing.T) {
 
 func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -162,8 +162,9 @@ func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig_privateCert(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "arn", certificateArnRegex),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("%s.terraformtesting.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("test.%s.com", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
@@ -607,23 +608,9 @@ resource "aws_acm_certificate" "cert" {
 }
 
 func testAccAcmCertificateConfig_privateCert(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority" "test" {
-  permanent_deletion_time_in_days = 7
-  type                            = "ROOT"
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-    signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = "terraformtesting.com"
-    }
-  }
-}
-
-resource "aws_acm_certificate" "cert" {
-  domain_name               = "%s.terraformtesting.com"
+	return testAccAwsAcmpcaCertificateAuthorityConfigType(rName, acmpca.CertificateAuthorityTypeRoot) + fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name               = "test.%[1]s.com"
   certificate_authority_arn = "${aws_acmpca_certificate_authority.test.arn}"
 }
 `, rName)
