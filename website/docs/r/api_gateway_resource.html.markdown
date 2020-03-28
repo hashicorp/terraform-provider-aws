@@ -39,6 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The resource's identifier.
 * `path` - The complete path for this API resource, including all parent paths.
+* `path_part` - The last path segment of this API resource.
 
 ## Import
 
