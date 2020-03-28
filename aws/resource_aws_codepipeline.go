@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -50,6 +51,10 @@ func resourceAwsCodePipeline() *schema.Resource {
 				},
 			},
 		},
+		"region": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 	}
 
 	return &schema.Resource{
@@ -86,11 +91,12 @@ func resourceAwsCodePipeline() *schema.Resource {
 				},
 			},
 			"artifact_stores": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: artifactStoreSchema,
 				},
+				Set: resourceAwsCodePipelineArtifactStoreHash,
 			},
 			"stage": {
 				Type:     schema.TypeList,
@@ -237,7 +243,29 @@ func expandAwsCodePipelineArtifactStore(d *schema.ResourceData) *codepipeline.Ar
 		return nil
 	}
 
-	data := configs[0].(map[string]interface{})
+	_, pipelineArtifactStore := expandAwsCodePipelineArtifactStoreData(configs[0].(map[string]interface{}))
+
+	return pipelineArtifactStore
+}
+
+func expandAwsCodePipelineArtifactStores(d *schema.ResourceData) map[string]*codepipeline.ArtifactStore {
+	configs := d.Get("artifact_stores").(*schema.Set).List()
+
+	if len(configs) == 0 {
+		return nil
+	}
+
+	pipelineArtifactStores := make(map[string]*codepipeline.ArtifactStore)
+
+	for _, config := range configs {
+		region, store := expandAwsCodePipelineArtifactStoreData(config.(map[string]interface{}))
+		pipelineArtifactStores[region] = store
+	}
+
+	return pipelineArtifactStores
+}
+
+func expandAwsCodePipelineArtifactStoreData(data map[string]interface{}) (string, *codepipeline.ArtifactStore) {
 	pipelineArtifactStore := codepipeline.ArtifactStore{
 		Location: aws.String(data["location"].(string)),
 		Type:     aws.String(data["type"].(string)),
@@ -251,26 +279,15 @@ func expandAwsCodePipelineArtifactStore(d *schema.ResourceData) *codepipeline.Ar
 		}
 		pipelineArtifactStore.EncryptionKey = &ek
 	}
-	return &pipelineArtifactStore
-}
 
-func expandAwsCodePipelineArtifactStores(d *schema.ResourceData) map[string]*codepipeline.ArtifactStore {
-	configs := d.Get("artifact_stores").([]interface{})
-
-	if len(configs) == 0 {
-		return nil
-	}
-
-	pipelineArtifactStores := make(map[string]*codepipeline.ArtifactStore)
-
-	// for region, config := range configs {
-	// 	pipelineArtifactStores[region] = expandAwsCodePipelineArtifactStore(config.(*schema.ResourceData))
-	// }
-
-	return pipelineArtifactStores
+	return data["region"].(string), &pipelineArtifactStore
 }
 
 func flattenAwsCodePipelineArtifactStore(artifactStore *codepipeline.ArtifactStore) []interface{} {
+	if artifactStore == nil {
+		return []interface{}{}
+	}
+
 	values := map[string]interface{}{}
 	values["type"] = *artifactStore.Type
 	values["location"] = *artifactStore.Location
@@ -286,8 +303,10 @@ func flattenAwsCodePipelineArtifactStore(artifactStore *codepipeline.ArtifactSto
 
 func flattenAwsCodePipelineArtifactStores(artifactStores map[string]*codepipeline.ArtifactStore) []interface{} {
 	values := []interface{}{}
-	for _, artifactStore := range artifactStores {
-		values = append(values, artifactStore)
+	for region, artifactStore := range artifactStores {
+		store := flattenAwsCodePipelineArtifactStore(artifactStore)[0].(map[string]interface{})
+		store["region"] = region
+		values = append(values, store)
 	}
 	return values
 }
@@ -570,4 +589,10 @@ func resourceAwsCodePipelineDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return err
+}
+
+func resourceAwsCodePipelineArtifactStoreHash(v interface{}) int {
+	m := v.(map[string]interface{})
+
+	return hashcode.String(m["region"].(string))
 }
