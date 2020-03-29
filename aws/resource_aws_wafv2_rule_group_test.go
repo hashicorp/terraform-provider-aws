@@ -419,6 +419,72 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_And(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.and_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.and_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.and_statement.0.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.and_statement.0.statement.1.geo_match_statement.#", "1"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_NotAnd(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.0.statement.0.and_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.1.geo_match_statement.#", "1"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_OrNotAnd(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.and_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.1.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.geo_match_statement.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2RuleGroup_changeNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
@@ -889,7 +955,7 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfigByteMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 30
+  capacity = 300
   name = "%s"
   scope = "REGIONAL"
 
@@ -1373,6 +1439,161 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       geo_match_statement {
         country_codes = ["ZM", "EE", "MM"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_And(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 2
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  allow {}
+    }
+
+    statement {
+      and_statement {
+		statement {
+          geo_match_statement {
+            country_codes = ["US"]
+          }
+        }
+        statement { 
+          geo_match_statement {
+            country_codes = ["NL"]
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_NotAnd(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 2
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  allow {}
+    }
+
+    statement {
+      not_statement {
+        statement {
+          and_statement {
+            statement {
+              geo_match_statement {
+                country_codes = ["US"]
+              }
+            }
+            statement { 
+              geo_match_statement {
+                country_codes = ["NL"]
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_OrNotAnd(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 3
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  allow {}
+    }
+
+    statement {
+      or_statement {
+        statement {
+          not_statement {
+            statement {
+              and_statement {
+                statement {
+                  geo_match_statement {
+                    country_codes = ["US"]
+                  }
+                }
+                statement { 
+                  geo_match_statement {
+                    country_codes = ["NL"]
+                  }
+                }
+              }
+            }
+          }
+        }
+        statement {
+          geo_match_statement {
+            country_codes = ["DE"]
+          }
+        }
       }
     }
 

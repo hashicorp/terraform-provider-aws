@@ -95,7 +95,7 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"statement": wafv2StatementSchema(3),
+						"statement": wafv2RootStatementSchema(3),
 						"visibility_config": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -367,15 +367,65 @@ func wafv2EmptySchema() *schema.Schema {
 	}
 }
 
-func wafv2StatementSchema(level int) *schema.Schema {
+func wafv2RootStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"and_statement":        wafv2StatementSchema(level),
 				"byte_match_statement": wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":  wafv2GeoMatchStatementSchema(),
+				"not_statement":        wafv2StatementSchema(level),
+				"or_statement":         wafv2StatementSchema(level),
+			},
+		},
+	}
+}
+
+func wafv2StatementSchema(level int) *schema.Schema {
+	if level > 1 {
+		return &schema.Schema{
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"statement": {
+						Type:     schema.TypeList,
+						Required: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"and_statement":        wafv2StatementSchema(level - 1),
+								"byte_match_statement": wafv2ByteMatchStatementSchema(),
+								"geo_match_statement":  wafv2GeoMatchStatementSchema(),
+								"not_statement":        wafv2StatementSchema(level - 1),
+								"or_statement":         wafv2StatementSchema(level - 1),
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"statement": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"byte_match_statement": wafv2ByteMatchStatementSchema(),
+							"geo_match_statement":  wafv2GeoMatchStatementSchema(),
+						},
+					},
+				},
 			},
 		},
 	}
@@ -530,7 +580,7 @@ func expandWafv2Rule(m map[string]interface{}) *wafv2.Rule {
 		Name:             aws.String(m["name"].(string)),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Action:           expandWafv2RuleAction(m["action"].([]interface{})),
-		Statement:        expandWafv2Statement(m["statement"].([]interface{})),
+		Statement:        expandWafv2RootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandWafv2VisibilityConfig(m["visibility_config"].([]interface{})),
 	}
 }
@@ -558,26 +608,6 @@ func expandWafv2RuleAction(l []interface{}) *wafv2.RuleAction {
 	return action
 }
 
-func expandWafv2Statement(l []interface{}) *wafv2.Statement {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	statement := &wafv2.Statement{}
-
-	if v, ok := m["byte_match_statement"]; ok {
-		statement.ByteMatchStatement = expandWafv2ByteMatchStatement(v.([]interface{}))
-	}
-
-	if v, ok := m["geo_match_statement"]; ok {
-		statement.GeoMatchStatement = expandWafv2GeoMatchStatement(v.([]interface{}))
-	}
-
-	return statement
-}
-
 func expandWafv2VisibilityConfig(l []interface{}) *wafv2.VisibilityConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -600,6 +630,75 @@ func expandWafv2VisibilityConfig(l []interface{}) *wafv2.VisibilityConfig {
 	}
 
 	return configuration
+}
+
+func expandWafv2RootStatement(l []interface{}) *wafv2.Statement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return expandWafv2Statement(m)
+}
+
+func expandWafv2Statements(l []interface{}) []*wafv2.Statement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	statements := make([]*wafv2.Statement, 0)
+
+	for _, statement := range l {
+		if statement == nil {
+			continue
+		}
+		statements = append(statements, expandWafv2Statement(statement.(map[string]interface{})))
+	}
+
+	return statements
+}
+
+func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
+	if m == nil {
+		return nil
+	}
+
+	statement := &wafv2.Statement{}
+
+	if v, ok := m["and_statement"]; ok {
+		statement.AndStatement = expandWafv2AndStatement(v.([]interface{}))
+	}
+
+	if v, ok := m["byte_match_statement"]; ok {
+		statement.ByteMatchStatement = expandWafv2ByteMatchStatement(v.([]interface{}))
+	}
+
+	if v, ok := m["geo_match_statement"]; ok {
+		statement.GeoMatchStatement = expandWafv2GeoMatchStatement(v.([]interface{}))
+	}
+
+	if v, ok := m["not_statement"]; ok {
+		statement.NotStatement = expandWafv2NotStatement(v.([]interface{}))
+	}
+
+	if v, ok := m["or_statement"]; ok {
+		statement.OrStatement = expandWafv2OrStatement(v.([]interface{}))
+	}
+
+	return statement
+}
+
+func expandWafv2AndStatement(l []interface{}) *wafv2.AndStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.AndStatement{
+		Statements: expandWafv2Statements(m["statement"].([]interface{})),
+	}
 }
 
 func expandWafv2ByteMatchStatement(l []interface{}) *wafv2.ByteMatchStatement {
@@ -720,6 +819,37 @@ func expandWafv2GeoMatchStatement(l []interface{}) *wafv2.GeoMatchStatement {
 	}
 }
 
+func expandWafv2NotStatement(l []interface{}) *wafv2.NotStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	s := m["statement"].([]interface{})
+
+	if len(s) == 0 || s[0] == nil {
+		return nil
+	}
+
+	m = s[0].(map[string]interface{})
+
+	return &wafv2.NotStatement{
+		Statement: expandWafv2Statement(m),
+	}
+}
+
+func expandWafv2OrStatement(l []interface{}) *wafv2.OrStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.OrStatement{
+		Statements: expandWafv2Statements(m["statement"].([]interface{})),
+	}
+}
+
 func flattenWafv2Rules(r []*wafv2.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
@@ -727,7 +857,7 @@ func flattenWafv2Rules(r []*wafv2.Rule) interface{} {
 		m["action"] = flattenWafv2RuleAction(rule.Action)
 		m["name"] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
-		m["statement"] = flattenWafv2Statement(rule.Statement)
+		m["statement"] = flattenWafv2RootStatement(rule.Statement)
 		m["visibility_config"] = flattenWafv2VisibilityConfig(rule.VisibilityConfig)
 		out[i] = m
 	}
@@ -757,12 +887,33 @@ func flattenWafv2RuleAction(a *wafv2.RuleAction) interface{} {
 	return []interface{}{m}
 }
 
-func flattenWafv2Statement(s *wafv2.Statement) interface{} {
+func flattenWafv2RootStatement(s *wafv2.Statement) interface{} {
 	if s == nil {
 		return []interface{}{}
 	}
 
+	return []interface{}{flattenWafv2Statement(s)}
+}
+
+func flattenWafv2Statements(s []*wafv2.Statement) interface{} {
+	out := make([]interface{}, len(s))
+	for i, statement := range s {
+		out[i] = flattenWafv2Statement(statement)
+	}
+
+	return out
+}
+
+func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
+	if s == nil {
+		return map[string]interface{}{}
+	}
+
 	m := map[string]interface{}{}
+
+	if s.AndStatement != nil {
+		m["and_statement"] = flattenWafv2AndStatement(s.AndStatement)
+	}
 
 	if s.ByteMatchStatement != nil {
 		m["byte_match_statement"] = flattenWafv2ByteMatchStatement(s.ByteMatchStatement)
@@ -770,6 +921,26 @@ func flattenWafv2Statement(s *wafv2.Statement) interface{} {
 
 	if s.GeoMatchStatement != nil {
 		m["geo_match_statement"] = flattenWafv2GeoMatchStatement(s.GeoMatchStatement)
+	}
+
+	if s.NotStatement != nil {
+		m["not_statement"] = flattenWafv2NotStatement(s.NotStatement)
+	}
+
+	if s.OrStatement != nil {
+		m["or_statement"] = flattenWafv2OrStatement(s.OrStatement)
+	}
+
+	return m
+}
+
+func flattenWafv2AndStatement(a *wafv2.AndStatement) interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"statement": flattenWafv2Statements(a.Statements),
 	}
 
 	return []interface{}{m}
@@ -870,6 +1041,30 @@ func flattenWafv2GeoMatchStatement(g *wafv2.GeoMatchStatement) interface{} {
 
 	m := map[string]interface{}{
 		"country_codes": flattenStringList(g.CountryCodes),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2NotStatement(a *wafv2.NotStatement) interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"statement": []interface{}{flattenWafv2Statement(a.Statement)},
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2OrStatement(a *wafv2.OrStatement) interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"statement": flattenWafv2Statements(a.Statements),
 	}
 
 	return []interface{}{m}
