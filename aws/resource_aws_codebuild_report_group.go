@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-func resourceAwsCodeBuildReportGroups() *schema.Resource {
+func resourceAwsCodeBuildReportGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeBuildReportGroupsCreate,
-		Read:   resourceAwsCodeBuildReportGroupsRead,
-		Update: resourceAwsCodeBuildReportGroupsUpdate,
-		Delete: resourceAwsCodeBuildReportGroupsDelete,
+		Create: resourceAwsCodeBuildReportGroupCreate,
+		Read:   resourceAwsCodeBuildReportGroupRead,
+		Update: resourceAwsCodeBuildReportGroupUpdate,
+		Delete: resourceAwsCodeBuildReportGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -100,12 +100,12 @@ func resourceAwsCodeBuildReportGroups() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeBuildReportGroupsCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsCodeBuildReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 	createOpts := &codebuild.CreateReportGroupInput{
 		Name:         aws.String(d.Get("name").(string)),
 		Type:         aws.String(d.Get("type").(string)),
-		ExportConfig: expandAwsCodeBuildReportGroupsExportConfig(d.Get("export_config").([]interface{})),
+		ExportConfig: expandAwsCodeBuildReportGroupExportConfig(d.Get("export_config").([]interface{})),
 	}
 
 	resp, err := conn.CreateReportGroup(createOpts)
@@ -115,10 +115,10 @@ func resourceAwsCodeBuildReportGroupsCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.ReportGroup.Arn))
 
-	return resourceAwsCodeBuildReportGroupsRead(d, meta)
+	return resourceAwsCodeBuildReportGroupRead(d, meta)
 }
 
-func resourceAwsCodeBuildReportGroupsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
 	resp, err := conn.BatchGetReportGroups(&codebuild.BatchGetReportGroupsInput{
@@ -152,20 +152,20 @@ func resourceAwsCodeBuildReportGroupsRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error setting created: %s", err)
 	}
 
-	if err := d.Set("export_config", flattenAwsCodeBuildReportGroupsExportConfig(reportGroups.ExportConfig)); err != nil {
+	if err := d.Set("export_config", flattenAwsCodeBuildReportGroupExportConfig(reportGroups.ExportConfig)); err != nil {
 		return fmt.Errorf("error setting export config: %s", err)
 	}
 
 	return nil
 }
 
-func resourceAwsCodeBuildReportGroupsUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsCodeBuildReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
 	if d.HasChange("export_config") {
 		input := &codebuild.UpdateReportGroupInput{
 			Arn:          aws.String(d.Id()),
-			ExportConfig: expandAwsCodeBuildReportGroupsExportConfig(d.Get("export_config").([]interface{})),
+			ExportConfig: expandAwsCodeBuildReportGroupExportConfig(d.Get("export_config").([]interface{})),
 		}
 
 		_, err := conn.UpdateReportGroup(input)
@@ -174,10 +174,10 @@ func resourceAwsCodeBuildReportGroupsUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsCodeBuildReportGroupsRead(d, meta)
+	return resourceAwsCodeBuildReportGroupRead(d, meta)
 }
 
-func resourceAwsCodeBuildReportGroupsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsCodeBuildReportGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
 	deleteOpts := &codebuild.DeleteReportGroupInput{
@@ -191,7 +191,7 @@ func resourceAwsCodeBuildReportGroupsDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func expandAwsCodeBuildReportGroupsExportConfig(config []interface{}) *codebuild.ReportExportConfig {
+func expandAwsCodeBuildReportGroupExportConfig(config []interface{}) *codebuild.ReportExportConfig {
 	if len(config) == 0 {
 		return nil
 	}
@@ -204,26 +204,26 @@ func expandAwsCodeBuildReportGroupsExportConfig(config []interface{}) *codebuild
 	}
 
 	if v, ok := s["s3_destination"]; ok {
-		exportConfig.S3Destination = expandAwsCodeBuildReportGroupsS3ReportExportConfig(v.([]interface{}))
+		exportConfig.S3Destination = expandAwsCodeBuildReportGroupS3ReportExportConfig(v.([]interface{}))
 	}
 
 	return exportConfig
 }
 
-func flattenAwsCodeBuildReportGroupsExportConfig(config *codebuild.ReportExportConfig) []map[string]interface{} {
+func flattenAwsCodeBuildReportGroupExportConfig(config *codebuild.ReportExportConfig) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
 	if config == nil {
 		return nil
 	}
 
-	settings["s3_destination"] = flattenAwsCodeBuildReportGroupsS3ReportExportConfig(config.S3Destination)
+	settings["s3_destination"] = flattenAwsCodeBuildReportGroupS3ReportExportConfig(config.S3Destination)
 	settings["type"] = aws.StringValue(config.ExportConfigType)
 
 	return []map[string]interface{}{settings}
 }
 
-func expandAwsCodeBuildReportGroupsS3ReportExportConfig(config []interface{}) *codebuild.S3ReportExportConfig {
+func expandAwsCodeBuildReportGroupS3ReportExportConfig(config []interface{}) *codebuild.S3ReportExportConfig {
 	if len(config) == 0 {
 		return nil
 	}
@@ -253,7 +253,7 @@ func expandAwsCodeBuildReportGroupsS3ReportExportConfig(config []interface{}) *c
 	return s3ReportExportConfig
 }
 
-func flattenAwsCodeBuildReportGroupsS3ReportExportConfig(config *codebuild.S3ReportExportConfig) []map[string]interface{} {
+func flattenAwsCodeBuildReportGroupS3ReportExportConfig(config *codebuild.S3ReportExportConfig) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
 	if config == nil {
