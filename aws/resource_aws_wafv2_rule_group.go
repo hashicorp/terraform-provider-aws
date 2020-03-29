@@ -69,7 +69,7 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 				}, false),
 			},
 			"rule": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -158,7 +158,7 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
-		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
+		Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
@@ -254,7 +254,7 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 		Id:               aws.String(d.Id()),
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
-		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
+		Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
