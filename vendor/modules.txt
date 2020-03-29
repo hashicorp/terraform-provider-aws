@@ -23,7 +23,7 @@ github.com/apparentlymart/go-cidr/cidr
 github.com/apparentlymart/go-textseg/textseg
 # github.com/armon/go-radix v1.0.0
 github.com/armon/go-radix
-# github.com/aws/aws-sdk-go v1.29.20
+# github.com/aws/aws-sdk-go v1.29.24
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
@@ -218,7 +218,7 @@ github.com/bflad/tfproviderdocs/check
 github.com/bflad/tfproviderdocs/check/sidenavigation
 github.com/bflad/tfproviderdocs/command
 github.com/bflad/tfproviderdocs/version
-# github.com/bflad/tfproviderlint v0.11.0
+# github.com/bflad/tfproviderlint v0.14.0
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/helper/analysisutils
 github.com/bflad/tfproviderlint/helper/astutils
@@ -283,6 +283,9 @@ github.com/bflad/tfproviderlint/passes/S031
 github.com/bflad/tfproviderlint/passes/S032
 github.com/bflad/tfproviderlint/passes/S033
 github.com/bflad/tfproviderlint/passes/S034
+github.com/bflad/tfproviderlint/passes/S035
+github.com/bflad/tfproviderlint/passes/S036
+github.com/bflad/tfproviderlint/passes/S037
 github.com/bflad/tfproviderlint/passes/V001
 github.com/bflad/tfproviderlint/passes/V002
 github.com/bflad/tfproviderlint/passes/V003
@@ -298,8 +301,10 @@ github.com/bflad/tfproviderlint/passes/helper/resource/testmatchresourceattrcall
 github.com/bflad/tfproviderlint/passes/helper/schema/crudfuncinfo
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatagetchangeassignstmt
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatagetokexistscallexpr
+github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatapartialcallexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatapartialselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetcallexpr
+github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialcallexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourceinfo
 github.com/bflad/tfproviderlint/passes/helper/schema/resourceinfodatasourceonly
@@ -310,7 +315,9 @@ github.com/bflad/tfproviderlint/passes/helper/schema/schemainfocomputedonly
 github.com/bflad/tfproviderlint/passes/helper/schema/schemamapcompositelit
 github.com/bflad/tfproviderlint/passes/helper/schema/schemavalidatefuncinfo
 github.com/bflad/tfproviderlint/passes/helper/validation/cidrnetworkselectorexpr
+github.com/bflad/tfproviderlint/passes/helper/validation/iprangecallexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/iprangeselectorexpr
+github.com/bflad/tfproviderlint/passes/helper/validation/singleipcallexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/singleipselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/validatejsonstringselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/validatelistuniquestringsselectorexpr
@@ -516,7 +523,7 @@ github.com/hashicorp/logutils
 github.com/hashicorp/terraform-config-inspect/tfconfig
 # github.com/hashicorp/terraform-json v0.4.0
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-sdk v1.7.0
+# github.com/hashicorp/terraform-plugin-sdk v1.8.0
 github.com/hashicorp/terraform-plugin-sdk/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/customdiff

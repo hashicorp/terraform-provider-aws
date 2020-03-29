@@ -9,11 +9,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -275,6 +278,37 @@ func testAccCheckListHasSomeElementAttrPair(nameFirst string, resourceAttr strin
 	}
 }
 
+// testAccCheckResourceAttrEquivalentJSON is a TestCheckFunc that compares a JSON value with an expected value. Both JSON
+// values are normalized before being compared.
+func testAccCheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := primaryInstanceState(s, resourceName)
+		if err != nil {
+			return err
+		}
+
+		v, ok := is.Attributes[attributeName]
+		if !ok {
+			return fmt.Errorf("%s: No attribute %q found", resourceName, attributeName)
+		}
+
+		vNormal, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("%s: Error normalizing JSON in %q: %w", resourceName, attributeName, err)
+		}
+
+		expectedNormal, err := structure.NormalizeJsonString(expectedJSON)
+		if err != nil {
+			return fmt.Errorf("Error normalizing expected JSON: %w", err)
+		}
+
+		if vNormal != expectedNormal {
+			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", resourceName, attributeName, expectedJSON, v)
+		}
+		return nil
+	}
+}
+
 // Copied and inlined from the SDK testing code
 func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	rs, ok := s.RootModule().Resources[name]
@@ -400,6 +434,18 @@ func testAccOrganizationsAccountPreCheck(t *testing.T) {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
+}
+
+func testAccOrganizationsEnabledPreCheck(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	input := &organizations.DescribeOrganizationInput{}
+	_, err := conn.DescribeOrganization(input)
+	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		t.Skip("this AWS account must be an existing member of an AWS Organization")
+	}
+	if err != nil {
+		t.Fatalf("error describing AWS Organization: %s", err)
+	}
 }
 
 func testAccAlternateAccountProviderConfig() string {
@@ -1093,6 +1139,53 @@ func testAccCheckAWSProviderPartition(providers *[]*schema.Provider, expectedPar
 	}
 }
 
+// testAccPreCheckHasDefaultVpcOrEc2Classic checks that the test region has a default VPC or has the EC2-Classic platform.
+// This check is useful to ensure that an instance can be launched without specifying a subnet.
+func testAccPreCheckHasDefaultVpcOrEc2Classic(t *testing.T) {
+	client := testAccProvider.Meta().(*AWSClient)
+
+	if !testAccHasDefaultVpc(t) && !hasEc2Classic(client.supportedplatforms) {
+		t.Skipf("skipping tests; %s does not have a default VPC or EC2-Classic", client.region)
+	}
+}
+
+func testAccHasDefaultVpc(t *testing.T) bool {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	resp, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
+		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
+	})
+	if testAccPreCheckSkipError(err) ||
+		len(resp.AccountAttributes) == 0 ||
+		len(resp.AccountAttributes[0].AttributeValues) == 0 ||
+		aws.StringValue(resp.AccountAttributes[0].AttributeValues[0].AttributeValue) == "none" {
+		return false
+	}
+	if err != nil {
+		t.Fatalf("error describing EC2 account attributes: %s", err)
+	}
+
+	return true
+}
+
+// testAccPreCheckOffersEc2InstanceType checks that the test region offers the specified EC2 instance type.
+func testAccPreCheckOffersEc2InstanceType(t *testing.T, instanceType string) {
+	client := testAccProvider.Meta().(*AWSClient)
+
+	resp, err := client.ec2conn.DescribeInstanceTypeOfferings(&ec2.DescribeInstanceTypeOfferingsInput{
+		Filters: buildEC2AttributeFilterList(map[string]string{
+			"instance-type": instanceType,
+		}),
+		LocationType: aws.String(ec2.LocationTypeRegion),
+	})
+	if testAccPreCheckSkipError(err) || len(resp.InstanceTypeOfferings) == 0 {
+		t.Skipf("skipping tests; %s does not offer EC2 instance type: %s", client.region, instanceType)
+	}
+	if err != nil {
+		t.Fatalf("error describing EC2 instance type offerings: %s", err)
+	}
+}
+
 func testAccAWSProviderConfigEndpoints(endpoints string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
@@ -1255,4 +1348,15 @@ provider "aws" {
 	}
 }
 `, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
+}
+
+// composeConfig can be called to concatenate multiple strings to build test configurations
+func composeConfig(config ...string) string {
+	var str strings.Builder
+
+	for _, conf := range config {
+		str.WriteString(conf)
+	}
+
+	return str.String()
 }

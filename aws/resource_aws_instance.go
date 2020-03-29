@@ -524,6 +524,35 @@ func resourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
+
+			"metadata_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_endpoint": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{ec2.InstanceMetadataEndpointStateEnabled, ec2.InstanceMetadataEndpointStateDisabled}, false),
+						},
+						"http_tokens": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{ec2.HttpTokensStateOptional, ec2.HttpTokensStateRequired}, false),
+						},
+						"http_put_response_hop_limit": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 64),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -572,6 +601,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		CreditSpecification:               instanceOpts.CreditSpecification,
 		CpuOptions:                        instanceOpts.CpuOptions,
 		HibernationOptions:                instanceOpts.HibernationOptions,
+		MetadataOptions:                   instanceOpts.MetadataOptions,
 		TagSpecifications:                 tagSpecifications,
 	}
 
@@ -721,6 +751,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if instance.HibernationOptions != nil {
 		d.Set("hibernation", instance.HibernationOptions.Configured)
+	}
+
+	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %s", err)
 	}
 
 	d.Set("ami", instance.ImageId)
@@ -1207,6 +1241,27 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 			if err != nil {
 				return fmt.Errorf("Error updating Instance credit specification: %s", err)
+			}
+		}
+	}
+
+	if d.HasChange("metadata_options") && !d.IsNewResource() {
+		if v, ok := d.GetOk("metadata_options"); ok {
+			if mo, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+				log.Printf("[DEBUG] Modifying metadata options for Instance (%s)", d.Id())
+				input := &ec2.ModifyInstanceMetadataOptionsInput{
+					InstanceId:   aws.String(d.Id()),
+					HttpEndpoint: aws.String(mo["http_endpoint"].(string)),
+				}
+				if mo["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
+					// These parameters are not allowed unless HttpEndpoint is enabled
+					input.HttpTokens = aws.String(mo["http_tokens"].(string))
+					input.HttpPutResponseHopLimit = aws.Int64(int64(mo["http_put_response_hop_limit"].(int)))
+				}
+				_, err := conn.ModifyInstanceMetadataOptions(input)
+				if err != nil {
+					return fmt.Errorf("Error updating metadata options: %s", err)
+				}
 			}
 		}
 	}
@@ -1815,6 +1870,7 @@ type awsInstanceOpts struct {
 	CreditSpecification               *ec2.CreditSpecificationRequest
 	CpuOptions                        *ec2.CpuOptionsRequest
 	HibernationOptions                *ec2.HibernationOptionsRequest
+	MetadataOptions                   *ec2.InstanceMetadataOptionsRequest
 }
 
 func buildAwsInstanceOpts(
@@ -1827,6 +1883,7 @@ func buildAwsInstanceOpts(
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
 		ImageID:               aws.String(d.Get("ami").(string)),
 		InstanceType:          aws.String(instanceType),
+		MetadataOptions:       expandEc2InstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
 	}
 
 	// Set default cpu_credits as Unlimited for T3 instance type
@@ -2100,4 +2157,44 @@ func getCreditSpecifications(conn *ec2.EC2, instanceId string) ([]map[string]int
 	}
 
 	return creditSpecifications, nil
+}
+
+func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptionsRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	opts := &ec2.InstanceMetadataOptionsRequest{
+		HttpEndpoint: aws.String(m["http_endpoint"].(string)),
+	}
+
+	if m["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
+		// These parameters are not allowed unless HttpEndpoint is enabled
+
+		if v, ok := m["http_tokens"].(string); ok && v != "" {
+			opts.HttpTokens = aws.String(v)
+		}
+
+		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
+			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
+		}
+	}
+
+	return opts
+}
+
+func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
+	if opts == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
+		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
+		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+	}
+
+	return []interface{}{m}
 }

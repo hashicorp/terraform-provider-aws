@@ -279,6 +279,26 @@ func dataSourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
+			"metadata_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_endpoint": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_tokens": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_put_response_hop_limit": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -484,6 +504,10 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	if err := d.Set("credit_specification", creditSpecifications); err != nil {
 		return fmt.Errorf("error setting credit_specification: %s", err)
+	}
+
+	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %s", err)
 	}
 
 	return nil

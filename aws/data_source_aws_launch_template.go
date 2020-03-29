@@ -19,7 +19,7 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -202,6 +202,26 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"metadata_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_endpoint": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_tokens": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_put_response_hop_limit": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"monitoring": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -336,7 +356,8 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags":   tagsSchemaComputed(),
+			"filter": dataSourceFiltersSchema(),
 		},
 	}
 }
@@ -344,11 +365,22 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	log.Printf("[DEBUG] Reading launch template %s", d.Get("name"))
+	filters, filtersOk := d.GetOk("filter")
+	name, nameOk := d.GetOk("name")
+	tags, tagsOk := d.GetOk("tags")
 
-	dlt, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
-		LaunchTemplateNames: []*string{aws.String(d.Get("name").(string))},
-	})
+	params := &ec2.DescribeLaunchTemplatesInput{}
+	if filtersOk {
+		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+	}
+	if nameOk {
+		params.LaunchTemplateNames = []*string{aws.String(name.(string))}
+	}
+	if tagsOk {
+		params.Filters = append(params.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
+	}
+
+	dlt, err := conn.DescribeLaunchTemplates(params)
 
 	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
@@ -442,6 +474,10 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("instance_market_options", getInstanceMarketOptions(ltData.InstanceMarketOptions)); err != nil {
 		return fmt.Errorf("error setting instance_market_options: %s", err)
+	}
+
+	if err := d.Set("metadata_options", flattenLaunchTemplateInstanceMetadataOptions(ltData.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %s", err)
 	}
 
 	if err := d.Set("monitoring", getMonitoring(ltData.Monitoring)); err != nil {

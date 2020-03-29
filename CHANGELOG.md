@@ -1,12 +1,89 @@
-## 2.54.0 (Unreleased)
+## 2.56.0 (Unreleased)
+## 2.55.0 (March 27, 2020)
 
 FEATURES:
 
-* **New Resource:** `aws_kinesis_video_stream` [GH-8291]
+* **New Resource:** `aws_ec2_availability_zone_group` ([#12400](https://github.com/terraform-providers/terraform-provider-aws/issues/12400))
+
+ENHANCEMENTS:
+
+* data-source/aws_availability_zone: Add `all_availability_zones` and `filter` arguments ([#12400](https://github.com/terraform-providers/terraform-provider-aws/issues/12400))
+* data-source/aws_availability_zone: Add `group_name`, `network_border_group`, and `opt_in_status` attributes ([#12400](https://github.com/terraform-providers/terraform-provider-aws/issues/12400))
+* data-source/aws_availability_zones: Add `all_availability_zones` and `filter` arguments ([#12400](https://github.com/terraform-providers/terraform-provider-aws/issues/12400))
+* data-source/aws_availability_zones: Add `group_names` attribute ([#12400](https://github.com/terraform-providers/terraform-provider-aws/issues/12400))
+* data-source/aws_ec2_transit_gateway_dx_gateway_attachement: Add `filter` and `tags` arguments ([#12516](https://github.com/terraform-providers/terraform-provider-aws/issues/12516))
+* data-source/aws_ec2_transit_gateway_vpn_attachment: Add `filter` and `tags` arguments ([#12415](https://github.com/terraform-providers/terraform-provider-aws/issues/12415))
+* data-source/aws_instance: Add `metadata_options` attribute ([#12491](https://github.com/terraform-providers/terraform-provider-aws/issues/12491))
+* data-source/aws_launch_template: Add `filter` and `tags` arguments ([#12403](https://github.com/terraform-providers/terraform-provider-aws/issues/12403))
+* data-source/aws_launch_template: Add `metadata_options` attribute ([#12491](https://github.com/terraform-providers/terraform-provider-aws/issues/12491))
+* data-source/aws_prefix_list: Add `filter` argument ([#12416](https://github.com/terraform-providers/terraform-provider-aws/issues/12416))
+* data-source/aws_vpc_endpoint_service: Add `filter` and `tags` arguments ([#12404](https://github.com/terraform-providers/terraform-provider-aws/issues/12404))
+* resource/aws_athena_workgroup: Add `force_destroy` argument ([#12254](https://github.com/terraform-providers/terraform-provider-aws/issues/12254))
+* resource/aws_cloudwatch_log_metric_filter: Support resource import ([#11992](https://github.com/terraform-providers/terraform-provider-aws/issues/11992))
+* resource/aws_flow_log: Add `max_aggregation_interval` argument ([#12483](https://github.com/terraform-providers/terraform-provider-aws/issues/12483))
+* resource/aws_instance: Add `metadata_options` configuration block (support IMDSv2) ([#12491](https://github.com/terraform-providers/terraform-provider-aws/issues/12491))
+* resource/aws_launch_template: Add `metadata_options` configuration block (support IMDSv2) ([#12491](https://github.com/terraform-providers/terraform-provider-aws/issues/12491))
+* resource/aws_msk_cluster: Add `logging_info` configuration block (support CloudWatch, Firehose, and S3 logging) ([#12215](https://github.com/terraform-providers/terraform-provider-aws/issues/12215))
+* resource/aws_mq_configuration: Support plan-time validation for `engine_type` argument ([#11843](https://github.com/terraform-providers/terraform-provider-aws/issues/11843))
+* resource/aws_route53_health_check: A dd plan-time validation to `insufficient_data_health_status` ([#12305](https://github.com/terraform-providers/terraform-provider-aws/issues/12305))
+* resource/aws_storagegateway_nfs_file_share: Add `path` attribute ([#12530](https://github.com/terraform-providers/terraform-provider-aws/issues/12530))
 
 BUG FIXES:
 
-* resource/aws_ebs_snapshot_copy: Return API errors instead of panic if unable to read snapshot [GH-12283]
+* resource/aws_db_instance: Allow restoring from snapshot into RAM shared Subnet with VPC Security Group ([#12447](https://github.com/terraform-providers/terraform-provider-aws/issues/12447))
+* resource/aws_mq_configuration: Remove extraneous `ListTags` API call during refresh ([#11843](https://github.com/terraform-providers/terraform-provider-aws/issues/11843))
+* resource/aws_neptune_cluster_instance: Add missing `configuring-log-exports` as allowed pending state ([#12079](https://github.com/terraform-providers/terraform-provider-aws/issues/12079))
+* resource/aws_route53_health_check: Do not recreate health check when using compressed ipv6 address ([#12305](https://github.com/terraform-providers/terraform-provider-aws/issues/12305))
+
+## 2.54.0 (March 19, 2020)
+
+FEATURES:
+
+* **New Resource:** `aws_kinesis_video_stream` ([#8291](https://github.com/terraform-providers/terraform-provider-aws/issues/8291))
+* **New Resource:** `aws_securityhub_member` ([#6975](https://github.com/terraform-providers/terraform-provider-aws/issues/6975))
+
+ENHANCEMENTS:
+
+* data-source/aws_iam_role: Add `tags` attribute ([#12349](https://github.com/terraform-providers/terraform-provider-aws/issues/12349))
+* data-source/aws_lb: Add `drop_invalid_header_fields` attribute ([#11257](https://github.com/terraform-providers/terraform-provider-aws/issues/11257))
+* provider: Support AWS shared configuration file `duration_seconds` setting for assume role ([#12359](https://github.com/terraform-providers/terraform-provider-aws/issues/12359))
+* resource/aws_backup_plan: Support resource import ([#12381](https://github.com/terraform-providers/terraform-provider-aws/issues/12381))
+* resource/aws_cognito_user_pool: Add `email_configuration` configuration block `from_email_address` argument ([#11607](https://github.com/terraform-providers/terraform-provider-aws/issues/11607))
+* resource/aws_cognito_user_pool: Add `username_configuration` configuration block (Support case insensitive usernames) ([#12317](https://github.com/terraform-providers/terraform-provider-aws/issues/12317))
+* resource/aws_cognito_user_pool_client: Add `analytics_configuration` configuration block (Support Pinpoint analytics) ([#11762](https://github.com/terraform-providers/terraform-provider-aws/issues/11762))
+* resource/aws_cognito_user_pool_client: Add `prevent_user_existence_errors` argument ([#11604](https://github.com/terraform-providers/terraform-provider-aws/issues/11604))
+* resource/aws_dlm_lifecycle_policy: Support plan-time validation for 1 hour schedules in `policy_details` `schedule` `create_rule` `interval` argument ([#12327](https://github.com/terraform-providers/terraform-provider-aws/issues/12327))
+* resource/aws_inspector_assessment_template: Add `tags` argument ([#12375](https://github.com/terraform-providers/terraform-provider-aws/issues/12375))
+* resource/aws_inspector_assessment_template: Support resource import ([#12375](https://github.com/terraform-providers/terraform-provider-aws/issues/12375))
+* resource/aws_lambda_function: Support plan-time validation for `handler` argument ([#12411](https://github.com/terraform-providers/terraform-provider-aws/issues/12411))
+* resource/aws_lb: Add `drop_invalid_header_fields` argument ([#11257](https://github.com/terraform-providers/terraform-provider-aws/issues/11257))
+* resource/aws_nat_gateway: Support tag-on-create ([#12347](https://github.com/terraform-providers/terraform-provider-aws/issues/12347))
+* resource/aws_opsworks_application: Support resource import ([#12383](https://github.com/terraform-providers/terraform-provider-aws/issues/12383))
+* resource/aws_opsworks_application: Add plan-time validation to `data_source_arn` and `data_source_type` arguments and `app_source` configuration block `type` argument ([#12383](https://github.com/terraform-providers/terraform-provider-aws/issues/12383))
+* resource/aws_opsworks_custom_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_ganglia_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_haproxy_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_java_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_memcached_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_mysql_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_nodejs_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_php_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_rails_app_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_opsworks_static_web_layer: Add `tags` argument, `arn` attribute, and plan-time validation to `custom_instance_profile_arn` argument ([#11667](https://github.com/terraform-providers/terraform-provider-aws/issues/11667))
+* resource/aws_vpc_dhcp_options_association: Support resource import ([#7252](https://github.com/terraform-providers/terraform-provider-aws/issues/7252))
+
+BUG FIXES:
+
+* resource/aws_api_gateway_rest_api: Ignore ordering differences for `endpoint_configuration` configuration block `vpc_endpoint_ids` argument ([#12350](https://github.com/terraform-providers/terraform-provider-aws/issues/12350))
+* resource/aws_backup_selection: Automatically retry on additional IAM Role eventual consistency error ([#10687](https://github.com/terraform-providers/terraform-provider-aws/issues/10687))
+* resource/aws_backup_vault: Remove resource from Terraform state when deleted outside Terraform ([#11845](https://github.com/terraform-providers/terraform-provider-aws/issues/11845))
+* resource/aws_cognito_user_pool_client: Ignore ordering differences for `callback_urls`, `logout_urls`, and `supported_identity_providers` arguments ([#12388](https://github.com/terraform-providers/terraform-provider-aws/issues/12388))
+* resource/aws_ebs_snapshot_copy: Return API errors instead of panic if unable to read snapshot ([#12283](https://github.com/terraform-providers/terraform-provider-aws/issues/12283))
+* resource/aws_kinesis_stream: Ensure `kms_key_id` argument in-place updates complete successfully ([#12008](https://github.com/terraform-providers/terraform-provider-aws/issues/12008))
+* resource/aws_lambda_alias: Propose resource recreation for `function_name` argument updates ([#11170](https://github.com/terraform-providers/terraform-provider-aws/issues/11170))
+* resource/aws_opsworks_application: Mark `app_source` configuration block `ssh_key` argument as sensitive ([#11984](https://github.com/terraform-providers/terraform-provider-aws/issues/11984))
+* resource/aws_opsworks_stack: Mark `custom_cookbooks_source` configuration block `ssh_key` argument as sensitive ([#11984](https://github.com/terraform-providers/terraform-provider-aws/issues/11984))
+* resource/aws_s3_bucket: Retry `NoSuchBucket` error when setting tags during resource creation ([#12418](https://github.com/terraform-providers/terraform-provider-aws/issues/12418))
 
 ## 2.53.0 (March 12, 2020)
 
@@ -3201,7 +3278,7 @@ BUG FIXES:
 
 NOTES:
 
-This release is happening outside the normal release schedule to accomodate a crash fix for the `aws_lb_target_group` resource. It appears an ELBv2 service update rolling out currently is the root cause. The potential for this crash has been present since the initial resource in Terraform 0.7.7 and all versions of the AWS provider up to v1.13.0.
+This release is happening outside the normal release schedule to accommodate a crash fix for the `aws_lb_target_group` resource. It appears an ELBv2 service update rolling out currently is the root cause. The potential for this crash has been present since the initial resource in Terraform 0.7.7 and all versions of the AWS provider up to v1.13.0.
 
 FEATURES:
 
@@ -3513,7 +3590,7 @@ BUG FIXES:
 * resource/aws_appautoscaling_policy: Support additional predefined metric types in validation [[#3122](https://github.com/terraform-providers/terraform-provider-aws/issues/3122)]]
 * resource/aws_dynamodb_table: Recognize changes in `non_key_attributes` ([#3136](https://github.com/terraform-providers/terraform-provider-aws/issues/3136))
 * resource/aws_ebs_snapshot: Fix `kms_key_id` attribute handling ([#3085](https://github.com/terraform-providers/terraform-provider-aws/issues/3085))
-* resource/aws_eip_assocation: Retry association for pending instances ([#3072](https://github.com/terraform-providers/terraform-provider-aws/issues/3072))
+* resource/aws_eip_association: Retry association for pending instances ([#3072](https://github.com/terraform-providers/terraform-provider-aws/issues/3072))
 * resource/aws_elastic_beanstalk_application: Prevent crash on reading missing application ([#3171](https://github.com/terraform-providers/terraform-provider-aws/issues/3171))
 * resource/aws_kinesis_firehose_delivery_stream: Prevent panic on missing S3 configuration prefix ([#3073](https://github.com/terraform-providers/terraform-provider-aws/issues/3073))
 * resource/aws_lambda_function: Retry updates for IAM eventual consistency ([#3116](https://github.com/terraform-providers/terraform-provider-aws/issues/3116))

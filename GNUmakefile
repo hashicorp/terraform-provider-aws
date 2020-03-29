@@ -54,6 +54,7 @@ docscheck:
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-ignore-side-navigation-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_kms_secret \
 		-require-resource-subcategory
+	@misspell -error -source text CHANGELOG.md
 
 lint:
 	@echo "==> Checking source code against linters..."
@@ -101,6 +102,9 @@ lint:
 		-S032 \
 		-S033 \
 		-S034 \
+		-S035 \
+		-S036 \
+		-S037 \
 		-V002 \
 		-V003 \
 		-V004 \

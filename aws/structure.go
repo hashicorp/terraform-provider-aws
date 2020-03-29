@@ -2530,6 +2530,10 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 		m["reply_to_email_address"] = *s.ReplyToEmailAddress
 	}
 
+	if s.From != nil {
+		m["from_email_address"] = *s.From
+	}
+
 	if s.SourceArn != nil {
 		m["source_arn"] = *s.SourceArn
 	}
@@ -3477,6 +3481,26 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 	}
 
 	return values
+}
+
+func expandCognitoUserPoolUsernameConfiguration(config map[string]interface{}) *cognitoidentityprovider.UsernameConfigurationType {
+	usernameConfigurationType := &cognitoidentityprovider.UsernameConfigurationType{
+		CaseSensitive: aws.Bool(config["case_sensitive"].(bool)),
+	}
+
+	return usernameConfigurationType
+}
+
+func flattenCognitoUserPoolUsernameConfiguration(u *cognitoidentityprovider.UsernameConfigurationType) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if u == nil {
+		return nil
+	}
+
+	m["case_sensitive"] = *u.CaseSensitive
+
+	return []map[string]interface{}{m}
 }
 
 func expandCognitoUserPoolVerificationMessageTemplate(config map[string]interface{}) *cognitoidentityprovider.VerificationMessageTemplateType {

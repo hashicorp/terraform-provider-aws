@@ -2123,6 +2123,11 @@ func testAccAWSClusterConfig_AvailabilityZones(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_rds_cluster" "test" {
@@ -2164,6 +2169,11 @@ func testAccAWSClusterConfig_DbSubnetGroupName(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_rds_cluster" "test" {
@@ -2213,6 +2223,11 @@ func testAccAWSClusterConfig_s3Restore(bucketName string, bucketPrefix string, u
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_region" "current" {}
@@ -2799,6 +2814,13 @@ func testAccAWSClusterConfigEncryptedCrossRegionReplica(n int) string {
 	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "alternate" {
   provider = "aws.alternate"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_caller_identity" "current" {}
@@ -2935,6 +2957,11 @@ func testAccAWSRDSClusterConfig_EngineMode_Multimaster(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {

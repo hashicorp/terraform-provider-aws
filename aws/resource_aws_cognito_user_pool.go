@@ -151,6 +151,10 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validateArn,
 						},
+						"from_email_address": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"email_sending_account": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -455,6 +459,21 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ConflictsWith: []string{"alias_attributes"},
 			},
 
+			"username_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"case_sensitive": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+
 			"user_pool_add_ons": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -569,6 +588,10 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 				emailConfigurationType.SourceArn = aws.String(v.(string))
 			}
 
+			if v, ok := config["from_email_address"]; ok && v.(string) != "" {
+				emailConfigurationType.From = aws.String(v.(string))
+			}
+
 			if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
 				emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
 			}
@@ -642,6 +665,15 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 
 	if v, ok := d.GetOk("username_attributes"); ok {
 		params.UsernameAttributes = expandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("username_configuration"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			params.UsernameConfiguration = expandCognitoUserPoolUsernameConfiguration(config)
+		}
 	}
 
 	if v, ok := d.GetOk("user_pool_add_ons"); ok {
@@ -834,6 +866,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("username_attributes", flattenStringList(resp.UserPool.UsernameAttributes))
 	}
 
+	if err := d.Set("username_configuration", flattenCognitoUserPoolUsernameConfiguration(resp.UserPool.UsernameConfiguration)); err != nil {
+		return fmt.Errorf("Failed setting username_configuration: %s", err)
+	}
+
 	if err := d.Set("user_pool_add_ons", flattenCognitoUserPoolUserPoolAddOns(resp.UserPool.UserPoolAddOns)); err != nil {
 		return fmt.Errorf("Failed setting user_pool_add_ons: %s", err)
 	}
@@ -997,6 +1033,10 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 				if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
 					emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
+				}
+
+				if v, ok := config["from_email_address"]; ok && v.(string) != "" {
+					emailConfigurationType.From = aws.String(v.(string))
 				}
 
 				params.EmailConfiguration = emailConfigurationType
