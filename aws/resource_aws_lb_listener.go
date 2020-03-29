@@ -104,6 +104,58 @@ func resourceAwsLbListener() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressIfDefaultActionTypeNot("forward"),
+							ConflictsWith:    []string{"default_action.0.forward"},
+						},
+
+						"forward": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot("forward"),
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"target_group": {
+										Type:     schema.TypeSet,
+										MinItems: 2,
+										MaxItems: 5,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"arn": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"weight": {
+													Type:         schema.TypeInt,
+													ValidateFunc: validation.IntBetween(0, 999),
+													Default:      1,
+													Optional:     true,
+												},
+											},
+										},
+									},
+									"stickiness": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+												"duration": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(1, 604800),
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 
 						"redirect": {
@@ -372,7 +424,9 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 
 		switch defaultActionMap["type"].(string) {
 		case "forward":
-			action.TargetGroupArn = aws.String(defaultActionMap["target_group_arn"].(string))
+			if err := lbListenerDefaultRuleActionForward(defaultActionMap, action); err != nil {
+				return err
+			}
 
 		case "redirect":
 			redirectList := defaultActionMap["redirect"].([]interface{})
@@ -586,7 +640,30 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 
 		switch aws.StringValue(defaultAction.Type) {
 		case "forward":
-			defaultActionMap["target_group_arn"] = aws.StringValue(defaultAction.TargetGroupArn)
+			if aws.StringValue(defaultAction.TargetGroupArn) != "" {
+				defaultActionMap["target_group_arn"] = aws.StringValue(defaultAction.TargetGroupArn)
+			} else {
+				targetGroups := make([]map[string]interface{}, 0, len(defaultAction.ForwardConfig.TargetGroups))
+				for _, targetGroup := range defaultAction.ForwardConfig.TargetGroups {
+					targetGroups = append(targetGroups,
+						map[string]interface{}{
+							"arn":    aws.StringValue(targetGroup.TargetGroupArn),
+							"weight": aws.Int64Value(targetGroup.Weight),
+						},
+					)
+				}
+				defaultActionMap["forward"] = []map[string]interface{}{
+					{
+						"target_group": targetGroups,
+						"stickiness": []map[string]interface{}{
+							{
+								"enabled":  aws.BoolValue(defaultAction.ForwardConfig.TargetGroupStickinessConfig.Enabled),
+								"duration": aws.Int64Value(defaultAction.ForwardConfig.TargetGroupStickinessConfig.DurationSeconds),
+							},
+						},
+					},
+				}
+			}
 
 		case "redirect":
 			defaultActionMap["redirect"] = []map[string]interface{}{
@@ -701,7 +778,9 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 
 			switch defaultActionMap["type"].(string) {
 			case "forward":
-				action.TargetGroupArn = aws.String(defaultActionMap["target_group_arn"].(string))
+				if err := lbListenerDefaultRuleActionForward(defaultActionMap, action); err != nil {
+					return err
+				}
 
 			case "redirect":
 				redirectList := defaultActionMap["redirect"].([]interface{})
@@ -844,5 +923,48 @@ func resourceAwsLbListenerDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error deleting Listener: %s", err)
 	}
 
+	return nil
+}
+
+func lbListenerDefaultRuleActionForward(actionMap map[string]interface{}, action *elbv2.Action) error {
+	forwardList := actionMap["forward"].([]interface{})
+	targetGroupArn := actionMap["target_group_arn"].(string)
+
+	if targetGroupArn != "" {
+		action.TargetGroupArn = aws.String(targetGroupArn)
+	} else if len(forwardList) == 1 {
+		forwardMap := forwardList[0].(map[string]interface{})
+		targetGroupsInput := forwardMap["target_group"].(*schema.Set).List()
+		weightedTargetGroups := make([]*elbv2.TargetGroupTuple, len(targetGroupsInput))
+
+		for i, input := range targetGroupsInput {
+			weightedTargetGroup := input.(map[string]interface{})
+			weightedTargetGroups[i] = &elbv2.TargetGroupTuple{
+				TargetGroupArn: aws.String(weightedTargetGroup["arn"].(string)),
+				Weight:         aws.Int64(int64(weightedTargetGroup["weight"].(int))),
+			}
+		}
+
+		action.ForwardConfig = &elbv2.ForwardActionConfig{
+			TargetGroups: weightedTargetGroups,
+		}
+
+		stickinessInput := forwardMap["stickiness"].([]interface{})
+		if len(stickinessInput) != 0 {
+			stickyInputMap := stickinessInput[0].(map[string]interface{})
+			if stickyInputMap["enabled"].(bool) {
+				action.ForwardConfig.TargetGroupStickinessConfig = &elbv2.TargetGroupStickinessConfig{
+					Enabled:         aws.Bool(stickyInputMap["enabled"].(bool)),
+					DurationSeconds: aws.Int64(int64(stickyInputMap["duration"].(int))),
+				}
+			} else {
+				action.ForwardConfig.TargetGroupStickinessConfig = &elbv2.TargetGroupStickinessConfig{
+					Enabled: aws.Bool(false),
+				}
+			}
+		}
+	} else {
+		return errors.New("for actions of type 'forward', you must specify a 'forward' block or 'target_group_arn'")
+	}
 	return nil
 }
