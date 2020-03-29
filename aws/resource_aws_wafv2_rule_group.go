@@ -374,11 +374,12 @@ func wafv2RootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":        wafv2StatementSchema(level),
-				"byte_match_statement": wafv2ByteMatchStatementSchema(),
-				"geo_match_statement":  wafv2GeoMatchStatementSchema(),
-				"not_statement":        wafv2StatementSchema(level),
-				"or_statement":         wafv2StatementSchema(level),
+				"and_statement":             wafv2StatementSchema(level - 1),
+				"byte_match_statement":      wafv2ByteMatchStatementSchema(),
+				"geo_match_statement":       wafv2GeoMatchStatementSchema(),
+				"not_statement":             wafv2StatementSchema(level - 1),
+				"or_statement":              wafv2StatementSchema(level - 1),
+				"size_constraint_statement": wafv2SizeConstraintSchema(),
 			},
 		},
 	}
@@ -397,11 +398,12 @@ func wafv2StatementSchema(level int) *schema.Schema {
 						Required: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"and_statement":        wafv2StatementSchema(level - 1),
-								"byte_match_statement": wafv2ByteMatchStatementSchema(),
-								"geo_match_statement":  wafv2GeoMatchStatementSchema(),
-								"not_statement":        wafv2StatementSchema(level - 1),
-								"or_statement":         wafv2StatementSchema(level - 1),
+								"and_statement":             wafv2StatementSchema(level - 1),
+								"byte_match_statement":      wafv2ByteMatchStatementSchema(),
+								"geo_match_statement":       wafv2GeoMatchStatementSchema(),
+								"not_statement":             wafv2StatementSchema(level - 1),
+								"or_statement":              wafv2StatementSchema(level - 1),
+								"size_constraint_statement": wafv2SizeConstraintSchema(),
 							},
 						},
 					},
@@ -421,8 +423,9 @@ func wafv2StatementSchema(level int) *schema.Schema {
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"byte_match_statement": wafv2ByteMatchStatementSchema(),
-							"geo_match_statement":  wafv2GeoMatchStatementSchema(),
+							"byte_match_statement":      wafv2ByteMatchStatementSchema(),
+							"geo_match_statement":       wafv2GeoMatchStatementSchema(),
+							"size_constraint_statement": wafv2SizeConstraintSchema(),
 						},
 					},
 				},
@@ -476,6 +479,38 @@ func wafv2GeoMatchStatementSchema() *schema.Schema {
 					MinItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
+			},
+		},
+	}
+}
+
+func wafv2SizeConstraintSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"comparison_operator": {
+					Type:     schema.TypeString,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ValidateFunc: validation.StringInSlice([]string{
+						wafv2.ComparisonOperatorEq,
+						wafv2.ComparisonOperatorGe,
+						wafv2.ComparisonOperatorGt,
+						wafv2.ComparisonOperatorLe,
+						wafv2.ComparisonOperatorLt,
+						wafv2.ComparisonOperatorNe,
+					}, false),
+				},
+				"field_to_match": fieldToMatchWafv2Schema(),
+				"size": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(0, 21474836480),
+				},
+				"text_transformation": textTransformationWafv2Schema(),
 			},
 		},
 	}
@@ -686,6 +721,10 @@ func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
 		statement.OrStatement = expandWafv2OrStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["size_constraint_statement"]; ok {
+		statement.SizeConstraintStatement = expandWafv2SizeConstraintStatement(v.([]interface{}))
+	}
+
 	return statement
 }
 
@@ -850,6 +889,21 @@ func expandWafv2OrStatement(l []interface{}) *wafv2.OrStatement {
 	}
 }
 
+func expandWafv2SizeConstraintStatement(l []interface{}) *wafv2.SizeConstraintStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.SizeConstraintStatement{
+		ComparisonOperator:  aws.String(m["comparison_operator"].(string)),
+		FieldToMatch:        expandWafv2FieldToMatch(m["field_to_match"].([]interface{})),
+		Size:                aws.Int64(int64(m["size"].(int))),
+		TextTransformations: expandWafv2TextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
 func flattenWafv2Rules(r []*wafv2.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
@@ -929,6 +983,10 @@ func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.OrStatement != nil {
 		m["or_statement"] = flattenWafv2OrStatement(s.OrStatement)
+	}
+
+	if s.SizeConstraintStatement != nil {
+		m["size_constraint_statement"] = flattenWafv2SizeConstraintStatement(s.SizeConstraintStatement)
 	}
 
 	return m
@@ -1065,6 +1123,21 @@ func flattenWafv2OrStatement(a *wafv2.OrStatement) interface{} {
 
 	m := map[string]interface{}{
 		"statement": flattenWafv2Statements(a.Statements),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2SizeConstraintStatement(s *wafv2.SizeConstraintStatement) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"comparison_operator": aws.StringValue(s.ComparisonOperator),
+		"field_to_match":      flattenWafv2FieldToMatch(s.FieldToMatch),
+		"size":                int(aws.Int64Value(s.Size)),
+		"text_transformation": flattenWafv2TextTransformations(s.TextTransformations),
 	}
 
 	return []interface{}{m}
