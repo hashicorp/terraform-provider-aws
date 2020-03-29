@@ -13,27 +13,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSCodeBuildReportGroups_basic(t *testing.T) {
+func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_codebuild_report_groups.test"
+	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeBuildReportGroupsDestroy,
+		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildReportGroupsBasicConfig(rName),
+				Config: testAccAWSCodeBuildReportGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildReportGroupsExists(resourceName, &reportGroup),
+					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "S3"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.packaging", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "false"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`report-group/`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`report-group/.+`)),
 				),
 			},
 			{
@@ -45,20 +45,20 @@ func TestAccAWSCodeBuildReportGroups_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildReportGroups_updated(t *testing.T) {
+func TestAccAWSCodeBuildReportGroup_updated(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_codebuild_report_groups.test"
+	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeBuildReportGroupsDestroy,
+		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildReportGroupsFullConfig(rName),
+				Config: testAccAWSCodeBuildReportGroupFullConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildReportGroupsExists(resourceName, &reportGroup),
+					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "S3"),
@@ -66,7 +66,7 @@ func TestAccAWSCodeBuildReportGroups_updated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.packaging", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.path", "/some"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`report-group/`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`report-group/.+`)),
 				),
 			},
 			{
@@ -75,9 +75,9 @@ func TestAccAWSCodeBuildReportGroups_updated(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodeBuildReportGroupsUpdatedConfig(rName),
+				Config: testAccAWSCodeBuildReportGroupUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildReportGroupsExists(resourceName, &reportGroup),
+					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "S3"),
@@ -85,18 +85,40 @@ func TestAccAWSCodeBuildReportGroups_updated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.packaging", "ZIP"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.path", "/some2"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`report-group/`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`report-group/.+`)),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSCodeBuildReportGroupsDestroy(s *terraform.State) error {
+func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
+	var reportGroup codebuild.ReportGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_report_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildReportGroupBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
+					testAccCheckAWSCodeBuildReportGroupDisappears(&reportGroup),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSCodeBuildReportGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codebuild_report_groups" {
+		if rs.Type != "aws_codebuild_report_group" {
 			continue
 		}
 
@@ -120,7 +142,7 @@ func testAccCheckAWSCodeBuildReportGroupsDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSCodeBuildReportGroupsExists(name string, ReportGroups *codebuild.ReportGroup) resource.TestCheckFunc {
+func testAccCheckAWSCodeBuildReportGroupExists(name string, reportGroup *codebuild.ReportGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -136,22 +158,30 @@ func testAccCheckAWSCodeBuildReportGroupsExists(name string, ReportGroups *codeb
 			return err
 		}
 
-		if len(resp.ReportGroups) == 0 {
-			return fmt.Errorf("Source Credential %s not found", rs.Primary.ID)
+		if len(resp.ReportGroups) != 1 ||
+			aws.StringValue(resp.ReportGroups[0].Arn) != rs.Primary.ID {
+			return fmt.Errorf("Report Group %s not found", rs.Primary.ID)
 		}
 
-		for _, reportGroup := range resp.ReportGroups {
-			if rs.Primary.ID == aws.StringValue(reportGroup.Arn) {
-				*ReportGroups = *reportGroup
-				return nil
-			}
-		}
+		*reportGroup = *resp.ReportGroups[0]
 
-		return fmt.Errorf("Report Groups %s not found", rs.Primary.ID)
+		return nil
 	}
 }
 
-func testAccAWSCodeBuildReportGroupsBasicConfigBase(rName string) string {
+func testAccCheckAWSCodeBuildReportGroupDisappears(reportGroup *codebuild.ReportGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+
+		_, err := conn.DeleteReportGroup(&codebuild.DeleteReportGroupInput{
+			Arn: reportGroup.Arn,
+		})
+
+		return err
+	}
+}
+
+func testAccAWSCodeBuildReportGroupBasicConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -182,10 +212,10 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccAWSCodeBuildReportGroupsBasicConfig(rName string) string {
-	return testAccAWSCodeBuildReportGroupsBasicConfigBase(rName) +
+func testAccAWSCodeBuildReportGroupBasicConfig(rName string) string {
+	return testAccAWSCodeBuildReportGroupBasicConfigBase(rName) +
 		fmt.Sprintf(`
-resource "aws_codebuild_report_groups" "test" {
+resource "aws_codebuild_report_group" "test" {
   name = %[1]q
   type = "TEST"
 
@@ -201,10 +231,10 @@ resource "aws_codebuild_report_groups" "test" {
 `, rName)
 }
 
-func testAccAWSCodeBuildReportGroupsFullConfig(rName string) string {
-	return testAccAWSCodeBuildReportGroupsBasicConfigBase(rName) +
+func testAccAWSCodeBuildReportGroupFullConfig(rName string) string {
+	return testAccAWSCodeBuildReportGroupBasicConfigBase(rName) +
 		fmt.Sprintf(`
-resource "aws_codebuild_report_groups" "test" {
+resource "aws_codebuild_report_group" "test" {
   name = %[1]q
   type = "TEST"
 
@@ -223,10 +253,10 @@ resource "aws_codebuild_report_groups" "test" {
 `, rName)
 }
 
-func testAccAWSCodeBuildReportGroupsUpdatedConfig(rName string) string {
-	return testAccAWSCodeBuildReportGroupsBasicConfigBase(rName) +
+func testAccAWSCodeBuildReportGroupUpdatedConfig(rName string) string {
+	return testAccAWSCodeBuildReportGroupBasicConfigBase(rName) +
 		fmt.Sprintf(`
-resource "aws_codebuild_report_groups" "test" {
+resource "aws_codebuild_report_group" "test" {
   name = %[1]q
   type = "TEST"
 

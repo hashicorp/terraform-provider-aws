@@ -129,30 +129,32 @@ func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{
 	}
 
 	if len(resp.ReportGroups) == 0 {
-		return fmt.Errorf("no matches found for CodeBuild Report Groups: %s", d.Id())
+		log.Printf("[WARN] CodeBuild Report Groups (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	if len(resp.ReportGroups) > 1 {
 		return fmt.Errorf("multiple matches found for CodeBuild Report Groups: %s", d.Id())
 	}
 
-	reportGroups := resp.ReportGroups[0]
+	reportGroup := resp.ReportGroups[0]
 
-	if reportGroups == nil {
+	if reportGroup == nil {
 		log.Printf("[WARN] CodeBuild Report Groups (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("arn", reportGroups.Arn)
-	d.Set("type", reportGroups.Type)
-	d.Set("name", reportGroups.Name)
+	d.Set("arn", reportGroup.Arn)
+	d.Set("type", reportGroup.Type)
+	d.Set("name", reportGroup.Name)
 
-	if err := d.Set("created", reportGroups.Created.Format(time.RFC3339)); err != nil {
+	if err := d.Set("created", reportGroup.Created.Format(time.RFC3339)); err != nil {
 		return fmt.Errorf("error setting created: %s", err)
 	}
 
-	if err := d.Set("export_config", flattenAwsCodeBuildReportGroupExportConfig(reportGroups.ExportConfig)); err != nil {
+	if err := d.Set("export_config", flattenAwsCodeBuildReportGroupExportConfig(reportGroup.ExportConfig)); err != nil {
 		return fmt.Errorf("error setting export config: %s", err)
 	}
 
