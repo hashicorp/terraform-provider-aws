@@ -170,8 +170,9 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsGrant_disappers(t *testing.T) {
-	timestamp := time.Now().Format(time.RFC1123)
+func TestAccAWSKmsGrant_disappears(t *testing.T) {
+	resourceName := "aws_kms_grant.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -179,10 +180,10 @@ func TestAccAWSKmsGrant_disappers(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsGrant_Basic("basic", timestamp, "\"Encrypt\", \"Decrypt\""),
+				Config: testAccAWSKmsGrant_Basic(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsGrantExists("aws_kms_grant.basic"),
-					testAccCheckAWSKmsGrantDisappears("aws_kms_grant.basic"),
+					testAccCheckAWSKmsGrantExists(resourceName),
+					testAccCheckAWSKmsGrantDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
