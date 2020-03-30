@@ -249,14 +249,14 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "2"),
 
 					testAccCheckAWSCodePipelineArtifactStoresAttr(&p, testAccGetRegion(), "type", "S3"),
-					testAccCheckAWSCodePipelineArtifactStoresAttrPair(&p, testAccGetRegion(), "location", "aws_s3_bucket.local", "bucket"),
+					testAccCheckAWSCodePipelineArtifactStoresAttrPair(&p, testAccGetRegion(), "location", "aws_s3_bucket.test", "bucket"),
 
 					testAccCheckAWSCodePipelineArtifactStoresAttr(&p, testAccGetAlternateRegion(), "type", "S3"),
 					testAccCheckAWSCodePipelineArtifactStoresAttrPair(&p, testAccGetAlternateRegion(), "location", "aws_s3_bucket.alternate", "bucket"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", fmt.Sprintf("%s-Build", testAccGetRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", testAccGetAlternateRegion())),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", testAccGetAlternateRegion()),
@@ -300,7 +300,7 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", fmt.Sprintf("%s-Build", testAccGetRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", testAccGetAlternateRegion())),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", testAccGetAlternateRegion()),
@@ -318,10 +318,78 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", fmt.Sprintf("%s-BuildUpdated", testAccGetRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "BuildUpdated"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-BuildUpdated", testAccGetAlternateRegion())),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", testAccGetAlternateRegion()),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
+	var p1, p2 codepipeline.PipelineDeclaration
+	resourceName := "aws_codepipeline.test"
+	var providers []*schema.Provider
+
+	name := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+			testAccAlternateRegionPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodePipelineConfig_basic(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists(resourceName, &p1),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "0"),
+
+					resource.TestCheckResourceAttrPair(resourceName, "artifact_store.0.location", "aws_s3_bucket.test", "bucket"),
+
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", ""),
+				),
+			},
+			{
+				Config: testAccAWSCodePipelineConfig_multiregion(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists(resourceName, &p2),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "2"),
+
+					testAccCheckAWSCodePipelineArtifactStoresAttr(&p2, testAccGetRegion(), "encryption_key.0.id", "1234"),
+					testAccCheckAWSCodePipelineArtifactStoresAttr(&p2, testAccGetAlternateRegion(), "encryption_key.0.id", "5678"),
+
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", testAccGetAlternateRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", testAccGetAlternateRegion()),
+				),
+			},
+			{
+				Config: testAccAWSCodePipelineConfig_backToBasic(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists(resourceName, &p1),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "0"),
+
+					resource.TestCheckResourceAttrPair(resourceName, "artifact_store.0.location", "aws_s3_bucket.test", "bucket"),
+
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
 				),
 			},
 		},
@@ -886,7 +954,7 @@ resource "aws_codepipeline" "test" {
 func testAccAWSCodePipelineConfig_multiregion(rName string) string {
 	return composeConfig(
 		testAccAlternateRegionProviderConfig(),
-		testAccAWSCodePipelineS3Bucket("local", rName),
+		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "aws.alternate"),
 		fmt.Sprintf(`
 resource "aws_iam_role" "codepipeline_role" {
@@ -924,8 +992,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "s3:GetBucketVersioning"
       ],
       "Resource": [
-        "${aws_s3_bucket.local.arn}",
-        "${aws_s3_bucket.local.arn}/*",
+        "${aws_s3_bucket.test.arn}",
+        "${aws_s3_bucket.test.arn}/*",
         "${aws_s3_bucket.alternate.arn}",
         "${aws_s3_bucket.alternate.arn}/*"
       ]
@@ -948,7 +1016,7 @@ resource "aws_codepipeline" "test" {
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_stores {
-		location = "${aws_s3_bucket.local.bucket}"
+		location = "${aws_s3_bucket.test.bucket}"
 		type     = "S3"    
     encryption_key {
       id   = "1234"
@@ -989,7 +1057,7 @@ resource "aws_codepipeline" "test" {
 
     action {
 		  region          = "%[2]s"
-      name            = "%[2]s-Build"
+      name            = "Build"
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
@@ -997,7 +1065,7 @@ resource "aws_codepipeline" "test" {
       version         = "1"
 
       configuration = {
-        ProjectName = "%[2]s-Test"
+        ProjectName = "Test"
       }
     }
     action {
@@ -1021,7 +1089,7 @@ resource "aws_codepipeline" "test" {
 func testAccAWSCodePipelineConfig_multiregionUpdated(rName string) string {
 	return composeConfig(
 		testAccAlternateRegionProviderConfig(),
-		testAccAWSCodePipelineS3Bucket("local", rName),
+		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "aws.alternate"),
 		fmt.Sprintf(`
 resource "aws_iam_role" "codepipeline_role" {
@@ -1059,8 +1127,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "s3:GetBucketVersioning"
       ],
       "Resource": [
-        "${aws_s3_bucket.local.arn}",
-        "${aws_s3_bucket.local.arn}/*",
+        "${aws_s3_bucket.test.arn}",
+        "${aws_s3_bucket.test.arn}/*",
         "${aws_s3_bucket.alternate.arn}",
         "${aws_s3_bucket.alternate.arn}/*"
       ]
@@ -1083,7 +1151,7 @@ resource "aws_codepipeline" "test" {
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_stores {
-		location = "${aws_s3_bucket.local.bucket}"
+		location = "${aws_s3_bucket.test.bucket}"
 		type     = "S3"    
     encryption_key {
       id   = "4321"
@@ -1124,7 +1192,7 @@ resource "aws_codepipeline" "test" {
 
     action {
 		  region          = "%[2]s"
-      name            = "%[2]s-BuildUpdated"
+      name            = "BuildUpdated"
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
@@ -1132,7 +1200,7 @@ resource "aws_codepipeline" "test" {
       version         = "1"
 
       configuration = {
-        ProjectName = "%[2]s-Test"
+        ProjectName = "Test"
       }
     }
     action {
@@ -1151,6 +1219,13 @@ resource "aws_codepipeline" "test" {
   }
 }
 `, rName, testAccGetRegion(), testAccGetAlternateRegion()))
+}
+
+func testAccAWSCodePipelineConfig_backToBasic(rName string) string {
+	return composeConfig(
+		testAccAlternateRegionProviderConfig(),
+		testAccAWSCodePipelineConfig_basic(rName),
+	)
 }
 
 func testAccAWSCodePipelineS3DefaultBucket(rName string) string {
