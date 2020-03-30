@@ -20,7 +20,7 @@ func TestAccDataSourceAwsSecretsManagerSecretRotation_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsSecretsManagerSecretRotationConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`not found`),
+				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
 			},
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretRotationConfig_Default(rName, 7),
