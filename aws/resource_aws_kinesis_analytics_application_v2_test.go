@@ -535,7 +535,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Add(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt),
+				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalyticsApplicationV2ConfigOutputsLambda(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationV2Exists(resourceName, &application2),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
@@ -672,7 +672,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsApplicationWithAddTags(rInt, "test1", "test2", "test3"),
+				Config: testAccKinesisAnalyticsApplicationV2WithAddTags(rInt, "test1", "test2", "test3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationV2Exists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "tags.%", "3"),
