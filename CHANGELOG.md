@@ -1,4 +1,9 @@
 ## 2.56.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_codedeploy_deployment_group: Fix `blue_green_deployment_config` updates for ECS [GH-11885]
+
 ## 2.55.0 (March 27, 2020)
 
 FEATURES:
