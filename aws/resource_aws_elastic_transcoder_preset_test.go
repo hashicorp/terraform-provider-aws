@@ -100,7 +100,7 @@ func testAccCheckElasticTranscoderPresetExists(name string, preset *elastictrans
 			return err
 		}
 
-		preset = out.Preset
+		*preset = *out.Preset
 
 		return nil
 	}
