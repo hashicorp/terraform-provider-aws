@@ -86,3 +86,5 @@ In addition to all arguments above, the following attributes are exported:
 * `tag_specifications` - The tags to apply to the resources during launch.
 * `tags` - (Optional) A mapping of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
+* `hibernation_options` - The hibernation options for the instance.
+
