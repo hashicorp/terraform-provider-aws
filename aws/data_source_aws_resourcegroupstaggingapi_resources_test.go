@@ -16,7 +16,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingApiResources_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingApiResourcesBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list.#"),
 				),
 			},
 		},
@@ -33,7 +33,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingApiResources_tag_key_filter(t *tes
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingApiResourcesTagKeyFilterConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list.#"),
 				),
 			},
 		},
@@ -46,7 +46,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {}
 
 const testAccDataSourceAwsResourceGroupsTaggingApiResourcesTagKeyFilterConfig = `
 data "aws_resourcegroupstaggingapi_resources" "test" {
-  tag_filter {
+  tag_filters {
     key = "Name"
   }
 

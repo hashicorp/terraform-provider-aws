@@ -111,7 +111,7 @@ func dataSourceAwsResourceGroupsTaggingApiResourcesRead(d *schema.ResourceData, 
 }
 
 func expandAwsResourceGroupsTaggingApiTagFilters(filters []interface{}) []*resourcegroupstaggingapi.TagFilter {
-	result := make([]*resourcegroupstaggingapi.TagFilter, 0, len(filters))
+	result := make([]*resourcegroupstaggingapi.TagFilter, len(filters))
 
 	for i, filter := range filters {
 		m := filter.(map[string]interface{})
