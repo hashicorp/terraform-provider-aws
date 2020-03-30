@@ -85,6 +85,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p2),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.type", "S3"),
+					resource.TestCheckResourceAttrPair(resourceName, "artifact_store.0.location", "aws_s3_bucket.updated", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.id", "4567"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.type", "KMS"),
@@ -351,13 +352,17 @@ func testAccPreCheckAWSCodePipeline(t *testing.T) {
 	}
 }
 
-func testAccAWSCodePipelineS3Bucket(rName string) string {
+func testAccAWSCodePipelineS3DefaultBucket(rName string) string {
+	return testAccAWSCodePipelineS3Bucket("test", rName)
+}
+
+func testAccAWSCodePipelineS3Bucket(bucket, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "foo" {
-  bucket = "tf-test-pipeline-%s"
+resource "aws_s3_bucket" "%[1]s" {
+  bucket = "tf-test-pipeline-%[1]s-%[2]s"
   acl    = "private"
 }
-`, rName)
+`, bucket, rName)
 }
 
 func testAccAWSCodePipelineServiceIAMRole(rName string) string {
@@ -481,7 +486,7 @@ EOF
 
 func testAccAWSCodePipelineConfig_basic(rName string) string {
 	return composeConfig(
-		testAccAWSCodePipelineS3Bucket(rName),
+		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
@@ -539,7 +544,8 @@ resource "aws_codepipeline" "test" {
 
 func testAccAWSCodePipelineConfig_basicUpdated(rName string) string {
 	return composeConfig(
-		testAccAWSCodePipelineS3Bucket(rName),
+		testAccAWSCodePipelineS3DefaultBucket(rName),
+		testAccAWSCodePipelineS3Bucket("updated", rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
@@ -597,7 +603,7 @@ resource "aws_codepipeline" "test" {
 
 func testAccAWSCodePipelineConfig_emptyArtifacts(rName string) string {
 	return composeConfig(
-		testAccAWSCodePipelineS3Bucket(rName),
+		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
@@ -701,7 +707,7 @@ EOF
 
 func testAccAWSCodePipelineConfig_deployWithServiceRole(rName string) string {
 	return composeConfig(
-		testAccAWSCodePipelineS3Bucket(rName),
+		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRoleWithAssumeRole(rName),
 		testAccAWSCodePipelineDeployActionIAMRole(rName),
 		fmt.Sprintf(`
@@ -782,7 +788,7 @@ resource "aws_codepipeline" "test" {
 
 func testAccAWSCodePipelineConfigWithTags(rName, tag1, tag2 string) string {
 	return composeConfig(
-		testAccAWSCodePipelineS3Bucket(rName),
+		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
