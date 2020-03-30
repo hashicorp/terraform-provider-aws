@@ -2841,6 +2841,8 @@ func TestValidateCloudFrontPublicKeyNamePrefix(t *testing.T) {
 func TestValidateDxConnectionBandWidth(t *testing.T) {
 	validBandwidths := []string{
 		"1Gbps",
+		"2Gbps",
+		"5Gbps",
 		"10Gbps",
 		"50Mbps",
 		"100Mbps",
