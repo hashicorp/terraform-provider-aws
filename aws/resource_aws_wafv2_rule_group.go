@@ -380,6 +380,7 @@ func wafv2RootStatementSchema(level int) *schema.Schema {
 				"not_statement":             wafv2StatementSchema(level - 1),
 				"or_statement":              wafv2StatementSchema(level - 1),
 				"size_constraint_statement": wafv2SizeConstraintSchema(),
+				"sqli_match_statement":      wafv2SqliMatchStatementSchema(),
 			},
 		},
 	}
@@ -404,6 +405,7 @@ func wafv2StatementSchema(level int) *schema.Schema {
 								"not_statement":             wafv2StatementSchema(level - 1),
 								"or_statement":              wafv2StatementSchema(level - 1),
 								"size_constraint_statement": wafv2SizeConstraintSchema(),
+								"sqli_match_statement":      wafv2SqliMatchStatementSchema(),
 							},
 						},
 					},
@@ -426,6 +428,7 @@ func wafv2StatementSchema(level int) *schema.Schema {
 							"byte_match_statement":      wafv2ByteMatchStatementSchema(),
 							"geo_match_statement":       wafv2GeoMatchStatementSchema(),
 							"size_constraint_statement": wafv2SizeConstraintSchema(),
+							"sqli_match_statement":      wafv2SqliMatchStatementSchema(),
 						},
 					},
 				},
@@ -510,6 +513,20 @@ func wafv2SizeConstraintSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.IntBetween(0, 21474836480),
 				},
+				"text_transformation": textTransformationWafv2Schema(),
+			},
+		},
+	}
+}
+
+func wafv2SqliMatchStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"field_to_match":      fieldToMatchWafv2Schema(),
 				"text_transformation": textTransformationWafv2Schema(),
 			},
 		},
@@ -725,6 +742,10 @@ func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
 		statement.SizeConstraintStatement = expandWafv2SizeConstraintStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["sqli_match_statement"]; ok {
+		statement.SqliMatchStatement = expandWafv2SqliMatchStatement(v.([]interface{}))
+	}
+
 	return statement
 }
 
@@ -904,6 +925,19 @@ func expandWafv2SizeConstraintStatement(l []interface{}) *wafv2.SizeConstraintSt
 	}
 }
 
+func expandWafv2SqliMatchStatement(l []interface{}) *wafv2.SqliMatchStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.SqliMatchStatement{
+		FieldToMatch:        expandWafv2FieldToMatch(m["field_to_match"].([]interface{})),
+		TextTransformations: expandWafv2TextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
 func flattenWafv2Rules(r []*wafv2.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
@@ -987,6 +1021,10 @@ func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.SizeConstraintStatement != nil {
 		m["size_constraint_statement"] = flattenWafv2SizeConstraintStatement(s.SizeConstraintStatement)
+	}
+
+	if s.SqliMatchStatement != nil {
+		m["sqli_match_statement"] = flattenWafv2SqliMatchStatement(s.SqliMatchStatement)
 	}
 
 	return m
@@ -1137,6 +1175,19 @@ func flattenWafv2SizeConstraintStatement(s *wafv2.SizeConstraintStatement) inter
 		"comparison_operator": aws.StringValue(s.ComparisonOperator),
 		"field_to_match":      flattenWafv2FieldToMatch(s.FieldToMatch),
 		"size":                int(aws.Int64Value(s.Size)),
+		"text_transformation": flattenWafv2TextTransformations(s.TextTransformations),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2SqliMatchStatement(s *wafv2.SqliMatchStatement) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"field_to_match":      flattenWafv2FieldToMatch(s.FieldToMatch),
 		"text_transformation": flattenWafv2TextTransformations(s.TextTransformations),
 	}
 

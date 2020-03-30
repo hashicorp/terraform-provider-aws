@@ -535,6 +535,62 @@ func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_SqliMatchStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.field_to_match.0.all_query_arguments.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1247795808.priority", "5"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1247795808.type", "URL_DECODE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.2156930824.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.2156930824.type", "LOWERCASE"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_SqliMatchStatement_Update(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.field_to_match.0.body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1247795808.priority", "5"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1247795808.type", "URL_DECODE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.4120379776.priority", "4"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.4120379776.type", "HTML_ENTITY_DECODE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1521630275.priority", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1521630275.type", "COMPRESS_WHITE_SPACE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2RuleGroup_changeNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
@@ -1742,6 +1798,109 @@ resource "aws_wafv2_rule_group" "test" {
         text_transformation {
           priority = 2
           type = "CMD_LINE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_SqliMatchStatement(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 300
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  allow {}
+    }
+
+    statement {
+      sqli_match_statement {
+        field_to_match {
+          all_query_arguments {}
+        }
+
+        text_transformation {
+          priority = 5
+          type = "URL_DECODE"
+        }
+
+        text_transformation {
+          priority = 2
+          type = "LOWERCASE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_SqliMatchStatement_Update(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 300
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  allow {}
+    }
+
+    statement {
+      sqli_match_statement {
+        field_to_match {
+          body {}
+        }
+
+        text_transformation {
+          priority = 5
+          type = "URL_DECODE"
+        }
+
+        text_transformation {
+          priority = 4
+          type = "HTML_ENTITY_DECODE"
+        }
+
+        text_transformation {
+          priority = 3
+          type = "COMPRESS_WHITE_SPACE"
         }
       }
     }
