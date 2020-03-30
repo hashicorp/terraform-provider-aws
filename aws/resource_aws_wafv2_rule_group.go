@@ -374,15 +374,16 @@ func wafv2RootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":              wafv2StatementSchema(level - 1),
-				"byte_match_statement":       wafv2ByteMatchStatementSchema(),
-				"geo_match_statement":        wafv2GeoMatchStatementSchema(),
-				"ip_set_reference_statement": wafv2IpSetReferenceStatementSchema(),
-				"not_statement":              wafv2StatementSchema(level - 1),
-				"or_statement":               wafv2StatementSchema(level - 1),
-				"size_constraint_statement":  wafv2SizeConstraintSchema(),
-				"sqli_match_statement":       wafv2SqliMatchStatementSchema(),
-				"xss_match_statement":        wafv2XssMatchStatementSchema(),
+				"and_statement":                         wafv2StatementSchema(level - 1),
+				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
+				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
+				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
+				"not_statement":                         wafv2StatementSchema(level - 1),
+				"or_statement":                          wafv2StatementSchema(level - 1),
+				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
+				"size_constraint_statement":             wafv2SizeConstraintSchema(),
+				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
+				"xss_match_statement":                   wafv2XssMatchStatementSchema(),
 			},
 		},
 	}
@@ -401,15 +402,16 @@ func wafv2StatementSchema(level int) *schema.Schema {
 						Required: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"and_statement":              wafv2StatementSchema(level - 1),
-								"byte_match_statement":       wafv2ByteMatchStatementSchema(),
-								"geo_match_statement":        wafv2GeoMatchStatementSchema(),
-								"ip_set_reference_statement": wafv2IpSetReferenceStatementSchema(),
-								"not_statement":              wafv2StatementSchema(level - 1),
-								"or_statement":               wafv2StatementSchema(level - 1),
-								"size_constraint_statement":  wafv2SizeConstraintSchema(),
-								"sqli_match_statement":       wafv2SqliMatchStatementSchema(),
-								"xss_match_statement":        wafv2XssMatchStatementSchema(),
+								"and_statement":                         wafv2StatementSchema(level - 1),
+								"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
+								"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
+								"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
+								"not_statement":                         wafv2StatementSchema(level - 1),
+								"or_statement":                          wafv2StatementSchema(level - 1),
+								"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
+								"size_constraint_statement":             wafv2SizeConstraintSchema(),
+								"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
+								"xss_match_statement":                   wafv2XssMatchStatementSchema(),
 							},
 						},
 					},
@@ -429,12 +431,13 @@ func wafv2StatementSchema(level int) *schema.Schema {
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"byte_match_statement":       wafv2ByteMatchStatementSchema(),
-							"geo_match_statement":        wafv2GeoMatchStatementSchema(),
-							"ip_set_reference_statement": wafv2IpSetReferenceStatementSchema(),
-							"size_constraint_statement":  wafv2SizeConstraintSchema(),
-							"sqli_match_statement":       wafv2SqliMatchStatementSchema(),
-							"xss_match_statement":        wafv2XssMatchStatementSchema(),
+							"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
+							"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
+							"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
+							"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
+							"size_constraint_statement":             wafv2SizeConstraintSchema(),
+							"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
+							"xss_match_statement":                   wafv2XssMatchStatementSchema(),
 						},
 					},
 				},
@@ -504,6 +507,24 @@ func wafv2IpSetReferenceStatementSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 				},
+			},
+		},
+	}
+}
+
+func wafv2RegexPatternSetReferenceStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"field_to_match":      fieldToMatchWafv2Schema(),
+				"text_transformation": textTransformationWafv2Schema(),
 			},
 		},
 	}
@@ -778,6 +799,10 @@ func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
 		statement.OrStatement = expandWafv2OrStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
+		statement.RegexPatternSetReferenceStatement = expandWafv2RegexPatternSetReferenceStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["size_constraint_statement"]; ok {
 		statement.SizeConstraintStatement = expandWafv2SizeConstraintStatement(v.([]interface{}))
 	}
@@ -966,6 +991,20 @@ func expandWafv2OrStatement(l []interface{}) *wafv2.OrStatement {
 	}
 }
 
+func expandWafv2RegexPatternSetReferenceStatement(l []interface{}) *wafv2.RegexPatternSetReferenceStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.RegexPatternSetReferenceStatement{
+		ARN:                 aws.String(m["arn"].(string)),
+		FieldToMatch:        expandWafv2FieldToMatch(m["field_to_match"].([]interface{})),
+		TextTransformations: expandWafv2TextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
 func expandWafv2SizeConstraintStatement(l []interface{}) *wafv2.SizeConstraintStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1090,6 +1129,10 @@ func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.OrStatement != nil {
 		m["or_statement"] = flattenWafv2OrStatement(s.OrStatement)
+	}
+
+	if s.RegexPatternSetReferenceStatement != nil {
+		m["regex_pattern_set_reference_statement"] = flattenWafv2RegexPatternSetReferenceStatement(s.RegexPatternSetReferenceStatement)
 	}
 
 	if s.SizeConstraintStatement != nil {
@@ -1250,6 +1293,20 @@ func flattenWafv2OrStatement(a *wafv2.OrStatement) interface{} {
 
 	m := map[string]interface{}{
 		"statement": flattenWafv2Statements(a.Statements),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2RegexPatternSetReferenceStatement(r *wafv2.RegexPatternSetReferenceStatement) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"arn":                 aws.StringValue(r.ARN),
+		"field_to_match":      flattenWafv2FieldToMatch(r.FieldToMatch),
+		"text_transformation": flattenWafv2TextTransformations(r.TextTransformations),
 	}
 
 	return []interface{}{m}

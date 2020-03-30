@@ -418,6 +418,54 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_RegexPatternSetReferenceStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.regex_pattern_set_reference_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.regex_pattern_set_reference_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.regex_pattern_set_reference_statement.0.text_transformation.#", "1"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.regex_pattern_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/regexpatternset/.+$`)),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_RegexPatternSetReferenceStatement_Update(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#", "1"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.or_statement.0.statement.1.regex_pattern_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/regexpatternset/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.regex_pattern_set_reference_statement.#", "1"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.or_statement.0.statement.1.regex_pattern_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/regexpatternset/.+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
@@ -1917,6 +1965,143 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_RegexPatternSetReferenceStatement(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_regex_pattern_set" "test" {
+  name = "regex-pattern-set-%s"
+  scope = "REGIONAL"
+
+  regular_expression_list {
+    regex_string = "one"
+  }
+}
+
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 50
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  allow {}
+    }
+
+    statement {
+      regex_pattern_set_reference_statement {
+        arn = aws_wafv2_regex_pattern_set.test.arn
+
+        field_to_match {
+          body {}
+        }
+
+        text_transformation {
+          priority = 2
+          type = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_RegexPatternSetReferenceStatement_Update(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_regex_pattern_set" "test_one" {
+  name = "regex-pattern-set-one-%s"
+  scope = "REGIONAL"
+
+  regular_expression_list {
+    regex_string = "one"
+  }
+}
+
+resource "aws_wafv2_regex_pattern_set" "test_two" {
+  name = "regex-pattern-set-two-%s"
+  scope = "REGIONAL"
+
+  regular_expression_list {
+    regex_string = "two"
+  }
+}
+
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 100
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  allow {}
+    }
+
+    statement {
+      or_statement {
+        statement {
+          regex_pattern_set_reference_statement {
+            arn = aws_wafv2_regex_pattern_set.test_one.arn
+
+            field_to_match {
+              body {}
+            }
+            
+            text_transformation {
+              priority = 2
+              type = "NONE"
+            }
+          }
+        }
+        statement {
+          regex_pattern_set_reference_statement {
+            arn = aws_wafv2_regex_pattern_set.test_two.arn
+
+            field_to_match {
+              body {}
+            }
+            
+            text_transformation {
+              priority = 2
+              type = "NONE"
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name, name, name)
 }
 
 func testAccAwsWafv2RuleGroupConfig_SizeConstraintStatement(name string) string {
