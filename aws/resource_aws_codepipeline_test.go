@@ -272,59 +272,60 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCodePipelineArtifactStoresAttr(p *codepipeline.PipelineDeclaration, region string, key, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		as, ok := p.ArtifactStores[region]
-		if !ok {
-			return fmt.Errorf("Artifact Store for region %q not found", region)
-		}
-		values := flatmap.Flatten(flattenAwsCodePipelineArtifactStore(as)[0].(map[string]interface{}))
+func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
+	var p1, p2 codepipeline.PipelineDeclaration
+	resourceName := "aws_codepipeline.test"
+	var providers []*schema.Provider
 
-		if v, ok := values[key]; !ok || v != value {
-			if !ok {
-				return fmt.Errorf("ArtifactStores[%s]: Attribute %q not found", region, key)
-			}
+	name := acctest.RandString(10)
 
-			return fmt.Errorf(
-				"ArtifactStores[%s]: Attribute %q expected %#v, got %#v", region, key, value, v)
-		}
-		return nil
-	}
-}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+			testAccAlternateRegionPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodePipelineConfig_multiregion(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists(resourceName, &p1),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "2"),
 
-func testAccCheckAWSCodePipelineArtifactStoresAttrPair(p *codepipeline.PipelineDeclaration, region string, keyFirst, nameSecond, keySecond string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		as, ok := p.ArtifactStores[region]
-		if !ok {
-			return fmt.Errorf("Artifact Store for region %q not found", region)
-		}
-		values := flatmap.Flatten(flattenAwsCodePipelineArtifactStore(as)[0].(map[string]interface{}))
+					testAccCheckAWSCodePipelineArtifactStoresAttr(&p1, testAccGetRegion(), "encryption_key.0.id", "1234"),
+					testAccCheckAWSCodePipelineArtifactStoresAttr(&p1, testAccGetAlternateRegion(), "encryption_key.0.id", "5678"),
 
-		isSecond, err := primaryInstanceState(s, nameSecond)
-		if err != nil {
-			return err
-		}
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", fmt.Sprintf("%s-Build", testAccGetRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", testAccGetAlternateRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", testAccGetAlternateRegion()),
+				),
+			},
+			{
+				Config: testAccAWSCodePipelineConfig_multiregionUpdated(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists(resourceName, &p2),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "2"),
 
-		vFirst, okFirst := values[keyFirst]
-		vSecond, okSecond := isSecond.Attributes[keySecond]
+					testAccCheckAWSCodePipelineArtifactStoresAttr(&p2, testAccGetRegion(), "encryption_key.0.id", "4321"),
+					testAccCheckAWSCodePipelineArtifactStoresAttr(&p2, testAccGetAlternateRegion(), "encryption_key.0.id", "8765"),
 
-		if okFirst != okSecond {
-			if !okFirst {
-				return fmt.Errorf("ArtifactStores[%s]: Attribute %q not set, but %q is set in %s as %q", region, keyFirst, keySecond, nameSecond, vSecond)
-			}
-			return fmt.Errorf("ArtifactStores[%s]: Attribute %q is %q, but %q is not set in %s", region, keyFirst, vFirst, keySecond, nameSecond)
-		}
-		if !(okFirst || okSecond) {
-			// If they both don't exist then they are equally unset, so that's okay.
-			return nil
-		}
-
-		if vFirst != vSecond {
-			return fmt.Errorf("ArtifactStores[%s]: Attribute '%s' expected %#v, got %#v", region, keyFirst, vSecond, vFirst)
-		}
-
-		return nil
-	}
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", fmt.Sprintf("%s-BuildUpdated", testAccGetRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-BuildUpdated", testAccGetAlternateRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", testAccGetAlternateRegion()),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.PipelineDeclaration) resource.TestCheckFunc {
@@ -1123,7 +1124,7 @@ resource "aws_codepipeline" "test" {
 
     action {
 		  region          = "%[2]s"
-      name            = "%[2]s-Build"
+      name            = "%[2]s-BuildUpdated"
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
@@ -1136,7 +1137,7 @@ resource "aws_codepipeline" "test" {
     }
     action {
 		  region          = "%[3]s"
-      name            = "%[3]s-Build"
+      name            = "%[3]s-BuildUpdated"
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
@@ -1173,4 +1174,59 @@ resource "aws_s3_bucket" "%[1]s" {
   provider = %[3]s
 }
 `, bucket, rName, provider)
+}
+
+func testAccCheckAWSCodePipelineArtifactStoresAttr(p *codepipeline.PipelineDeclaration, region string, key, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		as, ok := p.ArtifactStores[region]
+		if !ok {
+			return fmt.Errorf("Artifact Store for region %q not found", region)
+		}
+		values := flatmap.Flatten(flattenAwsCodePipelineArtifactStore(as)[0].(map[string]interface{}))
+
+		if v, ok := values[key]; !ok || v != value {
+			if !ok {
+				return fmt.Errorf("ArtifactStores[%s]: Attribute %q not found", region, key)
+			}
+
+			return fmt.Errorf(
+				"ArtifactStores[%s]: Attribute %q expected %#v, got %#v", region, key, value, v)
+		}
+		return nil
+	}
+}
+
+func testAccCheckAWSCodePipelineArtifactStoresAttrPair(p *codepipeline.PipelineDeclaration, region string, keyFirst, nameSecond, keySecond string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		as, ok := p.ArtifactStores[region]
+		if !ok {
+			return fmt.Errorf("Artifact Store for region %q not found", region)
+		}
+		values := flatmap.Flatten(flattenAwsCodePipelineArtifactStore(as)[0].(map[string]interface{}))
+
+		isSecond, err := primaryInstanceState(s, nameSecond)
+		if err != nil {
+			return err
+		}
+
+		vFirst, okFirst := values[keyFirst]
+		vSecond, okSecond := isSecond.Attributes[keySecond]
+
+		if okFirst != okSecond {
+			if !okFirst {
+				return fmt.Errorf("ArtifactStores[%s]: Attribute %q not set, but %q is set in %s as %q", region, keyFirst, keySecond, nameSecond, vSecond)
+			}
+			return fmt.Errorf("ArtifactStores[%s]: Attribute %q is %q, but %q is not set in %s", region, keyFirst, vFirst, keySecond, nameSecond)
+		}
+		if !(okFirst || okSecond) {
+			// If they both don't exist then they are equally unset, so that's okay.
+			return nil
+		}
+
+		if vFirst != vSecond {
+			return fmt.Errorf("ArtifactStores[%s]: Attribute '%s' expected %#v, got %#v", region, keyFirst, vSecond, vFirst)
+		}
+
+		return nil
+	}
 }
