@@ -164,6 +164,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>rds</code></li>
   <li><code>redshift</code></li>
   <li><code>resourcegroups</code></li>
+  <li><code>resourcegroupstaggingapi</code></li>  
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
   <li><code>route53resolver</code></li>
