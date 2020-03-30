@@ -372,6 +372,52 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.ip_set_reference_statement.#", "1"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.ip_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_Update(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.ip_set_reference_statement.#", "1"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.#", "1"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
@@ -1538,6 +1584,110 @@ resource "aws_wafv2_rule_group" "test" {
  }
 }
 `, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_ip_set" "test" {
+  name = "ip-set-%s"
+  scope = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses = ["1.1.1.1/32", "2.2.2.2/32"]
+}
+
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 2
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  allow {}
+    }
+
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.test.arn
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_Update(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_ip_set" "test_one" {
+  name = "ip-set-one-%s"
+  scope = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses = ["1.1.1.1/32", "2.2.2.2/32"]
+}
+
+resource "aws_wafv2_ip_set" "test_two" {
+  name = "ip-set-two-%s"
+  scope = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses = ["127.0.0.1/32"]
+}
+
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 2
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  allow {}
+    }
+
+    statement {
+      or_statement {
+        statement {
+          ip_set_reference_statement {
+            arn = aws_wafv2_ip_set.test_one.arn
+          }
+        }
+        statement {
+          ip_set_reference_statement {
+            arn = aws_wafv2_ip_set.test_two.arn
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name, name, name)
 }
 
 func testAccAwsWafv2RuleGroupConfigGeoMatchStatement(name string) string {

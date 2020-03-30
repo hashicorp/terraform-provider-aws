@@ -374,14 +374,15 @@ func wafv2RootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":             wafv2StatementSchema(level - 1),
-				"byte_match_statement":      wafv2ByteMatchStatementSchema(),
-				"geo_match_statement":       wafv2GeoMatchStatementSchema(),
-				"not_statement":             wafv2StatementSchema(level - 1),
-				"or_statement":              wafv2StatementSchema(level - 1),
-				"size_constraint_statement": wafv2SizeConstraintSchema(),
-				"sqli_match_statement":      wafv2SqliMatchStatementSchema(),
-				"xss_match_statement":       wafv2XssMatchStatementSchema(),
+				"and_statement":              wafv2StatementSchema(level - 1),
+				"byte_match_statement":       wafv2ByteMatchStatementSchema(),
+				"geo_match_statement":        wafv2GeoMatchStatementSchema(),
+				"ip_set_reference_statement": wafv2IpSetReferenceStatementSchema(),
+				"not_statement":              wafv2StatementSchema(level - 1),
+				"or_statement":               wafv2StatementSchema(level - 1),
+				"size_constraint_statement":  wafv2SizeConstraintSchema(),
+				"sqli_match_statement":       wafv2SqliMatchStatementSchema(),
+				"xss_match_statement":        wafv2XssMatchStatementSchema(),
 			},
 		},
 	}
@@ -400,14 +401,15 @@ func wafv2StatementSchema(level int) *schema.Schema {
 						Required: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"and_statement":             wafv2StatementSchema(level - 1),
-								"byte_match_statement":      wafv2ByteMatchStatementSchema(),
-								"geo_match_statement":       wafv2GeoMatchStatementSchema(),
-								"not_statement":             wafv2StatementSchema(level - 1),
-								"or_statement":              wafv2StatementSchema(level - 1),
-								"size_constraint_statement": wafv2SizeConstraintSchema(),
-								"sqli_match_statement":      wafv2SqliMatchStatementSchema(),
-								"xss_match_statement":       wafv2XssMatchStatementSchema(),
+								"and_statement":              wafv2StatementSchema(level - 1),
+								"byte_match_statement":       wafv2ByteMatchStatementSchema(),
+								"geo_match_statement":        wafv2GeoMatchStatementSchema(),
+								"ip_set_reference_statement": wafv2IpSetReferenceStatementSchema(),
+								"not_statement":              wafv2StatementSchema(level - 1),
+								"or_statement":               wafv2StatementSchema(level - 1),
+								"size_constraint_statement":  wafv2SizeConstraintSchema(),
+								"sqli_match_statement":       wafv2SqliMatchStatementSchema(),
+								"xss_match_statement":        wafv2XssMatchStatementSchema(),
 							},
 						},
 					},
@@ -427,11 +429,12 @@ func wafv2StatementSchema(level int) *schema.Schema {
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"byte_match_statement":      wafv2ByteMatchStatementSchema(),
-							"geo_match_statement":       wafv2GeoMatchStatementSchema(),
-							"size_constraint_statement": wafv2SizeConstraintSchema(),
-							"sqli_match_statement":      wafv2SqliMatchStatementSchema(),
-							"xss_match_statement":       wafv2XssMatchStatementSchema(),
+							"byte_match_statement":       wafv2ByteMatchStatementSchema(),
+							"geo_match_statement":        wafv2GeoMatchStatementSchema(),
+							"ip_set_reference_statement": wafv2IpSetReferenceStatementSchema(),
+							"size_constraint_statement":  wafv2SizeConstraintSchema(),
+							"sqli_match_statement":       wafv2SqliMatchStatementSchema(),
+							"xss_match_statement":        wafv2XssMatchStatementSchema(),
 						},
 					},
 				},
@@ -484,6 +487,22 @@ func wafv2GeoMatchStatementSchema() *schema.Schema {
 					Required: true,
 					MinItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			},
+		},
+	}
+}
+
+func wafv2IpSetReferenceStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Required: true,
 				},
 			},
 		},
@@ -743,6 +762,10 @@ func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
 		statement.ByteMatchStatement = expandWafv2ByteMatchStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["ip_set_reference_statement"]; ok {
+		statement.IPSetReferenceStatement = expandWafv2IpSetReferenceStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["geo_match_statement"]; ok {
 		statement.GeoMatchStatement = expandWafv2GeoMatchStatement(v.([]interface{}))
 	}
@@ -885,6 +908,18 @@ func expandWafv2TextTransformation(m map[string]interface{}) *wafv2.TextTransfor
 	return &wafv2.TextTransformation{
 		Priority: aws.Int64(int64(m["priority"].(int))),
 		Type:     aws.String(m["type"].(string)),
+	}
+}
+
+func expandWafv2IpSetReferenceStatement(l []interface{}) *wafv2.IPSetReferenceStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.IPSetReferenceStatement{
+		ARN: aws.String(m["arn"].(string)),
 	}
 }
 
@@ -1041,6 +1076,10 @@ func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
 		m["byte_match_statement"] = flattenWafv2ByteMatchStatement(s.ByteMatchStatement)
 	}
 
+	if s.IPSetReferenceStatement != nil {
+		m["ip_set_reference_statement"] = flattenWafv2IpSetReferenceStatement(s.IPSetReferenceStatement)
+	}
+
 	if s.GeoMatchStatement != nil {
 		m["geo_match_statement"] = flattenWafv2GeoMatchStatement(s.GeoMatchStatement)
 	}
@@ -1166,6 +1205,18 @@ func flattenWafv2TextTransformations(l []*wafv2.TextTransformation) []interface{
 		out[i] = m
 	}
 	return out
+}
+
+func flattenWafv2IpSetReferenceStatement(i *wafv2.IPSetReferenceStatement) interface{} {
+	if i == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"arn": aws.StringValue(i.ARN),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenWafv2GeoMatchStatement(g *wafv2.GeoMatchStatement) interface{} {
