@@ -96,7 +96,6 @@ func resourceAwsCodePipeline() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: artifactStoreSchema,
 				},
-				Set: resourceAwsCodePipelineArtifactStoreHash,
 			},
 			"stage": {
 				Type:     schema.TypeList,

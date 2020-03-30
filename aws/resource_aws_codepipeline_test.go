@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/flatmap"
 )
 
 func TestAccAWSCodePipeline_basic(t *testing.T) {
@@ -225,14 +225,6 @@ func TestAccAWSCodePipeline_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCodePipelineHashArtifactStore(region string) int {
-	return hashcode.String(region)
-}
-
-func testAccCheckAWSCodePipelineHashArtifactStoreKey(region, key string) string {
-	return fmt.Sprintf("artifact_stores.%d.%s", testAccCheckAWSCodePipelineHashArtifactStore(region), key)
-}
-
 func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 	var p codepipeline.PipelineDeclaration
 	resourceName := "aws_codepipeline.test"
@@ -256,13 +248,11 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "2"),
 
-					resource.TestCheckResourceAttr(resourceName, testAccCheckAWSCodePipelineHashArtifactStoreKey(testAccGetRegion(), "type"), "S3"),
-					resource.TestCheckResourceAttrPair(resourceName, testAccCheckAWSCodePipelineHashArtifactStoreKey(testAccGetRegion(), "location"), "aws_s3_bucket.local", "bucket"),
-					resource.TestCheckResourceAttr(resourceName, testAccCheckAWSCodePipelineHashArtifactStoreKey(testAccGetRegion(), "region"), testAccGetRegion()),
+					testAccCheckAWSCodePipelineArtifactStoresAttr(&p, testAccGetRegion(), "type", "S3"),
+					testAccCheckAWSCodePipelineArtifactStoresAttrPair(&p, testAccGetRegion(), "location", "aws_s3_bucket.local", "bucket"),
 
-					resource.TestCheckResourceAttr(resourceName, testAccCheckAWSCodePipelineHashArtifactStoreKey(testAccGetAlternateRegion(), "type"), "S3"),
-					resource.TestCheckResourceAttrPair(resourceName, testAccCheckAWSCodePipelineHashArtifactStoreKey(testAccGetAlternateRegion(), "location"), "aws_s3_bucket.alternate", "bucket"),
-					resource.TestCheckResourceAttr(resourceName, testAccCheckAWSCodePipelineHashArtifactStoreKey(testAccGetAlternateRegion(), "region"), testAccGetAlternateRegion()),
+					testAccCheckAWSCodePipelineArtifactStoresAttr(&p, testAccGetAlternateRegion(), "type", "S3"),
+					testAccCheckAWSCodePipelineArtifactStoresAttrPair(&p, testAccGetAlternateRegion(), "location", "aws_s3_bucket.alternate", "bucket"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
@@ -280,6 +270,61 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAWSCodePipelineArtifactStoresAttr(p *codepipeline.PipelineDeclaration, region string, key, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		as, ok := p.ArtifactStores[region]
+		if !ok {
+			return fmt.Errorf("Artifact Store for region %q not found", region)
+		}
+		values := flatmap.Flatten(flattenAwsCodePipelineArtifactStore(as)[0].(map[string]interface{}))
+
+		if v, ok := values[key]; !ok || v != value {
+			if !ok {
+				return fmt.Errorf("ArtifactStores[%s]: Attribute %q not found", region, key)
+			}
+
+			return fmt.Errorf(
+				"ArtifactStores[%s]: Attribute %q expected %#v, got %#v", region, key, value, v)
+		}
+		return nil
+	}
+}
+
+func testAccCheckAWSCodePipelineArtifactStoresAttrPair(p *codepipeline.PipelineDeclaration, region string, keyFirst, nameSecond, keySecond string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		as, ok := p.ArtifactStores[region]
+		if !ok {
+			return fmt.Errorf("Artifact Store for region %q not found", region)
+		}
+		values := flatmap.Flatten(flattenAwsCodePipelineArtifactStore(as)[0].(map[string]interface{}))
+
+		isSecond, err := primaryInstanceState(s, nameSecond)
+		if err != nil {
+			return err
+		}
+
+		vFirst, okFirst := values[keyFirst]
+		vSecond, okSecond := isSecond.Attributes[keySecond]
+
+		if okFirst != okSecond {
+			if !okFirst {
+				return fmt.Errorf("ArtifactStores[%s]: Attribute %q not set, but %q is set in %s as %q", region, keyFirst, keySecond, nameSecond, vSecond)
+			}
+			return fmt.Errorf("ArtifactStores[%s]: Attribute %q is %q, but %q is not set in %s", region, keyFirst, vFirst, keySecond, nameSecond)
+		}
+		if !(okFirst || okSecond) {
+			// If they both don't exist then they are equally unset, so that's okay.
+			return nil
+		}
+
+		if vFirst != vSecond {
+			return fmt.Errorf("ArtifactStores[%s]: Attribute '%s' expected %#v, got %#v", region, keyFirst, vSecond, vFirst)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.PipelineDeclaration) resource.TestCheckFunc {
@@ -350,19 +395,6 @@ func testAccPreCheckAWSCodePipeline(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func testAccAWSCodePipelineS3DefaultBucket(rName string) string {
-	return testAccAWSCodePipelineS3Bucket("test", rName)
-}
-
-func testAccAWSCodePipelineS3Bucket(bucket, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "%[1]s" {
-  bucket = "tf-test-pipeline-%[1]s-%[2]s"
-  acl    = "private"
-}
-`, bucket, rName)
 }
 
 func testAccAWSCodePipelineServiceIAMRole(rName string) string {
@@ -853,18 +885,9 @@ resource "aws_codepipeline" "test" {
 func testAccAWSCodePipelineConfig_multiregion(rName string) string {
 	return composeConfig(
 		testAccAlternateRegionProviderConfig(),
+		testAccAWSCodePipelineS3Bucket("local", rName),
+		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "aws.alternate"),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "local" {
-  bucket = "tf-test-pipeline-local-%[1]s"
-  acl    = "private"
-}
-
-resource "aws_s3_bucket" "alternate" {
-  bucket = "tf-test-pipeline-alternate-%[1]s"
-  acl    = "private"
-  provider = "aws.alternate"
-}
-
 resource "aws_iam_role" "codepipeline_role" {
   name = "codepipeline-role-%[1]s"
 
@@ -924,14 +947,22 @@ resource "aws_codepipeline" "test" {
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_stores {
-			location = "${aws_s3_bucket.local.bucket}"
-			type     = "S3"    
-      region   = "%[2]s"
+		location = "${aws_s3_bucket.local.bucket}"
+		type     = "S3"    
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+    region = "%[2]s"
 	}
   artifact_stores {
-			location = "${aws_s3_bucket.alternate.bucket}"
-			type     = "S3"  
-      region   = "%[3]s"
+		location = "${aws_s3_bucket.alternate.bucket}"
+		type     = "S3"  
+    encryption_key {
+      id   = "5678"
+      type = "KMS"
+    }
+    region   = "%[3]s"
 	}
 
   stage {
@@ -952,7 +983,6 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
-
   stage {
     name = "Build"
 
@@ -969,7 +999,6 @@ resource "aws_codepipeline" "test" {
         ProjectName = "%[2]s-Test"
       }
     }
-
     action {
 		  region          = "%[3]s"
       name            = "%[3]s-Build"
@@ -986,4 +1015,162 @@ resource "aws_codepipeline" "test" {
   }
 }
 `, rName, testAccGetRegion(), testAccGetAlternateRegion()))
+}
+
+func testAccAWSCodePipelineConfig_multiregionUpdated(rName string) string {
+	return composeConfig(
+		testAccAlternateRegionProviderConfig(),
+		testAccAWSCodePipelineS3Bucket("local", rName),
+		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "aws.alternate"),
+		fmt.Sprintf(`
+resource "aws_iam_role" "codepipeline_role" {
+  name = "codepipeline-role-%[1]s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codepipeline.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "codepipeline_policy" {
+  name = "codepipeline_policy"
+  role = "${aws_iam_role.codepipeline_role.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect":"Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:GetBucketVersioning"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.local.arn}",
+        "${aws_s3_bucket.local.arn}/*",
+        "${aws_s3_bucket.alternate.arn}",
+        "${aws_s3_bucket.alternate.arn}/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%[1]s"
+  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+
+  artifact_stores {
+		location = "${aws_s3_bucket.local.bucket}"
+		type     = "S3"    
+    encryption_key {
+      id   = "4321"
+      type = "KMS"
+    }
+    region = "%[2]s"
+	}
+  artifact_stores {
+		location = "${aws_s3_bucket.alternate.bucket}"
+		type     = "S3"  
+    encryption_key {
+      id   = "8765"
+      type = "KMS"
+    }
+    region   = "%[3]s"
+	}
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "ThirdParty"
+      provider         = "GitHub"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        Owner  = "lifesum-terraform"
+        Repo   = "test"
+        Branch = "master"
+      }
+    }
+  }
+  stage {
+    name = "Build"
+
+    action {
+		  region          = "%[2]s"
+      name            = "%[2]s-Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "%[2]s-Test"
+      }
+    }
+    action {
+		  region          = "%[3]s"
+      name            = "%[3]s-Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "%[3]s-Test"
+      }
+    }
+  }
+}
+`, rName, testAccGetRegion(), testAccGetAlternateRegion()))
+}
+
+func testAccAWSCodePipelineS3DefaultBucket(rName string) string {
+	return testAccAWSCodePipelineS3Bucket("test", rName)
+}
+
+func testAccAWSCodePipelineS3Bucket(bucket, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "%[1]s" {
+  bucket = "tf-test-pipeline-%[1]s-%[2]s"
+  acl    = "private"
+}
+`, bucket, rName)
+}
+
+func testAccAWSCodePipelineS3BucketWithProvider(bucket, rName, provider string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "%[1]s" {
+  bucket = "tf-test-pipeline-%[1]s-%[2]s"
+  acl    = "private"
+  provider = %[3]s
+}
+`, bucket, rName, provider)
 }
