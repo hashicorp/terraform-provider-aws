@@ -591,6 +591,56 @@ func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_XssMatchStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.field_to_match.0.body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.2336416342.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.2336416342.type", "NONE"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_XssMatchStatement_Update(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.field_to_match.0.body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.2876362756.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.2876362756.type", "URL_DECODE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2RuleGroup_changeNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
@@ -1901,6 +1951,95 @@ resource "aws_wafv2_rule_group" "test" {
         text_transformation {
           priority = 3
           type = "COMPRESS_WHITE_SPACE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_XssMatchStatement(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 300
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  block {}
+    }
+
+    statement {
+      xss_match_statement {
+
+        field_to_match {
+          body {}
+        }
+
+        text_transformation {
+          priority = 2
+          type = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_XssMatchStatement_Update(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 300
+  name = "%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+  	  allow {}
+    }
+
+    statement {
+      xss_match_statement {
+        field_to_match {
+          body {}
+        }
+
+        text_transformation {
+          priority = 2
+          type = "URL_DECODE"
         }
       }
     }
