@@ -1,5 +1,10 @@
 ## 2.56.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_launch_template: Add `hibernation_options` attribute [GH-12492]
+* resource/aws_launch_template: Add `hibernation_options` configuration block [GH-12492]
+
 BUG FIXES:
 
 * resource/aws_codedeploy_deployment_group: Fix `blue_green_deployment_config` updates for ECS [GH-11885]
