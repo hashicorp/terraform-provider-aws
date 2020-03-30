@@ -2997,7 +2997,7 @@ resource "aws_db_instance" "bar" {
 func testAccAWSDBInstanceConfig_FinalSnapshotIdentifier_SkipFinalSnapshot() string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "snapshot" {
-  identifier = "tf-test-%d"
+  identifier = "tf-acc-test-%[1]d"
 
   allocated_storage       = 5
   engine                  = "mysql"
@@ -3013,7 +3013,7 @@ resource "aws_db_instance" "snapshot" {
   parameter_group_name = "default.mysql5.6"
 
   skip_final_snapshot       = true
-  final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-1"
+  final_snapshot_identifier = "tf-acc-test-%[1]d"
 }
 `, acctest.RandInt())
 }
@@ -3921,7 +3921,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_db_subnet_group" "rds_one" {
-  name        = "tf_acc_test_%d"
+  name        = "tf_acc_test_%[1]d"
   description = "db subnets for rds_one"
 
   subnet_ids = ["${aws_subnet.main.id}", "${aws_subnet.other.id}"]
@@ -3950,7 +3950,7 @@ resource "aws_subnet" "other" {
 resource "aws_db_instance" "mssql" {
   allocated_storage   = 20
   engine              = "sqlserver-ex"
-  identifier          = "tf-test-mssql-%d"
+  identifier          = "tf-test-mssql-%[1]d"
   instance_class      = "db.t2.micro"
   password            = "somecrazypassword"
   skip_final_snapshot = true
@@ -3959,11 +3959,11 @@ resource "aws_db_instance" "mssql" {
 
 resource "aws_db_snapshot" "mssql-snap" {
   db_instance_identifier = "${aws_db_instance.mssql.id}"
-  db_snapshot_identifier = "mssql-snap"
+  db_snapshot_identifier = "tf-acc-test-%[1]d"
 }
 
 resource "aws_db_instance" "mssql_restore" {
-  identifier = "tf-test-mssql-%d-restore"
+  identifier = "tf-test-mssql-%[1]d-restore"
 
   db_subnet_group_name = "${aws_db_subnet_group.rds_one.name}"
 
@@ -3984,7 +3984,7 @@ resource "aws_db_instance" "mssql_restore" {
 }
 
 resource "aws_security_group" "rds-mssql" {
-  name = "tf-rds-mssql-test-%d"
+  name = "tf-rds-mssql-test-%[1]d"
 
   description = "TF Testing"
   vpc_id      = "${aws_vpc.foo.id}"
@@ -4013,7 +4013,7 @@ resource "aws_directory_service_directory" "foo" {
 }
 
 resource "aws_iam_role" "role" {
-  name = "tf-acc-db-instance-mssql-domain-role-%d"
+  name = "tf-acc-db-instance-mssql-domain-role-%[1]d"
 
   assume_role_policy = <<EOF
 {
@@ -4036,7 +4036,7 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   role       = "${aws_iam_role.role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
-`, rInt, rInt, rInt, rInt, rInt)
+`, rInt)
 }
 
 func testAccAWSDBMySQLSnapshotRestoreWithEngineVersion(rInt int) string {
@@ -4090,7 +4090,7 @@ resource "aws_db_instance" "mysql" {
 
 resource "aws_db_snapshot" "mysql-snap" {
   db_instance_identifier = "${aws_db_instance.mysql.id}"
-  db_snapshot_identifier = "mysql-snap"
+  db_snapshot_identifier = "tf-acc-test-%[1]d"
 }
 
 resource "aws_db_instance" "mysql_restore" {
