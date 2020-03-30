@@ -25,6 +25,7 @@ func TestAccAWSLaunchTemplateDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "default_version", dataSourceName, "default_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "latest_version", dataSourceName, "latest_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "hibernation_options", dataSourceName, "hibernation_options"),
 				),
 			},
 		},

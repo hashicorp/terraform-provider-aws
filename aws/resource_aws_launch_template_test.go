@@ -865,6 +865,46 @@ func TestAccAWSLaunchTemplate_metadataOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_hibernation(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfigHibernation(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "hibernation_options.0.configured", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfigHibernation(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "hibernation_options.0.configured", "false"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfigHibernation(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "hibernation_options.0.configured", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1549,4 +1589,16 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSLaunchTemplateConfigHibernation(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  hibernation_options {
+    configured = %[2]t
+  }
+}
+`, rName, enabled)
 }
