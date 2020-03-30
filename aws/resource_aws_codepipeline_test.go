@@ -33,7 +33,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.type", "S3"),
-					resource.TestCheckResourceAttrPair(resourceName, "artifact_store.0.location", "aws_s3_bucket.foo", "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, "artifact_store.0.location", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.id", "1234"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.type", "KMS"),
@@ -96,19 +96,19 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.name", "Source"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.input_artifacts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.0", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.0", "artifacts"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Owner", "foo-terraform"),
-					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Repo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Owner", "test-terraform"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Repo", "test-repo"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Branch", "stable"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.0", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.input_artifacts.0", "artifacts"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.ProjectName", "foo"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.ProjectName", "test"),
 				),
 			},
 		},
@@ -397,8 +397,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "s3:GetBucketVersioning"
       ],
       "Resource": [
-        "${aws_s3_bucket.foo.arn}",
-        "${aws_s3_bucket.foo.arn}/*"
+        "${aws_s3_bucket.test.arn}",
+        "${aws_s3_bucket.test.arn}/*"
       ]
     },
     {
@@ -453,8 +453,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "s3:GetBucketVersioning"
       ],
       "Resource": [
-        "${aws_s3_bucket.foo.arn}",
-        "${aws_s3_bucket.foo.arn}/*"
+        "${aws_s3_bucket.test.arn}",
+        "${aws_s3_bucket.test.arn}/*"
       ]
     },
     {
@@ -489,7 +489,7 @@ resource "aws_codepipeline" "test" {
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
+    location = "${aws_s3_bucket.test.bucket}"
     type     = "S3"
 
     encryption_key {
@@ -547,7 +547,7 @@ resource "aws_codepipeline" "test" {
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
+    location = "${aws_s3_bucket.updated.bucket}"
     type     = "S3"
 
     encryption_key {
@@ -565,11 +565,11 @@ resource "aws_codepipeline" "test" {
       owner            = "ThirdParty"
       provider         = "GitHub"
       version          = "1"
-      output_artifacts = ["bar"]
+      output_artifacts = ["artifacts"]
 
       configuration = {
-        Owner  = "foo-terraform"
-        Repo   = "bar"
+        Owner  = "test-terraform"
+        Repo   = "test-repo"
         Branch = "stable"
       }
     }
@@ -583,11 +583,11 @@ resource "aws_codepipeline" "test" {
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
-      input_artifacts = ["bar"]
+      input_artifacts = ["artifacts"]
       version         = "1"
 
       configuration = {
-        ProjectName = "foo"
+        ProjectName = "test"
       }
     }
   }
@@ -605,7 +605,7 @@ resource "aws_codepipeline" "test" {
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
+    location = "${aws_s3_bucket.test.bucket}"
     type     = "S3"
   }
 
@@ -688,8 +688,8 @@ resource "aws_iam_role_policy" "codepipeline_action_policy" {
         "s3:GetBucketVersioning"
       ],
       "Resource": [
-        "${aws_s3_bucket.foo.arn}",
-        "${aws_s3_bucket.foo.arn}/*"
+        "${aws_s3_bucket.test.arn}",
+        "${aws_s3_bucket.test.arn}/*"
       ]
     }
   ]
@@ -710,7 +710,7 @@ resource "aws_codepipeline" "test" {
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
+    location = "${aws_s3_bucket.test.bucket}"
     type     = "S3"
 
     encryption_key {
@@ -728,11 +728,11 @@ resource "aws_codepipeline" "test" {
       owner            = "ThirdParty"
       provider         = "GitHub"
       version          = "1"
-      output_artifacts = ["bar"]
+      output_artifacts = ["artifacts"]
 
       configuration = {
-        Owner  = "foo-terraform"
-        Repo   = "bar"
+        Owner  = "test-terraform"
+        Repo   = "test-repo"
         Branch = "stable"
       }
     }
@@ -746,12 +746,12 @@ resource "aws_codepipeline" "test" {
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
-      input_artifacts  = ["bar"]
-      output_artifacts = ["baz"]
+      input_artifacts  = ["artifacts"]
+      output_artifacts = ["artifacts2"]
       version          = "1"
 
       configuration = {
-        ProjectName = "foo"
+        ProjectName = "test"
       }
     }
   }
@@ -764,7 +764,7 @@ resource "aws_codepipeline" "test" {
       category        = "Deploy"
       owner           = "AWS"
       provider        = "CloudFormation"
-      input_artifacts = ["baz"]
+      input_artifacts = ["artifacts2"]
       role_arn        = "${aws_iam_role.codepipeline_action_role.arn}"
       version         = "1"
 
@@ -772,7 +772,7 @@ resource "aws_codepipeline" "test" {
         ActionMode    = "CHANGE_SET_REPLACE"
         ChangeSetName = "changeset"
         StackName     = "stack"
-        TemplatePath  = "baz::template.yaml"
+        TemplatePath  = "artifacts2::template.yaml"
       }
     }
   }
@@ -790,7 +790,7 @@ resource "aws_codepipeline" "test" {
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
+    location = "${aws_s3_bucket.test.bucket}"
     type     = "S3"
 
     encryption_key {
