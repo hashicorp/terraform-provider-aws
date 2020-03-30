@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * data-source/aws_launch_template: Add `hibernation_options` attribute [GH-12492]
+* resource/aws_kms_grant: Support resource import [GH-11991]
 * resource/aws_launch_template: Add `hibernation_options` configuration block [GH-12492]
 
 BUG FIXES:
