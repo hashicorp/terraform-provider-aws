@@ -167,10 +167,9 @@ type Config struct {
 	AllowedAccountIds   []string
 	ForbiddenAccountIds []string
 
-	Endpoints         map[string]string
-	IgnoreTagPrefixes []string
-	IgnoreTags        []string
-	Insecure          bool
+	Endpoints        map[string]string
+	IgnoreTagsConfig *keyvaluetags.IgnoreConfig
+	Insecure         bool
 
 	SkipCredsValidation     bool
 	SkipGetEC2Platforms     bool
@@ -254,8 +253,7 @@ type AWSClient struct {
 	guarddutyconn                       *guardduty.GuardDuty
 	greengrassconn                      *greengrass.Greengrass
 	iamconn                             *iam.IAM
-	ignoreTagPrefixes                   keyvaluetags.KeyValueTags
-	ignoreTags                          keyvaluetags.KeyValueTags
+	IgnoreTagsConfig                    *keyvaluetags.IgnoreConfig
 	imagebuilderconn                    *imagebuilder.Imagebuilder
 	inspectorconn                       *inspector.Inspector
 	iotconn                             *iot.IoT
@@ -472,8 +470,7 @@ func (c *Config) Client() (interface{}, error) {
 		guarddutyconn:                       guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["guardduty"])})),
 		greengrassconn:                      greengrass.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["greengrass"])})),
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
-		ignoreTagPrefixes:                   keyvaluetags.New(c.IgnoreTagPrefixes),
-		ignoreTags:                          keyvaluetags.New(c.IgnoreTags),
+		IgnoreTagsConfig:                    c.IgnoreTagsConfig,
 		imagebuilderconn:                    imagebuilder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["imagebuilder"])})),
 		inspectorconn:                       inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["inspector"])})),
 		iotconn:                             iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iot"])})),

@@ -483,20 +483,24 @@ provider "aws" {
 `, testAccGetAlternateRegion())
 }
 
-func testAccProviderConfigIgnoreTagPrefixes1(keyPrefix1 string) string {
+func testAccProviderConfigIgnoreTagsKeyPrefixes1(keyPrefix1 string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  ignore_tag_prefixes = [%[1]q]
+  ignore_tags {
+    key_prefixes = [%[1]q]
+  }
 }
 `, keyPrefix1)
 }
 
-func testAccProviderConfigIgnoreTags1(key1 string) string {
+func testAccProviderConfigIgnoreTagsKeys1(key1 string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  ignore_tags = [%[1]q]
+  ignore_tags {
+    keys = [%[1]q]
+  }
 }
 `, key1)
 }
@@ -691,7 +695,7 @@ func TestAccAWSProvider_Endpoints_Deprecated(t *testing.T) {
 	})
 }
 
-func TestAccAWSProvider_IgnoreTagPrefixes_None(t *testing.T) {
+func TestAccAWSProvider_IgnoreTags_EmptyConfigurationBlock(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -700,16 +704,17 @@ func TestAccAWSProvider_IgnoreTagPrefixes_None(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigIgnoreTagPrefixes0(),
+				Config: testAccAWSProviderConfigIgnoreTagsEmptyConfigurationBlock(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSProviderIgnoreTagPrefixes(&providers, []string{}),
+					testAccCheckAWSProviderIgnoreTagsKeys(&providers, []string{}),
+					testAccCheckAWSProviderIgnoreTagsKeyPrefixes(&providers, []string{}),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSProvider_IgnoreTagPrefixes_One(t *testing.T) {
+func TestAccAWSProvider_IgnoreTags_KeyPrefixes_None(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -718,16 +723,16 @@ func TestAccAWSProvider_IgnoreTagPrefixes_One(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigIgnoreTagPrefixes1("test"),
+				Config: testAccAWSProviderConfigIgnoreTagsKeyPrefixes0(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSProviderIgnoreTagPrefixes(&providers, []string{"test"}),
+					testAccCheckAWSProviderIgnoreTagsKeyPrefixes(&providers, []string{}),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSProvider_IgnoreTagPrefixes_Multiple(t *testing.T) {
+func TestAccAWSProvider_IgnoreTags_KeyPrefixes_One(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -736,16 +741,16 @@ func TestAccAWSProvider_IgnoreTagPrefixes_Multiple(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigIgnoreTagPrefixes2("test1", "test2"),
+				Config: testAccAWSProviderConfigIgnoreTagsKeyPrefixes1("test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSProviderIgnoreTagPrefixes(&providers, []string{"test1", "test2"}),
+					testAccCheckAWSProviderIgnoreTagsKeyPrefixes(&providers, []string{"test"}),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSProvider_IgnoreTags_None(t *testing.T) {
+func TestAccAWSProvider_IgnoreTags_KeyPrefixes_Multiple(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -754,16 +759,16 @@ func TestAccAWSProvider_IgnoreTags_None(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigIgnoreTags0(),
+				Config: testAccAWSProviderConfigIgnoreTagsKeyPrefixes2("test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSProviderIgnoreTags(&providers, []string{}),
+					testAccCheckAWSProviderIgnoreTagsKeyPrefixes(&providers, []string{"test1", "test2"}),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSProvider_IgnoreTags_One(t *testing.T) {
+func TestAccAWSProvider_IgnoreTags_Keys_None(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -772,16 +777,16 @@ func TestAccAWSProvider_IgnoreTags_One(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigIgnoreTags1("test"),
+				Config: testAccAWSProviderConfigIgnoreTagsKeys0(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSProviderIgnoreTags(&providers, []string{"test"}),
+					testAccCheckAWSProviderIgnoreTagsKeys(&providers, []string{}),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSProvider_IgnoreTags_Multiple(t *testing.T) {
+func TestAccAWSProvider_IgnoreTags_Keys_One(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -790,9 +795,27 @@ func TestAccAWSProvider_IgnoreTags_Multiple(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigIgnoreTags2("test1", "test2"),
+				Config: testAccAWSProviderConfigIgnoreTagsKeys1("test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSProviderIgnoreTags(&providers, []string{"test1", "test2"}),
+					testAccCheckAWSProviderIgnoreTagsKeys(&providers, []string{"test"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_IgnoreTags_Keys_Multiple(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigIgnoreTagsKeys2("test1", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderIgnoreTagsKeys(&providers, []string{"test1", "test2"}),
 				),
 			},
 		},
@@ -1009,7 +1032,7 @@ func testAccCheckAWSProviderEndpointsDeprecated(providers *[]*schema.Provider) r
 	}
 }
 
-func testAccCheckAWSProviderIgnoreTagPrefixes(providers *[]*schema.Provider, expectedIgnoreTagPrefixes []string) resource.TestCheckFunc {
+func testAccCheckAWSProviderIgnoreTagsKeyPrefixes(providers *[]*schema.Provider, expectedKeyPrefixes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if providers == nil {
 			return fmt.Errorf("no providers initialized")
@@ -1021,17 +1044,26 @@ func testAccCheckAWSProviderIgnoreTagPrefixes(providers *[]*schema.Provider, exp
 			}
 
 			providerClient := provider.Meta().(*AWSClient)
+			ignoreTagsConfig := providerClient.IgnoreTagsConfig
 
-			actualIgnoreTagPrefixes := providerClient.ignoreTagPrefixes.Keys()
+			if ignoreTagsConfig == nil || ignoreTagsConfig.KeyPrefixes == nil {
+				if len(expectedKeyPrefixes) != 0 {
+					return fmt.Errorf("expected key_prefixes (%d) length, got: 0", len(expectedKeyPrefixes))
+				}
 
-			if len(actualIgnoreTagPrefixes) != len(expectedIgnoreTagPrefixes) {
-				return fmt.Errorf("expected ignore_tag_prefixes (%d) length, got: %d", len(expectedIgnoreTagPrefixes), len(actualIgnoreTagPrefixes))
+				continue
 			}
 
-			for _, expectedElement := range expectedIgnoreTagPrefixes {
+			actualKeyPrefixes := ignoreTagsConfig.KeyPrefixes.Keys()
+
+			if len(actualKeyPrefixes) != len(expectedKeyPrefixes) {
+				return fmt.Errorf("expected key_prefixes (%d) length, got: %d", len(expectedKeyPrefixes), len(actualKeyPrefixes))
+			}
+
+			for _, expectedElement := range expectedKeyPrefixes {
 				var found bool
 
-				for _, actualElement := range actualIgnoreTagPrefixes {
+				for _, actualElement := range actualKeyPrefixes {
 					if actualElement == expectedElement {
 						found = true
 						break
@@ -1039,14 +1071,14 @@ func testAccCheckAWSProviderIgnoreTagPrefixes(providers *[]*schema.Provider, exp
 				}
 
 				if !found {
-					return fmt.Errorf("expected ignore_tag_prefixes element, but was missing: %s", expectedElement)
+					return fmt.Errorf("expected key_prefixes element, but was missing: %s", expectedElement)
 				}
 			}
 
-			for _, actualElement := range actualIgnoreTagPrefixes {
+			for _, actualElement := range actualKeyPrefixes {
 				var found bool
 
-				for _, expectedElement := range expectedIgnoreTagPrefixes {
+				for _, expectedElement := range expectedKeyPrefixes {
 					if actualElement == expectedElement {
 						found = true
 						break
@@ -1054,7 +1086,7 @@ func testAccCheckAWSProviderIgnoreTagPrefixes(providers *[]*schema.Provider, exp
 				}
 
 				if !found {
-					return fmt.Errorf("unexpected ignore_tag_prefixes element: %s", actualElement)
+					return fmt.Errorf("unexpected key_prefixes element: %s", actualElement)
 				}
 			}
 		}
@@ -1063,7 +1095,7 @@ func testAccCheckAWSProviderIgnoreTagPrefixes(providers *[]*schema.Provider, exp
 	}
 }
 
-func testAccCheckAWSProviderIgnoreTags(providers *[]*schema.Provider, expectedIgnoreTags []string) resource.TestCheckFunc {
+func testAccCheckAWSProviderIgnoreTagsKeys(providers *[]*schema.Provider, expectedKeys []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if providers == nil {
 			return fmt.Errorf("no providers initialized")
@@ -1075,17 +1107,26 @@ func testAccCheckAWSProviderIgnoreTags(providers *[]*schema.Provider, expectedIg
 			}
 
 			providerClient := provider.Meta().(*AWSClient)
+			ignoreTagsConfig := providerClient.IgnoreTagsConfig
 
-			actualIgnoreTags := providerClient.ignoreTags.Keys()
+			if ignoreTagsConfig == nil || ignoreTagsConfig.Keys == nil {
+				if len(expectedKeys) != 0 {
+					return fmt.Errorf("expected keys (%d) length, got: 0", len(expectedKeys))
+				}
 
-			if len(actualIgnoreTags) != len(expectedIgnoreTags) {
-				return fmt.Errorf("expected ignore_tags (%d) length, got: %d", len(expectedIgnoreTags), len(actualIgnoreTags))
+				continue
 			}
 
-			for _, expectedElement := range expectedIgnoreTags {
+			actualKeys := ignoreTagsConfig.Keys.Keys()
+
+			if len(actualKeys) != len(expectedKeys) {
+				return fmt.Errorf("expected keys (%d) length, got: %d", len(expectedKeys), len(actualKeys))
+			}
+
+			for _, expectedElement := range expectedKeys {
 				var found bool
 
-				for _, actualElement := range actualIgnoreTags {
+				for _, actualElement := range actualKeys {
 					if actualElement == expectedElement {
 						found = true
 						break
@@ -1093,14 +1134,14 @@ func testAccCheckAWSProviderIgnoreTags(providers *[]*schema.Provider, expectedIg
 				}
 
 				if !found {
-					return fmt.Errorf("expected ignore_tags element, but was missing: %s", expectedElement)
+					return fmt.Errorf("expected keys element, but was missing: %s", expectedElement)
 				}
 			}
 
-			for _, actualElement := range actualIgnoreTags {
+			for _, actualElement := range actualKeys {
 				var found bool
 
-				for _, expectedElement := range expectedIgnoreTags {
+				for _, expectedElement := range expectedKeys {
 					if actualElement == expectedElement {
 						found = true
 						break
@@ -1108,7 +1149,7 @@ func testAccCheckAWSProviderIgnoreTags(providers *[]*schema.Provider, expectedIg
 				}
 
 				if !found {
-					return fmt.Errorf("unexpected ignore_tags element: %s", actualElement)
+					return fmt.Errorf("unexpected keys element: %s", actualElement)
 				}
 			}
 		}
@@ -1207,7 +1248,26 @@ data "aws_arn" "test" {
 `, endpoints)
 }
 
-func testAccAWSProviderConfigIgnoreTagPrefixes0() string {
+func testAccAWSProviderConfigIgnoreTagsEmptyConfigurationBlock() string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  ignore_tags {}
+
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+}
+
+# Required to initialize the provider
+data "aws_arn" "test" {
+  arn = "arn:aws:s3:::test"
+}
+`)
+}
+
+func testAccAWSProviderConfigIgnoreTagsKeyPrefixes0() string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
@@ -1224,11 +1284,14 @@ data "aws_arn" "test" {
 `)
 }
 
-func testAccAWSProviderConfigIgnoreTagPrefixes1(tagPrefix1 string) string {
+func testAccAWSProviderConfigIgnoreTagsKeyPrefixes1(tagPrefix1 string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  ignore_tag_prefixes         = [%[1]q]
+  ignore_tags {
+    key_prefixes = [%[1]q]
+  }
+
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
@@ -1242,11 +1305,14 @@ data "aws_arn" "test" {
 `, tagPrefix1)
 }
 
-func testAccAWSProviderConfigIgnoreTagPrefixes2(tagPrefix1, tagPrefix2 string) string {
+func testAccAWSProviderConfigIgnoreTagsKeyPrefixes2(tagPrefix1, tagPrefix2 string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  ignore_tag_prefixes         = [%[1]q, %[2]q]
+  ignore_tags {
+    key_prefixes = [%[1]q, %[2]q]
+  }
+
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
@@ -1260,7 +1326,7 @@ data "aws_arn" "test" {
 `, tagPrefix1, tagPrefix2)
 }
 
-func testAccAWSProviderConfigIgnoreTags0() string {
+func testAccAWSProviderConfigIgnoreTagsKeys0() string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
@@ -1277,11 +1343,14 @@ data "aws_arn" "test" {
 `)
 }
 
-func testAccAWSProviderConfigIgnoreTags1(tag1 string) string {
+func testAccAWSProviderConfigIgnoreTagsKeys1(tag1 string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  ignore_tags                 = [%[1]q]
+  ignore_tags {
+    keys = [%[1]q]
+  }
+
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
@@ -1295,11 +1364,14 @@ data "aws_arn" "test" {
 `, tag1)
 }
 
-func testAccAWSProviderConfigIgnoreTags2(tag1, tag2 string) string {
+func testAccAWSProviderConfigIgnoreTagsKeys2(tag1, tag2 string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  ignore_tags                 = [%[1]q, %[2]q]
+  ignore_tags {
+    keys = [%[1]q, %[2]q]
+  }
+
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
