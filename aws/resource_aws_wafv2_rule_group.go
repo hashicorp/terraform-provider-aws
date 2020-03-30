@@ -53,6 +53,10 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
+			"lock_token": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -225,6 +229,7 @@ func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("capacity", resp.RuleGroup.Capacity)
 	d.Set("description", resp.RuleGroup.Description)
 	d.Set("arn", resp.RuleGroup.ARN)
+	d.Set("lock_token", resp.LockToken)
 	d.Set("rule", flattenWafv2Rules(resp.RuleGroup.Rules))
 	d.Set("visibility_config", flattenWafv2VisibilityConfig(resp.RuleGroup.VisibilityConfig))
 
@@ -242,18 +247,14 @@ func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
-	var resp *wafv2.GetRuleGroupOutput
-	params := &wafv2.GetRuleGroupInput{
-		Id:    aws.String(d.Id()),
-		Name:  aws.String(d.Get("name").(string)),
-		Scope: aws.String(d.Get("scope").(string)),
-	}
+
 	log.Printf("[INFO] Updating WAFV2 RuleGroup %s", d.Id())
 
 	u := &wafv2.UpdateRuleGroupInput{
 		Id:               aws.String(d.Id()),
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
+		LockToken:        aws.String(d.Get("lock_token").(string)),
 		Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
@@ -263,21 +264,10 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.GetRuleGroup(params)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error getting lock token: %s", err))
-		}
-
-		u.LockToken = resp.LockToken
-
-		_, err = conn.UpdateRuleGroup(u)
+		_, err := conn.UpdateRuleGroup(u)
 
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "AWS WAF couldn’t save your changes because you tried to update or delete a resource that has changed since you last retrieved it") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -286,7 +276,6 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if isResourceTimeoutError(err) {
-		u.LockToken = resp.LockToken
 		_, err = conn.UpdateRuleGroup(u)
 	}
 
@@ -306,33 +295,21 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
-	var resp *wafv2.GetRuleGroupOutput
-	params := &wafv2.GetRuleGroupInput{
-		Id:    aws.String(d.Id()),
-		Name:  aws.String(d.Get("name").(string)),
-		Scope: aws.String(d.Get("scope").(string)),
-	}
+
 	log.Printf("[INFO] Deleting WAFV2 RuleGroup %s", d.Id())
 
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.GetRuleGroup(params)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error getting lock token: %s", err))
-		}
+	r := &wafv2.DeleteRuleGroupInput{
+		Id:        aws.String(d.Id()),
+		Name:      aws.String(d.Get("name").(string)),
+		Scope:     aws.String(d.Get("scope").(string)),
+		LockToken: aws.String(d.Get("lock_token").(string)),
+	}
 
-		_, err = conn.DeleteRuleGroup(&wafv2.DeleteRuleGroupInput{
-			Id:        aws.String(d.Id()),
-			Name:      aws.String(d.Get("name").(string)),
-			Scope:     aws.String(d.Get("scope").(string)),
-			LockToken: resp.LockToken,
-		})
+	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteRuleGroup(r)
 
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "AWS WAF couldn’t save your changes because you tried to update or delete a resource that has changed since you last retrieved it") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -341,12 +318,7 @@ func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteRuleGroup(&wafv2.DeleteRuleGroupInput{
-			Id:        aws.String(d.Id()),
-			Name:      aws.String(d.Get("name").(string)),
-			Scope:     aws.String(d.Get("scope").(string)),
-			LockToken: resp.LockToken,
-		})
+		_, err = conn.DeleteRuleGroup(r)
 	}
 
 	if err != nil {
