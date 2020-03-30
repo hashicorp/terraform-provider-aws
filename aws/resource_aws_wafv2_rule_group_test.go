@@ -468,11 +468,11 @@ func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.and_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.0.geo_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.1.geo_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.and_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.and_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.and_statement.0.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.and_statement.0.statement.1.geo_match_statement.#", "1"),
 				),
 			},
 			{
@@ -1730,25 +1730,25 @@ resource "aws_wafv2_rule_group" "test" {
         statement {
           not_statement {
             statement {
-              and_statement {
-                statement {
-                  geo_match_statement {
-                    country_codes = ["US"]
-                  }
-                }
-                statement { 
-                  geo_match_statement {
-                    country_codes = ["NL"]
-                  }
-                }
+              geo_match_statement {
+                country_codes = ["DE"]
               }
             }
           }
         }
         statement {
-          geo_match_statement {
-            country_codes = ["DE"]
-          }
+		  and_statement {
+			statement {
+			  geo_match_statement {
+				country_codes = ["US"]
+			  }
+			}
+			statement { 
+			  geo_match_statement {
+				country_codes = ["NL"]
+			  }
+			}
+		  }
         }
       }
     }
