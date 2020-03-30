@@ -193,8 +193,6 @@ func resourceAwsdbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}
 		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("db_cluster_snapshot_arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS DB Cluster Snapshot (%s) tags: %s", d.Get("db_cluster_snapshot_arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
 
 	return nil
