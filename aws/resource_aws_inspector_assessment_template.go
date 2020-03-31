@@ -35,7 +35,6 @@ func resourceAWSInspectorAssessmentTemplate() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
 			},
 			"duration": {
 				Type:     schema.TypeInt,
