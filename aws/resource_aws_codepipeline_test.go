@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,12 +33,12 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.codepipeline_role", "arn"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.type", "S3"),
-					resource.TestCheckResourceAttrPair(resourceName, "artifact_store.0.location", "aws_s3_bucket.test", "bucket"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.id", "1234"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.type", "KMS"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "0"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p1, "", "type", "S3"),
+					testAccCheckAWSCodePipelineArtifactStoreAttrPair(&p1, "", "location", "aws_s3_bucket.test", "bucket"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p1, "", "encryption_key.#", "1"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p1, "", "encryption_key.0.id", "1234"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p1, "", "encryption_key.0.type", "KMS"),
+
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
@@ -84,12 +85,12 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_basicUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p2),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.type", "S3"),
-					resource.TestCheckResourceAttrPair(resourceName, "artifact_store.0.location", "aws_s3_bucket.updated", "bucket"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.id", "4567"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.0.type", "KMS"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "0"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p1, "", "type", "S3"),
+					testAccCheckAWSCodePipelineArtifactStoreAttrPair(&p1, "", "location", "aws_s3_bucket.test", "bucket"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p1, "", "encryption_key.#", "1"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p1, "", "encryption_key.0.id", "1234"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p1, "", "encryption_key.0.type", "KMS"),
+
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
@@ -132,8 +133,8 @@ func TestAccAWSCodePipeline_emptyArtifacts(t *testing.T) {
 					testAccCheckAWSCodePipelineExists(resourceName, &p),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.encryption_key.#", "0"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p, "", "type", "S3"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p, "", "encryption_key.#", "0"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -245,14 +246,13 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_multiregion(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
 
-					testAccCheckAWSCodePipelineArtifactStoresAttr(&p, testAccGetRegion(), "type", "S3"),
-					testAccCheckAWSCodePipelineArtifactStoresAttrPair(&p, testAccGetRegion(), "location", "aws_s3_bucket.test", "bucket"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p, testAccGetRegion(), "type", "S3"),
+					testAccCheckAWSCodePipelineArtifactStoreAttrPair(&p, testAccGetRegion(), "location", "aws_s3_bucket.test", "bucket"),
 
-					testAccCheckAWSCodePipelineArtifactStoresAttr(&p, testAccGetAlternateRegion(), "type", "S3"),
-					testAccCheckAWSCodePipelineArtifactStoresAttrPair(&p, testAccGetAlternateRegion(), "location", "aws_s3_bucket.alternate", "bucket"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p, testAccGetAlternateRegion(), "type", "S3"),
+					testAccCheckAWSCodePipelineArtifactStoreAttrPair(&p, testAccGetAlternateRegion(), "location", "aws_s3_bucket.alternate", "bucket"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
@@ -292,11 +292,10 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_multiregion(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p1),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
 
-					testAccCheckAWSCodePipelineArtifactStoresAttr(&p1, testAccGetRegion(), "encryption_key.0.id", "1234"),
-					testAccCheckAWSCodePipelineArtifactStoresAttr(&p1, testAccGetAlternateRegion(), "encryption_key.0.id", "5678"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p1, testAccGetRegion(), "encryption_key.0.id", "1234"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p1, testAccGetAlternateRegion(), "encryption_key.0.id", "5678"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
@@ -310,11 +309,10 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_multiregionUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p2),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
 
-					testAccCheckAWSCodePipelineArtifactStoresAttr(&p2, testAccGetRegion(), "encryption_key.0.id", "4321"),
-					testAccCheckAWSCodePipelineArtifactStoresAttr(&p2, testAccGetAlternateRegion(), "encryption_key.0.id", "8765"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p2, testAccGetRegion(), "encryption_key.0.id", "4321"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p2, testAccGetAlternateRegion(), "encryption_key.0.id", "8765"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
@@ -349,9 +347,8 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p1),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "0"),
 
-					resource.TestCheckResourceAttrPair(resourceName, "artifact_store.0.location", "aws_s3_bucket.test", "bucket"),
+					testAccCheckAWSCodePipelineArtifactStoreAttrPair(&p1, "", "location", "aws_s3_bucket.test", "bucket"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
@@ -363,11 +360,10 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_multiregion(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p2),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
 
-					testAccCheckAWSCodePipelineArtifactStoresAttr(&p2, testAccGetRegion(), "encryption_key.0.id", "1234"),
-					testAccCheckAWSCodePipelineArtifactStoresAttr(&p2, testAccGetAlternateRegion(), "encryption_key.0.id", "5678"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p2, testAccGetRegion(), "encryption_key.0.id", "1234"),
+					testAccCheckAWSCodePipelineArtifactStoreAttr(&p2, testAccGetAlternateRegion(), "encryption_key.0.id", "5678"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
@@ -382,9 +378,8 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p1),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_stores.#", "0"),
 
-					resource.TestCheckResourceAttrPair(resourceName, "artifact_store.0.location", "aws_s3_bucket.test", "bucket"),
+					testAccCheckAWSCodePipelineArtifactStoreAttrPair(&p1, "", "location", "aws_s3_bucket.test", "bucket"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
@@ -1015,7 +1010,7 @@ resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
-  artifact_stores {
+  artifact_store {
 		location = "${aws_s3_bucket.test.bucket}"
 		type     = "S3"    
     encryption_key {
@@ -1024,7 +1019,7 @@ resource "aws_codepipeline" "test" {
     }
     region = "%[2]s"
 	}
-  artifact_stores {
+  artifact_store {
 		location = "${aws_s3_bucket.alternate.bucket}"
 		type     = "S3"  
     encryption_key {
@@ -1150,7 +1145,7 @@ resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
-  artifact_stores {
+  artifact_store {
 		location = "${aws_s3_bucket.test.bucket}"
 		type     = "S3"    
     encryption_key {
@@ -1159,7 +1154,7 @@ resource "aws_codepipeline" "test" {
     }
     region = "%[2]s"
 	}
-  artifact_stores {
+  artifact_store {
 		location = "${aws_s3_bucket.alternate.bucket}"
 		type     = "S3"  
     encryption_key {
@@ -1251,15 +1246,23 @@ resource "aws_s3_bucket" "%[1]s" {
 `, bucket, rName, provider)
 }
 
-func testAccCheckAWSCodePipelineArtifactStoresAttr(p *codepipeline.PipelineDeclaration, region string, key, value string) resource.TestCheckFunc {
+func testAccCheckAWSCodePipelineArtifactStoreAttr(p *codepipeline.PipelineDeclaration, region string, key, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		as, ok := p.ArtifactStores[region]
-		if !ok {
-			return fmt.Errorf("Artifact Store for region %q not found", region)
+		values, err := testAccCheckAWSCodePipelineArtifactStoreFlatmap(p, region)
+		if err != nil {
+			return err
 		}
-		values := flatmap.Flatten(flattenAwsCodePipelineArtifactStore(as)[0].(map[string]interface{}))
+
+		emptyCheck := false
+		if value == "0" && (strings.HasSuffix(key, ".#") || strings.HasSuffix(key, ".%")) {
+			emptyCheck = true
+		}
 
 		if v, ok := values[key]; !ok || v != value {
+			if emptyCheck && !ok {
+				return nil
+			}
+
 			if !ok {
 				return fmt.Errorf("ArtifactStores[%s]: Attribute %q not found", region, key)
 			}
@@ -1271,13 +1274,12 @@ func testAccCheckAWSCodePipelineArtifactStoresAttr(p *codepipeline.PipelineDecla
 	}
 }
 
-func testAccCheckAWSCodePipelineArtifactStoresAttrPair(p *codepipeline.PipelineDeclaration, region string, keyFirst, nameSecond, keySecond string) resource.TestCheckFunc {
+func testAccCheckAWSCodePipelineArtifactStoreAttrPair(p *codepipeline.PipelineDeclaration, region string, keyFirst, nameSecond, keySecond string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		as, ok := p.ArtifactStores[region]
-		if !ok {
-			return fmt.Errorf("Artifact Store for region %q not found", region)
+		values, err := testAccCheckAWSCodePipelineArtifactStoreFlatmap(p, region)
+		if err != nil {
+			return err
 		}
-		values := flatmap.Flatten(flattenAwsCodePipelineArtifactStore(as)[0].(map[string]interface{}))
 
 		isSecond, err := primaryInstanceState(s, nameSecond)
 		if err != nil {
@@ -1303,5 +1305,139 @@ func testAccCheckAWSCodePipelineArtifactStoresAttrPair(p *codepipeline.PipelineD
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckAWSCodePipelineArtifactStoreFlatmap(p *codepipeline.PipelineDeclaration, region string) (flatmap.Map, error) {
+	var as *codepipeline.ArtifactStore
+	if region == "" {
+		as = p.ArtifactStore
+	} else {
+		v, ok := p.ArtifactStores[region]
+		if !ok {
+			return nil, fmt.Errorf("Artifact Store for region %q not found", region)
+		}
+		as = v
+	}
+	return flatmap.Flatten(flattenAwsCodePipelineArtifactStore(as)[0].(map[string]interface{})), nil
+}
+
+func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
+	cases := []struct {
+		Name          string
+		Input         []interface{}
+		ExpectedError string
+	}{
+		{
+			Name: "Single-region",
+			Input: []interface{}{
+				map[string]interface{}{
+					"location":       "",
+					"type":           "",
+					"encryption_key": []interface{}{},
+					"region":         "",
+				},
+			},
+		},
+		{
+			Name: "Single-region, names region",
+			Input: []interface{}{
+				map[string]interface{}{
+					"location":       "",
+					"type":           "",
+					"encryption_key": []interface{}{},
+					"region":         "us-west-2",
+				},
+			},
+			ExpectedError: "region cannot be set for a single-region CodePipeline",
+		},
+		{
+			Name: "Cross-region",
+			Input: []interface{}{
+				map[string]interface{}{
+					"location":       "",
+					"type":           "",
+					"encryption_key": []interface{}{},
+					"region":         "us-west-2",
+				},
+				map[string]interface{}{
+					"location":       "",
+					"type":           "",
+					"encryption_key": []interface{}{},
+					"region":         "us-east-1",
+				},
+			},
+		},
+		{
+			Name: "Cross-region, no regions",
+			Input: []interface{}{
+				map[string]interface{}{
+					"location":       "",
+					"type":           "",
+					"encryption_key": []interface{}{},
+					"region":         "",
+				},
+				map[string]interface{}{
+					"location":       "",
+					"type":           "",
+					"encryption_key": []interface{}{},
+					"region":         "",
+				},
+			},
+			ExpectedError: "region must be set for a cross-region CodePipeline",
+		},
+		{
+			Name: "Cross-region, not all regions",
+			Input: []interface{}{
+				map[string]interface{}{
+					"location":       "",
+					"type":           "",
+					"encryption_key": []interface{}{},
+					"region":         "us-west-2",
+				},
+				map[string]interface{}{
+					"location":       "",
+					"type":           "",
+					"encryption_key": []interface{}{},
+					"region":         "",
+				},
+			},
+			ExpectedError: "region must be set for a cross-region CodePipeline",
+		},
+		{
+			Name: "Duplicate regions",
+			Input: []interface{}{
+				map[string]interface{}{
+					"location":       "",
+					"type":           "",
+					"encryption_key": []interface{}{},
+					"region":         "us-west-2",
+				},
+				map[string]interface{}{
+					"location":       "",
+					"type":           "",
+					"encryption_key": []interface{}{},
+					"region":         "us-west-2",
+				},
+			},
+			ExpectedError: "only one Artifact Store can be defined per region for a cross-region CodePipeline",
+		},
+	}
+
+	for _, tc := range cases {
+		_, err := expandAwsCodePipelineArtifactStores(tc.Input)
+		if tc.ExpectedError == "" {
+			if err != nil {
+				t.Errorf("%s: Did not expect an error, but got: %q", tc.Name, err)
+			}
+		} else {
+			if err == nil {
+				t.Errorf("%s: Expected an error, but did not get one", tc.Name)
+			} else {
+				if err.Error() != tc.ExpectedError {
+					t.Errorf("%s: Expected error %q, got %q", tc.Name, tc.ExpectedError, err.Error())
+				}
+			}
+		}
 	}
 }
