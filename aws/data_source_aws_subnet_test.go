@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -14,7 +13,6 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
 	tag := "tf-acc-subnet-data-source"
-	arnregex := regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)
 
 	snResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
@@ -47,8 +45,9 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds1ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds1ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds1ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds1ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
+					resource.TestCheckResourceAttr(
+						ds1ResourceName, "outpost_arn", ""),
 
 					resource.TestCheckResourceAttrPair(
 						ds2ResourceName, "id", snResourceName, "id"),
@@ -64,8 +63,9 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds2ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds2ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds2ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds2ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
+					resource.TestCheckResourceAttr(
+						ds2ResourceName, "outpost_arn", ""),
 
 					resource.TestCheckResourceAttrPair(
 						ds3ResourceName, "id", snResourceName, "id"),
@@ -81,8 +81,9 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds3ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds3ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds3ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds3ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
+					resource.TestCheckResourceAttr(
+						ds3ResourceName, "outpost_arn", ""),
 
 					resource.TestCheckResourceAttrPair(
 						ds4ResourceName, "id", snResourceName, "id"),
@@ -98,8 +99,9 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds4ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds4ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds4ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds4ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
+					resource.TestCheckResourceAttr(
+						ds4ResourceName, "outpost_arn", ""),
 
 					resource.TestCheckResourceAttrPair(
 						ds5ResourceName, "id", snResourceName, "id"),
@@ -115,8 +117,9 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds5ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds5ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds5ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds5ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
+					resource.TestCheckResourceAttr(
+						ds5ResourceName, "outpost_arn", ""),
 
 					resource.TestCheckResourceAttrPair(
 						ds6ResourceName, "id", snResourceName, "id"),
@@ -132,8 +135,9 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 						ds6ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
 						ds6ResourceName, "tags.Name", tag),
-					resource.TestMatchResourceAttr(
-						ds6ResourceName, "arn", arnregex),
+					testAccMatchResourceAttrRegionalARN(ds6ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
+					resource.TestCheckResourceAttr(
+						ds6ResourceName, "outpost_arn", ""),
 				),
 			},
 		},
@@ -176,37 +180,6 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6CidrBlock(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccDataSourceAwsSubnet_Outpost(t *testing.T) {
-	rInt := acctest.RandIntRange(0, 256)
-
-	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
-	if outpostArn == "" {
-		t.Skip(
-			"Environment variable AWS_OUTPOST_ARN is not set. " +
-				"This environment variable must be set to the ARN of " +
-				"a deployed Outpost to enable this test.")
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceAwsSubnetConfigIpv6(rInt),
-			},
-			{
-				Config: testAccDataSourceAwsSubnetConfigOutpost(rInt, outpostArn),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_subnet.test",
-						"outpost_arn",
-						outpostArn),
 				),
 			},
 		},
@@ -294,32 +267,6 @@ resource "aws_subnet" "test" {
   }
 }
 `, rInt, rInt)
-}
-
-func testAccDataSourceAwsSubnetConfigOutpost(rInt int, outpostArn string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
-
-resource "aws_vpc" "test" {
-  cidr_block                       = "172.%d.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = "terraform-testacc-subnet-data-source-outpost"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "172.%d.123.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  outpost_arn       = "%s"
-
-  tags = {
-    Name = "tf-acc-subnet-data-source-outpost"
-  }
-}
-`, rInt, rInt, outpostArn)
 }
 
 func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceFilter(rInt int) string {
