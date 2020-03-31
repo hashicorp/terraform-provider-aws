@@ -32,14 +32,46 @@ func resourceAwsTransferUser() *schema.Resource {
 			},
 
 			"home_directory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"home_directory_mappings"},
+				ValidateFunc:  validation.StringLenBetween(0, 1024),
+			},
+
+			"home_directory_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					transfer.HomeDirectoryTypeLogical,
+					transfer.HomeDirectoryTypePath,
+				}, false),
+			},
+
+			"home_directory_mappings": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      50,
+				ConflictsWith: []string{"home_directory", "policy"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"entry": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+						"target": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+					},
+				},
 			},
 
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				ConflictsWith:    []string{"home_directory_mappings"},
 				ValidateFunc:     validateIAMPolicyJson,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
@@ -82,6 +114,14 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 
 	if attr, ok := d.GetOk("home_directory"); ok {
 		createOpts.HomeDirectory = aws.String(attr.(string))
+	}
+
+	if attr, ok := d.GetOk("home_directory_type"); ok {
+		createOpts.HomeDirectoryType = aws.String(attr.(string))
+	}
+
+	if attr, ok := d.GetOk("home_directory_mappings"); ok {
+		createOpts.HomeDirectoryMappings = expandTransferServerHomeDirectoryMappings(attr.([]interface{}))
 	}
 
 	if attr, ok := d.GetOk("policy"); ok {
@@ -134,6 +174,8 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("user_name", resp.User.UserName)
 	d.Set("arn", resp.User.Arn)
 	d.Set("home_directory", resp.User.HomeDirectory)
+	d.Set("home_directory_type", resp.User.HomeDirectoryType)
+	d.Set("home_directory_mappings", flattenTransferServerUserHomeDirectoryMappings(resp.User.HomeDirectoryMappings))
 	d.Set("policy", resp.User.Policy)
 	d.Set("role", resp.User.Role)
 
@@ -159,6 +201,14 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("home_directory") {
 		updateOpts.HomeDirectory = aws.String(d.Get("home_directory").(string))
 		updateFlag = true
+	}
+
+	if d.HasChange("home_directory_type") {
+		updateOpts.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
+	}
+
+	if d.HasChange("home_directory_mappings") {
+		updateOpts.HomeDirectoryMappings = expandTransferServerHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
 	}
 
 	if d.HasChange("policy") {
@@ -259,5 +309,46 @@ func waitForTransferUserDeletion(conn *transfer.Transfer, serverID, userName str
 	if err != nil {
 		return fmt.Errorf("Error decoding transfer user ID: %s", err)
 	}
+	return nil
+}
+
+func expandTransferServerHomeDirectoryMappings(m []interface{}) []*transfer.HomeDirectoryMapEntry {
+	ms := make([]*transfer.HomeDirectoryMapEntry, 0)
+
+	for _, v := range m {
+		mv := v.(map[string]interface{})
+		e := &transfer.HomeDirectoryMapEntry{}
+
+		if v, ok := mv["entry"].(string); ok && v != "" {
+			e.Entry = aws.String(v)
+		}
+
+		if v, ok := mv["target"].(string); ok && v != "" {
+			e.Target = aws.String(v)
+		}
+
+		ms = append(ms, e)
+	}
+
+	return ms
+}
+
+func flattenTransferServerUserHomeDirectoryMappings(m []*transfer.HomeDirectoryMapEntry) []map[string]interface{} {
+	ms := make([]map[string]interface{}, 0)
+
+	for _, e := range m {
+		if e.Entry != nil && e.Target != nil {
+			m := make(map[string]interface{})
+			m["entry"] = *e.Entry
+			m["target"] = *e.Target
+
+			ms = append(ms, m)
+		}
+	}
+
+	if len(ms) > 0 {
+		return ms
+	}
+
 	return nil
 }

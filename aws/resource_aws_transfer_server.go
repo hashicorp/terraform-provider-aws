@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -41,6 +42,7 @@ func resourceAwsTransferServer() *schema.Resource {
 				Default:  transfer.EndpointTypePublic,
 				ValidateFunc: validation.StringInSlice([]string{
 					transfer.EndpointTypePublic,
+					transfer.EndpointTypeVpc,
 					transfer.EndpointTypeVpcEndpoint,
 				}, false),
 			},
@@ -52,8 +54,9 @@ func resourceAwsTransferServer() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"vpc_endpoint_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								value := v.(string)
 								validNamePattern := "^vpce-[0-9a-f]{17}$"
@@ -64,6 +67,32 @@ func resourceAwsTransferServer() *schema.Resource {
 								}
 								return
 							},
+							DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+								if n == "" && d.Get("endpoint_type").(string) == transfer.EndpointTypeVpc {
+									return true
+								}
+								return false
+							},
+						},
+						"address_allocation_ids": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							Elem:          &schema.Schema{Type: schema.TypeString},
+							Set:           schema.HashString,
+							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
+						},
+						"subnet_ids": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							Elem:          &schema.Schema{Type: schema.TypeString},
+							Set:           schema.HashString,
+							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
+						},
+						"vpc_id": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ValidateFunc:  validation.NoZeroValues,
+							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
 					},
 				},
@@ -121,6 +150,7 @@ func resourceAwsTransferServer() *schema.Resource {
 }
 
 func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) error {
+	updateAfterCreate := false
 	conn := meta.(*AWSClient).transferconn
 	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().TransferTags()
 	createOpts := &transfer.CreateServerInput{}
@@ -156,6 +186,11 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 
 	if attr, ok := d.GetOk("endpoint_details"); ok {
 		createOpts.EndpointDetails = expandTransferServerEndpointDetails(attr.([]interface{}))
+
+		if createOpts.EndpointDetails.AddressAllocationIds != nil {
+			createOpts.EndpointDetails.AddressAllocationIds = nil
+			updateAfterCreate = true
+		}
 	}
 
 	if attr, ok := d.GetOk("host_key"); ok {
@@ -170,6 +205,17 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId(*resp.ServerId)
+
+	if updateAfterCreate {
+		updateOpts := &transfer.UpdateServerInput{
+			ServerId:        aws.String(d.Id()),
+			EndpointDetails: expandTransferServerEndpointDetails(d.Get("endpoint_details").([]interface{})),
+		}
+
+		if err := doTransferServerUpdate(d, updateOpts, conn, meta.(*AWSClient).ec2conn, true); err != nil {
+			return err
+		}
+	}
 
 	return resourceAwsTransferServerRead(d, meta)
 }
@@ -219,6 +265,7 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 	updateFlag := false
+	stopFlag := false
 	updateOpts := &transfer.UpdateServerInput{
 		ServerId: aws.String(d.Id()),
 	}
@@ -253,6 +300,10 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		if attr, ok := d.GetOk("endpoint_details"); ok {
 			updateOpts.EndpointDetails = expandTransferServerEndpointDetails(attr.([]interface{}))
 		}
+
+		if d.HasChange("endpoint_details.0.address_allocation_ids") {
+			stopFlag = true
+		}
 	}
 
 	if d.HasChange("host_key") {
@@ -263,14 +314,8 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if updateFlag {
-		_, err := conn.UpdateServer(updateOpts)
-		if err != nil {
-			if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-				log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("error updating Transfer Server (%s): %s", d.Id(), err)
+		if err := doTransferServerUpdate(d, updateOpts, conn, meta.(*AWSClient).ec2conn, stopFlag); err != nil {
+			return err
 		}
 	}
 
@@ -392,9 +437,25 @@ func expandTransferServerEndpointDetails(l []interface{}) *transfer.EndpointDeta
 	}
 	e := l[0].(map[string]interface{})
 
-	return &transfer.EndpointDetails{
-		VpcEndpointId: aws.String(e["vpc_endpoint_id"].(string)),
+	out := &transfer.EndpointDetails{}
+
+	if v, ok := e["vpc_endpoint_id"]; ok && v != "" {
+		out.VpcEndpointId = aws.String(v.(string))
 	}
+
+	if v, ok := e["address_allocation_ids"]; ok {
+		out.AddressAllocationIds = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := e["subnet_ids"]; ok {
+		out.SubnetIds = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := e["vpc_id"]; ok {
+		out.VpcId = aws.String(v.(string))
+	}
+
+	return out
 }
 
 func flattenTransferServerEndpointDetails(endpointDetails *transfer.EndpointDetails) []interface{} {
@@ -402,9 +463,156 @@ func flattenTransferServerEndpointDetails(endpointDetails *transfer.EndpointDeta
 		return []interface{}{}
 	}
 
-	e := map[string]interface{}{
-		"vpc_endpoint_id": aws.StringValue(endpointDetails.VpcEndpointId),
+	e := make(map[string]interface{})
+	if endpointDetails.VpcEndpointId != nil {
+		e["vpc_endpoint_id"] = *endpointDetails.VpcEndpointId
+	}
+	if endpointDetails.AddressAllocationIds != nil {
+		e["address_allocation_ids"] = endpointDetails.AddressAllocationIds
+	}
+	if endpointDetails.SubnetIds != nil {
+		e["subnet_ids"] = endpointDetails.SubnetIds
+	}
+	if endpointDetails.VpcId != nil {
+		e["vpc_id"] = *endpointDetails.VpcId
 	}
 
 	return []interface{}{e}
+}
+
+func doTransferServerUpdate(d *schema.ResourceData, updateOpts *transfer.UpdateServerInput, transferConn *transfer.Transfer, ec2Conn *ec2.EC2, stopFlag bool) error {
+	if stopFlag {
+		if err := waitForTransferServerVPCEndpointState(transferConn, ec2Conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("error waiting for Transfer Server VPC Endpoint (%s) to start: %s", d.Id(), err)
+		}
+
+		if err := stopAndWaitForTransferServer(d.Id(), transferConn, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return err
+		}
+	}
+
+	_, err := transferConn.UpdateServer(updateOpts)
+	if err != nil {
+		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("error updating Transfer Server (%s): %s", d.Id(), err)
+	}
+
+	if stopFlag {
+		if err := startAndWaitForTransferServer(d.Id(), transferConn, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func stopAndWaitForTransferServer(serverId string, conn *transfer.Transfer, timeout time.Duration) error {
+	stopReq := &transfer.StopServerInput{
+		ServerId: aws.String(serverId),
+	}
+	if _, err := conn.StopServer(stopReq); err != nil {
+		return fmt.Errorf("error stopping Transfer Server (%s): %s", serverId, err)
+	}
+
+	stateChangeConf := &resource.StateChangeConf{
+		Pending: []string{transfer.StateStarting, transfer.StateOnline, transfer.StateStopping},
+		Target:  []string{transfer.StateOffline},
+		Refresh: refreshTransferServerStatus(conn, serverId),
+		Timeout: timeout,
+		Delay:   10 * time.Second,
+	}
+
+	if _, err := stateChangeConf.WaitForState(); err != nil {
+		return fmt.Errorf("error waiting for Transfer Server (%s) to stop: %s", serverId, err)
+	}
+
+	return nil
+}
+
+func startAndWaitForTransferServer(serverId string, conn *transfer.Transfer, timeout time.Duration) error {
+	stopReq := &transfer.StartServerInput{
+		ServerId: aws.String(serverId),
+	}
+
+	if _, err := conn.StartServer(stopReq); err != nil {
+		return fmt.Errorf("error starting Transfer Server (%s): %s", serverId, err)
+	}
+
+	stateChangeConf := &resource.StateChangeConf{
+		Pending: []string{transfer.StateStarting, transfer.StateOffline, transfer.StateStopping},
+		Target:  []string{transfer.StateOnline},
+		Refresh: refreshTransferServerStatus(conn, serverId),
+		Timeout: timeout,
+		Delay:   10 * time.Second,
+	}
+
+	if _, err := stateChangeConf.WaitForState(); err != nil {
+		return fmt.Errorf("error waiting for Transfer Server (%s) to start: %s", serverId, err)
+	}
+
+	return nil
+}
+
+func refreshTransferServerStatus(conn *transfer.Transfer, serverId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		server, err := describeTransferServer(conn, serverId)
+
+		if server == nil {
+			return 42, "destroyed", nil
+		}
+
+		return server, aws.StringValue(server.State), err
+	}
+}
+
+func describeTransferServer(conn *transfer.Transfer, serverId string) (*transfer.DescribedServer, error) {
+	params := &transfer.DescribeServerInput{
+		ServerId: aws.String(serverId),
+	}
+
+	resp, err := conn.DescribeServer(params)
+
+	return resp.Server, err
+}
+
+func waitForTransferServerVPCEndpointState(transferConn *transfer.Transfer, ec2Conn *ec2.EC2, serverId string, timeout time.Duration) error {
+	server, err := describeTransferServer(transferConn, serverId)
+
+	stateChangeConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpcStatePending},
+		Target:  []string{ec2.VpcStateAvailable},
+		Refresh: refreshTransferServerVPCEndpointStatus(ec2Conn, server.EndpointDetails.VpcEndpointId),
+		Timeout: timeout,
+		Delay:   10 * time.Second,
+	}
+
+	_, err = stateChangeConf.WaitForState()
+
+	return err
+}
+
+func refreshTransferServerVPCEndpointStatus(conn *ec2.EC2, vpceId *string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		server, err := describeTransferServerVPCEndpoint(conn, vpceId)
+
+		if server == nil {
+			return 42, "destroyed", nil
+		}
+
+		return server, aws.StringValue(server.State), err
+	}
+}
+
+func describeTransferServerVPCEndpoint(conn *ec2.EC2, vpceId *string) (*ec2.VpcEndpoint, error) {
+	params := &ec2.DescribeVpcEndpointsInput{
+		VpcEndpointIds: []*string{vpceId},
+	}
+
+	resp, err := conn.DescribeVpcEndpoints(params)
+
+	return resp.VpcEndpoints[0], err
 }

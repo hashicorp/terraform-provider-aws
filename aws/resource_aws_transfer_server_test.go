@@ -111,6 +111,47 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSTransferServer_Vpc(t *testing.T) {
+	var conf transfer.DescribedServer
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		IDRefreshName: "aws_transfer_server.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerConfig_Vpc,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists("aws_transfer_server.test", &conf),
+					resource.TestCheckResourceAttr(
+						"aws_transfer_server.test", "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(
+						"aws_transfer_server.test", "endpoint_details.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_transfer_server.test", "endpoint_details.0.address_allocation_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:            "aws_transfer_server.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
+				Config: testAccAWSTransferServerConfig_VpcUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists("aws_transfer_server.test", &conf),
+					resource.TestCheckResourceAttr(
+						"aws_transfer_server.test", "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(
+						"aws_transfer_server.test", "endpoint_details.0.address_allocation_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSTransferServer_apigateway(t *testing.T) {
 	var conf transfer.DescribedServer
 	rName := acctest.RandString(5)
@@ -650,6 +691,79 @@ resource "aws_transfer_server" "default" {
   endpoint_details {
     vpc_endpoint_id = aws_vpc_endpoint.transfer.id
   }
+}
+`
+
+const testAccAWSTransferServerConfig_VpcDefault = `
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+	cidr_block = "10.0.0.0/16"
+
+	tags = {
+		Name = "terraform-testacc-vpc"
+	}
+}
+
+resource "aws_internet_gateway" "test" {
+	vpc_id = "${aws_vpc.test.id}"
+
+	tags = {
+		Name = "terraform-testacc-igw"
+	}
+}
+
+resource "aws_subnet" "test" {
+  vpc_id                  = "${aws_vpc.test.id}"
+  cidr_block              = "10.0.0.0/24"
+  map_public_ip_on_launch = true
+
+  depends_on = ["aws_internet_gateway.test"]
+}
+
+resource "aws_default_route_table" "test" {
+	default_route_table_id = "${aws_vpc.test.default_route_table_id}"
+
+	route {
+		cidr_block = "0.0.0.0/0"
+		gateway_id = "${aws_internet_gateway.test.id}"
+	}
+
+	tags = {
+		Name = "terraform-testacc-subnet"
+	}
+}
+
+resource "aws_eip" "testa" {
+  vpc      = true
+}
+
+resource "aws_eip" "testb" {
+  vpc      = true
+}
+`
+
+const testAccAWSTransferServerConfig_Vpc = testAccAWSTransferServerConfig_VpcDefault + `
+
+resource "aws_transfer_server" "test" {
+	endpoint_type = "VPC"
+	endpoint_details {
+		vpc_id = "${aws_vpc.test.id}"
+		address_allocation_ids = ["${aws_eip.testa.id}"]
+		subnet_ids = ["${aws_subnet.test.id}"]
+	}
+}
+`
+
+const testAccAWSTransferServerConfig_VpcUpdate = testAccAWSTransferServerConfig_VpcDefault + `
+
+resource "aws_transfer_server" "test" {
+	endpoint_type = "VPC"
+	endpoint_details {
+		vpc_id = "${aws_vpc.test.id}"
+		address_allocation_ids = ["${aws_eip.testb.id}"]
+		subnet_ids = ["${aws_subnet.test.id}"]
+	}
 }
 `
 

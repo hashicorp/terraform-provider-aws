@@ -43,6 +43,38 @@ func TestAccAWSTransferUser_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSTransferUser_restricted(t *testing.T) {
+	var conf transfer.DescribedUser
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		IDRefreshName: "aws_transfer_user.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferUserConfig_restricted(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &conf),
+					testAccMatchResourceAttrRegionalARN("aws_transfer_user.foo", "arn", "transfer", regexp.MustCompile(`user/.+`)),
+					resource.TestCheckResourceAttrPair(
+						"aws_transfer_user.foo", "server_id", "aws_transfer_server.foo", "id"),
+					resource.TestCheckResourceAttrPair(
+						"aws_transfer_user.foo", "role", "aws_iam_role.foo", "arn"),
+					resource.TestCheckResourceAttr(
+						"aws_transfer_user.foo", "home_directory_type", "LOGICAL"),
+				),
+			},
+			{
+				ResourceName:      "aws_transfer_user.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 	var conf transfer.DescribedUser
 	rName := acctest.RandString(10)
@@ -286,6 +318,74 @@ resource "aws_transfer_user" "foo" {
   server_id = aws_transfer_server.foo.id
   user_name = "tftestuser"
   role      = aws_iam_role.foo.arn
+}
+`, rName, rName)
+}
+
+func testAccAWSTransferUserConfig_restricted(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_server" "foo" {
+  identity_provider_type = "SERVICE_MANAGED"
+
+  tags = {
+    NAME = "tf-acc-test-transfer-server"
+  }
+}
+
+resource "aws_iam_role" "foo" {
+  name = "tf-test-transfer-user-iam-role-%s"
+
+  assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Principal": {
+				"Service": "transfer.amazonaws.com"
+			},
+			"Action": "sts:AssumeRole"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "foo" {
+  name = "tf-test-transfer-user-iam-policy-%s"
+  role = "${aws_iam_role.foo.id}"
+
+  policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AllowFullAccesstoS3",
+			"Effect": "Allow",
+			"Action": [
+				"s3:*"
+			],
+			"Resource": "*"
+		}
+	]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = ""
+}
+
+resource "aws_transfer_user" "foo" {
+  server_id 		  = "${aws_transfer_server.foo.id}"
+  user_name 		  = "tftestuser"
+  role                = "${aws_iam_role.foo.arn}"
+  home_directory_type = "LOGICAL"
+
+  home_directory_mappings {
+    entry = "/"
+    target = "/${aws_s3_bucket.test.bucket}/testuser"
+  }
 }
 `, rName, rName)
 }
