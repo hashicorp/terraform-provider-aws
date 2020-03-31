@@ -582,6 +582,10 @@ func describeTransferServer(conn *transfer.Transfer, serverId string) (*transfer
 func waitForTransferServerVPCEndpointState(transferConn *transfer.Transfer, ec2Conn *ec2.EC2, serverId string, timeout time.Duration) error {
 	server, err := describeTransferServer(transferConn, serverId)
 
+	if err != nil {
+		return err
+	}
+
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{ec2.VpcStatePending},
 		Target:  []string{ec2.VpcStateAvailable},
