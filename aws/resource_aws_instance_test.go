@@ -286,6 +286,8 @@ func TestAccAWSInstance_basic(t *testing.T) {
 						"3dc39dda39be1205215e776bad998da361a5955d"),
 					resource.TestCheckResourceAttr(
 						resourceName, "ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(
+						resourceName, "outpost_arn", ""),
 					resource.TestMatchResourceAttr(
 						resourceName,
 						"arn",
