@@ -4149,39 +4149,6 @@ resource "aws_subnet" "test" {
 `, rName, mapPublicIpOnLaunch)
 }
 
-// testAccAwsInstanceVpcConfig returns the configuration for tests that create
-//   1) a VPC with IPv6 support
-//   2) a subnet in the VPC
-//   3) a subnet in an Outpost
-// The resources are named 'test'.
-func testAccAwsInstanceOutpostConfig(rName string, outpostArn string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "current" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  blacklisted_zone_ids = ["usw2-az4"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block              = "10.1.1.0/24"
-  vpc_id                  = "${aws_vpc.test.id}"
-  availability_zone       = "${data.aws_availability_zones.current.names[0]}"
-  map_public_ip_on_launch = %s
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, outpostArn)
-}
-
 // testAccAwsInstanceVpcSecurityGroupConfig returns the configuration for tests that create
 //   1) a VPC security group
 //   2) an internet gateway in the VPC
