@@ -26,6 +26,7 @@ func dataSourceAwsResourceGroupsTaggingApiResources() *schema.Resource {
 			"tag_filters": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
@@ -35,6 +36,7 @@ func dataSourceAwsResourceGroupsTaggingApiResources() *schema.Resource {
 						"values": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							MaxItems: 20,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
