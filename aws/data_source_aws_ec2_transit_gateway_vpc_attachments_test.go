@@ -9,7 +9,6 @@ import (
 
 func TestAccAWSEc2TransitGatewayVpcAttachmentsDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_vpc_attachments.test"
-	resourceName := "aws_ec2_transit_gateway_vpc_attachments.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
@@ -19,7 +18,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentsDataSource_Filter(t *testing.T) {
 			{
 				Config: testAccAWSEc2TransitGatewayVpcAttachmentsDataSourceConfigFilter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_vpc_attachments.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "transit_gateway_vpc_attachments.#", "2"),
 				),
 			},
 		},
