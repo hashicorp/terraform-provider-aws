@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * data-source/aws_launch_template: Add `hibernation_options` attribute [GH-12492]
 * resource/aws_dx_connection: Support `2Gbps` and `5Gbps` values in plan-time validation for `bandwidth` argument [GH-12559]
 * resource/aws_dx_lag: Support `2Gbps` and `5Gbps` values in plan-time validation for `bandwidth` argument [GH-12559]
+* resource/aws_elastic_transcoder_preset: Support plan-time validation for `role` argument [GH-12575]
 * resource/aws_kms_grant: Support resource import [GH-11991]
 * resource/aws_launch_template: Add `hibernation_options` configuration block [GH-12492]
 
