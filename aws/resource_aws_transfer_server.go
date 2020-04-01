@@ -98,6 +98,14 @@ func resourceAwsTransferServer() *schema.Resource {
 				},
 			},
 
+			"vpce_security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+
 			"host_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -254,6 +262,15 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("identity_provider_type", resp.Server.IdentityProviderType)
 	d.Set("logging_role", resp.Server.LoggingRole)
 	d.Set("host_key_fingerprint", resp.Server.HostKeyFingerprint)
+
+	if resp.Server.EndpointDetails.VpcEndpointId != nil {
+		out, err := describeTransferServerVPCEndpoint(meta.(*AWSClient).ec2conn, resp.Server.EndpointDetails.VpcEndpointId)
+		if err != nil {
+			return err
+		}
+
+		d.Set("vpce_security_group_ids", flattenVpcEndpointSecurityGroupIds(out.Groups))
+	}
 
 	if err := d.Set("tags", keyvaluetags.TransferKeyValueTags(resp.Server.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("Error setting tags: %s", err)
@@ -506,6 +523,10 @@ func doTransferServerUpdate(d *schema.ResourceData, updateOpts *transfer.UpdateS
 		}
 	}
 
+	if err := updateTransferServerVPCEndpointSecurityGroup(d, transferConn, ec2Conn); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -585,29 +606,11 @@ func waitForTransferServerVPCEndpointState(transferConn *transfer.Transfer, ec2C
 		return err
 	}
 
-	stateChangeConf := &resource.StateChangeConf{
-		Pending: []string{ec2.VpcStatePending},
-		Target:  []string{ec2.VpcStateAvailable},
-		Refresh: refreshTransferServerVPCEndpointStatus(ec2Conn, server.EndpointDetails.VpcEndpointId),
-		Timeout: timeout,
-		Delay:   10 * time.Second,
+	if err := vpcEndpointWaitUntilAvailable(ec2Conn, *server.EndpointDetails.VpcEndpointId, timeout); err != nil {
+		return err
 	}
 
-	_, err = stateChangeConf.WaitForState()
-
-	return err
-}
-
-func refreshTransferServerVPCEndpointStatus(conn *ec2.EC2, vpceId *string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		server, err := describeTransferServerVPCEndpoint(conn, vpceId)
-
-		if server == nil {
-			return 42, "destroyed", nil
-		}
-
-		return server, aws.StringValue(server.State), err
-	}
+	return nil
 }
 
 func describeTransferServerVPCEndpoint(conn *ec2.EC2, vpceId *string) (*ec2.VpcEndpoint, error) {
@@ -618,4 +621,35 @@ func describeTransferServerVPCEndpoint(conn *ec2.EC2, vpceId *string) (*ec2.VpcE
 	resp, err := conn.DescribeVpcEndpoints(params)
 
 	return resp.VpcEndpoints[0], err
+}
+
+func updateTransferServerVPCEndpointSecurityGroup(d *schema.ResourceData, transferConn *transfer.Transfer, ec2conn *ec2.EC2) error {
+	server, err := describeTransferServer(transferConn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error describing Transfer Server VPC Endpoint: %s", err)
+	}
+
+	req := &ec2.ModifyVpcEndpointInput{
+		VpcEndpointId: aws.String(*server.EndpointDetails.VpcEndpointId),
+	}
+
+	if d.IsNewResource() {
+		out, err := describeTransferServerVPCEndpoint(ec2conn, server.EndpointDetails.VpcEndpointId)
+		if err != nil {
+			return err
+		}
+
+		req.RemoveSecurityGroupIds = append(req.RemoveSecurityGroupIds, out.Groups[0].GroupId)
+
+		setVpcEndpointCreateList(d, "vpce_security_group_ids", &req.AddSecurityGroupIds)
+	} else {
+		setVpcEndpointUpdateLists(d, "vpce_security_group_ids", &req.AddSecurityGroupIds, &req.RemoveSecurityGroupIds)
+	}
+
+	if _, err := ec2conn.ModifyVpcEndpoint(req); err != nil {
+		return fmt.Errorf("error updating VPC Endpoint: %s", err)
+	}
+
+	return nil
 }

@@ -130,6 +130,8 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 						"aws_transfer_server.test", "endpoint_details.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_transfer_server.test", "endpoint_details.0.address_allocation_ids.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_transfer_server.test", "vpce_security_group_ids.#", "1"),
 				),
 			},
 			{
@@ -146,6 +148,8 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 						"aws_transfer_server.test", "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(
 						"aws_transfer_server.test", "endpoint_details.0.address_allocation_ids.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_transfer_server.test", "vpce_security_group_ids.#", "0"),
 				),
 			},
 		},
@@ -736,6 +740,15 @@ resource "aws_default_route_table" "test" {
 	}
 }
 
+resource "aws_security_group" "test" {
+  name        = "terraform-testacc-security-group"
+  vpc_id      = data.aws_vpc.test.id
+
+	tags = {
+		Name = "terraform-testacc-security-group"
+	}
+}
+
 resource "aws_eip" "testa" {
   vpc      = true
 }
@@ -754,6 +767,10 @@ resource "aws_transfer_server" "test" {
 		address_allocation_ids = ["${aws_eip.testa.id}"]
 		subnet_ids = ["${aws_subnet.test.id}"]
 	}
+
+	vpce_security_group_ids = [
+		aws_security_group.test.id
+	]
 }
 `
 
