@@ -989,7 +989,7 @@ phases:
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSCodeBuildProjectConfig_Source_Type_NoSource(rName, "", ""),
-				ExpectError: regexp.MustCompile("`build_spec` must be set when source's `type` is `NO_SOURCE`"),
+				ExpectError: regexp.MustCompile("`buildspec` must be set when source's `type` is `NO_SOURCE`"),
 			},
 			{
 				Config:      testAccAWSCodeBuildProjectConfig_Source_Type_NoSource(rName, "location", rBuildspec),
