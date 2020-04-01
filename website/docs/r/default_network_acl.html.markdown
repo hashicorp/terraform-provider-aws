@@ -151,14 +151,11 @@ configuration of a `aws_default_network_acl` resource may result in a reoccurrin
 plan, until the Subnets are reassigned to another Network ACL or are destroyed.
 
 Because Subnets are by default associated with the Default Network ACL, any
-non-explicit association will show up as a plan to remove the Subnet. For
-example: if you have a custom `aws_network_acl` with two subnets attached, and
-you remove the `aws_network_acl` resource, after successfully destroying this
-resource future plans will show a diff on the managed `aws_default_network_acl`,
-as those two Subnets have been orphaned by the now destroyed network acl and thus
-adopted by the Default Network ACL. In order to avoid a reoccurring plan, they
-will need to be reassigned, destroyed, or added to the `subnet_ids` attribute of
-the `aws_default_network_acl` entry.
+non-explicit association will show up as a plan to remove the Default Network ACL from the Subnet when a custom `aws_network_acl` is added to the Subnet. The opposite is also true. If you have a custom `aws_network_acl` with two Subnets attached, and
+you remove the `aws_network_acl` resource, future plans will show an add diff on the managed `aws_default_network_acl`,
+as those two Subnets have been orphaned and implicitly 
+adopted by the Default Network ACL. In order to avoid a reoccurring diff on plan, the Subnets 
+will need to be reassigned to a custom `aws_network_acl`, destroyed, or explicitly added to the `aws_default_network_acl` entry via the `subnet_ids` attribute.
 
 As an alternative to the above, you can also specify the following lifecycle configuration in your `aws_default_network_acl` resource:
 
