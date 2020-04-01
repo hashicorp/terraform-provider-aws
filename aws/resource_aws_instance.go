@@ -949,16 +949,12 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
-
 	if d.HasChange("tags") && !d.IsNewResource() {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
-
-		d.SetPartial("tags")
 	}
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
@@ -974,8 +970,6 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error updating volume_tags (%s): %s", volumeId, err)
 			}
 		}
-
-		d.SetPartial("volume_tags")
 	}
 
 	if d.HasChange("iam_instance_profile") && !d.IsNewResource() {
@@ -1268,8 +1262,6 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	// TODO(mitchellh): wait for the attributes we modified to
 	// persist the change...
-
-	d.Partial(false)
 
 	return resourceAwsInstanceRead(d, meta)
 }
