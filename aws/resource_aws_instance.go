@@ -1263,13 +1263,13 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if vs, ok := d.GetOk("root_block_device.0.volume_size"); ok {
 			volumeSize := vs.(int)
 			if volumeSize != 0 {
-				volumeIds, err := getAwsInstanceVolumeIds(conn, d)
+				volumeIds, err := getAwsInstanceVolumeIds(conn, d.Id())
 				if err != nil {
 					return fmt.Errorf("Error retrieving volumes: %s.", err)
 				}
 
 				volResp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
-					VolumeIds: volumeIds,
+					VolumeIds: aws.StringSlice(volumeIds),
 				})
 				if err != nil {
 					return err
@@ -1282,7 +1282,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				if int64(volumeSize) != *volResp.Volumes[0].Size {
 					_, err = conn.ModifyVolume(&ec2.ModifyVolumeInput{
 						Size:     aws.Int64(int64(volumeSize)),
-						VolumeId: volumeIds[0],
+						VolumeId: aws.String(volumeIds[0]),
 					})
 					if err != nil {
 						return err
@@ -1291,7 +1291,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					stateConf := &resource.StateChangeConf{
 						Pending:    []string{"modifying", "optimizing"},
 						Target:     []string{"completed"},
-						Refresh:    VolumeStateRefreshFunc(conn, *volumeIds[0], "failed"),
+						Refresh:    VolumeStateRefreshFunc(conn, volumeIds[0], "failed"),
 						Timeout:    d.Timeout(schema.TimeoutUpdate),
 						Delay:      30 * time.Second,
 						MinTimeout: 30 * time.Second,
@@ -1299,7 +1299,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 					_, err = stateConf.WaitForState()
 					if err != nil {
-						return fmt.Errorf("Error waiting for volume (%s) to be modified: %s", *volumeIds[0], err)
+						return fmt.Errorf("Error waiting for volume (%s) to be modified: %s", volumeIds[0], err)
 					}
 				}
 			}
