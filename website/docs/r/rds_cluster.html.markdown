@@ -3,7 +3,7 @@ subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_rds_cluster"
 description: |-
-  Manages a RDS Aurora Cluster
+  Manages an RDS Aurora Cluster
 ---
 
 # Resource: aws_rds_cluster
@@ -14,7 +14,7 @@ For information on the difference between the available Aurora MySQL engines
 see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
 in the Amazon RDS User Guide.
 
-Changes to a RDS Cluster can occur when you manually change a
+Changes to an RDS Cluster can occur when you manually change a
 parameter, such as `port`, and are reflected in the next maintenance
 window. Because of this, Terraform may report a difference in its planning
 phase because a modification has not yet taken place. You can use the
