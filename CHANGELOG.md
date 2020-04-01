@@ -11,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_codedeploy_deployment_group: Fix `blue_green_deployment_config` updates for ECS [GH-11885]
+* resource/aws_kms_grant: Remove resource from Terraform state instead of error if removed outside Terraform [GH-12560]
 
 ## 2.55.0 (March 27, 2020)
 
