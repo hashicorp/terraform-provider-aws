@@ -18,6 +18,7 @@ BUG FIXES:
 * resource/aws_codedeploy_deployment_group: Fix `blue_green_deployment_config` updates for ECS [GH-11885]
 * resource/aws_emr_cluster: Now properly sets the order when multiple bootstrap actions are defined
 * resource/aws_kms_grant: Remove resource from Terraform state instead of error if removed outside Terraform [GH-12560]
+* resource/aws_s3_bucket: Prevent various panics with empty configuration blocks [GH-12614]
 * resource/aws_volume_attachment: Ensure any error is shown while waiting for volume to detach [GH-12596]
 
 ## 2.55.0 (March 27, 2020)
