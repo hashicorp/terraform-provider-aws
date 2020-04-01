@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -320,12 +319,12 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 }
 
 func resourceAwsElasticTranscoderPresetCreate(d *schema.ResourceData, meta interface{}) error {
-	elastictranscoderconn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*AWSClient).elastictranscoderconn
 
 	req := &elastictranscoder.CreatePresetInput{
 		Audio:       expandETAudioParams(d),
 		Container:   aws.String(d.Get("container").(string)),
-		Description: getStringPtr(d, "description"),
+		Description: aws.String(d.Get("description").(string)),
 		Thumbnails:  expandETThumbnails(d),
 		Video:       expandETVideoParams(d),
 	}
@@ -339,7 +338,7 @@ func resourceAwsElasticTranscoderPresetCreate(d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Elastic Transcoder Preset create opts: %s", req)
-	resp, err := elastictranscoderconn.CreatePreset(req)
+	resp, err := conn.CreatePreset(req)
 	if err != nil {
 		return fmt.Errorf("Error creating Elastic Transcoder Preset: %s", err)
 	}
@@ -366,16 +365,41 @@ func expandETThumbnails(d *schema.ResourceData) *elastictranscoder.Thumbnails {
 	}
 	t := s.List()[0].(map[string]interface{})
 
-	return &elastictranscoder.Thumbnails{
-		AspectRatio:   getStringPtr(t, "aspect_ratio"),
-		Format:        getStringPtr(t, "format"),
-		Interval:      getStringPtr(t, "interval"),
-		MaxHeight:     getStringPtr(t, "max_height"),
-		MaxWidth:      getStringPtr(t, "max_width"),
-		PaddingPolicy: getStringPtr(t, "padding_policy"),
-		Resolution:    getStringPtr(t, "resolution"),
-		SizingPolicy:  getStringPtr(t, "sizing_policy"),
+	thumbnails := &elastictranscoder.Thumbnails{}
+
+	if v, ok := t["aspect_ratio"]; ok && v.(string) != "" {
+		thumbnails.AspectRatio = aws.String(v.(string))
 	}
+
+	if v, ok := t["interval"]; ok && v.(string) != "" {
+		thumbnails.Interval = aws.String(v.(string))
+	}
+
+	if v, ok := t["format"]; ok && v.(string) != "" {
+		thumbnails.Format = aws.String(v.(string))
+	}
+
+	if v, ok := t["max_height"]; ok && v.(string) != "" {
+		thumbnails.MaxHeight = aws.String(v.(string))
+	}
+
+	if v, ok := t["max_width"]; ok && v.(string) != "" {
+		thumbnails.MaxWidth = aws.String(v.(string))
+	}
+
+	if v, ok := t["padding_policy"]; ok && v.(string) != "" {
+		thumbnails.PaddingPolicy = aws.String(v.(string))
+	}
+
+	if v, ok := t["resolution"]; ok && v.(string) != "" {
+		thumbnails.Resolution = aws.String(v.(string))
+	}
+
+	if v, ok := t["sizing_policy"]; ok && v.(string) != "" {
+		thumbnails.SizingPolicy = aws.String(v.(string))
+	}
+
+	return thumbnails
 }
 
 func expandETAudioParams(d *schema.ResourceData) *elastictranscoder.AudioParameters {
@@ -391,12 +415,12 @@ func expandETAudioParams(d *schema.ResourceData) *elastictranscoder.AudioParamet
 	audio := s.List()[0].(map[string]interface{})
 
 	return &elastictranscoder.AudioParameters{
-		AudioPackingMode: getStringPtr(audio, "audio_packing_mode"),
-		BitRate:          getStringPtr(audio, "bit_rate"),
-		Channels:         getStringPtr(audio, "channels"),
-		Codec:            getStringPtr(audio, "codec"),
+		AudioPackingMode: aws.String(audio["audio_packing_mode"].(string)),
+		BitRate:          aws.String(audio["bit_rate"].(string)),
+		Channels:         aws.String(audio["channels"].(string)),
+		Codec:            aws.String(audio["codec"].(string)),
 		CodecOptions:     expandETAudioCodecOptions(d),
-		SampleRate:       getStringPtr(audio, "sample_rate"),
+		SampleRate:       aws.String(audio["sample_rate"].(string)),
 	}
 }
 
@@ -408,11 +432,22 @@ func expandETAudioCodecOptions(d *schema.ResourceData) *elastictranscoder.AudioC
 
 	codec := s.List()[0].(map[string]interface{})
 
-	codecOpts := &elastictranscoder.AudioCodecOptions{
-		BitDepth: getStringPtr(codec, "bit_depth"),
-		BitOrder: getStringPtr(codec, "bit_order"),
-		Profile:  getStringPtr(codec, "profile"),
-		Signed:   getStringPtr(codec, "signed"),
+	codecOpts := &elastictranscoder.AudioCodecOptions{}
+
+	if v, ok := codec["signed"]; ok && v.(string) != "" {
+		codecOpts.Signed = aws.String(v.(string))
+	}
+
+	if v, ok := codec["profile"]; ok && v.(string) != "" {
+		codecOpts.Profile = aws.String(v.(string))
+	}
+
+	if v, ok := codec["bit_order"]; ok && v.(string) != "" {
+		codecOpts.BitOrder = aws.String(v.(string))
+	}
+
+	if v, ok := codec["bit_depth"]; ok && v.(string) != "" {
+		codecOpts.BitDepth = aws.String(v.(string))
 	}
 
 	return codecOpts
@@ -425,23 +460,76 @@ func expandETVideoParams(d *schema.ResourceData) *elastictranscoder.VideoParamet
 	}
 	p := s.List()[0].(map[string]interface{})
 
-	return &elastictranscoder.VideoParameters{
-		AspectRatio:        getStringPtr(p, "aspect_ratio"),
-		BitRate:            getStringPtr(p, "bit_rate"),
-		Codec:              getStringPtr(p, "codec"),
-		CodecOptions:       stringMapToPointers(d.Get("video_codec_options").(map[string]interface{})),
-		DisplayAspectRatio: getStringPtr(p, "display_aspect_ratio"),
-		FixedGOP:           getStringPtr(p, "fixed_gop"),
-		FrameRate:          getStringPtr(p, "frame_rate"),
-		KeyframesMaxDist:   getStringPtr(p, "keyframes_max_dist"),
-		MaxFrameRate:       getStringPtr(p, "max_frame_rate"),
-		MaxHeight:          getStringPtr(p, "max_height"),
-		MaxWidth:           getStringPtr(p, "max_width"),
-		PaddingPolicy:      getStringPtr(p, "padding_policy"),
-		Resolution:         getStringPtr(p, "resolution"),
-		SizingPolicy:       getStringPtr(p, "sizing_policy"),
-		Watermarks:         expandETVideoWatermarks(d),
+	etVideoParams := &elastictranscoder.VideoParameters{
+		Watermarks: expandETVideoWatermarks(d),
 	}
+
+	if v, ok := d.GetOk("video_codec_options"); ok {
+		codecOpts := make(map[string]string)
+		for k, va := range v.(map[string]interface{}) {
+			codecOpts[k] = va.(string)
+		}
+
+		etVideoParams.CodecOptions = aws.StringMap(codecOpts)
+	}
+
+	if v, ok := p["aspect_ratio"]; ok && v.(string) != "" {
+		etVideoParams.AspectRatio = aws.String(v.(string))
+	}
+
+	if v, ok := p["bit_rate"]; ok && v.(string) != "" {
+		etVideoParams.BitRate = aws.String(v.(string))
+	}
+
+	if v, ok := p["display_aspect_ratio"]; ok && v.(string) != "" {
+		etVideoParams.DisplayAspectRatio = aws.String(v.(string))
+	}
+
+	if v, ok := p["aspect_ratio"]; ok && v.(string) != "" {
+		etVideoParams.AspectRatio = aws.String(v.(string))
+	}
+
+	if v, ok := p["fixed_gop"]; ok && v.(string) != "" {
+		etVideoParams.FixedGOP = aws.String(v.(string))
+	}
+
+	if v, ok := p["frame_rate"]; ok && v.(string) != "" {
+		etVideoParams.FrameRate = aws.String(v.(string))
+	}
+
+	if v, ok := p["keyframes_max_dist"]; ok && v.(string) != "" {
+		etVideoParams.KeyframesMaxDist = aws.String(v.(string))
+	}
+
+	if v, ok := p["max_frame_rate"]; ok && v.(string) != "" {
+		etVideoParams.MaxFrameRate = aws.String(v.(string))
+	}
+
+	if v, ok := p["max_height"]; ok && v.(string) != "" {
+		etVideoParams.MaxHeight = aws.String(v.(string))
+	}
+
+	if v, ok := p["max_width"]; ok && v.(string) != "" {
+		etVideoParams.MaxWidth = aws.String(v.(string))
+	}
+
+	if v, ok := p["padding_policy"]; ok && v.(string) != "" {
+		etVideoParams.PaddingPolicy = aws.String(v.(string))
+	}
+
+	if v, ok := p["resolution"]; ok && v.(string) != "" {
+		etVideoParams.Resolution = aws.String(v.(string))
+	}
+
+	if v, ok := p["sizing_policy"]; ok && v.(string) != "" {
+		etVideoParams.SizingPolicy = aws.String(v.(string))
+	}
+
+	if v, ok := p["codec"]; ok && v.(string) != "" {
+		etVideoParams.Codec = aws.String(v.(string))
+	}
+
+	return etVideoParams
 }
 
 func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.PresetWatermark {
@@ -452,17 +540,18 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 	var watermarks []*elastictranscoder.PresetWatermark
 
 	for _, w := range s.List() {
+		p := w.(map[string]interface{})
 		watermark := &elastictranscoder.PresetWatermark{
-			HorizontalAlign:  getStringPtr(w, "horizontal_align"),
-			HorizontalOffset: getStringPtr(w, "horizontal_offset"),
-			Id:               getStringPtr(w, "id"),
-			MaxHeight:        getStringPtr(w, "max_height"),
-			MaxWidth:         getStringPtr(w, "max_width"),
-			Opacity:          getStringPtr(w, "opacity"),
-			SizingPolicy:     getStringPtr(w, "sizing_policy"),
-			Target:           getStringPtr(w, "target"),
-			VerticalAlign:    getStringPtr(w, "vertical_align"),
-			VerticalOffset:   getStringPtr(w, "vertical_offset"),
+			HorizontalAlign:  aws.String(p["horizontal_align"].(string)),
+			HorizontalOffset: aws.String(p["horizontal_offset"].(string)),
+			Id:               aws.String(p["id"].(string)),
+			MaxHeight:        aws.String(p["max_height"].(string)),
+			MaxWidth:         aws.String(p["max_width"].(string)),
+			Opacity:          aws.String(p["opacity"].(string)),
+			SizingPolicy:     aws.String(p["sizing_policy"].(string)),
+			Target:           aws.String(p["target"].(string)),
+			VerticalAlign:    aws.String(p["vertical_align"].(string)),
+			VerticalOffset:   aws.String(p["vertical_offset"].(string)),
 		}
 		watermarks = append(watermarks, watermark)
 	}
@@ -471,14 +560,14 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 }
 
 func resourceAwsElasticTranscoderPresetRead(d *schema.ResourceData, meta interface{}) error {
-	elastictranscoderconn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*AWSClient).elastictranscoderconn
 
-	resp, err := elastictranscoderconn.ReadPreset(&elastictranscoder.ReadPresetInput{
+	resp, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{
 		Id: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if err, ok := err.(awserr.Error); ok && err.Code() == "ResourceNotFoundException" {
+		if isAWSErr(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
 			d.SetId("")
 			return nil
 		}
@@ -521,7 +610,7 @@ func resourceAwsElasticTranscoderPresetRead(d *schema.ResourceData, meta interfa
 		}
 
 		if preset.Video.CodecOptions != nil {
-			d.Set("video_codec_options", flattenETVideoCodecOptions(preset.Video.CodecOptions))
+			d.Set("video_codec_options", aws.StringValueMap(preset.Video.CodecOptions))
 		}
 
 		if preset.Video.Watermarks != nil {
@@ -592,16 +681,6 @@ func flattenETVideoParams(video *elastictranscoder.VideoParameters) []map[string
 	m.SetString("sizing_policy", video.SizingPolicy)
 
 	return m.MapList()
-}
-
-func flattenETVideoCodecOptions(opts map[string]*string) map[string]interface{} {
-	codecOpts := setMap(make(map[string]interface{}))
-
-	for k, v := range opts {
-		codecOpts.SetString(k, v)
-	}
-
-	return codecOpts.Map()
 }
 
 func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[string]interface{} {
