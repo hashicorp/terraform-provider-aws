@@ -2067,38 +2067,6 @@ func flattenApiGatewayThrottleSettings(settings *apigateway.ThrottleSettings) []
 
 // TODO: refactor some of these helper functions and types in the terraform/helper packages
 
-// getStringPtr returns a *string version of the value taken from m, where m
-// can be a map[string]interface{} or a *schema.ResourceData. If the key isn't
-// present or is empty, getNilString returns nil.
-func getStringPtr(m interface{}, key string) *string {
-	switch m := m.(type) {
-	case map[string]interface{}:
-		v := m[key]
-
-		if v == nil {
-			return nil
-		}
-
-		s := v.(string)
-		if s == "" {
-			return nil
-		}
-
-		return &s
-
-	case *schema.ResourceData:
-		if v, ok := m.GetOk(key); ok {
-			if v == nil || v.(string) == "" {
-				return nil
-			}
-			s := v.(string)
-			return &s
-		}
-	}
-
-	return nil
-}
-
 // a convenience wrapper type for the schema.Set map[string]interface{}
 // Set operations only alter the underlying map if the value is not nil
 type setMap map[string]interface{}
