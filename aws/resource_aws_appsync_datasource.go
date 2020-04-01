@@ -237,7 +237,7 @@ func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).appsyncconn
 	region := meta.(*AWSClient).region
 
-	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
+	apiID, _, err := decodeAppsyncDataSourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -245,7 +245,7 @@ func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}
 
 	input := &appsync.UpdateDataSourceInput{
 		ApiId: aws.String(apiID),
-		Name:  aws.String(name),
+		Name:  aws.String(d.Get("name").(string)),
 		Type:  aws.String(d.Get("type").(string)),
 	}
 
@@ -277,6 +277,9 @@ func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
+
+	d.SetId(apiID + "-" + d.Get("name").(string))
+
 	return resourceAwsAppsyncDatasourceRead(d, meta)
 }
 
