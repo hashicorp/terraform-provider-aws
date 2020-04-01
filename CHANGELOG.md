@@ -1,5 +1,9 @@
 ## 2.56.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_emr_cluster: The bug fix in this release will potentially re-create EMR Clusters with multiple bootstrap actions, since bootstrap actions cannot be modified in place. To avoid re-creation, temporarily add the [`ignore_changes` lifecycle configuration argument](https://www.terraform.io/docs/configuration/resources.html#ignore_changes) and/or update the order in your Terraform configuration.
+
 ENHANCEMENTS:
 
 * data-source/aws_launch_template: Add `hibernation_options` attribute [GH-12492]
@@ -12,6 +16,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_codedeploy_deployment_group: Fix `blue_green_deployment_config` updates for ECS [GH-11885]
+* resource/aws_emr_cluster: Now properly sets the order when multiple bootstrap actions are defined
 * resource/aws_kms_grant: Remove resource from Terraform state instead of error if removed outside Terraform [GH-12560]
 * resource/aws_volume_attachment: Ensure any error is shown while waiting for volume to detach [GH-12596]
 
