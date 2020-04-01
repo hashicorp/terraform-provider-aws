@@ -1404,15 +1404,9 @@ func lbListenerRuleActionForward(actionMap map[string]interface{}, action *elbv2
 		stickinessInput := forwardMap["stickiness"].([]interface{})
 		if len(stickinessInput) != 0 {
 			stickyInputMap := stickinessInput[0].(map[string]interface{})
-			if stickyInputMap["enabled"].(bool) {
-				action.ForwardConfig.TargetGroupStickinessConfig = &elbv2.TargetGroupStickinessConfig{
-					Enabled:         aws.Bool(stickyInputMap["enabled"].(bool)),
-					DurationSeconds: aws.Int64(int64(stickyInputMap["duration"].(int))),
-				}
-			} else {
-				action.ForwardConfig.TargetGroupStickinessConfig = &elbv2.TargetGroupStickinessConfig{
-					Enabled: aws.Bool(false),
-				}
+			action.ForwardConfig.TargetGroupStickinessConfig = &elbv2.TargetGroupStickinessConfig{
+				Enabled:         aws.Bool(stickyInputMap["enabled"].(bool)),
+				DurationSeconds: aws.Int64(int64(stickyInputMap["duration"].(int))),
 			}
 		}
 	} else {
