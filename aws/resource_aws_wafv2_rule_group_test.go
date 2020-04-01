@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
+func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_rule_group.test"
@@ -24,7 +24,7 @@ func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfigBasic(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -42,7 +42,7 @@ func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigBasicUpdate(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_BasicUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -72,7 +72,7 @@ func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_minimal(t *testing.T) {
+func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_rule_group.test"
@@ -83,7 +83,7 @@ func TestAccAwsWafv2RuleGroup_minimal(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfigMinimal(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_Minimal(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -112,7 +112,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfigRuleActionAllow(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_RuleActionAllow(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -129,7 +129,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigRuleActionBlock(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_RuleActionBlock(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -146,7 +146,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigRuleActionCount(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_RuleActionCount(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -183,7 +183,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfigByteMatchStatement(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -200,7 +200,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigByteMatchStatementUpdate(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_Update(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -235,7 +235,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchAllQueryArguments(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchAllQueryArguments(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -253,7 +253,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchBody(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchBody(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -271,7 +271,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchMethod(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchMethod(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -289,7 +289,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchQueryString(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchQueryString(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -307,7 +307,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchSingleHeader(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchSingleHeader(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -326,7 +326,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchSingleQueryArgument(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchSingleQueryArgument(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -345,7 +345,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchUriPath(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchUriPath(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -477,7 +477,7 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfigGeoMatchStatement(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -490,7 +490,7 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigGeoMatchStatementUpdate(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_Update(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -735,7 +735,7 @@ func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_changeNameForceNew(t *testing.T) {
+func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
 	ruleGroupNewName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
@@ -747,7 +747,7 @@ func TestAccAwsWafv2RuleGroup_changeNameForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfigBasic(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &before),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -762,7 +762,7 @@ func TestAccAwsWafv2RuleGroup_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigBasic(ruleGroupNewName),
+				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &after),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -780,7 +780,7 @@ func TestAccAwsWafv2RuleGroup_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_changeCapacityForceNew(t *testing.T) {
+func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_rule_group.test"
@@ -791,7 +791,7 @@ func TestAccAwsWafv2RuleGroup_changeCapacityForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfigBasic(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &before),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -806,7 +806,7 @@ func TestAccAwsWafv2RuleGroup_changeCapacityForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigUpdate_capacity(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_Update_capacity(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &after),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -824,7 +824,7 @@ func TestAccAwsWafv2RuleGroup_changeCapacityForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_changeMetricNameForceNew(t *testing.T) {
+func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_rule_group.test"
@@ -835,7 +835,7 @@ func TestAccAwsWafv2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfigBasic(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &before),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -850,7 +850,7 @@ func TestAccAwsWafv2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigUpdate_metricName(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_Update_metricName(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &after),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -868,7 +868,7 @@ func TestAccAwsWafv2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_tags(t *testing.T) {
+func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_rule_group.test"
@@ -879,7 +879,7 @@ func TestAccAwsWafv2RuleGroup_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfigOneTag(ruleGroupName, "Tag1", "Value1"),
+				Config: testAccAwsWafv2RuleGroupConfig_OneTag(ruleGroupName, "Tag1", "Value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -894,7 +894,7 @@ func TestAccAwsWafv2RuleGroup_tags(t *testing.T) {
 				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigTwoTags(ruleGroupName, "Tag1", "Value1Updated", "Tag2", "Value2"),
+				Config: testAccAwsWafv2RuleGroupConfig_TwoTags(ruleGroupName, "Tag1", "Value1Updated", "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -904,7 +904,7 @@ func TestAccAwsWafv2RuleGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfigOneTag(ruleGroupName, "Tag2", "Value2"),
+				Config: testAccAwsWafv2RuleGroupConfig_OneTag(ruleGroupName, "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -980,7 +980,7 @@ func testAccCheckAwsWafv2RuleGroupExists(n string, v *wafv2.RuleGroup) resource.
 	}
 }
 
-func testAccAwsWafv2RuleGroupConfigBasic(name string) string {
+func testAccAwsWafv2RuleGroupConfig_Basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -1002,7 +1002,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigBasicUpdate(name string) string {
+func testAccAwsWafv2RuleGroupConfig_BasicUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -1041,7 +1041,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigUpdate_capacity(name string) string {
+func testAccAwsWafv2RuleGroupConfig_Update_capacity(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 3
@@ -1058,7 +1058,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigUpdate_metricName(name string) string {
+func testAccAwsWafv2RuleGroupConfig_Update_metricName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -1075,7 +1075,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigMinimal(name string) string {
+func testAccAwsWafv2RuleGroupConfig_Minimal(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -1091,7 +1091,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigRuleActionAllow(name string) string {
+func testAccAwsWafv2RuleGroupConfig_RuleActionAllow(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -1128,7 +1128,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigRuleActionBlock(name string) string {
+func testAccAwsWafv2RuleGroupConfig_RuleActionBlock(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -1165,7 +1165,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigRuleActionCount(name string) string {
+func testAccAwsWafv2RuleGroupConfig_RuleActionCount(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -1202,7 +1202,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigByteMatchStatement(name string) string {
+func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
@@ -1254,7 +1254,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigByteMatchStatementUpdate(name string) string {
+func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_Update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
@@ -1301,7 +1301,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchAllQueryArguments(name string) string {
+func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchAllQueryArguments(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
@@ -1348,7 +1348,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchBody(name string) string {
+func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchBody(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
  capacity = 15
@@ -1395,7 +1395,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchMethod(name string) string {
+func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchMethod(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
  capacity = 15
@@ -1442,7 +1442,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchQueryString(name string) string {
+func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchQueryString(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
  capacity = 15
@@ -1489,7 +1489,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchSingleHeader(name string) string {
+func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchSingleHeader(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
  capacity = 15
@@ -1538,7 +1538,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchSingleQueryArgument(name string) string {
+func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchSingleQueryArgument(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
  capacity = 30
@@ -1587,7 +1587,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigByteMatchStatementFieldToMatchUriPath(name string) string {
+func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchUriPath(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
  capacity = 15
@@ -1738,7 +1738,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigGeoMatchStatement(name string) string {
+func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -1775,7 +1775,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigGeoMatchStatementUpdate(name string) string {
+func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_Update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2395,7 +2395,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfigOneTag(name, tagKey, tagValue string) string {
+func testAccAwsWafv2RuleGroupConfig_OneTag(name, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2416,7 +2416,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name, tagKey, tagValue)
 }
 
-func testAccAwsWafv2RuleGroupConfigTwoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccAwsWafv2RuleGroupConfig_TwoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2

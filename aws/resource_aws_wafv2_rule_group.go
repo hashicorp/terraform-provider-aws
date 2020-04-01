@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -58,10 +59,13 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+				),
 			},
 			"scope": {
 				Type:     schema.TypeString,
@@ -99,57 +103,13 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"statement": wafv2RootStatementSchema(3),
-						"visibility_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cloudwatch_metrics_enabled": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-									"metric_name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									"sampled_requests_enabled": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-								},
-							},
-						},
+						"statement":         wafv2RootStatementSchema(3),
+						"visibility_config": wafv2VisibilityConfigSchema(),
 					},
 				},
 			},
-			"tags": tagsSchema(),
-			"visibility_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_metrics_enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"metric_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"sampled_requests_enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
+			"tags":              tagsSchema(),
+			"visibility_config": wafv2VisibilityConfigSchema(),
 		},
 	}
 }
@@ -425,7 +385,7 @@ func wafv2ByteMatchStatementSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match": fieldToMatchWafv2Schema(),
+				"field_to_match": wafv2FieldToMatchSchema(),
 				"positional_constraint": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -444,7 +404,7 @@ func wafv2ByteMatchStatementSchema() *schema.Schema {
 					Elem:         &schema.Schema{Type: schema.TypeString},
 					ValidateFunc: validation.StringLenBetween(1, 50),
 				},
-				"text_transformation": textTransformationWafv2Schema(),
+				"text_transformation": wafv2TextTransformationSchema(),
 			},
 		},
 	}
@@ -495,8 +455,8 @@ func wafv2RegexPatternSetReferenceStatementSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"field_to_match":      fieldToMatchWafv2Schema(),
-				"text_transformation": textTransformationWafv2Schema(),
+				"field_to_match":      wafv2FieldToMatchSchema(),
+				"text_transformation": wafv2TextTransformationSchema(),
 			},
 		},
 	}
@@ -522,13 +482,13 @@ func wafv2SizeConstraintSchema() *schema.Schema {
 						wafv2.ComparisonOperatorNe,
 					}, false),
 				},
-				"field_to_match": fieldToMatchWafv2Schema(),
+				"field_to_match": wafv2FieldToMatchSchema(),
 				"size": {
 					Type:         schema.TypeInt,
 					Required:     true,
 					ValidateFunc: validation.IntBetween(0, 21474836480),
 				},
-				"text_transformation": textTransformationWafv2Schema(),
+				"text_transformation": wafv2TextTransformationSchema(),
 			},
 		},
 	}
@@ -541,8 +501,8 @@ func wafv2SqliMatchStatementSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match":      fieldToMatchWafv2Schema(),
-				"text_transformation": textTransformationWafv2Schema(),
+				"field_to_match":      wafv2FieldToMatchSchema(),
+				"text_transformation": wafv2TextTransformationSchema(),
 			},
 		},
 	}
@@ -555,14 +515,14 @@ func wafv2XssMatchStatementSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match":      fieldToMatchWafv2Schema(),
-				"text_transformation": textTransformationWafv2Schema(),
+				"field_to_match":      wafv2FieldToMatchSchema(),
+				"text_transformation": wafv2TextTransformationSchema(),
 			},
 		},
 	}
 }
 
-func fieldToMatchWafv2Schema() *schema.Schema {
+func wafv2FieldToMatchSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -607,7 +567,7 @@ func fieldToMatchWafv2Schema() *schema.Schema {
 	}
 }
 
-func textTransformationWafv2Schema() *schema.Schema {
+func wafv2TextTransformationSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Required: true,
@@ -629,6 +589,35 @@ func textTransformationWafv2Schema() *schema.Schema {
 						wafv2.TextTransformationTypeNone,
 						wafv2.TextTransformationTypeUrlDecode,
 					}, false),
+				},
+			},
+		},
+	}
+}
+
+func wafv2VisibilityConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"cloudwatch_metrics_enabled": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"metric_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+					),
+				},
+				"sampled_requests_enabled": {
+					Type:     schema.TypeBool,
+					Required: true,
 				},
 			},
 		},
