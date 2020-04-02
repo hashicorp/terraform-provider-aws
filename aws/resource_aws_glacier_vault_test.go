@@ -297,8 +297,8 @@ func testAccCheckVaultNotificationsMissing(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		glacierconn := testAccProvider.Meta().(*AWSClient).glacierconn
-		out, err := glacierconn.GetVaultNotifications(&glacier.GetVaultNotificationsInput{
+		conn := testAccProvider.Meta().(*AWSClient).glacierconn
+		out, err := conn.GetVaultNotifications(&glacier.GetVaultNotificationsInput{
 			VaultName: aws.String(rs.Primary.ID),
 		})
 
@@ -349,7 +349,7 @@ resource "aws_glacier_vault" "test" {
 
 func testAccGlacierVaultNotificationConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sns_topic" "aws_sns_topic" {
+resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
@@ -357,7 +357,7 @@ resource "aws_glacier_vault" "test" {
   name = %[1]q
 
   notification {
-    sns_topic = aws_sns_topic.aws_sns_topic.arn
+    sns_topic = aws_sns_topic.test.arn
     events    = ["ArchiveRetrievalCompleted", "InventoryRetrievalCompleted"]
   }
 }
