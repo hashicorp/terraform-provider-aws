@@ -572,6 +572,11 @@ resource "aws_subnet" "test" {
 
 func testAccSubnetConfigOutpost(outpostArn string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  blacklisted_zone_ids = ["usw2-az4"]
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
   tags = {
@@ -582,6 +587,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
+  availability_zone       = "${data.aws_availability_zones.current.names[0]}"
   outpost_arn = "%s"
   tags = {
     Name = "tf-acc-subnet-outpost"
