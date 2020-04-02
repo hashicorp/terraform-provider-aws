@@ -7,7 +7,6 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -77,8 +76,9 @@ func resourceAwsGlacierVault() *schema.Resource {
 							Set:      schema.HashString,
 						},
 						"sns_topic": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -90,13 +90,13 @@ func resourceAwsGlacierVault() *schema.Resource {
 }
 
 func resourceAwsGlacierVaultCreate(d *schema.ResourceData, meta interface{}) error {
-	glacierconn := meta.(*AWSClient).glacierconn
+	conn := meta.(*AWSClient).glacierconn
 
 	input := &glacier.CreateVaultInput{
 		VaultName: aws.String(d.Get("name").(string)),
 	}
 
-	out, err := glacierconn.CreateVault(input)
+	out, err := conn.CreateVault(input)
 	if err != nil {
 		return fmt.Errorf("Error creating Glacier Vault: %s", err)
 	}
@@ -108,23 +108,23 @@ func resourceAwsGlacierVaultCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlacierVaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	glacierconn := meta.(*AWSClient).glacierconn
+	conn := meta.(*AWSClient).glacierconn
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-		if err := keyvaluetags.GlacierUpdateTags(glacierconn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.GlacierUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Glacier Vault (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("access_policy") {
-		if err := resourceAwsGlacierVaultPolicyUpdate(glacierconn, d); err != nil {
+		if err := resourceAwsGlacierVaultPolicyUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("notification") {
-		if err := resourceAwsGlacierVaultNotificationUpdate(glacierconn, d); err != nil {
+		if err := resourceAwsGlacierVaultNotificationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -133,14 +133,19 @@ func resourceAwsGlacierVaultUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error {
-	glacierconn := meta.(*AWSClient).glacierconn
+	conn := meta.(*AWSClient).glacierconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &glacier.DescribeVaultInput{
 		VaultName: aws.String(d.Id()),
 	}
 
-	out, err := glacierconn.DescribeVault(input)
+	out, err := conn.DescribeVault(input)
+	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] Glaier Vault (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("Error reading Glacier Vault: %s", err.Error())
 	}
@@ -155,7 +160,7 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("location", location)
 
-	tags, err := keyvaluetags.GlacierListTags(glacierconn, d.Id())
+	tags, err := keyvaluetags.GlacierListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glacier Vault (%s): %s", d.Id(), err)
@@ -166,13 +171,13 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] Getting the access_policy for Vault %s", d.Id())
-	pol, err := glacierconn.GetVaultAccessPolicy(&glacier.GetVaultAccessPolicyInput{
+	pol, err := conn.GetVaultAccessPolicy(&glacier.GetVaultAccessPolicyInput{
 		VaultName: aws.String(d.Id()),
 	})
 
-	if awserr, ok := err.(awserr.Error); ok && awserr.Code() == "ResourceNotFoundException" {
+	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
 		d.Set("access_policy", "")
-	} else if pol != nil {
+	} else if pol != nil && pol.Policy != nil {
 		policy, err := structure.NormalizeJsonString(*pol.Policy.Policy)
 		if err != nil {
 			return fmt.Errorf("access policy contains an invalid JSON: %s", err)
@@ -182,8 +187,8 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	notifications, err := getGlacierVaultNotification(glacierconn, d.Id())
-	if awserr, ok := err.(awserr.Error); ok && awserr.Code() == "ResourceNotFoundException" {
+	notifications, err := getGlacierVaultNotification(conn, d.Id())
+	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
 		d.Set("notification", "")
 	} else if pol != nil {
 		d.Set("notification", notifications)
@@ -195,10 +200,10 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsGlacierVaultDelete(d *schema.ResourceData, meta interface{}) error {
-	glacierconn := meta.(*AWSClient).glacierconn
+	conn := meta.(*AWSClient).glacierconn
 
 	log.Printf("[DEBUG] Glacier Delete Vault: %s", d.Id())
-	_, err := glacierconn.DeleteVault(&glacier.DeleteVaultInput{
+	_, err := conn.DeleteVault(&glacier.DeleteVaultInput{
 		VaultName: aws.String(d.Id()),
 	})
 	if err != nil {
