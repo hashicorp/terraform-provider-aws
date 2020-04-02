@@ -3081,8 +3081,13 @@ func testAccInstanceConfigOutpost(outpostArn string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceOutpostConfig(outpostArn) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type               = "m1.small"
+  instance_type               = "m5.large"
   subnet_id                   = "${aws_subnet.test.id}"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 8
+  }
 }
 `)
 }
