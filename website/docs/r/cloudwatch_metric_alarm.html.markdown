@@ -38,7 +38,7 @@ resource "aws_autoscaling_policy" "bat" {
   autoscaling_group_name = "${aws_autoscaling_group.bar.name}"
 }
 
-resource "aws_cloudwatch_metric_alarm" "bat" {
+resource "aws_cloudwatch_metric_alarm" "bar" {
   alarm_name          = "terraform-test-foobar5"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "2"
