@@ -697,9 +697,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-		InstanceIds: []*string{aws.String(d.Id())},
-	})
+	instance, err := resourceAwsInstanceFindByID(conn, d.Id())
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
@@ -713,12 +711,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// If nothing was found, then return no state
-	if len(resp.Reservations) == 0 {
+	if instance == nil {
 		d.SetId("")
 		return nil
 	}
-
-	instance := resp.Reservations[0].Instances[0]
 
 	if instance.State != nil {
 		// If the instance is terminated, then it is gone
@@ -1099,13 +1095,10 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		// Thus, we need to actually modify the primary network interface for the new security groups, as the primary
 		// network interface is where we modify/create security group assignments during Create.
 		log.Printf("[INFO] Modifying `vpc_security_group_ids` on Instance %q", d.Id())
-		instances, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-			InstanceIds: []*string{aws.String(d.Id())},
-		})
+		instance, err := resourceAwsInstanceFindByID(conn, d.Id())
 		if err != nil {
-			return err
+			return fmt.Errorf("error retrieving instance %q: %w", d.Id(), err)
 		}
-		instance := instances.Reservations[0].Instances[0]
 		var primaryInterface ec2.InstanceNetworkInterface
 		for _, ni := range instance.NetworkInterfaces {
 			if *ni.Attachment.DeviceIndex == 0 {
@@ -1329,36 +1322,30 @@ func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 // an EC2 instance.
 func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-			InstanceIds: []*string{aws.String(instanceID)},
-		})
+		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
-				// Set this to nil as if we didn't find anything.
-				resp = nil
-			} else {
+			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
 		}
 
-		if resp == nil || len(resp.Reservations) == 0 || len(resp.Reservations[0].Instances) == 0 {
+		if instance == nil {
 			// Sometimes AWS just has consistency issues and doesn't see
 			// our instance yet. Return an empty state.
 			return nil, "", nil
 		}
 
-		i := resp.Reservations[0].Instances[0]
-		state := *i.State.Name
+		state := *instance.State.Name
 
 		for _, failState := range failStates {
 			if state == failState {
-				return i, state, fmt.Errorf("Failed to reach target state. Reason: %s",
-					stringifyStateReason(i.StateReason))
+				return instance, state, fmt.Errorf("Failed to reach target state. Reason: %s",
+					stringifyStateReason(instance.StateReason))
 			}
 		}
 
-		return i, state, nil
+		return instance, state, nil
 	}
 }
 
@@ -2261,4 +2248,40 @@ func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse
 	}
 
 	return []interface{}{m}
+}
+
+// resourceAwsInstanceFindByID returns the EC2 instance by ID
+// * If the instance is found, returns the instance and nil
+// * If no instance is found, returns nil and nil
+// * If an error occurs, returns nil and the error
+func resourceAwsInstanceFindByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
+	instances, err := resourceAwsInstanceFind(conn, &ec2.DescribeInstancesInput{
+		InstanceIds: aws.StringSlice([]string{id}),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(instances) == 0 {
+		return nil, nil
+	}
+
+	return instances[0], nil
+}
+
+// resourceAwsInstanceFind returns EC2 instances matching the input parameters
+// * If instances are found, returns a slice of instances and nil
+// * If no instances are found, returns an empty slice and nil
+// * If an error occurs, returns nil and the error
+func resourceAwsInstanceFind(conn *ec2.EC2, params *ec2.DescribeInstancesInput) ([]*ec2.Instance, error) {
+	resp, err := conn.DescribeInstances(params)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Reservations) == 0 {
+		return []*ec2.Instance{}, nil
+	}
+
+	return resp.Reservations[0].Instances, nil
 }
