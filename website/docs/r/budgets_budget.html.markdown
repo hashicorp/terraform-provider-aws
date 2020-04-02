@@ -165,7 +165,7 @@ Valid keys for `cost_filters` parameter vary depending on the `budget_type` valu
   * `LinkedAccount`
   * `Operation`
   * `PurchaseType`
-  * `Service`
+  * [`Service`](#Services)
   * `TagKeyValue`
 * `usage`
   * `AZ`
@@ -175,42 +175,44 @@ Valid keys for `cost_filters` parameter vary depending on the `budget_type` valu
   * `UsageType:<service name>`
   * `TagKeyValue`
 
-Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-filter.html) for further detail.
+Refer to [AWS CostFilter documentation](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-CostFilters) for further detail.
 
 #### Services
 
 Valid keys for `Service` parameter in `cost_filters`
 
-* Amazon Athena
-* Amazon Elastic Compute Cloud - Compute
-* Amazon EC2 Container Registry (ECR)
-* Amazon EC2 Container Service
-* Amazon Elastic Block Store
-* AWS CloudTrail
-* AmazonCloudWatch
-* Amazon DynamoDB
-* Amazon ElastiCache
-* Amazon Elasticsearch Service
-* Amazon Elastic Load Balancing
-* Amazon API Gateway
-* AWS Glue
-* AWS Key Management Service
-* AWS Lambda
-* Matillion ETL for Amazon Redshift
-* Amazon Polly
-* Amazon Rekognition
-* Amazon Relational Database Service
-* Amazon Redshift
-* Amazon Simple Storage Service
-* AWS Transfer for SFTP
-* Amazon Route 53
-* Amazon SageMaker
-* AWS Secrets Manager
-* Amazon Simple Notification Service
-* Amazon Simple Queue Service
-* Tax
-* AWS WAF
-* AWS X-Ray
+```
+Amazon Athena
+Amazon Elastic Compute Cloud - Compute
+Amazon EC2 Container Registry (ECR)
+Amazon EC2 Container Service
+Amazon Elastic Block Store
+AWS CloudTrail
+AmazonCloudWatch
+Amazon DynamoDB
+Amazon ElastiCache
+Amazon Elasticsearch Service
+Amazon Elastic Load Balancing
+Amazon API Gateway
+AWS Glue
+AWS Key Management Service
+AWS Lambda
+Matillion ETL for Amazon Redshift
+Amazon Polly
+Amazon Rekognition
+Amazon Relational Database Service
+Amazon Redshift
+Amazon Simple Storage Service
+AWS Transfer for SFTP
+Amazon Route 53
+Amazon SageMaker
+AWS Secrets Manager
+Amazon Simple Notification Service
+Amazon Simple Queue Service
+Tax
+AWS WAF
+AWS X-Ray
+```
 
 ### BudgetNotification
 
