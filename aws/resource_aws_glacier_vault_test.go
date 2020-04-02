@@ -105,7 +105,7 @@ func TestAccAWSGlacierVault_notification(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glacier_vault.test"
-	snsResourceName := "aws_sns_topic_test"
+	snsResourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -366,6 +366,10 @@ resource "aws_glacier_vault" "test" {
 
 func testAccGlacierVaultPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_glacier_vault" "test" {
   name = %[1]q
 
@@ -385,7 +389,7 @@ resource "aws_glacier_vault" "test" {
              "glacier:AbortMultipartUpload",
              "glacier:CompleteMultipartUpload"
           ],
-          "Resource": ["*"]
+          "Resource": ["arn:aws:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"]
        }
     ]
 }
