@@ -23,6 +23,7 @@ CodeCommit
 CodeDeploy
 CodePipeline
 CodeStar Notifications
+CodeStar Connections
 Cognito
 Config
 Cost and Usage Report

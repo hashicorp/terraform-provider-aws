@@ -171,6 +171,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/codestarnotifications" = [
       "aws_codestarnotifications_",
     ],
+    "service/codestarconnections" = [
+      "aws_codestarconnections_",
+    ],
     "service/cognito" = [
       "aws_cognito_",
     ],
@@ -692,6 +695,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/codestarnotifications" = [
       "**/*_codestarnotifications_*",
       "**/codestarnotifications_*"
+    ]
+    "service/codestarconnections" = [
+      "**/*_codestarconnections_*",
+      "**/codestarconnections_*"
     ]
     "service/cognito" = [
       "**/*_cognito_*",

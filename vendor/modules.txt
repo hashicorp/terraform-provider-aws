@@ -97,6 +97,7 @@ github.com/aws/aws-sdk-go/service/codebuild
 github.com/aws/aws-sdk-go/service/codecommit
 github.com/aws/aws-sdk-go/service/codedeploy
 github.com/aws/aws-sdk-go/service/codepipeline
+github.com/aws/aws-sdk-go/service/codestarconnections
 github.com/aws/aws-sdk-go/service/codestarnotifications
 github.com/aws/aws-sdk-go/service/cognitoidentity
 github.com/aws/aws-sdk-go/service/cognitoidentityprovider

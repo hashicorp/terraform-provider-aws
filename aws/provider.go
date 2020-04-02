@@ -431,6 +431,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_codepipeline":                                        resourceAwsCodePipeline(),
 			"aws_codepipeline_webhook":                                resourceAwsCodePipelineWebhook(),
 			"aws_codestarnotifications_notification_rule":             resourceAwsCodeStarNotificationsNotificationRule(),
+			"aws_codestarconnections_connection":                      resourceAwsCodeStarConnectionsConnection(),
 			"aws_cur_report_definition":                               resourceAwsCurReportDefinition(),
 			"aws_customer_gateway":                                    resourceAwsCustomerGateway(),
 			"aws_datapipeline_pipeline":                               resourceAwsDataPipelinePipeline(),

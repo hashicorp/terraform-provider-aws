@@ -84,6 +84,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>codedeploy</code></li>
   <li><code>codepipeline</code></li>
   <li><code>codestarnotifications</code></li>
+  <li><code>codestarconnections</code></li>
   <li><code>cognitoidentity</code></li>
   <li><code>cognitoidp</code></li>
   <li><code>configservice</code></li>
