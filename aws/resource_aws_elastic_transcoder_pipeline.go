@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsElasticTranscoderPipeline() *schema.Resource {
@@ -65,15 +64,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"access": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									"READ",
-									"READ_ACP",
-									"WRITE_ACP",
-									"FULL_CONTROL",
-								}, true),
-							},
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"grantee": {
 							Type:     schema.TypeString,
@@ -182,15 +173,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"access": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									"READ",
-									"READ_ACP",
-									"WRITE_ACP",
-									"FULL_CONTROL",
-								}, true),
-							},
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"grantee": {
 							Type:     schema.TypeString,
