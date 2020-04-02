@@ -1483,35 +1483,35 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 		instanceBd := instanceBlockDevices[*vol.VolumeId]
 		bd := make(map[string]interface{})
 
-		bd["volume_id"] = *vol.VolumeId
+		bd["volume_id"] = aws.StringValue(vol.VolumeId)
 
 		if instanceBd.Ebs != nil && instanceBd.Ebs.DeleteOnTermination != nil {
-			bd["delete_on_termination"] = *instanceBd.Ebs.DeleteOnTermination
+			bd["delete_on_termination"] = aws.BoolValue(instanceBd.Ebs.DeleteOnTermination)
 		}
 		if vol.Size != nil {
-			bd["volume_size"] = *vol.Size
+			bd["volume_size"] = aws.Int64Value(vol.Size)
 		}
 		if vol.VolumeType != nil {
-			bd["volume_type"] = *vol.VolumeType
+			bd["volume_type"] = aws.StringValue(vol.VolumeType)
 		}
 		if vol.Iops != nil {
-			bd["iops"] = *vol.Iops
+			bd["iops"] = aws.Int64Value(vol.Iops)
 		}
 		if vol.Encrypted != nil {
-			bd["encrypted"] = *vol.Encrypted
+			bd["encrypted"] = aws.BoolValue(vol.Encrypted)
 		}
 		if vol.KmsKeyId != nil {
-			bd["kms_key_id"] = *vol.KmsKeyId
+			bd["kms_key_id"] = aws.StringValue(vol.KmsKeyId)
 		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {
 			blockDevices["root"] = bd
 		} else {
 			if instanceBd.DeviceName != nil {
-				bd["device_name"] = *instanceBd.DeviceName
+				bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 			}
 			if vol.SnapshotId != nil {
-				bd["snapshot_id"] = *vol.SnapshotId
+				bd["snapshot_id"] = aws.StringValue(vol.SnapshotId)
 			}
 
 			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
