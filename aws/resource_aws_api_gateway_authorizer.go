@@ -108,7 +108,7 @@ func resourceAwsApiGatewayAuthorizerCreate(d *schema.ResourceData, meta interfac
 	if v, ok := d.GetOk("authorizer_credentials"); ok {
 		input.AuthorizerCredentials = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("authorizer_result_ttl_in_seconds"); ok {
+	if v, ok := d.GetOkExists("authorizer_result_ttl_in_seconds"); ok {
 		input.AuthorizerResultTtlInSeconds = aws.Int64(int64(v.(int)))
 	}
 	if v, ok := d.GetOk("identity_validation_expression"); ok {

@@ -231,6 +231,35 @@ func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayAuthorizer_zero_ttl(t *testing.T) {
+	var conf apigateway.Authorizer
+	apiGatewayName := acctest.RandomWithPrefix("tf-acctest-apigw")
+	authorizerName := acctest.RandomWithPrefix("tf-acctest-igw-authorizer")
+	lambdaName := acctest.RandomWithPrefix("tf-acctest-igw-auth-lambda")
+	resourceName := "aws_api_gateway_authorizer.acctest"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaNoCache(apiGatewayName, authorizerName, lambdaName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayAuthorizerImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayAuthorizer_disappears(t *testing.T) {
 	var conf apigateway.Authorizer
 	apiGatewayName := acctest.RandomWithPrefix("tf-acctest-apigw")
