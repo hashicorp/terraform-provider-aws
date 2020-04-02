@@ -113,7 +113,7 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
 
 * `create` - (Defaults to 10 mins) Used when launching the instance (until it reaches the initial `running` state)
-* `update` - (Defaults to 20 mins) Used when stopping and starting the instance when necessary during update - e.g. when changing instance type
+* `update` - (Defaults to 10 mins) Used when stopping and starting the instance when necessary during update - e.g. when changing instance type
 * `delete` - (Defaults to 20 mins) Used when terminating the instance
 
 ### Block devices

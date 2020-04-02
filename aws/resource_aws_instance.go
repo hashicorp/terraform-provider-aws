@@ -37,7 +37,7 @@ func resourceAwsInstance() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
@@ -1285,9 +1285,12 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 						return err
 					}
 
+					// The volume is useable once the state is "optimizing", but will not be at full performance.
+					// Optimization can take hours. e.g. a full 1 TiB drive takes approximately 6 hours to optimize,
+					// according to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-modifications.html
 					stateConf := &resource.StateChangeConf{
-						Pending:    []string{"modifying", "optimizing"},
-						Target:     []string{"completed"},
+						Pending:    []string{"modifying"},
+						Target:     []string{"completed", "optimizing"},
 						Refresh:    VolumeStateRefreshFunc(conn, volumeID, "failed"),
 						Timeout:    d.Timeout(schema.TimeoutUpdate),
 						Delay:      30 * time.Second,
