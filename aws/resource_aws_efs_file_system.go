@@ -103,7 +103,7 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"transition_to_ia": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								efs.TransitionToIARulesAfter7Days,
 								efs.TransitionToIARulesAfter14Days,
@@ -187,7 +187,7 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	if hasLifecyclePolicy {
 		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(d.Get("lifecycle_policy").([]interface{})),
+			LifecyclePolicies: expandEfsFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
 		})
 		if err != nil {
 			return fmt.Errorf("Error creating lifecycle policy for EFS file system %q: %s",
@@ -234,10 +234,19 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("lifecycle_policy") {
-		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
+		input := &efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(d.Get("lifecycle_policy").([]interface{})),
-		})
+			LifecyclePolicies: expandEfsFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
+		}
+
+		// Prevent the following error during removal:
+		// InvalidParameter: 1 validation error(s) found.
+		// - missing required field, PutLifecycleConfigurationInput.LifecyclePolicies.
+		if input.LifecyclePolicies == nil {
+			input.LifecyclePolicies = []*efs.LifecyclePolicy{}
+		}
+
+		_, err := conn.PutLifecycleConfiguration(input)
 		if err != nil {
 			return fmt.Errorf("Error updating lifecycle policy for EFS file system %q: %s",
 				d.Id(), err.Error())
@@ -316,8 +325,9 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %s",
 			aws.StringValue(fs.FileSystemId), err)
 	}
-	if err := resourceAwsEfsFileSystemSetLifecyclePolicy(d, res.LifecyclePolicies); err != nil {
-		return err
+
+	if err := d.Set("lifecycle_policy", flattenEfsFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
+		return fmt.Errorf("error setting lifecycle_policy: %s", err)
 	}
 
 	return nil
@@ -402,36 +412,44 @@ func resourceEfsFileSystemCreateUpdateRefreshFunc(id string, conn *efs.EFS) reso
 	}
 }
 
-func resourceAwsEfsFileSystemSetLifecyclePolicy(d *schema.ResourceData, lp []*efs.LifecyclePolicy) error {
-	log.Printf("[DEBUG] lifecycle pols: %s %d", lp, len(lp))
-	if len(lp) == 0 {
-		d.Set("lifecycle_policy", nil)
-		return nil
-	}
-	newLP := make([]*map[string]interface{}, len(lp))
+func flattenEfsFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []interface{} {
+	var tfList []interface{}
 
-	for i := 0; i < len(lp); i++ {
-		config := lp[i]
-		data := make(map[string]interface{})
-		newLP[i] = &data
-		if config.TransitionToIA != nil {
-			data["transition_to_ia"] = *config.TransitionToIA
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
 		}
-		log.Printf("[DEBUG] lp: %s", data)
+
+		tfMap := make(map[string]interface{})
+
+		if apiObject.TransitionToIA != nil {
+			tfMap["transition_to_ia"] = aws.StringValue(apiObject.TransitionToIA)
+		}
+
+		tfList = append(tfList, tfMap)
 	}
 
-	if err := d.Set("lifecycle_policy", newLP); err != nil {
-		return fmt.Errorf("error setting lifecycle_policy: %s", err)
-	}
-	return nil
+	return tfList
 }
 
-func resourceAwsEfsFileSystemLifecyclePolicy(lcPol []interface{}) []*efs.LifecyclePolicy {
-	result := make([]*efs.LifecyclePolicy, len(lcPol))
+func expandEfsFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePolicy {
+	var apiObjects []*efs.LifecyclePolicy
 
-	for i := 0; i < len(lcPol); i++ {
-		lp := lcPol[i].(map[string]interface{})
-		result[i] = &efs.LifecyclePolicy{TransitionToIA: aws.String(lp["transition_to_ia"].(string))}
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := &efs.LifecyclePolicy{}
+
+		if v, ok := tfMap["transition_to_ia"].(string); ok && v != "" {
+			apiObject.TransitionToIA = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return result
+
+	return apiObjects
 }
