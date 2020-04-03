@@ -1622,6 +1622,8 @@ func flattenDSVpcSettings(
 
 	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
 	settings["vpc_id"] = aws.StringValue(s.VpcId)
+	settings["security_group_id"] = aws.StringValue(s.SecurityGroupId)
+	settings["availability_zones"] = flattenStringSet(s.AvailabilityZones)
 
 	return []map[string]interface{}{settings}
 }
