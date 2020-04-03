@@ -188,11 +188,13 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 		})
 	}
 
-	ops = append(ops, &apigateway.PatchOperation{
-		Op:    aws.String(apigateway.OpReplace),
-		Path:  aws.String(prefix + "caching/ttlInSeconds"),
-		Value: aws.String(fmt.Sprintf("%d", d.Get("settings.0.cache_ttl_in_seconds").(int))),
-	})
+	if v, ok := d.GetOkExists("settings.0.cache_ttl_in_seconds"); ok {
+		ops = append(ops, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String(prefix + "caching/ttlInSeconds"),
+			Value: aws.String(fmt.Sprintf("%d", v.(int))),
+		})
+	}
 
 	if d.HasChange("settings.0.cache_data_encrypted") {
 		ops = append(ops, &apigateway.PatchOperation{
