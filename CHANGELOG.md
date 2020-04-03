@@ -1,4 +1,4 @@
-## 2.56.0 (Unreleased)
+## 2.56.0 (April 03, 2020)
 
 NOTES:
 
@@ -6,21 +6,21 @@ NOTES:
 
 ENHANCEMENTS:
 
-* data-source/aws_launch_template: Add `hibernation_options` attribute [GH-12492]
-* resource/aws_codepipeline: Adds cross-region action support [GH-12549]
-* resource/aws_dx_connection: Support `2Gbps` and `5Gbps` values in plan-time validation for `bandwidth` argument [GH-12559]
-* resource/aws_dx_lag: Support `2Gbps` and `5Gbps` values in plan-time validation for `bandwidth` argument [GH-12559]
-* resource/aws_elastic_transcoder_preset: Support plan-time validation for `role` argument [GH-12575]
-* resource/aws_kms_grant: Support resource import [GH-11991]
-* resource/aws_launch_template: Add `hibernation_options` configuration block [GH-12492]
+* data-source/aws_launch_template: Add `hibernation_options` attribute ([#12492](https://github.com/terraform-providers/terraform-provider-aws/issues/12492))
+* resource/aws_codepipeline: Adds cross-region action support ([#12549](https://github.com/terraform-providers/terraform-provider-aws/issues/12549))
+* resource/aws_dx_connection: Support `2Gbps` and `5Gbps` values in plan-time validation for `bandwidth` argument ([#12559](https://github.com/terraform-providers/terraform-provider-aws/issues/12559))
+* resource/aws_dx_lag: Support `2Gbps` and `5Gbps` values in plan-time validation for `bandwidth` argument ([#12559](https://github.com/terraform-providers/terraform-provider-aws/issues/12559))
+* resource/aws_elastic_transcoder_preset: Support plan-time validation for `role` argument ([#12575](https://github.com/terraform-providers/terraform-provider-aws/issues/12575))
+* resource/aws_kms_grant: Support resource import ([#11991](https://github.com/terraform-providers/terraform-provider-aws/issues/11991))
+* resource/aws_launch_template: Add `hibernation_options` configuration block ([#12492](https://github.com/terraform-providers/terraform-provider-aws/issues/12492))
 
 BUG FIXES:
 
-* resource/aws_codedeploy_deployment_group: Fix `blue_green_deployment_config` updates for ECS [GH-11885]
+* resource/aws_codedeploy_deployment_group: Fix `blue_green_deployment_config` updates for ECS ([#11885](https://github.com/terraform-providers/terraform-provider-aws/issues/11885))
 * resource/aws_emr_cluster: Now properly sets the order when multiple bootstrap actions are defined
-* resource/aws_kms_grant: Remove resource from Terraform state instead of error if removed outside Terraform [GH-12560]
-* resource/aws_s3_bucket: Prevent various panics with empty configuration blocks [GH-12614]
-* resource/aws_volume_attachment: Ensure any error is shown while waiting for volume to detach [GH-12596]
+* resource/aws_kms_grant: Remove resource from Terraform state instead of error if removed outside Terraform ([#12560](https://github.com/terraform-providers/terraform-provider-aws/issues/12560))
+* resource/aws_s3_bucket: Prevent various panics with empty configuration blocks ([#12614](https://github.com/terraform-providers/terraform-provider-aws/issues/12614))
+* resource/aws_volume_attachment: Ensure any error is shown while waiting for volume to detach ([#12596](https://github.com/terraform-providers/terraform-provider-aws/issues/12596))
 
 ## 2.55.0 (March 27, 2020)
 
