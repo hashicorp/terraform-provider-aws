@@ -161,11 +161,8 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 				Computed: true,
 			},
 			"dns_ip_addresses": {
-				Type: schema.TypeSet,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.SingleIP(),
-				},
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 				Computed: true,
 			},
