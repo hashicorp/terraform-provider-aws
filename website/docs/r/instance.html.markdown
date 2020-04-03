@@ -136,7 +136,7 @@ The `root_block_device` mapping supports the following:
 * `encrypted` - (Optional) Enable volume encryption. (Default: `false`). Must be configured to perform drift detection.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 
-Modifying any of the `root_block_device` settings requires resource
+Modifying any of the `root_block_device` settings other than `volume_size` requires resource
 replacement.
 
 Each `ebs_block_device` supports the following:
