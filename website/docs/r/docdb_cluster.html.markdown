@@ -72,6 +72,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `tags` - (Optional) A mapping of tags to assign to the DB cluster.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
   with the Cluster
+* `deletion_protection` - (Optional) A value that indicates whether the DB cluster has deletion protection enabled.The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
 
 ## Attributes Reference
 
