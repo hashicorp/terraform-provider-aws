@@ -167,6 +167,8 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 
 	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
 		d.Set("access_policy", "")
+	} else if err != nil {
+		return fmt.Errorf("error getting access policy for Glacier Vault (%s): %s", d.Id(), err)
 	} else if pol != nil && pol.Policy != nil {
 		policy, err := structure.NormalizeJsonString(aws.StringValue(pol.Policy.Policy))
 		if err != nil {
