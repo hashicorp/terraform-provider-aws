@@ -62,7 +62,7 @@ The following arguments are supported:
 * `storage_encrypted` - (Optional) Specifies whether the Neptune cluster is encrypted. The default is `false` if not specified.
 * `tags` - (Optional) A mapping of tags to assign to the Neptune cluster.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate with the Cluster
-* `delete_protection` - (Optional) A value that indicates whether the DB cluster has deletion protection enabled.The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
+* `deletion_protection` - (Optional) A value that indicates whether the DB cluster has deletion protection enabled.The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
 
 ## Attributes Reference
 
