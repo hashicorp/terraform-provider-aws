@@ -143,7 +143,7 @@ The following arguments are supported:
 * `ram_disk_id` - The ID of the RAM disk.
 * `security_group_names` - A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
-* `vpc_security_group_ids` - A list of security group IDs to associate with.
+* `vpc_security_group_ids` - A list of security group IDs to associate with. Conflicts with `network_interfaces.security_groups`
 * `tag_specifications` - The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
 * `tags` - (Optional) A mapping of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
