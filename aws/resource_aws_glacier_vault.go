@@ -175,8 +175,6 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("access policy contains an invalid JSON: %s", err)
 		}
 		d.Set("access_policy", policy)
-	} else {
-		return err
 	}
 
 	notifications, err := getGlacierVaultNotification(conn, d.Id())
