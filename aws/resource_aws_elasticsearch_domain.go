@@ -217,7 +217,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"instance_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "m3.medium.elasticsearch",
+							Default:  elasticsearch.ESPartitionInstanceTypeM3MediumElasticsearch,
 						},
 						"zone_awareness_config": {
 							Type:             schema.TypeList,
@@ -238,6 +238,23 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"zone_awareness_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+						},
+						"warm_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"warm_count": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(2, 45),
+						},
+						"warm_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								elasticsearch.ESWarmPartitionInstanceTypeUltrawarm1MediumElasticsearch,
+								elasticsearch.ESWarmPartitionInstanceTypeUltrawarm1LargeElasticsearch,
+							}, false),
 						},
 					},
 				},
@@ -308,8 +325,9 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							}, false),
 						},
 						"cloudwatch_log_group_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 						"enabled": {
 							Type:     schema.TypeBool,
@@ -346,8 +364,9 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Required: true,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},

@@ -1274,6 +1274,21 @@ func expandESClusterConfig(m map[string]interface{}) *elasticsearch.Elasticsearc
 		}
 	}
 
+	if v, ok := m["warm_enabled"]; ok {
+		isEnabled := v.(bool)
+		config.WarmEnabled = aws.Bool(isEnabled)
+
+		if isEnabled {
+			if v, ok := m["warm_count"]; ok {
+				config.WarmCount = aws.Int64(int64(v.(int)))
+			}
+
+			if v, ok := m["warm_type"]; ok {
+				config.WarmType = aws.String(v.(string))
+			}
+		}
+	}
+
 	return &config
 }
 
@@ -1300,19 +1315,28 @@ func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[s
 	}
 
 	if c.DedicatedMasterCount != nil {
-		m["dedicated_master_count"] = *c.DedicatedMasterCount
+		m["dedicated_master_count"] = aws.Int64Value(c.DedicatedMasterCount)
 	}
 	if c.DedicatedMasterEnabled != nil {
-		m["dedicated_master_enabled"] = *c.DedicatedMasterEnabled
+		m["dedicated_master_enabled"] = aws.BoolValue(c.DedicatedMasterEnabled)
 	}
 	if c.DedicatedMasterType != nil {
-		m["dedicated_master_type"] = *c.DedicatedMasterType
+		m["dedicated_master_type"] = aws.StringValue(c.DedicatedMasterType)
 	}
 	if c.InstanceCount != nil {
-		m["instance_count"] = *c.InstanceCount
+		m["instance_count"] = aws.Int64Value(c.InstanceCount)
 	}
 	if c.InstanceType != nil {
-		m["instance_type"] = *c.InstanceType
+		m["instance_type"] = aws.StringValue(c.InstanceType)
+	}
+	if c.WarmEnabled != nil {
+		m["warm_enabled"] = aws.BoolValue(c.WarmEnabled)
+	}
+	if c.WarmCount != nil {
+		m["warm_count"] = aws.Int64Value(c.WarmCount)
+	}
+	if c.WarmType != nil {
+		m["warm_type"] = aws.StringValue(c.WarmType)
 	}
 
 	return []map[string]interface{}{m}
