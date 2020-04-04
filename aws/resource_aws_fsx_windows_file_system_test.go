@@ -101,6 +101,7 @@ func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "8"),
 					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexp.MustCompile(`^vpc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_1"),
 				),
 			},
 			{
@@ -150,6 +151,7 @@ func TestAccAWSFsxWindowsFileSystem_multiAz(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "8"),
 					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexp.MustCompile(`^vpc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", "MULTI_AZ_1"),
 				),
 			},
 			{
