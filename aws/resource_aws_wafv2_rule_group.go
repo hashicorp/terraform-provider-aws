@@ -146,7 +146,7 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "AWS WAF couldn’t perform your tagging operation because of an internal error") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "AWS WAF couldn’t save your changes because you tried to update or delete a resource that has changed since you last retrieved it") {
+			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "AWS WAF couldn’t retrieve the resource that you requested. Retry your request") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -229,6 +229,9 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "AWS WAF couldn’t retrieve the resource that you requested. Retry your request") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -268,9 +271,22 @@ func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) e
 		_, err := conn.DeleteRuleGroup(r)
 
 		if err != nil {
+			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "AWS WAF couldn’t perform the operation because your resource is being used by another resource or it’s associated with another resource") {
+				return resource.RetryableError(err)
+			}
 			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationException, "An error occurred during the tagging operation") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "AWS WAF couldn’t perform your tagging operation because of an internal error") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "AWS WAF couldn’t retrieve the resource that you requested. Retry your request") {
+				return resource.RetryableError(err)
+			}
+
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -399,7 +415,7 @@ func wafv2ByteMatchStatementSchema() *schema.Schema {
 				"search_string": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringLenBetween(1, 50),
+					ValidateFunc: validation.StringLenBetween(1, 200),
 				},
 				"text_transformation": wafv2TextTransformationSchema(),
 			},
