@@ -19,7 +19,7 @@ For information about function aliases, see [CreateAlias][2] and [AliasRoutingCo
 resource "aws_lambda_alias" "test_alias" {
   name             = "testalias"
   description      = "a sample description"
-  function_name    = "${aws_lambda_function.lambda_function_test.arn}"
+  function_name    = aws_lambda_function.lambda_function_test.arn
   function_version = "1"
 
   routing_config = {

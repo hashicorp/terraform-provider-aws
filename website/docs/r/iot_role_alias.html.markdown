@@ -32,7 +32,7 @@ EOF
 
 resource "aws_iot_role_alias" "alias" {
   alias    = "Thermostat-dynamodb-access-role-alias"
-  role_arn = "${aws_iam_role.role.arn}"
+  role_arn = aws_iam_role.role.arn
 }
 ```
 

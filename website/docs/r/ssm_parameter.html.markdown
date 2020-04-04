@@ -33,7 +33,7 @@ resource "aws_db_instance" "default" {
   instance_class       = "db.t2.micro"
   name                 = "mydb"
   username             = "foo"
-  password             = "${var.database_master_password}"
+  password             = var.database_master_password
   db_subnet_group_name = "my_database_subnet_group"
   parameter_group_name = "default.mysql5.7"
 }
@@ -42,10 +42,10 @@ resource "aws_ssm_parameter" "secret" {
   name        = "/${var.environment}/database/password/master"
   description = "The parameter description"
   type        = "SecureString"
-  value       = "${var.database_master_password}"
+  value       = var.database_master_password
 
   tags = {
-    environment = "${var.environment}"
+    environment = var.environment
   }
 }
 ```

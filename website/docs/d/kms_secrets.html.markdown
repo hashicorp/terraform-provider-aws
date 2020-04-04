@@ -47,8 +47,8 @@ data "aws_kms_secrets" "example" {
 
 resource "aws_rds_cluster" "example" {
   # ... other configuration ...
-  master_password = "${data.aws_kms_secrets.example.plaintext["master_password"]}"
-  master_username = "${data.aws_kms_secrets.example.plaintext["master_username"]}"
+  master_password = data.aws_kms_secrets.example.plaintext["master_password"]
+  master_username = data.aws_kms_secrets.example.plaintext["master_username"]
 }
 ```
 

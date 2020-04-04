@@ -28,7 +28,7 @@ resource "aws_waf_rule" "wafrule" {
   metric_name = "tfWAFRule"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }

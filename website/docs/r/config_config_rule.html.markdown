@@ -32,7 +32,7 @@ resource "aws_config_config_rule" "r" {
 
 resource "aws_config_configuration_recorder" "foo" {
   name     = "example"
-  role_arn = "${aws_iam_role.r.arn}"
+  role_arn = aws_iam_role.r.arn
 }
 
 resource "aws_iam_role" "r" {
@@ -57,7 +57,7 @@ POLICY
 
 resource "aws_iam_role_policy" "p" {
   name = "my-awsconfig-policy"
-  role = "${aws_iam_role.r.id}"
+  role = aws_iam_role.r.id
 
   policy = <<POLICY
 {
@@ -90,7 +90,7 @@ resource "aws_lambda_function" "example" {
 
 resource "aws_lambda_permission" "example" {
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.example.arn}"
+  function_name = aws_lambda_function.example.arn
   principal     = "config.amazonaws.com"
   statement_id  = "AllowExecutionFromConfig"
 }
@@ -100,7 +100,7 @@ resource "aws_config_config_rule" "example" {
 
   source {
     owner             = "CUSTOM_LAMBDA"
-    source_identifier = "${aws_lambda_function.example.arn}"
+    source_identifier = aws_lambda_function.example.arn
   }
 
   depends_on = ["aws_config_configuration_recorder.example", "aws_lambda_permission.example"]

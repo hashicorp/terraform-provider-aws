@@ -33,7 +33,7 @@ data "aws_caller_identity" "accepter" {
 # Creator's side of the VIF
 resource "aws_dx_hosted_transit_virtual_interface" "creator" {
   connection_id    = "dxcon-zzzzzzzz"
-  owner_account_id = "${data.aws_caller_identity.accepter.account_id}"
+  owner_account_id = data.aws_caller_identity.accepter.account_id
 
   name           = "tf-transit-vif-example"
   vlan           = 4094
@@ -55,8 +55,8 @@ resource "aws_dx_gateway" "example" {
 
 resource "aws_dx_hosted_transit_virtual_interface_accepter" "accepter" {
   provider             = "aws.accepter"
-  virtual_interface_id = "${aws_dx_hosted_transit_virtual_interface.creator.id}"
-  dx_gateway_id        = "${aws_dx_gateway.example.id}"
+  virtual_interface_id = aws_dx_hosted_transit_virtual_interface.creator.id
+  dx_gateway_id        = aws_dx_gateway.example.id
 
   tags = {
     Side = "Accepter"

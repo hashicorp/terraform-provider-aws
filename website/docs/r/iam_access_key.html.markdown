@@ -14,7 +14,7 @@ Provides an IAM access key. This is a set of credentials that allow API requests
 
 ```hcl
 resource "aws_iam_access_key" "lb" {
-  user    = "${aws_iam_user.lb.name}"
+  user    = aws_iam_user.lb.name
   pgp_key = "keybase:some_person_that_exists"
 }
 
@@ -25,7 +25,7 @@ resource "aws_iam_user" "lb" {
 
 resource "aws_iam_user_policy" "lb_ro" {
   name = "test"
-  user = "${aws_iam_user.lb.name}"
+  user = aws_iam_user.lb.name
 
   policy = <<EOF
 {
@@ -44,7 +44,7 @@ EOF
 }
 
 output "secret" {
-  value = "${aws_iam_access_key.lb.encrypted_secret}"
+  value = aws_iam_access_key.lb.encrypted_secret
 }
 ```
 

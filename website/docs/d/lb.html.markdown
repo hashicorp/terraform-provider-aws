@@ -30,8 +30,8 @@ variable "lb_name" {
 }
 
 data "aws_lb" "test" {
-  arn  = "${var.lb_arn}"
-  name = "${var.lb_name}"
+  arn  = var.lb_arn
+  name = var.lb_name
 }
 ```
 

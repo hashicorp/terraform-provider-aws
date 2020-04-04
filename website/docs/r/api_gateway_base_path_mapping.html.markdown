@@ -17,7 +17,7 @@ custom domain name.
 ```hcl
 resource "aws_api_gateway_deployment" "example" {
   # See aws_api_gateway_rest_api docs for how to create this
-  rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
+  rest_api_id = aws_api_gateway_rest_api.MyDemoAPI.id
   stage_name  = "live"
 }
 
@@ -31,9 +31,9 @@ resource "aws_api_gateway_domain_name" "example" {
 }
 
 resource "aws_api_gateway_base_path_mapping" "test" {
-  api_id      = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
-  stage_name  = "${aws_api_gateway_deployment.example.stage_name}"
-  domain_name = "${aws_api_gateway_domain_name.example.domain_name}"
+  api_id      = aws_api_gateway_rest_api.MyDemoAPI.id
+  stage_name  = aws_api_gateway_deployment.example.stage_name
+  domain_name = aws_api_gateway_domain_name.example.domain_name
 }
 ```
 

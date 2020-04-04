@@ -14,7 +14,7 @@ Provides a resource to create a VPC Internet Gateway.
 
 ```hcl
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   tags = {
     Name = "main"
@@ -33,7 +33,7 @@ The following arguments are supported:
 
 ```hcl
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_instance" "foo" {

@@ -14,7 +14,7 @@ Manages a RDS database cluster snapshot for Aurora clusters. For managing RDS da
 
 ```hcl
 resource "aws_db_cluster_snapshot" "example" {
-  db_cluster_identifier          = "${aws_rds_cluster.example.id}"
+  db_cluster_identifier          = aws_rds_cluster.example.id
   db_cluster_snapshot_identifier = "resourcetestsnapshot1234"
 }
 ```

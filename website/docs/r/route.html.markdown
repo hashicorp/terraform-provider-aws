@@ -36,13 +36,13 @@ resource "aws_vpc" "vpc" {
 }
 
 resource "aws_egress_only_internet_gateway" "egress" {
-  vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = aws_vpc.vpc.id
 }
 
 resource "aws_route" "r" {
   route_table_id              = "rtb-4fbb3ac4"
   destination_ipv6_cidr_block = "::/0"
-  egress_only_gateway_id      = "${aws_egress_only_internet_gateway.egress.id}"
+  egress_only_gateway_id      = aws_egress_only_internet_gateway.egress.id
 }
 ```
 

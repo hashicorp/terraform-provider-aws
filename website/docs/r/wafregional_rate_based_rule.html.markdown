@@ -31,7 +31,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit = 100
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }

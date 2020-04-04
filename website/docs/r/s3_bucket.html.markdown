@@ -32,7 +32,7 @@ resource "aws_s3_bucket" "b" {
 resource "aws_s3_bucket" "b" {
   bucket = "s3-website-test.hashicorp.com"
   acl    = "public-read"
-  policy = "${file("policy.json")}"
+  policy = file("policy.json")
 
   website {
     index_document = "index.html"
@@ -95,7 +95,7 @@ resource "aws_s3_bucket" "b" {
   acl    = "private"
 
   logging {
-    target_bucket = "${aws_s3_bucket.log_bucket.id}"
+    target_bucket = aws_s3_bucket.log_bucket.id
     target_prefix = "log/"
   }
 }
@@ -247,8 +247,8 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "replication" {
-  role       = "${aws_iam_role.replication.name}"
-  policy_arn = "${aws_iam_policy.replication.arn}"
+  role       = aws_iam_role.replication.name
+  policy_arn = aws_iam_policy.replication.arn
 }
 
 resource "aws_s3_bucket" "destination" {
@@ -271,7 +271,7 @@ resource "aws_s3_bucket" "bucket" {
   }
 
   replication_configuration {
-    role = "${aws_iam_role.replication.arn}"
+    role = aws_iam_role.replication.arn
 
     rules {
       id     = "foobar"
@@ -279,7 +279,7 @@ resource "aws_s3_bucket" "bucket" {
       status = "Enabled"
 
       destination {
-        bucket        = "${aws_s3_bucket.destination.arn}"
+        bucket        = aws_s3_bucket.destination.arn
         storage_class = "STANDARD"
       }
     }
@@ -301,7 +301,7 @@ resource "aws_s3_bucket" "mybucket" {
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        kms_master_key_id = "${aws_kms_key.mykey.arn}"
+        kms_master_key_id = aws_kms_key.mykey.arn
         sse_algorithm     = "aws:kms"
       }
     }
@@ -318,7 +318,7 @@ resource "aws_s3_bucket" "bucket" {
   bucket = "mybucket"
 
   grant {
-    id          = "${data.aws_canonical_user_id.current_user.id}"
+    id          = data.aws_canonical_user_id.current_user.id
     type        = "CanonicalUser"
     permissions = ["FULL_CONTROL"]
   }

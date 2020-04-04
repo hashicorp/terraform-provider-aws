@@ -24,7 +24,7 @@ data "aws_vpcs" "foo" {
 }
 
 output "foo" {
-  value = "${data.aws_vpcs.foo.ids}"
+  value = data.aws_vpcs.foo.ids
 }
 ```
 
@@ -34,16 +34,16 @@ An example use case would be interpolate the `aws_vpcs` output into `count` of a
 data "aws_vpcs" "foo" {}
 
 resource "aws_flow_log" "test_flow_log" {
-  count = "${length(data.aws_vpcs.foo.ids)}"
+  count = length(data.aws_vpcs.foo.ids)
 
   # ...
-  vpc_id = "${element(data.aws_vpcs.foo.ids, count.index)}"
+  vpc_id = element(data.aws_vpcs.foo.ids, count.index)
 
   # ...
 }
 
 output "foo" {
-  value = "${data.aws_vpcs.foo.ids}"
+  value = data.aws_vpcs.foo.ids
 }
 ```
 

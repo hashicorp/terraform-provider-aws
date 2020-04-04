@@ -24,7 +24,7 @@ resource "aws_s3_bucket" "inventory" {
 }
 
 resource "aws_s3_bucket_inventory" "test" {
-  bucket = "${aws_s3_bucket.test.id}"
+  bucket = aws_s3_bucket.test.id
   name   = "EntireBucketDaily"
 
   included_object_versions = "All"
@@ -36,7 +36,7 @@ resource "aws_s3_bucket_inventory" "test" {
   destination {
     bucket {
       format     = "ORC"
-      bucket_arn = "${aws_s3_bucket.inventory.arn}"
+      bucket_arn = aws_s3_bucket.inventory.arn
     }
   }
 }
@@ -54,7 +54,7 @@ resource "aws_s3_bucket" "inventory" {
 }
 
 resource "aws_s3_bucket_inventory" "test-prefix" {
-  bucket = "${aws_s3_bucket.test.id}"
+  bucket = aws_s3_bucket.test.id
   name   = "DocumentsWeekly"
 
   included_object_versions = "All"
@@ -70,7 +70,7 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
   destination {
     bucket {
       format     = "ORC"
-      bucket_arn = "${aws_s3_bucket.inventory.arn}"
+      bucket_arn = aws_s3_bucket.inventory.arn
       prefix     = "inventory"
     }
   }

@@ -46,7 +46,7 @@ resource "aws_vpc" "mainvpc" {
 }
 
 resource "aws_default_security_group" "default" {
-  vpc_id = "${aws_vpc.mainvpc.id}"
+  vpc_id = aws_vpc.mainvpc.id
 
   ingress {
     protocol  = -1
@@ -75,7 +75,7 @@ resource "aws_vpc" "mainvpc" {
 }
 
 resource "aws_default_security_group" "default" {
-  vpc_id = "${aws_vpc.mainvpc.id}"
+  vpc_id = aws_vpc.mainvpc.id
 
   ingress {
     protocol  = -1

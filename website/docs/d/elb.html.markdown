@@ -25,7 +25,7 @@ variable "lb_name" {
 }
 
 data "aws_elb" "test" {
-  name = "${var.lb_name}"
+  name = var.lb_name
 }
 ```
 

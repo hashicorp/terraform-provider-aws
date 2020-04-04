@@ -31,13 +31,13 @@ resource "aws_vpc" "bar" {
 }
 
 resource "aws_vpc_peering_connection" "foo" {
-  vpc_id      = "${aws_vpc.foo.id}"
-  peer_vpc_id = "${aws_vpc.bar.id}"
+  vpc_id      = aws_vpc.foo.id
+  peer_vpc_id = aws_vpc.bar.id
   auto_accept = true
 }
 
 resource "aws_vpc_peering_connection_options" "foo" {
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.foo.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.foo.id
 
   accepter {
     allow_remote_vpc_dns_resolution = true
@@ -91,9 +91,9 @@ data "aws_caller_identity" "peer" {
 resource "aws_vpc_peering_connection" "peer" {
   provider = "aws.requester"
 
-  vpc_id        = "${aws_vpc.main.id}"
-  peer_vpc_id   = "${aws_vpc.peer.id}"
-  peer_owner_id = "${data.aws_caller_identity.peer.account_id}"
+  vpc_id        = aws_vpc.main.id
+  peer_vpc_id   = aws_vpc.peer.id
+  peer_owner_id = data.aws_caller_identity.peer.account_id
   auto_accept   = false
 
   tags = {
@@ -105,7 +105,7 @@ resource "aws_vpc_peering_connection" "peer" {
 resource "aws_vpc_peering_connection_accepter" "peer" {
   provider = "aws.accepter"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
   auto_accept               = true
 
   tags = {
@@ -118,7 +118,7 @@ resource "aws_vpc_peering_connection_options" "requester" {
 
   # As options can't be set until the connection has been accepted
   # create an explicit dependency on the accepter.
-  vpc_peering_connection_id = "${aws_vpc_peering_connection_accepter.peer.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
 
   requester {
     allow_remote_vpc_dns_resolution = true
@@ -128,7 +128,7 @@ resource "aws_vpc_peering_connection_options" "requester" {
 resource "aws_vpc_peering_connection_options" "accepter" {
   provider = "aws.accepter"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection_accepter.peer.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
 
   accepter {
     allow_remote_vpc_dns_resolution = true

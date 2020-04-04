@@ -36,14 +36,14 @@ resource "aws_rds_cluster" "primary" {
 
   # ... other configuration ...
   engine_mode               = "global"
-  global_cluster_identifier = "${aws_rds_global_cluster.example.id}"
+  global_cluster_identifier = aws_rds_global_cluster.example.id
 }
 
 resource "aws_rds_cluster_instance" "primary" {
   provider = "aws.primary"
 
   # ... other configuration ...
-  cluster_identifier = "${aws_rds_cluster.primary.id}"
+  cluster_identifier = aws_rds_cluster.primary.id
 }
 
 resource "aws_rds_cluster" "secondary" {
@@ -52,14 +52,14 @@ resource "aws_rds_cluster" "secondary" {
 
   # ... other configuration ...
   engine_mode               = "global"
-  global_cluster_identifier = "${aws_rds_global_cluster.example.id}"
+  global_cluster_identifier = aws_rds_global_cluster.example.id
 }
 
 resource "aws_rds_cluster_instance" "secondary" {
   provider = "aws.secondary"
 
   # ... other configuration ...
-  cluster_identifier = "${aws_rds_cluster.secondary.id}"
+  cluster_identifier = aws_rds_cluster.secondary.id
 }
 ```
 

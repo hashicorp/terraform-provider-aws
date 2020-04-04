@@ -19,10 +19,10 @@ See [ECS Services section in AWS developer guide](https://docs.aws.amazon.com/Am
 ```hcl
 resource "aws_ecs_service" "mongo" {
   name            = "mongodb"
-  cluster         = "${aws_ecs_cluster.foo.id}"
-  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  cluster         = aws_ecs_cluster.foo.id
+  task_definition = aws_ecs_task_definition.mongo.arn
   desired_count   = 3
-  iam_role        = "${aws_iam_role.foo.arn}"
+  iam_role        = aws_iam_role.foo.arn
   depends_on      = ["aws_iam_role_policy.foo"]
 
   ordered_placement_strategy {
@@ -31,7 +31,7 @@ resource "aws_ecs_service" "mongo" {
   }
 
   load_balancer {
-    target_group_arn = "${aws_lb_target_group.foo.arn}"
+    target_group_arn = aws_lb_target_group.foo.arn
     container_name   = "mongo"
     container_port   = 8080
   }
@@ -66,8 +66,8 @@ resource "aws_ecs_service" "example" {
 ```hcl
 resource "aws_ecs_service" "bar" {
   name                = "bar"
-  cluster             = "${aws_ecs_cluster.foo.id}"
-  task_definition     = "${aws_ecs_task_definition.bar.arn}"
+  cluster             = aws_ecs_cluster.foo.id
+  task_definition     = aws_ecs_task_definition.bar.arn
   scheduling_strategy = "DAEMON"
 }
 ```

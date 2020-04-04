@@ -22,8 +22,8 @@ resource "aws_s3_bucket_object" "object" {
 
   # The filemd5() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
-  # etag = "${md5(file("path/to/file"))}"
-  etag = "${filemd5("path/to/file")}"
+  # etag = md5(file("path/to/file"))
+  etag = filemd5("path/to/file")
 }
 ```
 
@@ -42,9 +42,9 @@ resource "aws_s3_bucket" "examplebucket" {
 
 resource "aws_s3_bucket_object" "examplebucket_object" {
   key        = "someobject"
-  bucket     = "${aws_s3_bucket.examplebucket.id}"
+  bucket     = aws_s3_bucket.examplebucket.id
   source     = "index.html"
-  kms_key_id = "${aws_kms_key.examplekms.arn}"
+  kms_key_id = aws_kms_key.examplekms.arn
 }
 ```
 
@@ -58,7 +58,7 @@ resource "aws_s3_bucket" "examplebucket" {
 
 resource "aws_s3_bucket_object" "examplebucket_object" {
   key                    = "someobject"
-  bucket                 = "${aws_s3_bucket.examplebucket.id}"
+  bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
   server_side_encryption = "aws:kms"
 }
@@ -74,7 +74,7 @@ resource "aws_s3_bucket" "examplebucket" {
 
 resource "aws_s3_bucket_object" "examplebucket_object" {
   key                    = "someobject"
-  bucket                 = "${aws_s3_bucket.examplebucket.id}"
+  bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
   server_side_encryption = "AES256"
 }
@@ -98,7 +98,7 @@ resource "aws_s3_bucket" "examplebucket" {
 
 resource "aws_s3_bucket_object" "examplebucket_object" {
   key    = "someobject"
-  bucket = "${aws_s3_bucket.examplebucket.id}"
+  bucket = aws_s3_bucket.examplebucket.id
   source = "important.txt"
 
   object_lock_legal_hold_status = "ON"
@@ -135,7 +135,7 @@ This attribute is not compatible with KMS encryption, `kms_key_id` or `server_si
 * `kms_key_id` - (Optional) Specifies the AWS KMS Key ARN to use for object encryption.
 This value is a fully qualified **ARN** of the KMS Key. If using `aws_kms_key`,
 use the exported `arn` attribute:
-      `kms_key_id = "${aws_kms_key.foo.arn}"`
+      `kms_key_id = aws_kms_key.foo.arn`
 * `metadata` - (Optional) A mapping of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).
 * `tags` - (Optional) A mapping of tags to assign to the object.
 * `force_destroy` - (Optional) Allow the object to be deleted by removing any legal hold on any object version.

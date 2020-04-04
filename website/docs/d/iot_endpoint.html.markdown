@@ -28,7 +28,7 @@ resource "kubernetes_pod" "agent" {
       env = [
         {
           name  = "IOT_ENDPOINT"
-          value = "${data.aws_iot_endpoint.example.endpoint_address}"
+          value = data.aws_iot_endpoint.example.endpoint_address
         },
       ]
     }

@@ -38,7 +38,7 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = "tf-example"
   type   = "HTTP"
 
@@ -48,8 +48,8 @@ resource "aws_appsync_datasource" "test" {
 }
 
 resource "aws_appsync_function" "test" {
-  api_id                    = "${aws_appsync_graphql_api.test.id}"
-  data_source               = "${aws_appsync_datasource.test.name}"
+  api_id                    = aws_appsync_graphql_api.test.id
+  data_source               = aws_appsync_datasource.test.name
   name                      = "tf_example"
   request_mapping_template  = <<EOF
 {

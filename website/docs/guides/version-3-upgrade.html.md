@@ -153,7 +153,7 @@ resource "aws_emr_cluster" "example" {
 }
 
 resource "aws_emr_instance_group" "example" {
-  cluster_id     = "${aws_emr_cluster.example.id}"
+  cluster_id     = aws_emr_cluster.example.id
   instance_count = 2
   instance_type  = "c4.xlarge"
 }

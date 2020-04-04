@@ -40,14 +40,14 @@ resource "aws_ram_resource_share" "sender_share" {
 resource "aws_ram_principal_association" "sender_invite" {
   provider = "aws.alternate"
 
-  principal          = "${data.aws_caller_identity.receiver.account_id}"
-  resource_share_arn = "${aws_ram_resource_share.sender_share.arn}"
+  principal          = data.aws_caller_identity.receiver.account_id
+  resource_share_arn = aws_ram_resource_share.sender_share.arn
 }
 
 data "aws_caller_identity" "receiver" {}
 
 resource "aws_ram_resource_share_accepter" "receiver_accept" {
-  share_arn = "${aws_ram_principal_association.sender_invite.resource_share_arn}"
+  share_arn = aws_ram_principal_association.sender_invite.resource_share_arn
 }
 ```
 

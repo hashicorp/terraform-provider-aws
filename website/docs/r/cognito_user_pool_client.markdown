@@ -22,7 +22,7 @@ resource "aws_cognito_user_pool" "pool" {
 resource "aws_cognito_user_pool_client" "client" {
   name = "client"
 
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id = aws_cognito_user_pool.pool.id
 }
 ```
 
@@ -36,7 +36,7 @@ resource "aws_cognito_user_pool" "pool" {
 resource "aws_cognito_user_pool_client" "client" {
   name = "client"
 
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id = aws_cognito_user_pool.pool.id
 
   generate_secret     = true
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
@@ -78,7 +78,7 @@ EOF
 
 resource "aws_iam_role_policy" "test" {
   name = "role_policy"
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<-EOF
   {
@@ -99,12 +99,12 @@ resource "aws_iam_role_policy" "test" {
 
 resource "aws_cognito_user_pool_client" "test" {
   name         = "pool_client"
-  user_pool_id = "${aws_cognito_user_pool.test.id}"
+  user_pool_id = aws_cognito_user_pool.test.id
 
   analytics_configuration {
-    application_id   = "${aws_pinpoint_app.test.application_id}"
+    application_id   = aws_pinpoint_app.test.application_id
     external_id      = "some_id"
-    role_arn         = "${aws_iam_role.test.arn}"
+    role_arn         = aws_iam_role.test.arn
     user_data_shared = true
   }
 }

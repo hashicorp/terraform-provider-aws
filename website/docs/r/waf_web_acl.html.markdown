@@ -28,7 +28,7 @@ resource "aws_waf_rule" "wafrule" {
   metric_name = "tfWAFRule"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -49,7 +49,7 @@ resource "aws_waf_web_acl" "waf_acl" {
     }
 
     priority = 1
-    rule_id  = "${aws_waf_rule.wafrule.id}"
+    rule_id  = aws_waf_rule.wafrule.id
     type     = "REGULAR"
   }
 }
@@ -63,7 +63,7 @@ resource "aws_waf_web_acl" "waf_acl" {
 resource "aws_waf_web_acl" "example" {
   # ... other configuration ...
   logging_configuration {
-    log_destination = "${aws_kinesis_firehose_delivery_stream.example.arn}"
+    log_destination = aws_kinesis_firehose_delivery_stream.example.arn
 
     redacted_fields {
       field_to_match {

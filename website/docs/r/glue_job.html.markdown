@@ -19,7 +19,7 @@ Provides a Glue Job resource.
 ```hcl
 resource "aws_glue_job" "example" {
   name     = "example"
-  role_arn = "${aws_iam_role.example.arn}"
+  role_arn = aws_iam_role.example.arn
 
   command {
     script_location = "s3://${aws_s3_bucket.example.bucket}/example.py"
@@ -32,7 +32,7 @@ resource "aws_glue_job" "example" {
 ```hcl
 resource "aws_glue_job" "example" {
   name     = "example"
-  role_arn = "${aws_iam_role.example.arn}"
+  role_arn = aws_iam_role.example.arn
 
   command {
     script_location = "s3://${aws_s3_bucket.example.bucket}/example.scala"
@@ -57,7 +57,7 @@ resource "aws_glue_job" "example" {
 
   default_arguments = {
     # ... potentially other arguments ...
-    "--continuous-log-logGroup"          = "${aws_cloudwatch_log_group.example.name}"
+    "--continuous-log-logGroup"          = aws_cloudwatch_log_group.example.name
     "--enable-continuous-cloudwatch-log" = "true"
     "--enable-continuous-log-filter"     = "true"
     "--enable-metrics"                   = ""

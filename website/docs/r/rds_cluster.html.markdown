@@ -82,7 +82,7 @@ resource "aws_rds_cluster" "postgresql" {
 ```hcl
 resource "aws_rds_cluster" "example" {
   cluster_identifier   = "example"
-  db_subnet_group_name = "${aws_db_subnet_group.example.name}"
+  db_subnet_group_name = aws_db_subnet_group.example.name
   engine_mode          = "multimaster"
   master_password      = "barbarbarbar"
   master_username      = "foo"

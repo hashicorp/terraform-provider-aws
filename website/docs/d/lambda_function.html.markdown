@@ -18,7 +18,7 @@ variable "function_name" {
 }
 
 data "aws_lambda_function" "existing" {
-  function_name = "${var.function_name}"
+  function_name = var.function_name
 }
 ```
 

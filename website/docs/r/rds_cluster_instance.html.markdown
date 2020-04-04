@@ -29,7 +29,7 @@ For more information on Amazon Aurora, see [Aurora on Amazon RDS][2] in the Amaz
 resource "aws_rds_cluster_instance" "cluster_instances" {
   count              = 2
   identifier         = "aurora-cluster-demo-${count.index}"
-  cluster_identifier = "${aws_rds_cluster.default.id}"
+  cluster_identifier = aws_rds_cluster.default.id
   instance_class     = "db.r4.large"
 }
 

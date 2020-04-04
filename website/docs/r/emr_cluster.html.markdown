@@ -37,10 +37,10 @@ EOF
   keep_job_flow_alive_when_no_steps = true
 
   ec2_attributes {
-    subnet_id                         = "${aws_subnet.main.id}"
-    emr_managed_master_security_group = "${aws_security_group.sg.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.sg.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    subnet_id                         = aws_subnet.main.id
+    emr_managed_master_security_group = aws_security_group.sg.id
+    emr_managed_slave_security_group  = aws_security_group.sg.id
+    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
   master_instance_group {
@@ -136,7 +136,7 @@ EOF
   ]
 EOF
 
-  service_role = "${aws_iam_role.iam_emr_service_role.arn}"
+  service_role = aws_iam_role.iam_emr_service_role.arn
 }
 ```
 
@@ -204,7 +204,7 @@ resource "aws_emr_cluster" "example" {
   ec2_attributes {
     # ... other configuration ...
 
-    subnet_id = "${aws_subnet.example.id}"
+    subnet_id = aws_subnet.example.id
   }
 
   master_instance_group {
@@ -413,10 +413,10 @@ resource "aws_emr_cluster" "cluster" {
   applications  = ["Spark"]
 
   ec2_attributes {
-    subnet_id                         = "${aws_subnet.main.id}"
-    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    subnet_id                         = aws_subnet.main.id
+    emr_managed_master_security_group = aws_security_group.allow_all.id
+    emr_managed_slave_security_group  = aws_security_group.allow_all.id
+    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
   master_instance_type = "m5.xlarge"
@@ -465,13 +465,13 @@ resource "aws_emr_cluster" "cluster" {
   ]
 EOF
 
-  service_role = "${aws_iam_role.iam_emr_service_role.arn}"
+  service_role = aws_iam_role.iam_emr_service_role.arn
 }
 
 resource "aws_security_group" "allow_access" {
   name        = "allow_access"
   description = "Allow inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port   = 0
@@ -508,7 +508,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "main" {
-  vpc_id     = "${aws_vpc.main.id}"
+  vpc_id     = aws_vpc.main.id
   cidr_block = "168.31.0.0/20"
 
   tags = {
@@ -517,21 +517,21 @@ resource "aws_subnet" "main" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_route_table" "r" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 }
 
 resource "aws_main_route_table_association" "a" {
-  vpc_id         = "${aws_vpc.main.id}"
-  route_table_id = "${aws_route_table.r.id}"
+  vpc_id         = aws_vpc.main.id
+  route_table_id = aws_route_table.r.id
 }
 
 ###
@@ -563,7 +563,7 @@ EOF
 
 resource "aws_iam_role_policy" "iam_emr_service_policy" {
   name = "iam_emr_service_policy"
-  role = "${aws_iam_role.iam_emr_service_role.id}"
+  role = aws_iam_role.iam_emr_service_role.id
 
   policy = <<EOF
 {
@@ -654,12 +654,12 @@ EOF
 
 resource "aws_iam_instance_profile" "emr_profile" {
   name  = "emr_profile"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  roles = [aws_iam_role.iam_emr_profile_role.name]
 }
 
 resource "aws_iam_role_policy" "iam_emr_profile_policy" {
   name = "iam_emr_profile_policy"
-  role = "${aws_iam_role.iam_emr_profile_role.id}"
+  role = aws_iam_role.iam_emr_profile_role.id
 
   policy = <<EOF
 {

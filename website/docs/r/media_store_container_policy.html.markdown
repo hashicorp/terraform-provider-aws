@@ -22,7 +22,7 @@ resource "aws_media_store_container" "example" {
 }
 
 resource "aws_media_store_container_policy" "example" {
-  container_name = "${aws_media_store_container.example.name}"
+  container_name = aws_media_store_container.example.name
 
   policy = <<EOF
 {

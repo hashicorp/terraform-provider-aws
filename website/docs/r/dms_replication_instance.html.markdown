@@ -32,33 +32,33 @@ data "aws_iam_policy_document" "dms_assume_role" {
 }
 
 resource "aws_iam_role" "dms-access-for-endpoint" {
-  assume_role_policy = "${data.aws_iam_policy_document.dms_assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
   name               = "dms-access-for-endpoint"
 }
 
 resource "aws_iam_role_policy_attachment" "dms-access-for-endpoint-AmazonDMSRedshiftS3Role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSRedshiftS3Role"
-  role       = "${aws_iam_role.dms-access-for-endpoint.name}"
+  role       = aws_iam_role.dms-access-for-endpoint.name
 }
 
 resource "aws_iam_role" "dms-cloudwatch-logs-role" {
-  assume_role_policy = "${data.aws_iam_policy_document.dms_assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
   name               = "dms-cloudwatch-logs-role"
 }
 
 resource "aws_iam_role_policy_attachment" "dms-cloudwatch-logs-role-AmazonDMSCloudWatchLogsRole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSCloudWatchLogsRole"
-  role       = "${aws_iam_role.dms-cloudwatch-logs-role.name}"
+  role       = aws_iam_role.dms-cloudwatch-logs-role.name
 }
 
 resource "aws_iam_role" "dms-vpc-role" {
-  assume_role_policy = "${data.aws_iam_policy_document.dms_assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
   name               = "dms-vpc-role"
 }
 
 resource "aws_iam_role_policy_attachment" "dms-vpc-role-AmazonDMSVPCManagementRole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSVPCManagementRole"
-  role       = "${aws_iam_role.dms-vpc-role.name}"
+  role       = aws_iam_role.dms-vpc-role.name
 }
 
 # Create a new replication instance
@@ -74,7 +74,7 @@ resource "aws_dms_replication_instance" "test" {
   publicly_accessible          = true
   replication_instance_class   = "dms.t2.micro"
   replication_instance_id      = "test-dms-replication-instance-tf"
-  replication_subnet_group_id  = "${aws_dms_replication_subnet_group.test-dms-replication-subnet-group-tf.id}"
+  replication_subnet_group_id  = aws_dms_replication_subnet_group.test-dms-replication-subnet-group-tf.id
 
   tags = {
     Name = "test"

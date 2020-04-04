@@ -31,7 +31,7 @@ data "aws_caller_identity" "accepter" {
 # Creator's side of the VIF
 resource "aws_dx_hosted_public_virtual_interface" "creator" {
   connection_id    = "dxcon-zzzzzzzz"
-  owner_account_id = "${data.aws_caller_identity.accepter.account_id}"
+  owner_account_id = data.aws_caller_identity.accepter.account_id
 
   name           = "vif-foo"
   vlan           = 4094
@@ -50,7 +50,7 @@ resource "aws_dx_hosted_public_virtual_interface" "creator" {
 # Accepter's side of the VIF.
 resource "aws_dx_hosted_public_virtual_interface_accepter" "accepter" {
   provider             = "aws.accepter"
-  virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.creator.id}"
+  virtual_interface_id = aws_dx_hosted_public_virtual_interface.creator.id
 
   tags = {
     Side = "Accepter"

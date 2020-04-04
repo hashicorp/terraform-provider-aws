@@ -14,8 +14,8 @@ Provides a resource to create a VPC NAT Gateway.
 
 ```hcl
 resource "aws_nat_gateway" "gw" {
-  allocation_id = "${aws_eip.nat.id}"
-  subnet_id     = "${aws_subnet.public.id}"
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id
 }
 ```
 
@@ -23,8 +23,8 @@ Usage with tags:
 
 ```hcl
 resource "aws_nat_gateway" "gw" {
-  allocation_id = "${aws_eip.nat.id}"
-  subnet_id     = "${aws_subnet.public.id}"
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id
 
   tags = {
     Name = "gw NAT"
@@ -44,7 +44,7 @@ The following arguments are supported:
 
 ```hcl
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_nat_gateway" "gw" {
