@@ -32,40 +32,36 @@ resource "aws_sns_topic" "mytopic" {
 resource "aws_iam_role" "role" {
   name = "myrole"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "iot.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Effect" = "Allow"
+        "Principal" = {
+          "Service" = "iot.amazonaws.com"
+        }
+        "Action" = "sts:AssumeRole"
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "mypolicy"
   role = aws_iam_role.role.id
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Effect": "Allow",
-        "Action": [
-            "sns:Publish"
-        ],
-        "Resource": "${aws_sns_topic.mytopic.arn}"
-    }
-  ]
-}
-EOF
+  policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Effect" = "Allow"
+        "Action" = [
+          "sns:Publish"
+        ]
+        "Resource" = aws_sns_topic.mytopic.arn
+      }
+    ]
+  })
 }
 ```
 

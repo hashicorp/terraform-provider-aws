@@ -38,16 +38,18 @@ resource "aws_s3_bucket" "b" {
     index_document = "index.html"
     error_document = "error.html"
 
-    routing_rules = <<EOF
-[{
-    "Condition": {
-        "KeyPrefixEquals": "docs/"
-    },
-    "Redirect": {
-        "ReplaceKeyPrefixWith": "documents/"
-    }
-}]
-EOF
+    routing_rules = jsonencode(
+      [
+        {
+          "Condition" = {
+            "KeyPrefixEquals" = "docs/"
+          }
+          "Redirect" = {
+            "ReplaceKeyPrefixWith" = "documents/"
+          }
+        }
+      ]
+    )
   }
 }
 ```
@@ -189,61 +191,57 @@ provider "aws" {
 resource "aws_iam_role" "replication" {
   name = "tf-iam-role-replication-12345"
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "s3.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-POLICY
+  assume_role_policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Action" = "sts:AssumeRole"
+        "Principal" = {
+          "Service" = "s3.amazonaws.com"
+        }
+        "Effect" = "Allow"
+        "Sid"    = ""
+      }
+    ]
+  })
 }
 
 resource "aws_iam_policy" "replication" {
   name = "tf-iam-role-policy-replication-12345"
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:GetReplicationConfiguration",
-        "s3:ListBucket"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.bucket.arn}"
-      ]
-    },
-    {
-      "Action": [
-        "s3:GetObjectVersion",
-        "s3:GetObjectVersionAcl"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.bucket.arn}/*"
-      ]
-    },
-    {
-      "Action": [
-        "s3:ReplicateObject",
-        "s3:ReplicateDelete"
-      ],
-      "Effect": "Allow",
-      "Resource": "${aws_s3_bucket.destination.arn}/*"
-    }
-  ]
-}
-POLICY
+  policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Action" = [
+          "s3:GetReplicationConfiguration",
+          "s3:ListBucket",
+        ]
+        "Effect" = "Allow"
+        "Resource" = [
+          aws_s3_bucket.bucket.arn
+        ]
+      },
+      {
+        "Action" = [
+          "s3:GetObjectVersion",
+          "s3:GetObjectVersionAcl",
+        ]
+        "Effect" = "Allow"
+        "Resource" = [
+          "${aws_s3_bucket.bucket.arn}/*"
+        ]
+      },
+      {
+        "Action" = [
+          "s3:ReplicateObject",
+          "s3:ReplicateDelete",
+        ]
+        "Effect"   = "Allow"
+        "Resource" = "${aws_s3_bucket.destination.arn}/*"
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "replication" {
@@ -483,7 +481,7 @@ The `apply_server_side_encryption_by_default` object supports the following:
 
 The `grant` object supports the following:
 
-* `id` - (optional) Canonical user id to grant for. Used only when `type` is `CanonicalUser`.  
+* `id` - (optional) Canonical user id to grant for. Used only when `type` is `CanonicalUser`.
 * `type` - (required) - Type of grantee to apply for. Valid values are `CanonicalUser` and `Group`. `AmazonCustomerByEmail` is not supported.
 * `permissions` - (required) List of permissions to apply for grantee. Valid values are `READ`, `WRITE`, `READ_ACP`, `WRITE_ACP`, `FULL_CONTROL`.
 * `uri` - (optional) Uri address to grant for. Used only when `type` is `Group`.

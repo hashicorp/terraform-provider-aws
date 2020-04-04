@@ -20,20 +20,20 @@ Manages a S3 Bucket Notification Configuration. For additional information, see 
 resource "aws_sns_topic" "topic" {
   name = "s3-event-notification-topic"
 
-  policy = <<POLICY
-{
-    "Version":"2012-10-17",
-    "Statement":[{
-        "Effect": "Allow",
-        "Principal": {"AWS":"*"},
-        "Action": "SNS:Publish",
-        "Resource": "arn:aws:sns:*:*:s3-event-notification-topic",
-        "Condition":{
-            "ArnLike":{"aws:SourceArn":"${aws_s3_bucket.bucket.arn}"}
+  policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Effect"    = "Allow"
+        "Principal" = { "AWS" = "*" }
+        "Action"    = "SNS:Publish"
+        "Resource"  = "arn:aws:sns:*:*:s3-event-notification-topic"
+        "Condition" = {
+          "ArnLike" = { "aws:SourceArn" : aws_s3_bucket.bucket.arn }
         }
-    }]
-}
-POLICY
+      }
+    ]
+  })
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -57,22 +57,20 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 resource "aws_sqs_queue" "queue" {
   name = "s3-event-notification-queue"
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "sqs:SendMessage",
-	  "Resource": "arn:aws:sqs:*:*:s3-event-notification-queue",
-      "Condition": {
-        "ArnEquals": { "aws:SourceArn": "${aws_s3_bucket.bucket.arn}" }
+  policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Effect"    = "Allow"
+        "Principal" = "*"
+        "Action"    = "sqs:SendMessage"
+        "Resource"  = "arn:aws:sqs:*:*:s3-event-notification-queue"
+        "Condition" = {
+          "ArnEquals" = { "aws:SourceArn" = aws_s3_bucket.bucket.arn }
+        }
       }
-    }
-  ]
-}
-POLICY
+    ]
+  })
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -96,20 +94,18 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Action" = "sts:AssumeRole"
+        "Principal" = {
+          "Service" = "lambda.amazonaws.com"
+        }
+        "Effect" = "Allow"
+      }
+    ]
+  })
 }
 
 resource "aws_lambda_permission" "allow_bucket" {
@@ -152,20 +148,18 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Action" = "sts:AssumeRole"
+        "Principal" = {
+          "Service" = "lambda.amazonaws.com"
+        }
+        "Effect" = "Allow"
+      }
+    ]
+  })
 }
 
 resource "aws_lambda_permission" "allow_bucket1" {
@@ -222,7 +216,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
   depends_on = [
     aws_lambda_permission.allow_bucket1,
-    aws_lambda_permission.allow_bucket2
+    aws_lambda_permission.allow_bucket2,
   ]
 }
 ```
@@ -233,22 +227,20 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 resource "aws_sqs_queue" "queue" {
   name = "s3-event-notification-queue"
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "sqs:SendMessage",
-	  "Resource": "arn:aws:sqs:*:*:s3-event-notification-queue",
-      "Condition": {
-        "ArnEquals": { "aws:SourceArn": "${aws_s3_bucket.bucket.arn}" }
+  policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Effect"    = "Allow"
+        "Principal" = "*"
+        "Action"    = "sqs:SendMessage"
+        "Resource"  = "arn:aws:sqs:*:*:s3-event-notification-queue"
+        "Condition" = {
+          "ArnEquals" = { "aws:SourceArn" = aws_s3_bucket.bucket.arn }
+        }
       }
-    }
-  ]
-}
-POLICY
+    ]
+  })
 }
 
 resource "aws_s3_bucket" "bucket" {

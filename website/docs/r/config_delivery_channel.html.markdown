@@ -34,44 +34,40 @@ resource "aws_config_configuration_recorder" "foo" {
 resource "aws_iam_role" "r" {
   name = "awsconfig-example"
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "config.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-POLICY
+  assume_role_policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Action" = "sts:AssumeRole"
+        "Principal" = {
+          "Service" = "config.amazonaws.com"
+        }
+        "Effect" = "Allow"
+        "Sid"    = ""
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role_policy" "p" {
   name = "awsconfig-example"
   role = aws_iam_role.r.id
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.b.arn}",
-        "${aws_s3_bucket.b.arn}/*"
-      ]
-    }
-  ]
-}
-POLICY
+  policy = jsonencode({
+    "Version" = "2012-10-17"
+    "Statement" = [
+      {
+        "Action" = [
+          "s3:*"
+        ]
+        "Effect" = "Allow"
+        "Resource" = [
+          aws_s3_bucket.b.arn,
+          "${aws_s3_bucket.b.arn}/*",
+        ]
+      }
+    ]
+  })
 }
 ```
 
