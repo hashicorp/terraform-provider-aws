@@ -179,7 +179,6 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 			"deployment_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				Default:  fsx.WindowsDeploymentTypeSingleAz1,
 				ValidateFunc: validation.StringInSlice([]string{
