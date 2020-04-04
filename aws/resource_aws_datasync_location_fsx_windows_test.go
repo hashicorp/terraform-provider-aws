@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
@@ -81,7 +80,6 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 
 func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_location_fsx_windows.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,7 +88,7 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSyncLocationFsxWindowsConfig(rName),
+				Config: testAccAWSDataSyncLocationFsxWindowsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -111,7 +109,6 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 
 func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_location_fsx_windows.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -120,7 +117,7 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSyncLocationFsxWindowsConfig(rName),
+				Config: testAccAWSDataSyncLocationFsxWindowsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
 					testAccCheckAWSDataSyncLocationFsxWindowsDisappears(&locationFsxWindows1),
@@ -132,7 +129,6 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 }
 
 func TestAccAWSDataSyncLocationFsxWindows_Subdirectory(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows.test"
 
@@ -142,7 +138,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Subdirectory(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSyncLocationFsxWindowsConfigSubdirectory(rName, "/subdirectory1/"),
+				Config: testAccAWSDataSyncLocationFsxWindowsConfigSubdirectory("/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
@@ -160,7 +156,6 @@ func TestAccAWSDataSyncLocationFsxWindows_Subdirectory(t *testing.T) {
 
 func TestAccAWSDataSyncLocationFsxWindows_Tags(t *testing.T) {
 	var locationFsxWindows1, locationFsxWindows2, locationFsxWindows3 datasync.DescribeLocationFsxWindowsOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_location_fsx_windows.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -169,7 +164,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSyncLocationFsxWindowsConfigTags1(rName, "key1", "value1"),
+				Config: testAccAWSDataSyncLocationFsxWindowsConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -183,7 +178,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccAWSDataSyncLocationFsxWindowsConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAWSDataSyncLocationFsxWindowsConfigTags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows2),
 					testAccCheckAWSDataSyncLocationFsxWindowsNotRecreated(&locationFsxWindows1, &locationFsxWindows2),
@@ -193,7 +188,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSDataSyncLocationFsxWindowsConfigTags1(rName, "key1", "value1"),
+				Config: testAccAWSDataSyncLocationFsxWindowsConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows3),
 					testAccCheckAWSDataSyncLocationFsxWindowsNotRecreated(&locationFsxWindows2, &locationFsxWindows3),
@@ -283,125 +278,37 @@ func testAccCheckAWSDataSyncLocationFsxWindowsNotRecreated(i, j *datasync.Descri
 	}
 }
 
-func testAccAWSDataSyncLocationFsxWindowsConfigBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "aws-thinstaller" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["aws-thinstaller-*"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-FsxWindows"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-FsxWindows"
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-FsxWindows"
-  }
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.test.id}"
-  }
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-FsxWindows"
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  subnet_id      = "${aws_subnet.test.id}"
-  route_table_id = "${aws_route_table.test.id}"
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-FsxWindows"
-  }
-}
-
-resource "aws_instance" "test" {
-  depends_on = ["aws_internet_gateway.test"]
-
-  ami                         = "${data.aws_ami.aws-thinstaller.id}"
-  associate_public_ip_address = true
-
-  # Default instance type from sync.sh
-  instance_type          = "c5.2xlarge"
-  vpc_security_group_ids = ["${aws_security_group.test.id}"]
-  subnet_id              = "${aws_subnet.test.id}"
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-FsxWindows"
-  }
-}
-
-resource "aws_datasync_agent" "test" {
-  ip_address = "${aws_instance.test.public_ip}"
-  name       = %q
-}
-`, rName)
-}
-
-func testAccAWSDataSyncLocationFsxWindowsConfig(rName string) string {
-	return testAccAWSDataSyncLocationFsxWindowsConfigBase(rName) + fmt.Sprintf(`
+func testAccAWSDataSyncLocationFsxWindowsConfig() string {
+	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows" "test" {
+  fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
+  user                = "SomeUser"
+  password            = "SuperSecretPassw0rd"
+  security_group_arns = ["${aws_security_group.test1.arn}"]
 }
 `)
 }
 
-func testAccAWSDataSyncLocationFsxWindowsConfigSubdirectory(rName, subdirectory string) string {
-	return testAccAWSDataSyncLocationFsxWindowsConfigBase(rName) + fmt.Sprintf(`
+func testAccAWSDataSyncLocationFsxWindowsConfigSubdirectory(subdirectory string) string {
+	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows" "test" {
-  server_hostname = "example.com"
-  subdirectory    = %q
+  fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
+  user                = "SomeUser"
+  password            = "SuperSecretPassw0rd"
+  security_group_arns = ["${aws_security_group.test1.arn}"]
+  subdirectory        = %q
 }
 `, subdirectory)
 }
 
-func testAccAWSDataSyncLocationFsxWindowsConfigTags1(rName, key1, value1 string) string {
-	return testAccAWSDataSyncLocationFsxWindowsConfigBase(rName) + fmt.Sprintf(`
+func testAccAWSDataSyncLocationFsxWindowsConfigTags1(key1, value1 string) string {
+	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows" "test" {
+  fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
+  user                = "SomeUser"
+  password            = "SuperSecretPassw0rd"
+  security_group_arns = ["${aws_security_group.test1.arn}"]
+
   tags = {
     %[1]q = %[2]q
   }
@@ -409,9 +316,14 @@ resource "aws_datasync_location_fsx_windows" "test" {
 `, key1, value1)
 }
 
-func testAccAWSDataSyncLocationFsxWindowsConfigTags2(rName, key1, value1, key2, value2 string) string {
-	return testAccAWSDataSyncLocationFsxWindowsConfigBase(rName) + fmt.Sprintf(`
+func testAccAWSDataSyncLocationFsxWindowsConfigTags2(key1, value1, key2, value2 string) string {
+	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows" "test" {
+  fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
+  user                = "SomeUser"
+  password            = "SuperSecretPassw0rd"
+  security_group_arns = ["${aws_security_group.test1.arn}"]
+
   tags = {
     %[1]q = %[2]q
     %[3]q = %[4]q

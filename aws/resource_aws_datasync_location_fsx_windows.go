@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -33,34 +34,40 @@ func resourceAwsDataSyncLocationFsxWindows() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(1, 104),
 			},
 			"user": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 104),
 			},
 			"domain": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 253),
 			},
 			"security_group_arns": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
+				MinItems: 1,
+				MaxItems: 5,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validateArn,
 				},
 			},
 			"subdirectory": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 4096),
 			},
 			"tags": tagsSchema(),
 			"uri": {
