@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -46,7 +47,7 @@ func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -54,112 +55,30 @@ func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.name", "rule-1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.priority", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.allow.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.block.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.count.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
-	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
-	resourceName := "aws_wafv2_rule_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_Minimal(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
-	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
-	resourceName := "aws_wafv2_rule_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_RuleActionAllow(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.allow.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.block.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.count.#", "0"),
-				),
-			},
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_RuleActionBlock(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.allow.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.block.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.count.#", "0"),
-				),
-			},
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_RuleActionCount(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.allow.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.block.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.count.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.name", "rule-2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.priority", "10"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.action.0.allow.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.action.0.block.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.action.0.count.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.0.size_constraint_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.0.size_constraint_statement.0.comparison_operator", "LT"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.0.size_constraint_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.0.size_constraint_statement.0.field_to_match.0.query_string.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.0.size_constraint_statement.0.size", "50"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.0.size_constraint_statement.0.text_transformation.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.0.size_constraint_statement.0.text_transformation.2212084700.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.0.size_constraint_statement.0.text_transformation.2212084700.type", "CMD_LINE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.0.size_constraint_statement.0.text_transformation.4292479961.priority", "5"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1162901930.statement.0.size_constraint_statement.0.text_transformation.4292479961.type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3400404505.name", "rule-1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3400404505.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3400404505.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3400404505.action.0.allow.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3400404505.action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3400404505.action.0.count.#", "1"),
 				),
 			},
 			{
@@ -188,15 +107,15 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.positional_constraint", "CONTAINS"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.search_string", "word"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.text_transformation.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.text_transformation.4292479961.priority", "5"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.text_transformation.4292479961.type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.text_transformation.2156930824.priority", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.text_transformation.2156930824.type", "LOWERCASE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3451531458.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3451531458.statement.0.byte_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3451531458.statement.0.byte_match_statement.0.positional_constraint", "CONTAINS"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3451531458.statement.0.byte_match_statement.0.search_string", "word"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3451531458.statement.0.byte_match_statement.0.text_transformation.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3451531458.statement.0.byte_match_statement.0.text_transformation.4292479961.priority", "5"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3451531458.statement.0.byte_match_statement.0.text_transformation.4292479961.type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3451531458.statement.0.byte_match_statement.0.text_transformation.2156930824.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3451531458.statement.0.byte_match_statement.0.text_transformation.2156930824.type", "LOWERCASE"),
 				),
 			},
 			{
@@ -205,13 +124,13 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.positional_constraint", "EXACTLY"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.search_string", "sentence"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.text_transformation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.text_transformation.766585421.priority", "3"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.text_transformation.766585421.type", "CMD_LINE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3446749900.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3446749900.statement.0.byte_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3446749900.statement.0.byte_match_statement.0.positional_constraint", "EXACTLY"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3446749900.statement.0.byte_match_statement.0.search_string", "sentence"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3446749900.statement.0.byte_match_statement.0.text_transformation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3446749900.statement.0.byte_match_statement.0.text_transformation.766585421.priority", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3446749900.statement.0.byte_match_statement.0.text_transformation.766585421.type", "CMD_LINE"),
 				),
 			},
 			{
@@ -240,16 +159,16 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.0.byte_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.0.byte_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
 				),
 			},
 			{
@@ -258,16 +177,16 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.body.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.0.byte_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.0.byte_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.0.byte_match_statement.0.field_to_match.0.body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
 				),
 			},
 			{
@@ -276,16 +195,16 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.method.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.0.byte_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.0.byte_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.0.byte_match_statement.0.field_to_match.0.method.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
 				),
 			},
 			{
@@ -294,16 +213,16 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.0.byte_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.0.byte_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
 				),
 			},
 			{
@@ -312,17 +231,17 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_header.0.name", "a-forty-character-long-header-name-40-40"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.0.byte_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.0.byte_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.0.byte_match_statement.0.field_to_match.0.single_header.0.name", "a-forty-character-long-header-name-40-40"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
 				),
 			},
 			{
@@ -331,17 +250,17 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.0.name", "a-max-30-characters-long-name-"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.0.byte_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.0.byte_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.0.name", "a-max-30-characters-long-name-"),
+					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "0"),
 				),
 			},
 			{
@@ -350,379 +269,16 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
-	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
-	resourceName := "aws_wafv2_rule_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.ip_set_reference_statement.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.ip_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
-				),
-			},
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_Update(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.ip_set_reference_statement.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
-	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
-	resourceName := "aws_wafv2_rule_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_RegexPatternSetReferenceStatement(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.regex_pattern_set_reference_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.regex_pattern_set_reference_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.regex_pattern_set_reference_statement.0.text_transformation.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.regex_pattern_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/regexpatternset/.+$`)),
-				),
-			},
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_RegexPatternSetReferenceStatement_Update(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.or_statement.0.statement.1.regex_pattern_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/regexpatternset/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.regex_pattern_set_reference_statement.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "rule.0.statement.0.or_statement.0.statement.1.regex_pattern_set_reference_statement.0.arn", "wafv2", regexp.MustCompile(`regional/regexpatternset/.+$`)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
-	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
-	resourceName := "aws_wafv2_rule_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.geo_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.geo_match_statement.0.country_codes.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.geo_match_statement.0.country_codes.0", "US"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.geo_match_statement.0.country_codes.1", "NL"),
-				),
-			},
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_Update(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.geo_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.geo_match_statement.0.country_codes.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.geo_match_statement.0.country_codes.0", "ZM"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.geo_match_statement.0.country_codes.1", "EE"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.geo_match_statement.0.country_codes.2", "MM"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
-	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
-	resourceName := "aws_wafv2_rule_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_And(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.and_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.and_statement.0.statement.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.and_statement.0.statement.0.geo_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.and_statement.0.statement.1.geo_match_statement.#", "1"),
-				),
-			},
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_NotAnd(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.0.statement.0.and_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.0.geo_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.not_statement.0.statement.0.and_statement.0.statement.1.geo_match_statement.#", "1"),
-				),
-			},
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_OrNotAnd(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.geo_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.and_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.and_statement.0.statement.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.and_statement.0.statement.0.geo_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.or_statement.0.statement.1.and_statement.0.statement.1.geo_match_statement.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
-	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
-	resourceName := "aws_wafv2_rule_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_SizeConstraintStatement(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.0.comparison_operator", "GT"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.0.size", "100"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.0.field_to_match.0.method.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.0.text_transformation.#", "1"),
-				),
-			},
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_SizeConstraintStatement_Update(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.0.comparison_operator", "LT"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.0.size", "50"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.0.field_to_match.0.query_string.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.size_constraint_statement.0.text_transformation.#", "2"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
-	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
-	resourceName := "aws_wafv2_rule_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_SqliMatchStatement(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.field_to_match.0.all_query_arguments.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1247795808.priority", "5"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1247795808.type", "URL_DECODE"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.2156930824.priority", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.2156930824.type", "LOWERCASE"),
-				),
-			},
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_SqliMatchStatement_Update(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.field_to_match.0.body.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1247795808.priority", "5"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1247795808.type", "URL_DECODE"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.4120379776.priority", "4"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.4120379776.type", "HTML_ENTITY_DECODE"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1521630275.priority", "3"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.sqli_match_statement.0.text_transformation.1521630275.type", "COMPRESS_WHITE_SPACE"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
-	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
-	resourceName := "aws_wafv2_rule_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_XssMatchStatement(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.field_to_match.0.body.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.2336416342.priority", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.2336416342.type", "NONE"),
-				),
-			},
-			{
-				Config: testAccAwsWafv2RuleGroupConfig_XssMatchStatement_Update(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.field_to_match.0.body.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.2876362756.priority", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.statement.0.xss_match_statement.0.text_transformation.2876362756.type", "URL_DECODE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.0.byte_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.0.byte_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.0.byte_match_statement.0.field_to_match.0.body.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.0.byte_match_statement.0.field_to_match.0.method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.0.byte_match_statement.0.field_to_match.0.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.0.byte_match_statement.0.field_to_match.0.single_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "1"),
 				),
 			},
 			{
@@ -868,6 +424,393 @@ func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2064993648.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2064993648.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2064993648.statement.0.geo_match_statement.0.country_codes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2064993648.statement.0.geo_match_statement.0.country_codes.0", "US"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2064993648.statement.0.geo_match_statement.0.country_codes.1", "NL"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_Update(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4215509823.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4215509823.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4215509823.statement.0.geo_match_statement.0.country_codes.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4215509823.statement.0.geo_match_statement.0.country_codes.0", "ZM"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4215509823.statement.0.geo_match_statement.0.country_codes.1", "EE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.4215509823.statement.0.geo_match_statement.0.country_codes.2", "MM"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	var idx int
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					computeWafv2IpSetRefStatementIndex(&v, &idx),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.#", &idx, "1"),
+					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.0.arn", &idx, "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_And(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.867936606.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.867936606.statement.0.and_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.867936606.statement.0.and_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.867936606.statement.0.and_statement.0.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.867936606.statement.0.and_statement.0.statement.1.geo_match_statement.#", "1"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_NotAnd(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2966210839.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2966210839.statement.0.not_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2966210839.statement.0.not_statement.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2966210839.statement.0.not_statement.0.statement.0.and_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2966210839.statement.0.not_statement.0.statement.0.and_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2966210839.statement.0.not_statement.0.statement.0.and_statement.0.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2966210839.statement.0.not_statement.0.statement.0.and_statement.0.statement.1.geo_match_statement.#", "1"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_OrNotAnd(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.0.or_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.0.or_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.0.or_statement.0.statement.0.not_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.0.or_statement.0.statement.0.not_statement.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.0.or_statement.0.statement.0.not_statement.0.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.0.or_statement.0.statement.1.and_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.0.or_statement.0.statement.1.and_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.0.or_statement.0.statement.1.and_statement.0.statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.0.or_statement.0.statement.1.and_statement.0.statement.1.geo_match_statement.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_Minimal(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	var idx int
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_RegexPatternSetReferenceStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					computeWafv2RegexSetRefStatementIndex(&v, &idx),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.field_to_match.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.text_transformation.#", &idx, "1"),
+					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.arn", &idx, "wafv2", regexp.MustCompile(`regional/regexpatternset/.+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_RuleActionAllow(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2064993648.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2064993648.action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2064993648.action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2064993648.action.0.count.#", "0"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_RuleActionBlock(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2490412960.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2490412960.action.0.allow.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2490412960.action.0.block.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2490412960.action.0.count.#", "0"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_RuleActionCount(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3400404505.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3400404505.action.0.allow.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3400404505.action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3400404505.action.0.count.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_SizeConstraintStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.204038473.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.204038473.statement.0.size_constraint_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.204038473.statement.0.size_constraint_statement.0.comparison_operator", "GT"),
+					resource.TestCheckResourceAttr(resourceName, "rule.204038473.statement.0.size_constraint_statement.0.size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "rule.204038473.statement.0.size_constraint_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.204038473.statement.0.size_constraint_statement.0.field_to_match.0.method.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.204038473.statement.0.size_constraint_statement.0.text_transformation.#", "1"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_SizeConstraintStatement_Update(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3233602303.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3233602303.statement.0.size_constraint_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3233602303.statement.0.size_constraint_statement.0.comparison_operator", "LT"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3233602303.statement.0.size_constraint_statement.0.size", "50"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3233602303.statement.0.size_constraint_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3233602303.statement.0.size_constraint_statement.0.field_to_match.0.query_string.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3233602303.statement.0.size_constraint_statement.0.text_transformation.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_SqliMatchStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1169024249.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1169024249.statement.0.sqli_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1169024249.statement.0.sqli_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1169024249.statement.0.sqli_match_statement.0.field_to_match.0.all_query_arguments.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1169024249.statement.0.sqli_match_statement.0.text_transformation.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1169024249.statement.0.sqli_match_statement.0.text_transformation.1247795808.priority", "5"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1169024249.statement.0.sqli_match_statement.0.text_transformation.1247795808.type", "URL_DECODE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1169024249.statement.0.sqli_match_statement.0.text_transformation.2156930824.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1169024249.statement.0.sqli_match_statement.0.text_transformation.2156930824.type", "LOWERCASE"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_SqliMatchStatement_Update(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.0.sqli_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.0.sqli_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.0.sqli_match_statement.0.field_to_match.0.body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.0.sqli_match_statement.0.text_transformation.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.0.sqli_match_statement.0.text_transformation.1247795808.priority", "5"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.0.sqli_match_statement.0.text_transformation.1247795808.type", "URL_DECODE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.0.sqli_match_statement.0.text_transformation.4120379776.priority", "4"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.0.sqli_match_statement.0.text_transformation.4120379776.type", "HTML_ENTITY_DECODE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.0.sqli_match_statement.0.text_transformation.1521630275.priority", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.0.sqli_match_statement.0.text_transformation.1521630275.type", "COMPRESS_WHITE_SPACE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
@@ -914,6 +857,177 @@ func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_XssMatchStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.377378487.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.377378487.statement.0.xss_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.377378487.statement.0.xss_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.377378487.statement.0.xss_match_statement.0.field_to_match.0.body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.377378487.statement.0.xss_match_statement.0.text_transformation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.377378487.statement.0.xss_match_statement.0.text_transformation.2336416342.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.377378487.statement.0.xss_match_statement.0.text_transformation.2336416342.type", "NONE"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_XssMatchStatement_Update(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3452423088.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3452423088.statement.0.xss_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3452423088.statement.0.xss_match_statement.0.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3452423088.statement.0.xss_match_statement.0.field_to_match.0.body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3452423088.statement.0.xss_match_statement.0.text_transformation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3452423088.statement.0.xss_match_statement.0.text_transformation.2876362756.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3452423088.statement.0.xss_match_statement.0.text_transformation.2876362756.type", "URL_DECODE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccMatchResourceAttrArnWithIndexesAddr(name, format string, idx *int, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccMatchResourceAttrRegionalARN(name, fmt.Sprintf(format, *idx), "wafv2", arnResourceRegexp)(s)
+	}
+}
+
+// Calculates the index which isn't static because ARN is generated as part of the test
+func computeWafv2IpSetRefStatementIndex(r *wafv2.RuleGroup, idx *int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ruleResource := resourceAwsWafv2RuleGroup().Schema["rule"].Elem.(*schema.Resource)
+
+		rule := map[string]interface{}{
+			"name":     "rule-1",
+			"priority": 1,
+			"action": []interface{}{
+				map[string]interface{}{
+					"allow": make([]interface{}, 1),
+					"block": []interface{}{},
+					"count": []interface{}{},
+				},
+			},
+			"statement": []interface{}{
+				map[string]interface{}{
+					"and_statement":        []interface{}{},
+					"byte_match_statement": []interface{}{},
+					"geo_match_statement":  []interface{}{},
+					"ip_set_reference_statement": []interface{}{
+						map[string]interface{}{
+							"arn": *r.Rules[0].Statement.IPSetReferenceStatement.ARN,
+						},
+					},
+					"not_statement":                         []interface{}{},
+					"or_statement":                          []interface{}{},
+					"regex_pattern_set_reference_statement": []interface{}{},
+					"size_constraint_statement":             []interface{}{},
+					"sqli_match_statement":                  []interface{}{},
+					"xss_match_statement":                   []interface{}{},
+				},
+			},
+			"visibility_config": []interface{}{
+				map[string]interface{}{
+					"cloudwatch_metrics_enabled": false,
+					"metric_name":                "friendly-rule-metric-name",
+					"sampled_requests_enabled":   false,
+				},
+			},
+		}
+
+		f := schema.HashResource(ruleResource)
+		*idx = f(rule)
+
+		return nil
+	}
+}
+
+// Calculates the index which isn't static because ARN is generated as part of the test
+func computeWafv2RegexSetRefStatementIndex(r *wafv2.RuleGroup, idx *int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ruleResource := resourceAwsWafv2RuleGroup().Schema["rule"].Elem.(*schema.Resource)
+		textTransformationResource := ruleResource.Schema["statement"].Elem.(*schema.Resource).Schema["regex_pattern_set_reference_statement"].Elem.(*schema.Resource).Schema["text_transformation"].Elem.(*schema.Resource)
+		rule := map[string]interface{}{
+			"name":     "rule-1",
+			"priority": 1,
+			"action": []interface{}{
+				map[string]interface{}{
+					"allow": make([]interface{}, 1),
+					"block": []interface{}{},
+					"count": []interface{}{},
+				},
+			},
+			"statement": []interface{}{
+				map[string]interface{}{
+					"and_statement":              []interface{}{},
+					"byte_match_statement":       []interface{}{},
+					"geo_match_statement":        []interface{}{},
+					"ip_set_reference_statement": []interface{}{},
+					"not_statement":              []interface{}{},
+					"or_statement":               []interface{}{},
+					"regex_pattern_set_reference_statement": []interface{}{
+						map[string]interface{}{
+							"arn": *r.Rules[0].Statement.RegexPatternSetReferenceStatement.ARN,
+							"field_to_match": []interface{}{
+								map[string]interface{}{
+									"all_query_arguments":   []interface{}{},
+									"body":                  make([]interface{}, 1),
+									"method":                []interface{}{},
+									"query_string":          []interface{}{},
+									"single_header":         []interface{}{},
+									"single_query_argument": []interface{}{},
+									"uri_path":              []interface{}{},
+								},
+							},
+							"text_transformation": schema.NewSet(schema.HashResource(textTransformationResource), []interface{}{
+								map[string]interface{}{
+									"priority": 2,
+									"type":     "NONE",
+								},
+							}),
+						},
+					},
+					"size_constraint_statement": []interface{}{},
+					"sqli_match_statement":      []interface{}{},
+					"xss_match_statement":       []interface{}{},
+				},
+			},
+			"visibility_config": []interface{}{
+				map[string]interface{}{
+					"cloudwatch_metrics_enabled": false,
+					"metric_name":                "friendly-rule-metric-name",
+					"sampled_requests_enabled":   false,
+				},
+			},
+		}
+
+		f := schema.HashResource(ruleResource)
+		*idx = f(rule)
+
+		return nil
+	}
 }
 
 func testAccCheckAwsWafv2RuleGroupDestroy(s *terraform.State) error {
@@ -1005,13 +1119,48 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_BasicUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 2
+  capacity = 50
   name = "%s"
   description = "Updated"
   scope = "REGIONAL"
 
   rule {
+    name = "rule-2"
+    priority = 10
 
+    action {
+      block {}
+    }
+
+    statement {
+      size_constraint_statement {
+        comparison_operator = "LT"
+        size = 50
+
+        field_to_match {
+          query_string {}
+        }
+
+        text_transformation {
+          priority = 5
+          type = "NONE"
+        }
+
+        text_transformation {
+          priority = 2
+          type = "CMD_LINE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  rule {
     name = "rule-1"
     priority = 1
 
@@ -1678,66 +1827,6 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
-func testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_Update(name string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_ip_set" "test_one" {
-  name = "ip-set-one-%s"
-  scope = "REGIONAL"
-  ip_address_version = "IPV4"
-  addresses = ["1.1.1.1/32", "2.2.2.2/32"]
-}
-
-resource "aws_wafv2_ip_set" "test_two" {
-  name = "ip-set-two-%s"
-  scope = "REGIONAL"
-  ip_address_version = "IPV4"
-  addresses = ["127.0.0.1/32"]
-}
-
-resource "aws_wafv2_rule_group" "test" {
-  capacity = 2
-  name = "%s"
-  scope = "REGIONAL"
-
-  rule {
-    name = "rule-1"
-    priority = 1
-
-    action {
-  	  allow {}
-    }
-
-    statement {
-      or_statement {
-        statement {
-          ip_set_reference_statement {
-            arn = aws_wafv2_ip_set.test_one.arn
-          }
-        }
-        statement {
-          ip_set_reference_statement {
-            arn = aws_wafv2_ip_set.test_two.arn
-          }
-        }
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
-  }
-}
-`, name, name, name)
-}
-
 func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
@@ -2020,88 +2109,6 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, name, name)
-}
-
-func testAccAwsWafv2RuleGroupConfig_RegexPatternSetReferenceStatement_Update(name string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_regex_pattern_set" "test_one" {
-  name = "regex-pattern-set-one-%s"
-  scope = "REGIONAL"
-
-  regular_expression_list {
-    regex_string = "one"
-  }
-}
-
-resource "aws_wafv2_regex_pattern_set" "test_two" {
-  name = "regex-pattern-set-two-%s"
-  scope = "REGIONAL"
-
-  regular_expression_list {
-    regex_string = "two"
-  }
-}
-
-resource "aws_wafv2_rule_group" "test" {
-  capacity = 100
-  name = "%s"
-  scope = "REGIONAL"
-
-  rule {
-    name = "rule-1"
-    priority = 1
-
-    action {
-  	  allow {}
-    }
-
-    statement {
-      or_statement {
-        statement {
-          regex_pattern_set_reference_statement {
-            arn = aws_wafv2_regex_pattern_set.test_one.arn
-
-            field_to_match {
-              body {}
-            }
-            
-            text_transformation {
-              priority = 2
-              type = "NONE"
-            }
-          }
-        }
-        statement {
-          regex_pattern_set_reference_statement {
-            arn = aws_wafv2_regex_pattern_set.test_two.arn
-
-            field_to_match {
-              body {}
-            }
-            
-            text_transformation {
-              priority = 2
-              type = "NONE"
-            }
-          }
-        }
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
-  }
-}
-`, name, name, name)
 }
 
 func testAccAwsWafv2RuleGroupConfig_SizeConstraintStatement(name string) string {

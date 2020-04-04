@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -47,7 +46,7 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(1),
+				ValidateFunc: validation.IntBetween(1, 1500),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -77,7 +76,7 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 				}, false),
 			},
 			"rule": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -122,7 +121,7 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
-		Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
+		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
@@ -176,7 +175,7 @@ func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == wafv2.ErrCodeWAFNonexistentItemException {
+		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "AWS WAF couldn’t perform the operation because your resource doesn’t exist") {
 			log.Printf("[WARN] WAFV2 RuleGroup (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -215,7 +214,7 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
 		LockToken:        aws.String(d.Get("lock_token").(string)),
-		Rules:            expandWafv2Rules(d.Get("rule").([]interface{})),
+		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
@@ -389,7 +388,6 @@ func wafv2ByteMatchStatementSchema() *schema.Schema {
 				"positional_constraint": {
 					Type:     schema.TypeString,
 					Required: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
 					ValidateFunc: validation.StringInSlice([]string{
 						wafv2.PositionalConstraintContains,
 						wafv2.PositionalConstraintContainsWord,
@@ -401,7 +399,6 @@ func wafv2ByteMatchStatementSchema() *schema.Schema {
 				"search_string": {
 					Type:         schema.TypeString,
 					Required:     true,
-					Elem:         &schema.Schema{Type: schema.TypeString},
 					ValidateFunc: validation.StringLenBetween(1, 50),
 				},
 				"text_transformation": wafv2TextTransformationSchema(),
@@ -472,7 +469,6 @@ func wafv2SizeConstraintSchema() *schema.Schema {
 				"comparison_operator": {
 					Type:     schema.TypeString,
 					Required: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
 					ValidateFunc: validation.StringInSlice([]string{
 						wafv2.ComparisonOperatorEq,
 						wafv2.ComparisonOperatorGe,
@@ -580,7 +576,6 @@ func wafv2TextTransformationSchema() *schema.Schema {
 				"type": {
 					Type:     schema.TypeString,
 					Required: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
 					ValidateFunc: validation.StringInSlice([]string{
 						wafv2.TextTransformationTypeCmdLine,
 						wafv2.TextTransformationTypeCompressWhiteSpace,
