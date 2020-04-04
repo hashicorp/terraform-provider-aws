@@ -65,6 +65,8 @@ The following arguments are supported:
 * `skip_final_backup` - (Optional) When enabled, will skip the default final backup taken when the file system is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the file system.
 * `weekly_maintenance_start_time` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
+* `deployment_type` - (Optional) Specifies the file system deployment type, valid values are `MULTI_AZ_1` and `SINGLE_AZ_1`. Default values is `SINGLE_AZ_1`.
+* `PreferredSubnetId` - (Optional) Specifies the subnet in which you want the preferred file server to be located. Required for when deployment type is `MULTI_AZ_1`.
 
 ### self_managed_active_directory
 
@@ -87,6 +89,8 @@ In addition to all arguments above, the following attributes are exported:
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible.
 * `owner_id` - AWS account identifier that created the file system.
 * `vpc_id` - Identifier of the Virtual Private Cloud for the file system.
+* `preferred_file_server_ip` - the IP address of the primary, or preferred, file server.
+* `remote_administration_endpoint` - For `MULTI_AZ_1` deployment types, use this endpoint when performing administrative tasks on the file system using Amazon FSx Remote PowerShell. For `SINGLE_AZ_1` deployment types, this is the DNS name of the file system.
 
 ## Timeouts
 
