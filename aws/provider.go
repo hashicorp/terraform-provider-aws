@@ -491,6 +491,7 @@ func Provider() *schema.Provider {
 			"aws_datasync_location_nfs":                               resourceAwsDataSyncLocationNfs(),
 			"aws_datasync_location_s3":                                resourceAwsDataSyncLocationS3(),
 			"aws_datasync_location_smb":                               resourceAwsDataSyncLocationSmb(),
+			"aws_datasync_location_fsx_windows":                       resourceAwsDataSyncLocationFsxWindows(),
 			"aws_datasync_task":                                       resourceAwsDataSyncTask(),
 			"aws_dax_cluster":                                         resourceAwsDaxCluster(),
 			"aws_dax_parameter_group":                                 resourceAwsDaxParameterGroup(),
