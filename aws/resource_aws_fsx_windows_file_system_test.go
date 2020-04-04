@@ -112,6 +112,55 @@ func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
 					"skip_final_backup",
 				},
 			},
+			{
+				Config:   testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithSingleType(),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxWindowsFileSystem_multiAz(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_windows_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds2(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
+					resource.TestMatchResourceAttr(resourceName, "daily_automatic_backup_start_time", regexp.MustCompile(`^\d\d:\d\d$`)),
+					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile(`fs-.+\..+`)),
+					resource.TestMatchResourceAttr(resourceName, "kms_key_id", regexp.MustCompile(`^arn:`)),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "true"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "32"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "8"),
+					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexp.MustCompile(`^vpc-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
+			},
 		},
 	})
 }
@@ -900,6 +949,33 @@ resource "aws_fsx_windows_file_system" "test" {
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = ["${aws_subnet.test1.id}"]
+  throughput_capacity = 8
+}
+`)
+}
+
+func testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithSingleType() string {
+	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = "${aws_directory_service_directory.test.id}"
+  skip_final_backup   = true
+  storage_capacity    = 32
+  deployment_type     = "SINGLE_AZ_1"
+  subnet_ids          = ["${aws_subnet.test1.id}"]
+  throughput_capacity = 8
+}
+`)
+}
+
+func testAccAwsFsxWindowsFileSystemConfigSubnetIds2() string {
+	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = "${aws_directory_service_directory.test.id}"
+  skip_final_backup   = true
+  storage_capacity    = 32
+  deployment_type     = "MULTI_AZ_1"
+  subnet_ids          = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+  preferred_subnet_id = "${aws_subnet.test1.id}"
   throughput_capacity = 8
 }
 `)
