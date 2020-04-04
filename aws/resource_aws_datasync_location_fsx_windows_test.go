@@ -81,6 +81,7 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows.test"
+	fsResourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
@@ -92,9 +93,11 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^fsxw://.+/`)),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 				),
 			},
 			{
