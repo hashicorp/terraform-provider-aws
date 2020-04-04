@@ -552,9 +552,14 @@ func wafv2FieldToMatchSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"name": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 40),
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 40),
+									// The value is returned in lower case by the API.
+									// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
+									validateWafv2StringIsLowerCase(),
+								),
 							},
 						},
 					},
@@ -566,9 +571,14 @@ func wafv2FieldToMatchSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"name": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 30),
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 30),
+									// The value is returned in lower case by the API.
+									// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
+									validateWafv2StringIsLowerCase(),
+								),
 							},
 						},
 					},
@@ -576,6 +586,22 @@ func wafv2FieldToMatchSchema() *schema.Schema {
 				"uri_path": wafv2EmptySchema(),
 			},
 		},
+	}
+}
+
+func validateWafv2StringIsLowerCase() schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(string)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be string", k))
+			return
+		}
+
+		if strings.ToLower(v) != v {
+			es = append(es, fmt.Errorf("expected value of %s to only contain lower case characters", v))
+			return
+		}
+		return
 	}
 }
 
