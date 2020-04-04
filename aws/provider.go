@@ -891,6 +891,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafv2_ip_set":                                        resourceAwsWafv2IPSet(),
 			"aws_wafv2_regex_pattern_set":                             resourceAwsWafv2RegexPatternSet(),
 			"aws_wafv2_rule_group":                                    resourceAwsWafv2RuleGroup(),
+			"aws_wafv2_web_acl":                                       resourceAwsWafv2WebACL(),
 			"aws_worklink_fleet":                                      resourceAwsWorkLinkFleet(),
 			"aws_worklink_website_certificate_authority_association":  resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation(),
 			"aws_workspaces_directory":                                resourceAwsWorkspacesDirectory(),
