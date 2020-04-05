@@ -46,7 +46,7 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 1500),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"description": {
 				Type:         schema.TypeString,
