@@ -35,10 +35,6 @@ The following attributes are exported:
     distribution's information is fully propagated throughout the Amazon
     CloudFront system.
 
-  * `active_trusted_signers` - The key pair IDs that CloudFront is aware of for
-    each trusted signer, if the distribution is set up to serve private content
-    with signed URLs.
-
   * `domain_name` - The domain name corresponding to the distribution. For
     example: `d604721fxaaqy9.cloudfront.net`.
 
