@@ -3,12 +3,12 @@ subcategory: "WAFv2"
 layout: "aws"
 page_title: "AWS: aws_wafv2_rule_group"
 description: |-
-  Creates an AWS WAFv2 rule group resource.
+  Creates a WAFv2 rule group resource.
 ---
 
 # Resource: aws_wafv2_rule_group
 
-Creates an WAFv2 Rule Group Resource.
+Creates a WAFv2 Rule Group resource.
 
 ## Example Usage
 

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -27,7 +26,7 @@ func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -45,7 +44,7 @@ func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_BasicUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -104,7 +103,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.3451531458.statement.#", "1"),
@@ -121,7 +120,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_Update(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.3446749900.statement.#", "1"),
@@ -156,7 +155,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchAllQueryArguments(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.2971982489.statement.#", "1"),
@@ -174,7 +173,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchBody(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.4243272354.statement.#", "1"),
@@ -192,7 +191,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchMethod(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.1903944126.statement.#", "1"),
@@ -210,7 +209,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchQueryString(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.95492546.statement.#", "1"),
@@ -228,7 +227,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchSingleHeader(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.2127391528.statement.#", "1"),
@@ -247,7 +246,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchSingleQueryArgument(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.492520910.statement.#", "1"),
@@ -266,7 +265,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchUriPath(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.984121555.statement.#", "1"),
@@ -305,7 +304,7 @@ func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &before),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &before),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -320,7 +319,7 @@ func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &after),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &after),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupNewName),
@@ -349,7 +348,7 @@ func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &before),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &before),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -364,7 +363,7 @@ func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_Update_capacity(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &after),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &after),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -393,7 +392,7 @@ func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &before),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &before),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -408,7 +407,7 @@ func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_Update_metricName(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &after),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &after),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -419,6 +418,28 @@ func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "updated-friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_Disappears(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_Minimal(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2RuleGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -437,7 +458,7 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.2064993648.statement.#", "1"),
@@ -450,7 +471,7 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_Update(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.4215509823.statement.#", "1"),
@@ -485,7 +506,7 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					computeWafv2IpSetRefStatementIndex(&v, &idx),
@@ -517,7 +538,7 @@ func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_And(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.867936606.statement.#", "1"),
@@ -530,7 +551,7 @@ func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_NotAnd(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.2966210839.statement.#", "1"),
@@ -545,7 +566,7 @@ func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_OrNotAnd(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.464720012.statement.#", "1"),
@@ -583,7 +604,7 @@ func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_Minimal(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -613,7 +634,7 @@ func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_RegexPatternSetReferenceStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					computeWafv2RegexSetRefStatementIndex(&v, &idx),
@@ -647,7 +668,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_RuleActionAllow(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -664,7 +685,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_RuleActionBlock(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -681,7 +702,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_RuleActionCount(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
@@ -718,7 +739,7 @@ func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_SizeConstraintStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.204038473.statement.#", "1"),
@@ -733,7 +754,7 @@ func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_SizeConstraintStatement_Update(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.3233602303.statement.#", "1"),
@@ -768,7 +789,7 @@ func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_SqliMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.1169024249.statement.#", "1"),
@@ -785,7 +806,7 @@ func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_SqliMatchStatement_Update(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.2934928563.statement.#", "1"),
@@ -824,7 +845,7 @@ func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_OneTag(ruleGroupName, "Tag1", "Value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
@@ -839,7 +860,7 @@ func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_TwoTags(ruleGroupName, "Tag1", "Value1Updated", "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1Updated"),
@@ -849,7 +870,7 @@ func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_OneTag(ruleGroupName, "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
@@ -872,7 +893,7 @@ func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_XssMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.377378487.statement.#", "1"),
@@ -887,7 +908,7 @@ func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_XssMatchStatement_Update(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2RuleGroupExists("aws_wafv2_rule_group.test", &v),
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.3452423088.statement.#", "1"),
@@ -1045,16 +1066,20 @@ func testAccCheckAwsWafv2RuleGroupDestroy(s *terraform.State) error {
 			})
 
 		if err == nil {
-			if *resp.RuleGroup.Id == rs.Primary.ID {
-				return fmt.Errorf("WAFV2 RuleGroup %s still exists", rs.Primary.ID)
+			if resp == nil || resp.RuleGroup == nil {
+				return fmt.Errorf("Error getting WAFv2 RuleGroup")
 			}
+
+			if aws.StringValue(resp.RuleGroup.Id) == rs.Primary.ID {
+				return fmt.Errorf("WAFv2 RuleGroup %s still exists", rs.Primary.ID)
+			}
+
+			return nil
 		}
 
 		// Return nil if the RuleGroup is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == wafv2.ErrCodeWAFNonexistentItemException {
-				return nil
-			}
+		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+			return nil
 		}
 
 		return err
@@ -1071,7 +1096,7 @@ func testAccCheckAwsWafv2RuleGroupExists(n string, v *wafv2.RuleGroup) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAFV2 RuleGroup ID is set")
+			return fmt.Errorf("No WAFv2 RuleGroup ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).wafv2conn
@@ -1085,22 +1110,26 @@ func testAccCheckAwsWafv2RuleGroupExists(n string, v *wafv2.RuleGroup) resource.
 			return err
 		}
 
-		if *resp.RuleGroup.Id == rs.Primary.ID {
+		if resp == nil || resp.RuleGroup == nil {
+			return fmt.Errorf("Error getting WAFv2 RuleGroup")
+		}
+
+		if aws.StringValue(resp.RuleGroup.Id) == rs.Primary.ID {
 			*v = *resp.RuleGroup
 			return nil
 		}
 
-		return fmt.Errorf("WAFV2 RuleGroup (%s) not found", rs.Primary.ID)
+		return fmt.Errorf("WAFv2 RuleGroup (%s) not found", rs.Primary.ID)
 	}
 }
 
 func testAccAwsWafv2RuleGroupConfig_Basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 2
-  name = "%s"
+  capacity    = 2
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   tags = {
     Tag1 = "Value1"
@@ -1109,8 +1138,8 @@ resource "aws_wafv2_rule_group" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -1119,13 +1148,13 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_BasicUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 50
-  name = "%s"
+  capacity    = 50
+  name        = "%s"
   description = "Updated"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   rule {
-    name = "rule-2"
+    name     = "rule-2"
     priority = 10
 
     action {
@@ -1135,7 +1164,7 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       size_constraint_statement {
         comparison_operator = "LT"
-        size = 50
+        size                = 50
 
         field_to_match {
           query_string {}
@@ -1143,25 +1172,25 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 5
-          type = "NONE"
+          type     = "NONE"
         }
 
         text_transformation {
           priority = 2
-          type = "CMD_LINE"
+          type     = "CMD_LINE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
@@ -1176,15 +1205,15 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1193,15 +1222,15 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_Update_capacity(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 3
-  name = "%s"
+  capacity    = 3
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -1210,15 +1239,15 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_Update_metricName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 2
-  name = "%s"
+  capacity    = 2
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "updated-friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "updated-friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -1228,13 +1257,13 @@ func testAccAwsWafv2RuleGroupConfig_Minimal(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1244,15 +1273,15 @@ func testAccAwsWafv2RuleGroupConfig_RuleActionAllow(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
@@ -1263,15 +1292,15 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1281,15 +1310,15 @@ func testAccAwsWafv2RuleGroupConfig_RuleActionBlock(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  block {}
+      block {}
     }
 
     statement {
@@ -1300,15 +1329,15 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1318,15 +1347,15 @@ func testAccAwsWafv2RuleGroupConfig_RuleActionCount(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  count {}
+      count {}
     }
 
     statement {
@@ -1337,15 +1366,15 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1355,21 +1384,21 @@ func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
       byte_match_statement {
         positional_constraint = "CONTAINS"
-        search_string = "word"
+        search_string         = "word"
 
         field_to_match {
           all_query_arguments {}
@@ -1377,27 +1406,27 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 5
-          type = "NONE"
+          type     = "NONE"
         }
 
         text_transformation {
           priority = 2
-          type = "LOWERCASE"
+          type     = "LOWERCASE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1407,21 +1436,21 @@ func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_Update(name string) strin
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
       byte_match_statement {
         positional_constraint = "EXACTLY"
-        search_string = "sentence"
+        search_string         = "sentence"
 
         field_to_match {
           all_query_arguments {}
@@ -1429,22 +1458,22 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 3
-          type = "CMD_LINE"
+          type     = "CMD_LINE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1454,21 +1483,21 @@ func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchAllQueryArgum
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
       byte_match_statement {
         positional_constraint = "CONTAINS"
-        search_string = "word"
+        search_string         = "word"
 
         field_to_match {
           all_query_arguments {}
@@ -1476,22 +1505,22 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 5
-          type = "NONE"
+          type     = "NONE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1500,46 +1529,46 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchBody(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
- capacity = 15
- name = "%s"
- scope = "REGIONAL"
+  capacity = 15
+  name     = "%s"
+  scope    = "REGIONAL"
 
- rule {
-   name = "rule-1"
-   priority = 1
+  rule {
+    name     = "rule-1"
+    priority = 1
 
-   action {
- 	  allow {}
-   }
+    action {
+      allow {}
+    }
 
-   statement {
-     byte_match_statement {
-       positional_constraint = "CONTAINS"
-       search_string = "word"
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
 
-       field_to_match {
-         body {}
-       }
+        field_to_match {
+          body {}
+        }
 
-       text_transformation {
-         priority = 1
-         type = "NONE"
-       }
-     }
-   }
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
 
-   visibility_config {
-     cloudwatch_metrics_enabled = false
-     metric_name = "friendly-rule-metric-name"
-     sampled_requests_enabled = false
-   }
- }
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
 
- visibility_config {
-   cloudwatch_metrics_enabled = false
-   metric_name = "friendly-metric-name"
-   sampled_requests_enabled = false
- }
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
 }
 `, name)
 }
@@ -1547,46 +1576,46 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchMethod(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
- capacity = 15
- name = "%s"
- scope = "REGIONAL"
+  capacity = 15
+  name     = "%s"
+  scope    = "REGIONAL"
 
- rule {
-   name = "rule-1"
-   priority = 1
+  rule {
+    name     = "rule-1"
+    priority = 1
 
-   action {
- 	  allow {}
-   }
+    action {
+      allow {}
+    }
 
-   statement {
-     byte_match_statement {
-       positional_constraint = "CONTAINS"
-       search_string = "word"
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
 
-       field_to_match {
-         method {}
-       }
+        field_to_match {
+          method {}
+        }
 
-       text_transformation {
-         priority = 1
-         type = "NONE"
-       }
-     }
-   }
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
 
-   visibility_config {
-     cloudwatch_metrics_enabled = false
-     metric_name = "friendly-rule-metric-name"
-     sampled_requests_enabled = false
-   }
- }
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
 
- visibility_config {
-   cloudwatch_metrics_enabled = false
-   metric_name = "friendly-metric-name"
-   sampled_requests_enabled = false
- }
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
 }
 `, name)
 }
@@ -1594,46 +1623,46 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchQueryString(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
- capacity = 15
- name = "%s"
- scope = "REGIONAL"
+  capacity = 15
+  name     = "%s"
+  scope    = "REGIONAL"
 
- rule {
-   name = "rule-1"
-   priority = 1
+  rule {
+    name     = "rule-1"
+    priority = 1
 
-   action {
- 	  allow {}
-   }
+    action {
+      allow {}
+    }
 
-   statement {
-     byte_match_statement {
-       positional_constraint = "CONTAINS"
-       search_string = "word"
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
 
-       field_to_match {
-         query_string {}
-       }
+        field_to_match {
+          query_string {}
+        }
 
-       text_transformation {
-         priority = 1
-         type = "NONE"
-       }
-     }
-   }
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
 
-   visibility_config {
-     cloudwatch_metrics_enabled = false
-     metric_name = "friendly-rule-metric-name"
-     sampled_requests_enabled = false
-   }
- }
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
 
- visibility_config {
-   cloudwatch_metrics_enabled = false
-   metric_name = "friendly-metric-name"
-   sampled_requests_enabled = false
- }
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
 }
 `, name)
 }
@@ -1641,48 +1670,48 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchSingleHeader(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
- capacity = 15
- name = "%s"
- scope = "REGIONAL"
+  capacity = 15
+  name     = "%s"
+  scope    = "REGIONAL"
 
- rule {
-   name = "rule-1"
-   priority = 1
+  rule {
+    name     = "rule-1"
+    priority = 1
 
-   action {
- 	  allow {}
-   }
+    action {
+      allow {}
+    }
 
-   statement {
-     byte_match_statement {
-       positional_constraint = "CONTAINS"
-       search_string = "word"
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
 
-       field_to_match {
-         single_header {
-           name = "a-forty-character-long-header-name-40-40"
-         }
-       }
+        field_to_match {
+          single_header {
+            name = "a-forty-character-long-header-name-40-40"
+          }
+        }
 
-       text_transformation {
-         priority = 1
-         type = "NONE"
-       }
-     }
-   }
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
 
-   visibility_config {
-     cloudwatch_metrics_enabled = false
-     metric_name = "friendly-rule-metric-name"
-     sampled_requests_enabled = false
-   }
- }
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
 
- visibility_config {
-   cloudwatch_metrics_enabled = false
-   metric_name = "friendly-metric-name"
-   sampled_requests_enabled = false
- }
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
 }
 `, name)
 }
@@ -1690,48 +1719,48 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchSingleQueryArgument(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
- capacity = 30
- name = "%s"
- scope = "REGIONAL"
+  capacity = 30
+  name     = "%s"
+  scope    = "REGIONAL"
 
- rule {
-   name = "rule-1"
-   priority = 1
+  rule {
+    name     = "rule-1"
+    priority = 1
 
-   action {
- 	  allow {}
-   }
+    action {
+      allow {}
+    }
 
-   statement {
-     byte_match_statement {
-       positional_constraint = "CONTAINS"
-       search_string = "word"
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
 
-       field_to_match {
-         single_query_argument {
-           name = "a-max-30-characters-long-name-"
-         }
-       }
+        field_to_match {
+          single_query_argument {
+            name = "a-max-30-characters-long-name-"
+          }
+        }
 
-       text_transformation {
-         priority = 1
-         type = "NONE"
-       }
-     }
-   }
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
 
-   visibility_config {
-     cloudwatch_metrics_enabled = false
-     metric_name = "friendly-rule-metric-name"
-     sampled_requests_enabled = false
-   }
- }
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
 
- visibility_config {
-   cloudwatch_metrics_enabled = false
-   metric_name = "friendly-metric-name"
-   sampled_requests_enabled = false
- }
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
 }
 `, name)
 }
@@ -1739,46 +1768,46 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_ByteMatchStatement_FieldToMatchUriPath(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
- capacity = 15
- name = "%s"
- scope = "REGIONAL"
+  capacity = 15
+  name     = "%s"
+  scope    = "REGIONAL"
 
- rule {
-   name = "rule-1"
-   priority = 1
+  rule {
+    name     = "rule-1"
+    priority = 1
 
-   action {
- 	  allow {}
-   }
+    action {
+      allow {}
+    }
 
-   statement {
-     byte_match_statement {
-       positional_constraint = "CONTAINS"
-       search_string = "word"
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
 
-       field_to_match {
-         uri_path {}
-       }
+        field_to_match {
+          uri_path {}
+        }
 
-       text_transformation {
-         priority = 1
-         type = "NONE"
-       }
-     }
-   }
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
 
-   visibility_config {
-     cloudwatch_metrics_enabled = false
-     metric_name = "friendly-rule-metric-name"
-     sampled_requests_enabled = false
-   }
- }
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
 
- visibility_config {
-   cloudwatch_metrics_enabled = false
-   metric_name = "friendly-metric-name"
-   sampled_requests_enabled = false
- }
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
 }
 `, name)
 }
@@ -1786,23 +1815,23 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
-  name = "ip-set-%s"
-  scope = "REGIONAL"
+  name               = "ip-set-%s"
+  scope              = "REGIONAL"
   ip_address_version = "IPV4"
-  addresses = ["1.1.1.1/32", "2.2.2.2/32"]
+  addresses          = ["1.1.1.1/32", "2.2.2.2/32"]
 }
 
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
@@ -1813,15 +1842,15 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -1831,15 +1860,15 @@ func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
@@ -1850,15 +1879,15 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1868,15 +1897,15 @@ func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_Update(name string) string
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
@@ -1887,15 +1916,15 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1905,25 +1934,25 @@ func testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_And(name string) string
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
       and_statement {
-		statement {
+        statement {
           geo_match_statement {
             country_codes = ["US"]
           }
         }
-        statement { 
+        statement {
           geo_match_statement {
             country_codes = ["NL"]
           }
@@ -1933,15 +1962,15 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1951,15 +1980,15 @@ func testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_NotAnd(name string) str
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
@@ -1971,7 +2000,7 @@ resource "aws_wafv2_rule_group" "test" {
                 country_codes = ["US"]
               }
             }
-            statement { 
+            statement {
               geo_match_statement {
                 country_codes = ["NL"]
               }
@@ -1983,15 +2012,15 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -2001,15 +2030,15 @@ func testAccAwsWafv2RuleGroupConfig_LogicalRuleStatement_OrNotAnd(name string) s
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 3
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
@@ -2024,33 +2053,33 @@ resource "aws_wafv2_rule_group" "test" {
           }
         }
         statement {
-		  and_statement {
-			statement {
-			  geo_match_statement {
-				country_codes = ["US"]
-			  }
-			}
-			statement { 
-			  geo_match_statement {
-				country_codes = ["NL"]
-			  }
-			}
-		  }
+          and_statement {
+            statement {
+              geo_match_statement {
+                country_codes = ["US"]
+              }
+            }
+            statement {
+              geo_match_statement {
+                country_codes = ["NL"]
+              }
+            }
+          }
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -2059,7 +2088,7 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_RegexPatternSetReferenceStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-  name = "regex-pattern-set-%s"
+  name  = "regex-pattern-set-%s"
   scope = "REGIONAL"
 
   regular_expression_list {
@@ -2069,15 +2098,15 @@ resource "aws_wafv2_regex_pattern_set" "test" {
 
 resource "aws_wafv2_rule_group" "test" {
   capacity = 50
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
@@ -2090,22 +2119,22 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 2
-          type = "NONE"
+          type     = "NONE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -2115,21 +2144,21 @@ func testAccAwsWafv2RuleGroupConfig_SizeConstraintStatement(name string) string 
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
       size_constraint_statement {
         comparison_operator = "GT"
-        size = 100
+        size                = 100
 
         field_to_match {
           method {}
@@ -2137,22 +2166,22 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 5
-          type = "NONE"
+          type     = "NONE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -2162,21 +2191,21 @@ func testAccAwsWafv2RuleGroupConfig_SizeConstraintStatement_Update(name string) 
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
       size_constraint_statement {
         comparison_operator = "LT"
-        size = 50
+        size                = 50
 
         field_to_match {
           query_string {}
@@ -2184,27 +2213,27 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 5
-          type = "NONE"
+          type     = "NONE"
         }
 
         text_transformation {
           priority = 2
-          type = "CMD_LINE"
+          type     = "CMD_LINE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -2214,15 +2243,15 @@ func testAccAwsWafv2RuleGroupConfig_SqliMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
@@ -2233,27 +2262,27 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 5
-          type = "URL_DECODE"
+          type     = "URL_DECODE"
         }
 
         text_transformation {
           priority = 2
-          type = "LOWERCASE"
+          type     = "LOWERCASE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -2263,15 +2292,15 @@ func testAccAwsWafv2RuleGroupConfig_SqliMatchStatement_Update(name string) strin
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
@@ -2282,32 +2311,32 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 5
-          type = "URL_DECODE"
+          type     = "URL_DECODE"
         }
 
         text_transformation {
           priority = 4
-          type = "HTML_ENTITY_DECODE"
+          type     = "HTML_ENTITY_DECODE"
         }
 
         text_transformation {
           priority = 3
-          type = "COMPRESS_WHITE_SPACE"
+          type     = "COMPRESS_WHITE_SPACE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -2317,15 +2346,15 @@ func testAccAwsWafv2RuleGroupConfig_XssMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  block {}
+      block {}
     }
 
     statement {
@@ -2337,22 +2366,22 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 2
-          type = "NONE"
+          type     = "NONE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -2362,15 +2391,15 @@ func testAccAwsWafv2RuleGroupConfig_XssMatchStatement_Update(name string) string
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
-  name = "%s"
-  scope = "REGIONAL"
+  name     = "%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
-  	  allow {}
+      allow {}
     }
 
     statement {
@@ -2381,22 +2410,22 @@ resource "aws_wafv2_rule_group" "test" {
 
         text_transformation {
           priority = 2
-          type = "URL_DECODE"
+          type     = "URL_DECODE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -2405,19 +2434,19 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_OneTag(name, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 2
-  name = "%s"
+  capacity    = 2
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 
   tags = {
-    %q = %q
+    "%s" = "%s"
   }
 }
 `, name, name, tagKey, tagValue)
@@ -2426,20 +2455,20 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccAwsWafv2RuleGroupConfig_TwoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 2
-  name = "%s"
+  capacity    = 2
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    "%s" = "%s"
+    "%s" = "%s"
   }
 }
 `, name, name, tag1Key, tag1Value, tag2Key, tag2Value)

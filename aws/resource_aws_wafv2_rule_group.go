@@ -125,47 +125,46 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
-	if d.HasChange("description") {
-		params.Description = aws.String(d.Get("description").(string))
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
 		params.Tags = keyvaluetags.New(v).IgnoreAws().Wafv2Tags()
 	}
 
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateRuleGroup(params)
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationException, "An error occurred during the tagging operation") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "AWS WAF couldn’t perform your tagging operation because of an internal error") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "AWS WAF couldn’t retrieve the resource that you requested. Retry your request") {
+			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+
 	if isResourceTimeoutError(err) {
 		_, err = conn.CreateRuleGroup(params)
 	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating WAFv2 RuleGroup: %s", err)
 	}
-	d.SetId(*resp.Summary.Id)
+
+	if resp == nil || resp.Summary == nil {
+		return fmt.Errorf("Error creating WAFv2 RuleGroup")
+	}
+
+	d.SetId(aws.StringValue(resp.Summary.Id))
 
 	return resourceAwsWafv2RuleGroupRead(d, meta)
 }
 
 func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &wafv2.GetRuleGroupInput{
 		Id:    aws.String(d.Id()),
@@ -175,30 +174,39 @@ func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "AWS WAF couldn’t perform the operation because your resource doesn’t exist") {
-			log.Printf("[WARN] WAFV2 RuleGroup (%s) not found, removing from state", d.Id())
+		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+			log.Printf("[WARN] WAFv2 RuleGroup (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-
 		return err
 	}
 
-	d.Set("name", resp.RuleGroup.Name)
-	d.Set("capacity", resp.RuleGroup.Capacity)
-	d.Set("description", resp.RuleGroup.Description)
-	d.Set("arn", resp.RuleGroup.ARN)
-	d.Set("lock_token", resp.LockToken)
-	d.Set("rule", flattenWafv2Rules(resp.RuleGroup.Rules))
-	d.Set("visibility_config", flattenWafv2VisibilityConfig(resp.RuleGroup.VisibilityConfig))
+	if resp == nil || resp.RuleGroup == nil {
+		return fmt.Errorf("Error getting WAFv2 RuleGroup")
+	}
+
+	d.Set("name", aws.StringValue(resp.RuleGroup.Name))
+	d.Set("capacity", aws.Int64Value(resp.RuleGroup.Capacity))
+	d.Set("description", aws.StringValue(resp.RuleGroup.Description))
+	d.Set("arn", aws.StringValue(resp.RuleGroup.ARN))
+	d.Set("lock_token", aws.StringValue(resp.LockToken))
+
+	if err := d.Set("rule", flattenWafv2Rules(resp.RuleGroup.Rules)); err != nil {
+		return fmt.Errorf("Error setting rule: %s", err)
+	}
+
+	if err := d.Set("visibility_config", flattenWafv2VisibilityConfig(resp.RuleGroup.VisibilityConfig)); err != nil {
+		return fmt.Errorf("Error setting visibility_config: %s", err)
+	}
 
 	tags, err := keyvaluetags.Wafv2ListTags(conn, *resp.RuleGroup.ARN)
 	if err != nil {
-		return fmt.Errorf("error listing tags for WAFV2 RuleGroup (%s): %s", *resp.RuleGroup.ARN, err)
+		return fmt.Errorf("Error listing tags for WAFv2 RuleGroup (%s): %s", *resp.RuleGroup.ARN, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("Error setting tags: %s", err)
 	}
 
 	return nil
@@ -207,7 +215,7 @@ func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
 
-	log.Printf("[INFO] Updating WAFV2 RuleGroup %s", d.Id())
+	log.Printf("[INFO] Updating WAFv2 RuleGroup %s", d.Id())
 
 	u := &wafv2.UpdateRuleGroupInput{
 		Id:               aws.String(d.Id()),
@@ -218,18 +226,14 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
-	if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
-		u.Description = aws.String(d.Get("description").(string))
+	if v, ok := d.GetOk("description"); ok {
+		u.Description = aws.String(v.(string))
 	}
 
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateRuleGroup(u)
-
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "AWS WAF couldn’t retrieve the resource that you requested. Retry your request") {
+			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -242,13 +246,13 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error updating WAFV2 RuleGroup: %s", err)
+		return fmt.Errorf("Error updating WAFv2 RuleGroup: %s", err)
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.Wafv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("Error updating tags: %s", err)
 		}
 	}
 
@@ -258,7 +262,7 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
 
-	log.Printf("[INFO] Deleting WAFV2 RuleGroup %s", d.Id())
+	log.Printf("[INFO] Deleting WAFv2 RuleGroup %s", d.Id())
 
 	r := &wafv2.DeleteRuleGroupInput{
 		Id:        aws.String(d.Id()),
@@ -267,26 +271,15 @@ func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) e
 		LockToken: aws.String(d.Get("lock_token").(string)),
 	}
 
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteRuleGroup(r)
-
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "AWS WAF couldn’t perform the operation because your resource is being used by another resource or it’s associated with another resource") {
+			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
+			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationException, "An error occurred during the tagging operation") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "AWS WAF couldn’t perform your tagging operation because of an internal error") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "AWS WAF couldn’t retrieve the resource that you requested. Retry your request") {
-				return resource.RetryableError(err)
-			}
-
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -297,7 +290,7 @@ func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting WAFV2 RuleGroup: %s", err)
+		return fmt.Errorf("Error deleting WAFv2 RuleGroup: %s", err)
 	}
 
 	return nil
@@ -449,8 +442,9 @@ func wafv2IpSetReferenceStatementSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"arn": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validateArn,
 				},
 			},
 		},
@@ -465,8 +459,9 @@ func wafv2RegexPatternSetReferenceStatementSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"arn": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validateArn,
 				},
 				"field_to_match":      wafv2FieldToMatchSchema(),
 				"text_transformation": wafv2TextTransformationSchema(),
@@ -593,12 +588,12 @@ func validateWafv2StringIsLowerCase() schema.SchemaValidateFunc {
 	return func(i interface{}, k string) (s []string, es []error) {
 		v, ok := i.(string)
 		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be string", k))
+			es = append(es, fmt.Errorf("Expected type of %s to be string", k))
 			return
 		}
 
 		if strings.ToLower(v) != v {
-			es = append(es, fmt.Errorf("expected value of %s to only contain lower case characters", v))
+			es = append(es, fmt.Errorf("Expected value of %s to only contain lower case characters", v))
 			return
 		}
 		return
