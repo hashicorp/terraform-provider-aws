@@ -1197,8 +1197,6 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
 	conn := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
-
 	req := &ec2.ModifySpotFleetRequestInput{
 		SpotFleetRequestId: aws.String(d.Id()),
 	}

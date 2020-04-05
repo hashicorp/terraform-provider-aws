@@ -262,8 +262,6 @@ func resourceAwsGlobalAcceleratorAcceleratorRetrieve(conn *globalaccelerator.Glo
 func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).globalacceleratorconn
 
-	d.Partial(true)
-
 	if d.HasChange("name") || d.HasChange("ip_address_type") || d.HasChange("enabled") {
 		opts := &globalaccelerator.UpdateAcceleratorInput{
 			AcceleratorArn: aws.String(d.Id()),
@@ -282,10 +280,6 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 			return fmt.Errorf("Error updating Global Accelerator accelerator: %s", err)
 		}
 
-		d.SetPartial("name")
-		d.SetPartial("ip_address_type")
-		d.SetPartial("enabled")
-
 		err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 		if err != nil {
 			return err
@@ -298,10 +292,7 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 			if err != nil {
 				return err
 			}
-
 		}
-
-		d.SetPartial("attributes")
 	}
 
 	if d.HasChange("tags") {
@@ -310,11 +301,7 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 		if err := keyvaluetags.GlobalacceleratorUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Global Accelerator accelerator (%s) tags: %s", d.Id(), err)
 		}
-
-		d.SetPartial("tags")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsGlobalAcceleratorAcceleratorRead(d, meta)
 }

@@ -1,4 +1,64 @@
-## 2.55.0 (Unreleased)
+## 2.57.0 (Unreleased)
+## 2.56.0 (April 03, 2020)
+
+NOTES:
+
+* resource/aws_emr_cluster: The bug fix in this release will potentially re-create EMR Clusters with multiple bootstrap actions, since bootstrap actions cannot be modified in place. To avoid re-creation, temporarily add the [`ignore_changes` lifecycle configuration argument](https://www.terraform.io/docs/configuration/resources.html#ignore_changes) and/or update the order in your Terraform configuration.
+
+ENHANCEMENTS:
+
+* data-source/aws_launch_template: Add `hibernation_options` attribute ([#12492](https://github.com/terraform-providers/terraform-provider-aws/issues/12492))
+* resource/aws_codepipeline: Adds cross-region action support ([#12549](https://github.com/terraform-providers/terraform-provider-aws/issues/12549))
+* resource/aws_dx_connection: Support `2Gbps` and `5Gbps` values in plan-time validation for `bandwidth` argument ([#12559](https://github.com/terraform-providers/terraform-provider-aws/issues/12559))
+* resource/aws_dx_lag: Support `2Gbps` and `5Gbps` values in plan-time validation for `bandwidth` argument ([#12559](https://github.com/terraform-providers/terraform-provider-aws/issues/12559))
+* resource/aws_elastic_transcoder_preset: Support plan-time validation for `role` argument ([#12575](https://github.com/terraform-providers/terraform-provider-aws/issues/12575))
+* resource/aws_kms_grant: Support resource import ([#11991](https://github.com/terraform-providers/terraform-provider-aws/issues/11991))
+* resource/aws_launch_template: Add `hibernation_options` configuration block ([#12492](https://github.com/terraform-providers/terraform-provider-aws/issues/12492))
+
+BUG FIXES:
+
+* resource/aws_codedeploy_deployment_group: Fix `blue_green_deployment_config` updates for ECS ([#11885](https://github.com/terraform-providers/terraform-provider-aws/issues/11885))
+* resource/aws_emr_cluster: Now properly sets the order when multiple bootstrap actions are defined
+* resource/aws_kms_grant: Remove resource from Terraform state instead of error if removed outside Terraform ([#12560](https://github.com/terraform-providers/terraform-provider-aws/issues/12560))
+* resource/aws_s3_bucket: Prevent various panics with empty configuration blocks ([#12614](https://github.com/terraform-providers/terraform-provider-aws/issues/12614))
+* resource/aws_volume_attachment: Ensure any error is shown while waiting for volume to detach ([#12596](https://github.com/terraform-providers/terraform-provider-aws/issues/12596))
+
+## 2.55.0 (March 27, 2020)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_availability_zone_group` ([#12400](https://github.com/terraform-providers/terraform-provider-aws/issues/12400))
+
+ENHANCEMENTS:
+
+* data-source/aws_availability_zone: Add `all_availability_zones` and `filter` arguments ([#12400](https://github.com/terraform-providers/terraform-provider-aws/issues/12400))
+* data-source/aws_availability_zone: Add `group_name`, `network_border_group`, and `opt_in_status` attributes ([#12400](https://github.com/terraform-providers/terraform-provider-aws/issues/12400))
+* data-source/aws_availability_zones: Add `all_availability_zones` and `filter` arguments ([#12400](https://github.com/terraform-providers/terraform-provider-aws/issues/12400))
+* data-source/aws_availability_zones: Add `group_names` attribute ([#12400](https://github.com/terraform-providers/terraform-provider-aws/issues/12400))
+* data-source/aws_ec2_transit_gateway_dx_gateway_attachement: Add `filter` and `tags` arguments ([#12516](https://github.com/terraform-providers/terraform-provider-aws/issues/12516))
+* data-source/aws_ec2_transit_gateway_vpn_attachment: Add `filter` and `tags` arguments ([#12415](https://github.com/terraform-providers/terraform-provider-aws/issues/12415))
+* data-source/aws_instance: Add `metadata_options` attribute ([#12491](https://github.com/terraform-providers/terraform-provider-aws/issues/12491))
+* data-source/aws_launch_template: Add `filter` and `tags` arguments ([#12403](https://github.com/terraform-providers/terraform-provider-aws/issues/12403))
+* data-source/aws_launch_template: Add `metadata_options` attribute ([#12491](https://github.com/terraform-providers/terraform-provider-aws/issues/12491))
+* data-source/aws_prefix_list: Add `filter` argument ([#12416](https://github.com/terraform-providers/terraform-provider-aws/issues/12416))
+* data-source/aws_vpc_endpoint_service: Add `filter` and `tags` arguments ([#12404](https://github.com/terraform-providers/terraform-provider-aws/issues/12404))
+* resource/aws_athena_workgroup: Add `force_destroy` argument ([#12254](https://github.com/terraform-providers/terraform-provider-aws/issues/12254))
+* resource/aws_cloudwatch_log_metric_filter: Support resource import ([#11992](https://github.com/terraform-providers/terraform-provider-aws/issues/11992))
+* resource/aws_flow_log: Add `max_aggregation_interval` argument ([#12483](https://github.com/terraform-providers/terraform-provider-aws/issues/12483))
+* resource/aws_instance: Add `metadata_options` configuration block (support IMDSv2) ([#12491](https://github.com/terraform-providers/terraform-provider-aws/issues/12491))
+* resource/aws_launch_template: Add `metadata_options` configuration block (support IMDSv2) ([#12491](https://github.com/terraform-providers/terraform-provider-aws/issues/12491))
+* resource/aws_msk_cluster: Add `logging_info` configuration block (support CloudWatch, Firehose, and S3 logging) ([#12215](https://github.com/terraform-providers/terraform-provider-aws/issues/12215))
+* resource/aws_mq_configuration: Support plan-time validation for `engine_type` argument ([#11843](https://github.com/terraform-providers/terraform-provider-aws/issues/11843))
+* resource/aws_route53_health_check: A dd plan-time validation to `insufficient_data_health_status` ([#12305](https://github.com/terraform-providers/terraform-provider-aws/issues/12305))
+* resource/aws_storagegateway_nfs_file_share: Add `path` attribute ([#12530](https://github.com/terraform-providers/terraform-provider-aws/issues/12530))
+
+BUG FIXES:
+
+* resource/aws_db_instance: Allow restoring from snapshot into RAM shared Subnet with VPC Security Group ([#12447](https://github.com/terraform-providers/terraform-provider-aws/issues/12447))
+* resource/aws_mq_configuration: Remove extraneous `ListTags` API call during refresh ([#11843](https://github.com/terraform-providers/terraform-provider-aws/issues/11843))
+* resource/aws_neptune_cluster_instance: Add missing `configuring-log-exports` as allowed pending state ([#12079](https://github.com/terraform-providers/terraform-provider-aws/issues/12079))
+* resource/aws_route53_health_check: Do not recreate health check when using compressed ipv6 address ([#12305](https://github.com/terraform-providers/terraform-provider-aws/issues/12305))
+
 ## 2.54.0 (March 19, 2020)
 
 FEATURES:

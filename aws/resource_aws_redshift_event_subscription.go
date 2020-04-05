@@ -188,8 +188,6 @@ func resourceAwsRedshiftEventSubscriptionRetrieve(name string, conn *redshift.Re
 func resourceAwsRedshiftEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
 
-	d.Partial(true)
-
 	req := &redshift.ModifyEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
@@ -212,11 +210,7 @@ func resourceAwsRedshiftEventSubscriptionUpdate(d *schema.ResourceData, meta int
 		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
-
-	d.Partial(false)
 
 	return nil
 }

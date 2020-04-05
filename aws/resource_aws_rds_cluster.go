@@ -1118,7 +1118,6 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("db_cluster_parameter_group_name") {
-		d.SetPartial("db_cluster_parameter_group_name")
 		req.DBClusterParameterGroupName = aws.String(d.Get("db_cluster_parameter_group_name").(string))
 		requestUpdate = true
 	}
@@ -1134,19 +1133,16 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
-		d.SetPartial("enabled_cloudwatch_logs_exports")
 		req.CloudwatchLogsExportConfiguration = buildCloudwatchLogsExportConfiguration(d)
 		requestUpdate = true
 	}
 
 	if d.HasChange("scaling_configuration") {
-		d.SetPartial("scaling_configuration")
 		req.ScalingConfiguration = expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}), d.Get("engine_mode").(string))
 		requestUpdate = true
 	}
 
 	if d.HasChange("enable_http_endpoint") {
-		d.SetPartial("enable_http_endpoint")
 		req.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
 		requestUpdate = true
 	}
@@ -1242,8 +1238,6 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
-		} else {
-			d.SetPartial("tags")
 		}
 	}
 

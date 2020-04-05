@@ -266,8 +266,6 @@ func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interfac
 func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
-
 	req := &ec2.ModifyClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(d.Id()),
 	}
@@ -334,7 +332,6 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	d.Partial(false)
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
 }
 

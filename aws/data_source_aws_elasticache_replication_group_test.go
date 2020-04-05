@@ -63,7 +63,14 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_ClusterMode(t *testing.T) {
 
 func testAccDataSourceAwsElasticacheReplicationGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q

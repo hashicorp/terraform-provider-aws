@@ -196,16 +196,12 @@ func resourceAwsDbSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsDbSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	d.Partial(true)
-
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS DB Security Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
 
 	if d.HasChange("ingress") {
@@ -243,7 +239,6 @@ func resourceAwsDbSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 	}
-	d.Partial(false)
 
 	return resourceAwsDbSecurityGroupRead(d, meta)
 }

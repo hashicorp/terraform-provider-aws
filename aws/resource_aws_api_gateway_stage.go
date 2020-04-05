@@ -131,8 +131,6 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
 
-	d.Partial(true)
-
 	input := apigateway.CreateStageInput{
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
 		StageName:    aws.String(d.Get("stage_name").(string)),
@@ -175,13 +173,6 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(fmt.Sprintf("ags-%s-%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)))
 
-	d.SetPartial("rest_api_id")
-	d.SetPartial("stage_name")
-	d.SetPartial("deployment_id")
-	d.SetPartial("description")
-	d.SetPartial("variables")
-	d.SetPartial("xray_tracing_enabled")
-
 	if waitForCache && *out.CacheClusterStatus != apigateway.CacheClusterStatusNotAvailable {
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{
@@ -201,10 +192,6 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 			return err
 		}
 	}
-
-	d.SetPartial("cache_cluster_enabled")
-	d.SetPartial("cache_cluster_size")
-	d.Partial(false)
 
 	if _, ok := d.GetOk("client_certificate_id"); ok {
 		return resourceAwsApiGatewayStageUpdate(d, meta)
@@ -287,8 +274,6 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
-
-	d.Partial(true)
 
 	stageArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -395,12 +380,6 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Updating API Gateway Stage failed: %s", err)
 	}
 
-	d.SetPartial("client_certificate_id")
-	d.SetPartial("deployment_id")
-	d.SetPartial("description")
-	d.SetPartial("xray_tracing_enabled")
-	d.SetPartial("variables")
-
 	if waitForCache && *out.CacheClusterStatus != apigateway.CacheClusterStatusNotAvailable {
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{
@@ -424,10 +403,6 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 			return err
 		}
 	}
-
-	d.SetPartial("cache_cluster_enabled")
-	d.SetPartial("cache_cluster_size")
-	d.Partial(false)
 
 	return resourceAwsApiGatewayStageRead(d, meta)
 }

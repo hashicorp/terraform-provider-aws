@@ -214,8 +214,6 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	d.Partial(true)
-
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
@@ -223,7 +221,6 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 			return fmt.Errorf("error updating Sagemaker Notebook Instance (%s) tags: %s", d.Id(), err)
 		}
 	}
-	d.SetPartial("tags")
 
 	hasChanged := false
 	// Update
@@ -324,8 +321,6 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 			}
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsSagemakerNotebookInstanceRead(d, meta)
 }

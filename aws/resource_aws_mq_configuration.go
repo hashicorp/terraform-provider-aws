@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -53,6 +54,9 @@ func resourceAwsMqConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					mq.EngineTypeActivemq,
+				}, true),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -106,7 +110,7 @@ func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) er
 		ConfigurationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "NotFoundException", "") {
+		if isAWSErr(err, mq.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] MQ Configuration %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -136,11 +140,7 @@ func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("data", string(b))
 
-	tags, err := keyvaluetags.MqListTags(conn, aws.StringValue(out.Arn))
-	if err != nil {
-		return fmt.Errorf("error listing tags for MQ Configuration (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.MqKeyValueTags(out.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
