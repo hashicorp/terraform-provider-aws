@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -203,6 +204,37 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_Minimal(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
@@ -265,10 +297,19 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
+func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 	var v wafv2.WebACL
+	var idx int
 	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_web_acl.test"
+	excludedRules := []interface{}{
+		map[string]interface{}{
+			"name": "rule-to-exclude-b",
+		},
+		map[string]interface{}{
+			"name": "rule-to-exclude-a",
+		},
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -276,21 +317,48 @@ func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLConfig_Minimal(webACLName),
+				Config: testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					computeWafv2RuleGroupRefStatementIndex(&v, &idx, []interface{}{}),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.name", &idx, "rule-1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.count.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.none.#", &idx, "0"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.#", &idx, "1"),
+					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.arn", &idx, "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.excluded_rule.#", &idx, "0"),
 				),
+			},
+			{
+				Config: testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement_Update(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					computeWafv2RuleGroupRefStatementIndex(&v, &idx, excludedRules),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.name", &idx, "rule-1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.count.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.none.#", &idx, "0"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.#", &idx, "1"),
+					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.arn", &idx, "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.excluded_rule.#", &idx, "2"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.excluded_rule.0.name", &idx, "rule-to-exclude-b"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.excluded_rule.1.name", &idx, "rule-to-exclude-a"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2WebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -342,6 +410,64 @@ func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccMatchResourceAttrArnWithIndexesAddr(name, format string, idx *int, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccMatchResourceAttrRegionalARN(name, fmt.Sprintf(format, *idx), arnService, arnResourceRegexp)(s)
+	}
+}
+
+// Calculates the index which isn't static because ARN is generated as part of the test
+func computeWafv2RuleGroupRefStatementIndex(r *wafv2.WebACL, idx *int, e []interface{}) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ruleResource := resourceAwsWafv2WebACL().Schema["rule"].Elem.(*schema.Resource)
+		rule := map[string]interface{}{
+			"name":     "rule-1",
+			"priority": 1,
+			"action":   []interface{}{},
+			"override_action": []interface{}{
+				map[string]interface{}{
+					"none":  []interface{}{},
+					"count": make([]interface{}, 1),
+				},
+			},
+			"statement": []interface{}{
+				map[string]interface{}{
+					"and_statement":                         []interface{}{},
+					"byte_match_statement":                  []interface{}{},
+					"geo_match_statement":                   []interface{}{},
+					"ip_set_reference_statement":            []interface{}{},
+					"managed_rule_group_statement":          []interface{}{},
+					"not_statement":                         []interface{}{},
+					"or_statement":                          []interface{}{},
+					"rate_based_statement":                  []interface{}{},
+					"regex_pattern_set_reference_statement": []interface{}{},
+					"rule_group_reference_statement": []interface{}{
+						map[string]interface{}{
+							"arn":           *r.Rules[0].Statement.RuleGroupReferenceStatement.ARN,
+							"excluded_rule": e,
+						},
+					},
+					"size_constraint_statement": []interface{}{},
+					"sqli_match_statement":      []interface{}{},
+					"xss_match_statement":       []interface{}{},
+				},
+			},
+			"visibility_config": []interface{}{
+				map[string]interface{}{
+					"cloudwatch_metrics_enabled": false,
+					"metric_name":                "friendly-rule-metric-name",
+					"sampled_requests_enabled":   false,
+				},
+			},
+		}
+
+		f := schema.HashResource(ruleResource)
+		*idx = f(rule)
+
+		return nil
+	}
 }
 
 func testAccCheckAwsWafv2WebACLDestroy(s *terraform.State) error {
@@ -686,6 +812,191 @@ resource "aws_wafv2_web_acl" "test" {
           geo_match_statement {
             country_codes = ["US", "NL"]
           }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name, name)
+}
+
+func testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 10
+  name = "rule-group-%s"
+  scope = "REGIONAL"
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name = "%s"
+  scope = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      rule_group_reference_statement {
+        arn = aws_wafv2_rule_group.test.arn
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name, name)
+}
+
+func testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement_Update(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 10
+  name = "rule-group-%s"
+  scope = "REGIONAL"
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["NL"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  rule {
+    name = "rule-to-exclude-a"
+    priority = 10
+
+    action {
+      allow {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  rule {
+    name = "rule-to-exclude-b"
+    priority = 15
+
+    action {
+      allow {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["GB"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name = "%s"
+  scope = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      rule_group_reference_statement {
+        arn = aws_wafv2_rule_group.test.arn
+
+        excluded_rule {
+          name = "rule-to-exclude-b"
+        }
+
+        excluded_rule {
+          name = "rule-to-exclude-a"
         }
       }
     }

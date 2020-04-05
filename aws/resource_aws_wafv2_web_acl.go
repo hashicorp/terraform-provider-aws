@@ -441,7 +441,7 @@ func wafv2RuleGroupReferenceStatementSchema() *schema.Schema {
 				"arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.IntBetween(20, 2048),
+					ValidateFunc: validation.StringLenBetween(20, 2048),
 				},
 				"excluded_rule": wafv2ExcludedRuleSchema(),
 			},
@@ -572,6 +572,10 @@ func expandWafv2WebACLStatement(m map[string]interface{}) *wafv2.Statement {
 		statement.RegexPatternSetReferenceStatement = expandWafv2RegexPatternSetReferenceStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["rule_group_reference_statement"]; ok {
+		statement.RuleGroupReferenceStatement = expandWafv2RuleGroupReferenceStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["size_constraint_statement"]; ok {
 		statement.SizeConstraintStatement = expandWafv2SizeConstraintStatement(v.([]interface{}))
 	}
@@ -617,6 +621,19 @@ func expandWafv2RateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 	}
 
 	return r
+}
+
+func expandWafv2RuleGroupReferenceStatement(l []interface{}) *wafv2.RuleGroupReferenceStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.RuleGroupReferenceStatement{
+		ARN:           aws.String(m["arn"].(string)),
+		ExcludedRules: expandWafv2ExcludedRules(m["excluded_rule"].([]interface{})),
+	}
 }
 
 func expandWafv2ExcludedRules(l []interface{}) []*wafv2.ExcludedRule {
@@ -695,6 +712,10 @@ func flattenWafv2WebACLStatement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.RegexPatternSetReferenceStatement != nil {
 		m["regex_pattern_set_reference_statement"] = flattenWafv2RegexPatternSetReferenceStatement(s.RegexPatternSetReferenceStatement)
+	}
+
+	if s.RuleGroupReferenceStatement != nil {
+		m["rule_group_reference_statement"] = flattenWafv2RuleGroupReferenceStatement(s.RuleGroupReferenceStatement)
 	}
 
 	if s.SizeConstraintStatement != nil {
@@ -791,6 +812,19 @@ func flattenWafv2RateBasedStatement(r *wafv2.RateBasedStatement) interface{} {
 
 	if r.ScopeDownStatement != nil {
 		m["scope_down_statement"] = []interface{}{flattenWafv2Statement(r.ScopeDownStatement)}
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2RuleGroupReferenceStatement(r *wafv2.RuleGroupReferenceStatement) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"excluded_rule": flattenWafv2ExcludedRules(r.ExcludedRules),
+		"arn":           aws.StringValue(r.ARN),
 	}
 
 	return []interface{}{m}
