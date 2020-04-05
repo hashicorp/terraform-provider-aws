@@ -203,6 +203,68 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_RateBasedStatement(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.name", "rule-1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.action.0.allow.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.action.0.count.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.statement.0.rate_based_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.statement.0.rate_based_statement.0.aggregate_key_type", "IP"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.statement.0.rate_based_statement.0.limit", "50000"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.statement.0.rate_based_statement.0.scope_down_statement.#", "0"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2WebACLConfig_RateBasedStatement_Update(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.name", "rule-1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.action.0.allow.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.action.0.count.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.aggregate_key_type", "IP"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.scope_down_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0", "US"),
+					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1", "NL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2WebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
@@ -525,6 +587,105 @@ resource "aws_wafv2_web_acl" "test" {
 
 		excluded_rule {
           name = "NoUserAgent_HEADER"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name, name)
+}
+
+func testAccAwsWafv2WebACLConfig_RateBasedStatement(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name = "%s"
+  description = "%s"
+  scope = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit = 50000
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name, name)
+}
+
+func testAccAwsWafv2WebACLConfig_RateBasedStatement_Update(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name = "%s"
+  description = "%s"
+  scope = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit = 10000
+        aggregate_key_type = "IP"
+
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["US", "NL"]
+          }
         }
       }
     }

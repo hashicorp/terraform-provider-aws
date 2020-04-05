@@ -335,7 +335,7 @@ func wafv2WebACLRootStatementSchema(level int) *schema.Schema {
 				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(),
 				"not_statement":                         wafv2StatementSchema(level - 1),
 				"or_statement":                          wafv2StatementSchema(level - 1),
-				"rate_based_statement":                  wafv2RateBasedSchema(level - 1),
+				"rate_based_statement":                  wafv2RateBasedStatementSchema(level - 1),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"rule_group_reference_statement":        wafv2RuleGroupReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
@@ -385,7 +385,7 @@ func wafv2ExcludedRuleSchema() *schema.Schema {
 	}
 }
 
-func wafv2RateBasedSchema(level int) *schema.Schema {
+func wafv2RateBasedStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -403,7 +403,29 @@ func wafv2RateBasedSchema(level int) *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.IntBetween(100, 2000000000.),
 				},
-				"scope_down_statement": wafv2StatementSchema(level - 1),
+				"scope_down_statement": wafv2ScopeDownStatementSchema(level - 1),
+			},
+		},
+	}
+}
+
+func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"and_statement":                         wafv2StatementSchema(level - 1),
+				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
+				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
+				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
+				"not_statement":                         wafv2StatementSchema(level - 1),
+				"or_statement":                          wafv2StatementSchema(level - 1),
+				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
+				"size_constraint_statement":             wafv2SizeConstraintSchema(),
+				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
+				"xss_match_statement":                   wafv2XssMatchStatementSchema(),
 			},
 		},
 	}
@@ -542,6 +564,10 @@ func expandWafv2WebACLStatement(m map[string]interface{}) *wafv2.Statement {
 		statement.OrStatement = expandWafv2OrStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["rate_based_statement"]; ok {
+		statement.RateBasedStatement = expandWafv2RateBasedStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
 		statement.RegexPatternSetReferenceStatement = expandWafv2RegexPatternSetReferenceStatement(v.([]interface{}))
 	}
@@ -572,6 +598,25 @@ func expandWafv2ManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGro
 		Name:          aws.String(m["name"].(string)),
 		VendorName:    aws.String(m["vendor_name"].(string)),
 	}
+}
+
+func expandWafv2RateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	r := &wafv2.RateBasedStatement{
+		AggregateKeyType: aws.String(m["aggregate_key_type"].(string)),
+		Limit:            aws.Int64(int64(m["limit"].(int))),
+	}
+
+	s := m["scope_down_statement"].([]interface{})
+	if len(s) > 0 && s[0] != nil {
+		r.ScopeDownStatement = expandWafv2Statement(s[0].(map[string]interface{}))
+	}
+
+	return r
 }
 
 func expandWafv2ExcludedRules(l []interface{}) []*wafv2.ExcludedRule {
@@ -642,6 +687,10 @@ func flattenWafv2WebACLStatement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.OrStatement != nil {
 		m["or_statement"] = flattenWafv2OrStatement(s.OrStatement)
+	}
+
+	if s.RateBasedStatement != nil {
+		m["rate_based_statement"] = flattenWafv2RateBasedStatement(s.RateBasedStatement)
 	}
 
 	if s.RegexPatternSetReferenceStatement != nil {
@@ -724,6 +773,24 @@ func flattenWafv2ManagedRuleGroupStatement(r *wafv2.ManagedRuleGroupStatement) i
 		"excluded_rule": flattenWafv2ExcludedRules(r.ExcludedRules),
 		"name":          aws.StringValue(r.Name),
 		"vendor_name":   aws.StringValue(r.VendorName),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2RateBasedStatement(r *wafv2.RateBasedStatement) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"limit":                int(aws.Int64Value(r.Limit)),
+		"aggregate_key_type":   aws.StringValue(r.AggregateKeyType),
+		"scope_down_statement": nil,
+	}
+
+	if r.ScopeDownStatement != nil {
+		m["scope_down_statement"] = []interface{}{flattenWafv2Statement(r.ScopeDownStatement)}
 	}
 
 	return []interface{}{m}
