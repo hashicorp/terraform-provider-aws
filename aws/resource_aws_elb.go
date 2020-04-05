@@ -67,11 +67,12 @@ func resourceAwsElb() *schema.Resource {
 			},
 
 			"availability_zones": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
-				Set:      schema.HashString,
+				Type:          schema.TypeSet,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"subnets"},
+				Set:           schema.HashString,
 			},
 
 			"instances": {
@@ -102,11 +103,12 @@ func resourceAwsElb() *schema.Resource {
 			},
 
 			"subnets": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
-				Set:      schema.HashString,
+				Type:          schema.TypeSet,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"availability_zones"},
+				Set:           schema.HashString,
 			},
 
 			"idle_timeout": {
