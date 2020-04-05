@@ -42,6 +42,10 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"default_action": {
 				Type:     schema.TypeList,
 				Required: true,
