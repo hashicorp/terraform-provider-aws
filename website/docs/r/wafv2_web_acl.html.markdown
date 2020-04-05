@@ -16,6 +16,7 @@ This resource is based on `aws_wafv2_rule_group`, check the documentation of the
 
 
 ### Managed Rule
+
 ```hcl
 resource "aws_wafv2_web_acl" "example" {
   name        = "managed-rule-example"
@@ -70,6 +71,7 @@ resource "aws_wafv2_web_acl" "example" {
 ```
 
 ### Rate Based
+
 ```hcl
 resource "aws_wafv2_web_acl" "example" {
   name        = "rate-based-example"
@@ -122,6 +124,7 @@ resource "aws_wafv2_web_acl" "example" {
 ```
 
 ### Rule Group Reference
+
 ```hcl
 resource "aws_wafv2_rule_group" "example" {
   capacity = 10
