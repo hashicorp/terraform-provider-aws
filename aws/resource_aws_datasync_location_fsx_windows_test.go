@@ -48,7 +48,7 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 
 		for _, location := range output.Locations {
 			uri := aws.StringValue(location.LocationUri)
-			if !strings.HasPrefix(uri, "FsxWindows://") {
+			if !strings.HasPrefix(uri, "fsxw://") {
 				log.Printf("[INFO] Skipping DataSync Location FSX Windows: %s", uri)
 				continue
 			}
@@ -59,7 +59,7 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 
 			_, err := conn.DeleteLocation(input)
 
-			if isAWSErr(err, "InvalidRequestException", "not found") {
+			if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
 				continue
 			}
 
@@ -211,11 +211,16 @@ func testAccCheckAWSDataSyncLocationFsxWindowsDestroy(s *terraform.State) error 
 			continue
 		}
 
-		input := &datasync.DescribeLocationFsxWindowsInput{
-			LocationArn: aws.String(rs.Primary.ID),
+		locationArn, _, err := decodeAwsDataSyncLocationFsxWindowsID(rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
-		_, err := conn.DescribeLocationFsxWindows(input)
+		input := &datasync.DescribeLocationFsxWindowsInput{
+			LocationArn: aws.String(locationArn),
+		}
+
+		_, err = conn.DescribeLocationFsxWindows(input)
 
 		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
 			return nil
@@ -236,9 +241,14 @@ func testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName string, locati
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
+		locationArn, _, err := decodeAwsDataSyncLocationFsxWindowsID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
 		input := &datasync.DescribeLocationFsxWindowsInput{
-			LocationArn: aws.String(rs.Primary.ID),
+			LocationArn: aws.String(locationArn),
 		}
 
 		output, err := conn.DescribeLocationFsxWindows(input)

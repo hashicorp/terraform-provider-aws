@@ -110,7 +110,7 @@ func resourceAwsDataSyncLocationFsxWindowsCreate(d *schema.ResourceData, meta in
 		return fmt.Errorf("error creating DataSync Location FsxWindows: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.LocationArn), fsxArn))
+	d.SetId(fmt.Sprintf("%s#%s", aws.StringValue(output.LocationArn), fsxArn))
 
 	return resourceAwsDataSyncLocationFsxWindowsRead(d, meta)
 }
@@ -157,7 +157,7 @@ func resourceAwsDataSyncLocationFsxWindowsRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error setting creation_time: %s", err)
 	}
 
-	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
+	tags, err := keyvaluetags.DatasyncListTags(conn, locationArn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DataSync Location Fsx Windows (%s): %s", d.Id(), err)
@@ -214,7 +214,7 @@ func resourceAwsDataSyncLocationFsxWindowsDelete(d *schema.ResourceData, meta in
 }
 
 func decodeAwsDataSyncLocationFsxWindowsID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
+	parts := strings.Split(id, "#")
 
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn:FsxArn", id)
