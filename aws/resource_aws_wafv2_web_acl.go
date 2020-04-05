@@ -371,11 +371,11 @@ func wafv2ManagedRuleGroupStatementSchema() *schema.Schema {
 
 func wafv2ExcludedRuleSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"type": {
+				"name": {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
@@ -453,9 +453,29 @@ func expandWafv2WebACLRule(m map[string]interface{}) *wafv2.Rule {
 		Name:             aws.String(m["name"].(string)),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Action:           expandWafv2RuleAction(m["action"].([]interface{})),
+		OverrideAction:   expandWafv2OverrideAction(m["override_action"].([]interface{})),
 		Statement:        expandWafv2WebACLRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandWafv2VisibilityConfig(m["visibility_config"].([]interface{})),
 	}
+}
+
+func expandWafv2OverrideAction(l []interface{}) *wafv2.OverrideAction {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	action := &wafv2.OverrideAction{}
+
+	if v, ok := m["count"]; ok && len(v.([]interface{})) > 0 {
+		action.Count = &wafv2.CountAction{}
+	}
+
+	if v, ok := m["none"]; ok && len(v.([]interface{})) > 0 {
+		action.None = &wafv2.NoneAction{}
+	}
+
+	return action
 }
 
 func expandWafv2DefaultAction(l []interface{}) *wafv2.DefaultAction {
@@ -510,6 +530,10 @@ func expandWafv2WebACLStatement(m map[string]interface{}) *wafv2.Statement {
 		statement.GeoMatchStatement = expandWafv2GeoMatchStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["managed_rule_group_statement"]; ok {
+		statement.ManagedRuleGroupStatement = expandWafv2ManagedRuleGroupStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["not_statement"]; ok {
 		statement.NotStatement = expandWafv2NotStatement(v.([]interface{}))
 	}
@@ -535,6 +559,46 @@ func expandWafv2WebACLStatement(m map[string]interface{}) *wafv2.Statement {
 	}
 
 	return statement
+}
+
+func expandWafv2ManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	return &wafv2.ManagedRuleGroupStatement{
+		ExcludedRules: expandWafv2ExcludedRules(m["excluded_rule"].([]interface{})),
+		Name:          aws.String(m["name"].(string)),
+		VendorName:    aws.String(m["vendor_name"].(string)),
+	}
+}
+
+func expandWafv2ExcludedRules(l []interface{}) []*wafv2.ExcludedRule {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	rules := make([]*wafv2.ExcludedRule, 0)
+
+	for _, rule := range l {
+		if rule == nil {
+			continue
+		}
+		rules = append(rules, expandWafv2ExcludedRule(rule.(map[string]interface{})))
+	}
+
+	return rules
+}
+
+func expandWafv2ExcludedRule(m map[string]interface{}) *wafv2.ExcludedRule {
+	if m == nil {
+		return nil
+	}
+
+	return &wafv2.ExcludedRule{
+		Name: aws.String(m["name"].(string)),
+	}
 }
 
 func flattenWafv2WebACLRootStatement(s *wafv2.Statement) interface{} {
@@ -566,6 +630,10 @@ func flattenWafv2WebACLStatement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.GeoMatchStatement != nil {
 		m["geo_match_statement"] = flattenWafv2GeoMatchStatement(s.GeoMatchStatement)
+	}
+
+	if s.ManagedRuleGroupStatement != nil {
+		m["managed_rule_group_statement"] = flattenWafv2ManagedRuleGroupStatement(s.ManagedRuleGroupStatement)
 	}
 
 	if s.NotStatement != nil {
@@ -600,6 +668,7 @@ func flattenWafv2WebACLRules(r []*wafv2.Rule) interface{} {
 	for i, rule := range r {
 		m := make(map[string]interface{})
 		m["action"] = flattenWafv2RuleAction(rule.Action)
+		m["override_action"] = flattenWafv2OverrideAction(rule.OverrideAction)
 		m["name"] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
 		m["statement"] = flattenWafv2WebACLRootStatement(rule.Statement)
@@ -608,6 +677,24 @@ func flattenWafv2WebACLRules(r []*wafv2.Rule) interface{} {
 	}
 
 	return out
+}
+
+func flattenWafv2OverrideAction(a *wafv2.OverrideAction) interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if a.Count != nil {
+		m["count"] = make([]map[string]interface{}, 1)
+	}
+
+	if a.None != nil {
+		m["none"] = make([]map[string]interface{}, 1)
+	}
+
+	return []interface{}{m}
 }
 
 func flattenWafv2DefaultAction(a *wafv2.DefaultAction) interface{} {
@@ -626,4 +713,29 @@ func flattenWafv2DefaultAction(a *wafv2.DefaultAction) interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func flattenWafv2ManagedRuleGroupStatement(r *wafv2.ManagedRuleGroupStatement) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"excluded_rule": flattenWafv2ExcludedRules(r.ExcludedRules),
+		"name":          aws.StringValue(r.Name),
+		"vendor_name":   aws.StringValue(r.VendorName),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2ExcludedRules(r []*wafv2.ExcludedRule) interface{} {
+	out := make([]map[string]interface{}, len(r))
+	for i, rule := range r {
+		m := make(map[string]interface{})
+		m["name"] = aws.StringValue(rule.Name)
+		out[i] = m
+	}
+
+	return out
 }

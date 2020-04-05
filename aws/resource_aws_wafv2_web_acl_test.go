@@ -143,6 +143,66 @@ func TestAccAwsWafv2WebACL_ChangeNameForceNew(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.name", "rule-1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.override_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.override_action.0.count.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.override_action.0.none.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.statement.0.managed_rule_group_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.statement.0.managed_rule_group_statement.0.name", "AWSManagedRulesCommonRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.statement.0.managed_rule_group_statement.0.vendor_name", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.statement.0.managed_rule_group_statement.0.excluded_rule.#", "0"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement_Update(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.name", "rule-1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.override_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.override_action.0.count.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.override_action.0.none.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.0.name", "AWSManagedRulesCommonRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.0.vendor_name", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.0.excluded_rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.0.excluded_rule.0.name", "SizeRestrictions_QUERYSTRING"),
+					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.0.excluded_rule.1.name", "NoUserAgent_HEADER"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2WebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
@@ -386,6 +446,108 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, name)
+}
+
+func testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name = "%s"
+  description = "%s"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name, name)
+}
+
+func testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement_Update(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name = "%s"
+  description = "%s"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name = "rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+
+		excluded_rule {
+          name = "SizeRestrictions_QUERYSTRING"
+        }
+
+		excluded_rule {
+          name = "NoUserAgent_HEADER"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name = "friendly-rule-metric-name"
+      sampled_requests_enabled = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name = "friendly-metric-name"
+    sampled_requests_enabled = false
+  }
+}
+`, name, name)
 }
 
 func testAccAwsWafv2WebACLConfig_Minimal(name string) string {
