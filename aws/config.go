@@ -382,7 +382,7 @@ func (c *Config) Client() (interface{}, error) {
 			{Name: "Terraform", Version: c.terraformVersion,
 				Extra: []string{"+https://www.terraform.io"}},
 		},
-		StopOnExpiredCreds:      c.StopOnExpiredCreds,
+		StopOnExpiredCreds: c.StopOnExpiredCreds,
 	}
 
 	sess, accountID, partition, err := awsbase.GetSessionWithAccountIDAndPartition(awsbaseConfig)
