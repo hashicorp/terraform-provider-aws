@@ -246,11 +246,11 @@ func testAccCheckAWSWafv2IPSetExists(n string, v *wafv2.IPSet) resource.TestChec
 func testAccAwsWafv2IPSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name = "%s"
-  description = "%s"
-  scope = "REGIONAL"
+  name               = "%s"
+  description        = "%s"
+  scope              = "REGIONAL"
   ip_address_version = "IPV4"
-  addresses = ["1.2.3.4/32", "5.6.7.8/32"]
+  addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
 
   tags = {
     Tag1 = "Value1"
@@ -263,11 +263,11 @@ resource "aws_wafv2_ip_set" "ip_set" {
 func testAccAwsWafv2IPSetConfigUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name = "%s"
-  description = "Updated"
-  scope = "REGIONAL"
+  name               = "%s"
+  description        = "Updated"
+  scope              = "REGIONAL"
   ip_address_version = "IPV4"
-  addresses = ["1.1.1.1/32", "2.2.2.2/32", "3.3.3.3/32"]
+  addresses          = ["1.1.1.1/32", "2.2.2.2/32", "3.3.3.3/32"]
 }
 `, name)
 }
@@ -275,8 +275,8 @@ resource "aws_wafv2_ip_set" "ip_set" {
 func testAccAwsWafv2IPSetConfigMinimal(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name = "%s"
-  scope = "REGIONAL"
+  name               = "%s"
+  scope              = "REGIONAL"
   ip_address_version = "IPV4"
 }
 `, name)
@@ -285,14 +285,14 @@ resource "aws_wafv2_ip_set" "ip_set" {
 func testAccAwsWafv2IPSetConfigOneTag(name, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name = "%s"
-  description = "%s"
-  scope = "REGIONAL"
+  name               = "%s"
+  description        = "%s"
+  scope              = "REGIONAL"
   ip_address_version = "IPV4"
-  addresses = ["1.2.3.4/32", "5.6.7.8/32"]
+  addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
 
   tags = {
-    %q = %q
+    "%s" = "%s"
   }
 }
 `, name, name, tagKey, tagValue)
@@ -301,15 +301,15 @@ resource "aws_wafv2_ip_set" "ip_set" {
 func testAccAwsWafv2IPSetConfigTwoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name = "%s"
-  description = "%s"
-  scope = "REGIONAL"
+  name               = "%s"
+  description        = "%s"
+  scope              = "REGIONAL"
   ip_address_version = "IPV4"
-  addresses = ["1.2.3.4/32", "5.6.7.8/32"]
+  addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
 
   tags = {
-    %q = %q
-    %q = %q
+    "%s" = "%s"
+    "%s" = "%s"
   }
 }
 `, name, name, tag1Key, tag1Value, tag2Key, tag2Value)
