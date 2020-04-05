@@ -537,9 +537,9 @@ func testAccCheckAwsWafv2WebACLExists(n string, v *wafv2.WebACL) resource.TestCh
 func testAccAwsWafv2WebACLConfig_Basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   default_action {
     allow {}
@@ -552,8 +552,8 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -562,16 +562,16 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_BasicUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name        = "%s"
   description = "Updated"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   default_action {
     block {}
   }
 
   rule {
-    name = "rule-2"
+    name     = "rule-2"
     priority = 10
 
     action {
@@ -581,7 +581,7 @@ resource "aws_wafv2_web_acl" "test" {
     statement {
       size_constraint_statement {
         comparison_operator = "LT"
-        size = 50
+        size                = 50
 
         field_to_match {
           query_string {}
@@ -589,25 +589,25 @@ resource "aws_wafv2_web_acl" "test" {
 
         text_transformation {
           priority = 5
-          type = "NONE"
+          type     = "NONE"
         }
 
         text_transformation {
           priority = 2
-          type = "CMD_LINE"
+          type     = "CMD_LINE"
         }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
@@ -622,15 +622,15 @@ resource "aws_wafv2_web_acl" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -639,16 +639,16 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   default_action {
     allow {}
   }
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     override_action {
@@ -657,15 +657,15 @@ resource "aws_wafv2_web_acl" "test" {
 
     statement {
       managed_rule_group_statement {
-        name = "AWSManagedRulesCommonRuleSet"
+        name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
@@ -676,8 +676,8 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -686,16 +686,16 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement_Update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   default_action {
     allow {}
   }
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     override_action {
@@ -704,14 +704,14 @@ resource "aws_wafv2_web_acl" "test" {
 
     statement {
       managed_rule_group_statement {
-        name = "AWSManagedRulesCommonRuleSet"
+        name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
 
-		excluded_rule {
+        excluded_rule {
           name = "SizeRestrictions_QUERYSTRING"
         }
 
-		excluded_rule {
+        excluded_rule {
           name = "NoUserAgent_HEADER"
         }
       }
@@ -719,8 +719,8 @@ resource "aws_wafv2_web_acl" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
@@ -731,8 +731,8 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -741,16 +741,16 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_RateBasedStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   default_action {
     block {}
   }
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
@@ -765,8 +765,8 @@ resource "aws_wafv2_web_acl" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
@@ -777,8 +777,8 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -787,16 +787,16 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_RateBasedStatement_Update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   default_action {
     block {}
   }
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
@@ -805,7 +805,7 @@ resource "aws_wafv2_web_acl" "test" {
 
     statement {
       rate_based_statement {
-        limit = 10000
+        limit              = 10000
         aggregate_key_type = "IP"
 
         scope_down_statement {
@@ -818,8 +818,8 @@ resource "aws_wafv2_web_acl" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
@@ -830,8 +830,8 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -841,18 +841,18 @@ func testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement(name string) string
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 10
-  name = "rule-group-%s"
-  scope = "REGIONAL"
+  name     = "rule-group-%s"
+  scope    = "REGIONAL"
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name  = "%s"
   scope = "REGIONAL"
 
   default_action {
@@ -860,7 +860,7 @@ resource "aws_wafv2_web_acl" "test" {
   }
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     override_action {
@@ -875,8 +875,8 @@ resource "aws_wafv2_web_acl" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
@@ -887,8 +887,8 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -898,11 +898,11 @@ func testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement_Update(name string)
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 10
-  name = "rule-group-%s"
-  scope = "REGIONAL"
+  name     = "rule-group-%s"
+  scope    = "REGIONAL"
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     action {
@@ -917,13 +917,13 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   rule {
-    name = "rule-to-exclude-a"
+    name     = "rule-to-exclude-a"
     priority = 10
 
     action {
@@ -938,13 +938,13 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   rule {
-    name = "rule-to-exclude-b"
+    name     = "rule-to-exclude-b"
     priority = 15
 
     action {
@@ -959,20 +959,20 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name  = "%s"
   scope = "REGIONAL"
 
   default_action {
@@ -980,7 +980,7 @@ resource "aws_wafv2_web_acl" "test" {
   }
 
   rule {
-    name = "rule-1"
+    name     = "rule-1"
     priority = 1
 
     override_action {
@@ -1003,8 +1003,8 @@ resource "aws_wafv2_web_acl" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "friendly-rule-metric-name"
-      sampled_requests_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
     }
   }
 
@@ -1015,8 +1015,8 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, name)
@@ -1025,7 +1025,7 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_Minimal(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name  = "%s"
   scope = "REGIONAL"
 
   default_action {
@@ -1034,8 +1034,8 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -1044,9 +1044,9 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_OneTag(name, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   default_action {
     allow {}
@@ -1054,12 +1054,12 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 
   tags = {
-    %q = %q
+    "%s" = "%s"
   }
 }
 `, name, name, tagKey, tagValue)
@@ -1068,9 +1068,9 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_TwoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   default_action {
     allow {}
@@ -1078,13 +1078,13 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name = "friendly-metric-name"
-    sampled_requests_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    "%s" = "%s"
+    "%s" = "%s"
   }
 }
 `, name, name, tag1Key, tag1Value, tag2Key, tag2Value)
