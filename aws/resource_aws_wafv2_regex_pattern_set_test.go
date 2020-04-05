@@ -240,9 +240,9 @@ func testAccCheckAWSWafv2RegexPatternSetExists(n string, v *wafv2.RegexPatternSe
 func testAccAwsWafv2RegexPatternSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   regular_expression_list {
     regex_string = "one"
@@ -263,9 +263,9 @@ resource "aws_wafv2_regex_pattern_set" "test" {
 func testAccAwsWafv2RegexPatternSetConfigUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-  name = "%s"
+  name        = "%s"
   description = "Updated"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   regular_expression_list {
     regex_string = "one"
@@ -285,7 +285,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
 func testAccAwsWafv2RegexPatternSetConfigMinimal(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-  name = "%s"
+  name  = "%s"
   scope = "REGIONAL"
 
   regular_expression_list {
@@ -298,9 +298,9 @@ resource "aws_wafv2_regex_pattern_set" "test" {
 func testAccAwsWafv2RegexPatternSetConfigOneTag(name, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   regular_expression_list {
     regex_string = "one"
@@ -311,7 +311,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   }
 
   tags = {
-    %q = %q
+    "%s" = "%s"
   }
 }
 `, name, name, tagKey, tagValue)
@@ -320,17 +320,17 @@ resource "aws_wafv2_regex_pattern_set" "test" {
 func testAccAwsWafv2RegexPatternSetConfigTwoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   regular_expression_list {
     regex_string = "one"
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    "%s" = "%s"
+    "%s" = "%s"
   }
 }
 `, name, name, tag1Key, tag1Value, tag2Key, tag2Value)
