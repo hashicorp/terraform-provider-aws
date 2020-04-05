@@ -799,7 +799,7 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 	return resourceAwsCloudFrontDistributionRead(d, meta)
 }
 
-func resourceAwsCloudFrontDistributionReadBase(d *schema.ResourceData, meta interface{}, flatten bool) error {
+func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 	params := &cloudfront.GetDistributionInput{
 		Id: aws.String(d.Id()),
@@ -817,11 +817,9 @@ func resourceAwsCloudFrontDistributionReadBase(d *schema.ResourceData, meta inte
 	}
 
 	// Update attributes from DistributionConfig
-	if flatten {
-		err = flattenDistributionConfig(d, resp.Distribution.DistributionConfig)
-		if err != nil {
-			return err
-		}
+	err = flattenDistributionConfig(d, resp.Distribution.DistributionConfig)
+	if err != nil {
+		return err
 	}
 
 	// Update other attributes outside of DistributionConfig
@@ -845,10 +843,6 @@ func resourceAwsCloudFrontDistributionReadBase(d *schema.ResourceData, meta inte
 	}
 
 	return nil
-}
-
-func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsCloudFrontDistributionReadBase(d, meta, true)
 }
 
 func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interface{}) error {

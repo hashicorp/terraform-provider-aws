@@ -14,7 +14,7 @@ Use this data source to retrieve information about a CloudFront distribution.
 
 ```hcl
 data "aws_cloudfront_distribution" "test" {
-  id = "${aws_cloudfront_distribution.s3_distribution.id}"
+  id = "EDFDVBD632BHDS5"
 }
 
 ```
