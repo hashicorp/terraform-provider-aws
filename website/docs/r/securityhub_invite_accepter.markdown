@@ -1,7 +1,7 @@
 ---
+subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_invite_accepter"
-sidebar_current: "docs-aws-resource-securityhub-invite-accepter"
 description: |-
   Accepts a Security Hub invitation.
 ---
