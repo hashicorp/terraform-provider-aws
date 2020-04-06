@@ -124,7 +124,7 @@ func resourceAwsDbProxy() *schema.Resource {
 }
 
 func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
-	rdsconn := meta.(*AWSClient).rdsconn
+	conn := meta.(*AWSClient).rdsconn
 	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags()
 
 	params := rds.CreateDBProxyInput{
@@ -153,7 +153,7 @@ func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Create DB Proxy: %#v", params)
-	resp, err := rdsconn.CreateDBProxy(&params)
+	resp, err := conn.CreateDBProxy(&params)
 	if err != nil {
 		return fmt.Errorf("Error creating DB Proxy: %s", err)
 	}
@@ -162,7 +162,37 @@ func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resp.DBProxy.DBProxyArn)
 	log.Printf("[INFO] DB Proxy ID: %s", d.Id())
 
+	stateChangeConf := &resource.StateChangeConf{
+		Pending: []string{rds.DBProxyStatusCreating},
+		Target:  []string{rds.DBProxyStatusAvailable},
+		Refresh: resourceAwsDbProxyRefreshFunc(conn, d.Id()),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	_, err = stateChangeConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Error waiting for DB Proxy creation: %s", err)
+	}
+
 	return resourceAwsDbProxyRead(d, meta)
+}
+
+func resourceAwsDbProxyRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeDBProxies(&rds.DescribeDBProxiesInput{
+			DBProxyName: aws.String(proxyName),
+		})
+
+		if err != nil {
+			if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+				return 42, "", nil
+			}
+			return 42, "", err
+		}
+
+		dbProxy := resp.DBProxies[0]
+		return dbProxy, *dbProxy.Status, nil
+	}
 }
 
 func expandDbProxyAuth(l []interface{}) []*rds.UserAuthConfig {
@@ -208,13 +238,13 @@ func expandDbProxyAuth(l []interface{}) []*rds.UserAuthConfig {
 }
 
 func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
-	rdsconn := meta.(*AWSClient).rdsconn
+	conn := meta.(*AWSClient).rdsconn
 
 	params := rds.DescribeDBProxiesInput{
 		DBProxyName: aws.String(d.Id()),
 	}
 
-	resp, err := rdsconn.DescribeDBProxies(&params)
+	resp, err := conn.DescribeDBProxies(&params)
 	if err != nil {
 		if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
@@ -229,19 +259,19 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find DB Proxy: %#v", resp.DBProxies)
 	}
 
-	v := resp.DBProxies[0]
+	dbProxy := resp.DBProxies[0]
 
-	d.Set("arn", aws.StringValue(v.DBProxyArn))
-	d.Set("name", v.DBProxyName)
-	d.Set("debug_logging", v.DebugLogging)
-	d.Set("engine_family", v.EngineFamily)
-	d.Set("idle_client_timeout", v.IdleClientTimeout)
-	d.Set("require_tls", v.RequireTLS)
-	d.Set("role_arn", v.RoleArn)
-	d.Set("vpc_subnet_ids", flattenStringSet(v.VpcSubnetIds))
-	d.Set("security_group_ids", flattenStringSet(v.VpcSecurityGroupIds))
+	d.Set("arn", aws.StringValue(dbProxy.DBProxyArn))
+	d.Set("name", dbProxy.DBProxyName)
+	d.Set("debug_logging", dbProxy.DebugLogging)
+	d.Set("engine_family", dbProxy.EngineFamily)
+	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
+	d.Set("require_tls", dbProxy.RequireTLS)
+	d.Set("role_arn", dbProxy.RoleArn)
+	d.Set("vpc_subnet_ids", flattenStringSet(dbProxy.VpcSubnetIds))
+	d.Set("security_group_ids", flattenStringSet(dbProxy.VpcSecurityGroupIds))
 
-	tags, err := keyvaluetags.RdsListTags(rdsconn, d.Get("arn").(string))
+	tags, err := keyvaluetags.RdsListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("Error listing tags for RDS DB Proxy (%s): %s", d.Get("arn").(string), err)
@@ -255,12 +285,12 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
-	rdsconn := meta.(*AWSClient).rdsconn
+	conn := meta.(*AWSClient).rdsconn
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.RdsUpdateTags(rdsconn, d.Get("arn").(string), o, n); err != nil {
+		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("Error updating RDS DB Proxy (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
@@ -270,25 +300,26 @@ func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsDbProxyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+
 	params := rds.DeleteDBProxyInput{
 		DBProxyName: aws.String(d.Id()),
 	}
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDBProxy(&params)
-		if err != nil {
-			if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") || isAWSErr(err, rds.ErrCodeInvalidDBProxyStateFault, "") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteDBProxy(&params)
-	}
+	_, err := conn.DeleteDBProxy(&params)
 	if err != nil {
 		return fmt.Errorf("Error deleting DB Proxy: %s", err)
 	}
+
+	stateChangeConf := &resource.StateChangeConf{
+		Pending: []string{rds.DBProxyStatusDeleting},
+		Refresh: resourceAwsDbProxyRefreshFunc(conn, d.Id()),
+		Timeout: d.Timeout(schema.TimeoutDelete),
+	}
+
+	_, err = stateChangeConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Error waiting for DB Proxy deletion: %s", err)
+	}
+
 	return nil
 }
 
