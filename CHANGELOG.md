@@ -1,4 +1,9 @@
 ## 2.57.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudfront_distribution` [GH-6468]
+
 ## 2.56.0 (April 03, 2020)
 
 NOTES:
