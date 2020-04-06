@@ -1,12 +1,12 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_activation"
-sidebar_current: "docs-aws-resource-ssm-activation"
 description: |-
   Registers an on-premises server or virtual machine with Amazon EC2 so that it can be managed using Run Command.
 ---
 
-# aws_ssm_activation
+# Resource: aws_ssm_activation
 
 Registers an on-premises server or virtual machine with Amazon EC2 so that it can be managed using Run Command.
 
@@ -30,7 +30,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "test_attach" {
   role       = "${aws_iam_role.test_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_ssm_activation" "foo" {
@@ -46,18 +46,20 @@ resource "aws_ssm_activation" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Optional) The default name of the registerd managed instance.
+* `name` - (Optional) The default name of the registered managed instance.
 * `description` - (Optional) The description of the resource that you want to register.
-* `expiration_date` - (Optional) A timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) by which this activation request should expire. The default value is 24 hours from resource creation time.
+* `expiration_date` - (Optional) UTC timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) by which this activation request should expire. The default value is 24 hours from resource creation time. Terraform will only perform drift detection of its value when present in a configuration.
 * `iam_role` - (Required) The IAM Role to attach to the managed instance.
 * `registration_limit` - (Optional) The maximum number of managed instances you want to register. The default value is 1 instance.
+* `tags` - (Optional) A mapping of tags to assign to the object.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - The activation ID.
 * `activation_code` - The code the system generates when it processes the activation.
-* `name` - The default name of the registerd managed instance.
+* `name` - The default name of the registered managed instance.
 * `description` - The description of the resource that was registered.
 * `expired` - If the current activation has expired.
 * `expiration_date` - The date by which this activation request should expire. The default value is 24 hours.

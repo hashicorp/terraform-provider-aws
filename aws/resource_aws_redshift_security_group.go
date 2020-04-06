@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsRedshiftSecurityGroup() *schema.Resource {
@@ -27,37 +27,37 @@ func resourceAwsRedshiftSecurityGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateRedshiftSecurityGroupName,
 			},
 
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
 
-			"ingress": &schema.Schema{
+			"ingress": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cidr": &schema.Schema{
+						"cidr": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"security_group_name": &schema.Schema{
+						"security_group_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
 
-						"security_group_owner_id": &schema.Schema{
+						"security_group_owner_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -135,21 +135,21 @@ func resourceAwsRedshiftSecurityGroupRead(d *schema.ResourceData, meta interface
 	}
 
 	for _, v := range sg.IPRanges {
-		rule := map[string]interface{}{"cidr": *v.CIDRIP}
+		rule := map[string]interface{}{"cidr": aws.StringValue(v.CIDRIP)}
 		rules.Add(rule)
 	}
 
 	for _, g := range sg.EC2SecurityGroups {
 		rule := map[string]interface{}{
-			"security_group_name":     *g.EC2SecurityGroupName,
-			"security_group_owner_id": *g.EC2SecurityGroupOwnerId,
+			"security_group_name":     aws.StringValue(g.EC2SecurityGroupName),
+			"security_group_owner_id": aws.StringValue(g.EC2SecurityGroupOwnerId),
 		}
 		rules.Add(rule)
 	}
 
 	d.Set("ingress", rules)
-	d.Set("name", *sg.ClusterSecurityGroupName)
-	d.Set("description", *sg.Description)
+	d.Set("name", sg.ClusterSecurityGroupName)
+	d.Set("description", sg.Description)
 
 	return nil
 }

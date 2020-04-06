@@ -1,14 +1,14 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_rds_cluster_instance"
-sidebar_current: "docs-aws-resource-rds-cluster-instance"
 description: |-
   Provides an RDS Cluster Resource Instance
 ---
 
-# aws_rds_cluster_instance
+# Resource: aws_rds_cluster_instance
 
-Provides an RDS Cluster Resource Instance. A Cluster Instance Resource defines
+Provides an RDS Cluster Instance Resource. A Cluster Instance Resource defines
 attributes that are specific to a single instance in a [RDS Cluster][3],
 specifically running Amazon Aurora.
 
@@ -21,6 +21,8 @@ Cluster, or you may specify different Cluster Instance resources with various
 
 For more information on Amazon Aurora, see [Aurora on Amazon RDS][2] in the Amazon RDS User Guide.
 
+~> **NOTE:** Deletion Protection from the RDS service can only be enabled at the cluster level, not for individual cluster instances. You can still add the [`prevent_destroy` lifecycle behavior](https://www.terraform.io/docs/configuration/resources.html#prevent_destroy) to your Terraform resource configuration if you desire protection from accidental deletion.
+
 ## Example Usage
 
 ```hcl
@@ -28,7 +30,7 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   count              = 2
   identifier         = "aurora-cluster-demo-${count.index}"
   cluster_identifier = "${aws_rds_cluster.default.id}"
-  instance_class     = "db.r3.large"
+  instance_class     = "db.r4.large"
 }
 
 resource "aws_rds_cluster" "default" {
@@ -47,8 +49,8 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 
 The following arguments are supported:
 
-* `identifier` - (Optional, Forces new resource) The indentifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
-* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifer`.
+* `identifier` - (Optional, Forces new resource) The identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
+* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `cluster_identifier` - (Required) The identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
 * `engine` - (Optional) The name of the database engine to be used for the RDS instance. Defaults to `aurora`. Valid Values: `aurora`, `aurora-mysql`, `aurora-postgresql`.
 For information on the difference between the available Aurora MySQL engines
@@ -56,21 +58,7 @@ see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amaz
 in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The database engine version.
 * `instance_class` - (Required) The instance class to use. For details on CPU
-and memory, see [Scaling Aurora DB Instances][4]. Aurora currently
-  supports the below instance classes.
-  - db.t2.small
-  - db.t2.medium
-  - db.r3.large
-  - db.r3.xlarge
-  - db.r3.2xlarge
-  - db.r3.4xlarge
-  - db.r3.8xlarge
-  - db.r4.large
-  - db.r4.xlarge
-  - db.r4.2xlarge
-  - db.r4.4xlarge
-  - db.r4.8xlarge
-  - db.r4.16xlarge
+and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible.
 Default `false`. See the documentation on [Creating DB Instances][6] for more
 details on controlling this property.
@@ -82,7 +70,7 @@ details on controlling this property.
 enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `monitoring_interval` - (Optional) The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
-* `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer.
+* `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoted to writer.
 * `availability_zone` - (Optional, Computed) The EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) about the details.
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled.
   Eg: "04:00-09:00"
@@ -91,12 +79,15 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights is enabled or not.
 * `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
+* `copy_tags_to_snapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
+* `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `tags` - (Optional) A mapping of tags to assign to the instance.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of cluster instance
 * `cluster_identifier` - The RDS Cluster Identifier
 * `identifier` - The Instance identifier
 * `id` - The Instance identifier
@@ -120,6 +111,7 @@ In addition to all arguments above, the following attributes are exported:
 [4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Aurora.Managing.html
 [5]: /docs/configuration/resources.html#count
 [6]: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html
+[7]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
 
 ## Timeouts
 

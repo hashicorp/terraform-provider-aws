@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_export"
-sidebar_current: "docs-aws-datasource-cloudformation-export"
 description: |-
     Provides metadata of a CloudFormation Export (e.g. Cross Stack References)
 ---
@@ -17,7 +17,7 @@ exports specified in the [Output](http://docs.aws.amazon.com/AWSCloudFormation/l
 
 ```hcl
 data "aws_cloudformation_export" "subnet_id" {
-  name = "my:subnet_id:export"
+  name = "mySubnetIdExportName"
 }
 
 resource "aws_instance" "web" {
@@ -29,11 +29,11 @@ resource "aws_instance" "web" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the cross stack reference
+* `name` - (Required) The name of the export as it appears in the console or from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `value` - The value from Cloudformation export identified by the export name found from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
 * `exporting_stack_id` - The exporting_stack_id (AWS ARNs) equivalent `ExportingStackId` from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html) 

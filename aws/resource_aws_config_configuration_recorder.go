@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -28,7 +29,7 @@ func resourceAwsConfigConfigurationRecorder() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "default",
-				ValidateFunc: validateMaxLength(256),
+				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"role_arn": {
 				Type:         schema.TypeString,

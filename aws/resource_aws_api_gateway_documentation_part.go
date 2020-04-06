@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsApiGatewayDocumentationPart() *schema.Resource {
@@ -71,7 +71,7 @@ func resourceAwsApiGatewayDocumentationPart() *schema.Resource {
 }
 
 func resourceAwsApiGatewayDocumentationPartCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	apiId := d.Get("rest_api_id").(string)
 	out, err := conn.CreateDocumentationPart(&apigateway.CreateDocumentationPartInput{
@@ -88,7 +88,7 @@ func resourceAwsApiGatewayDocumentationPartCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsApiGatewayDocumentationPartRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[INFO] Reading API Gateway Documentation Part %s", d.Id())
 
@@ -120,7 +120,7 @@ func resourceAwsApiGatewayDocumentationPartRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsApiGatewayDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
 	if err != nil {
@@ -157,7 +157,7 @@ func resourceAwsApiGatewayDocumentationPartUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsApiGatewayDocumentationPartDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
 	if err != nil {
@@ -168,11 +168,7 @@ func resourceAwsApiGatewayDocumentationPartDelete(d *schema.ResourceData, meta i
 		DocumentationPartId: aws.String(id),
 		RestApiId:           aws.String(apiId),
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func expandApiGatewayDocumentationPartLocation(l []interface{}) *apigateway.DocumentationPartLocation {
@@ -203,7 +199,7 @@ func flattenApiGatewayDocumentationPartLocation(l *apigateway.DocumentationPartL
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	m["type"] = *l.Type
 	if l.Method != nil {
 		m["method"] = *l.Method

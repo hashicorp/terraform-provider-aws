@@ -1,19 +1,18 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCognitoUserPool() *schema.Resource {
@@ -65,10 +64,12 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							},
 						},
 						"unused_account_validity_days": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      7,
-							ValidateFunc: validation.IntBetween(0, 90),
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							Deprecated:    "Use password_policy.temporary_password_validity_days instead",
+							ValidateFunc:  validation.IntBetween(0, 90),
+							ConflictsWith: []string{"password_policy.0.temporary_password_validity_days"},
 						},
 					},
 				},
@@ -130,37 +131,57 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"email_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"reply_to_email_address": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateCognitoUserPoolReplyEmailAddress,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.StringInSlice([]string{""}, false),
+								validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+							),
 						},
 						"source_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validateArn,
 						},
+						"from_email_address": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"email_sending_account": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
+								cognitoidentityprovider.EmailSendingAccountTypeDeveloper,
+							}, false),
+						},
 					},
 				},
 			},
 
 			"email_verification_subject": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateCognitoUserPoolEmailVerificationSubject,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validateCognitoUserPoolEmailVerificationSubject,
+				ConflictsWith: []string{"verification_message_template.0.email_subject"},
 			},
 
 			"email_verification_message": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateCognitoUserPoolEmailVerificationMessage,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validateCognitoUserPoolEmailVerificationMessage,
+				ConflictsWith: []string{"verification_message_template.0.email_message"},
 			},
 
 			"endpoint": {
@@ -279,6 +300,12 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"temporary_password_validity_days": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntBetween(0, 365),
+							ConflictsWith: []string{"admin_create_user_config.0.unused_account_validity_days"},
+						},
 					},
 				},
 			},
@@ -376,6 +403,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"sms_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -393,9 +421,26 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"sms_verification_message": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateCognitoUserPoolSmsVerificationMessage,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validateCognitoUserPoolSmsVerificationMessage,
+				ConflictsWith: []string{"verification_message_template.0.sms_message"},
+			},
+
+			"software_token_mfa_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
 			},
 
 			"tags": tagsSchema(),
@@ -412,6 +457,40 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					}, false),
 				},
 				ConflictsWith: []string{"alias_attributes"},
+			},
+
+			"username_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"case_sensitive": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+
+			"user_pool_add_ons": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"advanced_security_mode": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.AdvancedSecurityModeTypeAudit,
+								cognitoidentityprovider.AdvancedSecurityModeTypeEnforced,
+								cognitoidentityprovider.AdvancedSecurityModeTypeOff,
+							}, false),
+						},
+					},
+				},
 			},
 
 			"verification_message_template": {
@@ -431,10 +510,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							}, false),
 						},
 						"email_message": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateEmailMessage,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateEmailMessage,
+							ConflictsWith: []string{"email_verification_message"},
 						},
 						"email_message_by_link": {
 							Type:         schema.TypeString,
@@ -443,10 +523,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateCognitoUserPoolTemplateEmailMessageByLink,
 						},
 						"email_subject": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateEmailSubject,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateEmailSubject,
+							ConflictsWith: []string{"email_verification_subject"},
 						},
 						"email_subject_by_link": {
 							Type:         schema.TypeString,
@@ -455,10 +536,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateCognitoUserPoolTemplateEmailSubjectByLink,
 						},
 						"sms_message": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateSmsMessage,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateSmsMessage,
+							ConflictsWith: []string{"sms_verification_message"},
 						},
 					},
 				},
@@ -506,6 +588,14 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 				emailConfigurationType.SourceArn = aws.String(v.(string))
 			}
 
+			if v, ok := config["from_email_address"]; ok && v.(string) != "" {
+				emailConfigurationType.From = aws.String(v.(string))
+			}
+
+			if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
+				emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
+			}
+
 			params.EmailConfiguration = emailConfigurationType
 		}
 	}
@@ -545,10 +635,6 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if v, ok := d.GetOk("mfa_configuration"); ok {
-		params.MfaConfiguration = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("password_policy"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -565,21 +651,43 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.Schema = expandCognitoUserPoolSchema(configs)
 	}
 
+	// For backwards compatibility, include this outside of MFA configuration
+	// since its configuration is allowed by the API even without SMS MFA.
 	if v, ok := d.GetOk("sms_authentication_message"); ok {
 		params.SmsAuthenticationMessage = aws.String(v.(string))
 	}
 
+	// Include the SMS configuration outside of MFA configuration since it
+	// can be used for user verification.
 	if v, ok := d.GetOk("sms_configuration"); ok {
-		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
-			params.SmsConfiguration = expandCognitoUserPoolSmsConfiguration(config)
-		}
+		params.SmsConfiguration = expandCognitoSmsConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("username_attributes"); ok {
 		params.UsernameAttributes = expandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("username_configuration"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			params.UsernameConfiguration = expandCognitoUserPoolUsernameConfiguration(config)
+		}
+	}
+
+	if v, ok := d.GetOk("user_pool_add_ons"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok {
+			userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
+
+			if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
+				userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
+			}
+			params.UserPoolAddOns = userPoolAddons
+		}
 	}
 
 	if v, ok := d.GetOk("verification_message_template"); ok {
@@ -596,7 +704,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		params.UserPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
+		params.UserPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityproviderTags()
 	}
 	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
 
@@ -606,22 +714,70 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateUserPool(params)
-		if isAWSErr(err, "InvalidSmsRoleTrustRelationshipException", "Role does not have a trust relationship allowing Cognito to assume the role") {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, "InvalidSmsRoleAccessPolicyException", "Role does not have permission to publish with SNS") {
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
 			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateUserPool(params)
+	}
 	if err != nil {
-		return errwrap.Wrapf("Error creating Cognito User Pool: {{err}}", err)
+		return fmt.Errorf("Error creating Cognito User Pool: %s", err)
 	}
 
 	d.SetId(*resp.UserPool.Id)
+
+	if v := d.Get("mfa_configuration").(string); v != cognitoidentityprovider.UserPoolMfaTypeOff {
+		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
+			MfaConfiguration:              aws.String(v),
+			SoftwareTokenMfaConfiguration: expandCognitoSoftwareTokenMfaConfiguration(d.Get("software_token_mfa_configuration").([]interface{})),
+			UserPoolId:                    aws.String(d.Id()),
+		}
+
+		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
+			input.SmsMfaConfiguration = &cognitoidentityprovider.SmsMfaConfigType{
+				SmsConfiguration: expandCognitoSmsConfiguration(v),
+			}
+
+			if v, ok := d.GetOk("sms_authentication_message"); ok {
+				input.SmsMfaConfiguration.SmsAuthenticationMessage = aws.String(v.(string))
+			}
+		}
+
+		// IAM Roles and Policies can take some time to propagate
+		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			_, err := conn.SetUserPoolMfaConfig(input)
+
+			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
+				return resource.RetryableError(err)
+			}
+
+			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.SetUserPoolMfaConfig(input)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error setting Cognito User Pool (%s) MFA Configuration: %w", d.Id(), err)
+		}
+	}
 
 	return resourceAwsCognitoUserPoolRead(d, meta)
 }
@@ -633,17 +789,16 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		UserPoolId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading Cognito User Pool: %s", params)
-
 	resp, err := conn.DescribeUserPool(params)
 
+	if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] Cognito User Pool (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] Cognito User Pool %s is already gone", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error describing Cognito User Pool (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("admin_create_user_config", flattenCognitoUserPoolAdminCreateUserConfig(resp.UserPool.AdminCreateUserConfig)); err != nil {
@@ -660,34 +815,33 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		Resource:  fmt.Sprintf("userpool/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
-	d.Set("endpoint", fmt.Sprintf("cognito-idp.%s.amazonaws.com/%s", meta.(*AWSClient).region, d.Id()))
+	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*AWSClient).RegionalHostname("cognito-idp"), d.Id()))
 	d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
 
 	if resp.UserPool.EmailVerificationSubject != nil {
-		d.Set("email_verification_subject", *resp.UserPool.EmailVerificationSubject)
+		d.Set("email_verification_subject", resp.UserPool.EmailVerificationSubject)
 	}
 	if resp.UserPool.EmailVerificationMessage != nil {
-		d.Set("email_verification_message", *resp.UserPool.EmailVerificationMessage)
+		d.Set("email_verification_message", resp.UserPool.EmailVerificationMessage)
 	}
 	if err := d.Set("lambda_config", flattenCognitoUserPoolLambdaConfig(resp.UserPool.LambdaConfig)); err != nil {
 		return fmt.Errorf("Failed setting lambda_config: %s", err)
 	}
-	if resp.UserPool.MfaConfiguration != nil {
-		d.Set("mfa_configuration", *resp.UserPool.MfaConfiguration)
-	}
 	if resp.UserPool.SmsVerificationMessage != nil {
-		d.Set("sms_verification_message", *resp.UserPool.SmsVerificationMessage)
+		d.Set("sms_verification_message", resp.UserPool.SmsVerificationMessage)
 	}
 	if resp.UserPool.SmsAuthenticationMessage != nil {
-		d.Set("sms_authentication_message", *resp.UserPool.SmsAuthenticationMessage)
+		d.Set("sms_authentication_message", resp.UserPool.SmsAuthenticationMessage)
 	}
 
 	if err := d.Set("device_configuration", flattenCognitoUserPoolDeviceConfiguration(resp.UserPool.DeviceConfiguration)); err != nil {
 		return fmt.Errorf("Failed setting device_configuration: %s", err)
 	}
 
-	if err := d.Set("email_configuration", flattenCognitoUserPoolEmailConfiguration(resp.UserPool.EmailConfiguration)); err != nil {
-		return fmt.Errorf("Failed setting email_configuration: %s", err)
+	if resp.UserPool.EmailConfiguration != nil {
+		if err := d.Set("email_configuration", flattenCognitoUserPoolEmailConfiguration(resp.UserPool.EmailConfiguration)); err != nil {
+			return fmt.Errorf("Failed setting email_configuration: %s", err)
+		}
 	}
 
 	if resp.UserPool.Policies != nil && resp.UserPool.Policies.PasswordPolicy != nil {
@@ -704,12 +858,20 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Failed setting schema: %s", err)
 	}
 
-	if err := d.Set("sms_configuration", flattenCognitoUserPoolSmsConfiguration(resp.UserPool.SmsConfiguration)); err != nil {
+	if err := d.Set("sms_configuration", flattenCognitoSmsConfiguration(resp.UserPool.SmsConfiguration)); err != nil {
 		return fmt.Errorf("Failed setting sms_configuration: %s", err)
 	}
 
 	if resp.UserPool.UsernameAttributes != nil {
 		d.Set("username_attributes", flattenStringList(resp.UserPool.UsernameAttributes))
+	}
+
+	if err := d.Set("username_configuration", flattenCognitoUserPoolUsernameConfiguration(resp.UserPool.UsernameConfiguration)); err != nil {
+		return fmt.Errorf("Failed setting username_configuration: %s", err)
+	}
+
+	if err := d.Set("user_pool_add_ons", flattenCognitoUserPoolUserPoolAddOns(resp.UserPool.UserPoolAddOns)); err != nil {
+		return fmt.Errorf("Failed setting user_pool_add_ons: %s", err)
 	}
 
 	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
@@ -719,7 +881,31 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("creation_date", resp.UserPool.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", resp.UserPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", resp.UserPool.Name)
-	d.Set("tags", tagsToMapGeneric(resp.UserPool.UserPoolTags))
+	if err := d.Set("tags", keyvaluetags.CognitoidentityKeyValueTags(resp.UserPool.UserPoolTags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	input := &cognitoidentityprovider.GetUserPoolMfaConfigInput{
+		UserPoolId: aws.String(d.Id()),
+	}
+
+	output, err := conn.GetUserPoolMfaConfig(input)
+
+	if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] Cognito User Pool (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error getting Cognito User Pool (%s) MFA Configuration: %w", d.Id(), err)
+	}
+
+	d.Set("mfa_configuration", output.MfaConfiguration)
+
+	if err := d.Set("software_token_mfa_configuration", flattenCognitoSoftwareTokenMfaConfiguration(output.SoftwareTokenMfaConfiguration)); err != nil {
+		return fmt.Errorf("error setting software_token_mfa_configuration: %s", err)
+	}
 
 	return nil
 }
@@ -727,151 +913,246 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
 
-	params := &cognitoidentityprovider.UpdateUserPoolInput{
-		UserPoolId: aws.String(d.Id()),
-	}
-
-	if d.HasChange("admin_create_user_config") {
-		configs := d.Get("admin_create_user_config").([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
-			params.AdminCreateUserConfig = expandCognitoUserPoolAdminCreateUserConfig(config)
+	// Multi-Factor Authentication updates
+	if d.HasChanges(
+		"mfa_configuration",
+		"sms_authentication_message",
+		"sms_configuration",
+		"software_token_mfa_configuration",
+	) {
+		mfaConfiguration := d.Get("mfa_configuration").(string)
+		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
+			MfaConfiguration:              aws.String(mfaConfiguration),
+			SoftwareTokenMfaConfiguration: expandCognitoSoftwareTokenMfaConfiguration(d.Get("software_token_mfa_configuration").([]interface{})),
+			UserPoolId:                    aws.String(d.Id()),
 		}
-	}
 
-	if d.HasChange("auto_verified_attributes") {
-		params.AutoVerifiedAttributes = expandStringList(d.Get("auto_verified_attributes").(*schema.Set).List())
-	}
-
-	if d.HasChange("device_configuration") {
-		configs := d.Get("device_configuration").([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
-			params.DeviceConfiguration = expandCognitoUserPoolDeviceConfiguration(config)
-		}
-	}
-
-	if v, ok := d.GetOk("email_configuration"); ok {
-		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
-			emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
-
-			if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
-				emailConfigurationType.ReplyToEmailAddress = aws.String(v.(string))
+		// Since SMS configuration applies to both verification and MFA, only include if MFA is enabled.
+		// Otherwise, the API will return the following error:
+		// InvalidParameterException: Invalid MFA configuration given, can't turn off MFA and configure an MFA together.
+		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil && mfaConfiguration != cognitoidentityprovider.UserPoolMfaTypeOff {
+			input.SmsMfaConfiguration = &cognitoidentityprovider.SmsMfaConfigType{
+				SmsConfiguration: expandCognitoSmsConfiguration(v),
 			}
 
-			if v, ok := config["source_arn"]; ok && v.(string) != "" {
-				emailConfigurationType.SourceArn = aws.String(v.(string))
+			if v, ok := d.GetOk("sms_authentication_message"); ok {
+				input.SmsMfaConfiguration.SmsAuthenticationMessage = aws.String(v.(string))
+			}
+		}
+
+		// IAM Roles and Policies can take some time to propagate
+		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			_, err := conn.SetUserPoolMfaConfig(input)
+
+			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
+				return resource.RetryableError(err)
 			}
 
-			params.EmailConfiguration = emailConfigurationType
+			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.SetUserPoolMfaConfig(input)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error setting Cognito User Pool (%s) MFA Configuration: %w", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("email_verification_subject") {
-		v := d.Get("email_verification_subject").(string)
-
-		// This is to prevent removing default message since the API disallows it
-		if v == "" {
-			return errors.New("email_verification_subject cannot be set to nil")
-		}
-		params.EmailVerificationSubject = aws.String(v)
-	}
-
-	if d.HasChange("email_verification_message") {
-		v := d.Get("email_verification_message").(string)
-
-		// This is to prevent removing default message since the API disallows it
-		if v == "" {
-			return errors.New("email_verification_message cannot be set to nil")
-		}
-		params.EmailVerificationMessage = aws.String(v)
-	}
-
-	if v, ok := d.GetOk("lambda_config"); ok {
-		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
-			params.LambdaConfig = expandCognitoUserPoolLambdaConfig(config)
-		}
-	}
-
-	if d.HasChange("mfa_configuration") {
-		params.MfaConfiguration = aws.String(d.Get("mfa_configuration").(string))
-	}
-
-	if v, ok := d.GetOk("password_policy"); ok {
-		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
-			policies := &cognitoidentityprovider.UserPoolPolicyType{}
-			policies.PasswordPolicy = expandCognitoUserPoolPasswordPolicy(config)
-			params.Policies = policies
-		}
-	}
-
-	if d.HasChange("sms_authentication_message") {
-		params.SmsAuthenticationMessage = aws.String(d.Get("sms_authentication_message").(string))
-	}
-
-	if d.HasChange("sms_configuration") {
-		configs := d.Get("sms_configuration").([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
-			params.SmsConfiguration = expandCognitoUserPoolSmsConfiguration(config)
-		}
-	}
-
-	if d.HasChange("verification_message_template") {
-		configs := d.Get("verification_message_template").([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
-			params.VerificationMessageTemplate = expandCognitoUserPoolVerificationMessageTemplate(config)
-		}
-	}
-
-	if d.HasChange("sms_verification_message") {
-		v := d.Get("sms_verification_message").(string)
-
-		// This is to prevent removing default message since the API disallows it
-		if v == "" {
-			return errors.New("sms_verification_message cannot be set to nil")
-		}
-		params.SmsVerificationMessage = aws.String(v)
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		params.UserPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
-	}
-
-	log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
-
-	// IAM roles & policies can take some time to propagate and be attached
-	// to the User Pool.
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var err error
-		_, err = conn.UpdateUserPool(params)
-		if isAWSErr(err, "InvalidSmsRoleTrustRelationshipException", "Role does not have a trust relationship allowing Cognito to assume the role") {
-			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
-			return resource.RetryableError(err)
-		}
-		if isAWSErr(err, "InvalidSmsRoleAccessPolicyException", "Role does not have permission to publish with SNS") {
-			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
-			return resource.RetryableError(err)
+	// Non Multi-Factor Authentication updates
+	// NOTES:
+	//  * Include SMS configuration changes since settings are shared between verification and MFA.
+	//  * For backwards compatibility, include SMS authentication message changes without SMS MFA since the API allows it.
+	if d.HasChanges(
+		"admin_create_user_config",
+		"auto_verified_attributes",
+		"device_configuration",
+		"email_configuration",
+		"email_verification_message",
+		"email_verification_subject",
+		"lambda_config",
+		"password_policy",
+		"sms_authentication_message",
+		"sms_configuration",
+		"sms_verification_message",
+		"tags",
+		"user_pool_add_ons",
+		"verification_message_template",
+	) {
+		params := &cognitoidentityprovider.UpdateUserPoolInput{
+			UserPoolId: aws.String(d.Id()),
 		}
 
-		return resource.NonRetryableError(err)
-	})
-	if err != nil {
-		return errwrap.Wrapf("Error updating Cognito User pool: {{err}}", err)
+		if v, ok := d.GetOk("admin_create_user_config"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				params.AdminCreateUserConfig = expandCognitoUserPoolAdminCreateUserConfig(config)
+			}
+		}
+
+		if v, ok := d.GetOk("auto_verified_attributes"); ok {
+			params.AutoVerifiedAttributes = expandStringList(v.(*schema.Set).List())
+		}
+
+		if v, ok := d.GetOk("device_configuration"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				params.DeviceConfiguration = expandCognitoUserPoolDeviceConfiguration(config)
+			}
+		}
+
+		if v, ok := d.GetOk("email_configuration"); ok {
+
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				log.Printf("[DEBUG] Set Values to update from configs")
+				emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
+
+				if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
+					emailConfigurationType.ReplyToEmailAddress = aws.String(v.(string))
+				}
+
+				if v, ok := config["source_arn"]; ok && v.(string) != "" {
+					emailConfigurationType.SourceArn = aws.String(v.(string))
+				}
+
+				if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
+					emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
+				}
+
+				if v, ok := config["from_email_address"]; ok && v.(string) != "" {
+					emailConfigurationType.From = aws.String(v.(string))
+				}
+
+				params.EmailConfiguration = emailConfigurationType
+			}
+		}
+
+		if v, ok := d.GetOk("email_verification_subject"); ok {
+			params.EmailVerificationSubject = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("email_verification_message"); ok {
+			params.EmailVerificationMessage = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("lambda_config"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				params.LambdaConfig = expandCognitoUserPoolLambdaConfig(config)
+			}
+		}
+
+		if v, ok := d.GetOk("mfa_configuration"); ok {
+			params.MfaConfiguration = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password_policy"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				policies := &cognitoidentityprovider.UserPoolPolicyType{}
+				policies.PasswordPolicy = expandCognitoUserPoolPasswordPolicy(config)
+				params.Policies = policies
+			}
+		}
+
+		if v, ok := d.GetOk("sms_authentication_message"); ok {
+			params.SmsAuthenticationMessage = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("sms_configuration"); ok {
+			params.SmsConfiguration = expandCognitoSmsConfiguration(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("user_pool_add_ons"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
+
+				if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
+					userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
+				}
+				params.UserPoolAddOns = userPoolAddons
+			}
+		}
+
+		if v, ok := d.GetOk("verification_message_template"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if d.HasChange("email_verification_message") {
+				config["email_message"] = d.Get("email_verification_message")
+			}
+			if d.HasChange("email_verification_subject") {
+				config["email_subject"] = d.Get("email_verification_subject")
+			}
+			if d.HasChange("sms_verification_message") {
+				config["sms_message"] = d.Get("sms_verification_message")
+			}
+
+			if ok && config != nil {
+				params.VerificationMessageTemplate = expandCognitoUserPoolVerificationMessageTemplate(config)
+			}
+		}
+
+		if v, ok := d.GetOk("sms_verification_message"); ok {
+			params.SmsVerificationMessage = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("tags"); ok {
+			params.UserPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityproviderTags()
+		}
+
+		log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
+
+		// IAM roles & policies can take some time to propagate and be attached
+		// to the User Pool.
+		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			var err error
+			_, err = conn.UpdateUserPool(params)
+			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
+				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
+				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") {
+				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool without UnusedAccountValidityDays", err)
+				params.AdminCreateUserConfig.UnusedAccountValidityDays = nil
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.UpdateUserPool(params)
+		}
+		if err != nil {
+			return fmt.Errorf("Error updating Cognito User pool: %s", err)
+		}
 	}
 
 	return resourceAwsCognitoUserPoolRead(d, meta)
@@ -889,8 +1170,76 @@ func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) 
 	_, err := conn.DeleteUserPool(params)
 
 	if err != nil {
-		return errwrap.Wrapf("Error deleting user pool: {{err}}", err)
+		return fmt.Errorf("Error deleting user pool: %s", err)
 	}
 
 	return nil
+}
+
+func expandCognitoSmsConfiguration(tfList []interface{}) *cognitoidentityprovider.SmsConfigurationType {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &cognitoidentityprovider.SmsConfigurationType{}
+
+	if v, ok := tfMap["external_id"].(string); ok && v != "" {
+		apiObject.ExternalId = aws.String(v)
+	}
+
+	if v, ok := tfMap["sns_caller_arn"].(string); ok && v != "" {
+		apiObject.SnsCallerArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandCognitoSoftwareTokenMfaConfiguration(tfList []interface{}) *cognitoidentityprovider.SoftwareTokenMfaConfigType {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &cognitoidentityprovider.SoftwareTokenMfaConfigType{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenCognitoSmsConfiguration(apiObject *cognitoidentityprovider.SmsConfigurationType) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ExternalId; v != nil {
+		tfMap["external_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SnsCallerArn; v != nil {
+		tfMap["sns_caller_arn"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCognitoSoftwareTokenMfaConfiguration(apiObject *cognitoidentityprovider.SoftwareTokenMfaConfigType) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	return []interface{}{tfMap}
 }

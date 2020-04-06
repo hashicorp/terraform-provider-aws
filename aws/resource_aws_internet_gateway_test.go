@@ -4,18 +4,22 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_internet_gateway", &resource.Sweeper{
 		Name: "aws_internet_gateway",
-		F:    testSweepInternetGateways,
+		Dependencies: []string{
+			"aws_subnet",
+		},
+		F: testSweepInternetGateways,
 	})
 }
 
@@ -26,16 +30,7 @@ func testSweepInternetGateways(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeInternetGatewaysInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeInternetGatewaysInput{}
 	resp, err := conn.DescribeInternetGateways(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -50,14 +45,73 @@ func testSweepInternetGateways(region string) error {
 		return nil
 	}
 
+	defaultVPCID := ""
+	describeVpcsInput := &ec2.DescribeVpcsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("isDefault"),
+				Values: aws.StringSlice([]string{"true"}),
+			},
+		},
+	}
+
+	describeVpcsOutput, err := conn.DescribeVpcs(describeVpcsInput)
+
+	if err != nil {
+		return fmt.Errorf("Error describing VPCs: %s", err)
+	}
+
+	if describeVpcsOutput != nil && len(describeVpcsOutput.Vpcs) == 1 {
+		defaultVPCID = aws.StringValue(describeVpcsOutput.Vpcs[0].VpcId)
+	}
+
 	for _, internetGateway := range resp.InternetGateways {
-		_, err := conn.DeleteInternetGateway(&ec2.DeleteInternetGatewayInput{
+		isDefaultVPCInternetGateway := false
+
+		for _, attachment := range internetGateway.Attachments {
+			if aws.StringValue(attachment.VpcId) == defaultVPCID {
+				isDefaultVPCInternetGateway = true
+				break
+			}
+
+			input := &ec2.DetachInternetGatewayInput{
+				InternetGatewayId: internetGateway.InternetGatewayId,
+				VpcId:             attachment.VpcId,
+			}
+
+			log.Printf("[DEBUG] Detaching Internet Gateway: %s", input)
+			_, err := conn.DetachInternetGateway(input)
+			if err != nil {
+				return fmt.Errorf("error detaching Internet Gateway (%s) from VPC (%s): %s", aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId), err)
+			}
+
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{"detaching"},
+				Target:  []string{"detached"},
+				Refresh: detachIGStateRefreshFunc(conn, aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId)),
+				Timeout: 10 * time.Minute,
+				Delay:   10 * time.Second,
+			}
+
+			log.Printf("[DEBUG] Waiting for Internet Gateway (%s) to detach from VPC (%s)", aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId))
+			if _, err = stateConf.WaitForState(); err != nil {
+				return fmt.Errorf("error waiting for VPN Gateway (%s) to detach from VPC (%s): %s", aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId), err)
+			}
+		}
+
+		if isDefaultVPCInternetGateway {
+			log.Printf("[DEBUG] Skipping Default VPC Internet Gateway: %s", aws.StringValue(internetGateway.InternetGatewayId))
+			continue
+		}
+
+		input := &ec2.DeleteInternetGatewayInput{
 			InternetGatewayId: internetGateway.InternetGatewayId,
-		})
+		}
+
+		log.Printf("[DEBUG] Deleting Internet Gateway: %s", input)
+		_, err := conn.DeleteInternetGateway(input)
 		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Internet Gateway (%s): %s",
-				*internetGateway.InternetGatewayId, err)
+			return fmt.Errorf("error deleting Internet Gateway (%s): %s", aws.StringValue(internetGateway.InternetGatewayId), err)
 		}
 	}
 
@@ -66,6 +120,7 @@ func testSweepInternetGateways(region string) error {
 
 func TestAccAWSInternetGateway_basic(t *testing.T) {
 	var v, v2 ec2.InternetGateway
+	resourceName := "aws_internet_gateway.test"
 
 	testNotEqual := func(*terraform.State) error {
 		if len(v.Attachments) == 0 {
@@ -84,26 +139,32 @@ func TestAccAWSInternetGateway_basic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_internet_gateway.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccInternetGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(
-						"aws_internet_gateway.foo", &v),
+						resourceName, &v),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
-
-			resource.TestStep{
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccInternetGatewayConfigChangeVPC,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(
-						"aws_internet_gateway.foo", &v2),
+						resourceName, &v2),
 					testNotEqual,
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 		},
@@ -112,6 +173,7 @@ func TestAccAWSInternetGateway_basic(t *testing.T) {
 
 func TestAccAWSInternetGateway_delete(t *testing.T) {
 	var ig ec2.InternetGateway
+	resourceName := "aws_internet_gateway.test"
 
 	testDeleted := func(r string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {
@@ -123,20 +185,20 @@ func TestAccAWSInternetGateway_delete(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_internet_gateway.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccInternetGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayExists("aws_internet_gateway.foo", &ig)),
+					testAccCheckInternetGatewayExists(resourceName, &ig)),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNoInternetGatewayConfig,
-				Check:  resource.ComposeTestCheckFunc(testDeleted("aws_internet_gateway.foo")),
+				Check:  resource.ComposeTestCheckFunc(testDeleted(resourceName)),
 			},
 		},
 	})
@@ -144,29 +206,37 @@ func TestAccAWSInternetGateway_delete(t *testing.T) {
 
 func TestAccAWSInternetGateway_tags(t *testing.T) {
 	var v ec2.InternetGateway
+	resourceName := "aws_internet_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_internet_gateway.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckInternetGatewayConfigTags,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayExists("aws_internet_gateway.foo", &v),
-					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-internet-gateway-tags"),
-					testAccCheckTags(&v.Tags, "foo", "bar"),
+					testAccCheckInternetGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "terraform-testacc-internet-gateway-tags"),
+					resource.TestCheckResourceAttr(resourceName, "tags.test", "bar"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
-
-			resource.TestStep{
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccCheckInternetGatewayConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayExists("aws_internet_gateway.foo", &v),
-					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-internet-gateway-tags"),
-					testAccCheckTags(&v.Tags, "foo", ""),
-					testAccCheckTags(&v.Tags, "bar", "baz"),
+					testAccCheckInternetGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "terraform-testacc-internet-gateway-tags"),
+					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 		},
@@ -235,81 +305,81 @@ func testAccCheckInternetGatewayExists(n string, ig *ec2.InternetGateway) resour
 }
 
 const testAccNoInternetGatewayConfig = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-no-internet-gateway"
 	}
 }
 `
 
 const testAccInternetGatewayConfig = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway"
 	}
 }
 
-resource "aws_internet_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+resource "aws_internet_gateway" "test" {
+	vpc_id = "${aws_vpc.test.id}"
+	tags = {
 		Name = "terraform-testacc-internet-gateway"
 	}
 }
 `
 
 const testAccInternetGatewayConfigChangeVPC = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-change-vpc"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.2.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-change-vpc-other"
 	}
 }
 
-resource "aws_internet_gateway" "foo" {
+resource "aws_internet_gateway" "test" {
 	vpc_id = "${aws_vpc.bar.id}"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-change-vpc-other"
 	}
 }
 `
 
 const testAccCheckInternetGatewayConfigTags = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-tags"
 	}
 }
 
-resource "aws_internet_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+resource "aws_internet_gateway" "test" {
+	vpc_id = "${aws_vpc.test.id}"
+	tags = {
 		Name = "terraform-testacc-internet-gateway-tags"
-		foo = "bar"
+		test = "bar"
 	}
 }
 `
 
 const testAccCheckInternetGatewayConfigTagsUpdate = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-tags"
 	}
 }
 
-resource "aws_internet_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+resource "aws_internet_gateway" "test" {
+	vpc_id = "${aws_vpc.test.id}"
+	tags = {
 		Name = "terraform-testacc-internet-gateway-tags"
 		bar = "baz"
 	}

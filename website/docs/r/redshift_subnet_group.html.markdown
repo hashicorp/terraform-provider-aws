@@ -1,12 +1,12 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_subnet_group"
-sidebar_current: "docs-aws-resource-redshift-subnet-group"
 description: |-
   Provides a Redshift Subnet Group resource.
 ---
 
-# aws_redshift_subnet_group
+# Resource: aws_redshift_subnet_group
 
 Creates a new Amazon Redshift subnet group. You must provide a list of one or more subnets in your existing Amazon Virtual Private Cloud (Amazon VPC) when creating Amazon Redshift subnet group.
 
@@ -22,7 +22,7 @@ resource "aws_subnet" "foo" {
   availability_zone = "us-west-2a"
   vpc_id            = "${aws_vpc.foo.id}"
 
-  tags {
+  tags = {
     Name = "tf-dbsubnet-test-1"
   }
 }
@@ -32,7 +32,7 @@ resource "aws_subnet" "bar" {
   availability_zone = "us-west-2b"
   vpc_id            = "${aws_vpc.foo.id}"
 
-  tags {
+  tags = {
     Name = "tf-dbsubnet-test-2"
   }
 }
@@ -41,7 +41,7 @@ resource "aws_redshift_subnet_group" "foo" {
   name       = "foo"
   subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
 
-  tags {
+  tags = {
     environment = "Production"
   }
 }
@@ -60,6 +60,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of the Redshift Subnet group name
 * `id` - The Redshift Subnet group ID.
 
 ## Import

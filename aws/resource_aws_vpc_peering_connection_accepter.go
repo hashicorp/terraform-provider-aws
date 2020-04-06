@@ -1,11 +1,10 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
-	"fmt"
-
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
@@ -14,13 +13,19 @@ func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 		Read:   resourceAwsVPCPeeringRead,
 		Update: resourceAwsVPCPeeringUpdate,
 		Delete: resourceAwsVPCPeeringAccepterDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
+				d.Set("vpc_peering_connection_id", d.Id())
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
-			"vpc_peering_connection_id": &schema.Schema{
+			"vpc_peering_connection_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				Computed: false,
 			},
 			"auto_accept": {
 				Type:     schema.TypeBool,

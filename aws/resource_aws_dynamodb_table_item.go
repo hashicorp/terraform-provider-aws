@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDynamoDbTableItem() *schema.Resource {
@@ -224,7 +224,7 @@ func resourceAwsDynamoDbTableItemDelete(d *schema.ResourceData, meta interface{}
 
 func buildDynamoDbExpressionAttributeNames(attrs map[string]*dynamodb.AttributeValue) map[string]*string {
 	names := map[string]*string{}
-	for key, _ := range attrs {
+	for key := range attrs {
 		names["#a_"+key] = aws.String(key)
 	}
 
@@ -233,53 +233,25 @@ func buildDynamoDbExpressionAttributeNames(attrs map[string]*dynamodb.AttributeV
 
 func buildDynamoDbProjectionExpression(attrs map[string]*dynamodb.AttributeValue) *string {
 	keys := []string{}
-	for key, _ := range attrs {
+	for key := range attrs {
 		keys = append(keys, key)
 	}
 	return aws.String("#a_" + strings.Join(keys, ", #a_"))
 }
 
 func buildDynamoDbTableItemId(tableName string, hashKey string, rangeKey string, attrs map[string]*dynamodb.AttributeValue) string {
-	hashVal := attrs[hashKey]
+	id := []string{tableName, hashKey}
 
-	id := []string{
-		tableName,
-		hashKey,
-		base64Encode(hashVal.B),
+	if hashVal, ok := attrs[hashKey]; ok {
+		id = append(id, base64Encode(hashVal.B))
+		id = append(id, aws.StringValue(hashVal.S))
+		id = append(id, aws.StringValue(hashVal.N))
 	}
-
-	if hashVal.S != nil {
-		id = append(id, *hashVal.S)
-	} else {
-		id = append(id, "")
+	if rangeVal, ok := attrs[rangeKey]; ok && rangeKey != "" {
+		id = append(id, rangeKey, base64Encode(rangeVal.B))
+		id = append(id, aws.StringValue(rangeVal.S))
+		id = append(id, aws.StringValue(rangeVal.N))
 	}
-	if hashVal.N != nil {
-		id = append(id, *hashVal.N)
-	} else {
-		id = append(id, "")
-	}
-	if rangeKey != "" {
-		rangeVal := attrs[rangeKey]
-
-		id = append(id,
-			rangeKey,
-			base64Encode(rangeVal.B),
-		)
-
-		if rangeVal.S != nil {
-			id = append(id, *rangeVal.S)
-		} else {
-			id = append(id, "")
-		}
-
-		if rangeVal.N != nil {
-			id = append(id, *rangeVal.N)
-		} else {
-			id = append(id, "")
-		}
-
-	}
-
 	return strings.Join(id, "|")
 }
 

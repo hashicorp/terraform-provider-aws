@@ -4,14 +4,11 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsOpsworksApplication() *schema.Resource {
@@ -21,6 +18,10 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 		Read:   resourceAwsOpsworksApplicationRead,
 		Update: resourceAwsOpsworksApplicationUpdate,
 		Delete: resourceAwsOpsworksApplicationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -30,6 +31,7 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
+				ForceNew: true,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -77,6 +79,13 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								opsworks.SourceTypeGit,
+								opsworks.SourceTypeSvn,
+								opsworks.SourceTypeArchive,
+								opsworks.SourceTypeS3,
+								"other",
+							}, false),
 						},
 
 						"url": {
@@ -101,26 +110,31 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 						},
 
 						"ssh_key": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 					},
 				},
 			},
-			// AutoSelectOpsworksMysqlInstance, OpsworksMysqlInstance, or RdsDbInstance.
-			// anything beside auto select will lead into failure in case the instance doesn't exist
-			// XXX: validation?
 			"data_source_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"AutoSelectOpsworksMysqlInstance",
+					"OpsworksMysqlInstance",
+					"RdsDbInstance",
+					"None",
+				}, false),
 			},
 			"data_source_database_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"data_source_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -167,9 +181,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return strings.TrimSpace(v.(string))
+									return strings.TrimSpace(v)
 								default:
 									return ""
 								}
@@ -180,9 +194,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 							Required:  true,
 							Sensitive: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return strings.TrimSpace(v.(string))
+									return strings.TrimSpace(v)
 								default:
 									return ""
 								}
@@ -192,9 +206,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return strings.TrimSpace(v.(string))
+									return strings.TrimSpace(v)
 								default:
 									return ""
 								}
@@ -262,17 +276,16 @@ func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}
 
 	resp, err := client.DescribeApps(req)
 	if err != nil {
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() == "ResourceNotFoundException" {
-				log.Printf("[INFO] App not found: %s", d.Id())
-				d.SetId("")
-				return nil
-			}
+		if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[INFO] App not found: %s", d.Id())
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
 
 	app := resp.Apps[0]
+	log.Printf("[DEBUG] Opsworks Application: %#v", app)
 
 	d.Set("name", app.Name)
 	d.Set("stack_id", app.StackId)
@@ -285,6 +298,7 @@ func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}
 	resourceAwsOpsworksSetApplicationDataSources(d, app.DataSources)
 	resourceAwsOpsworksSetApplicationEnvironmentVariable(d, app.Environment)
 	resourceAwsOpsworksSetApplicationAttributes(d, app.Attributes)
+
 	return nil
 }
 
@@ -311,24 +325,9 @@ func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface
 		Attributes:       resourceAwsOpsworksApplicationAttributes(d),
 	}
 
-	var resp *opsworks.CreateAppOutput
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var cerr error
-		resp, cerr = client.CreateApp(req)
-		if cerr != nil {
-			log.Printf("[INFO] client error")
-			if opserr, ok := cerr.(awserr.Error); ok {
-				// XXX: handle errors
-				log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
-				return resource.RetryableError(cerr)
-			}
-			return resource.NonRetryableError(cerr)
-		}
-		return nil
-	})
-
+	resp, err := client.CreateApp(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating OpsWorks application: %s", err)
 	}
 
 	appID := *resp.AppId
@@ -361,23 +360,11 @@ func resourceAwsOpsworksApplicationUpdate(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Updating OpsWorks layer: %s", d.Id())
 
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, cerr := client.UpdateApp(req)
-		if cerr != nil {
-			log.Printf("[INFO] client error")
-			if opserr, ok := cerr.(awserr.Error); ok {
-				// XXX: handle errors
-				log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
-				return resource.NonRetryableError(cerr)
-			}
-			return resource.RetryableError(cerr)
-		}
-		return nil
-	})
-
+	_, err = client.UpdateApp(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating OpsWorks app: %s", err)
 	}
+
 	return resourceAwsOpsworksApplicationRead(d, meta)
 }
 
@@ -415,7 +402,7 @@ func resourceAwsOpsworksSetApplicationEnvironmentVariable(d *schema.ResourceData
 		}
 		if config.Secure != nil {
 
-			if bool(*config.Secure) {
+			if aws.BoolValue(config.Secure) {
 				data["secure"] = &opsworksTrueString
 			} else {
 				data["secure"] = &opsworksFalseString
@@ -472,12 +459,16 @@ func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks
 		if v.Username != nil {
 			m["username"] = *v.Username
 		}
-		if v.Password != nil {
-			m["password"] = *v.Password
-		}
 		if v.Revision != nil {
 			m["revision"] = *v.Revision
 		}
+
+		// v.Password and v.SshKey will, on read, contain the placeholder string
+		// "*****FILTERED*****", so we ignore it on read and let persist
+		// the value already in the state.
+		m["password"] = d.Get("app_source.0.password").(string)
+		m["ssh_key"] = d.Get("app_source.0.ssh_key").(string)
+
 		nv = append(nv, m)
 	}
 
@@ -616,5 +607,4 @@ func resourceAwsOpsworksSetApplicationAttributes(d *schema.ResourceData, v map[s
 		return
 	}
 
-	return
 }

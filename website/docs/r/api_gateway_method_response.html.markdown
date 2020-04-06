@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_method_response"
-sidebar_current: "docs-aws-resource-api-gateway-method-response"
 description: |-
   Provides an HTTP Method Response for an API Gateway Resource.
 ---
 
-# aws_api_gateway_method_response
+# Resource: aws_api_gateway_method_response
 
 Provides an HTTP Method Response for an API Gateway Resource.
 
@@ -38,7 +38,7 @@ resource "aws_api_gateway_integration" "MyDemoIntegration" {
   type        = "MOCK"
 }
 
-resource "aws_api_gateway_method_response" "200" {
+resource "aws_api_gateway_method_response" "response_200" {
   rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
   resource_id = "${aws_api_gateway_resource.MyDemoResource.id}"
   http_method = "${aws_api_gateway_method.MyDemoMethod.http_method}"
@@ -58,4 +58,11 @@ The following arguments are supported:
 * `response_parameters` - (Optional) A map of response parameters that can be sent to the caller.
    For example: `response_parameters = { "method.response.header.X-Some-Header" = true }`
    would define that the header `X-Some-Header` can be provided on the response.
-* `response_parameters_in_json` - **Deprecated**, use `response_parameters` instead.
+
+## Import
+
+`aws_api_gateway_method_response` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`, e.g.
+
+```
+$ terraform import aws_api_gateway_method_response.example 12345abcde/67890fghij/GET/200
+```

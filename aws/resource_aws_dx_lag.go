@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDxLag() *schema.Resource {
@@ -47,15 +48,22 @@ func resourceAwsDxLag() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-				Deprecated: "Use aws_dx_connection and aws_dx_connection_association resources instead. " +
-					"Default connections will be removed as part of LAG creation automatically in future versions.",
+				Removed:  "Use `aws_dx_connection` and `aws_dx_connection_association` resources instead",
 			},
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
+			"jumbo_frame_capable": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
+			"has_logical_redundancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -63,31 +71,37 @@ func resourceAwsDxLag() *schema.Resource {
 func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	var noOfConnections int
-	if v, ok := d.GetOk("number_of_connections"); ok {
-		noOfConnections = v.(int)
-	} else {
-		noOfConnections = 1
-	}
-
 	req := &directconnect.CreateLagInput{
 		ConnectionsBandwidth: aws.String(d.Get("connections_bandwidth").(string)),
 		LagName:              aws.String(d.Get("name").(string)),
 		Location:             aws.String(d.Get("location").(string)),
-		NumberOfConnections:  aws.Int64(int64(noOfConnections)),
+		NumberOfConnections:  aws.Int64(int64(1)),
+	}
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		req.Tags = keyvaluetags.New(v).IgnoreAws().DirectconnectTags()
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect LAG: %#v", req)
 	resp, err := conn.CreateLag(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Direct Connect LAG: %s", err)
 	}
 
-	// TODO: Remove default connection(s) automatically provisioned by AWS
-	// per NumberOfConnections
-
 	d.SetId(aws.StringValue(resp.LagId))
-	return resourceAwsDxLagUpdate(d, meta)
+
+	// Delete unmanaged connection
+	connectionID := aws.StringValue(resp.Connections[0].ConnectionId)
+	deleteConnectionInput := &directconnect.DeleteConnectionInput{
+		ConnectionId: resp.Connections[0].ConnectionId,
+	}
+
+	log.Printf("[DEBUG] Deleting newly created and unmanaged Direct Connect LAG (%s) Connection: %s", d.Id(), connectionID)
+	if _, err := conn.DeleteConnection(deleteConnectionInput); err != nil {
+		return fmt.Errorf("error deleting newly created and unmanaged Direct Connect LAG (%s) Connection (%s): %s", d.Id(), connectionID, err)
+	}
+
+	return resourceAwsDxLagRead(d, meta)
 }
 
 func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
@@ -111,11 +125,11 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if len(resp.Lags) != 1 {
-		return fmt.Errorf("[ERROR] Number of Direct Connect LAGs (%s) isn't one, got %d", d.Id(), len(resp.Lags))
+		return fmt.Errorf("Number of Direct Connect LAGs (%s) isn't one, got %d", d.Id(), len(resp.Lags))
 	}
 	lag := resp.Lags[0]
 	if d.Id() != aws.StringValue(lag.LagId) {
-		return fmt.Errorf("[ERROR] Direct Connect LAG (%s) not found", d.Id())
+		return fmt.Errorf("Direct Connect LAG (%s) not found", d.Id())
 	}
 
 	if aws.StringValue(lag.LagState) == directconnect.LagStateDeleted {
@@ -135,9 +149,17 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", lag.LagName)
 	d.Set("connections_bandwidth", lag.ConnectionsBandwidth)
 	d.Set("location", lag.Location)
+	d.Set("jumbo_frame_capable", lag.JumboFrameCapable)
+	d.Set("has_logical_redundancy", lag.HasLogicalRedundancy)
 
-	if err := getTagsDX(conn, d, arn); err != nil {
-		return err
+	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Direct Connect LAG (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -145,8 +167,6 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsDxLagUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
-
-	d.Partial(true)
 
 	if d.HasChange("name") {
 		req := &directconnect.UpdateLagInput{
@@ -157,26 +177,18 @@ func resourceAwsDxLagUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Updating Direct Connect LAG: %#v", req)
 		_, err := conn.UpdateLag(req)
 		if err != nil {
-			return err
-		} else {
-			d.SetPartial("name")
+			return fmt.Errorf("error updating Direct Connect LAG (%s): %s", d.Id(), err)
 		}
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("dxlag/%s", d.Id()),
-	}.String()
-	if err := setTagsDX(conn, d, arn); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
-	}
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	d.Partial(false)
+		if err := keyvaluetags.DirectconnectUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Direct Connect LAG (%s) tags: %s", arn, err)
+		}
+	}
 
 	return resourceAwsDxLagRead(d, meta)
 }

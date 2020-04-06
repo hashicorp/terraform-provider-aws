@@ -1,16 +1,16 @@
 ---
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_group"
-sidebar_current: "docs-aws-resource-autoscaling-group"
 description: |-
   Provides an AutoScaling Group resource.
 ---
 
-# aws_autoscaling_group
+# Resource: aws_autoscaling_group
 
 Provides an AutoScaling Group resource.
 
--> **Note:** You must specify either `launch_configuration` or `launch_template`.
+-> **Note:** You must specify either `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
 
 ## Example Usage
 
@@ -70,19 +70,55 @@ EOF
 
 ```hcl
 resource "aws_launch_template" "foobar" {
-  name_prefix = "foobar"
-  image_id = "ami-1a2b3c"
+  name_prefix   = "foobar"
+  image_id      = "ami-1a2b3c"
   instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["us-east-1a"]
-  desired_capacity = 1
-  max_size = 1
-  min_size = 1
-  launch_template = {
-    id = "${aws_launch_template.foobar.id}"
-    version = "$$Latest"
+  desired_capacity   = 1
+  max_size           = 1
+  min_size           = 1
+
+  launch_template {
+    id      = "${aws_launch_template.foobar.id}"
+    version = "$Latest"
+  }
+}
+```
+
+### Mixed Instances Policy
+
+```hcl
+resource "aws_launch_template" "example" {
+  name_prefix   = "example"
+  image_id      = "${data.aws_ami.example.id}"
+  instance_type = "c5.large"
+}
+
+resource "aws_autoscaling_group" "example" {
+  availability_zones = ["us-east-1a"]
+  desired_capacity   = 1
+  max_size           = 1
+  min_size           = 1
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = "${aws_launch_template.example.id}"
+      }
+
+      override {
+        instance_type     = "c4.large"
+        weighted_capacity = "3"
+      }
+
+      override {
+        instance_type     = "c3.large"
+        weighted_capacity = "2"
+      }
+    }
   }
 }
 ```
@@ -93,37 +129,24 @@ resource "aws_autoscaling_group" "bar" {
 variable "extra_tags" {
   default = [
     {
-      key = "Foo"
-      value = "Bar"
+      key                 = "Foo"
+      value               = "Bar"
       propagate_at_launch = true
     },
     {
-      key = "Baz"
-      value = "Bam"
+      key                 = "Baz"
+      value               = "Bam"
       propagate_at_launch = true
     },
   ]
 }
 
 resource "aws_autoscaling_group" "bar" {
-  name                      = "foobar3-terraform-test"
-  max_size                  = 5
-  min_size                  = 2
-  launch_configuration      = "${aws_launch_configuration.foobar.name}"
-  vpc_zone_identifier       = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
-
-  tags = [
-    {
-      key                 = "explicit1"
-      value               = "value1"
-      propagate_at_launch = true
-    },
-    {
-      key                 = "explicit2"
-      value               = "value2"
-      propagate_at_launch = true
-    },
-  ]
+  name                 = "foobar3-terraform-test"
+  max_size             = 5
+  min_size             = 2
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  vpc_zone_identifier  = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
 
   tags = ["${concat(
     list(
@@ -148,13 +171,13 @@ The following arguments are supported:
 * `availability_zones` - (Required only for EC2-Classic) A list of one or more availability zones for the group. This parameter should not be specified when using `vpc_zone_identifier`.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `launch_configuration` - (Optional) The name of the launch configuration to use.
-* `launch_template` - (Optional) Launch template specification to use to launch instances.
-  See [Launch Template Specification](#launch-template-specification) below for more details.
+* `launch_template` - (Optional) Nested argument with Launch template specification to use to launch instances. Defined below.
+* `mixed_instances_policy` (Optional) Configuration block containing settings to define launch targets for Auto Scaling groups. Defined below.
 * `initial_lifecycle_hook` - (Optional) One or more
   [Lifecycle Hooks](http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html)
   to attach to the autoscaling group **before** instances are launched. The
   syntax is exactly the same as the separate
-  [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hooks.html)
+  [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
   resource, without the `autoscaling_group_name` attribute. Please note that this will only work when creating
   a new autoscaling group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
 * `health_check_grace_period` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
@@ -170,35 +193,86 @@ The following arguments are supported:
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the autoscaling
    group names. Only valid for classic load balancers. For ALBs, use `target_group_arns` instead.
 * `vpc_zone_identifier` (Optional) A list of subnet IDs to launch resources in.
-* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application Load Balancing.
-* `termination_policies` (Optional) A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `Default`.
+* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing.
+* `termination_policies` (Optional) A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`.
 * `suspended_processes` - (Optional) A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.
 * `tag` (Optional) A list of tag blocks. Tags documented below.
 * `tags` (Optional) A list of tag blocks (maps). Tags documented below.
 * `placement_group` (Optional) The name of the placement group into which you'll launch your instances, if any.
 * `metrics_granularity` - (Optional) The granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
-* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are `GroupMinSize`, `GroupMaxSize`, `GroupDesiredCapacity`, `GroupInServiceInstances`, `GroupPendingInstances`, `GroupStandbyInstances`, `GroupTerminatingInstances`, `GroupTotalInstances`.
+* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are `GroupDesiredCapacity`, `GroupInServiceCapacity`, `GroupPendingCapacity`, `GroupMinSize`, `GroupMaxSize`, `GroupInServiceInstances`, `GroupPendingInstances`, `GroupStandbyInstances`, `GroupStandbyCapacity`, `GroupTerminatingCapacity`, `GroupTerminatingInstances`, `GroupTotalCapacity`, `GroupTotalInstances`.
 * `wait_for_capacity_timeout` (Default: "10m") A maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for ASG instances to be healthy before timing out.  (See also [Waiting
   for Capacity](#waiting-for-capacity) below.) Setting this to "0" causes
   Terraform to skip all Capacity Waiting behavior.
 * `min_elb_capacity` - (Optional) Setting this causes Terraform to wait for
-  this number of instances to show up healthy in the ELB only on creation.
-  Updates will not wait on ELB instance number changes.
+  this number of instances from this autoscaling group to show up healthy in the
+  ELB only on creation. Updates will not wait on ELB instance number changes.
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `wait_for_elb_capacity` - (Optional) Setting this will cause Terraform to wait
-  for exactly this number of healthy instances in all attached load balancers
-  on both create and update operations. (Takes precedence over
-  `min_elb_capacity` behavior.)
+  for exactly this number of healthy instances from this autoscaling group in
+  all attached load balancers on both create and update operations. (Takes
+  precedence over `min_elb_capacity` behavior.)
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `protect_from_scale_in` (Optional) Allows setting instance protection. The
    autoscaling group will not select instances with this setting for terminination
    during scale in events.
 * `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
+* `max_instance_lifetime` (Optional) The maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 604800 and 31536000 seconds.
 
-Tags support the following:
+### launch_template
+
+~> **NOTE:** Either `id` or `name` must be specified.
+
+The top-level `launch_template` block supports the following:
+
+* `id` - (Optional) The ID of the launch template. Conflicts with `name`.
+* `name` - (Optional) The name of the launch template. Conflicts with `id`.
+* `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
+
+### mixed_instances_policy
+
+* `instances_distribution` - (Optional) Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
+* `launch_template` - (Required) Nested argument containing launch template settings along with the overrides to specify multiple instance types and weights. Defined below.
+
+#### mixed_instances_policy instances_distribution
+
+This configuration block supports the following:
+
+* `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`. Default: `prioritized`.
+* `on_demand_base_capacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
+* `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
+* `spot_allocation_strategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`, `capacity-optimized`. Default: `lowest-price`.
+* `spot_instance_pools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Default: `2`.
+* `spot_max_price` - (Optional) Maximum price per unit hour that the user is willing to pay for the Spot instances. Default: an empty string which means the on-demand price.
+
+#### mixed_instances_policy launch_template
+
+This configuration block supports the following:
+
+* `launch_template_specification` - (Required) Nested argument defines the Launch Template. Defined below.
+* `override` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
+
+##### mixed_instances_policy launch_template launch_template_specification
+
+~> **NOTE:** Either `launch_template_id` or `launch_template_name` must be specified.
+
+This configuration block supports the following:
+
+* `launch_template_id` - (Optional) The ID of the launch template. Conflicts with `launch_template_name`.
+* `launch_template_name` - (Optional) The name of the launch template. Conflicts with `launch_template_id`.
+* `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
+
+##### mixed_instances_policy launch_template override
+
+This configuration block supports the following:
+
+* `instance_type` - (Optional) Override the instance type in the Launch Template.
+* `weighted_capacity` - (Optional) The number of capacity units, which gives the instance type a proportional weight to other instance types.
+
+### tag and tags
 
 The `tag` attribute accepts exactly one tag declaration with the following fields:
 
@@ -212,13 +286,7 @@ Alternatively the `tags` attributes can be used, which accepts a list of maps co
 This allows the construction of dynamic lists of tags which is not possible using the single `tag` attribute.
 `tag` and `tags` are mutually exclusive, only one of them can be specified.
 
-### Launch Template Specification
-
-The `launch_template` block supports the following:
-
-* `id` - The ID of the launch template. Conflicts with `name`.
-* `name` - The name of the launch template. Conflicts with `id`.
-* `version` - Template version. Can be version number, `$Latest` or `$Default`. (Default: `$Default`).
+~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `AmazonECSManaged` tag. To ignore the removal of these automatic tags, see the [`ignore_tags` provider configuration](https://www.terraform.io/docs/providers/aws/index.html#ignore_tags) or the [`ignore_changes` lifecycle argument for Terraform resources](https://www.terraform.io/docs/configuration/resources.html#ignore_changes).
 
 ## Attributes Reference
 
@@ -245,7 +313,7 @@ AutoScaling Group
 
 ~> **NOTE:** Terraform has two types of ways you can add lifecycle hooks - via
 the `initial_lifecycle_hook` attribute from this resource, or via the separate
-[`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hooks.html)
+[`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
 resource. `initial_lifecycle_hook` exists here because any lifecycle hooks
 added with `aws_autoscaling_lifecycle_hook` will not be added until the
 autoscaling group has been created, and depending on your
@@ -254,7 +322,6 @@ been launched, creating unintended behavior. If you need hooks to run on all
 instances, add them with `initial_lifecycle_hook` here, but take
 care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 
-<a id="timeouts"></a>
 ## Timeouts
 
 `autoscaling_group` provides the following

@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCodeCommitRepository() *schema.Resource {
@@ -24,13 +26,13 @@ func resourceAwsCodeCommitRepository() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateMaxLength(100),
+				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(1000),
+				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
 
 			"arn": {
@@ -57,6 +59,7 @@ func resourceAwsCodeCommitRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -67,6 +70,7 @@ func resourceAwsCodeCommitRepositoryCreate(d *schema.ResourceData, meta interfac
 	input := &codecommit.CreateRepositoryInput{
 		RepositoryName:        aws.String(d.Get("repository_name").(string)),
 		RepositoryDescription: aws.String(d.Get("description").(string)),
+		Tags:                  keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodecommitTags(),
 	}
 
 	out, err := conn.CreateRepository(input)
@@ -80,23 +84,35 @@ func resourceAwsCodeCommitRepositoryCreate(d *schema.ResourceData, meta interfac
 	d.Set("clone_url_http", out.RepositoryMetadata.CloneUrlHttp)
 	d.Set("clone_url_ssh", out.RepositoryMetadata.CloneUrlSsh)
 
-	return resourceAwsCodeCommitRepositoryUpdate(d, meta)
+	if _, ok := d.GetOk("default_branch"); ok {
+		if err := resourceAwsCodeCommitUpdateDefaultBranch(conn, d); err != nil {
+			return fmt.Errorf("error updating CodeCommit Repository (%s) default branch: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsCodeCommitRepositoryRead(d, meta)
 }
 
 func resourceAwsCodeCommitRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codecommitconn
 
-	if _, ok := d.GetOk("default_branch"); ok {
-		if d.HasChange("default_branch") {
-			if err := resourceAwsCodeCommitUpdateDefaultBranch(conn, d); err != nil {
-				return err
-			}
+	if d.HasChange("default_branch") {
+		if err := resourceAwsCodeCommitUpdateDefaultBranch(conn, d); err != nil {
+			return fmt.Errorf("error updating CodeCommit Repository (%s) default branch: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("description") {
 		if err := resourceAwsCodeCommitUpdateDescription(conn, d); err != nil {
-			return err
+			return fmt.Errorf("error updating CodeCommit Repository (%s) description: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.CodecommitUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating CodeCommit Repository (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -132,6 +148,16 @@ func resourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{
 		if out.RepositoryMetadata.DefaultBranch != nil {
 			d.Set("default_branch", out.RepositoryMetadata.DefaultBranch)
 		}
+	}
+
+	tags, err := keyvaluetags.CodecommitListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for CodeCommit Repository (%s): %s", d.Get("arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil

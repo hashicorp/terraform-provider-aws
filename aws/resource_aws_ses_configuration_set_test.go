@@ -5,31 +5,37 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESConfigurationSetConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists("aws_ses_configuration_set.test"),
 				),
+			},
+			{
+				ResourceName:      "aws_ses_configuration_set.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesConn
+	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_configuration_set" {
@@ -69,7 +75,7 @@ func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES configuration set ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		response, err := conn.ListConfigurationSets(&ses.ListConfigurationSetsInput{})
 		if err != nil {

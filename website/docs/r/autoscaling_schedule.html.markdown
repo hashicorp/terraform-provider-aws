@@ -1,12 +1,12 @@
 ---
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_schedule"
-sidebar_current: "docs-aws-resource-autoscaling-schedule"
 description: |-
   Provides an AutoScaling Schedule resource.
 ---
 
-# aws_autoscaling_schedule
+# Resource: aws_autoscaling_schedule
 
 Provides an AutoScaling Schedule resource.
 
@@ -55,4 +55,13 @@ Set to -1 if you don't want to change the maximum size at the scheduled time.
 ~> **NOTE:** When `start_time` and `end_time` are specified with `recurrence` , they form the boundaries of when the recurring action will start and stop.
 
 ## Attribute Reference
+
 * `arn` - The ARN assigned by AWS to the autoscaling schedule.
+
+## Import
+
+AutoScaling ScheduledAction can be imported using the `auto-scaling-group-name` and `scheduled-action-name`, e.g.
+
+```
+$ terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
+```

@@ -8,14 +8,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsSfnActivity() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSfnActivityCreate,
 		Read:   resourceAwsSfnActivityRead,
+		Update: resourceAwsSfnActivityUpdate,
 		Delete: resourceAwsSfnActivityDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -26,13 +28,14 @@ func resourceAwsSfnActivity() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateMaxLength(80),
+				ValidateFunc: validation.StringLenBetween(0, 80),
 			},
 
 			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -43,6 +46,7 @@ func resourceAwsSfnActivityCreate(d *schema.ResourceData, meta interface{}) erro
 
 	params := &sfn.CreateActivityInput{
 		Name: aws.String(d.Get("name").(string)),
+		Tags: keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().SfnTags(),
 	}
 
 	activity, err := conn.CreateActivity(params)
@@ -51,6 +55,19 @@ func resourceAwsSfnActivityCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.SetId(*activity.ActivityArn)
+
+	return resourceAwsSfnActivityRead(d, meta)
+}
+
+func resourceAwsSfnActivityUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).sfnconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.SfnUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
 
 	return resourceAwsSfnActivityRead(d, meta)
 }
@@ -76,6 +93,16 @@ func resourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) error 
 		log.Printf("[DEBUG] Error setting creation_date: %s", err)
 	}
 
+	tags, err := keyvaluetags.SfnListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for SFN Activity (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -83,15 +110,15 @@ func resourceAwsSfnActivityDelete(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).sfnconn
 	log.Printf("[DEBUG] Deleting Step Functions Activity: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteActivity(&sfn.DeleteActivityInput{
-			ActivityArn: aws.String(d.Id()),
-		})
+	input := &sfn.DeleteActivityInput{
+		ActivityArn: aws.String(d.Id()),
+	}
 
-		if err == nil {
-			return nil
-		}
+	_, err := conn.DeleteActivity(input)
 
-		return resource.NonRetryableError(err)
-	})
+	if err != nil {
+		return fmt.Errorf("Error deleting SFN Activity: %s", err)
+	}
+
+	return nil
 }

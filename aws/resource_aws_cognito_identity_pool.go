@@ -3,14 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCognitoIdentityPool() *schema.Resource {
@@ -99,6 +98,8 @@ func resourceAwsCognitoIdentityPool() *schema.Resource {
 					ValidateFunc: validateCognitoSupportedLoginProviders,
 				},
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -132,6 +133,10 @@ func resourceAwsCognitoIdentityPoolCreate(d *schema.ResourceData, meta interface
 		params.OpenIdConnectProviderARNs = expandStringList(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		params.IdentityPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityTags()
+	}
+
 	entity, err := conn.CreateIdentityPool(params)
 	if err != nil {
 		return fmt.Errorf("Error creating Cognito Identity Pool: %s", err)
@@ -150,7 +155,7 @@ func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}
 		IdentityPoolId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == cognitoidentity.ErrCodeResourceNotFoundException {
 			d.SetId("")
 			return nil
 		}
@@ -168,21 +173,24 @@ func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}
 	d.Set("identity_pool_name", ip.IdentityPoolName)
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
 	d.Set("developer_provider_name", ip.DeveloperProviderName)
+	if err := d.Set("tags", keyvaluetags.CognitoidentityKeyValueTags(ip.IdentityPoolTags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	if err := d.Set("cognito_identity_providers", flattenCognitoIdentityProviders(ip.CognitoIdentityProviders)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting cognito_identity_providers error: %#v", err)
+		return fmt.Errorf("Error setting cognito_identity_providers error: %#v", err)
 	}
 
 	if err := d.Set("openid_connect_provider_arns", flattenStringList(ip.OpenIdConnectProviderARNs)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting openid_connect_provider_arns error: %#v", err)
+		return fmt.Errorf("Error setting openid_connect_provider_arns error: %#v", err)
 	}
 
 	if err := d.Set("saml_provider_arns", flattenStringList(ip.SamlProviderARNs)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting saml_provider_arns error: %#v", err)
+		return fmt.Errorf("Error setting saml_provider_arns error: %#v", err)
 	}
 
 	if err := d.Set("supported_login_providers", flattenCognitoSupportedLoginProviders(ip.SupportedLoginProviders)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting supported_login_providers error: %#v", err)
+		return fmt.Errorf("Error setting supported_login_providers error: %#v", err)
 	}
 
 	return nil
@@ -198,29 +206,40 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 		IdentityPoolName:               aws.String(d.Get("identity_pool_name").(string)),
 	}
 
-	if d.HasChange("developer_provider_name") {
-		params.DeveloperProviderName = aws.String(d.Get("developer_provider_name").(string))
+	if v, ok := d.GetOk("developer_provider_name"); ok {
+		params.DeveloperProviderName = aws.String(v.(string))
 	}
 
-	if d.HasChange("cognito_identity_providers") {
-		params.CognitoIdentityProviders = expandCognitoIdentityProviders(d.Get("cognito_identity_providers").(*schema.Set))
+	if v, ok := d.GetOk("cognito_identity_providers"); ok {
+		params.CognitoIdentityProviders = expandCognitoIdentityProviders(v.(*schema.Set))
 	}
 
-	if d.HasChange("supported_login_providers") {
-		params.SupportedLoginProviders = expandCognitoSupportedLoginProviders(d.Get("supported_login_providers").(map[string]interface{}))
+	if v, ok := d.GetOk("supported_login_providers"); ok {
+		params.SupportedLoginProviders = expandCognitoSupportedLoginProviders(v.(map[string]interface{}))
 	}
 
-	if d.HasChange("openid_connect_provider_arns") {
-		params.OpenIdConnectProviderARNs = expandStringList(d.Get("openid_connect_provider_arns").([]interface{}))
+	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
+		params.OpenIdConnectProviderARNs = expandStringList(v.([]interface{}))
 	}
 
-	if d.HasChange("saml_provider_arns") {
-		params.SamlProviderARNs = expandStringList(d.Get("saml_provider_arns").([]interface{}))
+	if v, ok := d.GetOk("saml_provider_arns"); ok {
+		params.SamlProviderARNs = expandStringList(v.([]interface{}))
 	}
+
+	log.Printf("[DEBUG] Updating Cognito Identity Pool: %s", params)
 
 	_, err := conn.UpdateIdentityPool(params)
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito Identity Pool: %s", err)
+		return fmt.Errorf("Error updating Cognito Identity Pool: %s", err)
+	}
+
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.CognitoidentityUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Cognito Identity Pool (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsCognitoIdentityPoolRead(d, meta)
@@ -230,15 +249,12 @@ func resourceAwsCognitoIdentityPoolDelete(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).cognitoconn
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteIdentityPool(&cognitoidentity.DeleteIdentityPoolInput{
-			IdentityPoolId: aws.String(d.Id()),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteIdentityPool(&cognitoidentity.DeleteIdentityPoolInput{
+		IdentityPoolId: aws.String(d.Id()),
 	})
+
+	if err != nil {
+		return fmt.Errorf("Error deleting Cognito identity pool: %s", err)
+	}
+	return nil
 }

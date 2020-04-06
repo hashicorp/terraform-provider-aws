@@ -2,6 +2,10 @@
 
 package secretsmanager
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeDecryptionFailure for service response error code
@@ -42,9 +46,16 @@ const (
 	// "InvalidRequestException".
 	//
 	// You provided a parameter value that is not valid for the current state of
-	// the resource. For example, if you try to enable rotation on a secret, you
-	// must already have a Lambda function ARN configured or included as a parameter
-	// in this call.
+	// the resource.
+	//
+	// Possible causes:
+	//
+	//    * You tried to perform the operation on a secret that's currently marked
+	//    deleted.
+	//
+	//    * You tried to enable rotation on a secret that doesn't already have a
+	//    Lambda function ARN configured and you didn't include such an ARN as a
+	//    parameter in this call.
 	ErrCodeInvalidRequestException = "InvalidRequestException"
 
 	// ErrCodeLimitExceededException for service response error code
@@ -60,6 +71,12 @@ const (
 	// The policy document that you provided isn't valid.
 	ErrCodeMalformedPolicyDocumentException = "MalformedPolicyDocumentException"
 
+	// ErrCodePreconditionNotMetException for service response error code
+	// "PreconditionNotMetException".
+	//
+	// The request failed because you did not complete all the prerequisite steps.
+	ErrCodePreconditionNotMetException = "PreconditionNotMetException"
+
 	// ErrCodeResourceExistsException for service response error code
 	// "ResourceExistsException".
 	//
@@ -72,3 +89,17 @@ const (
 	// We can't find the resource that you asked for.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"DecryptionFailure":                newErrorDecryptionFailure,
+	"EncryptionFailure":                newErrorEncryptionFailure,
+	"InternalServiceError":             newErrorInternalServiceError,
+	"InvalidNextTokenException":        newErrorInvalidNextTokenException,
+	"InvalidParameterException":        newErrorInvalidParameterException,
+	"InvalidRequestException":          newErrorInvalidRequestException,
+	"LimitExceededException":           newErrorLimitExceededException,
+	"MalformedPolicyDocumentException": newErrorMalformedPolicyDocumentException,
+	"PreconditionNotMetException":      newErrorPreconditionNotMetException,
+	"ResourceExistsException":          newErrorResourceExistsException,
+	"ResourceNotFoundException":        newErrorResourceNotFoundException,
+}

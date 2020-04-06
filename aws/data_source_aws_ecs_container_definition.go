@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsEcsContainerDefinition() *schema.Resource {
@@ -53,12 +53,12 @@ func dataSourceAwsEcsContainerDefinition() *schema.Resource {
 			"docker_labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"environment": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

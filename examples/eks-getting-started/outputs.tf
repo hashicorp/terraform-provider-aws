@@ -3,7 +3,7 @@
 #
 
 locals {
-  config-map-aws-auth = <<CONFIGMAPAWSAUTH
+  config_map_aws_auth = <<CONFIGMAPAWSAUTH
 
 
 apiVersion: v1
@@ -42,7 +42,7 @@ users:
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1alpha1
-      command: heptio-authenticator-aws
+      command: aws-iam-authenticator
       args:
         - "token"
         - "-i"
@@ -50,10 +50,10 @@ users:
 KUBECONFIG
 }
 
-output "config-map-aws-auth" {
-  value = "${local.config-map-aws-auth}"
+output "config_map_aws_auth" {
+  value = local.config_map_aws_auth
 }
 
 output "kubeconfig" {
-  value = "${local.kubeconfig}"
+  value = local.kubeconfig
 }

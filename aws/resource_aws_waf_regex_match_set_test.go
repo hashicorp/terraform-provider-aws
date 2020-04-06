@@ -3,14 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -43,10 +43,6 @@ func testSweepWafRegexMatchSet(region string) error {
 	}
 
 	for _, s := range resp.RegexMatchSets {
-		if !strings.HasPrefix(*s.Name, "tfacc") {
-			continue
-		}
-
 		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 			RegexMatchSetId: s.RegexMatchSetId,
 		})
@@ -62,15 +58,18 @@ func testSweepWafRegexMatchSet(region string) error {
 			return fmt.Errorf("Error updating WAF Regex Match Set: %s", err)
 		}
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.DeleteRegexMatchSetInput{
 				ChangeToken:     token,
-				RegexMatchSetId: aws.String(*set.RegexMatchSetId),
+				RegexMatchSetId: set.RegexMatchSetId,
 			}
 			log.Printf("[INFO] Deleting WAF Regex Match Set: %s", req)
 			return conn.DeleteRegexMatchSet(req)
 		})
+		if err != nil {
+			return fmt.Errorf("error deleting WAF Regex Match Set (%s): %s", aws.StringValue(set.RegexMatchSetId), err)
+		}
 	}
 
 	return nil
@@ -101,6 +100,7 @@ func testAccAWSWafRegexMatchSet_basic(t *testing.T) {
 
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
+	resourceName := "aws_waf_regex_match_set.test"
 
 	fieldToMatch := waf.FieldToMatch{
 		Data: aws.String("User-Agent"),
@@ -108,23 +108,29 @@ func testAccAWSWafRegexMatchSet_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegexMatchSetExists("aws_waf_regex_match_set.test", &matchSet),
+					testAccCheckAWSWafRegexMatchSetExists(resourceName, &matchSet),
 					testAccCheckAWSWafRegexPatternSetExists("aws_waf_regex_pattern_set.test", &patternSet),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`regexmatchset/.+`)),
 					computeWafRegexMatchSetTuple(&patternSet, &fieldToMatch, "NONE", &idx),
-					resource.TestCheckResourceAttr("aws_waf_regex_match_set.test", "name", matchSetName),
-					resource.TestCheckResourceAttr("aws_waf_regex_match_set.test", "regex_match_tuple.#", "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.field_to_match.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.data", &idx, "user-agent"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.type", &idx, "HEADER"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.text_transformation", &idx, "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "name", matchSetName),
+					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.data", &idx, "user-agent"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.type", &idx, "HEADER"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.text_transformation", &idx, "NONE"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -137,39 +143,45 @@ func testAccAWSWafRegexMatchSet_changePatterns(t *testing.T) {
 
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
+	resourceName := "aws_waf_regex_match_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegexMatchSetExists("aws_waf_regex_match_set.test", &before),
+					testAccCheckAWSWafRegexMatchSetExists(resourceName, &before),
 					testAccCheckAWSWafRegexPatternSetExists("aws_waf_regex_pattern_set.test", &patternSet),
 					computeWafRegexMatchSetTuple(&patternSet, &waf.FieldToMatch{Data: aws.String("User-Agent"), Type: aws.String("HEADER")}, "NONE", &idx1),
-					resource.TestCheckResourceAttr("aws_waf_regex_match_set.test", "name", matchSetName),
-					resource.TestCheckResourceAttr("aws_waf_regex_match_set.test", "regex_match_tuple.#", "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.field_to_match.#", &idx1, "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.data", &idx1, "user-agent"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.type", &idx1, "HEADER"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.text_transformation", &idx1, "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "name", matchSetName),
+					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.#", &idx1, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.data", &idx1, "user-agent"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.type", &idx1, "HEADER"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.text_transformation", &idx1, "NONE"),
 				),
 			},
 			{
 				Config: testAccAWSWafRegexMatchSetConfig_changePatterns(matchSetName, patternSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegexMatchSetExists("aws_waf_regex_match_set.test", &after),
-					resource.TestCheckResourceAttr("aws_waf_regex_match_set.test", "name", matchSetName),
-					resource.TestCheckResourceAttr("aws_waf_regex_match_set.test", "regex_match_tuple.#", "1"),
+					testAccCheckAWSWafRegexMatchSetExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", matchSetName),
+					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", "1"),
 
 					computeWafRegexMatchSetTuple(&patternSet, &waf.FieldToMatch{Data: aws.String("Referer"), Type: aws.String("HEADER")}, "COMPRESS_WHITE_SPACE", &idx2),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.field_to_match.#", &idx2, "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.data", &idx2, "referer"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.type", &idx2, "HEADER"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_regex_match_set.test", "regex_match_tuple.%d.text_transformation", &idx2, "COMPRESS_WHITE_SPACE"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.#", &idx2, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.data", &idx2, "referer"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.type", &idx2, "HEADER"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.text_transformation", &idx2, "COMPRESS_WHITE_SPACE"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -178,19 +190,25 @@ func testAccAWSWafRegexMatchSet_changePatterns(t *testing.T) {
 func testAccAWSWafRegexMatchSet_noPatterns(t *testing.T) {
 	var matchSet waf.RegexMatchSet
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
+	resourceName := "aws_waf_regex_match_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegexMatchSetConfig_noPatterns(matchSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegexMatchSetExists("aws_waf_regex_match_set.test", &matchSet),
-					resource.TestCheckResourceAttr("aws_waf_regex_match_set.test", "name", matchSetName),
-					resource.TestCheckResourceAttr("aws_waf_regex_match_set.test", "regex_match_tuple.#", "0"),
+					testAccCheckAWSWafRegexMatchSetExists(resourceName, &matchSet),
+					resource.TestCheckResourceAttr(resourceName, "name", matchSetName),
+					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -200,16 +218,17 @@ func testAccAWSWafRegexMatchSet_disappears(t *testing.T) {
 	var matchSet waf.RegexMatchSet
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
+	resourceName := "aws_waf_regex_match_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegexMatchSetExists("aws_waf_regex_match_set.test", &matchSet),
+					testAccCheckAWSWafRegexMatchSetExists(resourceName, &matchSet),
 					testAccCheckAWSWafRegexMatchSetDisappears(&matchSet),
 				),
 				ExpectNonEmptyPlan: true,
@@ -236,7 +255,7 @@ func testAccCheckAWSWafRegexMatchSetDisappears(set *waf.RegexMatchSet) resource.
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRegexMatchSetInput{
 				ChangeToken:     token,
@@ -318,7 +337,7 @@ func testAccCheckAWSWafRegexMatchSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the Regex Pattern Set is already destroyed
-		if isAWSErr(err, "WAFNonexistentItemException", "") {
+		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
 			return nil
 		}
 
@@ -332,18 +351,20 @@ func testAccAWSWafRegexMatchSetConfig(matchSetName, patternSetName string) strin
 	return fmt.Sprintf(`
 resource "aws_waf_regex_match_set" "test" {
   name = "%s"
+
   regex_match_tuple {
     field_to_match {
       data = "User-Agent"
       type = "HEADER"
     }
+
     regex_pattern_set_id = "${aws_waf_regex_pattern_set.test.id}"
-    text_transformation = "NONE"
+    text_transformation  = "NONE"
   }
 }
 
 resource "aws_waf_regex_pattern_set" "test" {
-  name = "%s"
+  name                  = "%s"
   regex_pattern_strings = ["one", "two"]
 }
 `, matchSetName, patternSetName)
@@ -359,13 +380,14 @@ resource "aws_waf_regex_match_set" "test" {
       data = "Referer"
       type = "HEADER"
     }
+
     regex_pattern_set_id = "${aws_waf_regex_pattern_set.test.id}"
-    text_transformation = "COMPRESS_WHITE_SPACE"
+    text_transformation  = "COMPRESS_WHITE_SPACE"
   }
 }
 
 resource "aws_waf_regex_pattern_set" "test" {
-  name = "%s"
+  name                  = "%s"
   regex_pattern_strings = ["one", "two"]
 }
 `, matchSetName, patternSetName)
@@ -375,5 +397,6 @@ func testAccAWSWafRegexMatchSetConfig_noPatterns(matchSetName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_match_set" "test" {
   name = "%s"
-}`, matchSetName)
+}
+`, matchSetName)
 }

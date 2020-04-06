@@ -1,14 +1,14 @@
 ---
+subcategory: "Secrets Manager"
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_secret_version"
-sidebar_current: "docs-aws-datasource-secretsmanager-secret-version"
 description: |-
   Retrieve information about a Secrets Manager secret version including its secret value
 ---
 
 # Data Source: aws_secretsmanager_secret_version
 
-Retrieve information about a Secrets Manager secret version includings its secret value. To retrieve secret metadata, see the [`aws_secretsmanager_secret` data source](/docs/providers/aws/d/secretsmanager_secret.html).
+Retrieve information about a Secrets Manager secret version, including its secret value. To retrieve secret metadata, see the [`aws_secretsmanager_secret` data source](/docs/providers/aws/d/secretsmanager_secret.html).
 
 ## Example Usage
 
@@ -31,6 +31,16 @@ data "aws_secretsmanager_secret_version" "by-version-stage" {
 }
 ```
 
+### Handling Key-Value Secret Strings in JSON
+
+Reading key-value pairs from JSON back into a native Terraform map can be accomplished in Terraform 0.12 and later with the [`jsondecode()` function](https://www.terraform.io/docs/configuration/functions/jsondecode.html):
+
+```hcl
+output "example" {
+  value = jsondecode(data.aws_secretsmanager_secret_version.example.secret_string)["key1"]
+}
+```
+
 ## Argument Reference
 
 * `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret.
@@ -39,6 +49,8 @@ data "aws_secretsmanager_secret_version" "by-version-stage" {
 
 ## Attributes Reference
 
+* `arn` - The ARN of the secret.
 * `id` - The unique identifier of this version of the secret.
 * `secret_string` - The decrypted part of the protected secret information that was originally provided as a string.
+* `secret_binary` - The decrypted part of the protected secret information that was originally provided as a binary. Base64 encoded.
 * `version_id` - The unique identifier of this version of the secret.

@@ -1,12 +1,12 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_policy"
-sidebar_current: "docs-aws-resource-iam-policy"
 description: |-
   Provides an IAM policy.
 ---
 
-# aws_iam_policy
+# Resource: aws_iam_policy
 
 Provides an IAM policy.
 
@@ -39,15 +39,12 @@ EOF
 
 The following arguments are supported:
 
-* `description` - (Optional) Description of the IAM policy.
+* `description` - (Optional, Forces new resource) Description of the IAM policy.
 * `name` - (Optional, Forces new resource) The name of the policy. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `path` - (Optional, default "/") Path in which to create the policy.
   See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
-* `policy` - (Required) The policy document. This is a JSON formatted string.
-  The heredoc syntax, `file` function, or the [`aws_iam_policy_document` data
-  source](/docs/providers/aws/d/iam_policy_document.html)
-  are all helpful here.
+* `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
 ## Attributes Reference
 

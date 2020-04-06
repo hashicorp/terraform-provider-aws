@@ -2,13 +2,65 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_guardduty_detector", &resource.Sweeper{
+		Name: "aws_guardduty_detector",
+		F:    testSweepGuarddutyDetectors,
+	})
+}
+
+func testSweepGuarddutyDetectors(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).guarddutyconn
+	input := &guardduty.ListDetectorsInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListDetectorsPages(input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
+		for _, detectorID := range page.DetectorIds {
+			id := aws.StringValue(detectorID)
+			input := &guardduty.DeleteDetectorInput{
+				DetectorId: detectorID,
+			}
+
+			log.Printf("[INFO] Deleting GuardDuty Detector: %s", id)
+			_, err := conn.DeleteDetector(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting GuardDuty Detector (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping GuardDuty Detector sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving GuardDuty Detectors: %s", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func testAccAwsGuardDutyDetector_basic(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
@@ -24,6 +76,7 @@ func testAccAwsGuardDutyDetector_basic(t *testing.T) {
 					testAccCheckAwsGuardDutyDetectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "SIX_HOURS"),
 				),
 			},
 			{
@@ -40,6 +93,13 @@ func testAccAwsGuardDutyDetector_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 				),
 			},
+			{
+				Config: testAccGuardDutyDetectorConfig_basic4,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "FIFTEEN_MINUTES"),
+				),
+			},
 		},
 	})
 }
@@ -52,11 +112,11 @@ func testAccAwsGuardDutyDetector_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGuardDutyDetectorConfig_basic1,
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -113,4 +173,9 @@ resource "aws_guardduty_detector" "test" {
 const testAccGuardDutyDetectorConfig_basic3 = `
 resource "aws_guardduty_detector" "test" {
   enable = true
+}`
+
+const testAccGuardDutyDetectorConfig_basic4 = `
+resource "aws_guardduty_detector" "test" {
+  finding_publishing_frequency = "FIFTEEN_MINUTES"
 }`

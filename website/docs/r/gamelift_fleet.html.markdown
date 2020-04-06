@@ -1,12 +1,12 @@
 ---
+subcategory: "Gamelift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_fleet"
-sidebar_current: "docs-aws-resource-gamelift-fleet"
 description: |-
   Provides a Gamelift Fleet resource.
 ---
 
-# aws_gamelift_fleet
+# Resource: aws_gamelift_fleet
 
 Provides a Gamelift Fleet resource.
 
@@ -14,13 +14,15 @@ Provides a Gamelift Fleet resource.
 
 ```hcl
 resource "aws_gamelift_fleet" "example" {
-  build_id = "${aws_gamelift_build.example.id}"
+  build_id          = "${aws_gamelift_build.example.id}"
   ec2_instance_type = "t2.micro"
-  name = "example-fleet-name"
+  fleet_type        = "ON_DEMAND"
+  name              = "example-fleet-name"
+
   runtime_configuration {
     server_process {
       concurrent_executions = 1
-      launch_path = "C:\\game\\GomokuServer.exe"
+      launch_path           = "C:\\game\\GomokuServer.exe"
     }
   }
 }
@@ -31,14 +33,17 @@ resource "aws_gamelift_fleet" "example" {
 The following arguments are supported:
 
 * `build_id` - (Required) ID of the Gamelift Build to be deployed on the fleet.
-* `ec2_instance_type` - (Required) Name of an EC2 instance type. e.g. `t2.micro`
-* `name` - (Required) The name of the fleet.
 * `description` - (Optional) Human-readable description of the fleet.
 * `ec2_inbound_permission` - (Optional) Range of IP addresses and port settings that permit inbound traffic to access server processes running on the fleet. See below.
+* `ec2_instance_type` - (Required) Name of an EC2 instance type. e.g. `t2.micro`
+* `fleet_type` - (Optional) Type of fleet. This value must be `ON_DEMAND` or `SPOT`. Defaults to `ON_DEMAND`.
+* `instance_role_arn` - (Optional) ARN of an IAM role that instances in the fleet can assume.
 * `metric_groups` - (Optional) List of names of metric groups to add this fleet to. A metric group tracks metrics across all fleets in the group. Defaults to `default`.
+* `name` - (Required) The name of the fleet.
 * `new_game_session_protection_policy` - (Optional) Game session protection policy to apply to all instances in this fleet. e.g. `FullProtection`. Defaults to `NoProtection`.
 * `resource_creation_limit_policy` - (Optional) Policy that limits the number of game sessions an individual player can create over a span of time for this fleet. See below.
 * `runtime_configuration` - (Optional) Instructions for launching server processes on each instance in the fleet. See below.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ### Nested Fields
 
@@ -73,6 +78,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Fleet ID.
 * `arn` - Fleet ARN.
 * `operating_system` - Operating system of the fleet's computing resources.
+
+## Timeouts
+
+`aws_gamelift_fleet` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+* `create` - (Default `70m`) How long to wait for a fleet to be created.
+* `delete` - (Default `20m`) How long to wait for a fleet to be deleted.
 
 ## Import
 

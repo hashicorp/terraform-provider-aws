@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEip() *schema.Resource {
@@ -31,53 +32,70 @@ func resourceAwsEip() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"vpc": &schema.Schema{
+			"vpc": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
 
-			"instance": &schema.Schema{
+			"instance": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"network_interface": &schema.Schema{
+			"network_interface": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"allocation_id": &schema.Schema{
+			"allocation_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"association_id": &schema.Schema{
+			"association_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"public_ip": &schema.Schema{
+			"public_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"private_ip": &schema.Schema{
+			"public_dns": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"associate_with_private_ip": &schema.Schema{
+			"private_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"private_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"associate_with_private_ip": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+
+			"public_ipv4_pool": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
 			},
 
 			"tags": tagsSchema(),
@@ -96,6 +114,10 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 
 	allocOpts := &ec2.AllocateAddressInput{
 		Domain: aws.String(domainOpt),
+	}
+
+	if v, ok := d.GetOk("public_ipv4_pool"); ok {
+		allocOpts.PublicIpv4Pool = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] EIP create configuration: %#v", allocOpts)
@@ -120,9 +142,9 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
 
-	if _, ok := d.GetOk("tags"); ok {
-		if err := setTags(ec2conn, d); err != nil {
-			return fmt.Errorf("Error creating EIP tags: %s", err)
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2UpdateTags(ec2conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
 
@@ -164,6 +186,9 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			describeAddresses, err = ec2conn.DescribeAddresses(req)
+		}
 		if err != nil {
 			return fmt.Errorf("Error retrieving EIP: %s", err)
 		}
@@ -181,16 +206,22 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// Verify AWS returned our EIP
-	if len(describeAddresses.Addresses) != 1 ||
-		domain == "vpc" && *describeAddresses.Addresses[0].AllocationId != id ||
-		*describeAddresses.Addresses[0].PublicIp != id {
-		if err != nil {
-			return fmt.Errorf("Unable to find EIP: %#v", describeAddresses.Addresses)
+	var address *ec2.Address
+
+	// In the case that AWS returns more EIPs than we intend it to, we loop
+	// over the returned addresses to see if it's in the list of results
+	for _, addr := range describeAddresses.Addresses {
+		if (domain == "vpc" && aws.StringValue(addr.AllocationId) == id) || aws.StringValue(addr.PublicIp) == id {
+			address = addr
+			break
 		}
 	}
 
-	address := describeAddresses.Addresses[0]
+	if address == nil {
+		log.Printf("[WARN] EIP %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	d.Set("association_id", address.AssociationId)
 	if address.InstanceId != nil {
@@ -203,8 +234,29 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("network_interface", "")
 	}
+
+	region := *ec2conn.Config.Region
 	d.Set("private_ip", address.PrivateIpAddress)
+	if address.PrivateIpAddress != nil {
+		dashIP := strings.Replace(*address.PrivateIpAddress, ".", "-", -1)
+
+		if region == "us-east-1" {
+			d.Set("private_dns", fmt.Sprintf("ip-%s.ec2.internal", dashIP))
+		} else {
+			d.Set("private_dns", fmt.Sprintf("ip-%s.%s.compute.internal", dashIP, region))
+		}
+	}
 	d.Set("public_ip", address.PublicIp)
+	if address.PublicIp != nil {
+		dashIP := strings.Replace(*address.PublicIp, ".", "-", -1)
+
+		if region == "us-east-1" {
+			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.compute-1", dashIP)))
+		} else {
+			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s.compute", dashIP, region)))
+		}
+	}
+	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
 
 	// On import (domain never set, which it must've been if we created),
 	// set the 'vpc' attribute depending on if we're in a VPC.
@@ -221,7 +273,9 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(*address.AllocationId)
 	}
 
-	d.Set("tags", tagsToMap(address.Tags))
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(address.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -292,6 +346,9 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = ec2conn.AssociateAddress(assocOpts)
+		}
 		if err != nil {
 			// Prevent saving instance if association failed
 			// e.g. missing internet gateway in VPC
@@ -301,9 +358,10 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, ok := d.GetOk("tags"); ok {
-		if err := setTags(ec2conn, d); err != nil {
-			return fmt.Errorf("Error updating EIP tags: %s", err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Ec2UpdateTags(ec2conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EIP (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -329,22 +387,24 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	domain := resourceAwsEipDomain(d)
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		var err error
-		switch domain {
-		case "vpc":
-			log.Printf(
-				"[DEBUG] EIP release (destroy) address allocation: %v",
-				d.Id())
-			_, err = ec2conn.ReleaseAddress(&ec2.ReleaseAddressInput{
-				AllocationId: aws.String(d.Id()),
-			})
-		case "standard":
-			log.Printf("[DEBUG] EIP release (destroy) address: %v", d.Id())
-			_, err = ec2conn.ReleaseAddress(&ec2.ReleaseAddressInput{
-				PublicIp: aws.String(d.Id()),
-			})
+
+	var input *ec2.ReleaseAddressInput
+	switch domain {
+	case "vpc":
+		log.Printf("[DEBUG] EIP release (destroy) address allocation: %v", d.Id())
+		input = &ec2.ReleaseAddressInput{
+			AllocationId: aws.String(d.Id()),
 		}
+	case "standard":
+		log.Printf("[DEBUG] EIP release (destroy) address: %v", d.Id())
+		input = &ec2.ReleaseAddressInput{
+			PublicIp: aws.String(d.Id()),
+		}
+	}
+
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		var err error
+		_, err = ec2conn.ReleaseAddress(input)
 
 		if err == nil {
 			return nil
@@ -355,6 +415,13 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 
 		return resource.RetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = ec2conn.ReleaseAddress(input)
+	}
+	if err != nil {
+		return fmt.Errorf("Error releasing EIP address: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsEipDomain(d *schema.ResourceData) string {

@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_integration_response"
-sidebar_current: "docs-aws-resource-api-gateway-integration-response"
 description: |-
   Provides an HTTP Method Integration Response for an API Gateway Resource.
 ---
 
-# aws_api_gateway_integration_response
+# Resource: aws_api_gateway_integration_response
 
 Provides an HTTP Method Integration Response for an API Gateway Resource.
 
@@ -41,7 +41,7 @@ resource "aws_api_gateway_integration" "MyDemoIntegration" {
   type        = "MOCK"
 }
 
-resource "aws_api_gateway_method_response" "200" {
+resource "aws_api_gateway_method_response" "response_200" {
   rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
   resource_id = "${aws_api_gateway_resource.MyDemoResource.id}"
   http_method = "${aws_api_gateway_method.MyDemoMethod.http_method}"
@@ -52,10 +52,10 @@ resource "aws_api_gateway_integration_response" "MyDemoIntegrationResponse" {
   rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
   resource_id = "${aws_api_gateway_resource.MyDemoResource.id}"
   http_method = "${aws_api_gateway_method.MyDemoMethod.http_method}"
-  status_code = "${aws_api_gateway_method_response.200.status_code}"
+  status_code = "${aws_api_gateway_method_response.response_200.status_code}"
 
   # Transforms the backend JSON response to XML
-  response_templates {
+  response_templates = {
     "application/xml" = <<EOF
 #set($inputRoot = $input.path('$'))
 <?xml version="1.0" encoding="UTF-8"?>
@@ -81,6 +81,13 @@ The following arguments are supported:
   For all other `HTTP` and `AWS` backends, the HTTP status code is matched.
 * `response_templates` - (Optional) A map specifying the templates used to transform the integration response body
 * `response_parameters` - (Optional) A map of response parameters that can be read from the backend response.
-  For example: `response_parameters = { "method.response.header.X-Some-Header" = "integration.response.header.X-Some-Other-Header" }`,
-* `response_parameters_in_json` - **Deprecated**, use `response_parameters` instead.
+  For example: `response_parameters = { "method.response.header.X-Some-Header" = "integration.response.header.X-Some-Other-Header" }`
 * `content_handling` - (Optional) Specifies how to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the response payload will be passed through from the integration response to the method response without modification.
+
+## Import
+
+`aws_api_gateway_integration_response` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`, e.g.
+
+```
+$ terraform import aws_api_gateway_integration_response.example 12345abcde/67890fghij/GET/200
+```

@@ -2,15 +2,66 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_config_configuration_recorder", &resource.Sweeper{
+		Name: "aws_config_configuration_recorder",
+		F:    testSweepConfigConfigurationRecorder,
+	})
+}
+
+func testSweepConfigConfigurationRecorder(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).configconn
+
+	req := &configservice.DescribeConfigurationRecordersInput{}
+	resp, err := conn.DescribeConfigurationRecorders(req)
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Config Configuration Recorders sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error describing Configuration Recorders: %s", err)
+	}
+
+	if len(resp.ConfigurationRecorders) == 0 {
+		log.Print("[DEBUG] No AWS Config Configuration Recorder to sweep")
+		return nil
+	}
+
+	for _, cr := range resp.ConfigurationRecorders {
+		_, err := conn.StopConfigurationRecorder(&configservice.StopConfigurationRecorderInput{
+			ConfigurationRecorderName: cr.Name,
+		})
+		if err != nil {
+			return err
+		}
+
+		_, err = conn.DeleteConfigurationRecorder(&configservice.DeleteConfigurationRecorderInput{
+			ConfigurationRecorderName: cr.Name,
+		})
+		if err != nil {
+			return fmt.Errorf(
+				"Error deleting Configuration Recorder (%s): %s",
+				*cr.Name, err)
+		}
+	}
+
+	return nil
+}
 
 func testAccConfigConfigurationRecorder_basic(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
@@ -79,11 +130,11 @@ func testAccConfigConfigurationRecorder_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConfigConfigurationRecorderConfig_basic(rInt),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -179,13 +230,14 @@ func testAccCheckConfigConfigurationRecorderDestroy(s *terraform.State) error {
 func testAccConfigConfigurationRecorderConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "foo" {
-  name = "tf-acc-test-%d"
+  name     = "tf-acc-test-%d"
   role_arn = "${aws_iam_role.r.arn}"
 }
 
 resource "aws_iam_role" "r" {
-    name = "tf-acc-test-awsconfig-%d"
-    assume_role_policy = <<POLICY
+  name = "tf-acc-test-awsconfig-%d"
+
+  assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -203,9 +255,10 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "p" {
-    name = "tf-acc-test-awsconfig-%d"
-    role = "${aws_iam_role.r.id}"
-    policy = <<EOF
+  name = "tf-acc-test-awsconfig-%d"
+  role = "${aws_iam_role.r.id}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -225,14 +278,14 @@ EOF
 }
 
 resource "aws_s3_bucket" "b" {
-  bucket = "tf-acc-test-awsconfig-%d"
+  bucket        = "tf-acc-test-awsconfig-%d"
   force_destroy = true
 }
 
 resource "aws_config_delivery_channel" "foo" {
-  name = "tf-acc-test-awsconfig-%d"
+  name           = "tf-acc-test-awsconfig-%d"
   s3_bucket_name = "${aws_s3_bucket.b.bucket}"
-  depends_on = ["aws_config_configuration_recorder.foo"]
+  depends_on     = ["aws_config_configuration_recorder.foo"]
 }
 `, randInt, randInt, randInt, randInt, randInt)
 }
@@ -240,18 +293,20 @@ resource "aws_config_delivery_channel" "foo" {
 func testAccConfigConfigurationRecorderConfig_allParams(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "foo" {
-  name = "tf-acc-test-%d"
+  name     = "tf-acc-test-%d"
   role_arn = "${aws_iam_role.r.arn}"
+
   recording_group {
-    all_supported = false
+    all_supported                 = false
     include_global_resource_types = false
-    resource_types = ["AWS::EC2::Instance", "AWS::CloudTrail::Trail"]
+    resource_types                = ["AWS::EC2::Instance", "AWS::CloudTrail::Trail"]
   }
 }
 
 resource "aws_iam_role" "r" {
-    name = "tf-acc-test-awsconfig-%d"
-    assume_role_policy = <<POLICY
+  name = "tf-acc-test-awsconfig-%d"
+
+  assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -269,9 +324,10 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "p" {
-    name = "tf-acc-test-awsconfig-%d"
-    role = "${aws_iam_role.r.id}"
-    policy = <<EOF
+  name = "tf-acc-test-awsconfig-%d"
+  role = "${aws_iam_role.r.id}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -291,14 +347,14 @@ EOF
 }
 
 resource "aws_s3_bucket" "b" {
-  bucket = "tf-acc-test-awsconfig-%d"
+  bucket        = "tf-acc-test-awsconfig-%d"
   force_destroy = true
 }
 
 resource "aws_config_delivery_channel" "foo" {
-  name = "tf-acc-test-awsconfig-%d"
+  name           = "tf-acc-test-awsconfig-%d"
   s3_bucket_name = "${aws_s3_bucket.b.bucket}"
-  depends_on = ["aws_config_configuration_recorder.foo"]
+  depends_on     = ["aws_config_configuration_recorder.foo"]
 }
 `, randInt, randInt, randInt, randInt, randInt)
 }

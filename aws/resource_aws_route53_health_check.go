@@ -3,11 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"net"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -32,20 +34,33 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				StateFunc: func(val interface{}) string {
 					return strings.ToUpper(val.(string))
 				},
+				ValidateFunc: validation.StringInSlice([]string{
+					route53.HealthCheckTypeCalculated,
+					route53.HealthCheckTypeCloudwatchMetric,
+					route53.HealthCheckTypeHttp,
+					route53.HealthCheckTypeHttpStrMatch,
+					route53.HealthCheckTypeHttps,
+					route53.HealthCheckTypeHttpsStrMatch,
+					route53.HealthCheckTypeTcp,
+				}, true),
 			},
 			"failure_threshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"request_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
+				ValidateFunc: validation.IntInSlice([]int{10, 30}),
 			},
 			"ip_address": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return net.ParseIP(old).Equal(net.ParseIP(new))
+				},
 			},
 			"fqdn": {
 				Type:     schema.TypeString,
@@ -103,6 +118,11 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 			"insufficient_data_health_status": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					route53.InsufficientDataHealthStatusHealthy,
+					route53.InsufficientDataHealthStatusLastKnownStatus,
+					route53.InsufficientDataHealthStatusUnhealthy,
+				}, true),
 			},
 			"reference_name": {
 				Type:     schema.TypeString,
@@ -192,8 +212,12 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	if err := setTagsR53(conn, d, "healthcheck"); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, o, n); err != nil {
+			return fmt.Errorf("error updating Route53 Health Check (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsRoute53HealthCheckRead(d, meta)
@@ -298,8 +322,8 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(*resp.HealthCheck.Id)
 
-	if err := setTagsR53(conn, d, "healthcheck"); err != nil {
-		return err
+	if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, map[string]interface{}{}, d.Get("tags").(map[string]interface{})); err != nil {
+		return fmt.Errorf("error setting Route53 Health Check (%s) tags: %s", d.Id(), err)
 	}
 
 	return resourceAwsRoute53HealthCheckRead(d, meta)
@@ -333,7 +357,11 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 	d.Set("resource_path", updated.ResourcePath)
 	d.Set("measure_latency", updated.MeasureLatency)
 	d.Set("invert_healthcheck", updated.Inverted)
-	d.Set("child_healthchecks", updated.ChildHealthChecks)
+
+	if err := d.Set("child_healthchecks", flattenStringList(updated.ChildHealthChecks)); err != nil {
+		return fmt.Errorf("error setting child_healthchecks: %s", err)
+	}
+
 	d.Set("child_health_threshold", updated.HealthThreshold)
 	d.Set("insufficient_data_health_status", updated.InsufficientDataHealthStatus)
 	d.Set("enable_sni", updated.EnableSNI)
@@ -345,24 +373,14 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 		d.Set("cloudwatch_alarm_region", updated.AlarmIdentifier.Region)
 	}
 
-	// read the tags
-	req := &route53.ListTagsForResourceInput{
-		ResourceId:   aws.String(d.Id()),
-		ResourceType: aws.String("healthcheck"),
-	}
+	tags, err := keyvaluetags.Route53ListTags(conn, d.Id(), route53.TagResourceTypeHealthcheck)
 
-	resp, err := conn.ListTagsForResource(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing tags for Route53 Health Check (%s): %s", d.Id(), err)
 	}
 
-	var tags []*route53.Tag
-	if resp.ResourceTagSet != nil {
-		tags = resp.ResourceTagSet.Tags
-	}
-
-	if err := d.Set("tags", tagsToMapR53(tags)); err != nil {
-		return err
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -371,20 +389,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 func resourceAwsRoute53HealthCheckDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
 
-	log.Printf("[DEBUG] Deleteing Route53 health check: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Route53 health check: %s", d.Id())
 	_, err := conn.DeleteHealthCheck(&route53.DeleteHealthCheckInput{HealthCheckId: aws.String(d.Id())})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func createChildHealthCheckList(s *schema.Set) (nl []*string) {
-	l := s.List()
-	for _, n := range l {
-		nl = append(nl, aws.String(n.(string)))
-	}
-
-	return nl
+	return err
 }

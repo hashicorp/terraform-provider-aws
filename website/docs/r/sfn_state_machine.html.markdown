@@ -1,12 +1,12 @@
 ---
+subcategory: "Step Function (SFN)"
 layout: "aws"
-page_title: "AWS: sfn_state_machine"
-sidebar_current: "docs-aws-resource-sfn-state-machine"
+page_title: "AWS: aws_sfn_state_machine"
 description: |-
   Provides a Step Function State Machine resource.
 ---
 
-# sfn_state_machine
+# Resource: aws_sfn_state_machine
 
 Provides a Step Function State Machine resource
 
@@ -42,6 +42,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the state machine.
 * `definition` - (Required) The Amazon States Language definition of the state machine.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to use for this state machine.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Attributes Reference
 

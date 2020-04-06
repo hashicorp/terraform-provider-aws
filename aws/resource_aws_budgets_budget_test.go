@@ -1,19 +1,19 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
+	"strings"
 	"testing"
-	"text/template"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSBudgetsBudget_basic(t *testing.T) {
@@ -23,8 +23,8 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 	accountID := "012345678910"
 	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBudgets(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -59,6 +59,12 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", *configBasicUpdate.TimeUnit),
 				),
 			},
+			{
+				ResourceName:            "aws_budgets_budget.foo",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
+			},
 		},
 	})
 }
@@ -69,8 +75,8 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 	configBasicDefaults := testAccAWSBudgetsBudgetConfigDefaults(name)
 	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBudgets(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -99,6 +105,108 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicUpdate.TimePeriod.Start.Format("2006-01-02_15:04")),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicUpdate.TimePeriod.End.Format("2006-01-02_15:04")),
 					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", *configBasicUpdate.TimeUnit),
+				),
+			},
+
+			{
+				ResourceName:            "aws_budgets_budget.foo",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
+			},
+		},
+	})
+}
+
+func TestAccAWSBudgetsBudget_notification(t *testing.T) {
+	name := fmt.Sprintf("test-budget-%d", acctest.RandInt())
+	configBasicDefaults := testAccAWSBudgetsBudgetConfigDefaults(name)
+	configBasicDefaults.CostFilters = map[string][]*string{}
+
+	notificationConfigDefaults := []budgets.Notification{testAccAWSBudgetsBudgetNotificationConfigDefaults()}
+	notificationConfigUpdated := []budgets.Notification{testAccAWSBudgetsBudgetNotificationConfigUpdate()}
+	twoNotificationConfigs := []budgets.Notification{
+		testAccAWSBudgetsBudgetNotificationConfigUpdate(),
+		testAccAWSBudgetsBudgetNotificationConfigDefaults(),
+	}
+
+	noEmails := []string{}
+	oneEmail := []string{"foo@example.com"}
+	oneOtherEmail := []string{"bar@example.com"}
+	twoEmails := []string{"bar@example.com", "baz@example.com"}
+	noTopics := []string{}
+	oneTopic := []string{"${aws_sns_topic.budget_notifications.arn}"}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBudgets(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			// Can't create without at least one subscriber
+			{
+				Config:      testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, noEmails, noTopics),
+				ExpectError: regexp.MustCompile(`Notification must have at least one subscriber`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
+				),
+			},
+			// Basic Notification with only email
+			{
+				Config: testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, oneEmail, noTopics),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
+				),
+			},
+			// Change only subscriber to a different e-mail
+			{
+				Config: testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, oneOtherEmail, noTopics),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
+				),
+			},
+			// Add a second e-mail and a topic
+			{
+				Config: testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, twoEmails, oneTopic),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
+				),
+			},
+			// Delete both E-Mails
+			{
+				Config: testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, noEmails, oneTopic),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
+				),
+			},
+			// Swap one Topic fo one E-Mail
+			{
+				Config: testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, oneEmail, noTopics),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
+				),
+			},
+			// Can't update without at least one subscriber
+			{
+				Config:      testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, noEmails, noTopics),
+				ExpectError: regexp.MustCompile(`Notification must have at least one subscriber`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
+				),
+			},
+			// Update all non-subscription parameters
+			{
+				Config:      testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigUpdated, noEmails, noTopics),
+				ExpectError: regexp.MustCompile(`Notification must have at least one subscriber`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
+				),
+			},
+			// Add a second subscription
+			{
+				Config:      testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, twoNotificationConfigs, noEmails, noTopics),
+				ExpectError: regexp.MustCompile(`Notification must have at least one subscriber`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
 				),
 			},
 		},
@@ -228,6 +336,24 @@ func testAccAWSBudgetsBudgetDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccPreCheckAWSBudgets(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).budgetconn
+
+	input := &budgets.DescribeBudgetsInput{
+		AccountId: aws.String(testAccProvider.Meta().(*AWSClient).accountid),
+	}
+
+	_, err := conn.DescribeBudgets(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
 	dateNow := time.Now().UTC()
 	futureDate := dateNow.AddDate(0, 0, 14)
@@ -236,11 +362,11 @@ func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
 		BudgetName: aws.String(name),
 		BudgetType: aws.String("COST"),
 		BudgetLimit: &budgets.Spend{
-			Amount: aws.String("500"),
+			Amount: aws.String("500.0"),
 			Unit:   aws.String("USD"),
 		},
 		CostFilters: map[string][]*string{
-			"AZ": []*string{
+			"AZ": {
 				aws.String("us-east-2"),
 			},
 		},
@@ -271,11 +397,11 @@ func testAccAWSBudgetsBudgetConfigDefaults(name string) budgets.Budget {
 		BudgetName: aws.String(name),
 		BudgetType: aws.String("COST"),
 		BudgetLimit: &budgets.Spend{
-			Amount: aws.String("100"),
+			Amount: aws.String("100.0"),
 			Unit:   aws.String("USD"),
 		},
 		CostFilters: map[string][]*string{
-			"AZ": []*string{
+			"AZ": {
 				aws.String("us-east-1"),
 			},
 		},
@@ -298,115 +424,195 @@ func testAccAWSBudgetsBudgetConfigDefaults(name string) budgets.Budget {
 	}
 }
 
-func testAccAWSBudgetsBudgetConfig_WithAccountID(budgetConfig budgets.Budget, accountID, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
-resource "aws_budgets_budget" "foo" {
-	account_id = "` + accountID + `"
-	name_prefix = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
+func testAccAWSBudgetsBudgetNotificationConfigDefaults() budgets.Notification {
+	return budgets.Notification{
+		NotificationType:   aws.String(budgets.NotificationTypeActual),
+		ThresholdType:      aws.String(budgets.ThresholdTypeAbsoluteValue),
+		Threshold:          aws.Float64(100.0),
+		ComparisonOperator: aws.String(budgets.ComparisonOperatorGreaterThan),
 	}
 }
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
-	return doc.String()
+func testAccAWSBudgetsBudgetNotificationConfigUpdate() budgets.Notification {
+	return budgets.Notification{
+		NotificationType:   aws.String(budgets.NotificationTypeForecasted),
+		ThresholdType:      aws.String(budgets.ThresholdTypePercentage),
+		Threshold:          aws.Float64(200.0),
+		ComparisonOperator: aws.String(budgets.ComparisonOperatorLessThan),
+	}
+}
+
+func testAccAWSBudgetsBudgetConfig_WithAccountID(budgetConfig budgets.Budget, accountID, costFilterKey string) string {
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	costFilterValue := *budgetConfig.CostFilters[costFilterKey][0]
+
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "foo" {
+  account_id        = "%s"
+  name_prefix       = "%s"
+  budget_type       = "%s"
+  limit_amount      = "%s"
+  limit_unit        = "%s"
+  time_period_start = "%s"
+  time_unit         = "%s"
+
+  cost_filters = {
+    "%s" = "%s"
+  }
+}
+`, accountID, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, timePeriodStart, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
 
 func testAccAWSBudgetsBudgetConfig_PrefixDefaults(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	costFilterValue := *budgetConfig.CostFilters[costFilterKey][0]
+
+	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name_prefix = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
-	}
+  name_prefix       = "%s"
+  budget_type       = "%s"
+  limit_amount      = "%s"
+  limit_unit        = "%s"
+  time_period_start = "%s"
+  time_unit         = "%s"
+
+  cost_filters = {
+    "%s" = "%s"
+  }
 }
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
-	return doc.String()
+`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, timePeriodStart, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
 
 func testAccAWSBudgetsBudgetConfig_Prefix(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
-resource "aws_budgets_budget" "foo" {
-	name_prefix = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	cost_types = {
-		include_tax = "{{.CostTypes.IncludeTax}}"
-		include_subscription = "{{.CostTypes.IncludeSubscription}}"
-		use_blended = "{{.CostTypes.UseBlended}}"
-	}
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
-	time_period_end = "{{.TimePeriod.End.Format "2006-01-02_15:04"}}"
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
-	}
-}
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
-	return doc.String()
-}
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	timePeriodEnd := budgetConfig.TimePeriod.End.Format("2006-01-02_15:04")
+	costFilterValue := *budgetConfig.CostFilters[costFilterKey][0]
 
-func testAccAWSBudgetsBudgetConfig_BasicDefaults(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
-	}
+  name_prefix  = "%s"
+  budget_type  = "%s"
+  limit_amount = "%s"
+  limit_unit   = "%s"
+
+  cost_types {
+    include_tax          = "%t"
+    include_subscription = "%t"
+    use_blended          = "%t"
+  }
+
+  time_period_start = "%s"
+  time_period_end   = "%s"
+  time_unit         = "%s"
+
+  cost_filters = {
+    "%s" = "%s"
+  }
 }
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
-	return doc.String()
+`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, *budgetConfig.CostTypes.IncludeTax, *budgetConfig.CostTypes.IncludeSubscription, *budgetConfig.CostTypes.UseBlended, timePeriodStart, timePeriodEnd, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
+}
+func testAccAWSBudgetsBudgetConfig_BasicDefaults(budgetConfig budgets.Budget, costFilterKey string) string {
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	costFilterValue := *budgetConfig.CostFilters[costFilterKey][0]
+
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "foo" {
+  name              = "%s"
+  budget_type       = "%s"
+  limit_amount      = "%s"
+  limit_unit        = "%s"
+  time_period_start = "%s"
+  time_unit         = "%s"
+
+  cost_filters = {
+    "%s" = "%s"
+  }
+}
+`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, timePeriodStart, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
 
 func testAccAWSBudgetsBudgetConfig_Basic(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	timePeriodEnd := budgetConfig.TimePeriod.End.Format("2006-01-02_15:04")
+	costFilterValue := *budgetConfig.CostFilters[costFilterKey][0]
+
+	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	cost_types = {
-		include_tax = "{{.CostTypes.IncludeTax}}"
-		include_subscription = "{{.CostTypes.IncludeSubscription}}"
-		use_blended = "{{.CostTypes.UseBlended}}"
-	}
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
-	time_period_end = "{{.TimePeriod.End.Format "2006-01-02_15:04"}}"
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
-	}
+  name         = "%s"
+  budget_type  = "%s"
+  limit_amount = "%s"
+  limit_unit   = "%s"
+
+  cost_types {
+    include_tax          = "%t"
+    include_subscription = "%t"
+    use_blended          = "%t"
+  }
+
+  time_period_start = "%s"
+  time_period_end   = "%s"
+  time_unit         = "%s"
+
+  cost_filters = {
+    "%s" = "%s"
+  }
 }
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
-	return doc.String()
+`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, *budgetConfig.CostTypes.IncludeTax, *budgetConfig.CostTypes.IncludeSubscription, *budgetConfig.CostTypes.UseBlended, timePeriodStart, timePeriodEnd, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
+}
+
+func testAccAWSBudgetsBudgetConfigWithNotification_Basic(budgetConfig budgets.Budget, notifications []budgets.Notification, emails []string, topics []string) string {
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	timePeriodEnd := budgetConfig.TimePeriod.End.Format("2006-01-02_15:04")
+	notificationStrings := make([]string, len(notifications))
+
+	for i, notification := range notifications {
+		notificationStrings[i] = testAccAWSBudgetsBudgetConfigNotificationSnippet(notification, emails, topics)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "budget_notifications" {
+  name_prefix = "user-updates-topic"
+}
+
+resource "aws_budgets_budget" "foo" {
+	name = "%s"
+	budget_type = "%s"
+	limit_amount = "%s"
+	limit_unit = "%s"
+	cost_types {
+		include_tax = "%t"
+		include_subscription = "%t"
+		use_blended = "%t"
+	}
+
+	time_period_start = "%s" 
+	time_period_end = "%s"
+	time_unit = "%s"
+	
+    %s
+}
+`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, *budgetConfig.CostTypes.IncludeTax, *budgetConfig.CostTypes.IncludeSubscription, *budgetConfig.CostTypes.UseBlended, timePeriodStart, timePeriodEnd, *budgetConfig.TimeUnit, strings.Join(notificationStrings, "\n"))
+
+}
+
+func testAccAWSBudgetsBudgetConfigNotificationSnippet(notification budgets.Notification, emails []string, topics []string) string {
+	quotedEMails := make([]string, len(emails))
+	for i, email := range emails {
+		quotedEMails[i] = strconv.Quote(email)
+	}
+
+	quotedTopics := make([]string, len(topics))
+	for i, topic := range topics {
+		quotedTopics[i] = strconv.Quote(topic)
+	}
+
+	return fmt.Sprintf(`
+	notification {
+		threshold = %f
+		threshold_type = "%s"
+		notification_type = "%s"
+		subscriber_email_addresses = [%s]
+		subscriber_sns_topic_arns = [%s]
+		comparison_operator = "%s"
+	}
+`, *notification.Threshold, *notification.ThresholdType, *notification.NotificationType, strings.Join(quotedEMails, ","), strings.Join(quotedTopics, ","), *notification.ComparisonOperator)
 }

@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -56,10 +55,6 @@ func testSweepCloudWatchEventPermissions(region string) error {
 	for _, statement := range policyDoc.Statements {
 		sid := statement.Sid
 
-		if !strings.HasPrefix(sid, "TestAcc") {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting CloudWatch Event Permission %s", sid)
 		_, err := conn.RemovePermission(&events.RemovePermissionInput{
 			StatementId: aws.String(sid),
@@ -78,10 +73,10 @@ func TestAccAWSCloudWatchEventPermission_Basic(t *testing.T) {
 	statementID := acctest.RandomWithPrefix(t.Name())
 	resourceName := "aws_cloudwatch_event_permission.test1"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic("", statementID),
@@ -116,6 +111,7 @@ func TestAccAWSCloudWatchEventPermission_Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 				),
@@ -127,6 +123,11 @@ func TestAccAWSCloudWatchEventPermission_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "principal", principal2),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -136,10 +137,10 @@ func TestAccAWSCloudWatchEventPermission_Action(t *testing.T) {
 	statementID := acctest.RandomWithPrefix(t.Name())
 	resourceName := "aws_cloudwatch_event_permission.test1"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCheckAwsCloudWatchEventPermissionResourceConfigAction("", principal, statementID),
@@ -164,28 +165,45 @@ func TestAccAWSCloudWatchEventPermission_Action(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func TestAccAWSCloudWatchEventPermission_Import(t *testing.T) {
-	principal := "123456789012"
-	statementID := acctest.RandomWithPrefix(t.Name())
-	resourceName := "aws_cloudwatch_event_permission.test1"
+func TestAccAWSCloudWatchEventPermission_Condition(t *testing.T) {
+	statementID := acctest.RandomWithPrefix("TestAcc")
+	resourceName := "aws_cloudwatch_event_permission.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic(principal, statementID),
+			{
+				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigConditionOrganization(statementID, "o-1234567890"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.value", "o-1234567890"),
 				),
 			},
-
-			resource.TestStep{
+			{
+				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigConditionOrganization(statementID, "o-0123456789"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.value", "o-0123456789"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -202,10 +220,10 @@ func TestAccAWSCloudWatchEventPermission_Multiple(t *testing.T) {
 	resourceName1 := "aws_cloudwatch_event_permission.test1"
 	resourceName2 := "aws_cloudwatch_event_permission.test2"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic(principal1, statementID1),
@@ -228,6 +246,48 @@ func TestAccAWSCloudWatchEventPermission_Multiple(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_permission.test1"
+	principal := "111111111111"
+	statementID := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(52, acctest.CharSetAlphaNum)) // len = 64
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic(principal, statementID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					testAccCheckCloudWatchEventPermissionDisappears(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckCloudWatchEventPermissionDisappears(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No resource ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+		input := events.RemovePermissionInput{
+			StatementId: aws.String(rs.Primary.ID),
+		}
+		_, err := conn.RemovePermission(&input)
+		return err
+	}
 }
 
 func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFunc {
@@ -258,11 +318,7 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 		}
 
 		_, err = findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -324,6 +380,21 @@ resource "aws_cloudwatch_event_permission" "test1" {
   statement_id = "%[3]s"
 }
 `, action, principal, statementID)
+}
+
+func testAccCheckAwsCloudWatchEventPermissionResourceConfigConditionOrganization(statementID, value string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_permission" "test" {
+  principal    = "*"
+  statement_id = %q
+
+  condition {
+    key   = "aws:PrincipalOrgID"
+    type  = "StringEquals"
+    value = %q
+  }
+}
+`, statementID, value)
 }
 
 func testAccCheckAwsCloudWatchEventPermissionResourceConfigMultiple(principal1, statementID1, principal2, statementID2 string) string {

@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsApiGatewayAccount() *schema.Resource {
@@ -22,21 +22,20 @@ func resourceAwsApiGatewayAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cloudwatch_role_arn": &schema.Schema{
+			"cloudwatch_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"throttle_settings": &schema.Schema{
+			"throttle_settings": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"burst_limit": &schema.Schema{
+						"burst_limit": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"rate_limit": &schema.Schema{
+						"rate_limit": {
 							Type:     schema.TypeFloat,
 							Computed: true,
 						},
@@ -48,7 +47,7 @@ func resourceAwsApiGatewayAccount() *schema.Resource {
 }
 
 func resourceAwsApiGatewayAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[INFO] Reading API Gateway Account %s", d.Id())
 	account, err := conn.GetAccount(&apigateway.GetAccountInput{})
@@ -70,7 +69,7 @@ func resourceAwsApiGatewayAccountRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	input := apigateway.UpdateAccountInput{}
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -93,7 +92,7 @@ func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Updating API Gateway Account: %s", input)
 
 	// Retry due to eventual consistency of IAM
-	expectedErrMsg := "The role ARN does not have required permissions set to API Gateway"
+	expectedErrMsg := "The role ARN does not have required permissions"
 	otherErrMsg := "API Gateway could not successfully write to CloudWatch Logs using the ARN specified"
 	var out *apigateway.Account
 	var err error
@@ -111,6 +110,9 @@ func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.UpdateAccount(&input)
+	}
 	if err != nil {
 		return fmt.Errorf("Updating API Gateway Account failed: %s", err)
 	}

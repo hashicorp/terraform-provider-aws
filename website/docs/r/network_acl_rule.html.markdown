@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_acl_rule"
-sidebar_current: "docs-aws-resource-network-acl-rule"
 description: |-
   Provides an network ACL Rule resource.
 ---
 
-# aws_network_acl_rule
+# Resource: aws_network_acl_rule
 
 Creates an entry (a rule) in a network ACL with the specified rule number.
 
@@ -20,16 +20,16 @@ a conflict of rule settings and will overwrite rules.
 
 ```hcl
 resource "aws_network_acl" "bar" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 }
 
 resource "aws_network_acl_rule" "bar" {
-  network_acl_id = "${aws_network_acl.bar.id}"
+  network_acl_id = aws_network_acl.bar.id
   rule_number    = 200
   egress         = false
   protocol       = "tcp"
   rule_action    = "allow"
-  cidr_block     = "0.0.0.0/0"
+  cidr_block     = aws_vpc.foo.cidr_block
   from_port      = 22
   to_port        = 22
 }
@@ -57,7 +57,7 @@ The following arguments are supported:
 
 ~> **NOTE:** If the value of `icmp_type` is `-1` (which results in a wildcard ICMP type), the `icmp_code` must also be set to `-1` (wildcard ICMP code).
 
-~> Note: For more information on ICMP types and codes, see here: http://www.nthelp.com/icmp.html
+~> Note: For more information on ICMP types and codes, see here: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 
 ## Attributes Reference
 

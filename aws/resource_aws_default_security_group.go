@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDefaultSecurityGroup() *schema.Resource {
@@ -16,8 +16,11 @@ func resourceAwsDefaultSecurityGroup() *schema.Resource {
 	dsg.Create = resourceAwsDefaultSecurityGroupCreate
 	dsg.Delete = resourceAwsDefaultSecurityGroupDelete
 
-	// Descriptions cannot be updated
-	delete(dsg.Schema, "description")
+	// description is a computed value for Default Security Groups and cannot be changed
+	dsg.Schema["description"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	}
 
 	// name is a computed value for Default Security Groups and cannot be changed
 	delete(dsg.Schema, "name_prefix")
@@ -38,7 +41,7 @@ func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).ec2conn
 	securityGroupOpts := &ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("group-name"),
 				Values: []*string{aws.String("default")},
 			},
@@ -67,7 +70,7 @@ func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interfac
 		// returned, as default is a protected name for each VPC, and for each
 		// Region on EC2 Classic
 		if len(resp.SecurityGroups) != 1 {
-			return fmt.Errorf("[ERR] Error finding default security group; found (%d) groups: %s", len(resp.SecurityGroups), resp)
+			return fmt.Errorf("Error finding default security group; found (%d) groups: %s", len(resp.SecurityGroups), resp)
 		}
 		g = resp.SecurityGroups[0]
 	} else {
@@ -81,19 +84,21 @@ func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if g == nil {
-		return fmt.Errorf("[ERR] Error finding default security group: no matching group found")
+		return fmt.Errorf("Error finding default security group: no matching group found")
 	}
 
 	d.SetId(*g.GroupId)
 
 	log.Printf("[INFO] Default Security Group ID: %s", d.Id())
 
-	if err := setTags(conn, d); err != nil {
-		return err
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding EC2 Default Security Group (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if err := revokeDefaultSecurityGroupRules(meta, g); err != nil {
-		return errwrap.Wrapf("{{err}}", err)
+		return fmt.Errorf("%s", err)
 	}
 
 	return resourceAwsSecurityGroupUpdate(d, meta)

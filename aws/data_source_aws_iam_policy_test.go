@@ -5,14 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
 	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -35,10 +35,11 @@ func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
 func testAccAwsDataSourceIamPolicyConfig(policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test_policy" {
-    name = "%s"
-    path = "/"
-    description = "My test policy"
-    policy = <<EOF
+  name        = "%s"
+  path        = "/"
+  description = "My test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -55,7 +56,7 @@ EOF
 }
 
 data "aws_iam_policy" "test" {
-	arn = "${aws_iam_policy.test_policy.arn}"
+  arn = "${aws_iam_policy.test_policy.arn}"
 }
 `, policyName)
 }

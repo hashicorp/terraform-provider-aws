@@ -8,8 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsVpcEndpointService() *schema.Resource {
@@ -27,13 +28,6 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"network_load_balancer_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
 			"allowed_principals": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -41,7 +35,33 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"state": {
+			"availability_zones": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Set:      schema.HashString,
+			},
+			"base_endpoint_dns_names": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Set:      schema.HashString,
+			},
+			"manages_vpc_endpoints": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"network_load_balancer_arns": {
+				Type:     schema.TypeSet,
+				Required: true,
+				MinItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateArn,
+				},
+				Set: schema.HashString,
+			},
+			"private_dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,22 +73,11 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-				Set:      schema.HashString,
-			},
-			"private_dns_name": {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"base_endpoint_dns_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-				Set:      schema.HashString,
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -79,6 +88,7 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 	req := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired:      aws.Bool(d.Get("acceptance_required").(bool)),
 		NetworkLoadBalancerArns: expandStringSet(d.Get("network_load_balancer_arns").(*schema.Set)),
+		TagSpecifications:       ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), "vpc-endpoint-service"),
 	}
 
 	log.Printf("[DEBUG] Creating VPC Endpoint Service configuration: %#v", req)
@@ -93,15 +103,26 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return resourceAwsVpcEndpointServiceUpdate(d, meta)
+	if v, ok := d.GetOk("allowed_principals"); ok && v.(*schema.Set).Len() > 0 {
+		modifyPermReq := &ec2.ModifyVpcEndpointServicePermissionsInput{
+			ServiceId:            aws.String(d.Id()),
+			AddAllowedPrincipals: expandStringSet(v.(*schema.Set)),
+		}
+		log.Printf("[DEBUG] Adding VPC Endpoint Service permissions: %#v", modifyPermReq)
+		if _, err := conn.ModifyVpcEndpointServicePermissions(modifyPermReq); err != nil {
+			return fmt.Errorf("error adding VPC Endpoint Service permissions: %s", err.Error())
+		}
+	}
+
+	return resourceAwsVpcEndpointServiceRead(d, meta)
 }
 
 func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	svcCfg, state, err := vpcEndpointServiceStateRefresh(conn, d.Id())()
+	svcCfgRaw, state, err := vpcEndpointServiceStateRefresh(conn, d.Id())()
 	if err != nil && state != ec2.ServiceStateFailed {
-		return fmt.Errorf("Error reading VPC Endpoint Service: %s", err.Error())
+		return fmt.Errorf("error reading VPC Endpoint Service (%s): %s", d.Id(), err.Error())
 	}
 
 	terminalStates := map[string]bool{
@@ -115,13 +136,48 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	return vpcEndpointServiceAttributes(d, svcCfg.(*ec2.ServiceConfiguration), conn)
+	svcCfg := svcCfgRaw.(*ec2.ServiceConfiguration)
+	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
+	err = d.Set("network_load_balancer_arns", flattenStringSet(svcCfg.NetworkLoadBalancerArns))
+	if err != nil {
+		return fmt.Errorf("error setting network_load_balancer_arns: %s", err)
+	}
+	err = d.Set("availability_zones", flattenStringSet(svcCfg.AvailabilityZones))
+	if err != nil {
+		return fmt.Errorf("error setting availability_zones: %s", err)
+	}
+	err = d.Set("base_endpoint_dns_names", flattenStringSet(svcCfg.BaseEndpointDnsNames))
+	if err != nil {
+		return fmt.Errorf("error setting base_endpoint_dns_names: %s", err)
+	}
+	d.Set("manages_vpc_endpoints", svcCfg.ManagesVpcEndpoints)
+	d.Set("private_dns_name", svcCfg.PrivateDnsName)
+	d.Set("service_name", svcCfg.ServiceName)
+	d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
+	d.Set("state", svcCfg.ServiceState)
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(svcCfg.Tags).IgnoreAws().Map())
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	resp, err := conn.DescribeVpcEndpointServicePermissions(&ec2.DescribeVpcEndpointServicePermissionsInput{
+		ServiceId: aws.String(d.Id()),
+	})
+	if err != nil {
+		return fmt.Errorf("error reading VPC Endpoint Service permissions (%s): %s", d.Id(), err.Error())
+	}
+
+	err = d.Set("allowed_principals", flattenVpcEndpointServiceAllowedPrincipals(resp.AllowedPrincipals))
+	if err != nil {
+		return fmt.Errorf("error setting allowed_principals: %s", err)
+	}
+
+	return nil
 }
 
 func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
 	svcId := d.Id()
 
 	modifyCfgReq := &ec2.ModifyVpcEndpointServiceConfigurationInput{
@@ -144,8 +200,6 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		if err := vpcEndpointServiceWaitUntilAvailable(d, conn); err != nil {
 			return err
 		}
-
-		d.SetPartial("network_load_balancer_arns")
 	}
 
 	modifyPermReq := &ec2.ModifyVpcEndpointServicePermissionsInput{
@@ -157,11 +211,16 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		if _, err := conn.ModifyVpcEndpointServicePermissions(modifyPermReq); err != nil {
 			return fmt.Errorf("Error modifying VPC Endpoint Service permissions: %s", err.Error())
 		}
-
-		d.SetPartial("allowed_principals")
 	}
 
-	d.Partial(false)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 VPC Endpoint Service (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	return resourceAwsVpcEndpointServiceRead(d, meta)
 }
 
@@ -180,15 +239,7 @@ func resourceAwsVpcEndpointServiceDelete(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.ServiceStateAvailable, ec2.ServiceStateDeleting},
-		Target:     []string{ec2.ServiceStateDeleted},
-		Refresh:    vpcEndpointServiceStateRefresh(conn, d.Id()),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	if _, err := stateConf.WaitForState(); err != nil {
+	if err := waitForVpcEndpointServiceDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for VPC Endpoint Service %s to delete: %s", d.Id(), err.Error())
 	}
 
@@ -235,25 +286,19 @@ func vpcEndpointServiceWaitUntilAvailable(d *schema.ResourceData, conn *ec2.EC2)
 	return nil
 }
 
-func vpcEndpointServiceAttributes(d *schema.ResourceData, svcCfg *ec2.ServiceConfiguration, conn *ec2.EC2) error {
-	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
-	d.Set("network_load_balancer_arns", flattenStringList(svcCfg.NetworkLoadBalancerArns))
-	d.Set("state", svcCfg.ServiceState)
-	d.Set("service_name", svcCfg.ServiceName)
-	d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
-	d.Set("availability_zones", flattenStringList(svcCfg.AvailabilityZones))
-	d.Set("private_dns_name", svcCfg.PrivateDnsName)
-	d.Set("base_endpoint_dns_names", flattenStringList(svcCfg.BaseEndpointDnsNames))
-
-	resp, err := conn.DescribeVpcEndpointServicePermissions(&ec2.DescribeVpcEndpointServicePermissionsInput{
-		ServiceId: aws.String(d.Id()),
-	})
-	if err != nil {
-		return err
+func waitForVpcEndpointServiceDeletion(conn *ec2.EC2, serviceID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ServiceStateAvailable, ec2.ServiceStateDeleting},
+		Target:     []string{ec2.ServiceStateDeleted},
+		Refresh:    vpcEndpointServiceStateRefresh(conn, serviceID),
+		Timeout:    10 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
-	d.Set("allowed_principals", flattenVpcEndpointServiceAllowedPrincipals(resp.AllowedPrincipals))
 
-	return nil
+	_, err := stateConf.WaitForState()
+
+	return err
 }
 
 func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) bool {
@@ -276,4 +321,16 @@ func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *
 	}
 
 	return true
+}
+
+func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) *schema.Set {
+	vPrincipals := []interface{}{}
+
+	for _, allowedPrincipal := range allowedPrincipals {
+		if allowedPrincipal.Principal != nil {
+			vPrincipals = append(vPrincipals, aws.StringValue(allowedPrincipal.Principal))
+		}
+	}
+
+	return schema.NewSet(schema.HashString, vPrincipals)
 }

@@ -1,7 +1,7 @@
 ---
+subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_replication_group"
-sidebar_current: "docs-aws-datasource-elasticache-replication-group"
 description: |-
   Get information on an ElastiCache Replication Group resource.
 ---
@@ -34,6 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 * `automatic_failover_enabled` - A flag whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails.
 * `node_type` – The cluster node type.
 * `number_cache_clusters` – The number of cache clusters that the replication group has.
+* `member_clusters` - The identifiers of all the nodes that are part of this replication group.
 * `snapshot_window` - The daily time range (in UTC) during which ElastiCache begins taking a daily snapshot of your node group (shard).
 * `snapshot_retention_limit` - The number of days for which ElastiCache retains automatic cache cluster snapshots before deleting them.
 * `port` – The port number on which the configuration endpoint will accept connections.

@@ -1,12 +1,12 @@
 ---
+subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_policy"
-sidebar_current: "docs-aws-resource-organizations-policy"
 description: |-
   Provides a resource to manage an AWS Organizations policy.
 ---
 
-# aws_organizations_policy
+# Resource: aws_organizations_policy
 
 Provides a resource to manage an [AWS Organizations policy](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies.html).
 
@@ -14,7 +14,7 @@ Provides a resource to manage an [AWS Organizations policy](https://docs.aws.ama
 
 ```hcl
 resource "aws_organizations_policy" "example" {
-  name    = "example"
+  name = "example"
 
   content = <<CONTENT
 {
@@ -33,10 +33,10 @@ CONTENT
 
 The following arguments are supported:
 
-* `content` - (Required) The policy content to add to the new policy. For example, if you create a [service control policy (SCP)](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html), this string must be JSON text that specifies the permissions that admins in attached accounts can delegate to their users, groups, and roles. For more information about the SCP syntax, see the [Service Control Policy Syntax documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_scp-syntax.html).
+* `content` - (Required) The policy content to add to the new policy. For example, if you create a [service control policy (SCP)](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html), this string must be JSON text that specifies the permissions that admins in attached accounts can delegate to their users, groups, and roles. For more information about the SCP syntax, see the [Service Control Policy Syntax documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_scp-syntax.html) and for more information on the Tag Policy syntax, see the [Tag Policy Syntax documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_example-tag-policies.html).
 * `name` - (Required) The friendly name to assign to the policy.
 * `description` - (Optional) A description to assign to the policy.
-* `type` - (Optional) The type of policy to create. Currently, the only valid value is `SERVICE_CONTROL_POLICY` (SCP).
+* `type` - (Optional) The type of policy to create. Currently, the only valid values are `SERVICE_CONTROL_POLICY` (SCP) and `TAG_POLICY`. Defaults to `SERVICE_CONTROL_POLICY`.
 
 ## Attribute Reference
 

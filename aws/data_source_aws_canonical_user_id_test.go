@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataSourceAwsCanonicalUserId_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -42,9 +42,5 @@ func testAccDataSourceAwsCanonicalUserIdCheckExists(name string) resource.TestCh
 }
 
 const testAccDataSourceAwsCanonicalUserIdConfig = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 data "aws_canonical_user_id" "current" { }
 `

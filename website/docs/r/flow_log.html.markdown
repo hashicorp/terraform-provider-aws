@@ -1,32 +1,34 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_flow_log"
-sidebar_current: "docs-aws-resource-flow-log"
 description: |-
   Provides a VPC/Subnet/ENI Flow Log
 ---
 
-# aws_flow_log
+# Resource: aws_flow_log
 
 Provides a VPC/Subnet/ENI Flow Log to capture IP traffic for a specific network
-interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group.
+interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucket.
 
 ## Example Usage
 
+### CloudWatch Logging
+
 ```hcl
-resource "aws_flow_log" "test_flow_log" {
-  log_group_name = "${aws_cloudwatch_log_group.test_log_group.name}"
-  iam_role_arn   = "${aws_iam_role.test_role.arn}"
-  vpc_id         = "${aws_vpc.default.id}"
-  traffic_type   = "ALL"
+resource "aws_flow_log" "example" {
+  iam_role_arn    = "${aws_iam_role.example.arn}"
+  log_destination = "${aws_cloudwatch_log_group.example.arn}"
+  traffic_type    = "ALL"
+  vpc_id          = "${aws_vpc.example.id}"
 }
 
-resource "aws_cloudwatch_log_group" "test_log_group" {
-  name = "test_log_group"
+resource "aws_cloudwatch_log_group" "example" {
+  name = "example"
 }
 
-resource "aws_iam_role" "test_role" {
-  name = "test_role"
+resource "aws_iam_role" "example" {
+  name = "example"
 
   assume_role_policy = <<EOF
 {
@@ -45,9 +47,9 @@ resource "aws_iam_role" "test_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "test_policy" {
-  name = "test_policy"
-  role = "${aws_iam_role.test_role.id}"
+resource "aws_iam_role_policy" "example" {
+  name = "example"
+  role = "${aws_iam_role.example.id}"
 
   policy = <<EOF
 {
@@ -70,18 +72,41 @@ EOF
 }
 ```
 
+### S3 Logging
+
+```hcl
+resource "aws_flow_log" "example" {
+  log_destination      = "${aws_s3_bucket.example.arn}"
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = "${aws_vpc.example.id}"
+}
+
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+```
+
 ## Argument Reference
+
+~> **NOTE:** One of `eni_id`, `subnet_id`, or `vpc_id` must be specified.
 
 The following arguments are supported:
 
-* `log_group_name` - (Required) The name of the CloudWatch log group
-* `iam_role_arn` - (Required) The ARN for the IAM role that's used to post flow
-  logs to a CloudWatch Logs log group
-* `vpc_id` - (Optional) VPC ID to attach to
-* `subnet_id` - (Optional) Subnet ID to attach to
+* `traffic_type` - (Required) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`.
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to
-* `traffic_type` - (Required) The type of traffic to capture. Valid values:
-  `ACCEPT`,`REJECT`, `ALL`
+* `iam_role_arn` - (Optional) The ARN for the IAM role that's used to post flow logs to a CloudWatch Logs log group
+* `log_destination_type` - (Optional) The type of the logging destination. Valid values: `cloud-watch-logs`, `s3`. Default: `cloud-watch-logs`.
+* `log_destination` - (Optional) The ARN of the logging destination.
+* `log_group_name` - (Optional) *Deprecated:* Use `log_destination` instead. The name of the CloudWatch log group.
+* `subnet_id` - (Optional) Subnet ID to attach to
+* `vpc_id` - (Optional) VPC ID to attach to
+* `log_format` - (Optional) The fields to include in the flow log record, in the order in which they should appear.
+* `max_aggregation_interval` - (Optional) The maximum interval of time
+  during which a flow of packets is captured and aggregated into a flow
+  log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10
+  minutes). Default: `600`.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Attributes Reference
 

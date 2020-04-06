@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsVpcDhcpOptionsAssociation() *schema.Resource {
@@ -14,19 +14,43 @@ func resourceAwsVpcDhcpOptionsAssociation() *schema.Resource {
 		Read:   resourceAwsVpcDhcpOptionsAssociationRead,
 		Update: resourceAwsVpcDhcpOptionsAssociationUpdate,
 		Delete: resourceAwsVpcDhcpOptionsAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsVpcDhcpOptionsAssociationImport,
+		},
 
 		Schema: map[string]*schema.Schema{
-			"vpc_id": &schema.Schema{
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"dhcp_options_id": &schema.Schema{
+			"dhcp_options_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 		},
 	}
+}
+
+func resourceAwsVpcDhcpOptionsAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*AWSClient).ec2conn
+	// Provide the vpc_id as the id to import
+	vpcRaw, _, err := VPCStateRefreshFunc(conn, d.Id())()
+	if err != nil {
+		return nil, err
+	}
+	if vpcRaw == nil {
+		return nil, nil
+	}
+	vpc := vpcRaw.(*ec2.Vpc)
+	if err = d.Set("vpc_id", vpc.VpcId); err != nil {
+		return nil, err
+	}
+	if err = d.Set("dhcp_options_id", vpc.DhcpOptionsId); err != nil {
+		return nil, err
+	}
+	d.SetId(*vpc.DhcpOptionsId + "-" + *vpc.VpcId)
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsVpcDhcpOptionsAssociationCreate(d *schema.ResourceData, meta interface{}) error {
@@ -87,12 +111,10 @@ func resourceAwsVpcDhcpOptionsAssociationDelete(d *schema.ResourceData, meta int
 	conn := meta.(*AWSClient).ec2conn
 
 	log.Printf("[INFO] Disassociating DHCP Options Set %s from VPC %s...", d.Get("dhcp_options_id"), d.Get("vpc_id"))
-	if _, err := conn.AssociateDhcpOptions(&ec2.AssociateDhcpOptionsInput{
+	_, err := conn.AssociateDhcpOptions(&ec2.AssociateDhcpOptionsInput{
 		DhcpOptionsId: aws.String("default"),
 		VpcId:         aws.String(d.Get("vpc_id").(string)),
-	}); err != nil {
-		return err
-	}
+	})
 
-	return nil
+	return err
 }

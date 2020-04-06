@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSEcsServiceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ecs_service.test"
 	resourceName := "aws_ecs_service.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -22,6 +22,7 @@ func TestAccAWSEcsServiceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "desired_count", dataSourceName, "desired_count"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_type", dataSourceName, "launch_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduling_strategy", dataSourceName, "scheduling_strategy"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "service_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_definition", dataSourceName, "task_definition"),
 				),

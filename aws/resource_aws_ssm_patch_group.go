@@ -1,11 +1,12 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsSsmPatchGroup() *schema.Resource {
@@ -88,7 +89,7 @@ func resourceAwsSsmPatchGroupDelete(d *schema.ResourceData, meta interface{}) er
 
 	_, err := ssmconn.DeregisterPatchBaselineForPatchGroup(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deregistering SSM Patch Group (%s): %s", d.Id(), err)
 	}
 
 	return nil

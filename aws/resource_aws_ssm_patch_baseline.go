@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 var ssmPatchComplianceLevels = []string{
@@ -25,6 +26,8 @@ var ssmPatchOSs = []string{
 	ssm.OperatingSystemUbuntu,
 	ssm.OperatingSystemRedhatEnterpriseLinux,
 	ssm.OperatingSystemCentos,
+	ssm.OperatingSystemAmazonLinux2,
+	ssm.OperatingSystemSuse,
 }
 
 func resourceAwsSsmPatchBaseline() *schema.Resource {
@@ -33,6 +36,9 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 		Read:   resourceAwsSsmPatchBaselineRead,
 		Update: resourceAwsSsmPatchBaselineUpdate,
 		Delete: resourceAwsSsmPatchBaselineDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -137,6 +143,7 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Default:      ssm.PatchComplianceLevelUnspecified,
 				ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -145,9 +152,13 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	params := &ssm.CreatePatchBaselineInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name:                           aws.String(d.Get("name").(string)),
 		ApprovedPatchesComplianceLevel: aws.String(d.Get("approved_patches_compliance_level").(string)),
 		OperatingSystem:                aws.String(d.Get("operating_system").(string)),
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -216,7 +227,20 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 
 	_, err := ssmconn.UpdatePatchBaseline(params)
 	if err != nil {
+		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+			log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.SsmUpdateTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline, o, n); err != nil {
+			return fmt.Errorf("error updating SSM Patch Baseline (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsSsmPatchBaselineRead(d, meta)
@@ -230,6 +254,11 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := ssmconn.GetPatchBaseline(params)
 	if err != nil {
+		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+			log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -241,11 +270,21 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("rejected_patches", flattenStringList(resp.RejectedPatches))
 
 	if err := d.Set("global_filter", flattenAwsSsmPatchFilterGroup(resp.GlobalFilters)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting global filters error: %#v", err)
+		return fmt.Errorf("Error setting global filters error: %#v", err)
 	}
 
 	if err := d.Set("approval_rule", flattenAwsSsmPatchRuleGroup(resp.ApprovalRules)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting approval rules error: %#v", err)
+		return fmt.Errorf("Error setting approval rules error: %#v", err)
+	}
+
+	tags, err := keyvaluetags.SsmListTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for SSM Patch Baseline (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -262,7 +301,7 @@ func resourceAwsSsmPatchBaselineDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := ssmconn.DeletePatchBaseline(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
 	return nil

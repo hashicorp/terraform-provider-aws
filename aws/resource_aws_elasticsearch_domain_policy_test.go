@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
@@ -43,12 +43,12 @@ func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
 }`
 	name := fmt.Sprintf("tf-test-%d", ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccESDomainPolicyConfig(ri, policy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
@@ -83,19 +83,22 @@ func buildESDomainArn(name, partition, accId, region string) (string, error) {
 func testAccESDomainPolicyConfig(randInt int, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
-    domain_name = "tf-test-%d"
-    elasticsearch_version = "2.3"
-    cluster_config {
-        instance_type = "t2.micro.elasticsearch"
-    }
-    ebs_options {
-        ebs_enabled = true
-        volume_size = 10
-    }
+  domain_name           = "tf-test-%d"
+  elasticsearch_version = "2.3"
+
+  cluster_config {
+    instance_type = "t2.micro.elasticsearch"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
 }
 
 resource "aws_elasticsearch_domain_policy" "main" {
   domain_name = "${aws_elasticsearch_domain.example.domain_name}"
+
   access_policies = <<POLICIES
 %s
 POLICIES

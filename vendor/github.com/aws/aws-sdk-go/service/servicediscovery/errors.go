@@ -2,10 +2,17 @@
 
 package servicediscovery
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCustomHealthNotFound for service response error code
 	// "CustomHealthNotFound".
+	//
+	// The health check for the instance that is specified by ServiceId and InstanceId
+	// is not a custom health check.
 	ErrCodeCustomHealthNotFound = "CustomHealthNotFound"
 
 	// ErrCodeDuplicateRequest for service response error code
@@ -24,8 +31,9 @@ const (
 	// ErrCodeInvalidInput for service response error code
 	// "InvalidInput".
 	//
-	// One or more specified values aren't valid. For example, when you're creating
-	// a namespace, the value of Name might not be a valid DNS name.
+	// One or more specified values aren't valid. For example, a required value
+	// might be missing, a numeric value might be outside the allowed range, or
+	// a string value might exceed length constraints.
 	ErrCodeInvalidInput = "InvalidInput"
 
 	// ErrCodeNamespaceAlreadyExists for service response error code
@@ -73,3 +81,17 @@ const (
 	// No service exists with the specified ID.
 	ErrCodeServiceNotFound = "ServiceNotFound"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CustomHealthNotFound":   newErrorCustomHealthNotFound,
+	"DuplicateRequest":       newErrorDuplicateRequest,
+	"InstanceNotFound":       newErrorInstanceNotFound,
+	"InvalidInput":           newErrorInvalidInput,
+	"NamespaceAlreadyExists": newErrorNamespaceAlreadyExists,
+	"NamespaceNotFound":      newErrorNamespaceNotFound,
+	"OperationNotFound":      newErrorOperationNotFound,
+	"ResourceInUse":          newErrorResourceInUse,
+	"ResourceLimitExceeded":  newErrorResourceLimitExceeded,
+	"ServiceAlreadyExists":   newErrorServiceAlreadyExists,
+	"ServiceNotFound":        newErrorServiceNotFound,
+}

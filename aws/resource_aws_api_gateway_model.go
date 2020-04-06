@@ -3,13 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsApiGatewayModel() *schema.Resource {
@@ -18,31 +17,58 @@ func resourceAwsApiGatewayModel() *schema.Resource {
 		Read:   resourceAwsApiGatewayModelRead,
 		Update: resourceAwsApiGatewayModelUpdate,
 		Delete: resourceAwsApiGatewayModelDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/NAME", d.Id())
+				}
+				restApiID := idParts[0]
+				name := idParts[1]
+				d.Set("name", name)
+				d.Set("rest_api_id", restApiID)
+
+				conn := meta.(*AWSClient).apigatewayconn
+
+				output, err := conn.GetModel(&apigateway.GetModelInput{
+					ModelName: aws.String(name),
+					RestApiId: aws.String(restApiID),
+				})
+
+				if err != nil {
+					return nil, err
+				}
+
+				d.SetId(aws.StringValue(output.Id))
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
-			"rest_api_id": &schema.Schema{
+			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 
-			"schema": &schema.Schema{
+			"schema": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 
-			"content_type": &schema.Schema{
+			"content_type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -52,7 +78,7 @@ func resourceAwsApiGatewayModel() *schema.Resource {
 }
 
 func resourceAwsApiGatewayModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Creating API Gateway Model")
 
 	var description *string
@@ -84,7 +110,7 @@ func resourceAwsApiGatewayModelCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
 	out, err := conn.GetModel(&apigateway.GetModelInput{
@@ -100,16 +126,16 @@ func resourceAwsApiGatewayModelRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 	log.Printf("[DEBUG] Received API Gateway Model: %s", out)
-	d.SetId(*out.Id)
+
+	d.Set("content_type", out.ContentType)
 	d.Set("description", out.Description)
 	d.Set("schema", out.Schema)
-	d.Set("content_type", out.ContentType)
 
 	return nil
 }
 
 func resourceAwsApiGatewayModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -142,28 +168,22 @@ func resourceAwsApiGatewayModelUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Deleting API Gateway Model: %s", d.Id())
+	input := &apigateway.DeleteModelInput{
+		ModelName: aws.String(d.Get("name").(string)),
+		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] schema is %#v", d)
-		_, err := conn.DeleteModel(&apigateway.DeleteModelInput{
-			ModelName: aws.String(d.Get("name").(string)),
-			RestApiId: aws.String(d.Get("rest_api_id").(string)),
-		})
-		if err == nil {
-			return nil
-		}
+	log.Printf("[DEBUG] schema is %#v", d)
+	_, err := conn.DeleteModel(input)
 
-		apigatewayErr, ok := err.(awserr.Error)
-		if apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
+	if isAWSErr(err, "NotFoundException", "") {
+		return nil
+	}
 
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
-	})
+	if err != nil {
+		return fmt.Errorf("Error deleting API gateway model: %s", err)
+	}
+	return nil
 }

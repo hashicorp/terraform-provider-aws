@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
@@ -17,7 +17,7 @@ func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 	beforeInt := acctest.RandInt()
 	afterInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
@@ -114,6 +114,7 @@ func testAccCheckDeviceFarmProjectDestroy(s *terraform.State) error {
 func testAccDeviceFarmProjectConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_project" "foo" {
-	name = "tf-testproject-%d"
-}`, rInt)
+  name = "tf-testproject-%d"
+}
+`, rInt)
 }

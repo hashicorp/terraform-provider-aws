@@ -1,12 +1,12 @@
 ---
+subcategory: "SNS"
 layout: "aws"
-page_title: "AWS: sns_topic_policy"
-sidebar_current: "docs-aws-resource-sns-topic-policy"
+page_title: "AWS: aws_sns_topic_policy"
 description: |-
   Provides an SNS topic policy resource.
 ---
 
-# aws_sns_topic_policy
+# Resource: aws_sns_topic_policy
 
 Provides an SNS topic policy resource
 
@@ -22,10 +22,10 @@ resource "aws_sns_topic" "test" {
 resource "aws_sns_topic_policy" "default" {
   arn = "${aws_sns_topic.test.arn}"
 
-  policy = "${data.aws_iam_policy_document.sns-topic-policy.json}"
+  policy = "${data.aws_iam_policy_document.sns_topic_policy.json}"
 }
 
-data "aws_iam_policy_document" "sns-topic-policy" {
+data "aws_iam_policy_document" "sns_topic_policy" {
   policy_id = "__default_policy_ID"
 
   statement {
@@ -63,6 +63,7 @@ data "aws_iam_policy_document" "sns-topic-policy" {
 
     sid = "__default_statement_ID"
   }
+}
 ```
 
 ## Argument Reference
@@ -70,4 +71,13 @@ data "aws_iam_policy_document" "sns-topic-policy" {
 The following arguments are supported:
 
 * `arn` - (Required) The ARN of the SNS topic
-* `policy` - (Required) The fully-formed AWS policy as JSON
+* `policy` - (Required) The fully-formed AWS policy as JSON. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
+
+## Import
+
+SNS Topic Policy can be imported using the topic ARN, e.g.
+
+```
+$ terraform import aws_sns_topic_policy.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
+```
+

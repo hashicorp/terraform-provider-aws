@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint"
-sidebar_current: "docs-aws-resource-vpc-endpoint"
 description: |-
   Provides a VPC Endpoint resource.
 ---
 
-# aws_vpc_endpoint
+# Resource: aws_vpc_endpoint
 
 Provides a VPC Endpoint resource.
 
@@ -19,7 +19,7 @@ Doing so will cause a conflict of associations and will overwrite the associatio
 
 ## Example Usage
 
-Basic usage:
+### Basic
 
 ```hcl
 resource "aws_vpc_endpoint" "s3" {
@@ -28,7 +28,20 @@ resource "aws_vpc_endpoint" "s3" {
 }
 ```
 
-Interface type usage:
+### Basic w/ Tags
+
+```hcl
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = "${aws_vpc.main.id}"
+  service_name = "com.amazonaws.us-west-2.s3"
+
+  tags = {
+    Environment = "test"
+  }
+}
+```
+
+### Interface Endpoint Type
 
 ```hcl
 resource "aws_vpc_endpoint" "ec2" {
@@ -37,14 +50,14 @@ resource "aws_vpc_endpoint" "ec2" {
   vpc_endpoint_type = "Interface"
 
   security_group_ids = [
-    "${aws_security_group.sg1.id}"
+    "${aws_security_group.sg1.id}",
   ]
 
   private_dns_enabled = true
 }
 ```
 
-Custom Service Usage:
+### Non-AWS Service
 
 ```hcl
 resource "aws_vpc_endpoint" "ptfe_service" {
@@ -81,28 +94,39 @@ resource "aws_route53_record" "ptfe_service" {
 
 The following arguments are supported:
 
+* `service_name` - (Required) The service name. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `vpc_id` - (Required) The ID of the VPC in which the endpoint will be used.
-* `vpc_endpoint_type` - (Optional) The VPC endpoint type, `Gateway` or `Interface`. Defaults to `Gateway`.
-* `service_name` - (Required) The service name, in the form `com.amazonaws.region.service` for AWS services.
 * `auto_accept` - (Optional) Accept the VPC endpoint (the VPC endpoint and service need to be in the same AWS account).
-* `policy` - (Optional) A policy to attach to the endpoint that controls access to the service. Applicable for endpoints of type `Gateway`.
-Defaults to full access.
+* `policy` - (Optional) A policy to attach to the endpoint that controls access to the service. Defaults to full access. All `Gateway` and some `Interface` endpoints support policies - see the [relevant AWS documentation](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints-access.html) for more details. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
+* `private_dns_enabled` - (Optional; AWS services and AWS Marketplace partner services only) Whether or not to associate a private hosted zone with the specified VPC. Applicable for endpoints of type `Interface`.
+Defaults to `false`.
 * `route_table_ids` - (Optional) One or more route table IDs. Applicable for endpoints of type `Gateway`.
 * `subnet_ids` - (Optional) The ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `Interface`.
 * `security_group_ids` - (Optional) The ID of one or more security groups to associate with the network interface. Required for endpoints of type `Interface`.
-* `private_dns_enabled` - (Optional) Whether or not to associate a private hosted zone with the specified VPC. Applicable for endpoints of type `Interface`.
-Defaults to `false`.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `vpc_endpoint_type` - (Optional) The VPC endpoint type, `Gateway` or `Interface`. Defaults to `Gateway`.
+
+### Timeouts
+
+`aws_vpc_endpoint` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating a VPC endpoint
+- `update` - (Default `10 minutes`) Used for VPC endpoint modifications
+- `delete` - (Default `10 minutes`) Used for destroying VPC endpoints
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC endpoint.
-* `state` - The state of the VPC endpoint.
-* `prefix_list_id` - The prefix list ID of the exposed AWS service. Applicable for endpoints of type `Gateway`.
 * `cidr_blocks` - The list of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
-* `network_interface_ids` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `Interface`.
 * `dns_entry` - The DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. DNS blocks are documented below.
+* `network_interface_ids` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `Interface`.
+* `owner_id` - The ID of the AWS account that owns the VPC endpoint.
+* `prefix_list_id` - The prefix list ID of the exposed AWS service. Applicable for endpoints of type `Gateway`.
+* `requester_managed` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
+* `state` - The state of the VPC endpoint.
 
 DNS blocks (for `dns_entry`) support the following attributes:
 

@@ -142,7 +142,7 @@ resource "aws_cognito_user_pool" "pool" {
     sns_caller_arn = "${aws_iam_role.cidp.arn}"
   }
 
-  tags {
+  tags = {
     "Name"    = "FooBar"
     "Project" = "Terraform"
   }

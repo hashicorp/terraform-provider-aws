@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_role"
-sidebar_current: "docs-aws-datasource-iam-role"
 description: |-
   Get information on a Amazon IAM role
 ---
@@ -29,5 +29,10 @@ data "aws_iam_role" "example" {
 * `id` - The friendly IAM role name to match.
 * `arn` - The Amazon Resource Name (ARN) specifying the role.
 * `assume_role_policy` - The policy document associated with the role.
+* `create_date` - Creation date of the role in RFC 3339 format.
+* `description` - Description for the role.
+* `max_session_duration` - Maximum session duration.
 * `path` - The path to the role.
+* `permissions_boundary` - The ARN of the policy that is used to set the permissions boundary for the role.
 * `unique_id` - The stable and unique string identifying the role.
+* `tags` - The tags attached to the role.

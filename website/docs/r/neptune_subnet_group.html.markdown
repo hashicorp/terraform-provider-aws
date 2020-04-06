@@ -1,12 +1,12 @@
 ---
+subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_subnet_group"
-sidebar_current: "docs-aws-resource-neptune-subnet-group"
 description: |-
   Provides an Neptune subnet group resource.
 ---
 
-# aws_neptune_subnet_group
+# Resource: aws_neptune_subnet_group
 
 Provides an Neptune subnet group resource.
 
@@ -17,7 +17,7 @@ resource "aws_neptune_subnet_group" "default" {
   name       = "main"
   subnet_ids = ["${aws_subnet.frontend.id}", "${aws_subnet.backend.id}"]
 
-  tags {
+  tags = {
     Name = "My neptune subnet group"
   }
 }

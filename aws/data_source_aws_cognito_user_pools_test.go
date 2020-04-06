@@ -5,14 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsCognitoUserPools_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf_acc_ds_cognito_user_pools_%s", acctest.RandString(7))
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -33,12 +33,12 @@ func TestAccDataSourceAwsCognitoUserPools_basic(t *testing.T) {
 func testAccDataSourceAwsCognitoUserPoolsConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
-	count = 2
-	name  = "%s"
+  count = 2
+  name  = "%s"
 }
 
 data "aws_cognito_user_pools" "selected" {
-	name = "${aws_cognito_user_pool.main.*.name[0]}"
+  name = "${aws_cognito_user_pool.main.*.name[0]}"
 }
 `, rName)
 }
@@ -46,7 +46,7 @@ data "aws_cognito_user_pools" "selected" {
 func testAccDataSourceAwsCognitoUserPoolsConfig_notFound(rName string) string {
 	return fmt.Sprintf(`
 data "aws_cognito_user_pools" "selected" {
-	name = "%s-not-found"
+  name = "%s-not-found"
 }
 `, rName)
 }

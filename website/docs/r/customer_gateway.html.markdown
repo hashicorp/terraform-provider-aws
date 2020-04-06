@@ -1,14 +1,14 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_customer_gateway"
-sidebar_current: "docs-aws-resource-customer-gateway"
 description: |-
   Provides a customer gateway inside a VPC. These objects can be
   connected to VPN gateways via VPN connections, and allow you to
   establish tunnels between your network and the VPC.
 ---
 
-# aws_customer_gateway
+# Resource: aws_customer_gateway
 
 Provides a customer gateway inside a VPC. These objects can be connected to VPN gateways via VPN connections, and allow you to establish tunnels between your network and the VPC.
 
@@ -20,7 +20,7 @@ resource "aws_customer_gateway" "main" {
   ip_address = "172.83.124.10"
   type       = "ipsec.1"
 
-  tags {
+  tags = {
     Name = "main-customer-gateway"
   }
 }

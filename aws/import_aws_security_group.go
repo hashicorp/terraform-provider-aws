@@ -3,9 +3,10 @@ package aws
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 // Security group import fans out to multiple resources due to the
@@ -25,6 +26,11 @@ func resourceAwsSecurityGroupImportState(
 		return nil, fmt.Errorf("security group not found")
 	}
 	sg := sgRaw.(*ec2.SecurityGroup)
+
+	// Perform nil check to avoid ImportStateVerify difference when unconfigured
+	if namePrefix := naming.NamePrefixFromName(aws.StringValue(sg.GroupName)); namePrefix != nil {
+		d.Set("name_prefix", namePrefix)
+	}
 
 	// Start building our results
 	results := make([]*schema.ResourceData, 1,
@@ -51,7 +57,7 @@ func resourceAwsSecurityGroupImportState(
 
 func resourceAwsSecurityGroupImportStatePerm(sg *ec2.SecurityGroup, ruleType string, perm *ec2.IpPermission) ([]*schema.ResourceData, error) {
 	/*
-	   Create a seperate Security Group Rule for:
+	   Create a separate Security Group Rule for:
 	   * The collection of IpRanges (cidr_blocks)
 	   * The collection of Ipv6Ranges (ipv6_cidr_blocks)
 	   * Each individual UserIdGroupPair (source_security_group_id)
@@ -179,7 +185,7 @@ func resourceAwsSecurityGroupImportStatePermPair(sg *ec2.SecurityGroup, ruleType
 	}
 
 	if err := setFromIPPerm(d, sg, perm); err != nil {
-		return nil, errwrap.Wrapf("Error importing AWS Security Group: {{err}}", err)
+		return nil, fmt.Errorf("Error importing AWS Security Group: %s", err)
 	}
 
 	return d, nil

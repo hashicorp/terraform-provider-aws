@@ -5,79 +5,116 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 	preset := &elastictranscoder.Preset{}
-	name := "aws_elastictranscoder_preset.bar"
+	name := "aws_elastictranscoder_preset.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	// make sure the old preset was destroyed on each intermediate step
-	// these are very easy to leak
-	checkExists := func(replaced bool) resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
-
-			if replaced {
-				_, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{Id: preset.Id})
-				if err != nil {
-					return nil
-				}
-
-				return fmt.Errorf("Preset Id %v should not exist", *preset.Id)
-			}
-
-			rs, ok := s.RootModule().Resources[name]
-			if !ok {
-				return fmt.Errorf("Not found: %s", name)
-			}
-			if rs.Primary.ID == "" {
-				return fmt.Errorf("No Preset ID is set")
-			}
-
-			out, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{
-				Id: aws.String(rs.Primary.ID),
-			})
-
-			if err != nil {
-				return err
-			}
-
-			preset = out.Preset
-
-			return nil
-
-		}
-	}
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: awsElasticTranscoderPresetConfig,
+			{
+				Config: awsElasticTranscoderPresetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkExists(false),
+					testAccCheckElasticTranscoderPresetExists(name, preset),
 				),
 			},
-			resource.TestStep{
-				Config: awsElasticTranscoderPresetConfig2,
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: awsElasticTranscoderPresetConfig2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkExists(true),
+					testAccCheckElasticTranscoderPresetExists(name, preset),
 				),
 			},
-			resource.TestStep{
-				Config: awsElasticTranscoderPresetConfig3,
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: awsElasticTranscoderPresetConfig3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkExists(true),
+					testAccCheckElasticTranscoderPresetExists(name, preset),
 				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
+}
+
+func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
+	preset := &elastictranscoder.Preset{}
+	name := "aws_elastictranscoder_preset.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: awsElasticTranscoderPresetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckElasticTranscoderPresetExists(name, preset),
+					testAccCheckElasticTranscoderPresetDisappears(preset),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckElasticTranscoderPresetExists(name string, preset *elastictranscoder.Preset) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Preset ID is set")
+		}
+
+		out, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{
+			Id: aws.String(rs.Primary.ID),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		*preset = *out.Preset
+
+		return nil
+	}
+}
+
+func testAccCheckElasticTranscoderPresetDisappears(preset *elastictranscoder.Preset) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+		_, err := conn.DeletePreset(&elastictranscoder.DeletePresetInput{
+			Id: preset.Id,
+		})
+
+		return err
+	}
 }
 
 func testAccCheckElasticTranscoderPresetDestroy(s *terraform.State) error {
@@ -98,24 +135,20 @@ func testAccCheckElasticTranscoderPresetDestroy(s *terraform.State) error {
 			}
 		}
 
-		awsErr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-
-		if awsErr.Code() != "ResourceNotFoundException" {
-			return fmt.Errorf("unexpected error: %s", awsErr)
+		if !isAWSErr(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+			return fmt.Errorf("unexpected error: %s", err)
 		}
 
 	}
 	return nil
 }
 
-const awsElasticTranscoderPresetConfig = `
-resource "aws_elastictranscoder_preset" "bar" {
+func awsElasticTranscoderPresetConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
   description = "elastic transcoder preset test 1"
-  name        = "aws_elastictranscoder_preset_tf_test_"
+  name        = %[1]q
 
   audio {
     audio_packing_mode = "SingleTrack"
@@ -125,13 +158,15 @@ resource "aws_elastictranscoder_preset" "bar" {
     sample_rate        = 44100
   }
 }
-`
+`, rName)
+}
 
-const awsElasticTranscoderPresetConfig2 = `
-resource "aws_elastictranscoder_preset" "bar" {
+func awsElasticTranscoderPresetConfig2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
   description = "elastic transcoder preset test 2"
-  name        = "aws_elastictranscoder_preset_tf_test_"
+  name        = %[1]q
 
   audio {
     audio_packing_mode = "SingleTrack"
@@ -158,10 +193,12 @@ resource "aws_elastictranscoder_preset" "bar" {
     sizing_policy        = "Fit"
   }
 
-  video_codec_options {
-    Profile            = "main"
-    Level              = "4.1"
-    MaxReferenceFrames = 4
+  video_codec_options = {
+    Profile                  = "main"
+    Level                    = "4.1"
+    MaxReferenceFrames       = 4
+    InterlacedMode           = "Auto"
+    ColorSpaceConversionMode = "None"
   }
 
   thumbnails {
@@ -173,13 +210,15 @@ resource "aws_elastictranscoder_preset" "bar" {
     sizing_policy  = "Fit"
   }
 }
-`
+`, rName)
+}
 
-const awsElasticTranscoderPresetConfig3 = `
-resource "aws_elastictranscoder_preset" "bar" {
+func awsElasticTranscoderPresetConfig3(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
   description = "elastic transcoder preset test 3"
-  name        = "aws_elastictranscoder_preset_tf_test_"
+  name        = %[1]q
 
   audio {
     audio_packing_mode = "SingleTrack"
@@ -207,18 +246,18 @@ resource "aws_elastictranscoder_preset" "bar" {
     sizing_policy        = "Fit"
   }
 
-  video_codec_options {
+  video_codec_options = {
     Profile                  = "main"
     Level                    = "2.2"
     MaxReferenceFrames       = 3
-    InterlaceMode            = "Progressive"
+    InterlacedMode           = "Progressive"
     ColorSpaceConversionMode = "None"
   }
 
   video_watermarks {
     id                = "Terraform Test"
-    max_width         = "20%"
-    max_height        = "20%"
+    max_width         = "20%%"
+    max_height        = "20%%"
     sizing_policy     = "ShrinkToFit"
     horizontal_align  = "Right"
     horizontal_offset = "10px"
@@ -237,4 +276,5 @@ resource "aws_elastictranscoder_preset" "bar" {
     sizing_policy  = "Fit"
   }
 }
-`
+`, rName)
+}

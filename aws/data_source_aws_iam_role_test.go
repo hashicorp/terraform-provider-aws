@@ -2,30 +2,62 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
-	roleName := fmt.Sprintf("test-role-%s", acctest.RandString(10))
+	roleName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_iam_role.test"
+	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMRoleConfig(roleName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_iam_role.test", "unique_id"),
-					resource.TestCheckResourceAttrSet("data.aws_iam_role.test", "assume_role_policy"),
-					resource.TestCheckResourceAttr("data.aws_iam_role.test", "path", "/testpath/"),
-					resource.TestCheckResourceAttr("data.aws_iam_role.test", "name", roleName),
-					resource.TestCheckResourceAttrSet("data.aws_iam_role.test", "create_date"),
-					resource.TestMatchResourceAttr("data.aws_iam_role.test", "arn",
-						regexp.MustCompile(`^arn:[\w-]+:([a-zA-Z0-9\-])+:([a-z]{2}-(gov-)?[a-z]+-\d{1})?:(\d{12})?:(.*)$`)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "assume_role_policy", resourceName, "assume_role_policy"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "create_date", resourceName, "create_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "max_session_duration", resourceName, "max_session_duration"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "path", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "unique_id", resourceName, "unique_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDataSourceIAMRole_tags(t *testing.T) {
+	roleName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_iam_role.test"
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsIAMRoleConfig_tags(roleName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "assume_role_policy", resourceName, "assume_role_policy"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "create_date", resourceName, "create_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "max_session_duration", resourceName, "max_session_duration"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "path", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "unique_id", resourceName, "unique_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.tag1", "test-value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.tag2", "test-value2"),
 				),
 			},
 		},
@@ -34,8 +66,8 @@ func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
 
 func testAccAwsIAMRoleConfig(roleName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "test_role" {
-  name = "%s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -57,7 +89,40 @@ EOF
 }
 
 data "aws_iam_role" "test" {
-  name = "${aws_iam_role.test_role.name}"
+  name = "${aws_iam_role.test.name}"
+}
+`, roleName)
+}
+
+func testAccAwsIAMRoleConfig_tags(roleName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+  tags = {
+    tag1 = "test-value1"
+    tag2 = "test-value2"
+  }
+}
+
+data "aws_iam_role" "test" {
+  name = "${aws_iam_role.test.name}"
 }
 `, roleName)
 }

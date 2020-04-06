@@ -2,6 +2,10 @@
 
 package cloudtrail
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeARNInvalidException for service response error code
@@ -10,14 +14,39 @@ const (
 	// This exception is thrown when an operation is called with an invalid trail
 	// ARN. The format of a trail ARN is:
 	//
-	// arn:aws:cloudtrail:us-east-1:123456789012:trail/MyTrail
+	// arn:aws:cloudtrail:us-east-2:123456789012:trail/MyTrail
 	ErrCodeARNInvalidException = "CloudTrailARNInvalidException"
+
+	// ErrCodeAccessNotEnabledException for service response error code
+	// "CloudTrailAccessNotEnabledException".
+	//
+	// This exception is thrown when trusted access has not been enabled between
+	// AWS CloudTrail and AWS Organizations. For more information, see Enabling
+	// Trusted Access with Other AWS Services (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html)
+	// and Prepare For Creating a Trail For Your Organization (https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-an-organizational-trail-prepare.html).
+	ErrCodeAccessNotEnabledException = "CloudTrailAccessNotEnabledException"
 
 	// ErrCodeCloudWatchLogsDeliveryUnavailableException for service response error code
 	// "CloudWatchLogsDeliveryUnavailableException".
 	//
 	// Cannot set a CloudWatch Logs delivery for this region.
 	ErrCodeCloudWatchLogsDeliveryUnavailableException = "CloudWatchLogsDeliveryUnavailableException"
+
+	// ErrCodeInsightNotEnabledException for service response error code
+	// "InsightNotEnabledException".
+	//
+	// If you run GetInsightSelectors on a trail that does not have Insights events
+	// enabled, the operation throws the exception InsightNotEnabledException.
+	ErrCodeInsightNotEnabledException = "InsightNotEnabledException"
+
+	// ErrCodeInsufficientDependencyServiceAccessPermissionException for service response error code
+	// "InsufficientDependencyServiceAccessPermissionException".
+	//
+	// This exception is thrown when the IAM user or role that is used to create
+	// the organization trail is lacking one or more required permissions for creating
+	// an organization trail in a required service. For more information, see Prepare
+	// For Creating a Trail For Your Organization (https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-an-organizational-trail-prepare.html).
+	ErrCodeInsufficientDependencyServiceAccessPermissionException = "InsufficientDependencyServiceAccessPermissionException"
 
 	// ErrCodeInsufficientEncryptionPolicyException for service response error code
 	// "InsufficientEncryptionPolicyException".
@@ -50,16 +79,32 @@ const (
 	// This exception is thrown when the provided role is not valid.
 	ErrCodeInvalidCloudWatchLogsRoleArnException = "InvalidCloudWatchLogsRoleArnException"
 
+	// ErrCodeInvalidEventCategoryException for service response error code
+	// "InvalidEventCategoryException".
+	//
+	// Occurs if an event category that is not valid is specified as a value of
+	// EventCategory.
+	ErrCodeInvalidEventCategoryException = "InvalidEventCategoryException"
+
 	// ErrCodeInvalidEventSelectorsException for service response error code
 	// "InvalidEventSelectorsException".
 	//
 	// This exception is thrown when the PutEventSelectors operation is called with
-	// an invalid number of event selectors, data resources, or an invalid value
-	// for a parameter:
+	// a number of event selectors or data resources that is not valid. The combination
+	// of event selectors and data resources is not valid. A trail can have up to
+	// 5 event selectors. A trail is limited to 250 data resources. These data resources
+	// can be distributed across event selectors, but the overall total cannot exceed
+	// 250.
+	//
+	// You can:
 	//
 	//    * Specify a valid number of event selectors (1 to 5) for a trail.
 	//
 	//    * Specify a valid number of data resources (1 to 250) for an event selector.
+	//    The limit of number of resources on an individual event selector is configurable
+	//    up to 250. However, this upper limit is allowed only if the total number
+	//    of data resources does not exceed 250 across all event selectors for a
+	//    trail.
 	//
 	//    * Specify a valid value for a parameter. For example, specifying the ReadWriteType
 	//    parameter with a value of read-only is invalid.
@@ -71,6 +116,14 @@ const (
 	// This exception is thrown when an operation is called on a trail from a region
 	// other than the region in which the trail was created.
 	ErrCodeInvalidHomeRegionException = "InvalidHomeRegionException"
+
+	// ErrCodeInvalidInsightSelectorsException for service response error code
+	// "InvalidInsightSelectorsException".
+	//
+	// The formatting or syntax of the InsightSelectors JSON statement in your PutInsightSelectors
+	// or GetInsightSelectors request is not valid, or the specified insight type
+	// in the InsightSelectors statement is not a valid insight type.
+	ErrCodeInvalidInsightSelectorsException = "InvalidInsightSelectorsException"
 
 	// ErrCodeInvalidKmsKeyIdException for service response error code
 	// "InvalidKmsKeyIdException".
@@ -125,8 +178,8 @@ const (
 	// ErrCodeInvalidTagParameterException for service response error code
 	// "InvalidTagParameterException".
 	//
-	// This exception is thrown when the key or value specified for the tag does
-	// not match the regular expression ^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$.
+	// This exception is thrown when the specified tag key or values are not valid.
+	// It can also occur if there are duplicate tags or too many tags on the resource.
 	ErrCodeInvalidTagParameterException = "InvalidTagParameterException"
 
 	// ErrCodeInvalidTimeRangeException for service response error code
@@ -171,7 +224,7 @@ const (
 	// ErrCodeKmsKeyDisabledException for service response error code
 	// "KmsKeyDisabledException".
 	//
-	// This exception is deprecated.
+	// This exception is no longer in use.
 	ErrCodeKmsKeyDisabledException = "KmsKeyDisabledException"
 
 	// ErrCodeKmsKeyNotFoundException for service response error code
@@ -187,11 +240,37 @@ const (
 	// This exception is thrown when the maximum number of trails is reached.
 	ErrCodeMaximumNumberOfTrailsExceededException = "MaximumNumberOfTrailsExceededException"
 
+	// ErrCodeNotOrganizationMasterAccountException for service response error code
+	// "NotOrganizationMasterAccountException".
+	//
+	// This exception is thrown when the AWS account making the request to create
+	// or update an organization trail is not the master account for an organization
+	// in AWS Organizations. For more information, see Prepare For Creating a Trail
+	// For Your Organization (https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-an-organizational-trail-prepare.html).
+	ErrCodeNotOrganizationMasterAccountException = "NotOrganizationMasterAccountException"
+
 	// ErrCodeOperationNotPermittedException for service response error code
 	// "OperationNotPermittedException".
 	//
 	// This exception is thrown when the requested operation is not permitted.
 	ErrCodeOperationNotPermittedException = "OperationNotPermittedException"
+
+	// ErrCodeOrganizationNotInAllFeaturesModeException for service response error code
+	// "OrganizationNotInAllFeaturesModeException".
+	//
+	// This exception is thrown when AWS Organizations is not configured to support
+	// all features. All features must be enabled in AWS Organization to support
+	// creating an organization trail. For more information, see Prepare For Creating
+	// a Trail For Your Organization (https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-an-organizational-trail-prepare.html).
+	ErrCodeOrganizationNotInAllFeaturesModeException = "OrganizationNotInAllFeaturesModeException"
+
+	// ErrCodeOrganizationsNotInUseException for service response error code
+	// "OrganizationsNotInUseException".
+	//
+	// This exception is thrown when the request is made from an AWS account that
+	// is not a member of an organization. To make this request, sign in using the
+	// credentials of an account that belongs to an organization.
+	ErrCodeOrganizationsNotInUseException = "OrganizationsNotInUseException"
 
 	// ErrCodeResourceNotFoundException for service response error code
 	// "ResourceNotFoundException".
@@ -234,7 +313,7 @@ const (
 	// ErrCodeTrailNotProvidedException for service response error code
 	// "TrailNotProvidedException".
 	//
-	// This exception is deprecated.
+	// This exception is no longer in use.
 	ErrCodeTrailNotProvidedException = "TrailNotProvidedException"
 
 	// ErrCodeUnsupportedOperationException for service response error code
@@ -243,3 +322,48 @@ const (
 	// This exception is thrown when the requested operation is not supported.
 	ErrCodeUnsupportedOperationException = "UnsupportedOperationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CloudTrailARNInvalidException":                          newErrorARNInvalidException,
+	"CloudTrailAccessNotEnabledException":                    newErrorAccessNotEnabledException,
+	"CloudWatchLogsDeliveryUnavailableException":             newErrorCloudWatchLogsDeliveryUnavailableException,
+	"InsightNotEnabledException":                             newErrorInsightNotEnabledException,
+	"InsufficientDependencyServiceAccessPermissionException": newErrorInsufficientDependencyServiceAccessPermissionException,
+	"InsufficientEncryptionPolicyException":                  newErrorInsufficientEncryptionPolicyException,
+	"InsufficientS3BucketPolicyException":                    newErrorInsufficientS3BucketPolicyException,
+	"InsufficientSnsTopicPolicyException":                    newErrorInsufficientSnsTopicPolicyException,
+	"InvalidCloudWatchLogsLogGroupArnException":              newErrorInvalidCloudWatchLogsLogGroupArnException,
+	"InvalidCloudWatchLogsRoleArnException":                  newErrorInvalidCloudWatchLogsRoleArnException,
+	"InvalidEventCategoryException":                          newErrorInvalidEventCategoryException,
+	"InvalidEventSelectorsException":                         newErrorInvalidEventSelectorsException,
+	"InvalidHomeRegionException":                             newErrorInvalidHomeRegionException,
+	"InvalidInsightSelectorsException":                       newErrorInvalidInsightSelectorsException,
+	"InvalidKmsKeyIdException":                               newErrorInvalidKmsKeyIdException,
+	"InvalidLookupAttributesException":                       newErrorInvalidLookupAttributesException,
+	"InvalidMaxResultsException":                             newErrorInvalidMaxResultsException,
+	"InvalidNextTokenException":                              newErrorInvalidNextTokenException,
+	"InvalidParameterCombinationException":                   newErrorInvalidParameterCombinationException,
+	"InvalidS3BucketNameException":                           newErrorInvalidS3BucketNameException,
+	"InvalidS3PrefixException":                               newErrorInvalidS3PrefixException,
+	"InvalidSnsTopicNameException":                           newErrorInvalidSnsTopicNameException,
+	"InvalidTagParameterException":                           newErrorInvalidTagParameterException,
+	"InvalidTimeRangeException":                              newErrorInvalidTimeRangeException,
+	"InvalidTokenException":                                  newErrorInvalidTokenException,
+	"InvalidTrailNameException":                              newErrorInvalidTrailNameException,
+	"KmsException":                                           newErrorKmsException,
+	"KmsKeyDisabledException":                                newErrorKmsKeyDisabledException,
+	"KmsKeyNotFoundException":                                newErrorKmsKeyNotFoundException,
+	"MaximumNumberOfTrailsExceededException":                 newErrorMaximumNumberOfTrailsExceededException,
+	"NotOrganizationMasterAccountException":                  newErrorNotOrganizationMasterAccountException,
+	"OperationNotPermittedException":                         newErrorOperationNotPermittedException,
+	"OrganizationNotInAllFeaturesModeException":              newErrorOrganizationNotInAllFeaturesModeException,
+	"OrganizationsNotInUseException":                         newErrorOrganizationsNotInUseException,
+	"ResourceNotFoundException":                              newErrorResourceNotFoundException,
+	"ResourceTypeNotSupportedException":                      newErrorResourceTypeNotSupportedException,
+	"S3BucketDoesNotExistException":                          newErrorS3BucketDoesNotExistException,
+	"TagsLimitExceededException":                             newErrorTagsLimitExceededException,
+	"TrailAlreadyExistsException":                            newErrorTrailAlreadyExistsException,
+	"TrailNotFoundException":                                 newErrorTrailNotFoundException,
+	"TrailNotProvidedException":                              newErrorTrailNotProvidedException,
+	"UnsupportedOperationException":                          newErrorUnsupportedOperationException,
+}

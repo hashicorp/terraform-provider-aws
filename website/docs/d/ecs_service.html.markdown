@@ -1,7 +1,7 @@
 ---
+subcategory: "ECS"
 layout: "aws"
 page_title: "AWS: aws_ecs_service"
-sidebar_current: "docs-aws-datasource-ecs-service"
 description: |-
     Provides details about an ecs service
 ---
@@ -29,9 +29,10 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the ECS Service
 * `desired_count` - The number of tasks for the ECS Service
 * `launch_type` - The launch type for the ECS Service
+* `scheduling_strategy` - The scheduling strategy for the ECS Service
 * `task_definition` - The family for the latest ACTIVE revision

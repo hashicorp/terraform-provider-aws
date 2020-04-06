@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_policy_document"
-sidebar_current: "docs-aws-datasource-iam-policy-document"
 description: |-
   Generates an IAM policy document in JSON format
 ---
@@ -13,6 +13,8 @@ Generates an IAM policy document in JSON format.
 This is a data source which can be used to construct a JSON representation of
 an IAM policy document, for use with resources which expect policy documents,
 such as the `aws_iam_policy` resource.
+
+-> For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
 ```hcl
 data "aws_iam_policy_document" "example" {
@@ -86,10 +88,11 @@ The following arguments are supported:
   current policy document.  Statements with non-blank `sid`s in the override
   document will overwrite statements with the same `sid` in the current document.
   Statements without an `sid` cannot be overwritten.
-* `statement` (Required) - A nested configuration block (described below)
+* `statement` (Optional) - A nested configuration block (described below)
   configuring one *statement* to be included in the policy document.
+* `version` (Optional) - IAM policy document version. Valid values: `2008-10-17`, `2012-10-17`. Defaults to `2012-10-17`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
 
-Each document configuration must have one or more `statement` blocks, which
+Each document configuration may have one or more `statement` blocks, which
 each accept the following arguments:
 
 * `sid` (Optional) - An ID for the policy statement.
@@ -116,15 +119,15 @@ each accept the following arguments:
 Each policy may have either zero or more `principals` blocks or zero or more
 `not_principals` blocks, both of which each accept the following arguments:
 
-* `type` (Required) The type of principal. For AWS accounts this is "AWS".
+* `type` (Required) The type of principal. For AWS ARNs this is "AWS".  For AWS services (e.g. Lambda), this is "Service".
 * `identifiers` (Required) List of identifiers for principals. When `type`
-  is "AWS", these are IAM user or role ARNs.
+  is "AWS", these are IAM user or role ARNs.  When `type` is "Service", these are AWS Service roles e.g. `lambda.amazonaws.com`.
 
 Each policy statement may have zero or more `condition` blocks, which each
 accept the following arguments:
 
 * `test` (Required) The name of the
-  [IAM condition type](http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html#AccessPolicyLanguage_ConditionType)
+  [IAM condition operator](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html)
   to evaluate.
 * `variable` (Required) The name of a
   [Context Variable](http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html#AvailableKeys)
@@ -297,3 +300,46 @@ data "aws_iam_policy_document" "override_json_example" {
 ```
 
 You can also combine `source_json` and `override_json` in the same document.
+
+## Example without Statement
+
+Use without a `statement`:
+
+```hcl
+data "aws_iam_policy_document" "source" {
+  statement {
+    sid       = "OverridePlaceholder"
+    actions   = ["ec2:DescribeAccountAttributes"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "override" {
+  statement {
+    sid       = "OverridePlaceholder"
+    actions   = ["s3:GetObject"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "politik" {
+  source_json   = "${data.aws_iam_policy_document.source.json}"
+  override_json = "${data.aws_iam_policy_document.override.json}"
+}
+```
+
+`data.aws_iam_policy_document.politik.json` will evaluate to:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OverridePlaceholder",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "*"
+    }
+  ]
+}
+```

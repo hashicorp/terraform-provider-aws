@@ -6,20 +6,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
 	name := "alias/aws/s3"
 	resourceName := "data.aws_kms_alias.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsKmsAlias_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsKmsAliasCheckExists(resourceName),
@@ -38,11 +38,11 @@ func TestAccDataSourceAwsKmsAlias_CMK(t *testing.T) {
 	aliasResourceName := "aws_kms_alias.test"
 	datasourceAliasResourceName := "data.aws_kms_alias.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsKmsAlias_CMK(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsKmsAliasCheckExists(datasourceAliasResourceName),
@@ -111,21 +111,23 @@ func testAccDataSourceAwsKmsAlias_name(name string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "test" {
   name = "%s"
-}`, name)
+}
+`, name)
 }
 
 func testAccDataSourceAwsKmsAlias_CMK(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-    description = "Terraform acc test"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test"
+  deletion_window_in_days = 7
 }
 
 resource "aws_kms_alias" "test" {
-    name = "alias/tf-acc-key-alias-%d"
-    target_key_id = "${aws_kms_key.test.key_id}"
+  name          = "alias/tf-acc-key-alias-%d"
+  target_key_id = "${aws_kms_key.test.key_id}"
 }
 
 %s
+
 `, rInt, testAccDataSourceAwsKmsAlias_name("${aws_kms_alias.test.name}"))
 }

@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
@@ -18,7 +18,7 @@ func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
 
 	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
@@ -52,7 +52,7 @@ func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
 func TestAccAWSNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
@@ -78,7 +78,7 @@ func TestAccAWSNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 func TestAccAWSNeptuneClusterParameterGroup_generatedName(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
@@ -103,7 +103,7 @@ func TestAccAWSNeptuneClusterParameterGroup_Description(t *testing.T) {
 
 	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
@@ -130,7 +130,7 @@ func TestAccAWSNeptuneClusterParameterGroup_Parameter(t *testing.T) {
 
 	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
@@ -171,7 +171,7 @@ func TestAccAWSNeptuneClusterParameterGroup_Tags(t *testing.T) {
 
 	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
@@ -293,11 +293,13 @@ func testAccCheckAWSNeptuneClusterParameterGroupExists(n string, v *neptune.DBCl
 }
 
 func testAccAWSNeptuneClusterParameterGroupConfig_Description(name, description string) string {
-	return fmt.Sprintf(`resource "aws_neptune_cluster_parameter_group" "bar" {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster_parameter_group" "bar" {
   description = "%s"
   family      = "neptune1"
   name        = "%s"
-}`, description, name)
+}
+`, description, name)
 }
 
 func testAccAWSNeptuneClusterParameterGroupConfig_Parameter(name, pName, pValue string) string {
@@ -320,7 +322,7 @@ resource "aws_neptune_cluster_parameter_group" "bar" {
   family = "neptune1"
   name   = "%s"
 
-  tags {
+  tags = {
     %s = "%s"
   }
 }
@@ -328,10 +330,12 @@ resource "aws_neptune_cluster_parameter_group" "bar" {
 }
 
 func testAccAWSNeptuneClusterParameterGroupConfig(name string) string {
-	return fmt.Sprintf(`resource "aws_neptune_cluster_parameter_group" "bar" {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster_parameter_group" "bar" {
   family = "neptune1"
   name   = "%s"
-}`, name)
+}
+`, name)
 }
 
 const testAccAWSNeptuneClusterParameterGroupConfig_namePrefix = `

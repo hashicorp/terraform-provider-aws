@@ -2,37 +2,43 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 )
 
 func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
 	var v waf.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resourceName := "aws_waf_rate_based_rule.wafrule"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRateBasedRuleExists("aws_waf_rate_based_rule.wafrule", &v),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "name", wafRuleName),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "predicates.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "metric_name", wafRuleName),
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &v),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`ratebasedrule/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -42,35 +48,35 @@ func TestAccAWSWafRateBasedRule_changeNameForceNew(t *testing.T) {
 	var before, after waf.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(5))
+	resourceName := "aws_waf_rate_based_rule.wafrule"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRateBasedRuleExists("aws_waf_rate_based_rule.wafrule", &before),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "name", wafRuleName),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "predicates.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "metric_name", wafRuleName),
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
 				),
 			},
 			{
 				Config: testAccAWSWafRateBasedRuleConfigChangeName(wafRuleNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRateBasedRuleExists("aws_waf_rate_based_rule.wafrule", &after),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "name", wafRuleNewName),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "predicates.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "metric_name", wafRuleNewName),
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", wafRuleNewName),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleNewName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -79,15 +85,17 @@ func TestAccAWSWafRateBasedRule_changeNameForceNew(t *testing.T) {
 func TestAccAWSWafRateBasedRule_disappears(t *testing.T) {
 	var v waf.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resourceName := "aws_waf_rate_based_rule.wafrule"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRateBasedRuleExists("aws_waf_rate_based_rule.wafrule", &v),
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &v),
 					testAccCheckAWSWafRateBasedRuleDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,9 +111,10 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 	var before, after waf.RateBasedRule
 	var idx int
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	resourceName := "aws_waf_rate_based_rule.wafrule"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
@@ -113,25 +122,30 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 				Config: testAccAWSWafRateBasedRuleConfig(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafIPSetExists("aws_waf_ipset.ipset", &ipset),
-					testAccCheckAWSWafRateBasedRuleExists("aws_waf_rate_based_rule.wafrule", &before),
-					resource.TestCheckResourceAttr("aws_waf_rate_based_rule.wafrule", "name", ruleName),
-					resource.TestCheckResourceAttr("aws_waf_rate_based_rule.wafrule", "predicates.#", "1"),
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					computeWafRateBasedRulePredicateWithIpSet(&ipset, false, "IPMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_rate_based_rule.wafrule", "predicates.%d.negated", &idx, "false"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_rate_based_rule.wafrule", "predicates.%d.type", &idx, "IPMatch"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicates.%d.negated", &idx, "false"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicates.%d.type", &idx, "IPMatch"),
 				),
 			},
 			{
 				Config: testAccAWSWafRateBasedRuleConfig_changePredicates(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafByteMatchSetExists("aws_waf_byte_match_set.set", &byteMatchSet),
-					testAccCheckAWSWafRateBasedRuleExists("aws_waf_rate_based_rule.wafrule", &after),
-					resource.TestCheckResourceAttr("aws_waf_rate_based_rule.wafrule", "name", ruleName),
-					resource.TestCheckResourceAttr("aws_waf_rate_based_rule.wafrule", "predicates.#", "1"),
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					computeWafRateBasedRulePredicateWithByteMatchSet(&byteMatchSet, true, "ByteMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_rate_based_rule.wafrule", "predicates.%d.negated", &idx, "true"),
-					testCheckResourceAttrWithIndexesAddr("aws_waf_rate_based_rule.wafrule", "predicates.%d.type", &idx, "ByteMatch"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicates.%d.negated", &idx, "true"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicates.%d.type", &idx, "ByteMatch"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -178,21 +192,73 @@ func computeWafRateBasedRulePredicateWithByteMatchSet(set *waf.ByteMatchSet, neg
 func TestAccAWSWafRateBasedRule_noPredicates(t *testing.T) {
 	var rule waf.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	resourceName := "aws_waf_rate_based_rule.wafrule"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRateBasedRuleConfig_noPredicates(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRateBasedRuleExists("aws_waf_rate_based_rule.wafrule", &rule),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "name", ruleName),
-					resource.TestCheckResourceAttr(
-						"aws_waf_rate_based_rule.wafrule", "predicates.#", "0"),
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSWafRateBasedRule_Tags(t *testing.T) {
+	var rule waf.RateBasedRule
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	resourceName := "aws_waf_rate_based_rule.wafrule"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRateBasedRuleConfigTags1(ruleName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &rule),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`ratebasedrule/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSWafRateBasedRuleConfigTags2(ruleName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSWafRateBasedRuleConfigTags1(ruleName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -202,7 +268,7 @@ func testAccCheckAWSWafRateBasedRuleDisappears(v *waf.RateBasedRule) resource.Te
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRateBasedRuleInput{
 				ChangeToken: token,
@@ -262,7 +328,7 @@ func testAccCheckAWSWafRateBasedRuleDestroy(s *terraform.State) error {
 
 		// Return nil if the Rule is already destroyed
 		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "WAFNonexistentItemException" {
+			if awsErr.Code() == waf.ErrCodeNonexistentItemException {
 				return nil
 			}
 		}
@@ -306,62 +372,70 @@ func testAccAWSWafRateBasedRuleConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  depends_on = ["aws_waf_ipset.ipset"]
-  name = "%s"
+  depends_on  = ["aws_waf_ipset.ipset"]
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
+  rate_key    = "IP"
+  rate_limit  = 2000
+
   predicates {
     data_id = "${aws_waf_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRateBasedRuleConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  depends_on = ["aws_waf_ipset.ipset"]
-  name = "%s"
+  depends_on  = ["aws_waf_ipset.ipset"]
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
+  rate_key    = "IP"
+  rate_limit  = 2000
+
   predicates {
     data_id = "${aws_waf_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRateBasedRuleConfig_changePredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_waf_byte_match_set" "set" {
   name = "%s"
+
   byte_match_tuples {
     text_transformation   = "NONE"
     target_string         = "badrefer1"
@@ -375,24 +449,58 @@ resource "aws_waf_byte_match_set" "set" {
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
+  rate_key    = "IP"
+  rate_limit  = 2000
+
   predicates {
     data_id = "${aws_waf_byte_match_set.set.id}"
     negated = true
-    type = "ByteMatch"
+    type    = "ByteMatch"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRateBasedRuleConfig_noPredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rate_based_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
-}`, name, name)
+  rate_key    = "IP"
+  rate_limit  = 2000
+}
+`, name, name)
+}
+
+func testAccAWSWafRateBasedRuleConfigTags1(name, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_rate_based_rule" "wafrule" {
+  name        = "%s"
+  metric_name = "%s"
+  rate_key    = "IP"
+  rate_limit  = 2000
+
+  tags = {
+  	%q = %q
+  }
+}
+`, name, name, tag1Key, tag1Value)
+}
+
+func testAccAWSWafRateBasedRuleConfigTags2(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_rate_based_rule" "wafrule" {
+  name        = "%s"
+  metric_name = "%s"
+  rate_key    = "IP"
+  rate_limit  = 2000
+
+  tags = {
+  	%q = %q
+  	%q = %q
+  }
+}
+`, name, name, tag1Key, tag1Value, tag2Key, tag2Value)
 }

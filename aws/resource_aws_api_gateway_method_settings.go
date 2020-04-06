@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsApiGatewayMethodSettings() *schema.Resource {
@@ -87,7 +87,7 @@ func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 }
 
 func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Reading API Gateway Method Settings %s", d.Id())
 	input := apigateway.GetStageInput{
@@ -128,7 +128,7 @@ func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	methodPath := d.Get("method_path").(string)
 	prefix := fmt.Sprintf("/%s/", methodPath)
@@ -188,7 +188,7 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 		ops = append(ops, &apigateway.PatchOperation{
 			Op:    aws.String("replace"),
 			Path:  aws.String(prefix + "caching/dataEncrypted"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("settings.0.cache_data_encrypted").(int))),
+			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.cache_data_encrypted").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.require_authorization_for_cache_control") {
@@ -225,7 +225,7 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsApiGatewayMethodSettingsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Deleting API Gateway Method Settings: %s", d.Id())
 
 	input := apigateway.UpdateStageInput{

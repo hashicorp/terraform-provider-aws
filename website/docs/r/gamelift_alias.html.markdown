@@ -1,12 +1,12 @@
 ---
+subcategory: "Gamelift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_alias"
-sidebar_current: "docs-aws-resource-gamelift-alias"
 description: |-
   Provides a Gamelift Alias resource.
 ---
 
-# aws_gamelift_alias
+# Resource: aws_gamelift_alias
 
 Provides a Gamelift Alias resource.
 
@@ -14,11 +14,12 @@ Provides a Gamelift Alias resource.
 
 ```hcl
 resource "aws_gamelift_alias" "example" {
-  name = "example-alias"
+  name        = "example-alias"
   description = "Example Description"
+
   routing_strategy {
     message = "Example Message"
-    type = "TERMINAL"
+    type    = "TERMINAL"
   }
 }
 ```
@@ -38,6 +39,7 @@ The following arguments are supported:
 * `fleet_id` - (Optional) ID of the Gamelift Fleet to point the alias to.
 * `message` - (Optional) Message text to be used with the `TERMINAL` routing strategy.
 * `type` - (Required) Type of routing strategy. e.g. `SIMPLE` or `TERMINAL`
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Attributes Reference
 

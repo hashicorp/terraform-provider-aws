@@ -2,7 +2,32 @@
 
 package efs
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
+
+	// ErrCodeAccessPointAlreadyExists for service response error code
+	// "AccessPointAlreadyExists".
+	//
+	// Returned if the access point you are trying to create already exists, with
+	// the creation token you provided in the request.
+	ErrCodeAccessPointAlreadyExists = "AccessPointAlreadyExists"
+
+	// ErrCodeAccessPointLimitExceeded for service response error code
+	// "AccessPointLimitExceeded".
+	//
+	// Returned if the AWS account has already created the maximum number of access
+	// points allowed per file system.
+	ErrCodeAccessPointLimitExceeded = "AccessPointLimitExceeded"
+
+	// ErrCodeAccessPointNotFound for service response error code
+	// "AccessPointNotFound".
+	//
+	// Returned if the specified AccessPointId value doesn't exist in the requester's
+	// AWS account.
+	ErrCodeAccessPointNotFound = "AccessPointNotFound"
 
 	// ErrCodeBadRequest for service response error code
 	// "BadRequest".
@@ -34,21 +59,21 @@ const (
 	// ErrCodeFileSystemLimitExceeded for service response error code
 	// "FileSystemLimitExceeded".
 	//
-	// Returned if the AWS account has already created maximum number of file systems
-	// allowed per account.
+	// Returned if the AWS account has already created the maximum number of file
+	// systems allowed per account.
 	ErrCodeFileSystemLimitExceeded = "FileSystemLimitExceeded"
 
 	// ErrCodeFileSystemNotFound for service response error code
 	// "FileSystemNotFound".
 	//
-	// Returned if the specified FileSystemId does not exist in the requester's
+	// Returned if the specified FileSystemId value doesn't exist in the requester's
 	// AWS account.
 	ErrCodeFileSystemNotFound = "FileSystemNotFound"
 
 	// ErrCodeIncorrectFileSystemLifeCycleState for service response error code
 	// "IncorrectFileSystemLifeCycleState".
 	//
-	// Returned if the file system's life cycle state is not "created".
+	// Returned if the file system's lifecycle state is not "available".
 	ErrCodeIncorrectFileSystemLifeCycleState = "IncorrectFileSystemLifeCycleState"
 
 	// ErrCodeIncorrectMountTargetState for service response error code
@@ -57,11 +82,29 @@ const (
 	// Returned if the mount target is not in the correct state for the operation.
 	ErrCodeIncorrectMountTargetState = "IncorrectMountTargetState"
 
+	// ErrCodeInsufficientThroughputCapacity for service response error code
+	// "InsufficientThroughputCapacity".
+	//
+	// Returned if there's not enough capacity to provision additional throughput.
+	// This value might be returned when you try to create a file system in provisioned
+	// throughput mode, when you attempt to increase the provisioned throughput
+	// of an existing file system, or when you attempt to change an existing file
+	// system from bursting to provisioned throughput mode.
+	ErrCodeInsufficientThroughputCapacity = "InsufficientThroughputCapacity"
+
 	// ErrCodeInternalServerError for service response error code
 	// "InternalServerError".
 	//
 	// Returned if an error occurred on the server side.
 	ErrCodeInternalServerError = "InternalServerError"
+
+	// ErrCodeInvalidPolicyException for service response error code
+	// "InvalidPolicyException".
+	//
+	// Returned if the FileSystemPolicy is is malformed or contains an error such
+	// as an invalid parameter value or a missing required parameter. Returned in
+	// the case of a policy lockout safety check error.
+	ErrCodeInvalidPolicyException = "InvalidPolicyException"
 
 	// ErrCodeIpAddressInUse for service response error code
 	// "IpAddressInUse".
@@ -87,11 +130,12 @@ const (
 	// ErrCodeNetworkInterfaceLimitExceeded for service response error code
 	// "NetworkInterfaceLimitExceeded".
 	//
-	// The calling account has reached the ENI limit for the specific AWS region.
-	// Client should try to delete some ENIs or get its account limit raised. For
-	// more information, see Amazon VPC Limits (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Appendix_Limits.html)
-	// in the Amazon Virtual Private Cloud User Guide (see the Network interfaces
-	// per VPC entry in the table).
+	// The calling account has reached the limit for elastic network interfaces
+	// for the specific AWS Region. The client should try to delete some elastic
+	// network interfaces or get the account limit raised. For more information,
+	// see Amazon VPC Limits (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Appendix_Limits.html)
+	// in the Amazon VPC User Guide (see the Network interfaces per VPC entry in
+	// the table).
 	ErrCodeNetworkInterfaceLimitExceeded = "NetworkInterfaceLimitExceeded"
 
 	// ErrCodeNoFreeAddressesInSubnet for service response error code
@@ -100,6 +144,13 @@ const (
 	// Returned if IpAddress was not specified in the request and there are no free
 	// IP addresses in the subnet.
 	ErrCodeNoFreeAddressesInSubnet = "NoFreeAddressesInSubnet"
+
+	// ErrCodePolicyNotFound for service response error code
+	// "PolicyNotFound".
+	//
+	// Returned if the default file system policy is in effect for the EFS file
+	// system specified.
+	ErrCodePolicyNotFound = "PolicyNotFound"
 
 	// ErrCodeSecurityGroupLimitExceeded for service response error code
 	// "SecurityGroupLimitExceeded".
@@ -111,7 +162,7 @@ const (
 	// ErrCodeSecurityGroupNotFound for service response error code
 	// "SecurityGroupNotFound".
 	//
-	// Returned if one of the specified security groups does not exist in the subnet's
+	// Returned if one of the specified security groups doesn't exist in the subnet's
 	// VPC.
 	ErrCodeSecurityGroupNotFound = "SecurityGroupNotFound"
 
@@ -121,7 +172,50 @@ const (
 	// Returned if there is no subnet with ID SubnetId provided in the request.
 	ErrCodeSubnetNotFound = "SubnetNotFound"
 
+	// ErrCodeThroughputLimitExceeded for service response error code
+	// "ThroughputLimitExceeded".
+	//
+	// Returned if the throughput mode or amount of provisioned throughput can't
+	// be changed because the throughput limit of 1024 MiB/s has been reached.
+	ErrCodeThroughputLimitExceeded = "ThroughputLimitExceeded"
+
+	// ErrCodeTooManyRequests for service response error code
+	// "TooManyRequests".
+	//
+	// Returned if you don’t wait at least 24 hours before changing the throughput
+	// mode, or decreasing the Provisioned Throughput value.
+	ErrCodeTooManyRequests = "TooManyRequests"
+
 	// ErrCodeUnsupportedAvailabilityZone for service response error code
 	// "UnsupportedAvailabilityZone".
 	ErrCodeUnsupportedAvailabilityZone = "UnsupportedAvailabilityZone"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessPointAlreadyExists":          newErrorAccessPointAlreadyExists,
+	"AccessPointLimitExceeded":          newErrorAccessPointLimitExceeded,
+	"AccessPointNotFound":               newErrorAccessPointNotFound,
+	"BadRequest":                        newErrorBadRequest,
+	"DependencyTimeout":                 newErrorDependencyTimeout,
+	"FileSystemAlreadyExists":           newErrorFileSystemAlreadyExists,
+	"FileSystemInUse":                   newErrorFileSystemInUse,
+	"FileSystemLimitExceeded":           newErrorFileSystemLimitExceeded,
+	"FileSystemNotFound":                newErrorFileSystemNotFound,
+	"IncorrectFileSystemLifeCycleState": newErrorIncorrectFileSystemLifeCycleState,
+	"IncorrectMountTargetState":         newErrorIncorrectMountTargetState,
+	"InsufficientThroughputCapacity":    newErrorInsufficientThroughputCapacity,
+	"InternalServerError":               newErrorInternalServerError,
+	"InvalidPolicyException":            newErrorInvalidPolicyException,
+	"IpAddressInUse":                    newErrorIpAddressInUse,
+	"MountTargetConflict":               newErrorMountTargetConflict,
+	"MountTargetNotFound":               newErrorMountTargetNotFound,
+	"NetworkInterfaceLimitExceeded":     newErrorNetworkInterfaceLimitExceeded,
+	"NoFreeAddressesInSubnet":           newErrorNoFreeAddressesInSubnet,
+	"PolicyNotFound":                    newErrorPolicyNotFound,
+	"SecurityGroupLimitExceeded":        newErrorSecurityGroupLimitExceeded,
+	"SecurityGroupNotFound":             newErrorSecurityGroupNotFound,
+	"SubnetNotFound":                    newErrorSubnetNotFound,
+	"ThroughputLimitExceeded":           newErrorThroughputLimitExceeded,
+	"TooManyRequests":                   newErrorTooManyRequests,
+	"UnsupportedAvailabilityZone":       newErrorUnsupportedAvailabilityZone,
+}

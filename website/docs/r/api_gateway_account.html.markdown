@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_account"
-sidebar_current: "docs-aws-resource-api-gateway-account"
 description: |-
   Provides a settings of an API Gateway Account.
 ---
 
-# aws_api_gateway_account
+# Resource: aws_api_gateway_account
 
 Provides a settings of an API Gateway Account. Settings is applied region-wide per `provider` block.
 

@@ -5,10 +5,10 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsWafXssMatchSet() *schema.Resource {
@@ -17,14 +17,21 @@ func resourceAwsWafXssMatchSet() *schema.Resource {
 		Read:   resourceAwsWafXssMatchSetRead,
 		Update: resourceAwsWafXssMatchSetUpdate,
 		Delete: resourceAwsWafXssMatchSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"xss_match_tuples": &schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"xss_match_tuples": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -46,7 +53,7 @@ func resourceAwsWafXssMatchSet() *schema.Resource {
 								},
 							},
 						},
-						"text_transformation": &schema.Schema{
+						"text_transformation": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -62,7 +69,7 @@ func resourceAwsWafXssMatchSetCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[INFO] Creating XssMatchSet: %s", d.Get("name").(string))
 
-	wr := newWafRetryer(conn, "global")
+	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateXssMatchSetInput{
 			ChangeToken: token,
@@ -72,7 +79,7 @@ func resourceAwsWafXssMatchSetCreate(d *schema.ResourceData, meta interface{}) e
 		return conn.CreateXssMatchSet(params)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error creating XssMatchSet: {{err}}", err)
+		return fmt.Errorf("Error creating XssMatchSet: %s", err)
 	}
 	resp := out.(*waf.CreateXssMatchSetOutput)
 
@@ -90,7 +97,7 @@ func resourceAwsWafXssMatchSetRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetXssMatchSet(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "WAFNonexistentItemException" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == waf.ErrCodeNonexistentItemException {
 			log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -101,6 +108,14 @@ func resourceAwsWafXssMatchSetRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("name", resp.XssMatchSet.Name)
 	d.Set("xss_match_tuples", flattenWafXssMatchTuples(resp.XssMatchSet.XssMatchTuples))
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "waf",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("xssmatchset/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
 
 	return nil
 }
@@ -114,7 +129,7 @@ func resourceAwsWafXssMatchSetUpdate(d *schema.ResourceData, meta interface{}) e
 
 		err := updateXssMatchSetResource(d.Id(), oldT, newT, conn)
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating XssMatchSet: {{err}}", err)
+			return fmt.Errorf("Error updating XssMatchSet: %s", err)
 		}
 	}
 
@@ -133,7 +148,7 @@ func resourceAwsWafXssMatchSetDelete(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	wr := newWafRetryer(conn, "global")
+	wr := newWafRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteXssMatchSetInput{
 			ChangeToken:   token,
@@ -143,14 +158,14 @@ func resourceAwsWafXssMatchSetDelete(d *schema.ResourceData, meta interface{}) e
 		return conn.DeleteXssMatchSet(req)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error deleting XssMatchSet: {{err}}", err)
+		return fmt.Errorf("Error deleting XssMatchSet: %s", err)
 	}
 
 	return nil
 }
 
 func updateXssMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WAF) error {
-	wr := newWafRetryer(conn, "global")
+	wr := newWafRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateXssMatchSetInput{
 			ChangeToken:   token,
@@ -162,14 +177,14 @@ func updateXssMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WA
 		return conn.UpdateXssMatchSet(req)
 	})
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error updating XssMatchSet: {{err}}", err)
+		return fmt.Errorf("Error updating XssMatchSet: %s", err)
 	}
 
 	return nil
 }
 
 func flattenWafXssMatchTuples(ts []*waf.XssMatchTuple) []interface{} {
-	out := make([]interface{}, len(ts), len(ts))
+	out := make([]interface{}, len(ts))
 	for i, t := range ts {
 		m := make(map[string]interface{})
 		m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)

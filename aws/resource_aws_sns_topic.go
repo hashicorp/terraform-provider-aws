@@ -7,10 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // Mutable attributes
@@ -24,13 +25,14 @@ var SNSAttributeMap = map[string]string{
 	"http_failure_feedback_role_arn":      "HTTPFailureFeedbackRoleArn",
 	"http_success_feedback_role_arn":      "HTTPSuccessFeedbackRoleArn",
 	"http_success_feedback_sample_rate":   "HTTPSuccessFeedbackSampleRate",
+	"kms_master_key_id":                   "KmsMasterKeyId",
 	"lambda_failure_feedback_role_arn":    "LambdaFailureFeedbackRoleArn",
 	"lambda_success_feedback_role_arn":    "LambdaSuccessFeedbackRoleArn",
 	"lambda_success_feedback_sample_rate": "LambdaSuccessFeedbackSampleRate",
-	"policy":                           "Policy",
-	"sqs_failure_feedback_role_arn":    "SQSFailureFeedbackRoleArn",
-	"sqs_success_feedback_role_arn":    "SQSSuccessFeedbackRoleArn",
-	"sqs_success_feedback_sample_rate": "SQSSuccessFeedbackSampleRate",
+	"policy":                              "Policy",
+	"sqs_failure_feedback_role_arn":       "SQSFailureFeedbackRoleArn",
+	"sqs_success_feedback_role_arn":       "SQSSuccessFeedbackRoleArn",
+	"sqs_success_feedback_sample_rate":    "SQSSuccessFeedbackSampleRate",
 }
 
 func resourceAwsSnsTopic() *schema.Resource {
@@ -52,9 +54,10 @@ func resourceAwsSnsTopic() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 			},
 			"name_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -64,7 +67,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -75,7 +78,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         false,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -105,6 +108,10 @@ func resourceAwsSnsTopic() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"http_failure_feedback_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"kms_master_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -138,13 +145,14 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
 
 func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
-
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().SnsTags()
 	var name string
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
@@ -158,6 +166,7 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 
 	req := &sns.CreateTopicInput{
 		Name: aws.String(name),
+		Tags: tags,
 	}
 
 	output, err := snsconn.CreateTopic(req)
@@ -167,7 +176,17 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(*output.TopicArn)
 
-	return resourceAwsSnsTopicUpdate(d, meta)
+	for terraformAttrName, snsAttrName := range SNSAttributeMap {
+		if d.HasChange(terraformAttrName) {
+			_, terraformAttrValue := d.GetChange(terraformAttrName)
+			err := updateAwsSnsTopicAttribute(d.Id(), snsAttrName, terraformAttrValue, snsconn)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return resourceAwsSnsTopicRead(d, meta)
 }
 
 func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -180,6 +199,13 @@ func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.SnsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 
@@ -209,7 +235,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set(terraformAttrName, attrmap[snsAttrName])
 		}
 	} else {
-		for terraformAttrName, _ := range SNSAttributeMap {
+		for terraformAttrName := range SNSAttributeMap {
 			d.Set(terraformAttrName, "")
 		}
 	}
@@ -225,6 +251,16 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	tags, err := keyvaluetags.SnsListTags(snsconn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -235,10 +271,8 @@ func resourceAwsSnsTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := snsconn.DeleteTopic(&sns.DeleteTopicInput{
 		TopicArn: aws.String(d.Id()),
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func updateAwsSnsTopicAttribute(topicArn, name string, value interface{}, conn *sns.SNS) error {
@@ -261,8 +295,6 @@ func updateAwsSnsTopicAttribute(topicArn, name string, value interface{}, conn *
 	_, err := retryOnAwsCode(sns.ErrCodeInvalidParameterException, func() (interface{}, error) {
 		return conn.SetTopicAttributes(&req)
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }

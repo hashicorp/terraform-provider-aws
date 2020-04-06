@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDmsReplicationTask() *schema.Resource {
@@ -59,7 +60,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 			"replication_task_settings": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 			"source_endpoint_arn": {
@@ -71,13 +72,10 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 			"table_mappings": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-			},
+			"tags": tagsSchema(),
 			"target_endpoint_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -97,14 +95,14 @@ func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{
 		ReplicationTaskIdentifier: aws.String(d.Get("replication_task_id").(string)),
 		SourceEndpointArn:         aws.String(d.Get("source_endpoint_arn").(string)),
 		TableMappings:             aws.String(d.Get("table_mappings").(string)),
-		Tags:                      dmsTagsFromMap(d.Get("tags").(map[string]interface{})),
+		Tags:                      keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DatabasemigrationserviceTags(),
 		TargetEndpointArn:         aws.String(d.Get("target_endpoint_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("cdc_start_time"); ok {
 		seconds, err := strconv.ParseInt(v.(string), 10, 64)
 		if err != nil {
-			return fmt.Errorf("[ERROR] DMS create replication task. Invalid CDC Unix timestamp: %s", err)
+			return fmt.Errorf("DMS create replication task. Invalid CDC Unix timestamp: %s", err)
 		}
 		request.CdcStartTime = aws.Time(time.Unix(seconds, 0))
 	}
@@ -166,13 +164,15 @@ func resourceAwsDmsReplicationTaskRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	tagsResp, err := conn.ListTagsForResource(&dms.ListTagsForResourceInput{
-		ResourceArn: aws.String(d.Get("replication_task_arn").(string)),
-	})
+	tags, err := keyvaluetags.DatabasemigrationserviceListTags(conn, d.Get("replication_task_arn").(string))
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing tags for DMS Replication Task (%s): %s", d.Get("replication_task_arn").(string), err)
 	}
-	d.Set("tags", dmsTagsToMap(tagsResp.TagList))
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -188,7 +188,7 @@ func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("cdc_start_time") {
 		seconds, err := strconv.ParseInt(d.Get("cdc_start_time").(string), 10, 64)
 		if err != nil {
-			return fmt.Errorf("[ERROR] DMS update replication task. Invalid CRC Unix timestamp: %s", err)
+			return fmt.Errorf("DMS update replication task. Invalid CRC Unix timestamp: %s", err)
 		}
 		request.CdcStartTime = aws.Time(time.Unix(seconds, 0))
 		hasChanges = true
@@ -210,9 +210,11 @@ func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("tags") {
-		err := dmsSetTags(d.Get("replication_task_arn").(string), d, meta)
-		if err != nil {
-			return err
+		arn := d.Get("replication_task_arn").(string)
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating DMS Replication Task (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -274,11 +276,8 @@ func resourceAwsDmsReplicationTaskDelete(d *schema.ResourceData, meta interface{
 
 	// Wait, catching any errors
 	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func resourceAwsDmsReplicationTaskSetState(d *schema.ResourceData, task *dms.ReplicationTask) error {

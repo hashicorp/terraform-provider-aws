@@ -7,15 +7,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSOpsworksUserProfile(t *testing.T) {
 	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	updateRName := fmt.Sprintf("test-user-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksUserProfileDestroy,
@@ -133,32 +133,32 @@ func testAccCheckAwsOpsworksUserProfileDestroy(s *terraform.State) error {
 func testAccAwsOpsworksUserProfileCreate(rn string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "user" {
-  user_arn = "${aws_iam_user.user.arn}"
+  user_arn     = "${aws_iam_user.user.arn}"
   ssh_username = "${aws_iam_user.user.name}"
 }
 
 resource "aws_iam_user" "user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
-	`, rn)
+`, rn)
 }
 
 func testAccAwsOpsworksUserProfileUpdate(rn, updateRn string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "user" {
-  user_arn = "${aws_iam_user.new-user.arn}"
+  user_arn     = "${aws_iam_user.new-user.arn}"
   ssh_username = "${aws_iam_user.new-user.name}"
 }
 
 resource "aws_iam_user" "user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
 
 resource "aws_iam_user" "new-user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
-	`, rn, updateRn)
+`, rn, updateRn)
 }

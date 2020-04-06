@@ -1,12 +1,12 @@
 ---
+subcategory: "Cloud9"
 layout: "aws"
 page_title: "AWS: aws_cloud9_environment_ec2"
-sidebar_current: "docs-aws-resource-cloud9-environment-ec2"
 description: |-
   Provides a Cloud9 EC2 Development Environment.
 ---
 
-# aws_cloud9_environment_ec2
+# Resource: aws_cloud9_environment_ec2
 
 Provides a Cloud9 EC2 Development Environment.
 
@@ -15,7 +15,7 @@ Provides a Cloud9 EC2 Development Environment.
 ```hcl
 resource "aws_cloud9_environment_ec2" "example" {
   instance_type = "t2.micro"
-  name = "example-env"
+  name          = "example-env"
 }
 ```
 
@@ -29,6 +29,7 @@ The following arguments are supported:
 * `description` - (Optional) The description of the environment.
 * `owner_arn` - (Optional) The ARN of the environment owner. This can be ARN of any AWS IAM principal. Defaults to the environment's creator.
 * `subnet_id` - (Optional) The ID of the subnet in Amazon VPC that AWS Cloud9 will use to communicate with the Amazon EC2 instance.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Attributes Reference
 

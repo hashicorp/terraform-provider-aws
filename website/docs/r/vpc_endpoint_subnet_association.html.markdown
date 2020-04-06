@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_subnet_association"
-sidebar_current: "docs-aws-resource-vpc-endpoint-subnet-association"
 description: |-
   Provides a resource to create an association between a VPC endpoint and a subnet.
 ---
 
-# aws_vpc_endpoint_subnet_association
+# Resource: aws_vpc_endpoint_subnet_association
 
 Provides a resource to create an association between a VPC endpoint and a subnet.
 
@@ -33,6 +33,14 @@ The following arguments are supported:
 
 * `vpc_endpoint_id` - (Required) The ID of the VPC endpoint with which the subnet will be associated.
 * `subnet_id` - (Required) The ID of the subnet to be associated with the VPC endpoint.
+
+### Timeouts
+
+`aws_vpc_endpoint_subnet_association` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating the association
+- `delete` - (Default `10 minutes`) Used for destroying the association
 
 ## Attributes Reference
 

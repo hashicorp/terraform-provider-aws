@@ -7,29 +7,37 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
+	resourceName := "aws_redshift_subnet_group.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
+					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_subnet_group.foo", "subnet_ids.#", "2"),
+						resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_subnet_group.foo", "description", "foo description"),
+						resourceName, "description", "test description"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
 			},
 		},
 	})
@@ -38,27 +46,34 @@ func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
+	resourceName := "aws_redshift_subnet_group.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
+					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_subnet_group.foo", "description", "foo description"),
+						resourceName, "description", "test description"),
 				),
 			},
-
-			resource.TestStep{
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
+			},
+			{
 				Config: testAccRedshiftSubnetGroup_updateDescription(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
+					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_subnet_group.foo", "description", "foo description updated"),
+						resourceName, "description", "test description updated"),
 				),
 			},
 		},
@@ -68,27 +83,34 @@ func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
 func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
+	resourceName := "aws_redshift_subnet_group.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
+					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_subnet_group.foo", "subnet_ids.#", "2"),
+						resourceName, "subnet_ids.#", "2"),
 				),
 			},
-
-			resource.TestStep{
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
+			},
+			{
 				Config: testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
+					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_subnet_group.foo", "subnet_ids.#", "3"),
+						resourceName, "subnet_ids.#", "3"),
 				),
 			},
 		},
@@ -98,8 +120,9 @@ func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
 func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
+	resourceName := "aws_redshift_subnet_group.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
@@ -107,21 +130,28 @@ func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
 			{
 				Config: testAccRedshiftSubnetGroupConfigWithTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
+					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_subnet_group.foo", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_redshift_subnet_group.foo", "tags.Name", "tf-redshift-subnetgroup"),
+						resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-redshift-subnetgroup"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
 			},
 			{
 				Config: testAccRedshiftSubnetGroupConfigWithTagsUpdated(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRedshiftSubnetGroupExists("aws_redshift_subnet_group.foo", &v),
+					testAccCheckRedshiftSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_subnet_group.foo", "tags.%", "3"),
-					resource.TestCheckResourceAttr("aws_redshift_subnet_group.foo", "tags.environment", "production"),
-					resource.TestCheckResourceAttr("aws_redshift_subnet_group.foo", "tags.Name", "tf-redshift-subnetgroup"),
-					resource.TestCheckResourceAttr("aws_redshift_subnet_group.foo", "tags.foo", "bar"),
+						resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.environment", "production"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-redshift-subnetgroup"),
+					resource.TestCheckResourceAttr(resourceName, "tags.test", "test2"),
 				),
 			},
 		},
@@ -154,7 +184,7 @@ func TestResourceAWSRedshiftSubnetGroupNameValidation(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(256),
+			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -228,189 +258,207 @@ func testAccCheckRedshiftSubnetGroupExists(n string, v *redshift.ClusterSubnetGr
 
 func testAccRedshiftSubnetGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-redshift-subnet-group"
-	}
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-redshift-subnet-group"
+  }
 }
 
-resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-foo"
-	}
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-test"
+  }
 }
 
-resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-bar"
-	}
+resource "aws_subnet" "test2" {
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-test2"
+  }
 }
 
-resource "aws_redshift_subnet_group" "foo" {
-	name = "foo-%d"
-	description = "foo description"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+resource "aws_redshift_subnet_group" "test" {
+  name        = "test-%d"
+  description = "test description"
+  subnet_ids  = ["${aws_subnet.test.id}", "${aws_subnet.test2.id}"]
 }
-	`, rInt)
+`, rInt)
 }
 
 func testAccRedshiftSubnetGroup_updateDescription(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-redshift-subnet-group-upd-description"
-	}
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-redshift-subnet-group-upd-description"
+  }
 }
 
-resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-upd-description-foo"
-	}
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-upd-description-test"
+  }
 }
 
-resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-upd-description-bar"
-	}
+resource "aws_subnet" "test2" {
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-upd-description-test2"
+  }
 }
 
-resource "aws_redshift_subnet_group" "foo" {
-	name = "foo-%d"
-	description = "foo description updated"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+resource "aws_redshift_subnet_group" "test" {
+  name        = "test-%d"
+  description = "test description updated"
+  subnet_ids  = ["${aws_subnet.test.id}", "${aws_subnet.test2.id}"]
 }
 `, rInt)
 }
 
 func testAccRedshiftSubnetGroupConfigWithTags(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-redshift-subnet-group-with-tags"
-	}
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-redshift-subnet-group-with-tags"
+  }
 }
 
-resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-with-tags-foo"
-	}
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-with-tags-test"
+  }
 }
 
-resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-with-tags-bar"
-	}
+resource "aws_subnet" "test2" {
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-with-tags-test2"
+  }
 }
 
-resource "aws_redshift_subnet_group" "foo" {
-	name = "foo-%d"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
-		Name = "tf-redshift-subnetgroup"
-	}
+resource "aws_redshift_subnet_group" "test" {
+  name       = "test-%d"
+  subnet_ids = ["${aws_subnet.test.id}", "${aws_subnet.test2.id}"]
+
+  tags = {
+    Name = "tf-redshift-subnetgroup"
+  }
 }
 `, rInt)
 }
 
 func testAccRedshiftSubnetGroupConfigWithTagsUpdated(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-redshift-subnet-group-with-tags"
-	}
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-redshift-subnet-group-with-tags"
+  }
 }
 
-resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-with-tags-foo"
-	}
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-with-tags-test"
+  }
 }
 
-resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-with-tags-bar"
-	}
+resource "aws_subnet" "test2" {
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-with-tags-test2"
+  }
 }
 
-resource "aws_redshift_subnet_group" "foo" {
-	name = "foo-%d"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
-		Name = "tf-redshift-subnetgroup"
-		environment = "production"
-		foo = "bar"
-	}
+resource "aws_redshift_subnet_group" "test" {
+  name       = "test-%d"
+  subnet_ids = ["${aws_subnet.test.id}", "${aws_subnet.test2.id}"]
+
+  tags = {
+    Name        = "tf-redshift-subnetgroup"
+    environment = "production"
+    test         = "test2"
+  }
 }
 `, rInt)
 }
 
 func testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-redshift-subnet-group-upd-subnet-ids"
-	}
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-redshift-subnet-group-upd-subnet-ids"
+  }
 }
 
-resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-foo"
-	}
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-test"
+  }
 }
 
-resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-bar"
-	}
+resource "aws_subnet" "test2" {
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-test2"
+  }
 }
 
-resource "aws_subnet" "foobar" {
-	cidr_block = "10.1.3.0/24"
-	availability_zone = "us-west-2c"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-foobar"
-	}
+resource "aws_subnet" "testtest2" {
+  cidr_block        = "10.1.3.0/24"
+  availability_zone = "us-west-2c"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-testtest2"
+  }
 }
 
-resource "aws_redshift_subnet_group" "foo" {
-	name = "foo-%d"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}", "${aws_subnet.foobar.id}"]
+resource "aws_redshift_subnet_group" "test" {
+  name       = "test-%d"
+  subnet_ids = ["${aws_subnet.test.id}", "${aws_subnet.test2.id}", "${aws_subnet.testtest2.id}"]
 }
 `, rInt)
 }

@@ -1,12 +1,12 @@
 ---
+subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
 page_title: "AWS: aws_lb"
-sidebar_current: "docs-aws-resource-elbv2"
 description: |-
   Provides a Load Balancer resource.
 ---
 
-# aws_lb
+# Resource: aws_lb
 
 Provides a Load Balancer resource.
 
@@ -32,7 +32,7 @@ resource "aws_lb" "test" {
     enabled = true
   }
 
-  tags {
+  tags = {
     Environment = "production"
   }
 }
@@ -49,7 +49,7 @@ resource "aws_lb" "test" {
 
   enable_deletion_protection = true
 
-  tags {
+  tags = {
     Environment = "production"
   }
 }
@@ -63,18 +63,22 @@ resource "aws_lb" "example" {
   load_balancer_type = "network"
 
   subnet_mapping {
-    subnet_id    = "${aws_subnet.example1.id}"
+    subnet_id     = "${aws_subnet.example1.id}"
     allocation_id = "${aws_eip.example1.id}"
   }
 
   subnet_mapping {
-    subnet_id    = "${aws_subnet.example2.id}"
+    subnet_id     = "${aws_subnet.example2.id}"
     allocation_id = "${aws_eip.example2.id}"
   }
 }
 ```
 
 ## Argument Reference
+
+~> **NOTE:** Please note that internal LBs can only use `ipv4` as the ip_address_type. You can only change to `dualstack` ip_address_type if the selected subnets are IPv6 enabled.
+
+~> **NOTE:** Please note that one of either `subnets` or `subnet_mapping` is required.
 
 The following arguments are supported:
 
@@ -85,7 +89,8 @@ Terraform will autogenerate a name beginning with `tf-lb`.
 * `internal` - (Optional) If true, the LB will be internal.
 * `load_balancer_type` - (Optional) The type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
 * `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application`.
-* `access_logs` - (Optional) An Access Logs block. Access Logs documented below. Only valid for Load Balancers of type `application`.
+* `drop_invalid_header_fields` - (Optional) Indicates whether HTTP headers with header fields that are not valid are removed by the load balancer (true) or routed to targets (false). The default is false. Elastic Load Balancing requires that message header names contain only alphanumeric characters and hyphens. Only valid for Load Balancers of type `application`.
+* `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
 cannot be updated for Load Balancers of type `network`. Changing this value 
 for load balancers of type `network` will force a recreation of the resource. 
@@ -98,8 +103,6 @@ for load balancers of type `network` will force a recreation of the resource.
 * `enable_http2` - (Optional) Indicates whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
 * `ip_address_type` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`
 * `tags` - (Optional) A mapping of tags to assign to the resource.
-
-~> **NOTE::** Please note that internal LBs can only use `ipv4` as the ip_address_type. You can only change to `dualstack` ip_address_type if the selected subnets are IPv6 enabled.
 
 Access Logs (`access_logs`) support the following:
 
@@ -120,7 +123,6 @@ The following attributes are exported in addition to the arguments listed above:
 * `arn` - The ARN of the load balancer (matches `id`).
 * `arn_suffix` - The ARN suffix for use with CloudWatch Metrics.
 * `dns_name` - The DNS name of the load balancer.
-* `canonical_hosted_zone_id` - The canonical hosted zone ID of the load balancer.
 * `zone_id` - The canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
 
 ## Timeouts

@@ -10,34 +10,48 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/encryption"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/encryption"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIamAccessKey() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsIamAccessKeyCreate,
 		Read:   resourceAwsIamAccessKeyRead,
+		Update: resourceAwsIamAccessKeyUpdate,
 		Delete: resourceAwsIamAccessKeyDelete,
 
 		Schema: map[string]*schema.Schema{
-			"user": &schema.Schema{
+			"user": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"status": &schema.Schema{
+			"status": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					iam.StatusTypeActive,
+					iam.StatusTypeInactive,
+				}, false),
 			},
-			"secret": &schema.Schema{
+			"secret": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+			"ses_smtp_password": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "Please use a PGP key to encrypt",
+				Sensitive:  true,
+				Deprecated: "AWS SigV2 for SES SMTP passwords isy deprecated.\nUse 'ses_smtp_password_v4' for region-specific AWS SigV4 signed SES SMTP password instead.",
 			},
-			"ses_smtp_password": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"ses_smtp_password_v4": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"pgp_key": {
 				Type:     schema.TypeString,
@@ -75,7 +89,7 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 	d.SetId(*createResp.AccessKey.AccessKeyId)
 
 	if createResp.AccessKey == nil || createResp.AccessKey.SecretAccessKey == nil {
-		return fmt.Errorf("[ERR] CreateAccessKey response did not contain a Secret Access Key as expected")
+		return fmt.Errorf("CreateAccessKey response did not contain a Secret Access Key as expected")
 	}
 
 	if v, ok := d.GetOk("pgp_key"); ok {
@@ -97,8 +111,19 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	d.Set("ses_smtp_password",
-		sesSmtpPasswordFromSecretKey(createResp.AccessKey.SecretAccessKey))
+	// AWS SigV2
+	sesSMTPPassword, err := sesSmtpPasswordFromSecretKeySigV2(createResp.AccessKey.SecretAccessKey)
+	if err != nil {
+		return fmt.Errorf("error getting SES SigV2 SMTP Password from Secret Access Key: %s", err)
+	}
+	d.Set("ses_smtp_password", sesSMTPPassword)
+
+	// AWS SigV4
+	sesSMTPPasswordV4, err := sesSmtpPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*AWSClient).region)
+	if err != nil {
+		return fmt.Errorf("error getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
+	}
+	d.Set("ses_smtp_password_v4", sesSMTPPasswordV4)
 
 	return resourceAwsIamAccessKeyReadResult(d, &iam.AccessKeyMetadata{
 		AccessKeyId: createResp.AccessKey.AccessKeyId,
@@ -147,6 +172,18 @@ func resourceAwsIamAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKe
 	return nil
 }
 
+func resourceAwsIamAccessKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+	iamconn := meta.(*AWSClient).iamconn
+
+	if d.HasChange("status") {
+		if err := resourceAwsIamAccessKeyStatusUpdate(iamconn, d); err != nil {
+			return err
+		}
+	}
+
+	return resourceAwsIamAccessKeyRead(d, meta)
+}
+
 func resourceAwsIamAccessKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
@@ -161,18 +198,75 @@ func resourceAwsIamAccessKeyDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func sesSmtpPasswordFromSecretKey(key *string) string {
+func resourceAwsIamAccessKeyStatusUpdate(iamconn *iam.IAM, d *schema.ResourceData) error {
+	request := &iam.UpdateAccessKeyInput{
+		AccessKeyId: aws.String(d.Id()),
+		Status:      aws.String(d.Get("status").(string)),
+		UserName:    aws.String(d.Get("user").(string)),
+	}
+
+	if _, err := iamconn.UpdateAccessKey(request); err != nil {
+		return fmt.Errorf("Error updating access key %s: %s", d.Id(), err)
+	}
+	return nil
+}
+
+func hmacSignature(key []byte, value []byte) ([]byte, error) {
+	h := hmac.New(sha256.New, key)
+	if _, err := h.Write(value); err != nil {
+		return []byte(""), err
+	}
+	return h.Sum(nil), nil
+}
+
+func sesSmtpPasswordFromSecretKeySigV4(key *string, region string) (string, error) {
 	if key == nil {
-		return ""
+		return "", nil
+	}
+	version := byte(0x04)
+	date := []byte("11111111")
+	service := []byte("ses")
+	terminal := []byte("aws4_request")
+	message := []byte("SendRawEmail")
+
+	rawSig, err := hmacSignature([]byte("AWS4"+*key), date)
+	if err != nil {
+		return "", err
+	}
+
+	if rawSig, err = hmacSignature(rawSig, []byte(region)); err != nil {
+		return "", err
+	}
+	if rawSig, err = hmacSignature(rawSig, service); err != nil {
+		return "", err
+	}
+	if rawSig, err = hmacSignature(rawSig, terminal); err != nil {
+		return "", err
+	}
+	if rawSig, err = hmacSignature(rawSig, message); err != nil {
+		return "", err
+	}
+
+	versionedSig := make([]byte, 0, len(rawSig)+1)
+	versionedSig = append(versionedSig, version)
+	versionedSig = append(versionedSig, rawSig...)
+	return base64.StdEncoding.EncodeToString(versionedSig), nil
+}
+
+func sesSmtpPasswordFromSecretKeySigV2(key *string) (string, error) {
+	if key == nil {
+		return "", nil
 	}
 	version := byte(0x02)
 	message := []byte("SendRawEmail")
 	hmacKey := []byte(*key)
 	h := hmac.New(sha256.New, hmacKey)
-	h.Write(message)
+	if _, err := h.Write(message); err != nil {
+		return "", err
+	}
 	rawSig := h.Sum(nil)
 	versionedSig := make([]byte, 0, len(rawSig)+1)
 	versionedSig = append(versionedSig, version)
 	versionedSig = append(versionedSig, rawSig...)
-	return base64.StdEncoding.EncodeToString(versionedSig)
+	return base64.StdEncoding.EncodeToString(versionedSig), nil
 }

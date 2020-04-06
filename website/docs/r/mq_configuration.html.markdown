@@ -1,12 +1,12 @@
 ---
+subcategory: "MQ"
 layout: "aws"
 page_title: "AWS: aws_mq_configuration"
-sidebar_current: "docs-aws-resource-mq-configuration"
 description: |-
   Provides an MQ configuration Resource
 ---
 
-# aws_mq_configuration
+# Resource: aws_mq_configuration
 
 Provides an MQ Configuration Resource. 
 
@@ -20,7 +20,8 @@ resource "aws_mq_configuration" "example" {
   name           = "example"
   engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
-  data           = <<DATA
+
+  data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <broker xmlns="http://activemq.apache.org/schema/core">
   <plugins>
@@ -44,6 +45,7 @@ The following arguments are supported:
 * `engine_type` - (Required) The type of broker engine.
 * `engine_version` - (Required) The version of the broker engine.
 * `name` - (Required) The name of the configuration
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 

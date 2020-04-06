@@ -2,45 +2,33 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	datasourceName := "data.aws_vpc_endpoint_service.test"
+	region := testAccGetRegion()
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcEndpointServiceGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "service_name", "com.amazonaws.us-west-2.s3"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "service_type", "Gateway"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "owner", "amazon"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "vpc_endpoint_policy_supported", "true"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "acceptance_required", "false"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "availability_zones.#", "3"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "availability_zones.2487133097", "us-west-2a"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "availability_zones.221770259", "us-west-2b"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "availability_zones.2050015877", "us-west-2c"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "private_dns_name", ""),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "base_endpoint_dns_names.#", "1"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "base_endpoint_dns_names.3003388505", "s3.us-west-2.amazonaws.com"),
+					resource.TestCheckResourceAttr(datasourceName, "service_name", fmt.Sprintf("com.amazonaws.%s.s3", region)),
+					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
+					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", "data.aws_availability_zones.available", "names.#"),
+					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "owner", "amazon"),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", ""),
+					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -48,37 +36,25 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 }
 
 func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	datasourceName := "data.aws_vpc_endpoint_service.test"
+	region := testAccGetRegion()
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcEndpointServiceInterfaceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "service_name", "com.amazonaws.us-west-2.ec2"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "service_type", "Interface"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "owner", "amazon"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "vpc_endpoint_policy_supported", "false"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "acceptance_required", "false"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "availability_zones.#", "3"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "availability_zones.2487133097", "us-west-2a"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "availability_zones.221770259", "us-west-2b"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "availability_zones.2050015877", "us-west-2c"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "private_dns_name", "ec2.us-west-2.amazonaws.com"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "base_endpoint_dns_names.#", "1"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.ec2", "base_endpoint_dns_names.1880016359", "ec2.us-west-2.vpce.amazonaws.com"),
+					resource.TestCheckResourceAttr(datasourceName, "service_name", fmt.Sprintf("com.amazonaws.%s.ec2", region)),
+					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "owner", "amazon"),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", fmt.Sprintf("ec2.%s.%s", region, testAccGetPartitionDNSSuffix())),
+					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -86,29 +62,74 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 }
 
 func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	datasourceName := "data.aws_vpc_endpoint_service.test"
+	rName := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfig(lbName),
+			{
+				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.foo", "service_type", "Interface"),
-					resource.TestMatchResourceAttr( // AWS account ID
-						"data.aws_vpc_endpoint_service.foo", "owner", regexp.MustCompile("^[0-9]{12}$")),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.foo", "vpc_endpoint_policy_supported", "false"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.foo", "acceptance_required", "true"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.foo", "availability_zones.#", "2"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.foo", "availability_zones.2487133097", "us-west-2a"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.foo", "availability_zones.221770259", "us-west-2b"),
+					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
+					testAccCheckResourceAttrAccountID(datasourceName, "owner"),
+					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsVpcEndpointService_custom_filter(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint_service.test"
+	rName := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
+					testAccCheckResourceAttrAccountID(datasourceName, "owner"),
+					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsVpcEndpointService_custom_filter_tags(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint_service.test"
+	rName := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
+					testAccCheckResourceAttrAccountID(datasourceName, "owner"),
+					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
 				),
 			},
 		},
@@ -116,52 +137,35 @@ func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 }
 
 const testAccDataSourceAwsVpcEndpointServiceGatewayConfig = `
-provider "aws" {
-  region = "us-west-2"
-}
+data "aws_availability_zones" "available" {}
 
-data "aws_vpc_endpoint_service" "s3" {
+data "aws_vpc_endpoint_service" "test" {
   service = "s3"
 }
 `
 
 const testAccDataSourceAwsVpcEndpointServiceInterfaceConfig = `
-provider "aws" {
-  region = "us-west-2"
-}
-
-data "aws_vpc_endpoint_service" "ec2" {
+data "aws_vpc_endpoint_service" "test" {
   service = "ec2"
 }
 `
 
-const testAccDataSourceAwsVpcEndpointServiceConfig_custom = `
-provider "aws" {
-  region = "us-west-2"
-}
-
-data "aws_vpc_endpoint_service" "ec2" {
-  service = "ec2"
-}
-`
-
-func testAccDataSourceAwsVpcEndpointServiceCustomConfig(lbName string) string {
-	return fmt.Sprintf(
-		`
-resource "aws_vpc" "nlb_test" {
+func testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
-    Name = "terraform-testacc-vpc-endpoint-service-custom"
+  tags = {
+    Name = %[1]q
   }
 }
 
-resource "aws_lb" "nlb_test_1" {
-  name = "%s"
+resource "aws_lb" "test" {
+  name = %[1]q
 
   subnets = [
-    "${aws_subnet.nlb_test_1.id}",
-    "${aws_subnet.nlb_test_2.id}",
+    "${aws_subnet.test1.id}",
+    "${aws_subnet.test2.id}",
   ]
 
   load_balancer_type         = "network"
@@ -169,41 +173,79 @@ resource "aws_lb" "nlb_test_1" {
   idle_timeout               = 60
   enable_deletion_protection = false
 
-  tags {
-    Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
+  tags = {
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "nlb_test_1" {
-  vpc_id            = "${aws_vpc.nlb_test.id}"
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
-  tags {
-    Name = "tf-acc-vpc-endpoint-service-custom"
+  tags = {
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "nlb_test_2" {
-  vpc_id            = "${aws_vpc.nlb_test.id}"
+resource "aws_subnet" "test2" {
+  vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
 
-  tags {
-    Name = "tf-acc-vpc-endpoint-service-custom"
+  tags = {
+    Name = %[1]q
   }
 }
 
-resource "aws_vpc_endpoint_service" "foo" {
+resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
 
   network_load_balancer_arns = [
-    "${aws_lb.nlb_test_1.id}",
+    "${aws_lb.test.id}",
   ]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
 
-data "aws_vpc_endpoint_service" "foo" {
-  service_name = "${aws_vpc_endpoint_service.foo.service_name}"
+func testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName string) string {
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "test" {
+  service_name = "${aws_vpc_endpoint_service.test.service_name}"
 }
-  `, lbName)
+`)
+}
+
+func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName string) string {
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "test" {
+  filter {
+    name   = "service-name"
+    values = ["${aws_vpc_endpoint_service.test.service_name}"]
+  }
+}
+`)
+}
+
+func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName string) string {
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "test" {
+  tags = {
+    Name  = "${aws_vpc_endpoint_service.test.tags["Name"]}"
+  }
+}
+`)
 }

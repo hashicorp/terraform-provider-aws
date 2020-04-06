@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsIotPolicy() *schema.Resource {
@@ -15,19 +15,19 @@ func resourceAwsIotPolicy() *schema.Resource {
 		Update: resourceAwsIotPolicyUpdate,
 		Delete: resourceAwsIotPolicyDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"policy": &schema.Schema{
+			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_version_id": &schema.Schema{
+			"default_version_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

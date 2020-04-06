@@ -1,12 +1,12 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_gateway"
-sidebar_current: "docs-aws-resource-dx-gateway"
 description: |-
   Provides a Direct Connect Gateway.
 ---
 
-# aws_dx_gateway
+# Resource: aws_dx_gateway
 
 Provides a Direct Connect Gateway.
 
@@ -14,7 +14,7 @@ Provides a Direct Connect Gateway.
 
 ```hcl
 resource "aws_dx_gateway" "example" {
-  name = "tf-dxg-example"
+  name            = "tf-dxg-example"
   amazon_side_asn = "64512"
 }
 ```
@@ -28,9 +28,10 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the gateway.
+* `owner_account_id` - AWS Account ID of the gateway.
 
 ## Timeouts
 

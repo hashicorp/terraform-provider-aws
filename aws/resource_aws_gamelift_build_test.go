@@ -3,14 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 const testAccGameliftBuildPrefix = "tf_acc_build_"
@@ -46,10 +46,6 @@ func testSweepGameliftBuilds(region string) error {
 	log.Printf("[INFO] Found %d Gamelift Builds", len(resp.Builds))
 
 	for _, build := range resp.Builds {
-		if !strings.HasPrefix(*build.Name, testAccGameliftBuildPrefix) {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting Gamelift Build %q", *build.BuildId)
 		_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{
 			BuildId: build.BuildId,
@@ -67,12 +63,18 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 	var conf gamelift.Build
 
 	rString := acctest.RandString(8)
+	resourceName := "aws_gamelift_build.test"
 
 	buildName := fmt.Sprintf("%s_%s", testAccGameliftBuildPrefix, rString)
 	uBuildName := fmt.Sprintf("%s_updated_%s", testAccGameliftBuildPrefix, rString)
 
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
+
+	if isResourceNotFoundError(err) {
+		t.Skip(err)
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,34 +84,136 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 	roleArn := *loc.RoleArn
 	key := *loc.Key
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGameliftBuildBasicConfig(buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftBuildExists("aws_gamelift_build.test", &conf),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "name", buildName),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "operating_system", "WINDOWS_2012"),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "storage_location.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "storage_location.0.bucket", bucketName),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "storage_location.0.key", key),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "storage_location.0.role_arn", roleArn),
+					testAccCheckAWSGameliftBuildExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", buildName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
+					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
+					resource.TestCheckResourceAttr(resourceName, "storage_location.0.role_arn", roleArn),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				Config: testAccAWSGameliftBuildBasicConfig(uBuildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftBuildExists("aws_gamelift_build.test", &conf),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "name", uBuildName),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "operating_system", "WINDOWS_2012"),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "storage_location.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "storage_location.0.bucket", bucketName),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "storage_location.0.key", key),
-					resource.TestCheckResourceAttr("aws_gamelift_build.test", "storage_location.0.role_arn", roleArn),
+					testAccCheckAWSGameliftBuildExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", uBuildName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
+					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
+					resource.TestCheckResourceAttr(resourceName, "storage_location.0.role_arn", roleArn),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGameliftBuild_tags(t *testing.T) {
+	var conf gamelift.Build
+
+	rString := acctest.RandString(8)
+	resourceName := "aws_gamelift_build.test"
+
+	buildName := fmt.Sprintf("%s_%s", testAccGameliftBuildPrefix, rString)
+	region := testAccGetRegion()
+	g, err := testAccAWSGameliftSampleGame(region)
+
+	if isResourceNotFoundError(err) {
+		t.Skip(err)
+	}
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	loc := g.Location
+	bucketName := *loc.Bucket
+	roleArn := *loc.RoleArn
+	key := *loc.Key
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGameliftBuildBasicConfigTags1(buildName, bucketName, key, roleArn, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGameliftBuildExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSGameliftBuildBasicConfigTags2(buildName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGameliftBuildExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSGameliftBuildBasicConfigTags1(buildName, bucketName, key, roleArn, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGameliftBuildExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGameliftBuild_disappears(t *testing.T) {
+	var conf gamelift.Build
+
+	rString := acctest.RandString(8)
+	resourceName := "aws_gamelift_build.test"
+
+	buildName := fmt.Sprintf("%s_%s", testAccGameliftBuildPrefix, rString)
+
+	region := testAccGetRegion()
+	g, err := testAccAWSGameliftSampleGame(region)
+
+	if isResourceNotFoundError(err) {
+		t.Skip(err)
+	}
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	loc := g.Location
+	bucketName := *loc.Bucket
+	roleArn := *loc.RoleArn
+	key := *loc.Key
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGameliftBuildBasicConfig(buildName, bucketName, key, roleArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGameliftBuildExists(resourceName, &conf),
+					testAccCheckAWSGameliftBuildDisappears(&conf),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -148,6 +252,17 @@ func testAccCheckAWSGameliftBuildExists(n string, res *gamelift.Build) resource.
 	}
 }
 
+func testAccCheckAWSGameliftBuildDisappears(res *gamelift.Build) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+
+		input := &gamelift.DeleteBuildInput{BuildId: res.BuildId}
+
+		_, err := conn.DeleteBuild(input)
+		return err
+	}
+}
+
 func testAccCheckAWSGameliftBuildDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).gameliftconn
 
@@ -175,16 +290,72 @@ func testAccCheckAWSGameliftBuildDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccPreCheckAWSGamelift(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+
+	input := &gamelift.ListBuildsInput{}
+
+	_, err := conn.ListBuilds(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAWSGameliftBuildBasicConfig(buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
-  name = "%s"
+  name             = "%s"
   operating_system = "WINDOWS_2012"
+
   storage_location {
-    bucket = "%s"
-    key = "%s"
+    bucket   = "%s"
+    key      = "%s"
     role_arn = "%s"
   }
 }
 `, buildName, bucketName, key, roleArn)
+}
+
+func testAccAWSGameliftBuildBasicConfigTags1(buildName, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_gamelift_build" "test" {
+  name             = %[1]q
+  operating_system = "WINDOWS_2012"
+
+  storage_location {
+    bucket   = %[2]q
+    key      = %[3]q
+    role_arn = %[4]q
+  }
+
+  tags = {
+    %[5]q = %[6]q
+  }
+}
+`, buildName, bucketName, key, roleArn, tagKey1, tagValue1)
+}
+
+func testAccAWSGameliftBuildBasicConfigTags2(buildName, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_gamelift_build" "test" {
+  name             = %[1]q
+  operating_system = "WINDOWS_2012"
+
+  storage_location {
+    bucket   = %[2]q
+    key      = %[3]q
+    role_arn = %[4]q
+  }
+
+  tags = {
+    %[5]q = %[6]q
+    %[7]q = %[8]q
+  }
+}
+`, buildName, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2)
 }

@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -26,16 +27,7 @@ func testSweepNetworkAcls(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeNetworkAclsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("tf-acc-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeNetworkAclsInput{}
 	resp, err := conn.DescribeNetworkAcls(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -53,8 +45,8 @@ func testSweepNetworkAcls(region string) error {
 	for _, nacl := range resp.NetworkAcls {
 		// Delete rules first
 		for _, entry := range nacl.Entries {
-			// This is a magic number for "ALL traffic" rule which can't be deleted
-			if *entry.RuleNumber == 32767 {
+			// These are the rule numbers for IPv4 and IPv6 "ALL traffic" rules which cannot be deleted
+			if aws.Int64Value(entry.RuleNumber) == 32767 || aws.Int64Value(entry.RuleNumber) == 32768 {
 				log.Printf("[DEBUG] Skipping Network ACL rule: %q / %d", *nacl.NetworkAclId, *entry.RuleNumber)
 				continue
 			}
@@ -110,44 +102,200 @@ func testSweepNetworkAcls(region string) error {
 	return nil
 }
 
-func TestAccAWSNetworkAcl_EgressAndIngressRules(t *testing.T) {
+func TestAccAWSNetworkAcl_basic(t *testing.T) {
+	resourceName := "aws_network_acl.test"
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclEgressNIngressConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSNetworkAcl_disappears(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclEgressNIngressConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckAWSNetworkAclDisappears(&networkAcl),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSNetworkAcl_Egress_ConfigMode(t *testing.T) {
+	var networkAcl1, networkAcl2, networkAcl3 ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclConfigEgressConfigModeBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl1),
+					testAccCheckAWSNetworkAclEgressRuleLength(&networkAcl1, 2),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSNetworkAclConfigEgressConfigModeNoBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl2),
+					testAccCheckAWSNetworkAclEgressRuleLength(&networkAcl2, 2),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSNetworkAclConfigEgressConfigModeZeroed(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl3),
+					testAccCheckAWSNetworkAclEgressRuleLength(&networkAcl3, 0),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSNetworkAcl_Ingress_ConfigMode(t *testing.T) {
+	var networkAcl1, networkAcl2, networkAcl3 ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclConfigIngressConfigModeBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl1),
+					testIngressRuleLength(&networkAcl1, 2),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSNetworkAclConfigIngressConfigModeNoBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl2),
+					testIngressRuleLength(&networkAcl2, 2),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSNetworkAclConfigIngressConfigModeZeroed(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl3),
+					testIngressRuleLength(&networkAcl3, 0),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSNetworkAcl_EgressAndIngressRules(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.bar",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclEgressNIngressConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.bar", &networkAcl),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "ingress.1871939009.protocol", "6"),
+						resourceName, "ingress.1871939009.protocol", "6"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "ingress.1871939009.rule_no", "1"),
+						resourceName, "ingress.1871939009.rule_no", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "ingress.1871939009.from_port", "80"),
+						resourceName, "ingress.1871939009.from_port", "80"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "ingress.1871939009.to_port", "80"),
+						resourceName, "ingress.1871939009.to_port", "80"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "ingress.1871939009.action", "allow"),
+						resourceName, "ingress.1871939009.action", "allow"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "ingress.1871939009.cidr_block", "10.3.0.0/18"),
+						resourceName, "ingress.1871939009.cidr_block", "10.3.0.0/18"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "egress.3111164687.protocol", "6"),
+						resourceName, "egress.3111164687.protocol", "6"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "egress.3111164687.rule_no", "2"),
+						resourceName, "egress.3111164687.rule_no", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "egress.3111164687.from_port", "443"),
+						resourceName, "egress.3111164687.from_port", "443"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "egress.3111164687.to_port", "443"),
+						resourceName, "egress.3111164687.to_port", "443"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "egress.3111164687.cidr_block", "10.3.0.0/18"),
+						resourceName, "egress.3111164687.cidr_block", "10.3.0.0/18"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.bar", "egress.3111164687.action", "allow"),
+						resourceName, "egress.3111164687.action", "allow"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -155,30 +303,37 @@ func TestAccAWSNetworkAcl_EgressAndIngressRules(t *testing.T) {
 
 func TestAccAWSNetworkAcl_OnlyIngressRules_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.foos",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclIngressConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.foos", &networkAcl),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.4245812720.protocol", "6"),
+						resourceName, "ingress.4245812720.protocol", "6"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.4245812720.rule_no", "2"),
+						resourceName, "ingress.4245812720.rule_no", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.4245812720.from_port", "443"),
+						resourceName, "ingress.4245812720.from_port", "443"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.4245812720.to_port", "443"),
+						resourceName, "ingress.4245812720.to_port", "443"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.4245812720.action", "deny"),
+						resourceName, "ingress.4245812720.action", "deny"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.4245812720.cidr_block", "10.2.0.0/18"),
+						resourceName, "ingress.4245812720.cidr_block", "10.2.0.0/18"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -186,53 +341,61 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_basic(t *testing.T) {
 
 func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.foos",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclIngressConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.foos", &networkAcl),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					testIngressRuleLength(&networkAcl, 2),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.protocol", "6"),
+						resourceName, "ingress.401088754.protocol", "6"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.rule_no", "1"),
+						resourceName, "ingress.401088754.rule_no", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.from_port", "0"),
+						resourceName, "ingress.401088754.from_port", "0"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.to_port", "22"),
+						resourceName, "ingress.401088754.to_port", "22"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.action", "deny"),
+						resourceName, "ingress.401088754.action", "deny"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.4245812720.cidr_block", "10.2.0.0/18"),
+						resourceName, "ingress.4245812720.cidr_block", "10.2.0.0/18"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.4245812720.from_port", "443"),
+						resourceName, "ingress.4245812720.from_port", "443"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.4245812720.rule_no", "2"),
+						resourceName, "ingress.4245812720.rule_no", "2"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSNetworkAclIngressConfigChange,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.foos", &networkAcl),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					testIngressRuleLength(&networkAcl, 1),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.protocol", "6"),
+						resourceName, "ingress.401088754.protocol", "6"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.rule_no", "1"),
+						resourceName, "ingress.401088754.rule_no", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.from_port", "0"),
+						resourceName, "ingress.401088754.from_port", "0"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.to_port", "22"),
+						resourceName, "ingress.401088754.to_port", "22"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.action", "deny"),
+						resourceName, "ingress.401088754.action", "deny"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.401088754.cidr_block", "10.2.0.0/18"),
+						resourceName, "ingress.401088754.cidr_block", "10.2.0.0/18"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 		},
@@ -241,18 +404,24 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
 
 func TestAccAWSNetworkAcl_CaseSensitivityNoChanges(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.foos",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclCaseSensitiveConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.foos", &networkAcl),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -260,19 +429,27 @@ func TestAccAWSNetworkAcl_CaseSensitivityNoChanges(t *testing.T) {
 
 func TestAccAWSNetworkAcl_OnlyEgressRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.bond",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclEgressConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.bond", &networkAcl),
-					testAccCheckTags(&networkAcl.Tags, "foo", "bar"),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-acc-acl-egress"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -280,26 +457,32 @@ func TestAccAWSNetworkAcl_OnlyEgressRules(t *testing.T) {
 
 func TestAccAWSNetworkAcl_SubnetChange(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.bar",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.bar", &networkAcl),
-					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.old"),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.old"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSNetworkAclSubnetConfigChange,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.bar", &networkAcl),
-					testAccCheckSubnetIsNotAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.old"),
-					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.new"),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckSubnetIsNotAssociatedWithAcl(resourceName, "aws_subnet.old"),
+					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.new"),
 				),
 			},
 		},
@@ -309,6 +492,7 @@ func TestAccAWSNetworkAcl_SubnetChange(t *testing.T) {
 
 func TestAccAWSNetworkAcl_Subnets(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
 
 	checkACLSubnets := func(acl *ec2.NetworkAcl, count int) resource.TestCheckFunc {
 		return func(*terraform.State) (err error) {
@@ -320,29 +504,33 @@ func TestAccAWSNetworkAcl_Subnets(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.bar",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclSubnet_SubnetIds,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.bar", &networkAcl),
-					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.one"),
-					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.two"),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.one"),
+					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.two"),
 					checkACLSubnets(&networkAcl, 2),
 				),
 			},
-
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccAWSNetworkAclSubnet_SubnetIdsUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.bar", &networkAcl),
-					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.one"),
-					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.three"),
-					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.four"),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.one"),
+					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.three"),
+					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.four"),
 					checkACLSubnets(&networkAcl, 3),
 				),
 			},
@@ -352,6 +540,7 @@ func TestAccAWSNetworkAcl_Subnets(t *testing.T) {
 
 func TestAccAWSNetworkAcl_SubnetsDelete(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
 
 	checkACLSubnets := func(acl *ec2.NetworkAcl, count int) resource.TestCheckFunc {
 		return func(*terraform.State) (err error) {
@@ -363,27 +552,31 @@ func TestAccAWSNetworkAcl_SubnetsDelete(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.bar",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclSubnet_SubnetIds,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.bar", &networkAcl),
-					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.one"),
-					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.two"),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.one"),
+					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.two"),
 					checkACLSubnets(&networkAcl, 2),
 				),
 			},
-
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccAWSNetworkAclSubnet_SubnetIdsDeleteOne,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.bar", &networkAcl),
-					testAccCheckSubnetIsAssociatedWithAcl("aws_network_acl.bar", "aws_subnet.one"),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.one"),
 					checkACLSubnets(&networkAcl, 1),
 				),
 			},
@@ -393,31 +586,57 @@ func TestAccAWSNetworkAcl_SubnetsDelete(t *testing.T) {
 
 func TestAccAWSNetworkAcl_ipv6Rules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.foos",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclIpv6Config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.foos", &networkAcl),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.#", "1"),
+						resourceName, "ingress.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.1976110835.protocol", "6"),
+						resourceName, "ingress.1976110835.protocol", "6"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.1976110835.rule_no", "1"),
+						resourceName, "ingress.1976110835.rule_no", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.1976110835.from_port", "0"),
+						resourceName, "ingress.1976110835.from_port", "0"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.1976110835.to_port", "22"),
+						resourceName, "ingress.1976110835.to_port", "22"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.1976110835.action", "allow"),
+						resourceName, "ingress.1976110835.action", "allow"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.1976110835.ipv6_cidr_block", "::/0"),
+						resourceName, "ingress.1976110835.ipv6_cidr_block", "::/0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSNetworkAcl_ipv6ICMPRules(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_network_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclConfigIpv6ICMP(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 				),
 			},
 		},
@@ -426,22 +645,28 @@ func TestAccAWSNetworkAcl_ipv6Rules(t *testing.T) {
 
 func TestAccAWSNetworkAcl_ipv6VpcRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.foos",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclIpv6VpcConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.foos", &networkAcl),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.#", "1"),
+						resourceName, "ingress.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_network_acl.foos", "ingress.1296304962.ipv6_cidr_block", "2600:1f16:d1e:9a00::/56"),
+						resourceName, "ingress.1296304962.ipv6_cidr_block", "2600:1f16:d1e:9a00::/56"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -449,18 +674,24 @@ func TestAccAWSNetworkAcl_ipv6VpcRules(t *testing.T) {
 
 func TestAccAWSNetworkAcl_espProtocol(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_network_acl.testesp",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclEsp,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclExists("aws_network_acl.testesp", &networkAcl),
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -499,6 +730,20 @@ func testAccCheckAWSNetworkAclDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckAWSNetworkAclDisappears(networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DeleteNetworkAclInput{
+			NetworkAclId: networkAcl.NetworkAclId,
+		}
+
+		_, err := conn.DeleteNetworkAcl(input)
+
+		return err
+	}
+}
+
 func testAccCheckAWSNetworkAclExists(n string, networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -527,11 +772,28 @@ func testAccCheckAWSNetworkAclExists(n string, networkAcl *ec2.NetworkAcl) resou
 	}
 }
 
+func testAccCheckAWSNetworkAclEgressRuleLength(networkAcl *ec2.NetworkAcl, length int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var entries []*ec2.NetworkAclEntry
+		for _, entry := range networkAcl.Entries {
+			if aws.BoolValue(entry.Egress) {
+				entries = append(entries, entry)
+			}
+		}
+		// There is always a default rule (ALL Traffic ... DENY)
+		// so we have to increase the length by 1
+		if len(entries) != length+1 {
+			return fmt.Errorf("Invalid number of ingress entries found; count = %d", len(entries))
+		}
+		return nil
+	}
+}
+
 func testIngressRuleLength(networkAcl *ec2.NetworkAcl, length int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var ingressEntries []*ec2.NetworkAclEntry
 		for _, e := range networkAcl.Entries {
-			if *e.Egress == false {
+			if !*e.Egress {
 				ingressEntries = append(ingressEntries, e)
 			}
 		}
@@ -596,10 +858,41 @@ func testAccCheckSubnetIsNotAssociatedWithAcl(acl string, subnet string) resourc
 	}
 }
 
+func testAccAWSNetworkAclConfigIpv6ICMP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_network_acl" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  ingress {
+    action          = "allow"
+    from_port       = 0
+    icmp_code       = -1
+    icmp_type       = -1
+    ipv6_cidr_block = "::/0"
+    protocol        = 58
+    rule_no         = 1
+    to_port         = 0
+  }
+
+  tags = {
+    Name = %q
+  }
+}
+`, rName, rName)
+}
+
 const testAccAWSNetworkAclIpv6Config = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-ipv6"
   }
 }
@@ -608,15 +901,15 @@ resource "aws_subnet" "blob" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-ipv6"
   }
 }
 
-resource "aws_network_acl" "foos" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
-  ingress = {
-    protocol = "tcp"
+  ingress {
+    protocol = 6
     rule_no = 1
     action = "allow"
     ipv6_cidr_block =  "::/0"
@@ -625,37 +918,33 @@ resource "aws_network_acl" "foos" {
   }
 
   subnet_ids = ["${aws_subnet.blob.id}"]
-  tags {
+  tags = {
     Name = "tf-acc-acl-ipv6"
   }
 }
 `
 
 const testAccAWSNetworkAclIpv6VpcConfig = `
-provider "aws" {
-  region = "us-east-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-ipv6-vpc-rules"
   }
 }
 
-resource "aws_network_acl" "foos" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
-  ingress = {
-    protocol = "tcp"
+  ingress {
+    protocol = 6
     rule_no = 1
     action = "allow"
     ipv6_cidr_block =  "2600:1f16:d1e:9a00::/56"
     from_port = 0
     to_port = 22
   }
-  tags {
+  tags = {
     Name = "tf-acc-acl-ipv6"
   }
 }
@@ -664,7 +953,7 @@ resource "aws_network_acl" "foos" {
 const testAccAWSNetworkAclIngressConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-ingress"
   }
 }
@@ -673,23 +962,23 @@ resource "aws_subnet" "blob" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-ingress"
   }
 }
 
-resource "aws_network_acl" "foos" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
-  ingress = {
-    protocol = "tcp"
+  ingress {
+    protocol = 6
     rule_no = 1
     action = "deny"
     cidr_block =  "10.2.0.0/18"
     from_port = 0
     to_port = 22
   }
-  ingress = {
-    protocol = "tcp"
+  ingress {
+    protocol = 6
     rule_no = 2
     action = "deny"
     cidr_block =  "10.2.0.0/18"
@@ -698,7 +987,7 @@ resource "aws_network_acl" "foos" {
   }
 
   subnet_ids = ["${aws_subnet.blob.id}"]
-  tags {
+  tags = {
     Name = "tf-acc-acl-ingress"
   }
 }
@@ -707,7 +996,7 @@ resource "aws_network_acl" "foos" {
 const testAccAWSNetworkAclCaseSensitiveConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-ingress"
   }
 }
@@ -716,15 +1005,15 @@ resource "aws_subnet" "blob" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-ingress"
   }
 }
 
-resource "aws_network_acl" "foos" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
-  ingress = {
-    protocol = "tcp"
+  ingress {
+    protocol = 6
     rule_no = 1
     action = "Allow"
     cidr_block =  "10.2.0.0/18"
@@ -732,7 +1021,7 @@ resource "aws_network_acl" "foos" {
     to_port = 22
   }
   subnet_ids = ["${aws_subnet.blob.id}"]
-  tags {
+  tags = {
     Name = "tf-acc-acl-case-sensitive"
   }
 }
@@ -741,7 +1030,7 @@ resource "aws_network_acl" "foos" {
 const testAccAWSNetworkAclIngressConfigChange = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-ingress"
   }
 }
@@ -750,15 +1039,15 @@ resource "aws_subnet" "blob" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-ingress"
   }
 }
 
-resource "aws_network_acl" "foos" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
-  ingress = {
-    protocol = "tcp"
+  ingress {
+    protocol = 6
     rule_no = 1
     action = "deny"
     cidr_block =  "10.2.0.0/18"
@@ -766,7 +1055,7 @@ resource "aws_network_acl" "foos" {
     to_port = 22
   }
   subnet_ids = ["${aws_subnet.blob.id}"]
-  tags {
+  tags = {
     Name = "tf-acc-acl-ingress"
   }
 }
@@ -775,7 +1064,7 @@ resource "aws_network_acl" "foos" {
 const testAccAWSNetworkAclEgressConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.2.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-egress"
   }
 }
@@ -784,15 +1073,15 @@ resource "aws_subnet" "blob" {
   cidr_block = "10.2.0.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-egress"
   }
 }
 
-resource "aws_network_acl" "bond" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
-  egress = {
-    protocol = "tcp"
+  egress {
+    protocol = 6
     rule_no = 2
     action = "allow"
     cidr_block =  "10.2.0.0/18"
@@ -800,7 +1089,7 @@ resource "aws_network_acl" "bond" {
     to_port = 443
   }
 
-  egress = {
+  egress {
     protocol = "-1"
     rule_no = 4
     action = "allow"
@@ -809,8 +1098,8 @@ resource "aws_network_acl" "bond" {
     to_port = 0
   }
 
-  egress = {
-    protocol = "tcp"
+  egress {
+    protocol = 6
     rule_no = 1
     action = "allow"
     cidr_block =  "10.2.0.0/18"
@@ -818,8 +1107,8 @@ resource "aws_network_acl" "bond" {
     to_port = 80
   }
 
-  egress = {
-    protocol = "tcp"
+  egress {
+    protocol = 6
     rule_no = 3
     action = "allow"
     cidr_block =  "10.2.0.0/18"
@@ -827,7 +1116,7 @@ resource "aws_network_acl" "bond" {
     to_port = 22
   }
 
-  tags {
+  tags = {
     foo = "bar"
     Name = "tf-acc-acl-egress"
   }
@@ -837,7 +1126,7 @@ resource "aws_network_acl" "bond" {
 const testAccAWSNetworkAclEgressNIngressConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.3.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-egress-and-ingress"
   }
 }
@@ -846,15 +1135,15 @@ resource "aws_subnet" "blob" {
   cidr_block = "10.3.0.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-egress-and-ingress"
   }
 }
 
-resource "aws_network_acl" "bar" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
-  egress = {
-    protocol = "tcp"
+  egress {
+    protocol = 6
     rule_no = 2
     action = "allow"
     cidr_block =  "10.3.0.0/18"
@@ -862,15 +1151,15 @@ resource "aws_network_acl" "bar" {
     to_port = 443
   }
 
-  ingress = {
-    protocol = "tcp"
+  ingress {
+    protocol = 6
     rule_no = 1
     action = "allow"
     cidr_block =  "10.3.0.0/18"
     from_port = 80
     to_port = 80
   }
-  tags {
+  tags = {
     Name = "tf-acc-acl-egress-and-ingress"
   }
 }
@@ -878,7 +1167,7 @@ resource "aws_network_acl" "bar" {
 const testAccAWSNetworkAclSubnetConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-subnet-change"
   }
 }
@@ -887,7 +1176,7 @@ resource "aws_subnet" "old" {
   cidr_block = "10.1.111.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-change-old"
   }
 }
@@ -896,7 +1185,7 @@ resource "aws_subnet" "new" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-change-new"
   }
 }
@@ -904,16 +1193,16 @@ resource "aws_subnet" "new" {
 resource "aws_network_acl" "roll" {
   vpc_id = "${aws_vpc.foo.id}"
   subnet_ids = ["${aws_subnet.new.id}"]
-  tags {
+  tags = {
     Name = "tf-acc-acl-subnet-change-roll"
   }
 }
 
-resource "aws_network_acl" "bar" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
   subnet_ids = ["${aws_subnet.old.id}"]
-  tags {
-    Name = "tf-acc-acl-subnet-change-bar"
+  tags = {
+    Name = "tf-acc-acl-subnet-change-test"
   }
 }
 `
@@ -921,7 +1210,7 @@ resource "aws_network_acl" "bar" {
 const testAccAWSNetworkAclSubnetConfigChange = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-subnet-change"
   }
 }
@@ -930,7 +1219,7 @@ resource "aws_subnet" "old" {
   cidr_block = "10.1.111.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-change-old"
   }
 }
@@ -939,16 +1228,16 @@ resource "aws_subnet" "new" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-change-new"
   }
 }
 
-resource "aws_network_acl" "bar" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
   subnet_ids = ["${aws_subnet.new.id}"]
-  tags {
-    Name = "tf-acc-acl-subnet-change-bar"
+  tags = {
+    Name = "tf-acc-acl-subnet-change-test"
   }
 }
 `
@@ -956,7 +1245,7 @@ resource "aws_network_acl" "bar" {
 const testAccAWSNetworkAclSubnet_SubnetIds = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-subnet-ids"
   }
 }
@@ -964,7 +1253,7 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
   vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-ids-one"
   }
 }
@@ -972,15 +1261,15 @@ resource "aws_subnet" "one" {
 resource "aws_subnet" "two" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-ids-two"
   }
 }
 
-resource "aws_network_acl" "bar" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
   subnet_ids = ["${aws_subnet.one.id}", "${aws_subnet.two.id}"]
-  tags {
+  tags = {
     Name = "tf-acc-acl-subnet-ids"
   }
 }
@@ -989,7 +1278,7 @@ resource "aws_network_acl" "bar" {
 const testAccAWSNetworkAclSubnet_SubnetIdsUpdate = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-subnet-ids"
   }
 }
@@ -997,7 +1286,7 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
   vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-ids-one"
   }
 }
@@ -1005,7 +1294,7 @@ resource "aws_subnet" "one" {
 resource "aws_subnet" "two" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-ids-two"
   }
 }
@@ -1013,7 +1302,7 @@ resource "aws_subnet" "two" {
 resource "aws_subnet" "three" {
   cidr_block = "10.1.222.0/24"
   vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-ids-three"
   }
 }
@@ -1021,19 +1310,19 @@ resource "aws_subnet" "three" {
 resource "aws_subnet" "four" {
   cidr_block = "10.1.4.0/24"
   vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-ids-four"
   }
 }
 
-resource "aws_network_acl" "bar" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
   subnet_ids = [
     "${aws_subnet.one.id}",
     "${aws_subnet.three.id}",
     "${aws_subnet.four.id}",
   ]
-  tags {
+  tags = {
     Name = "tf-acc-acl-subnet-ids"
   }
 }
@@ -1042,7 +1331,7 @@ resource "aws_network_acl" "bar" {
 const testAccAWSNetworkAclSubnet_SubnetIdsDeleteOne = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-subnet-ids"
   }
 }
@@ -1050,30 +1339,30 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
   vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  tags = {
     Name = "tf-acc-network-acl-subnet-ids-one"
   }
 }
 
-resource "aws_network_acl" "bar" {
+resource "aws_network_acl" "test" {
   vpc_id = "${aws_vpc.foo.id}"
   subnet_ids = ["${aws_subnet.one.id}"]
-  tags {
+  tags = {
     Name = "tf-acc-acl-subnet-ids"
   }
 }
 `
 
 const testAccAWSNetworkAclEsp = `
-resource "aws_vpc" "testespvpc" {
+resource "aws_vpc" "testvpc" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-network-acl-esp"
   }
 }
 
-resource "aws_network_acl" "testesp" {
-  vpc_id = "${aws_vpc.testespvpc.id}"
+resource "aws_network_acl" "test" {
+  vpc_id = "${aws_vpc.testvpc.id}"
 
   egress {
     protocol   = "esp"
@@ -1084,8 +1373,168 @@ resource "aws_network_acl" "testesp" {
     to_port    = 0
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-acl-esp"
   }
 }
 `
+
+func testAccAWSNetworkAclConfigEgressConfigModeBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
+  }
+}
+
+resource "aws_network_acl" "test" {
+  tags = {
+    Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+
+  egress {
+    action     = "allow"
+    cidr_block = "${aws_vpc.test.cidr_block}"
+    from_port  = 0
+    protocol   = 6
+    rule_no    = 1
+    to_port    = 0
+  }
+
+  egress {
+    action     = "allow"
+    cidr_block = "${aws_vpc.test.cidr_block}"
+    from_port  = 0
+    protocol   = "udp"
+    rule_no    = 2
+    to_port    = 0
+  }
+}
+`)
+}
+
+func testAccAWSNetworkAclConfigEgressConfigModeNoBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
+  }
+}
+
+resource "aws_network_acl" "test" {
+  tags = {
+    Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
+
+func testAccAWSNetworkAclConfigEgressConfigModeZeroed() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
+  }
+}
+
+resource "aws_network_acl" "test" {
+  egress = []
+
+  tags = {
+    Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
+
+func testAccAWSNetworkAclConfigIngressConfigModeBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
+  }
+}
+
+resource "aws_network_acl" "test" {
+  tags = {
+    Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+
+  ingress {
+    action     = "allow"
+    cidr_block = "${aws_vpc.test.cidr_block}"
+    from_port  = 0
+    protocol   = 6
+    rule_no    = 1
+    to_port    = 0
+  }
+
+  ingress {
+    action     = "allow"
+    cidr_block = "${aws_vpc.test.cidr_block}"
+    from_port  = 0
+    protocol   = "udp"
+    rule_no    = 2
+    to_port    = 0
+  }
+}
+`)
+}
+
+func testAccAWSNetworkAclConfigIngressConfigModeNoBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
+  }
+}
+
+resource "aws_network_acl" "test" {
+  tags = {
+    Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
+
+func testAccAWSNetworkAclConfigIngressConfigModeZeroed() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
+  }
+}
+
+resource "aws_network_acl" "test" {
+  ingress = []
+
+  tags = {
+    Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}

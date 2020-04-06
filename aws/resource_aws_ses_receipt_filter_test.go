@@ -4,31 +4,42 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
+	resourceName := "aws_ses_receipt_filter.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSSESReceiptFilterConfig,
+			{
+				Config: testAccAWSSESReceiptFilterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESReceiptFilterExists("aws_ses_receipt_filter.test"),
+					testAccCheckAwsSESReceiptFilterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cidr", "10.10.10.10"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "policy", "Block"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func testAccCheckSESReceiptFilterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesConn
+	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_receipt_filter" {
@@ -40,17 +51,11 @@ func testAccCheckSESReceiptFilterDestroy(s *terraform.State) error {
 			return err
 		}
 
-		found := false
 		for _, element := range response.Filters {
-			if *element.Name == "block-some-ip" {
-				found = true
+			if aws.StringValue(element.Name) == rs.Primary.ID {
+				return fmt.Errorf("SES Receipt Filter (%s) still exists", rs.Primary.ID)
 			}
 		}
-
-		if found {
-			return fmt.Errorf("The receipt filter still exists")
-		}
-
 	}
 
 	return nil
@@ -68,32 +73,29 @@ func testAccCheckAwsSESReceiptFilterExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES receipt filter ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		response, err := conn.ListReceiptFilters(&ses.ListReceiptFiltersInput{})
 		if err != nil {
 			return err
 		}
 
-		found := false
 		for _, element := range response.Filters {
-			if *element.Name == "block-some-ip" {
-				found = true
+			if aws.StringValue(element.Name) == rs.Primary.ID {
+				return nil
 			}
 		}
 
-		if !found {
-			return fmt.Errorf("The receipt filter was not created")
-		}
-
-		return nil
+		return fmt.Errorf("The receipt filter was not created")
 	}
 }
 
-const testAccAWSSESReceiptFilterConfig = `
+func testAccAWSSESReceiptFilterConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ses_receipt_filter" "test" {
-    name = "block-some-ip"
-    cidr = "10.10.10.10"
-    policy = "Block"
+  cidr   = "10.10.10.10"
+  name   = %q
+  policy = "Block"
 }
-`
+`, rName)
+}

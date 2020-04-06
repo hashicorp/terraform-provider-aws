@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -19,12 +19,12 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -47,12 +47,12 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -74,12 +74,12 @@ func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -99,12 +99,12 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -114,7 +114,7 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig_updatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -194,80 +194,90 @@ func testAccCheckNeptuneSubnetGroupExists(n string, v *neptune.DBSubnetGroup) re
 func testAccNeptuneSubnetGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-neptune-subnet-group"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-neptune-subnet-group"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-neptune-subnet-group-1"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-neptune-subnet-group-1"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-neptune-subnet-group-2"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-neptune-subnet-group-2"
+  }
 }
 
 resource "aws_neptune_subnet_group" "foo" {
-	name = "%s"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
-		Name = "tf-neptunesubnet-group-test"
-	}
-}`, rName)
+  name       = "%s"
+  subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+
+  tags = {
+    Name = "tf-neptunesubnet-group-test"
+  }
+}
+`, rName)
 }
 
 func testAccNeptuneSubnetGroupConfig_updatedDescription(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-neptune-subnet-group-updated-description"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-neptune-subnet-group-updated-description"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-neptune-subnet-group-1"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-neptune-subnet-group-1"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags {
-		Name = "tf-acc-neptune-subnet-group-2"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-neptune-subnet-group-2"
+  }
 }
 
 resource "aws_neptune_subnet_group" "foo" {
-	name = "%s"
-	description = "foo description updated"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
-		Name = "tf-neptunesubnet-group-test"
-	}
-}`, rName)
+  name        = "%s"
+  description = "foo description updated"
+  subnet_ids  = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+
+  tags = {
+    Name = "tf-neptunesubnet-group-test"
+  }
+}
+`, rName)
 }
 
 const testAccNeptuneSubnetGroupConfig_namePrefix = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-neptune-subnet-group-name-prefix"
 	}
 }
@@ -276,7 +286,7 @@ resource "aws_subnet" "a" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
-	tags {
+	tags = {
 		Name = "tf-acc-neptune-subnet-group-name-prefix-a"
 	}
 }
@@ -285,7 +295,7 @@ resource "aws_subnet" "b" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
-	tags {
+	tags = {
 		Name = "tf-acc-neptune-subnet-group-name-prefix-b"
 	}
 }
@@ -298,7 +308,7 @@ resource "aws_neptune_subnet_group" "test" {
 const testAccNeptuneSubnetGroupConfig_generatedName = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-neptune-subnet-group-generated-name"
 	}
 }
@@ -307,7 +317,7 @@ resource "aws_subnet" "a" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
-	tags {
+	tags = {
 		Name = "tf-acc-neptune-subnet-group-generated-name-a"
 	}
 }
@@ -316,7 +326,7 @@ resource "aws_subnet" "b" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
-	tags {
+	tags = {
 		Name = "tf-acc-neptune-subnet-group-generated-name-a"
 	}
 }

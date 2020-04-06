@@ -1,12 +1,12 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_configuration_aggregator"
-sidebar_current: "docs-aws-resource-config-configuration-aggregator"
 description: |-
   Manages an AWS Config Configuration Aggregator.
 ---
 
-# aws_config_configuration_aggregator
+# Resource: aws_config_configuration_aggregator
 
 Manages an AWS Config Configuration Aggregator
 
@@ -72,6 +72,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the configuration aggregator.
 * `account_aggregation_source` - (Optional) The account(s) to aggregate config data from as documented below.
 * `organization_aggregation_source` - (Optional) The organization to aggregate config data from as documented below.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 Either `account_aggregation_source` or `organization_aggregation_source` must be specified.
 
@@ -89,7 +90,7 @@ Either `regions` or `all_regions` (as true) must be specified.
 
 * `all_regions` - (Optional) If true, aggregate existing AWS Config regions and future regions.
 * `regions` - (Optional) List of source regions being aggregated.
-* `role_arn` - (Required) ARN of the IAM role used to retreive AWS Organization details associated with the aggregator account.
+* `role_arn` - (Required) ARN of the IAM role used to retrieve AWS Organization details associated with the aggregator account.
 
 Either `regions` or `all_regions` (as true) must be specified.
 

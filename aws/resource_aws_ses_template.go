@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSesTemplate() *schema.Resource {
@@ -31,7 +31,7 @@ func resourceAwsSesTemplate() *schema.Resource {
 			"html": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(512000),
+				ValidateFunc: validation.StringLenBetween(0, 512000),
 			},
 			"subject": {
 				Type:     schema.TypeString,
@@ -40,13 +40,13 @@ func resourceAwsSesTemplate() *schema.Resource {
 			"text": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(512000),
+				ValidateFunc: validation.StringLenBetween(0, 512000),
 			},
 		},
 	}
 }
 func resourceAwsSesTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	templateName := d.Get("name").(string)
 
@@ -81,7 +81,7 @@ func resourceAwsSesTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 	input := ses.GetTemplateInput{
 		TemplateName: aws.String(d.Id()),
 	}
@@ -106,7 +106,7 @@ func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsSesTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	templateName := d.Id()
 
@@ -140,7 +140,7 @@ func resourceAwsSesTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSesTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 	input := ses.DeleteTemplateInput{
 		TemplateName: aws.String(d.Id()),
 	}

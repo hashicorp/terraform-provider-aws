@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsSpotInstanceRequest() *schema.Resource {
@@ -94,14 +95,14 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRFC3339TimeString,
+				ValidateFunc: validation.IsRFC3339Time,
 				Computed:     true,
 			}
 			s["valid_until"] = &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRFC3339TimeString,
+				ValidateFunc: validation.IsRFC3339Time,
 				Computed:     true,
 			}
 			return s
@@ -118,8 +119,8 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	}
 
 	spotOpts := &ec2.RequestSpotInstancesInput{
-		SpotPrice: aws.String(d.Get("spot_price").(string)),
-		Type:      aws.String(d.Get("spot_type").(string)),
+		SpotPrice:                    aws.String(d.Get("spot_price").(string)),
+		Type:                         aws.String(d.Get("spot_type").(string)),
 		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behaviour").(string)),
 
 		// Though the AWS API supports creating spot instance requests for multiple
@@ -177,7 +178,6 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 
 	var resp *ec2.RequestSpotInstancesOutput
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
 		resp, err = conn.RequestSpotInstances(spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
@@ -192,6 +192,10 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		}
 		return resource.NonRetryableError(err)
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = conn.RequestSpotInstances(spotOpts)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error requesting spot instances: %s", err)
@@ -223,7 +227,13 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsSpotInstanceRequestUpdate(d, meta)
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding EC2 Spot Instance Request (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsSpotInstanceRequestRead(d, meta)
 }
 
 // Update spot state, etc
@@ -261,20 +271,24 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 		return nil
 	}
 
-	d.Set("spot_bid_status", *request.Status.Code)
+	d.Set("spot_bid_status", request.Status.Code)
 	// Instance ID is not set if the request is still pending
 	if request.InstanceId != nil {
-		d.Set("spot_instance_id", *request.InstanceId)
+		d.Set("spot_instance_id", request.InstanceId)
 		// Read the instance data, setting up connection information
 		if err := readInstance(d, meta); err != nil {
-			return fmt.Errorf("[ERR] Error reading Spot Instance Data: %s", err)
+			return fmt.Errorf("Error reading Spot Instance Data: %s", err)
 		}
 	}
 
 	d.Set("spot_request_state", request.State)
 	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
-	d.Set("tags", tagsToMap(request.Tags))
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(request.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("instance_interruption_behaviour", request.InstanceInterruptionBehavior)
 	d.Set("valid_from", aws.TimeValue(request.ValidFrom).Format(time.RFC3339))
 	d.Set("valid_until", aws.TimeValue(request.ValidUntil).Format(time.RFC3339))
@@ -370,14 +384,13 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
-	if err := setTags(conn, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
-	}
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	d.Partial(false)
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Spot Instance Request (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsSpotInstanceRequestRead(d, meta)
 }
@@ -396,7 +409,7 @@ func resourceAwsSpotInstanceRequestDelete(d *schema.ResourceData, meta interface
 
 	if instanceId := d.Get("spot_instance_id").(string); instanceId != "" {
 		log.Printf("[INFO] Terminating instance: %s", instanceId)
-		if err := awsTerminateInstance(conn, instanceId, d); err != nil {
+		if err := awsTerminateInstance(conn, instanceId, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return fmt.Errorf("Error terminating spot instance: %s", err)
 		}
 	}

@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRouteTable() *schema.Resource {
@@ -21,7 +22,7 @@ func resourceAwsRouteTable() *schema.Resource {
 		Update: resourceAwsRouteTableUpdate,
 		Delete: resourceAwsRouteTableDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsRouteTableImportState,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,9 +43,10 @@ func resourceAwsRouteTable() *schema.Resource {
 			},
 
 			"route": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Optional:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr_block": {
@@ -77,6 +79,11 @@ func resourceAwsRouteTable() *schema.Resource {
 							Optional: true,
 						},
 
+						"transit_gateway_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"vpc_peering_connection_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -89,6 +96,11 @@ func resourceAwsRouteTable() *schema.Resource {
 					},
 				},
 				Set: resourceAwsRouteTableHash,
+			},
+
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -193,6 +205,9 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		if r.InstanceId != nil {
 			m["instance_id"] = *r.InstanceId
 		}
+		if r.TransitGatewayId != nil {
+			m["transit_gateway_id"] = *r.TransitGatewayId
+		}
 		if r.VpcPeeringConnectionId != nil {
 			m["vpc_peering_connection_id"] = *r.VpcPeeringConnectionId
 		}
@@ -204,8 +219,11 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("route", route)
 
-	// Tags
-	d.Set("tags", tagsToMap(rt.Tags))
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(rt.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	d.Set("owner_id", rt.OwnerId)
 
 	return nil
 }
@@ -322,6 +340,10 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				RouteTableId: aws.String(d.Id()),
 			}
 
+			if s := m["transit_gateway_id"].(string); s != "" {
+				opts.TransitGatewayId = aws.String(s)
+			}
+
 			if s := m["vpc_peering_connection_id"].(string); s != "" {
 				opts.VpcPeeringConnectionId = aws.String(s)
 			}
@@ -357,18 +379,25 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[INFO] Creating route for %s: %#v", d.Id(), opts)
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := conn.CreateRoute(&opts)
+
+				if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+					return resource.RetryableError(err)
+				}
+
+				if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+					return resource.RetryableError(err)
+				}
+
 				if err != nil {
-					if awsErr, ok := err.(awserr.Error); ok {
-						if awsErr.Code() == "InvalidRouteTableID.NotFound" {
-							return resource.RetryableError(awsErr)
-						}
-					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.CreateRoute(&opts)
+			}
 			if err != nil {
-				return err
+				return fmt.Errorf("Error creating route: %s", err)
 			}
 
 			routes.Add(route)
@@ -376,10 +405,12 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if err := setTags(conn, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Route Table (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsRouteTableRead(d, meta)
@@ -484,6 +515,10 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	instanceSet := false
 	if v, ok := m["instance_id"]; ok {
 		instanceSet = v.(string) != ""
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["transit_gateway_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 

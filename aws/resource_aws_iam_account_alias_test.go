@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSIAMAccountAlias(t *testing.T) {
@@ -32,6 +32,29 @@ func TestAccAWSIAMAccountAlias(t *testing.T) {
 			}
 		})
 	}
+}
+
+func testAccAWSIAMAccountAlias_importBasic(t *testing.T) {
+	resourceName := "aws_iam_account_alias.test"
+
+	rstring := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIAMAccountAliasDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMAccountAliasConfig(rstring),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func testAccAWSIAMAccountAlias_basic_with_datasource(t *testing.T) {
@@ -59,7 +82,7 @@ func testAccAWSIAMAccountAlias_basic_with_datasource(t *testing.T) {
 				// We expect a non-empty plan due to the way data sources and depends_on
 				// work, or don't work. See https://github.com/hashicorp/terraform/issues/11139#issuecomment-275121893
 				// We accept this limitation and feel this test is OK because of the
-				// explicity check above
+				// explicitly check above
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -132,21 +155,6 @@ func testAccCheckAWSIAMAccountAliasExists(n string, a *string) resource.TestChec
 	}
 }
 
-func testAccCheckAwsIamAccountAlias(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Can't find Account Alias resource: %s", n)
-		}
-
-		if rs.Primary.Attributes["account_alias"] == "" {
-			return fmt.Errorf("Missing Account Alias")
-		}
-
-		return nil
-	}
-}
-
 func testAccAWSIAMAccountAliasConfig_with_datasource(rstring string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {
@@ -155,12 +163,14 @@ resource "aws_iam_account_alias" "test" {
 
 data "aws_iam_account_alias" "current" {
   depends_on = ["aws_iam_account_alias.test"]
-}`, rstring)
+}
+`, rstring)
 }
 
 func testAccAWSIAMAccountAliasConfig(rstring string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {
   account_alias = "terraform-%s-alias"
-}`, rstring)
+}
+`, rstring)
 }

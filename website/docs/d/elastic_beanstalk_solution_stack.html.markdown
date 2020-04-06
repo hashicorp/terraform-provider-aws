@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Beanstalk"
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_solution_stack"
-sidebar_current: "docs-aws-datasource-elastic-beanstalk-solution-stack"
 description: |-
   Get an elastic beanstalk solution stack.
 ---
@@ -14,9 +14,9 @@ Use this data source to get the name of a elastic beanstalk solution stack.
 
 ```hcl
 data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
-  most_recent   = true
+  most_recent = true
 
-  name_regex    = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
+  name_regex = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
 }
 ```
 

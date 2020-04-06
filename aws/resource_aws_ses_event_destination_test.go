@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSSESEventDestination_basic(t *testing.T) {
@@ -23,14 +23,15 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 	sesEventDstNameCw := fmt.Sprintf("tf_acc_event_dst_cloudwatch_%s", rString)
 	sesEventDstNameSns := fmt.Sprintf("tf_acc_event_dst_sns_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESEventDestinationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSESEventDestinationConfig(bucketName, roleName, streamName, policyName, topicName,
 					sesCfgSetName, sesEventDstNameKinesis, sesEventDstNameCw, sesEventDstNameSns),
 				Check: resource.ComposeTestCheckFunc(
@@ -48,7 +49,7 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 }
 
 func testAccCheckSESEventDestinationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesConn
+	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_configuration_set" {
@@ -88,7 +89,7 @@ func testAccCheckAwsSESEventDestinationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES event destination ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		response, err := conn.ListConfigurationSets(&ses.ListConfigurationSetsInput{})
 		if err != nil {
@@ -115,12 +116,13 @@ func testAccAWSSESEventDestinationConfig(bucketName, roleName, streamName, polic
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "%s"
-  acl = "private"
+  acl    = "private"
 }
 
 resource "aws_iam_role" "firehose_role" {
-   name = "%s"
-   assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -145,31 +147,34 @@ EOF
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-  name = "%s"
+  name        = "%s"
   destination = "s3"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose_role.arn}"
+    role_arn   = "${aws_iam_role.firehose_role.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
   }
 }
 
 resource "aws_iam_role_policy" "firehose_delivery_policy" {
-  name = "%s"
-  role = "${aws_iam_role.firehose_role.id}"
+  name   = "%s"
+  role   = "${aws_iam_role.firehose_role.id}"
   policy = "${data.aws_iam_policy_document.fh_felivery_document.json}"
 }
 
 data "aws_iam_policy_document" "fh_felivery_document" {
-    statement {
-        sid = "GiveSESPermissionToPutFirehose"
-        actions = [
-            "firehose:PutRecord",
-            "firehose:PutRecordBatch",
-        ]
-        resources = [
-            "*",
-        ]
-    }
+  statement {
+    sid = "GiveSESPermissionToPutFirehose"
+
+    actions = [
+      "firehose:PutRecord",
+      "firehose:PutRecordBatch",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
 }
 
 resource "aws_sns_topic" "ses_destination" {
@@ -177,39 +182,45 @@ resource "aws_sns_topic" "ses_destination" {
 }
 
 resource "aws_ses_configuration_set" "test" {
-    name = "%s"
+  name = "%s"
 }
 
 resource "aws_ses_event_destination" "kinesis" {
-  name = "%s"
+  name                   = "%s"
   configuration_set_name = "${aws_ses_configuration_set.test.name}"
-  enabled = true
-  matching_types = ["bounce", "send"]
+  enabled                = true
+  matching_types         = ["bounce", "send"]
 
   kinesis_destination {
     stream_arn = "${aws_kinesis_firehose_delivery_stream.test_stream.arn}"
-    role_arn = "${aws_iam_role.firehose_role.arn}"
+    role_arn   = "${aws_iam_role.firehose_role.arn}"
   }
 }
 
 resource "aws_ses_event_destination" "cloudwatch" {
-  name = "%s",
+  name                   = "%s"
   configuration_set_name = "${aws_ses_configuration_set.test.name}"
-  enabled = true
-  matching_types = ["bounce", "send"]
+  enabled                = true
+  matching_types         = ["bounce", "send"]
 
   cloudwatch_destination {
-    default_value = "default"
-	dimension_name = "dimension"
-	value_source = "emailHeader"
+    default_value  = "default"
+    dimension_name = "dimension"
+    value_source   = "emailHeader"
+  }
+
+  cloudwatch_destination {
+    default_value  = "default"
+    dimension_name = "ses:source-ip"
+    value_source   = "messageTag"
   }
 }
 
 resource "aws_ses_event_destination" "sns" {
-  name = "%s"
+  name                   = "%s"
   configuration_set_name = "${aws_ses_configuration_set.test.name}"
-  enabled = true
-  matching_types = ["bounce", "send"]
+  enabled                = true
+  matching_types         = ["bounce", "send"]
 
   sns_destination {
     topic_arn = "${aws_sns_topic.ses_destination.arn}"

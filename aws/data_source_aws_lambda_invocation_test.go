@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func testAccCheckLambdaInvocationResult(name, expectedResult string) resource.TestCheckFunc {
@@ -38,7 +38,7 @@ func TestAccDataSourceAwsLambdaInvocation_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	testData := "value3"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -60,7 +60,7 @@ func TestAccDataSourceAwsLambdaInvocation_qualifier(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	testData := "value3"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -81,7 +81,7 @@ func TestAccDataSourceAwsLambdaInvocation_complex(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	testData := "value3"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -131,7 +131,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = "${aws_iam_role.lambda_role.arn}"
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 
   environment {
     variables = {
@@ -162,7 +162,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = "${aws_iam_role.lambda_role.arn}"
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
   publish       = true
 
   environment {
@@ -195,7 +195,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = "${aws_iam_role.lambda_role.arn}"
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
   publish       = true
 
   environment {

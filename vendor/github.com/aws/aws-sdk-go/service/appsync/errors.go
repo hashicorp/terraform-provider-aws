@@ -2,7 +2,17 @@
 
 package appsync
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
+
+	// ErrCodeAccessDeniedException for service response error code
+	// "AccessDeniedException".
+	//
+	// You do not have access to perform this operation on this resource.
+	ErrCodeAccessDeniedException = "AccessDeniedException"
 
 	// ErrCodeApiKeyLimitExceededException for service response error code
 	// "ApiKeyLimitExceededException".
@@ -27,13 +37,13 @@ const (
 	// "BadRequestException".
 	//
 	// The request is not well formed. For example, a value is invalid or a required
-	// field is missing. Check the field values, and try again.
+	// field is missing. Check the field values, and then try again.
 	ErrCodeBadRequestException = "BadRequestException"
 
 	// ErrCodeConcurrentModificationException for service response error code
 	// "ConcurrentModificationException".
 	//
-	// Another modification is being made. That modification must complete before
+	// Another modification is in progress at this time and it must complete before
 	// you can make your change.
 	ErrCodeConcurrentModificationException = "ConcurrentModificationException"
 
@@ -58,8 +68,8 @@ const (
 	// ErrCodeNotFoundException for service response error code
 	// "NotFoundException".
 	//
-	// The resource specified in the request was not found. Check the resource and
-	// try again.
+	// The resource specified in the request was not found. Check the resource,
+	// and then try again.
 	ErrCodeNotFoundException = "NotFoundException"
 
 	// ErrCodeUnauthorizedException for service response error code
@@ -68,3 +78,17 @@ const (
 	// You are not authorized to perform this operation.
 	ErrCodeUnauthorizedException = "UnauthorizedException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":              newErrorAccessDeniedException,
+	"ApiKeyLimitExceededException":       newErrorApiKeyLimitExceededException,
+	"ApiKeyValidityOutOfBoundsException": newErrorApiKeyValidityOutOfBoundsException,
+	"ApiLimitExceededException":          newErrorApiLimitExceededException,
+	"BadRequestException":                newErrorBadRequestException,
+	"ConcurrentModificationException":    newErrorConcurrentModificationException,
+	"GraphQLSchemaException":             newErrorGraphQLSchemaException,
+	"InternalFailureException":           newErrorInternalFailureException,
+	"LimitExceededException":             newErrorLimitExceededException,
+	"NotFoundException":                  newErrorNotFoundException,
+	"UnauthorizedException":              newErrorUnauthorizedException,
+}

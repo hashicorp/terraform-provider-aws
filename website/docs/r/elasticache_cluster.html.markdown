@@ -1,12 +1,12 @@
 ---
+subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_cluster"
-sidebar_current: "docs-aws-resource-elasticache-cluster"
 description: |-
   Provides an ElastiCache Cluster resource.
 ---
 
-# aws_elasticache_cluster
+# Resource: aws_elasticache_cluster
 
 Provides an ElastiCache Cluster resource, which manages a Memcached cluster or Redis instance.
 For working with Redis (Cluster Mode Enabled) replication groups, see the
@@ -27,7 +27,7 @@ See the AWS Docs on [Modifying an ElastiCache Cache Cluster][2] for more informa
 resource "aws_elasticache_cluster" "example" {
   cluster_id           = "cluster-example"
   engine               = "memcached"
-  node_type            = "cache.m3.medium"
+  node_type            = "cache.m4.large"
   num_cache_nodes      = 2
   parameter_group_name = "default.memcached1.4"
   port                 = 11211
@@ -40,9 +40,10 @@ resource "aws_elasticache_cluster" "example" {
 resource "aws_elasticache_cluster" "example" {
   cluster_id           = "cluster-example"
   engine               = "redis"
-  node_type            = "cache.m3.medium"
+  node_type            = "cache.m4.large"
   num_cache_nodes      = 1
   parameter_group_name = "default.redis3.2"
+  engine_version       = "3.2.10"
   port                 = 6379
 }
 ```
@@ -71,7 +72,7 @@ The following arguments are supported:
  Valid values for this parameter are `memcached` or `redis`
 
 * `engine_version` – (Optional) Version number of the cache engine to be used.
-See [Selecting a Cache Engine and Version](https://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/SelectEngine.html)
+See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html)
 in the AWS Documentation center for supported versions
 
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
@@ -128,8 +129,6 @@ SNS topic to send ElastiCache notifications to. Example:
 * `az_mode` - (Optional, Memcached only) Specifies whether the nodes in this Memcached node group are created in a single Availability Zone or created across multiple Availability Zones in the cluster's region. Valid values for this parameter are `single-az` or `cross-az`, default is `single-az`. If you want to choose `cross-az`, `num_cache_nodes` must be greater than `1`
 
 * `availability_zone` - (Optional) The Availability Zone for the cache cluster. If you want to create cache nodes in multi-az, use `preferred_availability_zones` instead. Default: System chosen Availability Zone.
-
-* `availability_zones` - (*DEPRECATED*, Optional, Memcached only) Use `preferred_availability_zones` instead unless you want to create cache nodes in single-az, then use `availability_zone`. Set of Availability Zones in which the cache nodes will be created.
 
 * `preferred_availability_zones` - (Optional, Memcached only) A list of the Availability Zones in which cache nodes are created. If you are creating your cluster in an Amazon VPC you can only locate nodes in Availability Zones that are associated with the subnets in the selected subnet group. The number of Availability Zones listed must equal the value of `num_cache_nodes`. If you want all the nodes in the same Availability Zone, use `availability_zone` instead, or repeat the Availability Zone multiple times in the list. Default: System chosen Availability Zones. Detecting drift of existing node availability zone is not currently supported. Updating this argument by itself to migrate existing node availability zones is not currently supported and will show a perpetual difference.
 

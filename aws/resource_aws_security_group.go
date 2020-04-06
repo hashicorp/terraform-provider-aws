@@ -13,9 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func resourceAwsSecurityGroup() *schema.Resource {
@@ -43,14 +46,15 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateMaxLength(255),
+				ValidateFunc:  validation.StringLenBetween(0, 255),
 			},
 
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateMaxLength(100),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validation.StringLenBetween(0, 100),
 			},
 
 			"description": {
@@ -58,7 +62,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "Managed by Terraform",
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 
 			"vpc_id": {
@@ -69,9 +73,10 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			},
 
 			"ingress": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
@@ -108,6 +113,12 @@ func resourceAwsSecurityGroup() *schema.Resource {
 							},
 						},
 
+						"prefix_list_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -132,9 +143,10 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			},
 
 			"egress": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
@@ -234,14 +246,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		securityGroupOpts.Description = aws.String(v.(string))
 	}
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = resource.UniqueId()
-	}
+	groupName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 	securityGroupOpts.GroupName = aws.String(groupName)
 
 	var err error
@@ -264,8 +269,10 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 			d.Id(), err)
 	}
 
-	if err := setTags(conn, d); err != nil {
-		return err
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding EC2 Security Group (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule. Here we
@@ -385,7 +392,10 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 		log.Printf("[WARN] Error setting Egress rule set for (%s): %s", d.Id(), err)
 	}
 
-	d.Set("tags", tagsToMap(sg.Tags))
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(sg.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -423,11 +433,12 @@ func resourceAwsSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if !d.IsNewResource() {
-		if err := setTags(conn, d); err != nil {
-			return err
+	if d.HasChange("tags") && !d.IsNewResource() {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Security Group (%s) tags: %s", d.Id(), err)
 		}
-		d.SetPartial("tags")
 	}
 
 	return resourceAwsSecurityGroupRead(d, meta)
@@ -438,8 +449,8 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Security Group destroy: %v", d.Id())
 
-	if err := deleteLingeringLambdaENIs(conn, d); err != nil {
-		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
+	if err := deleteLingeringLambdaENIs(conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error deleting Lambda ENIs using Security Group (%s): %s", d.Id(), err)
 	}
 
 	// conditionally revoke rules first before attempting to delete the group
@@ -448,31 +459,33 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 			return err
 		}
 	}
-
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId: aws.String(d.Id()),
-		})
+	input := &ec2.DeleteSecurityGroupInput{
+		GroupId: aws.String(d.Id()),
+	}
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := conn.DeleteSecurityGroup(input)
 		if err != nil {
-			ec2err, ok := err.(awserr.Error)
-			if !ok {
-				return resource.RetryableError(err)
-			}
-
-			switch ec2err.Code() {
-			case "InvalidGroup.NotFound":
+			if isAWSErr(err, "InvalidGroup.NotFound", "") {
 				return nil
-			case "DependencyViolation":
+			}
+			if isAWSErr(err, "DependencyViolation", "") {
 				// If it is a dependency violation, we want to retry
 				return resource.RetryableError(err)
-			default:
-				// Any other error, we want to quit the retry loop immediately
-				return resource.NonRetryableError(err)
 			}
+			return resource.NonRetryableError(err)
 		}
-
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteSecurityGroup(input)
+		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting security group: %s", err)
+	}
+	return nil
 }
 
 // Revoke all ingress/egress rules that a Security Group has
@@ -688,14 +701,14 @@ func resourceAwsSecurityGroupUpdateRules(
 			n = new(schema.Set)
 		}
 
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os := resourceAwsSecurityGroupExpandRules(o.(*schema.Set))
+		ns := resourceAwsSecurityGroupExpandRules(n.(*schema.Set))
 
-		remove, err := expandIPPerms(group, os.Difference(ns).List())
+		remove, err := expandIPPerms(group, resourceAwsSecurityGroupCollapseRules(ruleset, os.Difference(ns).List()))
 		if err != nil {
 			return err
 		}
-		add, err := expandIPPerms(group, ns.Difference(os).List())
+		add, err := expandIPPerms(group, resourceAwsSecurityGroupCollapseRules(ruleset, ns.Difference(os).List()))
 		if err != nil {
 			return err
 		}
@@ -1129,7 +1142,7 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 		}
 
 		if _, ok := r["self"]; ok {
-			if r["self"].(bool) == true {
+			if r["self"].(bool) {
 				lenSGs++
 			}
 		}
@@ -1141,6 +1154,175 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 	}
 
 	return saves
+}
+
+// Duplicate ingress/egress block structure and fill out all
+// the required fields
+func resourceAwsSecurityGroupCopyRule(src map[string]interface{}, self bool, k string, v interface{}) map[string]interface{} {
+	var keys_to_copy = []string{"description", "from_port", "to_port", "protocol"}
+
+	dst := make(map[string]interface{})
+	for _, key := range keys_to_copy {
+		if val, ok := src[key]; ok {
+			dst[key] = val
+		}
+	}
+	if k != "" {
+		dst[k] = v
+	}
+	if _, ok := src["self"]; ok {
+		dst["self"] = self
+	}
+	return dst
+}
+
+// Given a set of SG rules (ingress/egress blocks), this function
+// will group the rules by from_port/to_port/protocol/description
+// tuples. This is inverse operation of
+// resourceAwsSecurityGroupExpandRules()
+//
+// For more detail, see comments for
+// resourceAwsSecurityGroupExpandRules()
+func resourceAwsSecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface{} {
+
+	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
+
+	collapsed := make(map[string]map[string]interface{})
+
+	for _, rule := range rules {
+		r := rule.(map[string]interface{})
+
+		ruleHash := idCollapseHash(ruleset, r["protocol"].(string), int64(r["to_port"].(int)), int64(r["from_port"].(int)), r["description"].(string))
+
+		if _, ok := collapsed[ruleHash]; ok {
+			if v, ok := r["self"]; ok && v.(bool) {
+				collapsed[ruleHash]["self"] = r["self"]
+			}
+		} else {
+			collapsed[ruleHash] = r
+			continue
+		}
+
+		for _, key := range keys_to_collapse {
+			if _, ok := r[key]; ok {
+				if _, ok := collapsed[ruleHash][key]; ok {
+					if key == "security_groups" {
+						collapsed[ruleHash][key] = collapsed[ruleHash][key].(*schema.Set).Union(r[key].(*schema.Set))
+					} else {
+						collapsed[ruleHash][key] = append(collapsed[ruleHash][key].([]interface{}), r[key].([]interface{})...)
+					}
+				} else {
+					collapsed[ruleHash][key] = r[key]
+				}
+			}
+		}
+	}
+
+	values := make([]interface{}, 0, len(collapsed))
+	for _, val := range collapsed {
+		values = append(values, val)
+	}
+	return values
+}
+
+// resourceAwsSecurityGroupExpandRules works in pair with
+// resourceAwsSecurityGroupCollapseRules and is used as a
+// workaround for the problem explained in
+// https://github.com/terraform-providers/terraform-provider-aws/pull/4726
+//
+// This function converts every ingress/egress block that
+// contains multiple rules to multiple blocks with only one
+// rule. Doing a Difference operation on such a normalized
+// set helps to avoid unnecessary removal of unchanged
+// rules during the Apply step.
+//
+// For example, in terraform syntax, the following block:
+//
+// ingress {
+//   from_port = 80
+//   to_port = 80
+//   protocol = "tcp"
+//   cidr_blocks = [
+//     "192.168.0.1/32",
+//     "192.168.0.2/32",
+//   ]
+// }
+//
+// will be converted to the two blocks below:
+//
+// ingress {
+//   from_port = 80
+//   to_port = 80
+//   protocol = "tcp"
+//   cidr_blocks = [ "192.168.0.1/32" ]
+// }
+//
+// ingress {
+//   from_port = 80
+//   to_port = 80
+//   protocol = "tcp"
+//   cidr_blocks = [ "192.168.0.2/32" ]
+// }
+//
+// Then the Difference operation is executed on the new set
+// to find which rules got modified, and the resulting set
+// is then passed to resourceAwsSecurityGroupCollapseRules
+// to convert the "diff" back to a more compact form for
+// execution. Such compact form helps reduce the number of
+// API calls.
+//
+func resourceAwsSecurityGroupExpandRules(rules *schema.Set) *schema.Set {
+	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
+
+	normalized := schema.NewSet(resourceAwsSecurityGroupRuleHash, nil)
+
+	for _, rawRule := range rules.List() {
+		rule := rawRule.(map[string]interface{})
+
+		if v, ok := rule["self"]; ok && v.(bool) {
+			new_rule := resourceAwsSecurityGroupCopyRule(rule, true, "", nil)
+			normalized.Add(new_rule)
+		}
+		for _, key := range keys_to_expand {
+			item, exists := rule[key]
+			if exists {
+				var list []interface{}
+				if key == "security_groups" {
+					list = item.(*schema.Set).List()
+				} else {
+					list = item.([]interface{})
+				}
+				for _, v := range list {
+					var new_rule map[string]interface{}
+					if key == "security_groups" {
+						new_v := schema.NewSet(schema.HashString, nil)
+						new_v.Add(v)
+						new_rule = resourceAwsSecurityGroupCopyRule(rule, false, key, new_v)
+					} else {
+						new_v := make([]interface{}, 0)
+						new_v = append(new_v, v)
+						new_rule = resourceAwsSecurityGroupCopyRule(rule, false, key, new_v)
+					}
+					normalized.Add(new_rule)
+				}
+			}
+		}
+	}
+
+	return normalized
+}
+
+// Convert type-to_port-from_port-protocol-description tuple
+// to a hash to use as a key in Set.
+func idCollapseHash(rType, protocol string, toPort, fromPort int64, description string) string {
+	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("%s-", rType))
+	buf.WriteString(fmt.Sprintf("%d-", toPort))
+	buf.WriteString(fmt.Sprintf("%d-", fromPort))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(protocol)))
+	buf.WriteString(fmt.Sprintf("%s-", description))
+
+	return fmt.Sprintf("rule-%d", hashcode.String(buf.String()))
 }
 
 // Creates a unique hash for the type, ports, and protocol, used as a key in
@@ -1158,9 +1340,9 @@ func idHash(rType, protocol string, toPort, fromPort int64, self bool) string {
 
 // protocolStateFunc ensures we only store a string in any protocol field
 func protocolStateFunc(v interface{}) string {
-	switch v.(type) {
+	switch v := v.(type) {
 	case string:
-		p := protocolForValue(v.(string))
+		p := protocolForValue(v)
 		return p
 	default:
 		log.Printf("[WARN] Non String value given for Protocol: %#v", v)
@@ -1211,94 +1393,82 @@ func protocolForValue(v string) string {
 // Similar to protocolIntegers() used by Network ACLs, but explicitly only
 // supports "tcp", "udp", "icmp", and "all"
 func sgProtocolIntegers() map[string]int {
-	var protocolIntegers = make(map[string]int)
-	protocolIntegers = map[string]int{
+	return map[string]int{
 		"udp":  17,
 		"tcp":  6,
 		"icmp": 1,
 		"all":  -1,
 	}
-	return protocolIntegers
 }
 
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
 // which would prevent SGs attached to such ENIs from being destroyed
-func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
-	// Here we carefully find the offenders
-	params := &ec2.DescribeNetworkInterfacesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("group-id"),
-				Values: []*string{aws.String(d.Id())},
-			},
-			{
-				Name:   aws.String("description"),
-				Values: []*string{aws.String("AWS Lambda VPC ENI: *")},
-			},
-		},
+func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
+	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
+	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
 	}
-	networkInterfaceResp, err := conn.DescribeNetworkInterfaces(params)
+
+	resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+		Filters: buildEC2AttributeFilterList(map[string]string{
+			filterName:    resourceId,
+			"description": "AWS Lambda VPC ENI*",
+		}),
+	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing ENIs: %s", err)
 	}
 
-	// Then we detach and finally delete those
-	v := networkInterfaceResp.NetworkInterfaces
-	for _, eni := range v {
-		if eni.Attachment != nil {
-			detachNetworkInterfaceParams := &ec2.DetachNetworkInterfaceInput{
-				AttachmentId: eni.Attachment.AttachmentId,
-			}
-			_, detachNetworkInterfaceErr := conn.DetachNetworkInterface(detachNetworkInterfaceParams)
+	for _, eni := range resp.NetworkInterfaces {
+		eniId := aws.StringValue(eni.NetworkInterfaceId)
 
-			if detachNetworkInterfaceErr != nil {
-				return detachNetworkInterfaceErr
-			}
-
-			log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *eni.NetworkInterfaceId)
+		if eni.Attachment != nil && aws.StringValue(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
+			// Hyperplane attached ENI.
+			// Wait for it to be moved into a removable state.
 			stateConf := &resource.StateChangeConf{
-				Pending: []string{"true"},
-				Target:  []string{"false"},
-				Refresh: networkInterfaceAttachedRefreshFunc(conn, *eni.NetworkInterfaceId),
-				Timeout: d.Timeout(schema.TimeoutDelete),
+				Pending: []string{
+					ec2.NetworkInterfaceStatusInUse,
+				},
+				Target: []string{
+					ec2.NetworkInterfaceStatusAvailable,
+				},
+				Refresh:    networkInterfaceStateRefresh(conn, eniId),
+				Timeout:    timeout,
+				Delay:      10 * time.Second,
+				MinTimeout: 10 * time.Second,
+				// Handle EC2 ENI eventual consistency. It can take up to 3 minutes.
+				ContinuousTargetOccurence: 18,
+				NotFoundChecks:            1,
 			}
-			if _, err := stateConf.WaitForState(); err != nil {
-				return fmt.Errorf(
-					"Error waiting for ENI (%s) to become detached: %s", *eni.NetworkInterfaceId, err)
+
+			eniRaw, err := stateConf.WaitForState()
+
+			if isResourceNotFoundError(err) {
+				continue
 			}
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Lambda V2N ENI (%s) to become available for detachment: %s", eniId, err)
+			}
+
+			eni = eniRaw.(*ec2.NetworkInterface)
 		}
 
-		deleteNetworkInterfaceParams := &ec2.DeleteNetworkInterfaceInput{
-			NetworkInterfaceId: eni.NetworkInterfaceId,
-		}
-		_, deleteNetworkInterfaceErr := conn.DeleteNetworkInterface(deleteNetworkInterfaceParams)
+		err = detachNetworkInterface(conn, eni, timeout)
 
-		if deleteNetworkInterfaceErr != nil {
-			return deleteNetworkInterfaceErr
+		if err != nil {
+			return fmt.Errorf("error detaching Lambda ENI (%s): %s", eniId, err)
+		}
+
+		err = deleteNetworkInterface(conn, eniId)
+
+		if err != nil {
+			return fmt.Errorf("error deleting Lambda ENI (%s): %s", eniId, err)
 		}
 	}
 
 	return nil
-}
-
-func networkInterfaceAttachedRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(id)},
-		}
-		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
-
-		if err != nil {
-			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
-			return nil, "", err
-		}
-
-		eni := describeResp.NetworkInterfaces[0]
-		hasAttachment := strconv.FormatBool(eni.Attachment != nil)
-		log.Printf("[DEBUG] ENI %s has attachment state %s", id, hasAttachment)
-		return eni, hasAttachment, nil
-	}
 }
 
 func initSecurityGroupRule(ruleMap map[string]map[string]interface{}, perm *ec2.IpPermission, desc string) map[string]interface{} {

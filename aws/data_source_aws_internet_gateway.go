@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsInternetGateway() *schema.Resource {
@@ -36,6 +37,10 @@ func dataSourceAwsInternetGateway() *schema.Resource {
 					},
 				},
 			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -55,7 +60,7 @@ func dataSourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) 
 		"internet-gateway-id": internetGatewayId.(string),
 	})
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
-		tagsFromMap(tags.(map[string]interface{})),
+		keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
 	)...)
 	req.Filters = append(req.Filters, buildEC2CustomFilterList(
 		filter.(*schema.Set),
@@ -76,13 +81,17 @@ func dataSourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 	igw := resp.InternetGateways[0]
 	d.SetId(aws.StringValue(igw.InternetGatewayId))
-	d.Set("tags", tagsToMap(igw.Tags))
-	d.Set("internet_gateway_id", igw.InternetGatewayId)
-	if err := d.Set("attachments", dataSourceAttachmentsRead(igw.Attachments)); err != nil {
-		return err
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(igw.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	return nil
+	d.Set("owner_id", igw.OwnerId)
+	d.Set("internet_gateway_id", igw.InternetGatewayId)
+
+	err1 := d.Set("attachments", dataSourceAttachmentsRead(igw.Attachments))
+	return err1
+
 }
 
 func dataSourceAttachmentsRead(igwAttachments []*ec2.InternetGatewayAttachment) []map[string]interface{} {

@@ -3,9 +3,8 @@ package aws
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsCloudwatchLogGroup() *schema.Resource {
@@ -25,6 +24,15 @@ func dataSourceAwsCloudwatchLogGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"retention_in_days": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -33,27 +41,10 @@ func dataSourceAwsCloudwatchLogGroupRead(d *schema.ResourceData, meta interface{
 	name := d.Get("name").(string)
 	conn := meta.(*AWSClient).cloudwatchlogsconn
 
-	input := &cloudwatchlogs.DescribeLogGroupsInput{
-		LogGroupNamePrefix: aws.String(name),
-	}
-
-	var logGroup *cloudwatchlogs.LogGroup
-	// iterate over the pages of log groups until we find the one we are looking for
-	err := conn.DescribeLogGroupsPages(input,
-		func(resp *cloudwatchlogs.DescribeLogGroupsOutput, _ bool) bool {
-			for _, lg := range resp.LogGroups {
-				if aws.StringValue(lg.LogGroupName) == name {
-					logGroup = lg
-					return false
-				}
-			}
-			return true
-		})
-
+	logGroup, err := lookupCloudWatchLogGroup(conn, name)
 	if err != nil {
 		return err
 	}
-
 	if logGroup == nil {
 		return fmt.Errorf("No log group named %s found\n", name)
 	}
@@ -61,6 +52,18 @@ func dataSourceAwsCloudwatchLogGroupRead(d *schema.ResourceData, meta interface{
 	d.SetId(name)
 	d.Set("arn", logGroup.Arn)
 	d.Set("creation_time", logGroup.CreationTime)
+	d.Set("retention_in_days", logGroup.RetentionInDays)
+	d.Set("kms_key_id", logGroup.KmsKeyId)
+
+	tags, err := keyvaluetags.CloudwatchlogsListTags(conn, name)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for CloudWatch Logs Group (%s): %s", name, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }

@@ -1,7 +1,7 @@
 ---
+subcategory: "EFS"
 layout: "aws"
-page_title: "AWS: efs_mount_target"
-sidebar_current: "docs-aws-datasource-efs-mount-target"
+page_title: "AWS: aws_efs_mount_target"
 description: |-
   Provides an Elastic File System Mount Target (EFS) data source.
 ---
@@ -14,7 +14,7 @@ Provides information about an Elastic File System Mount Target (EFS).
 
 ```hcl
 variable "mount_target_id" {
-  type = "string"
+  type    = "string"
   default = ""
 }
 
@@ -33,6 +33,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `file_system_arn` - Amazon Resource Name of the file system for which the mount target is intended.
 * `file_system_id` - ID of the file system for which the mount target is intended.
 * `subnet_id` - ID of the mount target's subnet.
 * `ip_address` - Address at which the file system may be mounted via the mount target.

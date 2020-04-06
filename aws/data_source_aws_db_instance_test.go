@@ -5,13 +5,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSDbInstanceDataSource_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -28,6 +28,12 @@ func TestAccAWSDbInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "hosted_zone_id"),
 					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "master_username"),
 					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "port"),
+					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "multi_az"),
+					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "enabled_cloudwatch_logs_exports.0"),
+					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "enabled_cloudwatch_logs_exports.1"),
+					resource.TestCheckResourceAttrPair("data.aws_db_instance.bar", "resource_id", "aws_db_instance.bar", "resource_id"),
+					resource.TestCheckResourceAttrPair("data.aws_db_instance.bar", "tags.%", "aws_db_instance.bar", "tags.%"),
+					resource.TestCheckResourceAttrPair("data.aws_db_instance.bar", "tags.Environment", "aws_db_instance.bar", "tags.Environment"),
 				),
 			},
 		},
@@ -41,7 +47,7 @@ func TestAccAWSDbInstanceDataSource_ec2Classic(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -58,23 +64,31 @@ func TestAccAWSDbInstanceDataSource_ec2Classic(t *testing.T) {
 func testAccAWSDBInstanceDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
-	identifier = "datasource-test-terraform-%d"
+  identifier = "datasource-test-terraform-%d"
 
-	allocated_storage = 10
-	engine = "MySQL"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
+  allocated_storage = 10
+  engine            = "MySQL"
+  instance_class    = "db.t2.micro"
+  name              = "baz"
+  password          = "barbarbarbar"
+  username          = "foo"
 
-	backup_retention_period = 0
-	skip_final_snapshot = true
+  backup_retention_period = 0
+  skip_final_snapshot     = true
+
+  enabled_cloudwatch_logs_exports = [
+    "audit",
+    "error",
+  ]
+
+  tags = {
+    Environment = "test"
+  }
 }
 
 data "aws_db_instance" "bar" {
-	db_instance_identifier = "${aws_db_instance.bar.identifier}"
+  db_instance_identifier = "${aws_db_instance.bar.identifier}"
 }
-
 `, rInt)
 }
 
@@ -83,8 +97,7 @@ func testAccAWSDBInstanceDataSourceConfig_ec2Classic(rInt int) string {
 %s
 
 data "aws_db_instance" "bar" {
-	db_instance_identifier = "${aws_db_instance.bar.identifier}"
+  db_instance_identifier = "${aws_db_instance.bar.identifier}"
 }
-
 `, testAccAWSDBInstanceConfigEc2Classic(rInt))
 }

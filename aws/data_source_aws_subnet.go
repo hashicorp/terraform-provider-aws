@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsSubnet() *schema.Resource {
@@ -15,6 +16,12 @@ func dataSourceAwsSubnet() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"availability_zone": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
+			"availability_zone_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -74,6 +81,16 @@ func dataSourceAwsSubnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -98,10 +115,11 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	filters := map[string]string{
-		"availabilityZone": d.Get("availability_zone").(string),
-		"defaultForAz":     defaultForAzStr,
-		"state":            d.Get("state").(string),
-		"vpc-id":           d.Get("vpc_id").(string),
+		"availabilityZone":   d.Get("availability_zone").(string),
+		"availabilityZoneId": d.Get("availability_zone_id").(string),
+		"defaultForAz":       defaultForAzStr,
+		"state":              d.Get("state").(string),
+		"vpc-id":             d.Get("vpc_id").(string),
 	}
 
 	if v, ok := d.GetOk("cidr_block"); ok {
@@ -113,9 +131,13 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	req.Filters = buildEC2AttributeFilterList(filters)
-	req.Filters = append(req.Filters, buildEC2TagFilterList(
-		tagsFromMap(d.Get("tags").(map[string]interface{})),
-	)...)
+
+	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+		req.Filters = append(req.Filters, buildEC2TagFilterList(
+			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+		)...)
+	}
+
 	req.Filters = append(req.Filters, buildEC2CustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
@@ -141,10 +163,15 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(*subnet.SubnetId)
 	d.Set("vpc_id", subnet.VpcId)
 	d.Set("availability_zone", subnet.AvailabilityZone)
+	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("state", subnet.State)
-	d.Set("tags", tagsToMap(subnet.Tags))
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 
@@ -154,6 +181,9 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("ipv6_cidr_block", a.Ipv6CidrBlock)
 		}
 	}
+
+	d.Set("arn", subnet.SubnetArn)
+	d.Set("owner_id", subnet.OwnerId)
 
 	return nil
 }

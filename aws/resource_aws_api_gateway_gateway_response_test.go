@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
@@ -17,7 +17,7 @@ func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
 
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayGatewayResponseDestroy,
@@ -43,6 +43,12 @@ func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr("aws_api_gateway_gateway_response.test", "response_parameters.gatewayresponse.header.Authorization"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_gateway_response.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayGatewayResponseImportStateIdFunc("aws_api_gateway_gateway_response.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -58,7 +64,7 @@ func testAccCheckAWSAPIGatewayGatewayResponseExists(n string, res *apigateway.Up
 			return fmt.Errorf("No API Gateway Gateway Response ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetGatewayResponseInput{
 			RestApiId:    aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.main"].Primary.ID),
@@ -76,7 +82,7 @@ func testAccCheckAWSAPIGatewayGatewayResponseExists(n string, res *apigateway.Up
 }
 
 func testAccCheckAWSAPIGatewayGatewayResponseDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_gateway_response" {
@@ -107,6 +113,17 @@ func testAccCheckAWSAPIGatewayGatewayResponseDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccAWSAPIGatewayGatewayResponseImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["response_type"]), nil
+	}
+}
+
 func testAccAWSAPIGatewayGatewayResponseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "main" {
@@ -114,12 +131,12 @@ resource "aws_api_gateway_rest_api" "main" {
 }
 
 resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.main.id}"
-  status_code = "401"
+  rest_api_id   = "${aws_api_gateway_rest_api.main.id}"
+  status_code   = "401"
   response_type = "UNAUTHORIZED"
 
   response_templates = {
-    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
+    "application/xml" = "#set($inputRoot = $input.path('$'))\n{ }"
   }
 
   response_parameters = {
@@ -136,8 +153,8 @@ resource "aws_api_gateway_rest_api" "main" {
 }
 
 resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.main.id}"
-  status_code = "477"
+  rest_api_id   = "${aws_api_gateway_rest_api.main.id}"
+  status_code   = "477"
   response_type = "UNAUTHORIZED"
 
   response_templates = {

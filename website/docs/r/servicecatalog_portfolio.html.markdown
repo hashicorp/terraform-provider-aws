@@ -1,12 +1,12 @@
 ---
+subcategory: "Service Catalog"
 layout: "aws"
 page_title: "AWS: aws_servicecatalog_portfolio"
-sidebar_current: "docs-aws-resource-servicecatalog-portfolio"
 description: |-
   Provides a resource to create a Service Catalog portfolio
 ---
 
-# aws_servicecatalog_portfolio
+# Resource: aws_servicecatalog_portfolio
 
 Provides a resource to create a Service Catalog Portfolio.
 
@@ -14,8 +14,8 @@ Provides a resource to create a Service Catalog Portfolio.
 
 ```hcl
 resource "aws_servicecatalog_portfolio" "portfolio" {
-  name = "My App Portfolio"
-  description = "List of my organizations apps"
+  name          = "My App Portfolio"
+  description   = "List of my organizations apps"
   provider_name = "Brett"
 }
 ```

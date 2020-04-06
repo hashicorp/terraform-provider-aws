@@ -461,10 +461,15 @@ func (v *TimestampValue) decode(r io.Reader) error {
 	return nil
 }
 
+// MarshalJSON implements the json.Marshaler interface
+func (v TimestampValue) MarshalJSON() ([]byte, error) {
+	return []byte(v.String()), nil
+}
+
 func timeFromEpochMilli(t int64) time.Time {
 	secs := t / 1e3
 	msec := t % 1e3
-	return time.Unix(secs, msec*int64(time.Millisecond))
+	return time.Unix(secs, msec*int64(time.Millisecond)).UTC()
 }
 
 // An UUIDValue provides eventstream encoding, and representation of a UUID

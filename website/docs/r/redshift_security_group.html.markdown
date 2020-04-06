@@ -1,12 +1,12 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_security_group"
-sidebar_current: "docs-aws-resource-redshift-security-group"
 description: |-
   Provides a Redshift security group resource.
 ---
 
-# aws_redshift_security_group
+# Resource: aws_redshift_security_group
 
 Creates a new Amazon Redshift security group. You use security groups to control access to non-VPC clusters
 

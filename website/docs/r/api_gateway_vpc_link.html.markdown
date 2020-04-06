@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_vpc_link"
-sidebar_current: "docs-aws-resource-api-gateway-vpc-link"
 description: |-
   Provides an API Gateway VPC Link.
 ---
 
-# aws_api_gateway_vpc_link
+# Resource: aws_api_gateway_vpc_link
 
 Provides an API Gateway VPC Link.
 
@@ -14,8 +14,8 @@ Provides an API Gateway VPC Link.
 
 ```hcl
 resource "aws_lb" "example" {
-  name = "example"
-  internal = true
+  name               = "example"
+  internal           = true
   load_balancer_type = "network"
 
   subnet_mapping {
@@ -24,7 +24,7 @@ resource "aws_lb" "example" {
 }
 
 resource "aws_api_gateway_vpc_link" "example" {
-  name = "example"
+  name        = "example"
   description = "example description"
   target_arns = ["${aws_lb.example.arn}"]
 }
@@ -37,6 +37,7 @@ The following arguments are supported:
 * `name` - (Required) The name used to label and identify the VPC link.
 * `description` - (Optional) The description of the VPC link.
 * `target_arns` - (Required, ForceNew) The list of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Attributes Reference
 

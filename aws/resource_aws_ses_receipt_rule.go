@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSesReceiptRule() *schema.Resource {
@@ -19,6 +21,9 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 		Update: resourceAwsSesReceiptRuleUpdate,
 		Read:   resourceAwsSesReceiptRuleRead,
 		Delete: resourceAwsSesReceiptRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsSesReceiptRuleImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -225,8 +230,9 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						},
 
 						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntAtLeast(1),
 						},
 					},
 				},
@@ -354,11 +360,27 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 	}
 }
 
+func resourceAwsSesReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), ":")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected <ruleset-name>:<rule-name>", d.Id())
+	}
+
+	ruleSetName := idParts[0]
+	ruleName := idParts[1]
+
+	d.Set("rule_set_name", ruleSetName)
+	d.Set("name", ruleName)
+	d.SetId(ruleName)
+
+	return []*schema.ResourceData{d}, nil
+}
+
 func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	createOpts := &ses.CreateReceiptRuleInput{
-		Rule:        buildReceiptRule(d, meta),
+		Rule:        buildReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
 
@@ -377,10 +399,10 @@ func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSesReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	updateOpts := &ses.UpdateReceiptRuleInput{
-		Rule:        buildReceiptRule(d, meta),
+		Rule:        buildReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
 
@@ -406,7 +428,7 @@ func resourceAwsSesReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	describeOpts := &ses.DescribeReceiptRuleInput{
 		RuleName:    aws.String(d.Id()),
@@ -425,10 +447,10 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	d.Set("enabled", *response.Rule.Enabled)
+	d.Set("enabled", response.Rule.Enabled)
 	d.Set("recipients", flattenStringList(response.Rule.Recipients))
-	d.Set("scan_enabled", *response.Rule.ScanEnabled)
-	d.Set("tls_policy", *response.Rule.TlsPolicy)
+	d.Set("scan_enabled", response.Rule.ScanEnabled)
+	d.Set("tls_policy", response.Rule.TlsPolicy)
 
 	addHeaderActionList := []map[string]interface{}{}
 	bounceActionList := []map[string]interface{}{}
@@ -573,15 +595,11 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	err = d.Set("workmail_action", workmailActionList)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsSesReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	deleteOpts := &ses.DeleteReceiptRuleInput{
 		RuleName:    aws.String(d.Id()),
@@ -596,7 +614,7 @@ func resourceAwsSesReceiptRuleDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func buildReceiptRule(d *schema.ResourceData, meta interface{}) *ses.ReceiptRule {
+func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 	receiptRule := &ses.ReceiptRule{
 		Name: aws.String(d.Get("name").(string)),
 	}
@@ -683,9 +701,15 @@ func buildReceiptRule(d *schema.ResourceData, meta interface{}) *ses.ReceiptRule
 			elem := element.(map[string]interface{})
 
 			s3Action := &ses.S3Action{
-				BucketName:      aws.String(elem["bucket_name"].(string)),
-				KmsKeyArn:       aws.String(elem["kms_key_arn"].(string)),
-				ObjectKeyPrefix: aws.String(elem["object_key_prefix"].(string)),
+				BucketName: aws.String(elem["bucket_name"].(string)),
+			}
+
+			if elem["kms_key_arn"] != "" {
+				s3Action.KmsKeyArn = aws.String(elem["kms_key_arn"].(string))
+			}
+
+			if elem["object_key_prefix"] != "" {
+				s3Action.ObjectKeyPrefix = aws.String(elem["object_key_prefix"].(string))
 			}
 
 			if elem["topic_arn"] != "" {

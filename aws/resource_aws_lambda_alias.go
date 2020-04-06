@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsLambdaAlias() *schema.Resource {
@@ -17,28 +17,50 @@ func resourceAwsLambdaAlias() *schema.Resource {
 		Read:   resourceAwsLambdaAliasRead,
 		Update: resourceAwsLambdaAliasUpdate,
 		Delete: resourceAwsLambdaAliasDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsLambdaAliasImport,
+		},
 
 		Schema: map[string]*schema.Schema{
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"function_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"function_version": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"name": &schema.Schema{
+			"function_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": &schema.Schema{
+			"function_version": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"routing_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"additional_version_weights": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeFloat},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -59,6 +81,7 @@ func resourceAwsLambdaAliasCreate(d *schema.ResourceData, meta interface{}) erro
 		FunctionName:    aws.String(functionName),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(aliasName),
+		RoutingConfig:   expandLambdaAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
 	}
 
 	aliasConfiguration, err := conn.CreateAlias(params)
@@ -98,6 +121,14 @@ func resourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("function_version", aliasConfiguration.FunctionVersion)
 	d.Set("name", aliasConfiguration.Name)
 	d.Set("arn", aliasConfiguration.AliasArn)
+	d.SetId(*aliasConfiguration.AliasArn)
+
+	invokeArn := lambdaFunctionInvokeArn(*aliasConfiguration.AliasArn, meta)
+	d.Set("invoke_arn", invokeArn)
+
+	if err := d.Set("routing_config", flattenLambdaAliasRoutingConfiguration(aliasConfiguration.RoutingConfig)); err != nil {
+		return fmt.Errorf("error setting routing_config: %s", err)
+	}
 
 	return nil
 }
@@ -134,6 +165,7 @@ func resourceAwsLambdaAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 		FunctionName:    aws.String(d.Get("function_name").(string)),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(d.Get("name").(string)),
+		RoutingConfig:   expandLambdaAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
 	}
 
 	_, err := conn.UpdateAlias(params)
@@ -142,4 +174,42 @@ func resourceAwsLambdaAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
+}
+
+func expandLambdaAliasRoutingConfiguration(l []interface{}) *lambda.AliasRoutingConfiguration {
+	aliasRoutingConfiguration := &lambda.AliasRoutingConfiguration{}
+
+	if len(l) == 0 || l[0] == nil {
+		return aliasRoutingConfiguration
+	}
+
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["additional_version_weights"]; ok {
+		aliasRoutingConfiguration.AdditionalVersionWeights = expandFloat64Map(v.(map[string]interface{}))
+	}
+
+	return aliasRoutingConfiguration
+}
+
+func resourceAwsLambdaAliasImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", d.Id())
+	}
+
+	functionName := idParts[0]
+	alias := idParts[1]
+	log.Printf("[DEBUG] Importing Lambda Alias %s for function name %s", alias, functionName)
+
+	conn := meta.(*AWSClient).lambdaconn
+
+	getFunctionOutput, err := conn.GetFunction(&lambda.GetFunctionInput{FunctionName: &functionName})
+	if err != nil {
+		return nil, err
+	}
+
+	d.Set("function_name", getFunctionOutput.Configuration.FunctionArn)
+	d.Set("name", alias)
+	return []*schema.ResourceData{d}, nil
 }

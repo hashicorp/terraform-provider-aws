@@ -8,66 +8,57 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8)) // ELB name cannot be longer than 32 characters
+	elbResourceName := "aws_elb.test"
+	resourceName := "aws_lb_ssl_negotiation_policy.test"
+
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccSslNegotiationPolicyConfig(
-					fmt.Sprintf("tf-acctest-%s", acctest.RandString(10)), fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))),
+			{
+				Config: testAccSslNegotiationPolicyConfig(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLBSSLNegotiationPolicy(
-						"aws_elb.lb",
-						"aws_lb_ssl_negotiation_policy.foo",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_lb_ssl_negotiation_policy.foo", "attribute.#", "7"),
+					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSLBSSLNegotiationPolicy_missingLB(t *testing.T) {
-	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))
+func TestAccAWSLBSSLNegotiationPolicy_disappears(t *testing.T) {
+	var loadBalancer elb.LoadBalancerDescription
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8)) // ELB name cannot be longer than 32 characters
+	elbResourceName := "aws_elb.test"
+	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	// check that we can destroy the policy if the LB is missing
-	removeLB := func() {
-		conn := testAccProvider.Meta().(*AWSClient).elbconn
-		deleteElbOpts := elb.DeleteLoadBalancerInput{
-			LoadBalancerName: aws.String(lbName),
-		}
-		if _, err := conn.DeleteLoadBalancer(&deleteElbOpts); err != nil {
-			t.Fatalf("Error deleting ELB: %s", err)
-		}
-	}
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccSslNegotiationPolicyConfig(fmt.Sprintf("tf-acctest-%s", acctest.RandString(10)), lbName),
+			{
+				Config: testAccSslNegotiationPolicyConfig(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLBSSLNegotiationPolicy(
-						"aws_elb.lb",
-						"aws_lb_ssl_negotiation_policy.foo",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_lb_ssl_negotiation_policy.foo", "attribute.#", "7"),
+					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
+					testAccCheckAWSELBExists(elbResourceName, &loadBalancer),
+					testAccCheckAWSELBDisappears(&loadBalancer),
 				),
-			},
-			resource.TestStep{
-				PreConfig: removeLB,
-				Config:    testAccSslNegotiationPolicyConfig(fmt.Sprintf("tf-acctest-%s", acctest.RandString(10)), lbName),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -191,79 +182,75 @@ func policyAttributesToMap(attributes *[]*elb.PolicyAttributeDescription) map[st
 }
 
 // Sets the SSL Negotiation policy with attributes.
-func testAccSslNegotiationPolicyConfig(certName string, lbName string) string {
+func testAccSslNegotiationPolicyConfig(rName, key, certificate string) string {
 	return fmt.Sprintf(`
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
+resource "aws_iam_server_certificate" "test" {
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
 
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
+resource "aws_elb" "test" {
+  name               = "%[1]s"
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+
+  listener {
+    instance_port      = 8000
+    instance_protocol  = "https"
+    lb_port            = 443
+    lb_protocol        = "https"
+    ssl_certificate_id = "${aws_iam_server_certificate.test.arn}"
+  }
+}
+
+resource "aws_lb_ssl_negotiation_policy" "test" {
+  name          = "foo-policy"
+  load_balancer = "${aws_elb.test.id}"
+  lb_port       = 443
+
+  attribute {
+    name  = "Protocol-TLSv1"
+    value = "false"
   }
 
-  validity_period_hours = 12
+  attribute {
+    name  = "Protocol-TLSv1.1"
+    value = "false"
+  }
 
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
+  attribute {
+    name  = "Protocol-TLSv1.2"
+    value = "true"
+  }
 
-resource "aws_iam_server_certificate" "test_cert" {
-  name             = "%s"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-  private_key      = "${tls_private_key.example.private_key_pem}"
-}
+  attribute {
+    name  = "Server-Defined-Cipher-Order"
+    value = "true"
+  }
 
-resource "aws_elb" "lb" {
-	name = "%s"
-	availability_zones = ["us-west-2a"]
-	listener {
-		instance_port = 8000
-		instance_protocol = "https"
-		lb_port = 443
-		lb_protocol = "https"
-		ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
-	}
+  attribute {
+    name  = "ECDHE-RSA-AES128-GCM-SHA256"
+    value = "true"
+  }
+
+  attribute {
+    name  = "AES128-GCM-SHA256"
+    value = "true"
+  }
+
+  attribute {
+    name  = "EDH-RSA-DES-CBC3-SHA"
+    value = "false"
+  }
 }
-resource "aws_lb_ssl_negotiation_policy" "foo" {
-	name = "foo-policy"
-	load_balancer = "${aws_elb.lb.id}"
-	lb_port = 443
-	attribute {
-    	name = "Protocol-TLSv1"
-        value = "false"
-    }
-    attribute {
-        name = "Protocol-TLSv1.1"
-        value = "false"
-    }
-    attribute {
-        name = "Protocol-TLSv1.2"
-        value = "true"
-    }
-    attribute {
-        name = "Server-Defined-Cipher-Order"
-        value = "true"
-    }
-    attribute {
-        name = "ECDHE-RSA-AES128-GCM-SHA256"
-        value = "true"
-    }
-    attribute {
-        name = "AES128-GCM-SHA256"
-        value = "true"
-    }
-    attribute {
-        name = "EDH-RSA-DES-CBC3-SHA"
-        value = "false"
-    }
-}
-`, certName, lbName)
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }

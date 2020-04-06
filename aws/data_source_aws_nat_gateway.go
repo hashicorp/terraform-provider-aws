@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsNatGateway() *schema.Resource {
@@ -89,6 +90,12 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 		)...)
 	}
 
+	if tags, ok := d.GetOk("tags"); ok {
+		req.Filter = append(req.Filter, buildEC2TagFilterList(
+			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+		)...)
+	}
+
 	req.Filter = append(req.Filter, buildEC2CustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
@@ -116,6 +123,10 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("state", ngw.State)
 	d.Set("subnet_id", ngw.SubnetId)
 	d.Set("vpc_id", ngw.VpcId)
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(ngw.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	for _, address := range ngw.NatGatewayAddresses {
 		if *address.AllocationId != "" {

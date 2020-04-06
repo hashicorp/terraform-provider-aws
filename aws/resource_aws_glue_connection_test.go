@@ -3,14 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -28,10 +27,6 @@ func testSweepGlueConnections(region string) error {
 	conn := client.(*AWSClient).glueconn
 	catalogID := client.(*AWSClient).accountid
 
-	prefixes := []string{
-		"tf-acc-test-",
-	}
-
 	input := &glue.GetConnectionsInput{
 		CatalogId: aws.String(catalogID),
 	}
@@ -41,23 +36,12 @@ func testSweepGlueConnections(region string) error {
 			return false
 		}
 		for _, connection := range page.ConnectionList {
-			skip := true
-			name := connection.Name
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Glue Connection: %s", *name)
-				continue
-			}
+			name := aws.StringValue(connection.Name)
 
-			log.Printf("[INFO] Deleting Glue Connection: %s", *name)
-			err := deleteGlueConnection(conn, catalogID, *name)
+			log.Printf("[INFO] Deleting Glue Connection: %s", name)
+			err := deleteGlueConnection(conn, catalogID, name)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", *name, err)
+				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", name, err)
 			}
 		}
 		return !lastPage
@@ -79,7 +63,7 @@ func TestAccAWSGlueConnection_Basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
@@ -111,7 +95,7 @@ func TestAccAWSGlueConnection_Description(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
@@ -145,7 +129,7 @@ func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
@@ -194,7 +178,7 @@ func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
@@ -210,6 +194,7 @@ func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.0.security_group_id_list.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.subnet_id"),
 				),
@@ -358,12 +343,19 @@ resource "aws_glue_connection" "test" {
 
 func testAccAWSGlueConnectionConfig_PhysicalConnectionRequirements(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-glue-connection-base"
   }
 }
@@ -387,7 +379,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "10.0.${count.index}.0/24"
   vpc_id            = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-glue-connection-base"
   }
 }
@@ -426,6 +418,7 @@ resource "aws_glue_connection" "test" {
   name = "%[1]s"
 
   physical_connection_requirements {
+    availability_zone      = "${aws_subnet.test.0.availability_zone}"
     security_group_id_list = ["${aws_security_group.test.id}"]
     subnet_id              = "${aws_subnet.test.0.id}"
   }

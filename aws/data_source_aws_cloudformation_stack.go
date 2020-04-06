@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsCloudFormationStack() *schema.Resource {
@@ -22,10 +22,6 @@ func dataSourceAwsCloudFormationStack() *schema.Resource {
 			"template_body": {
 				Type:     schema.TypeString,
 				Computed: true,
-				StateFunc: func(v interface{}) string {
-					template, _ := normalizeCloudFormationTemplate(v)
-					return template
-				},
 			},
 			"capabilities": {
 				Type:     schema.TypeSet,
@@ -63,10 +59,7 @@ func dataSourceAwsCloudFormationStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Computed: true,
-			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -99,7 +92,9 @@ func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface
 	}
 
 	d.Set("parameters", flattenAllCloudFormationParameters(stack.Parameters))
-	d.Set("tags", flattenCloudFormationTags(stack.Tags))
+	if err := d.Set("tags", keyvaluetags.CloudformationKeyValueTags(stack.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 	d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs))
 
 	if len(stack.Capabilities) > 0 {
@@ -116,7 +111,7 @@ func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface
 
 	template, err := normalizeCloudFormationTemplate(*tOut.TemplateBody)
 	if err != nil {
-		return errwrap.Wrapf("template body contains an invalid JSON or YAML: {{err}}", err)
+		return fmt.Errorf("template body contains an invalid JSON or YAML: %s", err)
 	}
 	d.Set("template_body", template)
 

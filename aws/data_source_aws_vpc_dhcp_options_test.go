@@ -5,15 +5,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options.test"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -36,6 +36,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.0", resourceName, "ntp_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
 				),
 			},
 		},
@@ -47,7 +48,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options.test"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -66,11 +67,19 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.0", resourceName, "ntp_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
 				),
 			},
 			{
 				Config:      testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt, 2),
 				ExpectError: regexp.MustCompile(`Multiple matching EC2 DHCP Options found`),
+			},
+			{
+				// We have one last empty step here because otherwise we'll leave the
+				// test case with resources in the state and an erroneous config, and
+				// thus the automatic destroy step will fail. This ensures we end with
+				// both an empty state and a valid config.
+				Config: `/* this config intentionally left blank */`,
 			},
 		},
 	})
@@ -94,7 +103,7 @@ resource "aws_vpc_dhcp_options" "test" {
   netbios_node_type    = 2
   ntp_servers          = ["127.0.0.1"]
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -119,7 +128,7 @@ resource "aws_vpc_dhcp_options" "test" {
   netbios_node_type    = 2
   ntp_servers          = ["127.0.0.1"]
 
-  tags {
+  tags = {
     Name = "tf-acc-test-%d"
   }
 }

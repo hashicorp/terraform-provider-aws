@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEbsVolume() *schema.Resource {
@@ -45,6 +45,9 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("type").(string) != ec2.VolumeTypeIo1 && new == "0"
+				},
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
@@ -78,7 +81,8 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*AWSClient).ec2conn
 
 	request := &ec2.CreateVolumeInput{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeVolume),
 	}
 	if value, ok := d.GetOk("encrypted"); ok {
 		request.Encrypted = aws.Bool(value.(bool))
@@ -139,22 +143,11 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(*result.VolumeId)
 
-	if _, ok := d.GetOk("tags"); ok {
-		if err := setTags(conn, d); err != nil {
-			return errwrap.Wrapf("Error setting tags for EBS Volume: {{err}}", err)
-		}
-	}
-
 	return resourceAwsEbsVolumeRead(d, meta)
 }
 
 func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	if _, ok := d.GetOk("tags"); ok {
-		if err := setTags(conn, d); err != nil {
-			return errwrap.Wrapf("Error updating tags for EBS Volume: {{err}}", err)
-		}
-	}
 
 	requestUpdate := false
 	params := &ec2.ModifyVolumeInput{
@@ -196,6 +189,14 @@ func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf(
 				"Error waiting for Volume (%s) to become available: %s",
 				*result.VolumeModification.VolumeId, err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 
@@ -243,75 +244,110 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error reading EC2 volume %s: %s", d.Id(), err)
 	}
 
-	return readVolume(d, meta.(*AWSClient), response.Volumes[0])
+	if response == nil || len(response.Volumes) == 0 || response.Volumes[0] == nil {
+		return fmt.Errorf("error reading EC2 Volume (%s): empty response", d.Id())
+	}
+
+	volume := response.Volumes[0]
+
+	arn := arn.ARN{
+		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("volume/%s", d.Id()),
+		Service:   "ec2",
+	}
+	d.Set("arn", arn.String())
+	d.Set("availability_zone", aws.StringValue(volume.AvailabilityZone))
+	d.Set("encrypted", aws.BoolValue(volume.Encrypted))
+	d.Set("iops", aws.Int64Value(volume.Iops))
+	d.Set("kms_key_id", aws.StringValue(volume.KmsKeyId))
+	d.Set("size", aws.Int64Value(volume.Size))
+	d.Set("snapshot_id", aws.StringValue(volume.SnapshotId))
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	d.Set("type", aws.StringValue(volume.VolumeType))
+
+	return nil
 }
 
 func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		request := &ec2.DeleteVolumeInput{
-			VolumeId: aws.String(d.Id()),
-		}
-		_, err := conn.DeleteVolume(request)
-		if err == nil {
+	input := &ec2.DeleteVolumeInput{
+		VolumeId: aws.String(d.Id()),
+	}
+
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteVolume(input)
+
+		if isAWSErr(err, "InvalidVolume.NotFound", "") {
 			return nil
 		}
 
-		ebsErr, ok := err.(awserr.Error)
-		if ebsErr.Code() == "VolumeInUse" {
+		if isAWSErr(err, "VolumeInUse", "") {
 			return resource.RetryableError(fmt.Errorf("EBS VolumeInUse - trying again while it detaches"))
 		}
 
-		if !ok {
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
-		return resource.NonRetryableError(err)
+		return nil
 	})
 
-}
-
-func readVolume(d *schema.ResourceData, client *AWSClient, volume *ec2.Volume) error {
-	d.SetId(*volume.VolumeId)
-
-	arn := arn.ARN{
-		Partition: client.partition,
-		Region:    client.region,
-		Service:   "ec2",
-		AccountID: client.accountid,
-		Resource:  fmt.Sprintf("volume/%s", d.Id()),
-	}
-	d.Set("arn", arn.String())
-
-	d.Set("availability_zone", *volume.AvailabilityZone)
-	if volume.Encrypted != nil {
-		d.Set("encrypted", *volume.Encrypted)
-	}
-	if volume.KmsKeyId != nil {
-		d.Set("kms_key_id", *volume.KmsKeyId)
-	}
-	if volume.Size != nil {
-		d.Set("size", *volume.Size)
-	}
-	if volume.SnapshotId != nil {
-		d.Set("snapshot_id", *volume.SnapshotId)
-	}
-	if volume.VolumeType != nil {
-		d.Set("type", *volume.VolumeType)
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteVolume(input)
 	}
 
-	if volume.VolumeType != nil && *volume.VolumeType == "io1" {
-		// Only set the iops attribute if the volume type is io1. Setting otherwise
-		// can trigger a refresh/plan loop based on the computed value that is given
-		// from AWS, and prevent us from specifying 0 as a valid iops.
-		//   See https://github.com/hashicorp/terraform/pull/4146
-		if volume.Iops != nil {
-			d.Set("iops", *volume.Iops)
+	if err != nil {
+		return fmt.Errorf("error deleting EBS Volume (%s): %s", d.Id(), err)
+	}
+
+	describeInput := &ec2.DescribeVolumesInput{
+		VolumeIds: []*string{aws.String(d.Id())},
+	}
+
+	var output *ec2.DescribeVolumesOutput
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.DescribeVolumes(describeInput)
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		for _, volume := range output.Volumes {
+			if aws.StringValue(volume.VolumeId) == d.Id() {
+				state := aws.StringValue(volume.State)
+
+				if state == ec2.VolumeStateDeleting {
+					return resource.RetryableError(fmt.Errorf("EBS Volume (%s) still deleting", d.Id()))
+				}
+
+				return resource.NonRetryableError(fmt.Errorf("EBS Volume (%s) in unexpected state after deletion: %s", d.Id(), state))
+			}
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.DescribeVolumes(describeInput)
+	}
+
+	if isAWSErr(err, "InvalidVolume.NotFound", "") {
+		return nil
+	}
+
+	for _, volume := range output.Volumes {
+		if aws.StringValue(volume.VolumeId) == d.Id() {
+			return fmt.Errorf("EBS Volume (%s) in unexpected state after deletion: %s", d.Id(), aws.StringValue(volume.State))
 		}
 	}
-
-	d.Set("tags", tagsToMap(volume.Tags))
 
 	return nil
 }

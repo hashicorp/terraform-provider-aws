@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsGlueConnection() *schema.Resource {
@@ -29,8 +29,9 @@ func resourceAwsGlueConnection() *schema.Resource {
 				Computed: true,
 			},
 			"connection_properties": {
-				Type:     schema.TypeMap,
-				Required: true,
+				Type:      schema.TypeMap,
+				Required:  true,
+				Sensitive: true,
 			},
 			"connection_type": {
 				Type:     schema.TypeString,
@@ -62,6 +63,10 @@ func resourceAwsGlueConnection() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"availability_zone": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"security_group_id_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -249,6 +254,10 @@ func expandGlueConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 func expandGluePhysicalConnectionRequirements(m map[string]interface{}) *glue.PhysicalConnectionRequirements {
 	physicalConnectionRequirements := &glue.PhysicalConnectionRequirements{}
 
+	if v, ok := m["availability_zone"]; ok {
+		physicalConnectionRequirements.AvailabilityZone = aws.String(v.(string))
+	}
+
 	if v, ok := m["security_group_id_list"]; ok {
 		physicalConnectionRequirements.SecurityGroupIdList = expandStringList(v.([]interface{}))
 	}
@@ -266,6 +275,7 @@ func flattenGluePhysicalConnectionRequirements(physicalConnectionRequirements *g
 	}
 
 	m := map[string]interface{}{
+		"availability_zone":      aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
 		"security_group_id_list": flattenStringList(physicalConnectionRequirements.SecurityGroupIdList),
 		"subnet_id":              aws.StringValue(physicalConnectionRequirements.SubnetId),
 	}

@@ -3,10 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -37,14 +38,16 @@ func resourceAwsKmsAlias() *schema.Resource {
 				ValidateFunc:  validateAwsKmsName,
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAwsKmsName,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateAwsKmsName,
 			},
 			"target_key_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: suppressEquivalentTargetKeyIdAndARN,
 			},
 			"target_key_arn": {
 				Type:     schema.TypeString,
@@ -179,10 +182,15 @@ func retryFindKmsAliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, e
 			return resource.NonRetryableError(err)
 		}
 		if resp == nil {
-			return resource.RetryableError(err)
+			return resource.RetryableError(&resource.NotFoundError{})
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = findKmsAliasByName(conn, name, nil)
+	}
+
 	return resp, err
 }
 
@@ -219,4 +227,15 @@ func findKmsAliasByName(conn *kms.KMS, name string, marker *string) (*kms.AliasL
 func resourceAwsKmsAliasImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	return []*schema.ResourceData{d}, nil
+}
+
+func suppressEquivalentTargetKeyIdAndARN(k, old, new string, d *schema.ResourceData) bool {
+	newARN, err := arn.Parse(new)
+	if err != nil {
+		log.Printf("[DEBUG] %q can not be parsed as an ARN: %q", new, err)
+		return false
+	}
+
+	resource := strings.TrimPrefix(newARN.Resource, "key/")
+	return old == resource
 }

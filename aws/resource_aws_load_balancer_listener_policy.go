@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsLoadBalancerListenerPolicies() *schema.Resource {
@@ -19,19 +19,19 @@ func resourceAwsLoadBalancerListenerPolicies() *schema.Resource {
 		Delete: resourceAwsLoadBalancerListenerPoliciesDelete,
 
 		Schema: map[string]*schema.Schema{
-			"load_balancer_name": &schema.Schema{
+			"load_balancer_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"policy_names": &schema.Schema{
+			"policy_names": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Set:      schema.HashString,
 			},
 
-			"load_balancer_port": &schema.Schema{
+			"load_balancer_port": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -96,9 +96,7 @@ func resourceAwsLoadBalancerListenerPoliciesRead(d *schema.ResourceData, meta in
 			continue
 		}
 
-		for _, name := range listener.PolicyNames {
-			policyNames = append(policyNames, name)
-		}
+		policyNames = append(policyNames, listener.PolicyNames...)
 	}
 
 	d.Set("load_balancer_name", loadBalancerName)

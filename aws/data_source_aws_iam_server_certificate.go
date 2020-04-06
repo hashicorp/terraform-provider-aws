@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func dataSourceAwsIAMServerCertificate() *schema.Resource {
@@ -25,7 +25,7 @@ func dataSourceAwsIAMServerCertificate() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateMaxLength(128),
+				ValidateFunc:  validation.StringLenBetween(0, 128),
 			},
 
 			"name_prefix": {
@@ -33,7 +33,7 @@ func dataSourceAwsIAMServerCertificate() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateMaxLength(128 - resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 128-resource.UniqueIDSuffixLength),
 			},
 
 			"path_prefix": {
@@ -123,7 +123,7 @@ func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interfac
 		return true
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error describing certificates: {{err}}", err)
+		return fmt.Errorf("Error describing certificates: %s", err)
 	}
 
 	if len(metadatas) == 0 {
@@ -139,9 +139,9 @@ func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interfac
 
 	metadata := metadatas[0]
 	d.SetId(*metadata.ServerCertificateId)
-	d.Set("arn", *metadata.Arn)
-	d.Set("path", *metadata.Path)
-	d.Set("name", *metadata.ServerCertificateName)
+	d.Set("arn", metadata.Arn)
+	d.Set("path", metadata.Path)
+	d.Set("name", metadata.ServerCertificateName)
 	if metadata.Expiration != nil {
 		d.Set("expiration_date", metadata.Expiration.Format(time.RFC3339))
 	}

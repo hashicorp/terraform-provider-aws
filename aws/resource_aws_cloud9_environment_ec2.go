@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
@@ -61,6 +62,7 @@ func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -72,6 +74,7 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(d.Get("name").(string)),
 		ClientRequestToken: aws.String(resource.UniqueId()),
+		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Cloud9Tags(),
 	}
 
 	if v, ok := d.GetOk("automatic_stop_time_minutes"); ok {
@@ -100,9 +103,12 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.CreateEnvironmentEC2(params)
+	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating Cloud9 EC2 Environment: %s", err)
 	}
 	d.SetId(*out.EnvironmentId)
 
@@ -163,11 +169,22 @@ func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{
 	}
 	env := out.Environments[0]
 
-	d.Set("arn", env.Arn)
+	arn := aws.StringValue(env.Arn)
+	d.Set("arn", arn)
 	d.Set("description", env.Description)
 	d.Set("name", env.Name)
 	d.Set("owner_arn", env.OwnerArn)
 	d.Set("type", env.Type)
+
+	tags, err := keyvaluetags.Cloud9ListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Cloud9 EC2 Environment (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	log.Printf("[DEBUG] Received Cloud9 Environment EC2: %s", env)
 
@@ -192,6 +209,15 @@ func resourceAwsCloud9EnvironmentEc2Update(d *schema.ResourceData, meta interfac
 
 	log.Printf("[DEBUG] Cloud9 Environment EC2 updated: %s", out)
 
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		arn := d.Get("arn").(string)
+
+		if err := keyvaluetags.Cloud9UpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Cloud9 EC2 Environment (%s) tags: %s", arn, err)
+		}
+	}
+
 	return resourceAwsCloud9EnvironmentEc2Read(d, meta)
 }
 
@@ -204,10 +230,13 @@ func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		out, err := conn.DescribeEnvironments(&cloud9.DescribeEnvironmentsInput{
-			EnvironmentIds: []*string{aws.String(d.Id())},
-		})
+
+	input := &cloud9.DescribeEnvironmentsInput{
+		EnvironmentIds: []*string{aws.String(d.Id())},
+	}
+	var out *cloud9.DescribeEnvironmentsOutput
+	err = resource.Retry(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
+		out, err = conn.DescribeEnvironments(input)
 		if err != nil {
 			if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
 				return nil
@@ -223,9 +252,17 @@ func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interfac
 		}
 		return resource.RetryableError(fmt.Errorf("Cloud9 EC2 Environment %q still exists", d.Id()))
 	})
-	if err != nil {
-		return err
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeEnvironments(input)
+		if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
+			return nil
+		}
+		if isAWSErr(err, "AccessDeniedException", "is not authorized to access this resource") {
+			return nil
+		}
 	}
-
-	return err
+	if err != nil {
+		return fmt.Errorf("Error deleting Cloud9 EC2 Environment: %s", err)
+	}
+	return nil
 }

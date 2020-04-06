@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsProxyProtocolPolicy() *schema.Resource {
@@ -19,12 +19,12 @@ func resourceAwsProxyProtocolPolicy() *schema.Resource {
 		Delete: resourceAwsProxyProtocolPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
-			"load_balancer": &schema.Schema{
+			"load_balancer": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"instance_ports": &schema.Schema{
+			"instance_ports": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Required: true,
@@ -41,7 +41,7 @@ func resourceAwsProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface
 	input := &elb.CreateLoadBalancerPolicyInput{
 		LoadBalancerName: elbname,
 		PolicyAttributes: []*elb.PolicyAttribute{
-			&elb.PolicyAttribute{
+			{
 				AttributeName:  aws.String("ProxyProtocol"),
 				AttributeValue: aws.String("True"),
 			},
@@ -59,10 +59,7 @@ func resourceAwsProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface
 			*input.PolicyName, err)
 	}
 
-	// Assign the policy name for use later
-	d.Partial(true)
 	d.SetId(fmt.Sprintf("%s:%s", *elbname, *input.PolicyName))
-	d.SetPartial("load_balancer")
 	log.Printf("[INFO] ELB PolicyName: %s", *input.PolicyName)
 
 	return resourceAwsProxyProtocolPolicyUpdate(d, meta)
@@ -70,11 +67,11 @@ func resourceAwsProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
-	elbname := aws.String(d.Get("load_balancer").(string))
+	elbname := d.Get("load_balancer").(string)
 
 	// Retrieve the current ELB policies for updating the state
 	req := &elb.DescribeLoadBalancersInput{
-		LoadBalancerNames: []*string{elbname},
+		LoadBalancerNames: []*string{aws.String(elbname)},
 	}
 	resp, err := elbconn.DescribeLoadBalancers(req)
 	if err != nil {
@@ -94,7 +91,7 @@ func resourceAwsProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}
 		ports = append(ports, &ipstr)
 	}
 	d.Set("instance_ports", ports)
-	d.Set("load_balancer", *elbname)
+	d.Set("load_balancer", elbname)
 	return nil
 }
 
@@ -117,9 +114,8 @@ func resourceAwsProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface
 	}
 
 	backends := flattenBackendPolicies(resp.LoadBalancerDescriptions[0].BackendServerDescriptions)
-	_, policyName := resourceAwsProxyProtocolPolicyParseId(d.Id())
+	policyName := resourceAwsProxyProtocolPolicyParseId(d.Id())
 
-	d.Partial(true)
 	if d.HasChange("instance_ports") {
 		o, n := d.GetChange("instance_ports")
 		os := o.(*schema.Set)
@@ -147,8 +143,6 @@ func resourceAwsProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("Error setting policy for backend: %s", err)
 			}
 		}
-
-		d.SetPartial("instance_ports")
 	}
 
 	return resourceAwsProxyProtocolPolicyRead(d, meta)
@@ -173,7 +167,7 @@ func resourceAwsProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface
 
 	backends := flattenBackendPolicies(resp.LoadBalancerDescriptions[0].BackendServerDescriptions)
 	ports := d.Get("instance_ports").(*schema.Set).List()
-	_, policyName := resourceAwsProxyProtocolPolicyParseId(d.Id())
+	policyName := resourceAwsProxyProtocolPolicyParseId(d.Id())
 
 	inputs, err := resourceAwsProxyProtocolPolicyRemove(policyName, ports, backends)
 	if err != nil {
@@ -259,7 +253,8 @@ func resourceAwsProxyProtocolPolicyAdd(policyName string, ports []interface{}, b
 // resourceAwsProxyProtocolPolicyParseId takes an ID and parses it into
 // it's constituent parts. You need two axes (LB name, policy name)
 // to create or identify a proxy protocol policy in AWS's API.
-func resourceAwsProxyProtocolPolicyParseId(id string) (string, string) {
+func resourceAwsProxyProtocolPolicyParseId(id string) string {
 	parts := strings.SplitN(id, ":", 2)
-	return parts[0], parts[1]
+	// We currently omit the ELB name as it is not currently used anywhere
+	return parts[1]
 }

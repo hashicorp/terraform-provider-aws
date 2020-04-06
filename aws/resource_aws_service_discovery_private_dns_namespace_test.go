@@ -2,20 +2,21 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 	rName := acctest.RandString(5) + ".example.com"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -34,8 +35,8 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
 	rName := acctest.RandString(64-len("example.com")) + ".example.com"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -46,6 +47,25 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),
 					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "hosted_zone"),
 				),
+			},
+		},
+	})
+}
+
+// This acceptance test ensures we properly send back error messaging. References:
+//  * https://github.com/terraform-providers/terraform-provider-aws/issues/2830
+//  * https://github.com/terraform-providers/terraform-provider-aws/issues/5532
+func TestAccAWSServiceDiscoveryPrivateDnsNamespace_error_Overlap(t *testing.T) {
+	rName := acctest.RandString(5) + ".example.com"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccServiceDiscoveryPrivateDnsNamespaceConfigOverlapping(rName),
+				ExpectError: regexp.MustCompile(`overlapping name space`),
 			},
 		},
 	})
@@ -85,19 +105,59 @@ func testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(name string) resou
 	}
 }
 
+func testAccPreCheckAWSServiceDiscovery(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).sdconn
+
+	input := &servicediscovery.ListNamespacesInput{}
+
+	_, err := conn.ListNamespaces(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-service-discovery-private-dns-ns"
   }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "%s"
+  name        = "%s"
   description = "test"
-  vpc = "${aws_vpc.test.id}"
+  vpc         = "${aws_vpc.test.id}"
 }
 `, rName)
+}
+
+func testAccServiceDiscoveryPrivateDnsNamespaceConfigOverlapping(topDomain string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-service-discovery-private-dns-ns"
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "top" {
+  name = %q
+  vpc  = "${aws_vpc.test.id}"
+}
+
+# Ensure ordering after first namespace
+resource "aws_service_discovery_private_dns_namespace" "subdomain" {
+  name = "${aws_service_discovery_private_dns_namespace.top.name}"
+  vpc  = "${aws_service_discovery_private_dns_namespace.top.vpc}"
+}
+`, topDomain)
 }

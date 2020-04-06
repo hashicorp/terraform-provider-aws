@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_snapshot"
-sidebar_current: "docs-aws-datasource-db-snapshot"
 description: |-
   Get information on a DB Snapshot.
 ---
@@ -11,6 +11,7 @@ description: |-
 Use this data source to get information about a DB Snapshot for use when provisioning DB instances
 
 ~> **NOTE:** This data source does not apply to snapshots created on Aurora DB clusters.
+See the [`aws_db_cluster_snapshot` data source](/docs/providers/aws/d/db_cluster_snapshot.html) for DB Cluster snapshots.
 
 ## Example Usage
 
@@ -29,7 +30,7 @@ resource "aws_db_instance" "prod" {
 
 data "aws_db_snapshot" "latest_prod_snapshot" {
   db_instance_identifier = "${aws_db_instance.prod.id}"
-  most_recent = true
+  most_recent            = true
 }
 
 # Use the latest production snapshot to create a dev instance.
@@ -37,6 +38,7 @@ resource "aws_db_instance" "dev" {
   instance_class      = "db.t2.micro"
   name                = "mydbdev"
   snapshot_identifier = "${data.aws_db_snapshot.latest_prod_snapshot.id}"
+
   lifecycle {
     ignore_changes = ["snapshot_identifier"]
   }
@@ -44,6 +46,8 @@ resource "aws_db_instance" "dev" {
 ```
 
 ## Argument Reference
+
+~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
 
 The following arguments are supported:
 

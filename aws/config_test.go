@@ -1,30 +1,103 @@
 package aws
 
 import (
-	"bytes"
-	"fmt"
-	"log"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	awsbase "github.com/hashicorp/aws-sdk-go-base"
 )
 
-func TestGetSupportedEC2Platforms(t *testing.T) {
-	ec2Endpoints := []*awsMockEndpoint{
-		&awsMockEndpoint{
-			Request: &awsMockRequest{"POST", "/", "Action=DescribeAccountAttributes&" +
-				"AttributeName.1=supported-platforms&Version=2016-11-15"},
-			Response: &awsMockResponse{200, test_ec2_describeAccountAttributes_response, "text/xml"},
+func TestAWSClientPartitionHostname(t *testing.T) {
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Prefix    string
+		Expected  string
+	}{
+		{
+			Name: "AWS Commercial",
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+			},
+			Prefix:   "test",
+			Expected: "test.amazonaws.com",
+		},
+		{
+			Name: "AWS China",
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com.cn",
+			},
+			Prefix:   "test",
+			Expected: "test.amazonaws.com.cn",
 		},
 	}
-	closeFunc, sess, err := getMockedAwsApiSession("EC2", ec2Endpoints)
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			got := testCase.AWSClient.PartitionHostname(testCase.Prefix)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientRegionalHostname(t *testing.T) {
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Prefix    string
+		Expected  string
+	}{
+		{
+			Name: "AWS Commercial",
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com",
+				region:    "us-west-2",
+			},
+			Prefix:   "test",
+			Expected: "test.us-west-2.amazonaws.com",
+		},
+		{
+			Name: "AWS China",
+			AWSClient: &AWSClient{
+				dnsSuffix: "amazonaws.com.cn",
+				region:    "cn-northwest-1",
+			},
+			Prefix:   "test",
+			Expected: "test.cn-northwest-1.amazonaws.com.cn",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			got := testCase.AWSClient.RegionalHostname(testCase.Prefix)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestGetSupportedEC2Platforms(t *testing.T) {
+	ec2Endpoints := []*awsbase.MockEndpoint{
+		{
+			Request: &awsbase.MockRequest{
+				Method: "POST",
+				Uri:    "/",
+				Body:   "Action=DescribeAccountAttributes&AttributeName.1=supported-platforms&Version=2016-11-15",
+			},
+			Response: &awsbase.MockResponse{
+				StatusCode:  200,
+				Body:        test_ec2_describeAccountAttributes_response,
+				ContentType: "text/xml",
+			},
+		},
+	}
+	closeFunc, sess, err := awsbase.GetMockedAwsApiSession("EC2", ec2Endpoints)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,65 +112,6 @@ func TestGetSupportedEC2Platforms(t *testing.T) {
 	if !reflect.DeepEqual(platforms, expectedPlatforms) {
 		t.Fatalf("Received platforms: %q\nExpected: %q\n", platforms, expectedPlatforms)
 	}
-}
-
-// getMockedAwsApiSession establishes a httptest server to simulate behaviour
-// of a real AWS API server
-func getMockedAwsApiSession(svcName string, endpoints []*awsMockEndpoint) (func(), *session.Session, error) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(r.Body)
-		requestBody := buf.String()
-
-		log.Printf("[DEBUG] Received %s API %q request to %q: %s",
-			svcName, r.Method, r.RequestURI, requestBody)
-
-		for _, e := range endpoints {
-			if r.Method == e.Request.Method && r.RequestURI == e.Request.Uri && requestBody == e.Request.Body {
-				log.Printf("[DEBUG] Mocked %s API responding with %d: %s",
-					svcName, e.Response.StatusCode, e.Response.Body)
-
-				w.WriteHeader(e.Response.StatusCode)
-				w.Header().Set("Content-Type", e.Response.ContentType)
-				w.Header().Set("X-Amzn-Requestid", "1b206dd1-f9a8-11e5-becf-051c60f11c4a")
-				w.Header().Set("Date", time.Now().Format(time.RFC1123))
-
-				fmt.Fprintln(w, e.Response.Body)
-				return
-			}
-		}
-
-		w.WriteHeader(400)
-		return
-	}))
-
-	sc := awsCredentials.NewStaticCredentials("accessKey", "secretKey", "")
-
-	sess, err := session.NewSession(&aws.Config{
-		Credentials:                   sc,
-		Region:                        aws.String("us-east-1"),
-		Endpoint:                      aws.String(ts.URL),
-		CredentialsChainVerboseErrors: aws.Bool(true),
-	})
-
-	return ts.Close, sess, err
-}
-
-type awsMockEndpoint struct {
-	Request  *awsMockRequest
-	Response *awsMockResponse
-}
-
-type awsMockRequest struct {
-	Method string
-	Uri    string
-	Body   string
-}
-
-type awsMockResponse struct {
-	StatusCode  int
-	Body        string
-	ContentType string
 }
 
 var test_ec2_describeAccountAttributes_response = `<DescribeAccountAttributesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">

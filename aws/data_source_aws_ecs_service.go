@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsEcsService() *schema.Resource {
@@ -33,6 +33,10 @@ func dataSourceAwsEcsService() *schema.Resource {
 				Computed: true,
 			},
 			"launch_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"scheduling_strategy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,6 +82,7 @@ func dataSourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("cluster_arn", service.ClusterArn)
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("launch_type", service.LaunchType)
+	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	d.Set("task_definition", service.TaskDefinition)
 
 	return nil

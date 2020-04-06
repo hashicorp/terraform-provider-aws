@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_usage_plan"
-sidebar_current: "docs-aws-resource-api-gateway-usage-plan"
 description: |-
   Provides an API Gateway Usage Plan.
 ---
 
-# aws_api_gateway_usage_plan
+# Resource: aws_api_gateway_usage_plan
 
 Provides an API Gateway Usage Plan.
 
@@ -17,16 +17,16 @@ resource "aws_api_gateway_rest_api" "myapi" {
   name = "MyDemoAPI"
 }
 
-...
+# ...
 
 resource "aws_api_gateway_deployment" "dev" {
   rest_api_id = "${aws_api_gateway_rest_api.myapi.id}"
-  stage_name = "dev"
+  stage_name  = "dev"
 }
 
 resource "aws_api_gateway_deployment" "prod" {
   rest_api_id = "${aws_api_gateway_rest_api.myapi.id}"
-  stage_name = "prod"
+  stage_name  = "prod"
 }
 
 resource "aws_api_gateway_usage_plan" "MyUsagePlan" {
@@ -69,6 +69,7 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 * `quota_settings` - (Optional) The [quota settings](#quota-settings-arguments) of the usage plan.
 * `throttle_settings` - (Optional) The [throttling limits](#throttling-settings-arguments) of the usage plan.
 * `product_code` - (Optional) The AWS Markeplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 #### Api Stages arguments
 
@@ -97,11 +98,12 @@ In addition to all arguments above, the following attributes are exported:
 * `quota_settings` - The quota of the usage plan.
 * `throttle_settings` - The throttling limits of the usage plan.
 * `product_code` - The AWS Markeplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
+* `arn` - Amazon Resource Name (ARN)
 
 ## Import
 
 AWS API Gateway Usage Plan can be imported using the `id`, e.g.
 
-```
+```sh
 $ terraform import aws_api_gateway_usage_plan.myusageplan <usage_plan_id>
 ```

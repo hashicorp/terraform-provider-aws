@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 // The preferences are account-wide, so the tests must be serialized
@@ -34,7 +34,7 @@ func testAccAWSSNSSMSPreferences_empty(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSSMSPreferencesConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr("aws_sns_sms_preferences.test_pref", "monthly_spend_limit"),
@@ -55,7 +55,7 @@ func testAccAWSSNSSMSPreferences_defaultSMSType(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSSMSPreferencesConfig_defSMSType,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr("aws_sns_sms_preferences.test_pref", "monthly_spend_limit"),
@@ -76,7 +76,7 @@ func testAccAWSSNSSMSPreferences_almostAll(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSSMSPreferencesConfig_almostAll,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_sns_sms_preferences.test_pref", "monthly_spend_limit", "1"),
@@ -95,7 +95,7 @@ func testAccAWSSNSSMSPreferences_deliveryRole(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSSNSSMSPreferencesConfig_deliveryRole,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("aws_sns_sms_preferences.test_pref", "delivery_status_iam_role_arn", arnRole),
@@ -143,9 +143,9 @@ resource "aws_sns_sms_preferences" "test_pref" {
 `
 const testAccAWSSNSSMSPreferencesConfig_almostAll = `
 resource "aws_sns_sms_preferences" "test_pref" {
-	monthly_spend_limit = "1",
-	default_sms_type = "Transactional",
-	usage_report_s3_bucket = "some-bucket",
+	monthly_spend_limit = "1"
+	default_sms_type = "Transactional"
+	usage_report_s3_bucket = "some-bucket"
 }
 `
 const testAccAWSSNSSMSPreferencesConfig_deliveryRole = `
@@ -188,7 +188,7 @@ POLICY
 }
 
 resource "aws_sns_sms_preferences" "test_pref" {
-	delivery_status_iam_role_arn = "${aws_iam_role.test_smsdelivery_role.arn}",
-	delivery_status_success_sampling_rate = "75",
+	delivery_status_iam_role_arn = "${aws_iam_role.test_smsdelivery_role.arn}"
+	delivery_status_success_sampling_rate = "75"
 }
 `

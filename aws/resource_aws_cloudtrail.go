@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCloudTrail() *schema.Resource {
@@ -55,6 +56,11 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Default:  true,
 			},
 			"is_multi_region_trail": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"is_organization_trail": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -133,10 +139,15 @@ func resourceAwsCloudTrail() *schema.Resource {
 
 func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudtrailconn
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CloudtrailTags()
 
 	input := cloudtrail.CreateTrailInput{
 		Name:         aws.String(d.Get("name").(string)),
 		S3BucketName: aws.String(d.Get("s3_bucket_name").(string)),
+	}
+
+	if len(tags) > 0 {
+		input.TagsList = tags
 	}
 
 	if v, ok := d.GetOk("cloud_watch_logs_group_arn"); ok {
@@ -150,6 +161,9 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 	}
 	if v, ok := d.GetOk("is_multi_region_trail"); ok {
 		input.IsMultiRegionTrail = aws.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("is_organization_trail"); ok {
+		input.IsOrganizationTrail = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("enable_log_file_validation"); ok {
 		input.EnableLogFileValidation = aws.Bool(v.(bool))
@@ -165,7 +179,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var t *cloudtrail.CreateTrailOutput
-	err := resource.Retry(15*time.Second, func() *resource.RetryError {
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
@@ -179,13 +193,15 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		t, err = conn.CreateTrail(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating CloudTrail: %s", err)
 	}
 
 	log.Printf("[DEBUG] CloudTrail created: %s", t)
 
-	d.Set("arn", t.TrailARN)
 	d.SetId(*t.Name)
 
 	// AWS CloudTrail sets newly-created trails to false.
@@ -203,7 +219,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsCloudTrailUpdate(d, meta)
+	return resourceAwsCloudTrailRead(d, meta)
 }
 
 func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
@@ -243,6 +259,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cloud_watch_logs_group_arn", trail.CloudWatchLogsLogGroupArn)
 	d.Set("include_global_service_events", trail.IncludeGlobalServiceEvents)
 	d.Set("is_multi_region_trail", trail.IsMultiRegionTrail)
+	d.Set("is_organization_trail", trail.IsOrganizationTrail)
 	d.Set("sns_topic_name", trail.SnsTopicName)
 	d.Set("enable_log_file_validation", trail.LogFileValidationEnabled)
 
@@ -254,24 +271,14 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", trail.TrailARN)
 	d.Set("home_region", trail.HomeRegion)
 
-	// Get tags
-	req := &cloudtrail.ListTagsInput{
-		ResourceIdList: []*string{trail.TrailARN},
-	}
+	tags, err := keyvaluetags.CloudtrailListTags(conn, *trail.TrailARN)
 
-	tagsOut, err := conn.ListTags(req)
 	if err != nil {
-		return err
-	}
-	log.Printf("[DEBUG] Received CloudTrail tags: %s", tagsOut)
-
-	var tags []*cloudtrail.Tag
-	if tagsOut.ResourceTagList != nil && len(tagsOut.ResourceTagList) > 0 {
-		tags = tagsOut.ResourceTagList[0].TagsList
+		return fmt.Errorf("error listing tags for Cloudtrail (%s): %s", *trail.TrailARN, err)
 	}
 
-	if err := d.Set("tags", tagsToMapCloudtrail(tags)); err != nil {
-		return err
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	logstatus, err := cloudTrailGetLoggingStatus(conn, trail.Name)
@@ -320,6 +327,9 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("is_multi_region_trail") {
 		input.IsMultiRegionTrail = aws.Bool(d.Get("is_multi_region_trail").(bool))
 	}
+	if d.HasChange("is_organization_trail") {
+		input.IsOrganizationTrail = aws.Bool(d.Get("is_organization_trail").(bool))
+	}
 	if d.HasChange("enable_log_file_validation") {
 		input.EnableLogFileValidation = aws.Bool(d.Get("enable_log_file_validation").(bool))
 	}
@@ -332,7 +342,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Updating CloudTrail: %s", input)
 	var t *cloudtrail.UpdateTrailOutput
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		t, err = conn.UpdateTrail(&input)
 		if err != nil {
@@ -346,14 +356,18 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		t, err = conn.UpdateTrail(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating CloudTrail: %s", err)
 	}
 
 	if d.HasChange("tags") {
-		err := setTagsCloudtrail(conn, d)
-		if err != nil {
-			return err
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.CloudtrailUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

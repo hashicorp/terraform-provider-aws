@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsWafRegionalXssMatchSet() *schema.Resource {
@@ -16,14 +16,17 @@ func resourceAwsWafRegionalXssMatchSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalXssMatchSetRead,
 		Update: resourceAwsWafRegionalXssMatchSetUpdate,
 		Delete: resourceAwsWafRegionalXssMatchSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"xss_match_tuple": &schema.Schema{
+			"xss_match_tuple": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -45,7 +48,7 @@ func resourceAwsWafRegionalXssMatchSet() *schema.Resource {
 								},
 							},
 						},
-						"text_transformation": &schema.Schema{
+						"text_transformation": {
 							Type:     schema.TypeString,
 							Required: true,
 						},

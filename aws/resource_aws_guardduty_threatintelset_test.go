@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func testAccAwsGuardDutyThreatintelset_basic(t *testing.T) {
@@ -60,11 +60,11 @@ func testAccAwsGuardDutyThreatintelset_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyThreatintelsetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGuardDutyThreatintelsetConfig_basic(bucketName, keyName, threatintelsetName, true),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -127,11 +127,7 @@ func testAccCheckAwsGuardDutyThreatintelsetExists(name string) resource.TestChec
 
 		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
 		_, err = conn.GetThreatIntelSet(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -140,8 +136,8 @@ func testAccGuardDutyThreatintelsetConfig_basic(bucketName, keyName, threatintel
 %s
 
 resource "aws_s3_bucket" "test" {
-  acl = "private"
-  bucket = "%s"
+  acl           = "private"
+  bucket        = "%s"
   force_destroy = true
 }
 
@@ -153,11 +149,11 @@ resource "aws_s3_bucket_object" "test" {
 }
 
 resource "aws_guardduty_threatintelset" "test" {
-  name = "%s"
+  name        = "%s"
   detector_id = "${aws_guardduty_detector.test.id}"
-  format = "TXT"
-  location = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
-  activate = %t
+  format      = "TXT"
+  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  activate    = %t
 }
 `, testAccGuardDutyDetectorConfig_basic1, bucketName, keyName, threatintelsetName, activate)
 }
