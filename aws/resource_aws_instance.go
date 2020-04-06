@@ -464,7 +464,6 @@ func resourceAwsInstance() *schema.Resource {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
-							ForceNew:         true,
 							DiffSuppressFunc: iopsDiffSuppressFunc,
 						},
 
@@ -478,7 +477,6 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 
 						"volume_id": {
@@ -1252,57 +1250,68 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("root_block_device.0.volume_size") && !d.IsNewResource() {
-		if vs, ok := d.GetOk("root_block_device.0.volume_size"); ok {
-			volumeSize := vs.(int)
-			if volumeSize != 0 {
-				instance, err := resourceAwsInstanceFindByID(conn, d.Id())
-				if err != nil {
-					return fmt.Errorf("error retrieving instance %q: %w", d.Id(), err)
-				}
-				blockDevices, err := readBlockDevicesFromInstance(instance, conn)
-				if err != nil {
-					return fmt.Errorf("error retrieving volumes for instance %q: %w", d.Id(), err)
-				}
+	if d.HasChange("root_block_device.0") && !d.IsNewResource() {
+		instance, err := resourceAwsInstanceFindByID(conn, d.Id())
+		if err != nil {
+			return fmt.Errorf("error retrieving instance %q: %w", d.Id(), err)
+		}
+		blockDevices, err := readBlockDevicesFromInstance(instance, conn)
+		if err != nil {
+			return fmt.Errorf("error retrieving volumes for instance %q: %w", d.Id(), err)
+		}
+		rd, ok := blockDevices["root"]
+		if !ok {
+			return fmt.Errorf("root volume no found for instance %q", d.Id())
+		}
 
-				rd, ok := blockDevices["root"]
-				if !ok {
-					return fmt.Errorf("root volume no found for instance %q", d.Id())
-				}
+		rootDevice := rd.(map[string]interface{})
+		volumeID := rootDevice["volume_id"].(string)
+		input := ec2.ModifyVolumeInput{
+			VolumeId: aws.String(volumeID),
+		}
 
-				rootDevice := rd.(map[string]interface{})
-				currSize, ok := rootDevice["volume_size"].(int64)
-				if !ok {
-					return fmt.Errorf("root volume size no found for instance %q", d.Id())
-				}
-				if int64(volumeSize) != currSize {
-					volumeID := rootDevice["volume_id"].(string)
-					_, err = conn.ModifyVolume(&ec2.ModifyVolumeInput{
-						Size:     aws.Int64(int64(volumeSize)),
-						VolumeId: aws.String(volumeID),
-					})
-					if err != nil {
-						return err
-					}
-
-					// The volume is useable once the state is "optimizing", but will not be at full performance.
-					// Optimization can take hours. e.g. a full 1 TiB drive takes approximately 6 hours to optimize,
-					// according to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-modifications.html
-					stateConf := &resource.StateChangeConf{
-						Pending:    []string{"modifying"},
-						Target:     []string{"completed", "optimizing"},
-						Refresh:    VolumeStateRefreshFunc(conn, volumeID, "failed"),
-						Timeout:    d.Timeout(schema.TimeoutUpdate),
-						Delay:      30 * time.Second,
-						MinTimeout: 30 * time.Second,
-					}
-
-					_, err = stateConf.WaitForState()
-					if err != nil {
-						return fmt.Errorf("error waiting for volume (%s) to be modified: %s", volumeID, err)
-					}
-				}
+		rbd := d.Get("root_block_device.0").(map[string]interface{})
+		if v, ok := rbd["volume_size"]; ok {
+			currSize := rootDevice["volume_size"].(int64)
+			volumeSize := int64(v.(int))
+			if volumeSize != currSize {
+				input.Size = aws.Int64(volumeSize)
 			}
+		}
+		if v, ok := rbd["volume_type"]; ok {
+			currType := rootDevice["volume_type"].(string)
+			volumeType := v.(string)
+			if volumeType != currType {
+				input.VolumeType = aws.String(volumeType)
+			}
+		}
+		if v, ok := rbd["iops"]; ok {
+			currIOPS := rootDevice["iops"].(int64)
+			iops := int64(v.(int))
+			if iops != currIOPS {
+				input.Iops = aws.Int64(iops)
+			}
+		}
+		_, err = conn.ModifyVolume(&input)
+		if err != nil {
+			return err
+		}
+
+		// The volume is useable once the state is "optimizing", but will not be at full performance.
+		// Optimization can take hours. e.g. a full 1 TiB drive takes approximately 6 hours to optimize,
+		// according to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-modifications.html
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"modifying"},
+			Target:     []string{"completed", "optimizing"},
+			Refresh:    VolumeStateRefreshFunc(conn, volumeID, "failed"),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			Delay:      30 * time.Second,
+			MinTimeout: 30 * time.Second,
+		}
+
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error waiting for volume (%s) to be modified: %s", volumeID, err)
 		}
 	}
 
@@ -1656,8 +1665,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 	return networkInterfaces
 }
 
-func readBlockDeviceMappingsFromConfig(
-	d *schema.ResourceData, conn *ec2.EC2) ([]*ec2.BlockDeviceMapping, error) {
+func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([]*ec2.BlockDeviceMapping, error) {
 	blockDevices := make([]*ec2.BlockDeviceMapping, 0)
 
 	if v, ok := d.GetOk("ebs_block_device"); ok {
@@ -1728,9 +1736,6 @@ func readBlockDeviceMappingsFromConfig(
 
 	if v, ok := d.GetOk("root_block_device"); ok {
 		vL := v.([]interface{})
-		if len(vL) > 1 {
-			return nil, errors.New("Cannot specify more than one root_block_device.")
-		}
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
