@@ -175,15 +175,52 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 * `customized_metric_specification` - (Optional) A custom CloudWatch metric. Documentation can be found  at: [AWS Customized Metric Specification](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_CustomizedMetricSpecification.html). See supported fields below.
 * `predefined_metric_specification` - (Optional) A predefined metric. See supported fields below.
 
-### `customized_metric_specification`
+#### `customized_metric_specification`
 
-* `dimensions` - (Optional) The dimensions of the metric.
+Example usage:
+
+```hcl
+resource "aws_appautoscaling_policy" "example" {
+  policy_type = "TargetTrackingScaling"
+
+  # ... other configuration ...
+
+  target_tracking_scaling_policy_configuration {
+    target_value = 40
+
+    # ... potentially other configuration ...
+
+    customized_metric_specification {
+      metric_name = "MyUtilizationMetric"
+      namespace   = "MyNamespace"
+      statistic   = "Average"
+      unit        = "Percent"
+
+      dimensions {
+        name  = "MyOptionalMetricDimensionName"
+        value = "MyOptionalMetricDimensionValue"
+      }
+    }
+  }
+}
+```
+
+The `target_tracking_scaling_policy_configuration` `customized_metric_specification` configuration block supports the following arguments:
+
+* `dimensions` - (Optional) Configuration block(s) with the dimensions of the metric if the metric was published with dimensions. Detailed below.
 * `metric_name` - (Required) The name of the metric.
 * `namespace` - (Required) The namespace of the metric.
-* `statistic` - (Required) The statistic of the metric.
+* `statistic` - (Required) The statistic of the metric. Valid values: `Average`, `Minimum`, `Maximum`, `SampleCount`, and `Sum`.
 * `unit` - (Optional) The unit of the metric.
 
-### `predefined_metric_specification`
+##### `dimensions`
+
+The `target_tracking_scaling_policy_configration` `customized_metric_specification` `dimensions` configuration block supports the following arguments:
+
+* `name` - (Required) Name of the dimension.
+* `value` - (Required) Value of the dimension.
+
+#### `predefined_metric_specification`
 
 * `predefined_metric_type` - (Required) The metric type.
 * `resource_label` - (Optional) Reserved for future use.
