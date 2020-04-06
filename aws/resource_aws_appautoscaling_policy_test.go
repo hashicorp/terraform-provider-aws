@@ -31,6 +31,11 @@ func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
 			errorExpected: false,
 		},
 		{
+			input:         "dynamodb/table/tableName/index/indexName/dynamodb:table:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/tableName",
+			expected:      []string{"dynamodb", "table/tableName/index/indexName", "dynamodb:table:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/tableName"},
+			errorExpected: false,
+		},
+		{
 			input:         "ec2/spot-fleet-request/sfr-d77c6508-1c1d-4e79-8789-fc019ee44c96/ec2:spot-fleet-request:TargetCapacity/test-appautoscaling-policy-ruuhd",
 			expected:      []string{"ec2", "spot-fleet-request/sfr-d77c6508-1c1d-4e79-8789-fc019ee44c96", "ec2:spot-fleet-request:TargetCapacity", "test-appautoscaling-policy-ruuhd"},
 			errorExpected: false,
