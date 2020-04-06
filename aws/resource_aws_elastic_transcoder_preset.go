@@ -622,15 +622,19 @@ func resourceAwsElasticTranscoderPresetRead(d *schema.ResourceData, meta interfa
 }
 
 func flattenETAudioParameters(audio *elastictranscoder.AudioParameters) []map[string]interface{} {
-	m := setMap(make(map[string]interface{}))
+	if audio == nil {
+		return nil
+	}
 
-	m.SetString("audio_packing_mode", audio.AudioPackingMode)
-	m.SetString("bit_rate", audio.BitRate)
-	m.SetString("channels", audio.Channels)
-	m.SetString("codec", audio.Codec)
-	m.SetString("sample_rate", audio.SampleRate)
+	result := map[string]interface{}{
+		"audio_packing_mode": aws.StringValue(audio.AudioPackingMode),
+		"bit_rate":           aws.StringValue(audio.BitRate),
+		"channels":           aws.StringValue(audio.Channels),
+		"codec":              aws.StringValue(audio.Codec),
+		"sample_rate":        aws.StringValue(audio.SampleRate),
+	}
 
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func flattenETAudioCodecOptions(opts *elastictranscoder.AudioCodecOptions) []map[string]interface{} {
@@ -638,79 +642,87 @@ func flattenETAudioCodecOptions(opts *elastictranscoder.AudioCodecOptions) []map
 		return nil
 	}
 
-	m := setMap(make(map[string]interface{}))
+	result := map[string]interface{}{
+		"bit_depth": aws.StringValue(opts.BitDepth),
+		"bit_order": aws.StringValue(opts.BitOrder),
+		"profile":   aws.StringValue(opts.Profile),
+		"signed":    aws.StringValue(opts.Signed),
+	}
 
-	m.SetString("bit_depth", opts.BitDepth)
-	m.SetString("bit_order", opts.BitOrder)
-	m.SetString("profile", opts.Profile)
-	m.SetString("signed", opts.Signed)
-
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func flattenETThumbnails(thumbs *elastictranscoder.Thumbnails) []map[string]interface{} {
-	m := setMap(make(map[string]interface{}))
+	if thumbs == nil {
+		return nil
+	}
 
-	m.SetString("aspect_ratio", thumbs.AspectRatio)
-	m.SetString("format", thumbs.Format)
-	m.SetString("interval", thumbs.Interval)
-	m.SetString("max_height", thumbs.MaxHeight)
-	m.SetString("max_width", thumbs.MaxWidth)
-	m.SetString("padding_policy", thumbs.PaddingPolicy)
-	m.SetString("resolution", thumbs.Resolution)
-	m.SetString("sizing_policy", thumbs.SizingPolicy)
+	result := map[string]interface{}{
+		"aspect_ratio":   aws.StringValue(thumbs.AspectRatio),
+		"format":         aws.StringValue(thumbs.Format),
+		"interval":       aws.StringValue(thumbs.Interval),
+		"max_height":     aws.StringValue(thumbs.MaxHeight),
+		"max_width":      aws.StringValue(thumbs.MaxWidth),
+		"padding_policy": aws.StringValue(thumbs.PaddingPolicy),
+		"resolution":     aws.StringValue(thumbs.Resolution),
+		"sizing_policy":  aws.StringValue(thumbs.SizingPolicy),
+	}
 
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func flattenETVideoParams(video *elastictranscoder.VideoParameters) []map[string]interface{} {
-	m := setMap(make(map[string]interface{}))
+	if video == nil {
+		return nil
+	}
 
-	m.SetString("aspect_ratio", video.AspectRatio)
-	m.SetString("bit_rate", video.BitRate)
-	m.SetString("codec", video.Codec)
-	m.SetString("display_aspect_ratio", video.DisplayAspectRatio)
-	m.SetString("fixed_gop", video.FixedGOP)
-	m.SetString("frame_rate", video.FrameRate)
-	m.SetString("keyframes_max_dist", video.KeyframesMaxDist)
-	m.SetString("max_frame_rate", video.MaxFrameRate)
-	m.SetString("max_height", video.MaxHeight)
-	m.SetString("max_width", video.MaxWidth)
-	m.SetString("padding_policy", video.PaddingPolicy)
-	m.SetString("resolution", video.Resolution)
-	m.SetString("sizing_policy", video.SizingPolicy)
+	result := map[string]interface{}{
+		"aspect_ratio":         aws.StringValue(video.AspectRatio),
+		"bit_rate":             aws.StringValue(video.BitRate),
+		"codec":                aws.StringValue(video.Codec),
+		"display_aspect_ratio": aws.StringValue(video.DisplayAspectRatio),
+		"fixed_gop":            aws.StringValue(video.FixedGOP),
+		"frame_rate":           aws.StringValue(video.FrameRate),
+		"keyframes_max_dist":   aws.StringValue(video.KeyframesMaxDist),
+		"max_frame_rate":       aws.StringValue(video.MaxFrameRate),
+		"max_height":           aws.StringValue(video.MaxHeight),
+		"max_width":            aws.StringValue(video.MaxWidth),
+		"padding_policy":       aws.StringValue(video.PaddingPolicy),
+		"resolution":           aws.StringValue(video.Resolution),
+		"sizing_policy":        aws.StringValue(video.SizingPolicy),
+	}
 
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[string]interface{} {
 	var watermarkSet []map[string]interface{}
 
 	for _, w := range watermarks {
-		watermark := setMap(make(map[string]interface{}))
+		watermark := map[string]interface{}{
+			"horizontal_align":  aws.StringValue(w.HorizontalAlign),
+			"horizontal_offset": aws.StringValue(w.HorizontalOffset),
+			"id":                aws.StringValue(w.Id),
+			"max_height":        aws.StringValue(w.MaxHeight),
+			"max_width":         aws.StringValue(w.MaxWidth),
+			"opacity":           aws.StringValue(w.Opacity),
+			"sizing_policy":     aws.StringValue(w.SizingPolicy),
+			"target":            aws.StringValue(w.Target),
+			"vertical_align":    aws.StringValue(w.VerticalAlign),
+			"vertical_offset":   aws.StringValue(w.VerticalOffset),
+		}
 
-		watermark.SetString("horizontal_align", w.HorizontalAlign)
-		watermark.SetString("horizontal_offset", w.HorizontalOffset)
-		watermark.SetString("id", w.Id)
-		watermark.SetString("max_height", w.MaxHeight)
-		watermark.SetString("max_width", w.MaxWidth)
-		watermark.SetString("opacity", w.Opacity)
-		watermark.SetString("sizing_policy", w.SizingPolicy)
-		watermark.SetString("target", w.Target)
-		watermark.SetString("vertical_align", w.VerticalAlign)
-		watermark.SetString("vertical_offset", w.VerticalOffset)
-
-		watermarkSet = append(watermarkSet, watermark.Map())
+		watermarkSet = append(watermarkSet, watermark)
 	}
 
 	return watermarkSet
 }
 
 func resourceAwsElasticTranscoderPresetDelete(d *schema.ResourceData, meta interface{}) error {
-	elastictranscoderconn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*AWSClient).elastictranscoderconn
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Preset: %s", d.Id())
-	_, err := elastictranscoderconn.DeletePreset(&elastictranscoder.DeletePresetInput{
+	_, err := conn.DeletePreset(&elastictranscoder.DeletePresetInput{
 		Id: aws.String(d.Id()),
 	})
 

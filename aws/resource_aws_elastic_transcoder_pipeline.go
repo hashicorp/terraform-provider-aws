@@ -279,13 +279,14 @@ func flattenETNotifications(n *elastictranscoder.Notifications) []map[string]int
 		return nil
 	}
 
-	m := setMap(make(map[string]interface{}))
+	result := map[string]interface{}{
+		"completed":   aws.StringValue(n.Completed),
+		"error":       aws.StringValue(n.Error),
+		"progressing": aws.StringValue(n.Progressing),
+		"warning":     aws.StringValue(n.Warning),
+	}
 
-	m.SetString("completed", n.Completed)
-	m.SetString("error", n.Error)
-	m.SetString("progressing", n.Progressing)
-	m.SetString("warning", n.Warning)
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func expandETPiplineOutputConfig(d *schema.ResourceData, key string) *elastictranscoder.PipelineOutputConfig {
@@ -317,12 +318,16 @@ func expandETPiplineOutputConfig(d *schema.ResourceData, key string) *elastictra
 }
 
 func flattenETPipelineOutputConfig(cfg *elastictranscoder.PipelineOutputConfig) []map[string]interface{} {
-	m := setMap(make(map[string]interface{}))
+	if cfg == nil {
+		return nil
+	}
 
-	m.SetString("bucket", cfg.Bucket)
-	m.SetString("storage_class", cfg.StorageClass)
+	result := map[string]interface{}{
+		"bucket":        aws.StringValue(cfg.Bucket),
+		"storage_class": aws.StringValue(cfg.StorageClass),
+	}
 
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func expandETPermList(permissions *schema.Set) []*elastictranscoder.Permission {
@@ -350,12 +355,13 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 	var set []map[string]interface{}
 
 	for _, p := range perms {
-		m := setMap(make(map[string]interface{}))
-		m.Set("access", flattenStringList(p.Access))
-		m.SetString("grantee", p.Grantee)
-		m.SetString("grantee_type", p.GranteeType)
+		result := map[string]interface{}{
+			"access":       flattenStringList(p.Access),
+			"grantee":      aws.StringValue(p.Grantee),
+			"grantee_type": aws.StringValue(p.GranteeType),
+		}
 
-		set = append(set, m)
+		set = append(set, result)
 	}
 	return set
 }
