@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source:** `aws_cloudfront_distribution` [GH-6468]
 
+BUG FIXES:
+
+* resource/aws_appautoscaling_policy: Fix error when importing DynamoDB Table Index policy [GH-11232]
+
 ## 2.56.0 (April 03, 2020)
 
 NOTES:
