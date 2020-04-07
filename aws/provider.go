@@ -488,7 +488,7 @@ func Provider() *schema.Provider {
 			"aws_datapipeline_pipeline":                               resourceAwsDataPipelinePipeline(),
 			"aws_datasync_agent":                                      resourceAwsDataSyncAgent(),
 			"aws_datasync_location_efs":                               resourceAwsDataSyncLocationEfs(),
-			"aws_datasync_location_fsx_windows":                       resourceAwsDataSyncLocationFsxWindows(),
+			"aws_datasync_location_fsx_windows_file_system":           resourceAwsDataSyncLocationFsxWindowsFileSystem(),
 			"aws_datasync_location_nfs":                               resourceAwsDataSyncLocationNfs(),
 			"aws_datasync_location_s3":                                resourceAwsDataSyncLocationS3(),
 			"aws_datasync_location_smb":                               resourceAwsDataSyncLocationSmb(),

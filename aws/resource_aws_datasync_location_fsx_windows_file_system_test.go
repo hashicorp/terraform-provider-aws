@@ -15,8 +15,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_datasync_location_fsx_windows", &resource.Sweeper{
-		Name: "aws_datasync_location_fsx_windows",
+	resource.AddTestSweepers("aws_datasync_location_fsx_windows_file_system", &resource.Sweeper{
+		Name: "aws_datasync_location_fsx_windows_file_system",
 		F:    testSweepDataSyncLocationFsxWindows,
 	})
 }
@@ -42,17 +42,17 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 		}
 
 		if len(output.Locations) == 0 {
-			log.Print("[DEBUG] No DataSync Location FSX Windowss to sweep")
+			log.Print("[DEBUG] No DataSync Location FSX Windows File System to sweep")
 			return nil
 		}
 
 		for _, location := range output.Locations {
 			uri := aws.StringValue(location.LocationUri)
 			if !strings.HasPrefix(uri, "fsxw://") {
-				log.Printf("[INFO] Skipping DataSync Location FSX Windows: %s", uri)
+				log.Printf("[INFO] Skipping DataSync Location FSX Windows File System: %s", uri)
 				continue
 			}
-			log.Printf("[INFO] Deleting DataSync Location FSX Windows: %s", uri)
+			log.Printf("[INFO] Deleting DataSync Location FSX Windows File System: %s", uri)
 			input := &datasync.DeleteLocationInput{
 				LocationArn: location.LocationArn,
 			}
@@ -80,7 +80,7 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 
 func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
-	resourceName := "aws_datasync_location_fsx_windows.test"
+	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 	fsResourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -112,7 +112,7 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 
 func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
-	resourceName := "aws_datasync_location_fsx_windows.test"
+	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
@@ -133,7 +133,7 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 
 func TestAccAWSDataSyncLocationFsxWindows_Subdirectory(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
-	resourceName := "aws_datasync_location_fsx_windows.test"
+	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
@@ -159,7 +159,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Subdirectory(t *testing.T) {
 
 func TestAccAWSDataSyncLocationFsxWindows_Tags(t *testing.T) {
 	var locationFsxWindows1, locationFsxWindows2, locationFsxWindows3 datasync.DescribeLocationFsxWindowsOutput
-	resourceName := "aws_datasync_location_fsx_windows.test"
+	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
@@ -207,11 +207,11 @@ func testAccCheckAWSDataSyncLocationFsxWindowsDestroy(s *terraform.State) error 
 	conn := testAccProvider.Meta().(*AWSClient).datasyncconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_datasync_location_fsx_windows" {
+		if rs.Type != "aws_datasync_location_fsx_windows_file_system" {
 			continue
 		}
 
-		locationArn, _, err := decodeAwsDataSyncLocationFsxWindowsID(rs.Primary.ID)
+		locationArn, _, err := decodeAwsDataSyncLocationFsxWindowsFileSystemID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -241,7 +241,7 @@ func testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName string, locati
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		locationArn, _, err := decodeAwsDataSyncLocationFsxWindowsID(rs.Primary.ID)
+		locationArn, _, err := decodeAwsDataSyncLocationFsxWindowsFileSystemID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -284,7 +284,7 @@ func testAccCheckAWSDataSyncLocationFsxWindowsDisappears(location *datasync.Desc
 func testAccCheckAWSDataSyncLocationFsxWindowsNotRecreated(i, j *datasync.DescribeLocationFsxWindowsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.CreationTime) != aws.TimeValue(j.CreationTime) {
-			return errors.New("DataSync Location FSX Windows was recreated")
+			return errors.New("DataSync Location FSX Windows File System was recreated")
 		}
 
 		return nil
@@ -293,7 +293,7 @@ func testAccCheckAWSDataSyncLocationFsxWindowsNotRecreated(i, j *datasync.Descri
 
 func testAccAWSDataSyncLocationFsxWindowsConfig() string {
 	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
-resource "aws_datasync_location_fsx_windows" "test" {
+resource "aws_datasync_location_fsx_windows_file_system" "test" {
   fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
   user                = "SomeUser"
   password            = "SuperSecretPassw0rd"
@@ -304,19 +304,19 @@ resource "aws_datasync_location_fsx_windows" "test" {
 
 func testAccAWSDataSyncLocationFsxWindowsConfigSubdirectory(subdirectory string) string {
 	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
-resource "aws_datasync_location_fsx_windows" "test" {
+resource "aws_datasync_location_fsx_windows_file_system" "test" {
   fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
   user                = "SomeUser"
   password            = "SuperSecretPassw0rd"
   security_group_arns = ["${aws_security_group.test1.arn}"]
-  subdirectory        = %q
+  subdirectory        = %[1]q
 }
 `, subdirectory)
 }
 
 func testAccAWSDataSyncLocationFsxWindowsConfigTags1(key1, value1 string) string {
 	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
-resource "aws_datasync_location_fsx_windows" "test" {
+resource "aws_datasync_location_fsx_windows_file_system" "test" {
   fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
   user                = "SomeUser"
   password            = "SuperSecretPassw0rd"
@@ -331,7 +331,7 @@ resource "aws_datasync_location_fsx_windows" "test" {
 
 func testAccAWSDataSyncLocationFsxWindowsConfigTags2(key1, value1, key2, value2 string) string {
 	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
-resource "aws_datasync_location_fsx_windows" "test" {
+resource "aws_datasync_location_fsx_windows_file_system" "test" {
   fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
   user                = "SomeUser"
   password            = "SuperSecretPassw0rd"
