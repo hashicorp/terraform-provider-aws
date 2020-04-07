@@ -23,6 +23,13 @@ func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 		Delete: resourceAwsRedshiftSnapshotCopyGrantDelete,
 		Exists: resourceAwsRedshiftSnapshotCopyGrantExists,
 
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("snapshot_copy_grant_name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
