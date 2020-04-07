@@ -15,13 +15,15 @@ import (
 
 func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 	return &schema.Resource{
-		// There is no API for updating/modifying grants, hence no Update
-		// Instead changes to most fields will force a new resource
 		Create: resourceAwsRedshiftSnapshotCopyGrantCreate,
 		Read:   resourceAwsRedshiftSnapshotCopyGrantRead,
 		Update: resourceAwsRedshiftSnapshotCopyGrantUpdate,
 		Delete: resourceAwsRedshiftSnapshotCopyGrantDelete,
 		Exists: resourceAwsRedshiftSnapshotCopyGrantExists,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
