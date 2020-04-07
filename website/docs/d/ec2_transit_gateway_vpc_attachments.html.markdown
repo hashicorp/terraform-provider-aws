@@ -15,19 +15,17 @@ Get information on EC2 Transit Gateway VPC Attachments.
 ### By Filter
 
 ```hcl
-data "aws_ec2_transit_gateway_vpc_attachments" "example" {
+data "aws_ec2_transit_gateway_vpc_attachments" "filtered" {
   filter {
     name   = "state"
     values = ["pendingAcceptance"]
   }
 }
 
-# to get more information on the attachments
-data "aws_ec2_transit_gateway_vpc_attachment" "sample" {
-  count = length(data.aws_ec2_transit_gateway_vpc_attachments.example)
-  id = data.aws_ec2_transit_gateway_vpc_attachments.example[count.index]
+data "aws_ec2_transit_gateway_vpc_attachment" "unit" {
+  count = length(data.aws_ec2_transit_gateway_vpc_attachments.filtered.ids)
+  id    = data.aws_ec2_transit_gateway_vpc_attachments.filtered.ids[count.index]
 }
-
 ```
 
 ## Argument Reference
@@ -38,13 +36,14 @@ The following arguments are supported:
 
 ### filter Argument Reference
 
-* `name` - (Required) Name of the filter @see https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-transit-gateway-attachments.html.
+* `name` - (Required) Name of the filter check avalable value on [official documentation][1]
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `ids` A list of all attachments ids matching filter
+* `ids` A list of all attachments ids matching filter, you can retrieve more information about the attachment using the data [aws_ec2_transit_gateway_vpc_attachment][2] getting it by identifier 
 
-
+[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-transit-gateway-attachments.html
+[2]: https://www.terraform.io/docs/providers/aws/d/ec2_transit_gateway_vpc_attachment.html
