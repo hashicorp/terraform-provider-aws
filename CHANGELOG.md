@@ -1,5 +1,17 @@
 ## 2.57.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* provider: The configuration for the preview ignore tags functionality has been updated to include a wrapping configuration block. For example:
+
+```hcl
+provider "aws" {
+  ignore_tags {
+    keys = ["TagKey1"]
+  }
+}
+```
+
 FEATURES:
 
 * **New Data Source:** `aws_cloudfront_distribution` [GH-6468]
