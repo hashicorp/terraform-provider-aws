@@ -7,6 +7,7 @@ FEATURES:
 BUG FIXES:
 
 * resource/aws_appautoscaling_policy: Fix error when importing DynamoDB Table Index policy [GH-11232]
+* resource/aws_lb_target_group: Automatically propose resource recreation for TCP `protocol` Target Groups when `health_check` configuration block `interval`, `protocol`, or `timeout` argument values are updated [GH-4568]
 
 ## 2.56.0 (April 03, 2020)
 
