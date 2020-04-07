@@ -144,6 +144,11 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"operation": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateIoTRuleDynamoDBOperation,
+						},
 					},
 				},
 			},
@@ -401,6 +406,9 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 		}
 		if v, ok := raw["payload_field"].(string); ok && v != "" {
 			act.DynamoDB.PayloadField = aws.String(v)
+		}
+		if v, ok := raw["operation"].(string); ok && v != "" {
+			act.DynamoDB.Operation = aws.String(v)
 		}
 		actions[i] = act
 		i++

@@ -102,6 +102,7 @@ The `dynamodb` object takes the following arguments:
 * `range_key_field` - (Optional) The range key name.
 * `range_key_type` - (Optional) The range key type. Valid values are "STRING" or "NUMBER".
 * `range_key_value` - (Optional) The range key value.
+* `operation` - (Optional) The operation. Valid values are "INSERT", "UPDATE", or "DELETE".
 * `role_arn` - (Required) The ARN of the IAM role that grants access to the DynamoDB table.
 * `table_name` - (Required) The name of the DynamoDB table.
 

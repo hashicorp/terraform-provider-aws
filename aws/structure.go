@@ -2809,6 +2809,10 @@ func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface
 				m["range_key_value"] = aws.StringValue(v.RangeKeyValue)
 			}
 
+			if v.Operation != nil {
+				m["operation"] = aws.StringValue(v.Operation)
+			}
+
 			items = append(items, m)
 		}
 	}
