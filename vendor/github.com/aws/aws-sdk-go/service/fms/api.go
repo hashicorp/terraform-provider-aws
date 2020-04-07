@@ -2488,8 +2488,8 @@ func (s *GetProtectionStatusOutput) SetServiceType(v string) *GetProtectionStatu
 // The operation failed because of a system problem, even though the request
 // was valid. Retry your request.
 type InternalErrorException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2506,17 +2506,17 @@ func (s InternalErrorException) GoString() string {
 
 func newErrorInternalErrorException(v protocol.ResponseMetadata) error {
 	return &InternalErrorException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalErrorException) Code() string {
+func (s *InternalErrorException) Code() string {
 	return "InternalErrorException"
 }
 
 // Message returns the exception's message.
-func (s InternalErrorException) Message() string {
+func (s *InternalErrorException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2524,28 +2524,28 @@ func (s InternalErrorException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalErrorException) OrigErr() error {
+func (s *InternalErrorException) OrigErr() error {
 	return nil
 }
 
-func (s InternalErrorException) Error() string {
+func (s *InternalErrorException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalErrorException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalErrorException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The parameters of the request were invalid.
 type InvalidInputException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2562,17 +2562,17 @@ func (s InvalidInputException) GoString() string {
 
 func newErrorInvalidInputException(v protocol.ResponseMetadata) error {
 	return &InvalidInputException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidInputException) Code() string {
+func (s *InvalidInputException) Code() string {
 	return "InvalidInputException"
 }
 
 // Message returns the exception's message.
-func (s InvalidInputException) Message() string {
+func (s *InvalidInputException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2580,30 +2580,30 @@ func (s InvalidInputException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidInputException) OrigErr() error {
+func (s *InvalidInputException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidInputException) Error() string {
+func (s *InvalidInputException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidInputException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidInputException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidInputException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidInputException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The operation failed because there was nothing to do. For example, you might
 // have submitted an AssociateAdminAccount request, but the account ID that
 // you submitted was already set as the AWS Firewall Manager administrator.
 type InvalidOperationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2620,17 +2620,17 @@ func (s InvalidOperationException) GoString() string {
 
 func newErrorInvalidOperationException(v protocol.ResponseMetadata) error {
 	return &InvalidOperationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidOperationException) Code() string {
+func (s *InvalidOperationException) Code() string {
 	return "InvalidOperationException"
 }
 
 // Message returns the exception's message.
-func (s InvalidOperationException) Message() string {
+func (s *InvalidOperationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2638,28 +2638,28 @@ func (s InvalidOperationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidOperationException) OrigErr() error {
+func (s *InvalidOperationException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidOperationException) Error() string {
+func (s *InvalidOperationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidOperationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidOperationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidOperationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidOperationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The value of the Type parameter is invalid.
 type InvalidTypeException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2676,17 +2676,17 @@ func (s InvalidTypeException) GoString() string {
 
 func newErrorInvalidTypeException(v protocol.ResponseMetadata) error {
 	return &InvalidTypeException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidTypeException) Code() string {
+func (s *InvalidTypeException) Code() string {
 	return "InvalidTypeException"
 }
 
 // Message returns the exception's message.
-func (s InvalidTypeException) Message() string {
+func (s *InvalidTypeException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2694,22 +2694,22 @@ func (s InvalidTypeException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidTypeException) OrigErr() error {
+func (s *InvalidTypeException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidTypeException) Error() string {
+func (s *InvalidTypeException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidTypeException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidTypeException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidTypeException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidTypeException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The operation exceeds a resource limit, for example, the maximum number of
@@ -2717,8 +2717,8 @@ func (s InvalidTypeException) RequestID() string {
 // see Firewall Manager Limits (https://docs.aws.amazon.com/waf/latest/developerguide/fms-limits.html)
 // in the AWS WAF Developer Guide.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2735,17 +2735,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2753,22 +2753,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListComplianceStatusInput struct {
@@ -3749,8 +3749,8 @@ func (s *PutPolicyOutput) SetPolicyArn(v string) *PutPolicyOutput {
 
 // The specified resource was not found.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -3767,17 +3767,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3785,22 +3785,22 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource tags that AWS Firewall Manager uses to determine if a particular
@@ -3868,7 +3868,18 @@ type SecurityServicePolicyData struct {
 	// Details about the service that are specific to the service type, in JSON
 	// format. For service type SHIELD_ADVANCED, this is an empty string.
 	//
-	//    * Example: WAF ManagedServiceData": "{\"type\": \"WAF\", \"ruleGroups\":
+	//    * Example: WAFV2 "SecurityServicePolicyData": "{ \"type\": \"WAFV2\",
+	//    \"postProcessRuleGroups\": [ { \"managedRuleGroupIdentifier\": { \"managedRuleGroupName\":
+	//    \"AWSManagedRulesAdminProtectionRuleSet\", \"vendor\": \"AWS\" } \"ruleGroupARN\":
+	//    \"rule group arn", \"overrideAction\": { \"type\": \"COUNT|\" }, \"excludedRules\":
+	//    [ { \"name\" : \"EntityName\" } ], \"type\": \"ManagedRuleGroup|RuleGroup\"
+	//    } ], \"preProcessRuleGroups\": [ { \"managedRuleGroupIdentifier\": { \"managedRuleGroupName\":
+	//    \"AWSManagedRulesAdminProtectionRuleSet\", \"vendor\": \"AWS\" } \"ruleGroupARN\":
+	//    \"rule group arn\", \"overrideAction\": { \"type\": \"COUNT\" }, \"excludedRules\":
+	//    [ { \"name\" : \"EntityName\" } ], \"type\": \"ManagedRuleGroup|RuleGroup\"
+	//    } ], \"defaultAction\": { \"type\": \"BLOCK\" }}"
+	//
+	//    * Example: WAF "ManagedServiceData": "{\"type\": \"WAF\", \"ruleGroups\":
 	//    [{\"id\": \"12345678-1bcd-9012-efga-0987654321ab\", \"overrideAction\"
 	//    : {\"type\": \"COUNT\"}}], \"defaultAction\": {\"type\": \"BLOCK\"}}
 	//
@@ -4196,6 +4207,9 @@ const (
 const (
 	// SecurityServiceTypeWaf is a SecurityServiceType enum value
 	SecurityServiceTypeWaf = "WAF"
+
+	// SecurityServiceTypeWafv2 is a SecurityServiceType enum value
+	SecurityServiceTypeWafv2 = "WAFV2"
 
 	// SecurityServiceTypeShieldAdvanced is a SecurityServiceType enum value
 	SecurityServiceTypeShieldAdvanced = "SHIELD_ADVANCED"
