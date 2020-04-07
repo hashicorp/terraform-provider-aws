@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source:** `aws_cloudfront_distribution` [GH-6468]
 
+ENHANCEMENTS:
+
+* resource/aws_redshift_snapshot_copy_grant: Support resource import [GH-10350]
+
 BUG FIXES:
 
 * resource/aws_appautoscaling_policy: Fix error when importing DynamoDB Table Index policy [GH-11232]
