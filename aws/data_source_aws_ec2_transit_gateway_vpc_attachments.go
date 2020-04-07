@@ -84,7 +84,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, me
 		var item *schema.ResourceData
 		if transitGatewayVpcAttachment != nil {
 			if transitGatewayVpcAttachment.Options == nil {
-				return fmt.Errorf("error reading EC2 Transit Gateway VPC Attachment (%s): missing options", transitGatewayVpcAttachment.TransitGatewayAttachmentId)
+				return fmt.Errorf("error reading EC2 Transit Gateway VPC Attachment (%s): missing options", aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
 			}
 
 			item.Set("dns_support", transitGatewayVpcAttachment.Options.DnsSupport)
