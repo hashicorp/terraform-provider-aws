@@ -131,7 +131,9 @@ func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	params := rds.CreateDBProxyInput{
 		Auth:         expandDbProxyAuth(d.Get("auth").(*schema.Set).List()),
 		DBProxyName:  aws.String(d.Get("name").(string)),
+		DebugLogging: aws.Bool(d.Get("debug_logging").(bool)),
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
+		RequireTLS:   aws.Bool(d.Get("require_tls").(bool)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		Tags:         tags,
 		VpcSubnetIds: expandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
@@ -315,19 +317,13 @@ func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 		Auth:           expandDbProxyAuth(d.Get("auth").(*schema.Set).List()),
 		DBProxyName:    aws.String(oName.(string)),
 		NewDBProxyName: aws.String(nName.(string)),
+		DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
+		RequireTLS:     aws.Bool(d.Get("require_tls").(bool)),
 		RoleArn:        aws.String(d.Get("role_arn").(string)),
-	}
-
-	if v, ok := d.GetOk("debug_logging"); ok {
-		params.DebugLogging = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("idle_client_timeout"); ok {
 		params.IdleClientTimeout = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("require_tls"); ok {
-		params.RequireTLS = aws.Bool(v.(bool))
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
@@ -376,6 +372,7 @@ func resourceAwsDbProxyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{rds.DBProxyStatusDeleting},
+		Target:  []string{""},
 		Refresh: resourceAwsDbProxyRefreshFunc(conn, d.Id()),
 		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
