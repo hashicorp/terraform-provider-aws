@@ -505,6 +505,8 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 		}
 	}
 
+	rootVolumeSize := "11"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   resourceName,
@@ -513,12 +515,12 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigBlockDevices,
+				Config: testAccAwsEc2InstanceConfigBlockDevices(rootVolumeSize),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "root_block_device.0.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.device_name", "/dev/sdb"),
@@ -1460,6 +1462,7 @@ func TestAccAWSInstance_EbsRootDevice_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "root_block_device.0.volume_size"),
 					resource.TestCheckResourceAttrSet(resourceName, "root_block_device.0.volume_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "root_block_device.0.volume_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "root_block_device.0.device_name"),
 				),
 			},
 		},
@@ -1471,13 +1474,13 @@ func TestAccAWSInstance_EbsRootDevice_ModifySize(t *testing.T) {
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
 
-	originalSize := "30"
-	deleteOnTermination := "false"
+	deleteOnTermination := "true"
 	volumeType := "gp2"
 
+	originalSize := "30"
 	updatedSize := "32"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1510,12 +1513,12 @@ func TestAccAWSInstance_EbsRootDevice_ModifyType(t *testing.T) {
 	resourceName := "aws_instance.test"
 
 	volumeSize := "30"
-	deleteOnTermination := "false"
+	deleteOnTermination := "true"
 
 	originalType := "gp2"
 	updatedType := "io1"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1549,13 +1552,13 @@ func TestAccAWSInstance_EbsRootDevice_ModifyIOPS(t *testing.T) {
 	resourceName := "aws_instance.test"
 
 	volumeSize := "30"
-	deleteOnTermination := "false"
+	deleteOnTermination := "true"
 	volumeType := "io1"
-	originalIOPS := "100"
 
+	originalIOPS := "100"
 	updatedIOPS := "200"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1585,31 +1588,163 @@ func TestAccAWSInstance_EbsRootDevice_ModifyIOPS(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_modifyWithMultipleBlockDevices(t *testing.T) {
-	var before ec2.Instance
-	var after ec2.Instance
+func TestAccAWSInstance_EbsRootDevice_ModifyDeleteOnTermination(t *testing.T) {
+	var original ec2.Instance
+	var updated ec2.Instance
 	resourceName := "aws_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	volumeSize := "30"
+	volumeType := "gp2"
+
+	originalDeleteOnTermination := "false"
+	updatedDeleteOnTermination := "true"
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigBlockDevices,
+				Config: testAccAwsEc2InstanceRootBlockDevice(volumeSize, originalDeleteOnTermination, volumeType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
+				),
+			},
+			{
+				Config: testAccAwsEc2InstanceRootBlockDevice(volumeSize, updatedDeleteOnTermination, volumeType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &updated),
+					testAccCheckInstanceNotRecreated(t, &original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_EbsRootDevice_ModifyAll(t *testing.T) {
+	var original ec2.Instance
+	var updated ec2.Instance
+	resourceName := "aws_instance.test"
+
+	originalSize := "30"
+	updatedSize := "32"
+
+	originalType := "gp2"
+	updatedType := "io1"
+
+	updatedIOPS := "200"
+
+	originalDeleteOnTermination := "false"
+	updatedDeleteOnTermination := "true"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEc2InstanceRootBlockDevice(originalSize, originalDeleteOnTermination, originalType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalSize),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", originalType),
+				),
+			},
+			{
+				Config: testAccAwsEc2InstanceRootBlockDeviceWithIOPS(updatedSize, updatedDeleteOnTermination, updatedType, updatedIOPS),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &updated),
+					testAccCheckInstanceNotRecreated(t, &original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", updatedSize),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", updatedType),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", updatedIOPS),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifySize(t *testing.T) {
+	var before ec2.Instance
+	var after ec2.Instance
+	resourceName := "aws_instance.test"
+
+	deleteOnTermination := "true"
+
+	originalRootVolumeSize := "10"
+	updatedRootVolumeSize := "14"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(originalRootVolumeSize, deleteOnTermination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalRootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "9"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.volume_size", "12"),
 				),
 			},
 			{
-				Config: testAccInstanceConfigBlockDevicesRootSizeUpdated,
+				Config: testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(updatedRootVolumeSize, deleteOnTermination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckInstanceNotRecreated(t, &before, &after),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "14"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", updatedRootVolumeSize),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "9"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.volume_size", "12"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermination(t *testing.T) {
+	var before ec2.Instance
+	var after ec2.Instance
+	resourceName := "aws_instance.test"
+
+	rootVolumeSize := "10"
+
+	originalDeleteOnTermination := "false"
+	updatedDeleteOnTermination := "true"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(rootVolumeSize, originalDeleteOnTermination),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "9"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.volume_size", "12"),
+				),
+			},
+			{
+				Config: testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(rootVolumeSize, updatedDeleteOnTermination),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &after),
+					testAccCheckInstanceNotRecreated(t, &before, &after),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "9"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.volume_size", "12"),
@@ -3130,7 +3265,15 @@ data "aws_ami" "ami" {
 }
 `
 
-const testAccInstanceConfigBlockDevices = `
+func testAccAwsEc2InstanceConfigBlockDevices(size string) string {
+	return testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(size, "")
+}
+
+func testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(size, delete string) string {
+	if delete == "" {
+		delete = "null"
+	}
+	return fmt.Sprintf(`
 resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-55a7ea65"
@@ -3141,8 +3284,9 @@ resource "aws_instance" "test" {
 	instance_type = "m3.medium"
 
 	root_block_device {
-		volume_type = "gp2"
-		volume_size = 11
+		volume_type           = "gp2"
+		volume_size           = %[1]s
+		delete_on_termination = %[2]s
 	}
 
 	ebs_block_device {
@@ -3169,48 +3313,8 @@ resource "aws_instance" "test" {
 		virtual_name = "ephemeral0"
 	}
 }
-`
-
-const testAccInstanceConfigBlockDevicesRootSizeUpdated = `
-resource "aws_instance" "test" {
-	# us-west-2
-	ami = "ami-55a7ea65"
-
-	# In order to attach an encrypted volume to an instance you need to have an
-	# m3.medium or larger. See "Supported Instance Types" in:
-	# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
-	instance_type = "m3.medium"
-
-	root_block_device {
-		volume_type = "gp2"
-		volume_size = 14
-	}
-
-	ebs_block_device {
-		device_name = "/dev/sdb"
-		volume_size = 9
-	}
-
-	ebs_block_device {
-		device_name = "/dev/sdc"
-		volume_size = 10
-		volume_type = "io1"
-		iops = 100
-	}
-
-	# Encrypted ebs block device
-	ebs_block_device {
-		device_name = "/dev/sdd"
-		volume_size = 12
-		encrypted   = true
-	}
-
-	ephemeral_block_device {
-		device_name = "/dev/sde"
-		virtual_name = "ephemeral0"
-	}
+`, size, delete)
 }
-`
 
 func testAccInstanceConfigSourceDestEnable(rName string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`

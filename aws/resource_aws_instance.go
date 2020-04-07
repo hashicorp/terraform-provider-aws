@@ -443,7 +443,11 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
-							ForceNew: true,
+						},
+
+						"device_name": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 
 						"encrypted": {
@@ -1269,12 +1273,14 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := ec2.ModifyVolumeInput{
 			VolumeId: aws.String(volumeID),
 		}
+		modifyVolume := false
 
 		rbd := d.Get("root_block_device.0").(map[string]interface{})
 		if v, ok := rbd["volume_size"]; ok {
 			currSize := rootDevice["volume_size"].(int64)
 			volumeSize := int64(v.(int))
 			if volumeSize != currSize {
+				modifyVolume = true
 				input.Size = aws.Int64(volumeSize)
 			}
 		}
@@ -1282,6 +1288,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			currType := rootDevice["volume_type"].(string)
 			volumeType := v.(string)
 			if volumeType != currType {
+				modifyVolume = true
 				input.VolumeType = aws.String(volumeType)
 			}
 		}
@@ -1289,29 +1296,50 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			currIOPS := rootDevice["iops"].(int64)
 			iops := int64(v.(int))
 			if iops != currIOPS {
+				modifyVolume = true
 				input.Iops = aws.Int64(iops)
 			}
 		}
-		_, err = conn.ModifyVolume(&input)
-		if err != nil {
-			return err
+		if modifyVolume {
+			_, err = conn.ModifyVolume(&input)
+			if err != nil {
+				return err
+			}
+
+			// The volume is useable once the state is "optimizing", but will not be at full performance.
+			// Optimization can take hours. e.g. a full 1 TiB drive takes approximately 6 hours to optimize,
+			// according to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-modifications.html
+			stateConf := &resource.StateChangeConf{
+				Pending:    []string{"modifying"},
+				Target:     []string{"completed", "optimizing"},
+				Refresh:    VolumeStateRefreshFunc(conn, volumeID, "failed"),
+				Timeout:    d.Timeout(schema.TimeoutUpdate),
+				Delay:      30 * time.Second,
+				MinTimeout: 30 * time.Second,
+			}
+
+			_, err = stateConf.WaitForState()
+			if err != nil {
+				return fmt.Errorf("error waiting for volume (%s) to be modified: %s", volumeID, err)
+			}
 		}
 
-		// The volume is useable once the state is "optimizing", but will not be at full performance.
-		// Optimization can take hours. e.g. a full 1 TiB drive takes approximately 6 hours to optimize,
-		// according to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-modifications.html
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"modifying"},
-			Target:     []string{"completed", "optimizing"},
-			Refresh:    VolumeStateRefreshFunc(conn, volumeID, "failed"),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			Delay:      30 * time.Second,
-			MinTimeout: 30 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("error waiting for volume (%s) to be modified: %s", volumeID, err)
+		if v, ok := rbd["delete_on_termination"]; ok {
+			_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+				InstanceId: aws.String(d.Id()),
+				BlockDeviceMappings: []*ec2.InstanceBlockDeviceMappingSpecification{
+					{
+						DeviceName: aws.String(rootDevice["device_name"].(string)),
+						Ebs: &ec2.EbsInstanceBlockDeviceSpecification{
+							// VolumeId:            aws.String(volumeID),
+							DeleteOnTermination: aws.Bool(v.(bool)),
+						},
+					},
+				},
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -1518,13 +1546,13 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 		if vol.KmsKeyId != nil {
 			bd["kms_key_id"] = aws.StringValue(vol.KmsKeyId)
 		}
+		if instanceBd.DeviceName != nil {
+			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
+		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {
 			blockDevices["root"] = bd
 		} else {
-			if instanceBd.DeviceName != nil {
-				bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
-			}
 			if vol.SnapshotId != nil {
 				bd["snapshot_id"] = aws.StringValue(vol.SnapshotId)
 			}
