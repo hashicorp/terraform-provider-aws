@@ -759,7 +759,12 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 				return err
 			}
 		}
-		if diff.HasChange("health_check.0.protocol") {
+		// The health_check configuration block protocol argument has Default: HTTP, however the block
+		// itself is Computed: true. When not configured, a TLS (Network LB) Target Group will default
+		// to health check protocol TLS. We do not want to trigger recreation in this scenario.
+		// ResourceDiff will show 0 changed keys for the configuration block, which we can use to ensure
+		// there was an actual change to trigger the ForceNew.
+		if diff.HasChange("health_check.0.protocol") && len(diff.GetChangedKeysPrefix("health_check.0")) != 0 {
 			if err := diff.ForceNew("health_check.0.protocol"); err != nil {
 				return err
 			}
