@@ -76,6 +76,7 @@ func resourceAwsDbProxy() *schema.Resource {
 			"vpc_subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
+				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
@@ -237,6 +238,26 @@ func expandDbProxyAuth(l []interface{}) []*rds.UserAuthConfig {
 	return userAuthConfigs
 }
 
+func flattenDbProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]interface{} {
+	m := make(map[string]interface{})
+
+	m["auth_scheme"] = aws.StringValue(userAuthConfig.AuthScheme)
+	m["description"] = aws.StringValue(userAuthConfig.Description)
+	m["iam_auth"] = aws.StringValue(userAuthConfig.IAMAuth)
+	m["secret_arn"] = aws.StringValue(userAuthConfig.SecretArn)
+	m["username"] = aws.StringValue(userAuthConfig.UserName)
+
+	return m
+}
+
+func flattenDbProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) *schema.Set {
+	s := []interface{}{}
+	for _, v := range userAuthConfigs {
+		s = append(s, flattenDbProxyAuth(v))
+	}
+	return schema.NewSet(resourceAwsDbProxyAuthHash, s)
+}
+
 func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
@@ -262,6 +283,7 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 	dbProxy := resp.DBProxies[0]
 
 	d.Set("arn", aws.StringValue(dbProxy.DBProxyArn))
+	d.Set("auth", flattenDbProxyAuths(dbProxy.Auth))
 	d.Set("name", dbProxy.DBProxyName)
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("engine_family", dbProxy.EngineFamily)
@@ -286,6 +308,49 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+
+	oName, nName := d.GetChange("name")
+
+	params := rds.ModifyDBProxyInput{
+		Auth:           expandDbProxyAuth(d.Get("auth").(*schema.Set).List()),
+		DBProxyName:    aws.String(oName.(string)),
+		NewDBProxyName: aws.String(nName.(string)),
+		RoleArn:        aws.String(d.Get("role_arn").(string)),
+	}
+
+	if v, ok := d.GetOk("debug_logging"); ok {
+		params.DebugLogging = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("idle_client_timeout"); ok {
+		params.IdleClientTimeout = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("require_tls"); ok {
+		params.RequireTLS = aws.Bool(v.(bool))
+	}
+
+	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		params.SecurityGroups = expandStringSet(v)
+	}
+
+	log.Printf("[DEBUG] Update DB Proxy: %#v", params)
+	_, err := conn.ModifyDBProxy(&params)
+	if err != nil {
+		return fmt.Errorf("Error updating DB Proxy: %s", err)
+	}
+
+	stateChangeConf := &resource.StateChangeConf{
+		Pending: []string{rds.DBProxyStatusModifying},
+		Target:  []string{rds.DBProxyStatusAvailable},
+		Refresh: resourceAwsDbProxyRefreshFunc(conn, d.Id()),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	_, err = stateChangeConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Error waiting for DB Proxy update: %s", err)
+	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
