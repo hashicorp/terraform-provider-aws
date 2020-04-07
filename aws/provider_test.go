@@ -473,6 +473,33 @@ provider "aws" {
 `, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), testAccGetAlternateRegion(), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
 }
 
+// When testing needs to distinguish a second region and second account in the same region
+// e.g. cross-region functionality with RAM shared subnets
+func testAccAlternateAccountAndAlternateRegionProviderConfig() string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  access_key = %[1]q
+  alias      = "alternateaccountalternateregion"
+  profile    = %[2]q
+  region     = %[3]q
+  secret_key = %[4]q
+}
+
+provider "aws" {
+  access_key = %[1]q
+  alias      = "alternateaccountsameregion"
+  profile    = %[2]q
+  secret_key = %[4]q
+}
+
+provider "aws" {
+  alias  = "sameaccountalternateregion"
+  region = %[3]q
+}
+`, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), testAccGetAlternateRegion(), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+}
+
 func testAccAlternateRegionProviderConfig() string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
