@@ -45,6 +45,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `transit_gateway_vpc_attachments_ids` A list of all attachments ids matching filter
+* `ids` A list of all attachments ids matching filter
 
 

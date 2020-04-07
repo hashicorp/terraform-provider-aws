@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsEc2TransitGatewayVpcAttachments() *schema.Resource {
@@ -17,7 +18,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachments() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
-			"transit_gateway_vpc_attachments_ids": {
+			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -30,7 +31,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, me
 	conn := meta.(*AWSClient).ec2conn
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
-	var items []*schema.ResourceData
+	var items []string
 
 	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
@@ -48,16 +49,15 @@ func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, me
 	}
 
 	for _, transitGatewayVpcAttachment := range output.TransitGatewayVpcAttachments {
-		var item string
 		if transitGatewayVpcAttachment != nil {
 			if transitGatewayVpcAttachment.Options == nil {
 				return fmt.Errorf("error reading EC2 Transit Gateway VPC Attachment (%s): missing options", aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
 			}
 
-			item = aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
+			items = append(items, *transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 		}
-		items = append(items, item)
 	}
-	d.Set("transit_gateway_vpc_attachments_ids", items)
+	d.SetId(resource.UniqueId())
+	d.Set("ids", items)
 	return nil
 }

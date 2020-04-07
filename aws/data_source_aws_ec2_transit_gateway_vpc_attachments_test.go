@@ -18,7 +18,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentsDataSource_Filter(t *testing.T) {
 			{
 				Config: testAccAWSEc2TransitGatewayVpcAttachmentsDataSourceConfigFilter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "transit_gateway_vpc_attachments_ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 				),
 			},
 		},
