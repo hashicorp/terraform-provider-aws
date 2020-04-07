@@ -200,8 +200,7 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	ignoreTags := meta.(*AWSClient).ignoreTags
-	ignoreTagPrefixes := meta.(*AWSClient).ignoreTagPrefixes
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeSubnets(&ec2.DescribeSubnetsInput{
 		SubnetIds: []*string{aws.String(d.Id())},
@@ -242,7 +241,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", subnet.SubnetArn)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnorePrefixes(ignoreTagPrefixes).Ignore(ignoreTags).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // Provider returns a terraform.ResourceProvider.
@@ -90,20 +91,29 @@ func Provider() terraform.ResourceProvider {
 
 			"endpoints": endpointsSchema(),
 
-			"ignore_tag_prefixes": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "Resource tag key prefixes to ignore across all resources.",
-			},
-
 			"ignore_tags": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "Resource tag keys to ignore across all resources.",
+				MaxItems:    1,
+				Description: "Configuration block with settings to ignore resource tags across all resources.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"keys": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Set:         schema.HashString,
+							Description: "Resource tag keys to ignore across all resources.",
+						},
+						"key_prefixes": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Set:         schema.HashString,
+							Description: "Resource tag key prefixes to ignore across all resources.",
+						},
+					},
+				},
 			},
 
 			"insecure": {
@@ -1109,6 +1119,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Region:                  d.Get("region").(string),
 		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),
+		IgnoreTagsConfig:        expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                d.Get("insecure").(bool),
 		SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:     d.Get("skip_get_ec2_platforms").(bool),
@@ -1149,18 +1160,6 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		endpoints := endpointsSetI.(map[string]interface{})
 		for _, endpointServiceName := range endpointServiceNames {
 			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
-		}
-	}
-
-	if v, ok := d.GetOk("ignore_tag_prefixes"); ok {
-		for _, ignoreTagPrefixRaw := range v.(*schema.Set).List() {
-			config.IgnoreTagPrefixes = append(config.IgnoreTagPrefixes, ignoreTagPrefixRaw.(string))
-		}
-	}
-
-	if v, ok := d.GetOk("ignore_tags"); ok {
-		for _, ignoreTagRaw := range v.(*schema.Set).List() {
-			config.IgnoreTags = append(config.IgnoreTags, ignoreTagRaw.(string))
 		}
 	}
 
@@ -1240,4 +1239,23 @@ func endpointsSchema() *schema.Schema {
 			Schema: endpointsAttributes,
 		},
 	}
+}
+
+func expandProviderIgnoreTags(l []interface{}) *keyvaluetags.IgnoreConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	ignoreConfig := &keyvaluetags.IgnoreConfig{}
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["keys"].(*schema.Set); ok {
+		ignoreConfig.Keys = keyvaluetags.New(v.List())
+	}
+
+	if v, ok := m["key_prefixes"].(*schema.Set); ok {
+		ignoreConfig.KeyPrefixes = keyvaluetags.New(v.List())
+	}
+
+	return ignoreConfig
 }

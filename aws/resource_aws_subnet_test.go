@@ -192,11 +192,11 @@ func TestAccAWSSubnet_ignoreTags(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:   testAccProviderConfigIgnoreTagPrefixes1("ignorekey") + testAccSubnetConfig,
+				Config:   testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccSubnetConfig,
 				PlanOnly: true,
 			},
 			{
-				Config:   testAccProviderConfigIgnoreTags1("ignorekey1") + testAccSubnetConfig,
+				Config:   testAccProviderConfigIgnoreTagsKeys1("ignorekey1") + testAccSubnetConfig,
 				PlanOnly: true,
 			},
 		},
