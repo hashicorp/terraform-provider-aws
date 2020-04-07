@@ -21,6 +21,13 @@ data "aws_ec2_transit_gateway_vpc_attachments" "example" {
     values = ["pendingAcceptance"]
   }
 }
+
+# to get more information on the attachments
+data "aws_ec2_transit_gateway_vpc_attachment" "sample" {
+  count = length(data.aws_ec2_transit_gateway_vpc_attachments.example)
+  id = data.aws_ec2_transit_gateway_vpc_attachments.example[count.index]
+}
+
 ```
 
 ## Argument Reference
@@ -38,17 +45,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `transit_gateway_vpc_attachments` A list of all attachments matching filter
+* `transit_gateway_vpc_attachments_ids` A list of all attachments ids matching filter
 
-### transit_gateway_vpc_attachments Attribute Reference
 
-Each member of this list have following attributes:
-
-* `dns_support` - Whether DNS support is enabled.
-* `id` - EC2 Transit Gateway VPC Attachment identifier
-* `ipv6_support` - Whether IPv6 support is enabled.
-* `subnet_ids` - Identifiers of EC2 Subnets.
-* `transit_gateway_id` - EC2 Transit Gateway identifier
-* `tags` - Key-value tags for the EC2 Transit Gateway VPC Attachment
-* `vpc_id` - Identifier of EC2 VPC.
-* `vpc_owner_id` - Identifier of the AWS account that owns the EC2 VPC.
