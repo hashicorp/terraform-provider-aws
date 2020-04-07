@@ -43,7 +43,7 @@ func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "schema", schema),
+					testAccCheckResourceAttrEquivalentJSON(resourceName, "schema", schema),
 				),
 			},
 			{
@@ -111,19 +111,19 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 }
 `
 	schema2 := `
-	{
-		"$schema": "http://json-schema.org/draft-04/schema#",
-		"title": "ExampleModel",
-		"type": "object",
-		"properties": {
-		  "ids": {
-			"type": "array",
-			"items":{
-			  "type": "integer"
-			}
-		  }
-		}
-	  }
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "ExampleModel",
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+        "items":{
+          "type": "integer"
+        }
+    }
+  }
+}
 `
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -138,7 +138,7 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type", "text/x-json"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "schema", schema1),
+					testAccCheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
 				),
 			},
 			{
@@ -148,7 +148,7 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "schema", schema2),
+					testAccCheckResourceAttrEquivalentJSON(resourceName, "schema", schema2),
 				),
 			},
 			{
@@ -158,7 +158,7 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type", "text/x-json"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "schema", schema1),
+					testAccCheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
 				),
 			},
 			{
