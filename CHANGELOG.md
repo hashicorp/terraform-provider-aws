@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_docdb_cluster: Add deletion_protection argument [GH-12650]
 * resource/aws_redshift_snapshot_copy_grant: Support resource import [GH-10350]
 
 BUG FIXES:
