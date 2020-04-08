@@ -9075,6 +9075,9 @@ type CreateSMBFileShareInput struct {
 	// they like on the file share, regardless of file permissions.
 	AdminUserList []*string `type:"list"`
 
+	// The Amazon Resource Name (ARN) of the storage used for the audit logs.
+	AuditDestinationARN *string `type:"string"`
+
 	// The authentication method that users use to access the file share.
 	//
 	// Valid values are ActiveDirectory or GuestAccess. The default is ActiveDirectory.
@@ -9091,8 +9094,7 @@ type CreateSMBFileShareInput struct {
 	// If this field is not populated, the default value S3_STANDARD is used. Optional.
 	DefaultStorageClass *string `min:"5" type:"string"`
 
-	// The Amazon Resource Name (ARN) of the file gateway on which you want to create
-	// a file share.
+	// The ARN of the file gateway on which you want to create a file share.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -9233,6 +9235,12 @@ func (s *CreateSMBFileShareInput) Validate() error {
 // SetAdminUserList sets the AdminUserList field's value.
 func (s *CreateSMBFileShareInput) SetAdminUserList(v []*string) *CreateSMBFileShareInput {
 	s.AdminUserList = v
+	return s
+}
+
+// SetAuditDestinationARN sets the AuditDestinationARN field's value.
+func (s *CreateSMBFileShareInput) SetAuditDestinationARN(v string) *CreateSMBFileShareInput {
+	s.AuditDestinationARN = &v
 	return s
 }
 
@@ -13262,8 +13270,8 @@ func (s *GatewayInfo) SetGatewayType(v string) *GatewayInfo {
 // An internal server error has occurred during the request. For more information,
 // see the error and message fields.
 type InternalServerError struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A StorageGatewayError that provides more information about the cause of the
 	// error.
@@ -13285,17 +13293,17 @@ func (s InternalServerError) GoString() string {
 
 func newErrorInternalServerError(v protocol.ResponseMetadata) error {
 	return &InternalServerError{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerError) Code() string {
+func (s *InternalServerError) Code() string {
 	return "InternalServerError"
 }
 
 // Message returns the exception's message.
-func (s InternalServerError) Message() string {
+func (s *InternalServerError) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13303,29 +13311,29 @@ func (s InternalServerError) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerError) OrigErr() error {
+func (s *InternalServerError) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerError) Error() string {
+func (s *InternalServerError) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerError) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerError) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerError) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerError) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An exception occurred because an invalid gateway request was issued to the
 // service. For more information, see the error and message fields.
 type InvalidGatewayRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A StorageGatewayError that provides more detail about the cause of the error.
 	Error_ *Error `locationName:"error" type:"structure"`
@@ -13346,17 +13354,17 @@ func (s InvalidGatewayRequestException) GoString() string {
 
 func newErrorInvalidGatewayRequestException(v protocol.ResponseMetadata) error {
 	return &InvalidGatewayRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidGatewayRequestException) Code() string {
+func (s *InvalidGatewayRequestException) Code() string {
 	return "InvalidGatewayRequestException"
 }
 
 // Message returns the exception's message.
-func (s InvalidGatewayRequestException) Message() string {
+func (s *InvalidGatewayRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13364,22 +13372,22 @@ func (s InvalidGatewayRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidGatewayRequestException) OrigErr() error {
+func (s *InvalidGatewayRequestException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidGatewayRequestException) Error() string {
+func (s *InvalidGatewayRequestException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidGatewayRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidGatewayRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidGatewayRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidGatewayRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // JoinDomainInput
@@ -15176,6 +15184,9 @@ type SMBFileShareInfo struct {
 	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
 	AdminUserList []*string `type:"list"`
 
+	// The Amazon Resource Name (ARN) of the storage used for the audit logs.
+	AuditDestinationARN *string `type:"string"`
+
 	// The authentication method of the file share.
 	//
 	// Valid values are ActiveDirectory or GuestAccess. The default is ActiveDirectory.
@@ -15278,6 +15289,12 @@ func (s SMBFileShareInfo) GoString() string {
 // SetAdminUserList sets the AdminUserList field's value.
 func (s *SMBFileShareInfo) SetAdminUserList(v []*string) *SMBFileShareInfo {
 	s.AdminUserList = v
+	return s
+}
+
+// SetAuditDestinationARN sets the AuditDestinationARN field's value.
+func (s *SMBFileShareInfo) SetAuditDestinationARN(v string) *SMBFileShareInfo {
+	s.AuditDestinationARN = &v
 	return s
 }
 
@@ -15398,8 +15415,8 @@ func (s *SMBFileShareInfo) SetValidUserList(v []*string) *SMBFileShareInfo {
 // An internal server error has occurred because the service is unavailable.
 // For more information, see the error and message fields.
 type ServiceUnavailableError struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A StorageGatewayError that provides more information about the cause of the
 	// error.
@@ -15421,17 +15438,17 @@ func (s ServiceUnavailableError) GoString() string {
 
 func newErrorServiceUnavailableError(v protocol.ResponseMetadata) error {
 	return &ServiceUnavailableError{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceUnavailableError) Code() string {
+func (s *ServiceUnavailableError) Code() string {
 	return "ServiceUnavailableError"
 }
 
 // Message returns the exception's message.
-func (s ServiceUnavailableError) Message() string {
+func (s *ServiceUnavailableError) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15439,22 +15456,22 @@ func (s ServiceUnavailableError) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceUnavailableError) OrigErr() error {
+func (s *ServiceUnavailableError) OrigErr() error {
 	return nil
 }
 
-func (s ServiceUnavailableError) Error() string {
+func (s *ServiceUnavailableError) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceUnavailableError) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceUnavailableError) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceUnavailableError) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceUnavailableError) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // SetLocalConsolePasswordInput
@@ -17183,6 +17200,9 @@ type UpdateSMBFileShareInput struct {
 	// @group1. Can only be set if Authentication is set to ActiveDirectory.
 	AdminUserList []*string `type:"list"`
 
+	// The Amazon Resource Name (ARN) of the storage used for the audit logs.
+	AuditDestinationARN *string `type:"string"`
+
 	// The default storage class for objects put into an Amazon S3 bucket by the
 	// file gateway. Possible values are S3_STANDARD, S3_STANDARD_IA, or S3_ONEZONE_IA.
 	// If this field is not populated, the default value S3_STANDARD is used. Optional.
@@ -17278,6 +17298,12 @@ func (s *UpdateSMBFileShareInput) Validate() error {
 // SetAdminUserList sets the AdminUserList field's value.
 func (s *UpdateSMBFileShareInput) SetAdminUserList(v []*string) *UpdateSMBFileShareInput {
 	s.AdminUserList = v
+	return s
+}
+
+// SetAuditDestinationARN sets the AuditDestinationARN field's value.
+func (s *UpdateSMBFileShareInput) SetAuditDestinationARN(v string) *UpdateSMBFileShareInput {
+	s.AuditDestinationARN = &v
 	return s
 }
 

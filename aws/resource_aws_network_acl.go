@@ -251,7 +251,6 @@ func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	d.Partial(true)
 
 	if d.HasChange("ingress") {
 		err := updateNetworkAclEntries(d, "ingress", conn)
@@ -335,7 +334,6 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	d.Partial(false)
 	return resourceAwsNetworkAclRead(d, meta)
 }
 

@@ -821,6 +821,7 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
+
 	// Update other attributes outside of DistributionConfig
 	err = d.Set("active_trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners))
 	if err != nil {

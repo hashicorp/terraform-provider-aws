@@ -200,11 +200,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   potentially end up destroying a live environment). Conflicts with
   `allowed_account_ids`.
 
-* `ignore_tag_prefixes` - (Optional) **NOTE: This functionality is in public preview and there are no compatibility promises with future versions of the Terraform AWS Provider until a general availability announcement.** List of resource tag key prefixes to ignore across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations). This is designed for situations where external systems are managing certain resource tags. It prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values. If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) is also used. This functionality is only supported in the following resources:
-  - `aws_subnet`
-  - `aws_vpc`
-
-* `ignore_tags` - (Optional) **NOTE: This functionality is in public preview and there are no compatibility promises with future versions of the Terraform AWS Provider until a general availability announcement.** List of exact resource tag keys to ignore across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations). This is designed for situations where external systems are managing certain resource tags. It prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value. If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) is also used. This functionality is only supported in the following resources:
+* `ignore_tags` - (Optional) **NOTE: This functionality is in public preview and there are no compatibility promises with future versions of the Terraform AWS Provider until a general availability announcement.** Configuration block with resource tag settings to ignore across all resources handled by this provider for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations. This functionality is only supported in the following resources:
   - `aws_subnet`
   - `aws_vpc`
 
@@ -283,7 +279,9 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   virtual hosted bucket addressing, `http://BUCKET.s3.amazonaws.com/KEY`,
   when possible. Specific to the Amazon S3 service.
 
-The nested `assume_role` block supports the following:
+### assume_role Configuration Block
+
+The `assume_role` configuration block supports the following arguments:
 
 * `role_arn` - (Required) The ARN of the role to assume.
 
@@ -297,6 +295,25 @@ The nested `assume_role` block supports the following:
 This gives you a way to further restrict the permissions for the resulting temporary
 security credentials. You cannot use the passed policy to grant permissions that are
 in excess of those allowed by the access policy of the role that is being assumed.
+
+### ignore_tags Configuration Block
+
+~> **NOTE:** This functionality is in public preview and there are no compatibility promises with future versions of the Terraform AWS Provider until a general availability announcement.
+
+Example:
+
+```hcl
+provider "aws" {
+  ignore_tags {
+    keys = ["TagKey1"]
+  }
+}
+```
+
+The `ignore_tags` configuration block supports the following arguments:
+
+* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider. This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value. If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) is also used.
+* `key_prefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider. This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values. If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) is also used.
 
 ## Getting the Account ID
 

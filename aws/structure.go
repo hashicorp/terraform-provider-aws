@@ -2067,71 +2067,6 @@ func flattenApiGatewayThrottleSettings(settings *apigateway.ThrottleSettings) []
 
 // TODO: refactor some of these helper functions and types in the terraform/helper packages
 
-// getStringPtr returns a *string version of the value taken from m, where m
-// can be a map[string]interface{} or a *schema.ResourceData. If the key isn't
-// present or is empty, getNilString returns nil.
-func getStringPtr(m interface{}, key string) *string {
-	switch m := m.(type) {
-	case map[string]interface{}:
-		v := m[key]
-
-		if v == nil {
-			return nil
-		}
-
-		s := v.(string)
-		if s == "" {
-			return nil
-		}
-
-		return &s
-
-	case *schema.ResourceData:
-		if v, ok := m.GetOk(key); ok {
-			if v == nil || v.(string) == "" {
-				return nil
-			}
-			s := v.(string)
-			return &s
-		}
-	}
-
-	return nil
-}
-
-// a convenience wrapper type for the schema.Set map[string]interface{}
-// Set operations only alter the underlying map if the value is not nil
-type setMap map[string]interface{}
-
-// SetString sets m[key] = *value only if `value != nil`
-func (s setMap) SetString(key string, value *string) {
-	if value == nil {
-		return
-	}
-
-	s[key] = *value
-}
-
-// Set assigns value to s[key] if value isn't nil
-func (s setMap) Set(key string, value interface{}) {
-	if reflect.ValueOf(value).IsNil() {
-		return
-	}
-
-	s[key] = value
-}
-
-// Map returns the raw map type for a shorter type conversion
-func (s setMap) Map() map[string]interface{} {
-	return map[string]interface{}(s)
-}
-
-// MapList returns the map[string]interface{} as a single element in a slice to
-// match the schema.Set data type used for structs.
-func (s setMap) MapList() []map[string]interface{} {
-	return []map[string]interface{}{s.Map()}
-}
-
 // Takes the result of flatmap.Expand for an array of policy attributes and
 // returns ELB API compatible objects
 func expandPolicyAttributes(configured []interface{}) ([]*elb.PolicyAttribute, error) {
@@ -3713,10 +3648,11 @@ func flattenWafAction(n *waf.WafAction) []map[string]interface{} {
 		return nil
 	}
 
-	m := setMap(make(map[string]interface{}))
+	result := map[string]interface{}{
+		"type": aws.StringValue(n.Type),
+	}
 
-	m.SetString("type", n.Type)
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func flattenWafWebAclRules(ts []*waf.ActivatedRule) []map[string]interface{} {

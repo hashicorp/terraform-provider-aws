@@ -634,7 +634,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 
 	if aws.StringValue(projectSource.Type) == codebuild.SourceTypeNoSource {
 		if aws.StringValue(projectSource.Buildspec) == "" {
-			return fmt.Errorf("`build_spec` must be set when source's `type` is `NO_SOURCE`")
+			return fmt.Errorf("`buildspec` must be set when source's `type` is `NO_SOURCE`")
 		}
 
 		if aws.StringValue(projectSource.Location) != "" {

@@ -779,7 +779,14 @@ variable "name" {
   default = "%s"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 data "aws_ami" "amzn" {
   most_recent = true

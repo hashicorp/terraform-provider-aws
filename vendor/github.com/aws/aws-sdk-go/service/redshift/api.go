@@ -1843,7 +1843,8 @@ func (c *Redshift) CreateSnapshotScheduleRequest(input *CreateSnapshotScheduleIn
 
 // CreateSnapshotSchedule API operation for Amazon Redshift.
 //
-// Creates a snapshot schedule with the rate of every 12 hours.
+// Create a snapshot schedule that can be associated to a cluster and which
+// overrides the default system backup schedule.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8611,7 +8612,7 @@ func (c *Redshift) ResizeClusterRequest(input *ResizeClusterInput) (req *request
 // Elastic resize operations have the following restrictions:
 //
 //    * You can only resize clusters of the following types: dc2.large dc2.8xlarge
-//    ds2.xlarge ds2.8xlarge ra3.16xlarge
+//    ds2.xlarge ds2.8xlarge ra3.4xlarge ra3.16xlarge
 //
 //    * The type of nodes that you add must match the node type for the cluster.
 //
@@ -11608,7 +11609,7 @@ type CreateClusterInput struct {
 	// in the Amazon Redshift Cluster Management Guide.
 	//
 	// Valid Values: ds2.xlarge | ds2.8xlarge | dc1.large | dc1.8xlarge | dc2.large
-	// | dc2.8xlarge | ra3.16xlarge
+	// | dc2.8xlarge | ra3.4xlarge | ra3.16xlarge
 	//
 	// NodeType is a required field
 	NodeType *string `type:"string" required:"true"`
@@ -19112,7 +19113,7 @@ type ModifyClusterInput struct {
 	// in the Amazon Redshift Cluster Management Guide.
 	//
 	// Valid Values: ds2.xlarge | ds2.8xlarge | dc1.large | dc1.8xlarge | dc2.large
-	// | dc2.8xlarge | ra3.16xlarge
+	// | dc2.8xlarge | ra3.4xlarge | ra3.16xlarge
 	NodeType *string `type:"string"`
 
 	// The new number of nodes of the cluster. If you specify a new number of nodes,

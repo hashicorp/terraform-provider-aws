@@ -242,8 +242,6 @@ func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).r53conn
 	region := meta.(*AWSClient).region
 
-	d.Partial(true)
-
 	if d.HasChange("comment") {
 		input := route53.UpdateHostedZoneCommentInput{
 			Id:      aws.String(d.Id()),
@@ -255,8 +253,6 @@ func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) erro
 		if err != nil {
 			return fmt.Errorf("error updating Route53 Hosted Zone (%s) comment: %s", d.Id(), err)
 		}
-
-		d.SetPartial("comment")
 	}
 
 	if d.HasChange("tags") {
@@ -298,11 +294,7 @@ func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 		}
-
-		d.SetPartial("vpc")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsRoute53ZoneRead(d, meta)
 }

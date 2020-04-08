@@ -928,8 +928,6 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
-	d.Partial(true)
-
 	if d.HasChange("priority") {
 		params := &elbv2.SetRulePrioritiesInput{
 			RulePriorities: []*elbv2.RulePriorityPair{
@@ -944,8 +942,6 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 		if err != nil {
 			return err
 		}
-
-		d.SetPartial("priority")
 	}
 
 	requestUpdate := false
@@ -1080,7 +1076,6 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 			params.Actions[i] = action
 		}
 		requestUpdate = true
-		d.SetPartial("action")
 	}
 
 	if d.HasChange("condition") {
@@ -1090,7 +1085,6 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 		requestUpdate = true
-		d.SetPartial("condition")
 	}
 
 	if requestUpdate {
@@ -1103,8 +1097,6 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 			return errors.New("Error modifying creating LB Listener Rule: no rules returned in response")
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsLbListenerRuleRead(d, meta)
 }

@@ -330,6 +330,91 @@ func (c *S3Control) DeleteAccessPointPolicyWithContext(ctx aws.Context, input *D
 	return out, req.Send()
 }
 
+const opDeleteJobTagging = "DeleteJobTagging"
+
+// DeleteJobTaggingRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteJobTagging operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteJobTagging for more information on using the DeleteJobTagging
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteJobTaggingRequest method.
+//    req, resp := client.DeleteJobTaggingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/s3control-2018-08-20/DeleteJobTagging
+func (c *S3Control) DeleteJobTaggingRequest(input *DeleteJobTaggingInput) (req *request.Request, output *DeleteJobTaggingOutput) {
+	op := &request.Operation{
+		Name:       opDeleteJobTagging,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v20180820/jobs/{id}/tagging",
+	}
+
+	if input == nil {
+		input = &DeleteJobTaggingInput{}
+	}
+
+	output = &DeleteJobTaggingOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Build.PushBackNamed(protocol.NewHostPrefixHandler("{AccountId}.", input.hostLabels))
+	req.Handlers.Build.PushBackNamed(protocol.ValidateEndpointHostHandler)
+	return
+}
+
+// DeleteJobTagging API operation for AWS S3 Control.
+//
+// Delete the tags on a Amazon S3 batch operations job, if any.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS S3 Control's
+// API operation DeleteJobTagging for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/s3control-2018-08-20/DeleteJobTagging
+func (c *S3Control) DeleteJobTagging(input *DeleteJobTaggingInput) (*DeleteJobTaggingOutput, error) {
+	req, out := c.DeleteJobTaggingRequest(input)
+	return out, req.Send()
+}
+
+// DeleteJobTaggingWithContext is the same as DeleteJobTagging with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteJobTagging for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *S3Control) DeleteJobTaggingWithContext(ctx aws.Context, input *DeleteJobTaggingInput, opts ...request.Option) (*DeleteJobTaggingOutput, error) {
+	req, out := c.DeleteJobTaggingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeletePublicAccessBlock = "DeletePublicAccessBlock"
 
 // DeletePublicAccessBlockRequest generates a "aws/request.Request" representing the
@@ -720,6 +805,90 @@ func (c *S3Control) GetAccessPointPolicyStatus(input *GetAccessPointPolicyStatus
 // for more information on using Contexts.
 func (c *S3Control) GetAccessPointPolicyStatusWithContext(ctx aws.Context, input *GetAccessPointPolicyStatusInput, opts ...request.Option) (*GetAccessPointPolicyStatusOutput, error) {
 	req, out := c.GetAccessPointPolicyStatusRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetJobTagging = "GetJobTagging"
+
+// GetJobTaggingRequest generates a "aws/request.Request" representing the
+// client's request for the GetJobTagging operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetJobTagging for more information on using the GetJobTagging
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetJobTaggingRequest method.
+//    req, resp := client.GetJobTaggingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/s3control-2018-08-20/GetJobTagging
+func (c *S3Control) GetJobTaggingRequest(input *GetJobTaggingInput) (req *request.Request, output *GetJobTaggingOutput) {
+	op := &request.Operation{
+		Name:       opGetJobTagging,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v20180820/jobs/{id}/tagging",
+	}
+
+	if input == nil {
+		input = &GetJobTaggingInput{}
+	}
+
+	output = &GetJobTaggingOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Build.PushBackNamed(protocol.NewHostPrefixHandler("{AccountId}.", input.hostLabels))
+	req.Handlers.Build.PushBackNamed(protocol.ValidateEndpointHostHandler)
+	return
+}
+
+// GetJobTagging API operation for AWS S3 Control.
+//
+// Retrieve the tags on a Amazon S3 batch operations job.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS S3 Control's
+// API operation GetJobTagging for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/s3control-2018-08-20/GetJobTagging
+func (c *S3Control) GetJobTagging(input *GetJobTaggingInput) (*GetJobTaggingOutput, error) {
+	req, out := c.GetJobTaggingRequest(input)
+	return out, req.Send()
+}
+
+// GetJobTaggingWithContext is the same as GetJobTagging with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetJobTagging for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *S3Control) GetJobTaggingWithContext(ctx aws.Context, input *GetJobTaggingInput, opts ...request.Option) (*GetJobTaggingOutput, error) {
+	req, out := c.GetJobTaggingRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1163,6 +1332,93 @@ func (c *S3Control) PutAccessPointPolicy(input *PutAccessPointPolicyInput) (*Put
 // for more information on using Contexts.
 func (c *S3Control) PutAccessPointPolicyWithContext(ctx aws.Context, input *PutAccessPointPolicyInput, opts ...request.Option) (*PutAccessPointPolicyOutput, error) {
 	req, out := c.PutAccessPointPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutJobTagging = "PutJobTagging"
+
+// PutJobTaggingRequest generates a "aws/request.Request" representing the
+// client's request for the PutJobTagging operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutJobTagging for more information on using the PutJobTagging
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutJobTaggingRequest method.
+//    req, resp := client.PutJobTaggingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/s3control-2018-08-20/PutJobTagging
+func (c *S3Control) PutJobTaggingRequest(input *PutJobTaggingInput) (req *request.Request, output *PutJobTaggingOutput) {
+	op := &request.Operation{
+		Name:       opPutJobTagging,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v20180820/jobs/{id}/tagging",
+	}
+
+	if input == nil {
+		input = &PutJobTaggingInput{}
+	}
+
+	output = &PutJobTaggingOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Build.PushBackNamed(protocol.NewHostPrefixHandler("{AccountId}.", input.hostLabels))
+	req.Handlers.Build.PushBackNamed(protocol.ValidateEndpointHostHandler)
+	return
+}
+
+// PutJobTagging API operation for AWS S3 Control.
+//
+// Replace the set of tags on a Amazon S3 batch operations job.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS S3 Control's
+// API operation PutJobTagging for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/s3control-2018-08-20/PutJobTagging
+func (c *S3Control) PutJobTagging(input *PutJobTaggingInput) (*PutJobTaggingOutput, error) {
+	req, out := c.PutJobTaggingRequest(input)
+	return out, req.Send()
+}
+
+// PutJobTaggingWithContext is the same as PutJobTagging with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutJobTagging for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *S3Control) PutJobTaggingWithContext(ctx aws.Context, input *PutJobTaggingInput, opts ...request.Option) (*PutJobTaggingOutput, error) {
+	req, out := c.PutJobTaggingRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1654,6 +1910,9 @@ type CreateJobInput struct {
 	//
 	// RoleArn is a required field
 	RoleArn *string `min:"1" type:"string" required:"true"`
+
+	// An optional set of tags to associate with the job when it is created.
+	Tags []*S3Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -1714,6 +1973,16 @@ func (s *CreateJobInput) Validate() error {
 			invalidParams.AddNested("Report", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1772,6 +2041,12 @@ func (s *CreateJobInput) SetReport(v *JobReport) *CreateJobInput {
 // SetRoleArn sets the RoleArn field's value.
 func (s *CreateJobInput) SetRoleArn(v string) *CreateJobInput {
 	s.RoleArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateJobInput) SetTags(v []*S3Tag) *CreateJobInput {
+	s.Tags = v
 	return s
 }
 
@@ -1958,6 +2233,85 @@ func (s DeleteAccessPointPolicyOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteAccessPointPolicyOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteJobTaggingInput struct {
+	_ struct{} `locationName:"DeleteJobTaggingRequest" type:"structure"`
+
+	// The account ID for the Amazon Web Services account associated with the Amazon
+	// S3 batch operations job you want to remove tags from.
+	//
+	// AccountId is a required field
+	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
+
+	// The ID for the job whose tags you want to delete.
+	//
+	// JobId is a required field
+	JobId *string `location:"uri" locationName:"id" min:"5" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteJobTaggingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteJobTaggingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteJobTaggingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteJobTaggingInput"}
+	if s.AccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccountId"))
+	}
+	if s.AccountId != nil && len(*s.AccountId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AccountId", 1))
+	}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 5 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *DeleteJobTaggingInput) SetAccountId(v string) *DeleteJobTaggingInput {
+	s.AccountId = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *DeleteJobTaggingInput) SetJobId(v string) *DeleteJobTaggingInput {
+	s.JobId = &v
+	return s
+}
+
+func (s *DeleteJobTaggingInput) hostLabels() map[string]string {
+	return map[string]string{
+		"AccountId": aws.StringValue(s.AccountId),
+	}
+}
+
+type DeleteJobTaggingOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteJobTaggingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteJobTaggingOutput) GoString() string {
 	return s.String()
 }
 
@@ -2422,6 +2776,94 @@ func (s GetAccessPointPolicyStatusOutput) GoString() string {
 // SetPolicyStatus sets the PolicyStatus field's value.
 func (s *GetAccessPointPolicyStatusOutput) SetPolicyStatus(v *PolicyStatus) *GetAccessPointPolicyStatusOutput {
 	s.PolicyStatus = v
+	return s
+}
+
+type GetJobTaggingInput struct {
+	_ struct{} `locationName:"GetJobTaggingRequest" type:"structure"`
+
+	// The account ID for the Amazon Web Services account associated with the Amazon
+	// S3 batch operations job you want to retrieve tags for.
+	//
+	// AccountId is a required field
+	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
+
+	// The ID for the job whose tags you want to retrieve.
+	//
+	// JobId is a required field
+	JobId *string `location:"uri" locationName:"id" min:"5" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetJobTaggingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetJobTaggingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetJobTaggingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetJobTaggingInput"}
+	if s.AccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccountId"))
+	}
+	if s.AccountId != nil && len(*s.AccountId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AccountId", 1))
+	}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 5 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *GetJobTaggingInput) SetAccountId(v string) *GetJobTaggingInput {
+	s.AccountId = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *GetJobTaggingInput) SetJobId(v string) *GetJobTaggingInput {
+	s.JobId = &v
+	return s
+}
+
+func (s *GetJobTaggingInput) hostLabels() map[string]string {
+	return map[string]string{
+		"AccountId": aws.StringValue(s.AccountId),
+	}
+}
+
+type GetJobTaggingOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The set of tags associated with the job.
+	Tags []*S3Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s GetJobTaggingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetJobTaggingOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *GetJobTaggingOutput) SetTags(v []*S3Tag) *GetJobTaggingOutput {
+	s.Tags = v
 	return s
 }
 
@@ -3692,6 +4134,109 @@ func (s PutAccessPointPolicyOutput) String() string {
 
 // GoString returns the string representation
 func (s PutAccessPointPolicyOutput) GoString() string {
+	return s.String()
+}
+
+type PutJobTaggingInput struct {
+	_ struct{} `locationName:"PutJobTaggingRequest" type:"structure" xmlURI:"http://awss3control.amazonaws.com/doc/2018-08-20/"`
+
+	// The account ID for the Amazon Web Services account associated with the Amazon
+	// S3 batch operations job you want to replace tags on.
+	//
+	// AccountId is a required field
+	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
+
+	// The ID for the job whose tags you want to replace.
+	//
+	// JobId is a required field
+	JobId *string `location:"uri" locationName:"id" min:"5" type:"string" required:"true"`
+
+	// The set of tags to associate with the job.
+	//
+	// Tags is a required field
+	Tags []*S3Tag `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s PutJobTaggingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutJobTaggingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutJobTaggingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutJobTaggingInput"}
+	if s.AccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccountId"))
+	}
+	if s.AccountId != nil && len(*s.AccountId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AccountId", 1))
+	}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 5 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 5))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *PutJobTaggingInput) SetAccountId(v string) *PutJobTaggingInput {
+	s.AccountId = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *PutJobTaggingInput) SetJobId(v string) *PutJobTaggingInput {
+	s.JobId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PutJobTaggingInput) SetTags(v []*S3Tag) *PutJobTaggingInput {
+	s.Tags = v
+	return s
+}
+
+func (s *PutJobTaggingInput) hostLabels() map[string]string {
+	return map[string]string{
+		"AccountId": aws.StringValue(s.AccountId),
+	}
+}
+
+type PutJobTaggingOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutJobTaggingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutJobTaggingOutput) GoString() string {
 	return s.String()
 }
 
