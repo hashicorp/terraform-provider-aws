@@ -20,6 +20,7 @@ ENHANCEMENTS:
 
 * resource/aws_cloudhsm_v2_cluster: Support tag-on-create [GH-11683]
 * resource/aws_docdb_cluster: Add `deletion_protection` argument [GH-12650]
+* resource/aws_egress_only_internet_gateway: Add `tags` argument [GH-11568]
 * resource/aws_redshift_snapshot_copy_grant: Support resource import [GH-10350]
 * resource/aws_spot_fleet_request: Add `tags` argument (support tagging of Spot Fleet Request itself) [GH-12295]
 * resource/aws_spot_fleet_request: Support plan-time validation for `launch_specification` configuration block `ebs_block_device` `volume_type`, `iam_instance_profile_arn`, `placement_tenancy`, and `root_block_device` `volume_type` arguments [GH-12295]
