@@ -123,8 +123,6 @@ func resourceAwsEgressOnlyInternetGatewayUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	d.SetPartial("tags")
-
 	return resourceAwsEgressOnlyInternetGatewayRead(d, meta)
 }
 
