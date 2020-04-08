@@ -171,7 +171,6 @@ func resourceAwsAmi() *schema.Resource {
 			"manage_ebs_snapshots": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				ForceNew: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
