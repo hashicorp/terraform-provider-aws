@@ -118,7 +118,6 @@ func dataSourceAwsResourceGroupsTaggingApiResourcesRead(d *schema.ResourceData, 
 		return err
 	}
 
-
 	d.SetId(resource.UniqueId())
 
 	if err := d.Set("resource_tag_mapping_list", flattenAwsResourceGroupsTaggingApiResourcesTagMappingList(taggings)); err != nil {
