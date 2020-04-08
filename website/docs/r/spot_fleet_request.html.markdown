@@ -13,7 +13,7 @@ instances to be requested on the Spot market.
 
 ## Example Usage
 
-### Using launch specifications:
+### Using launch specifications
 
 ```hcl
 # Request a Spot fleet
@@ -54,7 +54,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
 }
 ```
 
-### Using launch templates:
+### Using launch templates
 
 ```
 resource "aws_launch_template" "foo" {
