@@ -483,6 +483,36 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 	}
 }
 
+// ServiceResourceNotFoundErrorCode determines the error code of tagable resources when not found
+func ServiceResourceNotFoundErrorCode(serviceName string) string {
+	switch serviceName {
+	default:
+		return "ResourceNotFoundException"
+	}
+}
+
+// ServiceResourceNotFoundErrorCode determines the common substring of error codes of tagable resources when not found
+// This value takes precedence over ServiceResourceNotFoundErrorCode when defined for a service.
+func ServiceResourceNotFoundErrorCodeContains(serviceName string) string {
+	switch serviceName {
+	case "ec2":
+		return ".NotFound"
+	default:
+		return ""
+	}
+}
+
+// ServiceRetryCreationOnResourceNotFound determines if tag creation should be retried when the tagable resource is not found
+// This should only be used for services with eventual consistency considerations.
+func ServiceRetryCreationOnResourceNotFound(serviceName string) string {
+	switch serviceName {
+	case "ec2":
+		return "yes"
+	default:
+		return ""
+	}
+}
+
 // ServiceTagFunction determines the service tagging function.
 func ServiceTagFunction(serviceName string) string {
 	switch serviceName {
