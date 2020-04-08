@@ -383,7 +383,7 @@ func TestAccAWSCodePipelineWithNamespace(t *testing.T) {
 		t.Skip("Environment variable GITHUB_TOKEN is not set")
 	}
 
-	var p1, p2 codepipeline.PipelineDeclaration
+	var p1 codepipeline.PipelineDeclaration
 	name := acctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
 
